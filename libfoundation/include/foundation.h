@@ -656,6 +656,16 @@ typedef struct __MCLocale* MCLocaleRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  NEW AND DELETE OPERATORS
+//
+
+#ifdef __cplusplus
+# include <new>
+using std::nothrow;
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  MINIMUM FUNCTIONS
 //
 
@@ -1067,24 +1077,12 @@ MC_DLLEXPORT void MCMemoryDelete(void *p_record);
 
 }
 
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline void *operator new (size_t, void *p_block, bool)
-{
-	return p_block;
-}
-
 template<typename T> bool MCMemoryNew(T*& r_record)
 {
 	void *t_record;
 	if (MCMemoryNew(sizeof(T), t_record))
 	{
-        r_record = new(t_record, true) T;
+        r_record = new (t_record) T;
 		return true;
 	}
 	return false;

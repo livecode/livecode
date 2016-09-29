@@ -767,7 +767,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
         t_stream = nil;
         if (t_success)
         {
-            t_stream = new MCObjectOutputStream(t_stream_handle);
+            t_stream = new (nothrow) MCObjectOutputStream(t_stream_handle);
             if (t_stream == nil)
                 t_success = false;
         }
@@ -863,7 +863,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
         t_stream = nil;
         if (t_success)
         {
-            t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
+            t_stream = new (nothrow) MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
             if (t_stream == nil)
                 t_success = false;
         }
@@ -1341,7 +1341,7 @@ void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStri
 {
     // Create the pattern matcher
     MCPatternMatcher *t_matcher;
-    t_matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    t_matcher = new (nothrow) MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
     
@@ -1352,7 +1352,7 @@ void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringR
 {
     // Create the pattern matcher
     MCPatternMatcher *t_matcher;
-    t_matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    t_matcher = new (nothrow) MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
     if (!t_matcher -> compile(&t_regex_error))

@@ -146,7 +146,7 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 		clear(False);
 	if (MCactivefield != NULL)
 		MCactivefield->unselect(True, True);
-	MCSelnode *nodeptr = new MCSelnode(objptr);
+	MCSelnode *nodeptr = new (nothrow) MCSelnode(objptr);
 	nodeptr->appendto(objects);
 	if (p_sendmessage)
 		objptr->message(MCM_selected_object_changed);
@@ -328,7 +328,7 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 		else
 			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
 		gptr->makegroup(controls, parent);
-		objects = new MCSelnode(gptr);
+		objects = new (nothrow) MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
 		
 		r_group_ptr = gptr;
@@ -476,7 +476,7 @@ Boolean MCSellist::del()
 				cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
 				if (cptr->del(true))
 				{
-					Ustruct *us = new Ustruct;
+					Ustruct *us = new (nothrow) Ustruct;
 					us->type = UT_DELETE;
 					us->ud.layer = num;
 					MCundos->savestate(cptr, us);
@@ -565,7 +565,7 @@ Boolean MCSellist::endmove()
 	do
 	{
 		MCControl *cptr = (MCControl *)tptr->ref;
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_MOVE;
 		us->ud.deltas.x = lastx - startx;
 		us->ud.deltas.y = lasty - starty;

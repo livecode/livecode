@@ -1194,7 +1194,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)
-					tsub = new MCStack(*toclone);
+					tsub = new (nothrow) MCStack(*toclone);
 			}
 			else
 			{
@@ -1598,7 +1598,7 @@ void MCStack::SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamed
 	{
 		if (linkatts == nil)
 		{
-			/* UNCHECKED */ linkatts = new Linkatts;
+			/* UNCHECKED */ linkatts = new (nothrow) Linkatts;
 			MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
 			linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
 			linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
@@ -1724,7 +1724,7 @@ void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool* p_value)
     {
         if (linkatts == nil)
         {
-            /* UNCHECKED */ linkatts = new Linkatts;
+            /* UNCHECKED */ linkatts = new (nothrow) Linkatts;
             MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
             linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
             linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);

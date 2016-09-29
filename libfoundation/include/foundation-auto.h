@@ -716,7 +716,7 @@ public:
  * manage a value created with the "new" operator.  For example:
  *
  *     MCAutoPointer<int> number;
- *     number = new int;
+ *     number = new (nothrow) int;
  */
 template<typename T> class MCAutoPointer
 {
@@ -769,7 +769,7 @@ private:
  * manage a value created with the "new[]" operator.  For example:
  *
  *     MCAutoPointer<int[]> numbers;
- *     numbers = new int[25];
+ *     numbers = new (nothrow) int[25];
  */
 template<typename T> class MCAutoPointer<T[]>
 {

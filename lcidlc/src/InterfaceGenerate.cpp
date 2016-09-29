@@ -1213,7 +1213,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 	t_is_java = p_mapping == kHandlerMappingJava;
 	
 	MappedParameter *t_mapped_params;
-	t_mapped_params = new MappedParameter[t_variant -> parameter_count];
+	t_mapped_params = new (nothrow) MappedParameter[t_variant -> parameter_count];
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
 		map_parameter(self, p_mapping, &t_variant -> parameters[k], k, t_mapped_params[k]);
 	

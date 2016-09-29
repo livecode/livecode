@@ -361,7 +361,7 @@ bool MCPNGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForPNGStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCPNGImageLoader *t_loader;
-	t_loader = new MCPNGImageLoader(p_stream);
+	t_loader = new (nothrow) MCPNGImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;

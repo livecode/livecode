@@ -939,7 +939,7 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	MCGContextConcatCTM(p_target, t_transform);
 	
 	MCGraphicsContext *t_gfx_context;
-	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	/* UNCHECKED */ t_gfx_context = new (nothrow) MCGraphicsContext(p_target);
 	
 	MCRectangle t_user_rect;
 	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));

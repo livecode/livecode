@@ -633,7 +633,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}				
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);
@@ -735,7 +735,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);

@@ -1123,7 +1123,7 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
 	MCParameter *params = NULL;
 	if (p1 != NULL)
 	{
-		params = new MCParameter;
+		params = new (nothrow) MCParameter;
 		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
@@ -1158,7 +1158,7 @@ void MCUIDC::addsubtimer(MCObject *optr, MCValueRef suboptr, MCNameRef mptr, uin
     cancelmessageobject(optr, mptr, suboptr);
     
     MCParameter *t_param;
-    t_param = new MCParameter;
+    t_param = new (nothrow) MCParameter;
     t_param -> setvalueref_argument(suboptr);
     doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, t_param);
 }
@@ -1359,7 +1359,7 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
 {
 	stopmove(optr, False);
-	MCMovingList *mptr = new MCMovingList;
+	MCMovingList *mptr = new (nothrow) MCMovingList;
 	mptr->appendto(moving);
 	mptr->object = optr;
 	mptr->pts = pts;
@@ -1581,7 +1581,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 
     uint4 slength = strlen(*t_cstring);
     MCAutoPointer<char[]> startptr;
-    startptr = new char[slength + 1];
+    startptr = new (nothrow) char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);
 

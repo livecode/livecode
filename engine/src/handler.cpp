@@ -260,7 +260,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 			}
 		}
 		if (type == ST_DATA)
-			newstatement = new MCEcho;
+			newstatement = new (nothrow) MCEcho;
 		else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 		{
 			if (type != ST_ID)
@@ -268,7 +268,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				MCperror->add(PE_HANDLER_NOCOMMAND, sp);
 				return PS_ERROR;
 			}
-			newstatement = new MCComref(sp.gettoken_nameref());
+			newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 		}
 		else
 		{
@@ -328,7 +328,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	if (newnparams == 0)
 		newparams = NULL;
 	else
-		newparams = new MCContainer *[newnparams];
+		newparams = new (nothrow) MCContainer *[newnparams];
     
 	Boolean err = False;
 	for (i = 0 ; i < newnparams ; i++)
@@ -362,7 +362,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
             // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
             //  param type, with this handler and param index, so that use of the get command syncs up correctly.
             if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
-                m_it = new MCVarref(this, i, True);
+                m_it = new (nothrow) MCVarref(this, i, True);
             
 			plist = plist->getnext();
 		}
@@ -405,7 +405,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		vars = NULL;
 	else
 	{
-		vars = new MCVariable *[nvnames];
+		vars = new (nothrow) MCVariable *[nvnames];
 		i = nvnames;
 		while (i--)
 		{
@@ -588,14 +588,14 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 	for (i = 0 ; i < nvnames ; i++)
 		if (MCNameIsEqualTo(p_name, vinfo[i] . name, kMCCompareCaseless))
 		{
-			*dptr = new MCVarref(this, i, False);
+			*dptr = new (nothrow) MCVarref(this, i, False);
 			return PS_NORMAL;
 		}
 
 	for (i = 0 ; i < npnames ; i++)
 		if (MCNameIsEqualTo(p_name, pinfo[i] . name, kMCCompareCaseless))
 	{
-			*dptr = new MCVarref(this, i, True);
+			*dptr = new (nothrow) MCVarref(this, i, True);
 			return PS_NORMAL;
 		}
 
@@ -644,7 +644,7 @@ Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_r
 		}
 	}
 
-	*r_ref = new MCVarref(this, nvnames++, False);
+	*r_ref = new (nothrow) MCVarref(this, nvnames++, False);
 
 	return PS_NORMAL;
 }
@@ -655,7 +655,7 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 	for (i = 0 ; i < nconstants ; i++)
 		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
 		{
-			*dptr = new MCLiteral(cinfo[i].value);
+			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
 		}
 	return hlist->findconstant(p_name, dptr);

@@ -225,7 +225,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeRedirect:
 	{
 		char *t_redirect;
-		t_redirect = new char[p_length];
+		t_redirect = new (nothrow) char[p_length];
 		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
@@ -243,7 +243,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeFontmap:
     {
         char *t_fontmap;
-        t_fontmap = new char[p_length];
+        t_fontmap = new (nothrow) char[p_length];
         if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read fontmap");

@@ -296,7 +296,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 			return NULL;
 		}
         
-		t_handle = new MCAssetFileHandle(t_stream, t_size, t_offset);
+		t_handle = new (nothrow) MCAssetFileHandle(t_stream, t_size, t_offset);
     }
 	else
 	{
@@ -314,7 +314,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
         if (t_stream == NULL)
             return NULL;
         
-        t_handle = new MCStdioFileHandle(t_stream);
+        t_handle = new (nothrow) MCStdioFileHandle(t_stream);
 	}
     
     return t_handle;

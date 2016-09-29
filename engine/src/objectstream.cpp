@@ -388,7 +388,7 @@ IO_stat MCObjectInputStream::Fill(void)
 	IO_stat t_stat;
 
 	if (m_buffer == nil)
-		m_buffer = new char[16384];
+		m_buffer = new (nothrow) char[16384];
 	
 	if (m_buffer == nil)
 		return IO_ERROR;
@@ -423,7 +423,7 @@ MCObjectOutputStream::MCObjectOutputStream(IO_handle p_stream)
 {
 	m_stream = p_stream;
 
-	m_buffer = new char[16384];
+	m_buffer = new (nothrow) char[16384];
 	m_frontier = 0;
 	m_mark = 0;
 }

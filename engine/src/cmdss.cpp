@@ -57,7 +57,7 @@ delete target;
 Parse_stat MCCompact::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -133,7 +133,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 			{
 				if (ct_class(oterm) == CT_ORDINAL)
 				{
-					card = new MCCRef;
+					card = new (nothrow) MCCRef;
 					card->otype = CT_CARD;
 					card->etype = oterm;
 					return PS_NORMAL;
@@ -275,7 +275,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						{
 							if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
 							{
-								widget = new MCChunk(False);
+								widget = new (nothrow) MCChunk(False);
 								if (widget->parse(sp, False) != PS_NORMAL)
 								{
 									MCperror->add(PE_GO_BADWIDGETEXP, sp);
@@ -286,7 +286,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 								break;
 							}
 
-							card = new MCCRef;
+							card = new (nothrow) MCCRef;
 							card->etype = nterm;
 							MCScriptPoint oldsp(sp);
 							MCerrorlock++;
@@ -301,13 +301,13 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						break;
 					case CT_START:
 					case CT_FINISH:
-						card = new MCCRef;
+						card = new (nothrow) MCCRef;
 						card->etype = nterm;
 						sp.skip_token(SP_FACTOR, TT_CHUNK, CT_CARD);
 						break;
 					case CT_HOME:
 					case CT_HELP:
-						stack = new MCCRef;
+						stack = new (nothrow) MCCRef;
 						stack->etype = nterm;
 						break;
 					default:
@@ -326,7 +326,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						(PE_GO_BADCHUNKORDER, sp);
 						return PS_ERROR;
 					}
-					curref = new MCCRef;
+					curref = new (nothrow) MCCRef;
 					if (oterm == CT_UNDEFINED)
 					{
 						if (nterm >= CT_FIRST_TEXT_CHUNK || nterm == CT_URL)
@@ -398,7 +398,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					sp.backup();
-					card = new MCCRef;
+					card = new (nothrow) MCCRef;
 					card->otype = CT_CARD;
 					card->etype = CT_EXPRESSION;
 					if (sp.parseexp(False, True, &card->startpos) != PS_NORMAL)
@@ -424,7 +424,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					return PS_ERROR;
 				}
 				sp.backup();
-				stack = new MCCRef;
+				stack = new (nothrow) MCCRef;
 				stack->otype = CT_STACK;
 				stack->etype = CT_EXPRESSION;
 				if (sp.parseexp(False, True, &stack->startpos) != PS_NORMAL)
@@ -475,7 +475,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 		return sptr;
 
 	MCObject *objptr;
-	MCChunk *tchunk = new MCChunk(False);
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
 	MCerrorlock++;
     // AL-2014-11-10: [[ Bug 13972 ]] Parsing the chunk without passing through the context results
     //  in a parse error for unquoted stack and card names, since there is then no handler in which to
@@ -1018,7 +1018,7 @@ Parse_stat MCHide::parse(MCScriptPoint &sp)
 		(PE_HIDE_BADTARGET, sp);
 		return PS_ERROR;
 	}
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1028,7 +1028,7 @@ Parse_stat MCHide::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED) == PS_NORMAL)
 	{
 		sp.skip_token(SP_COMMAND, TT_STATEMENT, S_VISUAL);
-		effect = new MCVisualEffect;
+		effect = new (nothrow) MCVisualEffect;
 		if (effect->parse(sp) != PS_NORMAL)
 		{
 			MCperror->add
@@ -1298,7 +1298,7 @@ Parse_stat MCPop::parse(MCScriptPoint &sp)
 		(PE_POP_BADPREP, sp);
 		return PS_ERROR;
 	}
-	dest = new MCChunk(True);
+	dest = new (nothrow) MCChunk(True);
 	if (dest->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1373,7 +1373,7 @@ Parse_stat MCPush::parse(MCScriptPoint &sp)
 			sp . backup();
 		}
 
-		card = new MCChunk(False);
+		card = new (nothrow) MCChunk(False);
 		if (card -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PUSH_BADEXP, sp);
@@ -1440,7 +1440,7 @@ MCSave::~MCSave()
 Parse_stat MCSave::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1646,7 +1646,7 @@ Parse_stat MCShow::parse(MCScriptPoint &sp)
 		(PE_SHOW_BADTARGET, sp);
 		return PS_ERROR;
 	}
-	ton = new MCChunk(False);
+	ton = new (nothrow) MCChunk(False);
 	if (ton->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1669,7 +1669,7 @@ Parse_stat MCShow::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED) == PS_NORMAL)
 	{
 		sp.skip_token(SP_COMMAND, TT_STATEMENT, S_VISUAL);
-		effect = new MCVisualEffect;
+		effect = new (nothrow) MCVisualEffect;
 		if (effect->parse(sp) != PS_NORMAL)
 		{
 			MCperror->add
@@ -1821,7 +1821,7 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 	}
 	else
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -2170,7 +2170,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED) == PS_NORMAL)
 		{
 			sp.skip_token(SP_COMMAND, TT_STATEMENT, S_VISUAL);
-			effect = new MCVisualEffect;
+			effect = new (nothrow) MCVisualEffect;
 			if (effect->parse(sp) != PS_NORMAL)
 			{
 				MCperror->add

@@ -435,7 +435,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForGIFStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCGIFImageLoader *t_loader;
-	t_loader = new MCGIFImageLoader(p_stream);
+	t_loader = new (nothrow) MCGIFImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;

@@ -144,7 +144,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -163,7 +163,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 			}
 			if (!needone && sp.skip_token(SP_FACTOR, TT_RPAREN) == PS_NORMAL)
 				return PS_NORMAL;
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add
@@ -1034,8 +1034,8 @@ Parse_stat MCIntersect::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
 	
-	o1 = new MCChunk(False);
-	o2 = new MCChunk(False);
+	o1 = new (nothrow) MCChunk(False);
+	o2 = new (nothrow) MCChunk(False);
 	
 	Symbol_type stype;
 	if (o1->parse(sp, False) != PS_NORMAL
@@ -1542,7 +1542,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SELECTEDBUTTON_NOOBJECT, sp);
@@ -2283,7 +2283,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 		}
 		if (type == ST_SEP)
 		{
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_VALUE_BADOBJECT, sp);
@@ -2368,7 +2368,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FACTOR_NOLPAREN, sp);
 		return PS_ERROR;
 	}
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_WITHIN_NOOBJECT, sp);
@@ -3076,7 +3076,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 	}
 	
 	Symbol_type type;
-	m_object = new MCChunk(False);
+	m_object = new (nothrow) MCChunk(False);
 	if (sp.next(type) != PS_NORMAL || type != ST_SEP
         || m_object->parse(sp, False) != PS_NORMAL)
 	{

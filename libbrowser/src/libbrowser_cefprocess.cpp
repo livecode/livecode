@@ -397,7 +397,7 @@ bool MCCefHandleGetSelectedText(CefRefPtr<CefBrowser> p_browser, CefString &r_re
 	t_success = true;
 	
 	MCGetSelectedTextDOMVisitor *t_dom_visitor;
-	t_dom_visitor = new MCGetSelectedTextDOMVisitor();
+	t_dom_visitor = new (nothrow) MCGetSelectedTextDOMVisitor();
 	t_success = t_dom_visitor != nil;
 	
 	CefRefPtr<CefDOMVisitor> t_visitor_ref;
@@ -437,7 +437,7 @@ bool MCCefHandleGetTitle(CefRefPtr<CefBrowser> p_browser, CefString &r_return_va
 	t_success = true;
 	
 	MCGetTitleDOMVisitor *t_dom_visitor;
-	t_dom_visitor = new MCGetTitleDOMVisitor();
+	t_dom_visitor = new (nothrow) MCGetTitleDOMVisitor();
 	t_success = t_dom_visitor != nil;
 	
 	CefRefPtr<CefDOMVisitor> t_visitor_ref;
@@ -740,7 +740,7 @@ private:
 		if (!p_container->HasValue(p_name))
 		{
 			CefRefPtr<CefV8Handler> t_handler;
-			t_success = nil != (t_handler = new MCCefLCFuncHandler(p_name));
+			t_success = nil != (t_handler = new (nothrow) MCCefLCFuncHandler(p_name));
 			
 			CefRefPtr<CefV8Value> t_func;
 			if (t_success)
@@ -816,7 +816,7 @@ private:
 bool MCCefCreateApp(CefRefPtr<CefApp> &r_app)
 {
 	MCCefRenderApp *t_app;
-	t_app = new MCCefRenderApp();
+	t_app = new (nothrow) MCCefRenderApp();
 	
 	if (t_app == nil)
 	{

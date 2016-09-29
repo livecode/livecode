@@ -429,7 +429,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		MCAudioClip *aptr = sref.aclips;
 		do
 		{
-			MCAudioClip *newaclip = new MCAudioClip(*aptr);
+			MCAudioClip *newaclip = new (nothrow) MCAudioClip(*aptr);
 			newaclip->setid(aptr->getid());
 			newaclip->appendto(aclips);
 			newaclip->setparent(this);
@@ -442,7 +442,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		MCVideoClip *vptr = sref.vclips;
 		do
 		{
-			MCVideoClip *newvclip = new MCVideoClip(*vptr);
+			MCVideoClip *newvclip = new (nothrow) MCVideoClip(*vptr);
 			newvclip->setid(vptr->getid());
 			newvclip->appendto(vclips);
 			newvclip->setparent(this);
@@ -458,7 +458,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	if (nstackfiles != 0)
 	{
 		uint2 ts = nstackfiles;
-		stackfiles = new MCStackfile[ts];
+		stackfiles = new (nothrow) MCStackfile[ts];
 		while (ts--)
 		{
 			stackfiles[ts].stackname = MCValueRetain(sref.stackfiles[ts].stackname);
@@ -469,7 +469,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		stackfiles = NULL;
 	if (sref.linkatts != NULL)
 	{
-		linkatts = new Linkatts;
+		linkatts = new (nothrow) Linkatts;
 		memcpy(linkatts, sref.linkatts, sizeof(Linkatts));
         
 		linkatts->colorname = linkatts->colorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->colorname);
@@ -1599,7 +1599,7 @@ void MCStack::loadexternals(void)
 	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
-	m_externals = new MCExternalHandlerList;
+	m_externals = new (nothrow) MCExternalHandlerList;
 
 	MCAutoArrayRef t_array;
 	/* UNCHECKED */ MCStringSplit(externalfiles, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);

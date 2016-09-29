@@ -379,7 +379,7 @@ MCCdata *MCField::getcarddata(MCCdata *&list, uint4 parid, Boolean create)
 	}
 	if (foundptr == NULL && create)
 	{
-		foundptr = new MCCdata(parid);
+		foundptr = new (nothrow) MCCdata(parid);
 		foundptr->appendto(list);
 	}
 	return foundptr;
@@ -1652,7 +1652,7 @@ Boolean MCField::deleteselection(Boolean force)
 
 		findex_t si, ei;
 		selectedmark(False, si, ei, False);
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_DELETE_TEXT;
 		us->ud.text.index = si;
 		us->ud.text.data = cloneselection();
@@ -1877,7 +1877,7 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		else
 		{
 			MCundos->freestate();
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->type = UT_TYPE_TEXT;
 			
 			// MW-UNDO-FIX: Store the index this record starts at
@@ -1930,7 +1930,7 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				focusedy -= focusedparagraph->getheight(fixedheight);
 				joinparagraphs();
 				firstparagraph = lastparagraph = NULL;
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.newline = True;
 				us->ud.text.data = NULL;
 			}
@@ -1949,14 +1949,14 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				{
 					joinparagraphs();
 					firstparagraph = lastparagraph = NULL;
-					us = new Ustruct;
+					us = new (nothrow) Ustruct;
 					us->ud.text.newline = True;
 					us->ud.text.data = NULL;
 				}
 			}
 			else
 			{
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.data = undopgptr;
 				us->ud.text.newline = False;
 				updateparagraph(True, False);
@@ -2017,7 +2017,7 @@ void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym
 		joinparagraphs();
 		if (focusedparagraph->gettextsize())
 			state &= ~CS_PARTIAL;
-		cutptr = new MCParagraph;
+		cutptr = new (nothrow) MCParagraph;
 		cutptr->setparent(this);
 	}
 	else

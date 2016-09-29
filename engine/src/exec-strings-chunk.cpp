@@ -1125,7 +1125,7 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
 {
-    m_sp = new MCScriptPoint(p_text);
+    m_sp = new (nothrow) MCScriptPoint(p_text);
 }
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
@@ -1133,7 +1133,7 @@ MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text,
     MCAutoStringRef t_substring;
     MCStringCopySubstring(m_text, p_restriction, &t_substring);
     MCValueAssign(m_text, *t_substring);
-    m_sp = new MCScriptPoint(m_text);
+    m_sp = new (nothrow) MCScriptPoint(m_text);
 }
 
 MCTextChunkIterator_Tokenized::~MCTextChunkIterator_Tokenized()
@@ -1168,7 +1168,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStr
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
         return tci;
     }
     
@@ -1180,7 +1180,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ct
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
         return tci;
     }
     

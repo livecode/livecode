@@ -348,7 +348,7 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 			t_item_start++;
 
 		MenuItemDescriptor *t_item;
-		t_item = new MenuItemDescriptor;
+		t_item = new (nothrow) MenuItemDescriptor;
 	
 		if (t_current_item == NULL)
 			t_items = t_item, t_current_item = t_items;

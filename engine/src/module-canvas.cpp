@@ -6026,7 +6026,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canv
     t_pixel_count = t_width * t_height;
     
     uint32_t *t_my_pixels, *t_data_ptr;
-    t_my_pixels = new uint32_t[t_pixel_count];
+    t_my_pixels = new (nothrow) uint32_t[t_pixel_count];
     memcpy(t_my_pixels, t_pixels, t_pixel_count * sizeof(uint32_t));
     
     t_data_ptr = t_my_pixels;

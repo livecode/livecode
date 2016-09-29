@@ -1182,7 +1182,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -2149,7 +2149,7 @@ void MCPlayer::markerchanged(MCPlatformPlayerDuration p_time)
             MCExecContext ctxt(nil, nil, nil);
             
             MCParameter *t_param;
-            t_param = new MCParameter;
+            t_param = new (nothrow) MCParameter;
             t_param -> set_argument(ctxt, m_callbacks[i] . parameter);
             MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
             
@@ -2190,7 +2190,7 @@ void MCPlayer::currenttimechanged(void)
         state |= CS_CTC_PENDING;
         
         MCParameter *t_param;
-        t_param = new MCParameter;
+        t_param = new (nothrow) MCParameter;
         t_param -> setn_argument(getmoviecurtime());
         MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
         
@@ -3270,7 +3270,7 @@ void MCPlayer::handle_mdown(int p_which)
             {
                 if (s_volume_popup == nil)
                 {
-                    s_volume_popup = new MCPlayerVolumePopup;
+                    s_volume_popup = new (nothrow) MCPlayerVolumePopup;
                     s_volume_popup -> setparent(MCdispatcher);
                     MCdispatcher -> add_transient_stack(s_volume_popup);
                 }
@@ -3740,7 +3740,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
             if (s_rate_popup == nil)
             {
-                s_rate_popup = new MCPlayerRatePopup;
+                s_rate_popup = new (nothrow) MCPlayerRatePopup;
                 s_rate_popup -> setparent(MCdispatcher);
                 MCdispatcher -> add_transient_stack(s_rate_popup);
             }

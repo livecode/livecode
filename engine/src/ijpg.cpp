@@ -847,7 +847,7 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForJPEGStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCJPEGImageLoader *t_loader;
-	t_loader = new MCJPEGImageLoader(p_stream);
+	t_loader = new (nothrow) MCJPEGImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;

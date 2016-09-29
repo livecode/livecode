@@ -1329,7 +1329,7 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
         case PS_NORMAL:
             if (type == ST_ID)
                 if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
-                    newstatement = new MCComref(sp.gettoken_nameref());
+                    newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
                 else
                 {
                     if (te->type != TT_STATEMENT)
