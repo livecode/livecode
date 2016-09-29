@@ -660,10 +660,8 @@ void MCQTRecordDialog()
 
 static CGrafPtr s_qt_target_port = nil;
 
-static MCGImageRef s_qt_start_image = nil;
 static CGrafPtr s_qt_start_port = NULL;
 
-static MCGImageRef s_qt_end_image = nil;
 static CGrafPtr s_qt_end_port = NULL;
 
 static QTAtomContainer s_qt_effect_desc = NULL;

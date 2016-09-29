@@ -184,7 +184,7 @@ static void configureSerialPort(int sRefNum)
     struct termios	theTermios;
     if (tcgetattr(sRefNum, &theTermios) < 0)
     {
-        MCLog("Error getting terminous attributes", nil);
+        MCLog("Error getting terminous attributes");
     }
     cfsetispeed(&theTermios,  B9600);
     theTermios.c_cflag = CS8;
@@ -206,7 +206,7 @@ static void configureSerialPort(int sRefNum)
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
-        MCLog("Error setting terminous attributes", nil);
+        MCLog("Error setting terminous attributes");
     }
 
     delete[] controlptr;

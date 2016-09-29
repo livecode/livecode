@@ -636,7 +636,6 @@ bool MCCustomMetaContext::begincomposite(const MCRectangle &p_mark_clip, MCGCont
 	if (t_success)
 		t_success = MCGContextCreate(t_width, t_height, true, t_gcontext);
 
-	MCContext *t_context = nil;
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_gcontext, t_scale, t_scale);

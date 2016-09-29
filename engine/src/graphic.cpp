@@ -574,7 +574,6 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 // MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
 bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 {
-	MCRectangle trect;
 	int	tRadius;
 	
 	r_points = NULL;

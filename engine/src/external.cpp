@@ -62,7 +62,7 @@ bool MCExternalHandlerList::ListExternals(MCStringRef& r_list)
 	if (t_success)
 		t_success = MCListCreateMutable('\n', &t_external_list);
 
-	for(uindex_t i = 0, j = 0; i < m_externals . Count(); i++)
+	for(uindex_t i = 0; i < m_externals . Count(); i++)
 	{
 		MCAutoStringRef t_name_string;
 
@@ -88,7 +88,7 @@ bool MCExternalHandlerList::ListHandlers(Handler_type p_type, MCStringRef& r_lis
 	if (t_success)
 		t_success = MCListCreateMutable('\n', &t_handler_list);
 
-	for(uindex_t i = 0, j = 0; i < m_handlers . Count(); i++)
+	for(uindex_t i = 0; i < m_handlers . Count(); i++)
 	{
 		if (t_success && m_externals[m_handlers[i] . external] -> GetHandlerType(m_handlers[i] . handler) == p_type)
 			t_success = MCListAppend(*t_handler_list, m_handlers[i] . name);

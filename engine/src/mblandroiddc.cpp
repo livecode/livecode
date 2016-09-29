@@ -1289,11 +1289,11 @@ static void *mobile_main(void *arg)
 
 	// Initialize and the run the main loop
 
-	MCLog("Calling X_init", 0);
+	MCLog("Calling X_init");
 
 	if (!X_init(argc, t_args, envc, t_env))
 	{
-		MCLog("X_init failed", 0);
+		MCLog("X_init failed");
 
 		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
 		// finish LiveCodeActivity
@@ -1312,7 +1312,7 @@ static void *mobile_main(void *arg)
 		return (void *)1;
 	}
 
-	MCLog("Calling mode initialize", 0);
+	MCLog("Calling mode initialize");
 
 	// Load device-specific configuration
 	MCAndroidLoadDeviceConfiguration();
@@ -1325,7 +1325,7 @@ static void *mobile_main(void *arg)
 	while(s_android_bitmap == nil)
 		co_yield_to_android();
 
-	MCLog("Starting up project", 0);
+	MCLog("Starting up project");
 	send_startup_message(false);
     
     // PM-2015-02-02: [[ Bug 14456 ]] Make sure the billing provider is properly initialized before a preopenstack/openstack message is sent
@@ -1334,7 +1334,7 @@ static void *mobile_main(void *arg)
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
     
-	MCLog("Hiding splash screen", 0);
+	MCLog("Hiding splash screen");
 	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
 
 	while(s_engine_running)
@@ -1343,9 +1343,9 @@ static void *mobile_main(void *arg)
 			break;
 	}
 
-	MCLog("Shutting down project", 0);
+	MCLog("Shutting down project");
 	
-	MCLog("Calling X_close", 0);
+	MCLog("Calling X_close");
 	X_close();
 
 	// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
@@ -1974,7 +1974,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
     MCModulesInitialize();
     MCScriptInitialize();
     
-	MCLog("doCreate called", 0);
+	MCLog("doCreate called");
 
 	// Make sure the engine isn't running
 	s_engine_running = false;
@@ -2035,12 +2035,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 	// Next we yield to engine which will run until the creation phase is done.
 	MCLog("Yielding to engine thread to perform initialization phase", 0);
 	co_yield_to_engine();
-	MCLog("Engine has initialized", 0);
+	MCLog("Engine has initialized");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, jobject object)
 {
-	MCLog("doDestroy called", 0);
+	MCLog("doDestroy called");
 
 	if (!s_engine_running)
 		return;
@@ -2074,7 +2074,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 	s_android_activity = nil;
 
 	void *t_result;
-	MCLog("Engine has finalized", 0);
+	MCLog("Engine has finalized");
 	s_android_engine_thread.Join(&t_result);
 
 	pthread_cond_destroy(&s_coroutine_condition);
@@ -2083,32 +2083,32 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestart(JNIEnv *env, jobject object, jobject view)
 {
-	MCLog("doRestart called", 0);
+	MCLog("doRestart called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStart(JNIEnv *env, jobject object)
 {
-	MCLog("doStart called", 0);
+	MCLog("doStart called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStop(JNIEnv *env, jobject object)
 {
-	MCLog("doStop called", 0);
+	MCLog("doStop called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv *env, jobject object)
 {
-	MCLog("doPause called", 0);
+	MCLog("doPause called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object)
 {
-	MCLog("doResume called", 0);
+	MCLog("doResume called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object)
 {
-	MCLog("doLowMemory called", 0);
+	MCLog("doLowMemory called");
 	static_cast<MCScreenDC *>(MCscreen) -> compact_memory();
 }
 
@@ -2344,7 +2344,7 @@ static MCStringRef s_media_content = nil;
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content)
 {
-	MCLog("doMediaDone called - passing arg", 0);
+	MCLog("doMediaDone called - passing arg");
 
     if (s_media_content != nil)
         MCValueRelease(s_media_content);
@@ -2652,7 +2652,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceCh
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceCreated(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceCreated called", 0);
+	MCLog("doSurfaceCreated called");
 
 	// Get the openglview methods
 	if (s_openglview_start_method == nil)
@@ -2684,7 +2684,7 @@ static void doSurfaceDestroyedCallback(void *)
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceDestroyed(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceDestroyed called", 0);
+	MCLog("doSurfaceDestroyed called");
 
 	co_yield_to_engine_and_call(doSurfaceDestroyedCallback, nil);
 
@@ -2713,7 +2713,7 @@ static void doSurfaceChangedCallback(void *p_is_init)
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceChanged(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceChanged called", 0);
+	MCLog("doSurfaceChanged called");
 
 	bool t_is_init;
 	t_is_init = false;

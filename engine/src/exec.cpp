@@ -855,7 +855,6 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_value)
 {
     MCAssert(p_expr != nil);
-    MCExecValue t_value;
     
     bool t_failure, t_can_debug;
     t_can_debug = true;
@@ -1786,7 +1785,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt16:
         case kMCPropertyTypeInt32:
         {
-            integer_t t_value;
             ((void(*)(MCExecContext&, void *, integer_t&))prop -> getter)(ctxt, mark, r_value . int_value);
             if (!ctxt . HasError())
             {
@@ -1799,7 +1797,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeUInt16:
         case kMCPropertyTypeUInt32:
         {
-            uinteger_t t_value;
             ((void(*)(MCExecContext&, void *, uinteger_t&))prop -> getter)(ctxt, mark, r_value . uint_value);
             if (!ctxt . HasError())
             {
@@ -1810,7 +1807,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeDouble:
         {
-            double t_value;
             ((void(*)(MCExecContext&, void *, double&))prop -> getter)(ctxt, mark, r_value . double_value);
             if (!ctxt . HasError())
             {
@@ -1821,7 +1817,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeChar:
         {
-            char_t t_value;
             ((void(*)(MCExecContext&, void *, char_t&))prop -> getter)(ctxt, mark, r_value . char_value);
             if (!ctxt . HasError())
             {
@@ -1854,7 +1849,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeName:
         {
-            MCNewAutoNameRef t_value;
             ((void(*)(MCExecContext&, void *, MCNameRef&))prop->getter)(ctxt, mark, r_value . nameref_value);
             if (!ctxt.HasError())
             {
@@ -1865,7 +1859,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeColor:
         {
-            MCColor t_value;
             ((void(*)(MCExecContext&, void *, MCColor&))prop -> getter)(ctxt, mark, r_value . color_value);
             if (!ctxt . HasError())
             {
@@ -1876,7 +1869,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeRectangle:
         {
-            MCRectangle t_value;
             ((void(*)(MCExecContext&, void *, MCRectangle&))prop -> getter)(ctxt, mark, r_value . rectangle_value);
             if (!ctxt . HasError())
             {
@@ -1887,7 +1879,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypePoint:
         {
-            MCPoint t_value;
             ((void(*)(MCExecContext&, void *, MCPoint&))prop -> getter)(ctxt, mark, r_value . point_value);
             if (!ctxt . HasError())
             {

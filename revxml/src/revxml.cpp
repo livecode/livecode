@@ -483,7 +483,6 @@ Example: if xml_ValidateDTD(docid,dtddata) is empty then put "validated"
 void XML_ValidateDTD(char *args[], int nargs, char **retstring,
 				Bool *pass, Bool *error)
 {
-	static int dtdcounter = 0;
 	*pass = False;
 	*error = False;
 	char *result = NULL;
@@ -2883,12 +2882,11 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];
-	char *result;
-
+	
 	xmlChar *doc_txt_ptr;
 	int doc_txt_len;
 
@@ -2957,7 +2955,7 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];

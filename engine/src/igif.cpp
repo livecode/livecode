@@ -478,8 +478,7 @@ bool MCImageEncodeGIF(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	int t_err = 0;
 	GifFileType *t_gif = nil;
 	ColorMapObject *t_colormap = nil;
-	GifColorType *t_gifcolors = nil;
-
+	
 	MCGIFWriteContext t_context;
 	t_context.stream = p_stream;
 	t_context.byte_count = 0;

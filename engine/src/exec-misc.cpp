@@ -425,7 +425,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
     
     if (!t_extension_found)
     {
-        MCLog("Type not found", nil);
+        MCLog("Type not found");
 		uint4 parid;
 		MCObject *objptr;
 		MCChunk *tchunk = new MCChunk(False);
@@ -434,7 +434,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
 		Parse_stat stat = tchunk->parse(sp, False);
         if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
 		{
-            MCLog("could not find image", nil);
+            MCLog("could not find image");
 			ctxt.SetTheResultToStaticCString("could not find image");
 			MCerrorlock--;
 			delete tchunk;
@@ -443,7 +443,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
 		
 		if (objptr -> gettype() != CT_IMAGE)
 		{
-            MCLog("not an image", nil);
+            MCLog("not an image");
 			ctxt.SetTheResultToStaticCString("not an image");
             return;
 		}
@@ -464,7 +464,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
         }
         else
         {
-            MCLog("not a supported image", nil);
+            MCLog("not a supported image");
             ctxt.SetTheResultToStaticCString("not a supported format");
 			return;
 		}

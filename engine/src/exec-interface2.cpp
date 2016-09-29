@@ -774,7 +774,6 @@ void MCInterfaceGetLookAndFeel(MCExecContext& ctxt, intenum_t& r_value)
 
 void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 {
-	MCTheme *newtheme = NULL;
 	MCField *oldactive = MCactivefield;
 	if (oldactive != NULL)
 		oldactive->kunfocus();
