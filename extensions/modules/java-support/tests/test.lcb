@@ -1,0 +1,37 @@
+/*
+Copyright (C) 2015-2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.java.tests
+
+use com.livecode.module.javasupport
+use com.livecode.java
+
+public handler TestObject()
+	if the operating system is not "mac" then
+		skip test "java object created" because "not implemented on" && the operating system
+	else
+		variable tObj as JObject
+		put Object_Constructor([]) into tObj
+
+		variable tClass as JObject
+		put Object_getClass(tObj) into tClass
+
+		test "Object created" when Class_getName(tClass) is "java.lang.Object"
+	end if
+end handler
+
+end module
