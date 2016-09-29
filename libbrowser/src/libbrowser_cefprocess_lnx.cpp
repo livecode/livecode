@@ -46,15 +46,15 @@ int main(int argc, char *argv[])
 			return -1;
 	}
 
-	MCLog("constructing args", nil);
+	MCLog("constructing args");
 	CefMainArgs t_args(argc, argv);
 	
-	MCLog("creating app", nil);
+	MCLog("creating app");
 	CefRefPtr<CefApp> t_app;
 	if (!MCCefCreateApp(t_app))
 		return -1;
 	
-	MCLog("executing", nil);
+	MCLog("executing");
 	return CefExecuteProcess(t_args, t_app, NULL);
 }
 

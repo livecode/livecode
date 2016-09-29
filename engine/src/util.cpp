@@ -112,7 +112,7 @@ void MCU_init()
     }
     else
     {
-        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCLog("Warning: Failed to seed random number generator");
         MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
     }
     MCU_srand();

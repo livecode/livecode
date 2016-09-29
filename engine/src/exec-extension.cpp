@@ -473,7 +473,7 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
     MCAutoErrorRef t_error;
     if (!MCErrorCatch(&t_error))
     {
-        MCLog("Error state indicated with no error having been thrown", 0);
+        MCLog("Error state indicated with no error having been thrown");
         return ES_ERROR;
     }
     

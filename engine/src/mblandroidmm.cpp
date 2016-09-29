@@ -92,21 +92,21 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 
 void MCSystemStopVideo(void)
 {
-	MCLog("MCSystemStopVideo()", nil);
+	MCLog("MCSystemStopVideo()");
 	MCAndroidEngineRemoteCall("stopVideo", "v", nil);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieStopped(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieStopped(JNIEnv *env, jobject object)
 {
-	MCLog("doMovieStopped", nil);
+	MCLog("doMovieStopped");
 	s_video_playing=false;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieTouched(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieTouched(JNIEnv *env, jobject object)
 {
-	MCLog("doMovieTouched", nil);
+	MCLog("doMovieTouched");
 	extern MCExecContext *MCECptr;
 	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCECptr -> GetObject()));
 }
