@@ -40,6 +40,7 @@ install:
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: >
+  set -eu
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
     if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
       LICENSE_FILE=livecode-firstrun.lcf
