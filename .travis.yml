@@ -40,21 +40,24 @@ install:
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: >
-  if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
-    if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
-      LICENSE_FILE=livecode-firstrun.lcf
-      LICENSE_DIR="$HOME/.runrev/licenses"
-      [ -d "$LICENSE_DIR" ] || mkdir -p "$LICENSE_DIR"
-      touch "$LICENSE_DIR/$LICENSE_FILE"
-      make all-linux && xvfb-run make check-linux
-    fi
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
-      LICENSE_FILE=livecode-firstrun.lcf
-      LICENSE_DIR="$HOME/Library/Application Support/RunRev/Licenses"
-      [ -d "$LICENSE_DIR" ] || mkdir -p "$LICENSE_DIR"
-      touch "$LICENSE_DIR/$LICENSE_FILE"
-      make all-mac && make check-mac
-    fi
+  case "${TRAVIS_OS_NAME}" in
+    linux)
+      BUILD_PLATFORM=linux ;
+      LICENSE_DIR="${HOME}/.runrev/licenses" ;
+      ;;
+    osx)
+      BUILD_PLATFORM=mac ;
+      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses" ;
+      export XCODEBUILD="set -o pipefail && xcodebuild" ;
+      export XCODEBUILD_FILTER="| xcpretty" ;
+      ;;
+  esac
+
+  if [[ ! -v COVERITY_SCAN_BRANCH ]]; then
+    mkdir -p "${LICENSE_DIR}" &&
+    touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
+    make all-${BUILD_PLATFORM} &&
+    make check-${BUILD_PLATFORM}
   fi
 
 addons:
