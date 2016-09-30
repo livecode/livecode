@@ -304,12 +304,19 @@
 
 'action' DeclareParameters(PARAMETERLIST)
 
-    'rule' DeclareParameters(parameterlist(parameter(_, Name, _), Tail)):
-        DeclareId(Name)
+    'rule' DeclareParameters(parameterlist(Head, Tail)):
+        DeclareParameter(Head)
         DeclareParameters(Tail)
         
     'rule' DeclareParameters(nil):
         -- do nothing
+
+'action' DeclareParameter(PARAMETER)
+
+    'rule' DeclareParameter(parameter(_, Id, _)):
+        DeclareId(Id)
+
+    'rule' DeclareParameter(variadic(_)):
 
 'action' DeclareTemplateParameters(TYPELIST)
 
@@ -407,11 +414,19 @@
 
 'action' DefineParameters(ID, PARAMETERLIST)
 
-    'rule' DefineParameters(PackageId, parameterlist(parameter(_, Name, Type), Tail)):
-        DefineSymbolId(Name, inferred, PackageId, parameter, Type)
+    'rule' DefineParameters(PackageId, parameterlist(Parameter, Tail)):
+        DefineParameter(PackageId, Parameter)
         DefineParameters(PackageId, Tail)
 
     'rule' DefineParameters(PackageId, nil):
+        -- do nothing
+
+'action' DefineParameter(ID, PARAMETER)
+
+    'rule' DefineParameter(PackageId, parameter(_, Name, Type)):
+        DefineSymbolId(Name, inferred, PackageId, parameter, Type)
+
+    'rule' DefineParameter(PackageId, variadic(_)):
         -- do nothing
 
 --------------------------------------------------------------------------------
