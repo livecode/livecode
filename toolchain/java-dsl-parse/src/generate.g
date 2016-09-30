@@ -403,6 +403,9 @@
         ||
 		|)
 
+    'rule' OutputConvertToForeignParam(variadic(_)):
+        -- TODO: Deal with variadic args
+
 'condition' RequiresConversion(TYPE)
 
      -- strings require conversion
@@ -430,7 +433,11 @@
 		||
             OutputWriteI("pParam_", SymbolName, "")
         |)
-                
+
+    'rule' OutputForeignCallParam(variadic(_)):
+        -- TODO: Deal with variadic args
+        OutputWrite("va_args")
+
 'action' OutputWrapperReturn(TYPE)
 
 	'rule' OutputWrapperReturn(Type)
@@ -505,6 +512,7 @@
         GenerateType(Type)
 
     'rule' GenerateParam(variadic(_)):
+        -- TODO: Deal with variadic args
         OutputWrite("in va_args as List")
 
 'action' GenerateJavaParam(PARAMETER)
@@ -515,6 +523,9 @@
         OutputWriteI("in pParam_", SymbolName, "")
         OutputWrite(" as ")
         GenerateJavaType(Type)
+
+    'rule' GenerateJavaParam(variadic(_)):
+        OutputWrite("in pArgs as List")
 
 'action' GenerateDefinitions(DEFINITION)
 
