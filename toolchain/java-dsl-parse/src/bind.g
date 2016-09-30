@@ -501,6 +501,8 @@
 
         LeaveScope
 
+        ApplyParamTypes(Params)
+
         Apply(Returns)
 
         Apply(Throws)
@@ -520,6 +522,8 @@
         Apply(Params)
 
         LeaveScope
+
+        ApplyParamTypes(Params)
 
     'rule' Apply(TYPE'named(_, Name, Parameter)):
         ApplyId(Name)
@@ -541,6 +545,27 @@
 
     'rule' Apply(OPTIONALID'id(Id)):
         ApplyId(Id)
+
+    'rule' Apply(PARAMETERLIST'parameterlist(Head, Tail)):
+        Apply(Head)
+        Apply(Tail)
+
+'action' ApplyParamTypes(PARAMETERLIST)
+
+    'rule' ApplyParamTypes(parameterlist(Head, Tail)):
+        ApplyParamType(Head)
+        ApplyParamTypes(Tail)
+
+    'rule' ApplyParamTypes(nil):
+
+'action' ApplyParamType(PARAMETER)
+
+    'rule' ApplyParamType(parameter(_, _, Type)):
+        Apply(Type)
+
+    'rule' ApplyParamType(variadic(_)):
+
+
 
 --------------------------------------------------------------------------------
 
