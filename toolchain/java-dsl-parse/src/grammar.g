@@ -473,7 +473,7 @@
 'nonterm' Parameter(-> PARAMETER)
 
     'rule' Parameter(-> parameter(Position, Name, Type)):
-        UnqualifiedId(-> Name) @(-> Position) OptionalTypeClause(-> Type)
+        UnqualifiedId(-> Name) @(-> Position) TypeClause(-> Type)
 
     'rule' Parameter(-> variadic(Position)):
         "..." @(-> Position)
@@ -574,15 +574,23 @@
         UnqualifiedId(-> Name) @(-> Position)
 
 	'rule' NamedType(-> named(Position, Name, Parameter)):
-		UnqualifiedId(-> Name) @(-> Position) "<" GenericTypeList(-> Parameter) ">"
+		UnqualifiedId(-> Name) @(-> Position) "<" NamedTypeList(-> Parameter) ">"
 
 'nonterm' NamedTypeList(-> TYPELIST)
 
     'rule' NamedTypeList(-> typelist(Named, Tail)):
-        NamedType(-> Named) "," NamedTypeList(-> Tail)
+        NamedTypeListElement(-> Named) "," NamedTypeList(-> Tail)
         
     'rule' NamedTypeList(-> typelist(Named, nil)):
-        NamedType(-> Named)
+        NamedTypeListElement(-> Named)
+
+'nonterm' NamedTypeListElement(-> TYPE)
+
+    'rule' NamedTypeListElement(-> wildcard(Position, Bounds)):
+        @(-> Position) "?" OptionalBounds(-> Bounds)
+
+    'rule' NamedTypeListElement(-> Type):
+        NamedType(-> Type)
 
 'nonterm' JavaArray(-> TYPE)
 
