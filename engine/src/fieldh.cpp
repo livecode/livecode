@@ -672,7 +672,7 @@ bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, i
 bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraphStyle *p_style)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
     
     // SN-2014-04-25 [[ Bug 12177 ]] Importing HTML was creating parent-less paragraphs,
     // thus sometimes causing crashing when the parent was accessed - mainly when getfontattrs() was needed
@@ -763,7 +763,7 @@ MCParagraph *MCField::texttoparagraphs(MCStringRef p_text)
 {
     // Create a new list of paragraphs
     MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 
@@ -830,7 +830,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		t_paragraph -> defrag();
 
 		MCParagraph *t_new_paragraph;
-		t_new_paragraph = new MCParagraph;
+		t_new_paragraph = new (nothrow) MCParagraph;
 		t_new_paragraph -> setparent(t_paragraph -> getparent());
 		t_new_paragraph -> inittext();
 
@@ -966,7 +966,7 @@ extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_w
 MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 

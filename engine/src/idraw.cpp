@@ -475,7 +475,7 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_mr));
 
 	MCContext *t_gfxcontext = nil;
-	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 
 	getstack() -> getcurcard() -> draw(t_gfxcontext, t_mr, false); 
 	

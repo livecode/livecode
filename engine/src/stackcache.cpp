@@ -370,7 +370,7 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 {
 	if (m_id_cache == nil)
 	{
-		m_id_cache = new MCStackIdCache;
+		m_id_cache = new (nothrow) MCStackIdCache;
 		if (!m_id_cache -> RehashBuckets(1))
 		{
 			delete m_id_cache;

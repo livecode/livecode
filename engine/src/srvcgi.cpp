@@ -973,7 +973,7 @@ static bool cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 // $_POST_RAW contains the entire post message and is read from stdin on access
 static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 {
-	MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+	MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 	
 	bool t_success = true;
 
@@ -987,7 +987,7 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 		uint32_t t_read = 0;
 		
 		char *t_data;
-		t_data = new char[t_length];
+		t_data = new (nothrow) char[t_length];
 		t_success = t_stdin->Read(t_data, t_length, t_read) && t_length == t_read;
 
 		// Store the raw POST data
@@ -1057,7 +1057,7 @@ static bool cgi_compute_post_variables()
 	}
 	else if (gotenv && MCStringBeginsWithCString(*t_content_type, (const char_t *)"multipart/form-data;", kMCStringOptionCompareCaseless))
     {
-		MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
         IO_handle t_stdin_handle = t_stdin;
 		
         cgi_store_form_multipart(t_stdin_handle);
@@ -1528,12 +1528,12 @@ bool cgi_initialize()
 	// without conflicting
 	if (t_success)
 	{
-		s_cgi_stdin_cache = new MCStreamCache(IO_stdin);
+		s_cgi_stdin_cache = new (nothrow) MCStreamCache(IO_stdin);
 		t_success = s_cgi_stdin_cache != nil;
 	}
 	if (t_success)
 	{
-		IO_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		IO_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 		t_success = IO_stdin != nil;
 	}
 	
@@ -1541,7 +1541,7 @@ bool cgi_initialize()
 	// before any content.
 	if (t_success)
 	{
-		IO_stdout = new cgi_stdout;
+		IO_stdout = new (nothrow) cgi_stdout;
 		t_success = IO_stdout != nil;
 	}
 	

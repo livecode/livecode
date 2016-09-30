@@ -837,7 +837,7 @@ public:
 bool MCCefBrowserBase::Initialize()
 {
 	// create client and browser
-	m_client = new MCCefBrowserClient(this);
+	m_client = new (nothrow) MCCefBrowserClient(this);
 
 	CefWindowInfo t_window_info;
 	CefBrowserSettings t_settings;
@@ -1177,7 +1177,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_result.Clear();
 
 	CefRefPtr<CefStringVisitor> t_visitor;
-	t_visitor = new MCStringVisitor(t_result);
+	t_visitor = new (nothrow) MCStringVisitor(t_result);
 
 	m_browser->GetMainFrame()->GetSource(t_visitor);
 

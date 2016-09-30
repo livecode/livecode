@@ -46,7 +46,7 @@ bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image)
 	t_bitmap = nil;
 	if (t_success)
 	{
-		t_bitmap = new SkBitmap(p_bitmap);
+		t_bitmap = new (nothrow) SkBitmap(p_bitmap);
 		t_success = nil != t_bitmap;
 	}
 	

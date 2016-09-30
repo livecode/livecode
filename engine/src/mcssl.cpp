@@ -156,7 +156,7 @@ unsigned long SSLError(MCStringRef& errbuf)
     if (ecode)
     {
         MCAutoPointer<char> t_errbuf;
-        t_errbuf = new char[256];
+        t_errbuf = new (nothrow) char[256];
         ERR_error_string_n(ecode,&t_errbuf,255);
         /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
     }

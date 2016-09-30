@@ -106,7 +106,7 @@ private:
 MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle p_object, MCStringRef p_url, MCSystemUrlStatus p_status, uint32_t p_amount, uint32_t p_total, MCStringRef p_error)
 {
 	MCUrlProgressEvent *t_event;
-	t_event = new MCUrlProgressEvent();
+	t_event = new (nothrow) MCUrlProgressEvent();
 	if (t_event == nil)
 		return nil;
     
@@ -399,7 +399,7 @@ private:
 MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle p_object, MCNameRef p_message, MCStringRef p_url, MCSystemUrlStatus p_status, MCDataRef p_data, MCStringRef p_error)
 {
 	MCUrlLoadEvent *t_event;
-	t_event = new MCUrlLoadEvent();
+	t_event = new (nothrow) MCUrlLoadEvent();
 	if (t_event == nil)
 		return nil;
 	

@@ -136,7 +136,7 @@ IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 		case OT_PARAGRAPH:
 		case OT_PARAGRAPH_EXT:
 			{
-				MCParagraph *newpar = new MCParagraph;
+				MCParagraph *newpar = new (nothrow) MCParagraph;
 				newpar->setparent((MCField *)parent);
 				
 				// MW-2012-03-04: [[ StackFile5500 ]] If the record is extended then

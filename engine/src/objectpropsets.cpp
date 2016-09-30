@@ -58,7 +58,7 @@ bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
 bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_new_set;
-	t_new_set = new MCObjectPropertySet;
+	t_new_set = new (nothrow) MCObjectPropertySet;
 	if (t_new_set == nil)
 		return false;
 

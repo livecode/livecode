@@ -829,7 +829,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 				;
 			
 			MenuItemDescriptor *t_item;
-			t_item = new MenuItemDescriptor;
+			t_item = new (nothrow) MenuItemDescriptor;
 			if (t_item == NULL)
 				break;
             

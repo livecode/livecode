@@ -446,7 +446,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	}
 	else
 	{
-		MCEPS *eptr = new MCEPS;
+		MCEPS *eptr = new (nothrow) MCEPS;
 		if (!eptr->import(p_filename, t_stream))
 		{
             delete eptr;

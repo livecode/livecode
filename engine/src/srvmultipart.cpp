@@ -460,7 +460,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	bool t_success = true;
 	
 	MCBoundaryReader *t_reader;
-	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"));
+	t_reader = new (nothrow) MCBoundaryReader(p_stream, MCSTR("\r\n"));
 	
 	r_bytes_read = 0;
 	
@@ -555,7 +555,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
             t_success = false;
         else
         {
-            t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
+            t_reader = new (nothrow) MCBoundaryReader(p_stream, *t_boundary_tail);
             t_success = t_reader != NULL;
         }
 	}

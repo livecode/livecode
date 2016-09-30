@@ -287,7 +287,7 @@ void CB_endElement(const char *name)
 //MESSAGE: XMLElementData data - sent when element data is encountered between tags
 void CB_elementData(const char *data, int length)
 {
-	char *buffer = new char[length+1];
+	char *buffer = new (nothrow) char[length+1];
 	memcpy(buffer, data, length);
 	buffer[length] = '\0';
 	DispatchMetaCardMessage("revStartXMLData",(char *)buffer);
@@ -392,7 +392,7 @@ void XML_NewDocument(char *args[], int nargs, char **retstring,
 		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 	}
 	else{
-		CXMLDocument *newdoc = new CXMLDocument;
+		CXMLDocument *newdoc = new (nothrow) CXMLDocument;
 
 		Bool wellformed = util_strnicmp(args[1],"TRUE",4) == 0;
 		
@@ -533,7 +533,7 @@ void XML_NewDocumentFromFile(char *args[], int nargs, char **retstring,
 	if (!*error)
 	{
 		Bool wellformed = util_strnicmp(args[1],"TRUE",4) == 0;
-		CXMLDocument *newdoc = new CXMLDocument;
+		CXMLDocument *newdoc = new (nothrow) CXMLDocument;
 		Bool buildtree = True;
 		Bool sendmessages = False;
 		if (nargs >= 3)
@@ -2741,7 +2741,7 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 				cur = xsltParseStylesheetDoc(xmlDoc);
 				if (NULL != cur)
 				{
-					CXMLDocument *newdoc = new CXMLDocument(cur);
+					CXMLDocument *newdoc = new (nothrow) CXMLDocument(cur);
 					doclist.add(newdoc);
 					unsigned int docid = newdoc->GetID();
 
@@ -2798,7 +2798,7 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 		cur = xsltParseStylesheetFile((const xmlChar *)t_native_path);
 		if (NULL != cur)
 		{
-			CXMLDocument *newdoc = new CXMLDocument(cur);
+			CXMLDocument *newdoc = new (nothrow) CXMLDocument(cur);
 			doclist.add(newdoc);
 			unsigned int docid = newdoc->GetID();
 			result = (char *)malloc(INTSTRSIZE);

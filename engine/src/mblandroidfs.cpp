@@ -529,7 +529,7 @@ bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolder
 	 * path, a path separator character, and any possible filename. */
 	size_t t_path_len = strlen(*t_path);
 	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
-	char *t_entry_path = new char[t_entry_path_len + 1];
+	char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 	strcpy (t_entry_path, *t_path);
 	if ((*t_path)[t_path_len - 1] != '/')
 	{

@@ -57,9 +57,9 @@ static Boolean dragclick;
 void MCScreenDC::setupcolors()
 {
 	ncolors = MCU_min(vis->colormap_size, MAX_CELLS);
-	colors = new MCColor[ncolors];
-    colornames = new MCStringRef[ncolors];
-	allocs = new int2[ncolors];
+	colors = new (nothrow) MCColor[ncolors];
+    colornames = new (nothrow) MCStringRef[ncolors];
+	allocs = new (nothrow) int2[ncolors];
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
@@ -299,7 +299,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             {
                 // Handled separately
                 //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
-                MCEventnode *t_node = new MCEventnode(gdk_event_copy(t_event));
+                MCEventnode *t_node = new (nothrow) MCEventnode(gdk_event_copy(t_event));
                 t_node->appendto(pendingevents);
                 expose();
                 break;
@@ -974,7 +974,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         // Queue the message if required. Otherwise, dispose of it
         if (t_queue)
         {
-            MCEventnode *tptr = new MCEventnode(t_event);
+            MCEventnode *tptr = new (nothrow) MCEventnode(t_event);
             tptr->appendto(pendingevents);
             t_event = NULL;
         }
@@ -1018,7 +1018,7 @@ void MCScreenDC::EnqueueGdkEvents(bool p_block)
         // GTK hasn't had a chance at this event yet
         //gtk_main_do_event(t_event);
         
-        MCEventnode *t_eventnode = new MCEventnode(t_event);
+        MCEventnode *t_eventnode = new (nothrow) MCEventnode(t_event);
         t_eventnode->appendto(pendingevents);
     }
 }
@@ -1053,7 +1053,7 @@ bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent
 
 void MCScreenDC::EnqueueEvent(GdkEvent* p_event)
 {
-    MCEventnode *t_node = new MCEventnode(p_event);
+    MCEventnode *t_node = new (nothrow) MCEventnode(p_event);
     t_node->appendto(pendingevents);
 }
 
@@ -1183,7 +1183,7 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
         {
             // Handled separately
             //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
-            MCEventnode *t_node = new MCEventnode(gdk_event_copy(p_event));
+            MCEventnode *t_node = new (nothrow) MCEventnode(gdk_event_copy(p_event));
             t_node->appendto(pendingevents);
             expose();
             break;

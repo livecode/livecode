@@ -281,17 +281,8 @@ void MCMemoryDelete(void *p_record);
 
 //////////
 
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline void *operator new (size_t, void *p_block, bool)
-{
-	return p_block;
-}
+#include <new>
+using std::nothrow;
 
 // This method provides type-safe construction of an object.
 template<typename T> bool MCMemoryNew(T*& r_record)
@@ -302,7 +293,7 @@ template<typename T> bool MCMemoryNew(T*& r_record)
 		// Notice here we use the 'placement-new' operator we defined above to
 		// do the type conversion. This ensures any type-specific initialization
 		// is done.
-		r_record = new(t_record, true) T;
+		r_record = new (t_record) T;
 
 		return true;
 	}
@@ -317,13 +308,6 @@ template<typename T> void MCMemoryDelete(T* p_record)
 
 	MCMemoryDelete(static_cast<void *>(p_record));
 }
-
-#ifdef _DEBUG
-#ifdef redef_new
-#undef redef_new
-#define new new(__FILE__, __LINE__)
-#endif
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

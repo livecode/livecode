@@ -123,8 +123,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	// Make sure certain things are already created before MCS_init. This is
 	// required right now because the Windows MCS_init uses MCS_query_registry
 	// which needs these things.
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::create(MCresult);
 #endif
 

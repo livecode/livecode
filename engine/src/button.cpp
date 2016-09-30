@@ -319,7 +319,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 {
 	if (bref.icons != NULL)
 	{
-		icons = new iconlist;
+		icons = new (nothrow) iconlist;
 		memcpy(icons, bref.icons, sizeof(iconlist));
 		icons->curicon = NULL;
 	}
@@ -350,7 +350,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 		MCCdata *bptr = bref.bdata;
 		do
 		{
-			MCCdata *newbdata = new MCCdata(*bptr);
+			MCCdata *newbdata = new (nothrow) MCCdata(*bptr);
 			newbdata->appendto(bdata);
 			bptr = (MCCdata *)bptr->next();
 		}
@@ -1757,7 +1757,7 @@ void MCButton::closemenu(Boolean kfocus, Boolean disarm)
 
 MCControl *MCButton::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCButton *newbutton = new MCButton(*this);
+	MCButton *newbutton = new (nothrow) MCButton(*this);
 	if (attach)
 		newbutton->attach(p, invisible);
 	return newbutton;
@@ -2049,7 +2049,7 @@ MCCdata *MCButton::getbptr(uint4 cardid)
 	}
 	if (foundptr == NULL)
 	{
-		foundptr = new MCCdata(cardid);
+		foundptr = new (nothrow) MCCdata(cardid);
 		foundptr->appendto(bdata);
 	}
 	return foundptr;
@@ -2423,7 +2423,7 @@ public:
 		}
 		while (newdepth < stackdepth)
 			parent->makemenu(bstack, stackdepth, menuflags, fontref);
-		MCButton *newbutton = new MCButton;
+		MCButton *newbutton = new (nothrow) MCButton;
 		newbutton->appendto(bstack[stackdepth].buttons);
 		MCNameRef t_name = nil;
 		if (!MCStringIsEmpty(p_menuitem->tag))
@@ -2590,7 +2590,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 				//major menustring
 				nlines = MCStringCountChar(menustring, MCRangeMake(0, MCStringGetLength(menustring)), '\n', kMCStringOptionCompareExact) + 1;
 
-				MCField *fptr = new MCField;
+				MCField *fptr = new (nothrow) MCField;
 				uint2 height;
 				if (nlines > menulines)
 				{
@@ -2902,7 +2902,7 @@ void MCButton::docascade(MCStringRef p_pick)
 		//    menu button, rather than of this one.
 		if (pptr->m_menu_handler == nil || !pptr->m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
 		{
-			MCParameter *param = new MCParameter;
+			MCParameter *param = new (nothrow) MCParameter;
 			param->setvalueref_argument(*t_pick);
 			MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
 		}
@@ -3385,7 +3385,7 @@ static void openicon(MCImage *&icon, uint1 *data, uint4 size)
 	// MW-2012-02-17: [[ FontRefs ]] Make sure we set a parent on the icon, and also
 	//   make it invisible. If we don't do this we get issues with parent references
 	//   and fontrefs.
-	icon = new MCImage;
+	icon = new (nothrow) MCImage;
 	icon->setparent(MCdispatcher);
 	icon->setflag(False, F_VISIBLE);
 	icon->setflag(True, F_I_ALWAYS_BUFFER);
@@ -3497,7 +3497,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 		t_stat = checkloadstat(p_stream . ReadU32(t_hover_icon_id));
 		if (t_stat == IO_NORMAL)
 		{
-			icons = new iconlist;
+			icons = new (nothrow) iconlist;
 			memset(icons, 0, sizeof(iconlist));
 			icons -> iconids[CI_HOVER] = t_hover_icon_id;
 		}
@@ -3697,7 +3697,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (iconid != 0 || hiliteiconid != 0)
 		{
 			flags |= F_HAS_ICONS;
-			icons = new iconlist;
+			icons = new (nothrow) iconlist;
 			memset(icons, 0, sizeof(iconlist));
 			icons->iconids[CI_DEFAULT] = iconid;
 			icons->iconids[CI_HILITED] = hiliteiconid;
@@ -3713,7 +3713,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			//   area.
 			if (icons == NULL)
 			{
-				icons = new iconlist;
+				icons = new (nothrow) iconlist;
 				memset(icons, 0, sizeof(iconlist));
 			}
 
@@ -3853,7 +3853,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_BDATA)
 		{
-			MCCdata *newbdata = new MCCdata;
+			MCCdata *newbdata = new (nothrow) MCCdata;
 			if ((stat = newbdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newbdata;

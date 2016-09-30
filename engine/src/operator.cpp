@@ -1076,13 +1076,13 @@ Parse_stat MCThere::parse(MCScriptPoint &sp, Boolean the)
 	if (sp.lookup(SP_THERE, te) != PS_NORMAL)
 	{
 		sp.backup();
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_THERE_NOOBJECT, sp);
 			return PS_ERROR;
 		}
-		right = new MCExpression(); // satisfy check in scriptpt.parse
+		right = new (nothrow) MCExpression(); // satisfy check in scriptpt.parse
 	}
 	else
 	{

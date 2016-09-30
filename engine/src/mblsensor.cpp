@@ -398,7 +398,7 @@ static MCSensorUpdateEvent * FetchSensorEvent(MCSensorType p_sensor)
     if (!s_sensor_message_pending[p_sensor])
     {
         s_sensor_message_pending[p_sensor] = true;
-        t_event = new MCSensorUpdateEvent(p_sensor);
+        t_event = new (nothrow) MCSensorUpdateEvent(p_sensor);
     }
     return t_event;        
 }
@@ -418,7 +418,7 @@ void MCSensorAddLocationSample(const MCSensorLocationReading& p_reading)
     }
     
     MCSensorLocationReading *t_reading;
-    t_reading = new MCSensorLocationReading(p_reading);
+    t_reading = new (nothrow) MCSensorLocationReading(p_reading);
     if (t_reading == nil)
         return;
     
@@ -459,7 +459,7 @@ void MCSensorPostChangeMessage(MCSensorType p_sensor)
 void MCSensorPostErrorMessage(MCSensorType p_sensor, MCStringRef p_error)
 {
     MCCustomEvent *t_event = nil;
-	t_event = new MCSensorErrorEvent(p_sensor, p_error);
+	t_event = new (nothrow) MCSensorErrorEvent(p_sensor, p_error);
 	MCEventQueuePostCustom(t_event);
 }
 

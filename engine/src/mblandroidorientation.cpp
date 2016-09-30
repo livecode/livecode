@@ -222,7 +222,7 @@ struct MCOrientationChangedEvent: public MCCustomEvent
 void MCAndroidOrientationChanged(int orientation)
 {
 //	MCLog("MCAndroidOrientationChanged(%d)", orientation);
-	MCCustomEvent *t_orientation_event = new MCOrientationChangedEvent();
+	MCCustomEvent *t_orientation_event = new (nothrow) MCOrientationChangedEvent();
 	MCEventQueuePostCustom(t_orientation_event);
 }
 

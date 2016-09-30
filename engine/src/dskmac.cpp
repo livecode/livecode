@@ -101,7 +101,7 @@ bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode
 inline char *FourCharCodeToString(FourCharCode p_code)
 {
 	char *t_result;
-	t_result = new char[5];
+	t_result = new (nothrow) char[5];
 	*(FourCharCode *)t_result = MCSwapInt32NetworkToHost(p_code);
 	t_result[4] = '\0';
 	return t_result;
@@ -196,8 +196,8 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 	}
 	AEAddressDesc senderDesc;
 	//
-	char *p3val = new char[128];
-	//char *p3val = new char[kNBPEntityBufferSize + 1]; //sender's address 105 + 1
+	char *p3val = new (nothrow) char[128];
+	//char *p3val = new (nothrow) char[kNBPEntityBufferSize + 1]; //sender's address 105 + 1
 	if (AEGetAttributeDesc(ae, keyOriginalAddressAttr,
 	                       typeWildCard, &senderDesc) == noErr)
 	{
@@ -269,7 +269,7 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 			Size rSize;  //actual size returned
 			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
 			{
-				byte_t *sptr = new byte_t[rSize + 1];
+				byte_t *sptr = new (nothrow) byte_t[rSize + 1];
 				AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, sptr, rSize, &rSize);
                 MCExecContext ctxt(MCdefaultstackptr -> getcard(), nil, nil);
                 MCAutoStringRef t_sptr;
@@ -377,7 +377,7 @@ OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *ae, AppleEvent *reply, lon
      parameter of the reply Apple event. */
 	if (AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, NULL, 0, &rSize) == noErr)
 	{
-		byte_t* t_utf8 = new byte_t[rSize + 1];
+		byte_t* t_utf8 = new (nothrow) byte_t[rSize + 1];
 		AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
 		/* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, AEAnswerErr);
 	}
@@ -406,7 +406,7 @@ OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *ae, AppleEvent *reply, lon
                 /* UNCHECKED */ MCStringFormat(AEAnswerErr, "Got error %d when receiving Apple event", errno);
                 return errno;
 			}
-			byte_t *t_utf8 = new byte_t[rSize + 1];
+			byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
 			AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
 			/* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, AEAnswerData);
 		}
@@ -723,7 +723,7 @@ static TextToUnicodeInfo fetch_unicode_info(TextEncoding p_encoding)
 			t_info = NULL;
 		
 		UnicodeInfoRecord *t_record;
-		t_record = new UnicodeInfoRecord;
+		t_record = new (nothrow) UnicodeInfoRecord;
 		t_record -> next = s_records;
 		t_record -> encoding = p_encoding;
 		t_record -> info = t_info;
@@ -2177,7 +2177,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         // In block sizes of 1k, copy over the data from source to destination..
-        char *t_buffer = new char[65536];
+        char *t_buffer = new (nothrow) char[65536];
         if (t_source_fork_opened && t_dest_fork_opened)
         {
             OSErr t_os_read_error, t_os_write_error;
@@ -2237,7 +2237,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         else
         {
             char *buffer;
-            buffer = new char[fsize];
+            buffer = new (nothrow) char[fsize];
             if (buffer == NULL)
                 MCresult->sets("can't create data buffer");
             else
@@ -2375,7 +2375,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         AEDisposeDesc(&ae);
         if (errno != noErr)
         {
-            char *buffer = new char[6 + I2L];
+            char *buffer = new (nothrow) char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
             delete[] buffer;
@@ -2480,7 +2480,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     
                     if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
                     {
-                        byte_t *t_utf8 = new byte_t[rSize + 1];
+                        byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
                         AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
                         /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, r_value);
                     }
@@ -2533,7 +2533,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             case AE_SENDER:
             {
                 AEAddressDesc senderDesc;
-                char *sender = new char[128];
+                char *sender = new (nothrow) char[128];
                 
                 if ((errno = AEGetAttributeDesc(aePtr, keyOriginalAddressAttr,
                                                 typeWildCard, &senderDesc)) == noErr)
@@ -2585,7 +2585,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         AEDisposeDesc(&answer);
         if (errno != noErr)
         {
-            char *buffer = new char[6 + I2L];
+            char *buffer = new (nothrow) char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
             delete[] buffer;
@@ -2827,8 +2827,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFStringRef t_raw;
         CFMutableStringRef t_lower, t_upper;
         CFIndex t_ignored;
-        MCuppercasingtable = new uint8_t[256];
-        MClowercasingtable = new uint8_t[256];
+        MCuppercasingtable = new (nothrow) uint8_t[256];
+        MClowercasingtable = new (nothrow) uint8_t[256];
         for(uindex_t i = 0; i < 256; ++i)
             MCuppercasingtable[i] = uint8_t(i);
         t_raw = CFStringCreateWithBytes(NULL, MCuppercasingtable, 256, kCFStringEncodingMacRoman, false);
@@ -3009,7 +3009,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		if (t_len)
 		{
-			char *t_model = new char[t_len];
+			char *t_model = new (nothrow) char[t_len];
 			if (nil == t_model)
 				return false;
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
@@ -3718,7 +3718,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         io_object_t thePort;
         if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
         {
-            char *buffer = new char[6 + I2L];
+            char *buffer = new (nothrow) char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
             delete[] buffer;
@@ -3952,7 +3952,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         fptr = fopen(*t_path_utf, IO_CREATE_MODE);
 
         if (fptr != nil)
-            t_handle = new MCStdioFileHandle(fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(fptr);
         
         return t_handle;
     }
@@ -3994,7 +3994,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     //   rather than '-1'.
                     if (t_buffer != MAP_FAILED)
                     {
-                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
+                        t_handle = new (nothrow) MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
                     }
                 }
@@ -4046,7 +4046,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             MCS_mac_setfiletype(p_path);
         
 		if (fptr != NULL)
-            t_handle = new MCStdioFileHandle(fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(fptr);
         
         return t_handle;
     }
@@ -4082,7 +4082,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
-		t_handle = new MCStdioFileHandle(t_stream);
+		t_handle = new (nothrow) MCStdioFileHandle(t_stream);
 		
 		return t_handle;
     }
@@ -4134,7 +4134,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             // SN-2014-05-02 [[ Bug 12246 ]] Serial I/O fails on write
             // The serial port number is never used in the 6.X engine... and switching to an STDIO file
             // is enough to have the serial devices working perfectly.
-            t_handle = new MCStdioFileHandle(fptr, true);
+            t_handle = new (nothrow) MCStdioFileHandle(fptr, true);
         }
         
         return t_handle;
@@ -5025,7 +5025,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 			}
             case typeUTF8Text:
             {
-                byte_t *result = new byte_t[s + 1];
+                byte_t *result = new (nothrow) byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
                 t_success = MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
                 delete[] result;
@@ -5033,7 +5033,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
             }
             case typeChar:
             {
-                char_t *result = new char_t[s + 1];
+                char_t *result = new (nothrow) char_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
                 t_success = MCStringCreateWithNativeChars(result, s, r_result);
                 delete[] result;
@@ -5158,14 +5158,14 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
 			}
             case typeUTF8Text:
             {
-                byte_t *result = new byte_t[s + 1];
+                byte_t *result = new (nothrow) byte_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
                 t_success = MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
                 break;
             }
             case typeChar:
             {
-                char_t *result = new char_t[s + 1];
+                char_t *result = new (nothrow) char_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
                 t_success = MCStringCreateWithNativeChars(result, s, r_result);
                 delete[] result;
@@ -5306,7 +5306,7 @@ static OSStatus osaexecute(MCStringRef& r_string, ComponentInstance compinstance
 	AEDesc aedresult;
 	OSADisplay(compinstance, scriptresult, typeUTF8Text, kOSAModeNull, &aedresult);
 	Size tsize = AEGetDescDataSize(&aedresult);
-	byte_t *buffer = new byte_t[tsize];
+	byte_t *buffer = new (nothrow) byte_t[tsize];
 	err = AEGetDescData(&aedresult,buffer,tsize);
     /* UNCHECKED */ MCStringCreateWithBytesAndRelease(buffer, tsize, kMCStringEncodingUTF8, false, r_string);
 	AEDisposeDesc(&aedresult);
@@ -5328,7 +5328,7 @@ static void getosacomponents()
 	compdesc.componentFlagsMask = kOSASupportsCompiling;
 	long compnumber = CountComponents(&compdesc);
 	if (compnumber - 1) //don't include the generic script comp
-		osacomponents = new OSAcomponent[compnumber - 1];
+		osacomponents = new (nothrow) OSAcomponent[compnumber - 1];
 	while ((tcomponent = FindNextComponent(tcomponent,&compdesc)) != NULL)
 	{
 		ComponentDescription founddesc;
@@ -5518,7 +5518,7 @@ static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, c
 	}
 	else
 	{
-		argv = new char *[3];
+		argv = new (nothrow) char *[3];
 		argv[0] = name;
 		argv[1] = doc;
 		argc = 2;

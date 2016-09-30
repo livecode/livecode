@@ -109,7 +109,7 @@ char *strclone(const char *one)
 	char *two = NULL;
 	if (one != NULL)
 	{
-		two = new char[strlen(one) + 1];
+		two = new (nothrow) char[strlen(one) + 1];
 		strcpy(two, one);
 	}
 	return two;
@@ -117,7 +117,7 @@ char *strclone(const char *one)
 
 char *get_currrent_directory()
 {
-	char *dptr = new char[PATH_MAX + 2];
+	char *dptr = new (nothrow) char[PATH_MAX + 2];
 	GetCurrentDirectoryA(PATH_MAX +1, (LPSTR)dptr);
 	dptr = os_path_to_native(dptr);
 	return dptr;

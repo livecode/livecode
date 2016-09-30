@@ -195,7 +195,7 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	for (tmp = vars, t_vindex = 0 ; tmp != NULL ; tmp = tmp->getnext(), t_vindex += 1)
 		if ((!tmp -> isuql() || !p_ignore_uql) && tmp->hasname(p_name))
 		{
-			*dptr = new MCVarref(tmp, t_vindex);
+			*dptr = new (nothrow) MCVarref(tmp, t_vindex);
 			return PS_NORMAL;
 		}
 
@@ -211,13 +211,13 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 
 	if (MCNameIsEqualTo(p_name, MCN_msg, kMCCompareCaseless))
 	{
-		*dptr = new MCVarref(MCmb);
+		*dptr = new (nothrow) MCVarref(MCmb);
 		return PS_NORMAL;
 	}
 
 	if (MCNameIsEqualTo(p_name, MCN_each, kMCCompareCaseless))
 	{
-		*dptr = new MCVarref(MCeach);
+		*dptr = new (nothrow) MCVarref(MCeach);
 		return PS_NORMAL;
 	}
 
@@ -309,7 +309,7 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref *
 	}
 
 	// MW-2008-10-28: [[ ParentScripts ]] Make a varref for a script local variable.
-	*newptr = new MCVarref(lastvar, nvars);
+	*newptr = new (nothrow) MCVarref(lastvar, nvars);
 
 	// MW-2008-10-28: [[ ParentScripts ]] Extend the vinits array
 	// MW-2011-08-22: [[ Bug ]] Don't clone the init when we are creating a UQL in
@@ -332,7 +332,7 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 	for (i = 0 ; i < nconstants ; i++)
 		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
 		{
-			*dptr = new MCLiteral(cinfo[i].value);
+			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
 		}
 	return PS_NO_MATCH;
@@ -432,7 +432,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 	{
 		// MW-2008-11-02: [[ ParentScripts ]] Rejig the old variables list to be a vector
 		//   so we can preserve the ordering for later mapping.
-		s_old_variables = new MCVariable *[nvars];
+		s_old_variables = new (nothrow) MCVariable *[nvars];
 		s_old_variable_count = nvars;
 		for(uint32_t i = 0; vars != NULL; vars = vars -> getnext(), i++)
 			s_old_variables[i] = vars;
@@ -441,7 +441,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 		//   but only if this object is used as a parentscript.
 		if (t_is_parent_script)
 		{
-			s_old_variable_map = new uint32_t[nvars];
+			s_old_variable_map = new (nothrow) uint32_t[nvars];
 
 			// We initialize the map to all 0xffffffff's - this indicates that the existing
 			// value should not be brought forward.
@@ -488,7 +488,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 
 						t_is_private = true;
 					}
-					newhandler = new MCHandler((uint1)te->which, t_is_private);
+					newhandler = new (nothrow) MCHandler((uint1)te->which, t_is_private);
 					if (newhandler->parse(sp, te->which == HT_GETPROP || te->which == HT_SETPROP) != PS_NORMAL)
 					{
 						sp.sethandler(NULL);
@@ -515,7 +515,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 					{
 					case S_GLOBAL:
 						{
-							MCGlobal *gptr = new MCGlobal;
+							MCGlobal *gptr = new (nothrow) MCGlobal;
 							if (gptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);
@@ -526,7 +526,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 						}
 					case S_LOCAL:
 						{
-							MCLocalVariable *lptr = new MCLocalVariable;
+							MCLocalVariable *lptr = new (nothrow) MCLocalVariable;
 							if (lptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);
@@ -537,7 +537,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 						}
 					case S_CONSTANT:
 						{
-							MCLocalConstant *cptr = new MCLocalConstant;
+							MCLocalConstant *cptr = new (nothrow) MCLocalConstant;
 							if (cptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);

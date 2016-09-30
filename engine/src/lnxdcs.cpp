@@ -215,7 +215,7 @@ Boolean MCScreenDC::open()
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
 	MCutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0)	;
 	
-	MCimagecache = new MCXImageCache ;
+	MCimagecache = new (nothrow) MCXImageCache ;
 	
     if (MCdisplayname == NULL)
         MCdisplayname = gdk_get_display();

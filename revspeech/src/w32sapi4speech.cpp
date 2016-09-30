@@ -191,7 +191,7 @@ bool WindowsSAPI4Narrator::Initialize(void)
 
 	m_device_engine->QueryInterface(IID_ITTSAttributesA, (LPVOID *)&m_device_attributes);
 
-	m_device_notifier = new CNotify(this);
+	m_device_notifier = new (nothrow) CNotify(this);
 	if (m_device_notifier)
 	{
 		HRESULT hRes = m_device_engine->Register(m_device_notifier, IID_ITTSNotifySink2A, &m_device_notifier_id);
@@ -625,7 +625,7 @@ bool WindowsSAPI4Narrator::SpeakToFile(const char *p_string, const char *p_file)
 	SpeakToFileNotifier2 *t_notifier;
 	if (t_success)
 	{
-		t_notifier = new SpeakToFileNotifier2();
+		t_notifier = new (nothrow) SpeakToFileNotifier2();
 		if (t_notifier)
 		{
 			HRESULT t_result = t_central_interface -> Register(t_notifier, IID_ITTSNotifySinkA, &t_notifier_id);
@@ -647,7 +647,7 @@ bool WindowsSAPI4Narrator::SpeakToFile(const char *p_string, const char *p_file)
 
 		if (t_success)
 		{
-			t_file = new WCHAR[strlen(t_native_path) + 1];
+			t_file = new (nothrow) WCHAR[strlen(t_native_path) + 1];
 			if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, t_native_path, -1, t_file, strlen(t_native_path) + 1))
 				t_success = false;
 		}
@@ -747,7 +747,7 @@ bool WindowsSAPI4Narrator::SpeakToFileOld(const char *p_string, const char *p_fi
 
 		if (t_success)
 		{
-			t_file = new WCHAR[strlen(t_native_path) + 1];
+			t_file = new (nothrow) WCHAR[strlen(t_native_path) + 1];
 			if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, t_native_path, -1, t_file, strlen(t_native_path) + 1))
 				t_success = false;
 		}
@@ -795,7 +795,7 @@ bool WindowsSAPI4Narrator::SpeakToFileOld(const char *p_string, const char *p_fi
 	CNotify *t_notifier;
 	if (t_success)
 	{
-		t_notifier = new CNotify(this);
+		t_notifier = new (nothrow) CNotify(this);
 		if (t_notifier)
 		{
 			HRESULT t_result = t_central_interface -> Register(t_notifier, IID_ITTSNotifySinkA, &t_notifier_id);

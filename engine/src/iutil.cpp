@@ -147,7 +147,7 @@ void MCImage::addneed(MCObject *p_object)
 	}
 
 	// not found - create new need & add to list
-	/* UNCHECKED */ t_need = new MCImageNeed(p_object);
+	/* UNCHECKED */ t_need = new (nothrow) MCImageNeed(p_object);
 	t_need->Add(m_needs);
 }
 
