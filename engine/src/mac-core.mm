@@ -1937,51 +1937,44 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void get_desktop_height()
+CGFloat get_desktop_height()
 {
-    s_desktop_height = 0.0f;
-    
-    for (NSScreen * t_screen in [NSScreen screens])
-    {
-        NSRect t_rect = [t_screen frame];
-        if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
-            s_desktop_height = t_rect.origin.y + t_rect.size.height;
-    }
-    
-    s_have_desktop_height = true;
+	if (!s_have_desktop_height)
+	{
+		s_desktop_height = 0.0f;
+		
+		for (NSScreen * t_screen in [NSScreen screens])
+		{
+			NSRect t_rect = [t_screen frame];
+			if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
+				s_desktop_height = t_rect.origin.y + t_rect.size.height;
+		}
+		
+		s_have_desktop_height = true;
+	}
+	
+	return s_desktop_height;
 }
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {
-	if (!s_have_desktop_height)
-        get_desktop_height();
-	
-	r_point = NSMakePoint(p . x, s_desktop_height - p . y);
+	r_point = NSMakePoint(p . x, get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
-	if (!s_have_desktop_height)
-        get_desktop_height();
-	
-	r_point . x = p . x;
-	r_point . y = s_desktop_height - p . y;
+	r_point . x = int16_t(p . x);
+	r_point . y = int16_t(get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	if (!s_have_desktop_height)
-        get_desktop_height();
-	
-	r_rect = NSMakeRect(r . x, s_desktop_height - (r . y + r . height), r . width, r . height);
+	r_rect = NSMakeRect(CGFloat(r . x), get_desktop_height() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
 }
 
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	if (!s_have_desktop_height)
-        get_desktop_height();
-	
-	r_rect = MCRectangleMake(r . origin . x, s_desktop_height - (r . origin . y + r . size . height), r . size . width, r . size . height);
+	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(get_desktop_height() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
