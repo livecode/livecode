@@ -29,6 +29,7 @@ public:
     virtual void OnDetach();
 	virtual bool OnPaint(MCGContextRef p_context);
     virtual void OnGeometryChanged(const MCRectangle& p_new_rect);
+	virtual void OnViewTransformChanged();
 	virtual void OnViewportGeometryChanged(const MCRectangle &p_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);

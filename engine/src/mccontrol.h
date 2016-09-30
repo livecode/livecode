@@ -156,7 +156,9 @@ public:
 
 	void redraw(MCDC *dc, const MCRectangle &dirty);
 
-	void sizerects(MCRectangle *rects);
+	// IM-2016-09-26: [[ Bug 17247 ]] Return rect of selection handles for the given object rect
+	static void sizerects(const MCRectangle &p_object_rect, MCRectangle rects[8]);
+	
 	void drawselected(MCDC *dc);
 	void drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 	               Arrow_direction dir, Boolean border, Boolean hilite);
@@ -369,12 +371,13 @@ public:
 
 
 // MCControl has lots of derived classes so this (fragile!) specialisation is
-// needed to account for them.
+// needed to account for them. It depends on the correctness of the CT_x_CONTROL
+// enum values (i.e everything within that range must derive from MCControl).
 template <>
 inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
 {
     Chunk_term t_type = p_object->gettype();
-    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD);
+    MCAssert(t_type >= CT_FIRST_CONTROL && t_type <= CT_LAST_CONTROL);
     return static_cast<MCControl*> (p_object);
 }
 

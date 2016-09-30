@@ -904,7 +904,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCal
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
 {
-	MCLog("doJSExecutionResult", nil);
+	MCLog("doJSExecutionResult");
 	
 	bool t_success;
 	t_success = true;

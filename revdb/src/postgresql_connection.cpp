@@ -451,7 +451,6 @@ void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
 	{
 		char *result = buffer;
 		char *resultptr = result;
-		unsigned int colsize = 0;
 		if (!newcursor->getEOF())
 		{
 			while (True){

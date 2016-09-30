@@ -158,10 +158,14 @@ struct MCStackAttachment
 
 class MCStack : public MCObject
 {
-	friend class MCHcstak;
-	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_STACK };
 
 protected:
+    
+    friend class MCHcstak;
+    friend class MCHccard;
     
 	Window window;
 	MCCursorRef cursor;
@@ -312,8 +316,6 @@ protected:
     
 public:
     
-    enum { kObjectType = CT_STACK };
-    
 	Boolean menuwindow;
 
 	MCStack(void);
@@ -358,6 +360,8 @@ public:
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnViewTransformChanged();
 	
 	virtual void OnAttach();
 	virtual void OnDetach();

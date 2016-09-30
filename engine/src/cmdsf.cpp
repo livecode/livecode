@@ -521,7 +521,7 @@ MCExport::~MCExport()
 Parse_stat MCExport::parse(MCScriptPoint &sp)
 {
 	Symbol_type type;
-	const LT *te;
+	const LT *te = NULL;
 
 	initpoint(sp);
 	if (sp.next(type) != PS_NORMAL)
@@ -565,13 +565,13 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			
 			if (!t_has_rectangle ||	sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 			{
-				Symbol_type type;
-				const LT *te = NULL;
+				Symbol_type t_type;
+				const LT *t_te = NULL;
 
 				// MW-2006-05-04: Bug 3506 - crash in specific case due to not checking result of sp.lookup
 				// MW-2007-09-11: [[ Bug 5242 ]] - the alternate of this if used to fail if te == NULL, this
 				//   can happen though if we are looking at a variable chunk.
-				if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te -> type == TT_CHUNK && te -> which == CT_STACK)
+				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && t_te -> which == CT_STACK)
 				{
 					if (sp.parseexp(False, True, &exsstack) != PS_NORMAL)
 					{
@@ -587,7 +587,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 							return PS_ERROR;
 						}
 				}
-				else if (te == NULL || te -> type != TT_TO)
+				else if (t_te == NULL || t_te -> type != TT_TO)
 				{
 					sp . backup();
 					image = new MCChunk(False);
@@ -1370,7 +1370,7 @@ MCImport::~MCImport()
 Parse_stat MCImport::parse(MCScriptPoint &sp)
 {
 	Symbol_type type;
-	const LT *te;
+	const LT *te = NULL;
 
 	initpoint(sp);
 	if (sp.next(type) != PS_NORMAL)
@@ -1412,11 +1412,11 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 
 			if (!t_has_rectangle || sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 			{
-				Symbol_type type;
-				const LT *te = NULL;
+				Symbol_type t_type;
+				const LT *t_te = NULL;
 
 				// MW-2006-03-24: Bug 3442 - crash in specific case due to not checking result of sp.lookup
-				if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te -> type == TT_CHUNK && te -> which == CT_STACK)
+				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && t_te -> which == CT_STACK)
 				{
 					if (sp.parseexp(False, True, &mname) != PS_NORMAL)
 					{

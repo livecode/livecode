@@ -79,7 +79,7 @@ static void __rebuild_library_handler_list(void)
         if (MCScriptIsModuleALibrary(t_ext -> module))
         {
             MCAutoProperListRef t_handlers;
-            MCScriptCopyHandlersOfModule(t_ext -> module, &t_handlers);
+            MCScriptListHandlerNamesOfModule(t_ext -> module, &t_handlers);
             for(uindex_t i = 0; i < MCProperListGetLength(*t_handlers); i++)
             {
                 MCNameRef t_name;
@@ -345,7 +345,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     t_ext = *(MCLoadedExtension **)MCForeignValueGetContentsPtr(t_ptr);
     
     MCTypeInfoRef t_signature;
-    MCScriptQueryHandlerOfModule(t_ext -> module, p_message, t_signature);
+    MCScriptQueryHandlerSignatureOfModule(t_ext -> module, p_message, t_signature);
     
     uindex_t t_arg_count;
     t_arg_count = MCHandlerTypeInfoGetParameterCount(t_signature);
@@ -411,7 +411,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     MCValueRef t_result;
     t_result = nil;
     if (t_success &&
-        MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
+        MCScriptCallHandlerInInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
     {
         t_param = p_parameters;
         for(uindex_t i = 0; i < t_arg_count && t_success; i++)
@@ -473,7 +473,7 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
     MCAutoErrorRef t_error;
     if (!MCErrorCatch(&t_error))
     {
-        MCLog("Error state indicated with no error having been thrown", 0);
+        MCLog("Error state indicated with no error having been thrown");
         return ES_ERROR;
     }
     

@@ -600,6 +600,12 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, i == 0 ? "%d" : ",%d", t_style.tabs[i]);
 				/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '"');
 			}
+			if (ctxt . effective || t_style . has_tab_alignments)
+			{
+				MCAutoStringRef t_formatted_tabalign;
+				/* UNCHECKED */ MCField::formattabalignments(t_style.tab_alignments, t_style.tab_alignment_count, &t_formatted_tabalign);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " tabalign=\"%@\"", *t_formatted_tabalign);
+			}
 			if (t_style . has_background_color)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
 			if (t_style . has_border_width || ctxt . effective)
@@ -837,6 +843,7 @@ enum import_html_attr_type_t
 	kImportHtmlAttrSpaceAbove,
 	kImportHtmlAttrSpaceBelow,
 	kImportHtmlAttrTabStops,
+	kImportHtmlAttrTabAlignments,
 	kImportHtmlAttrBorderWidth,
 	kImportHtmlAttrBorderColor,
 	kImportHtmlAttrPadding,
@@ -875,6 +882,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "spaceabove", kImportHtmlAttrSpaceAbove},
 	{ "spacebelow", kImportHtmlAttrSpaceBelow },
 	{ "tabstops", kImportHtmlAttrTabStops },
+	{ "tabalign", kImportHtmlAttrTabAlignments },
 	{ "borderwidth", kImportHtmlAttrBorderWidth },
 	{ "bordercolor", kImportHtmlAttrBorderColor },
 	{ "padding", kImportHtmlAttrPadding },
@@ -1935,6 +1943,20 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
                 }
             }
 			break;
+			case kImportHtmlAttrTabAlignments:
+			{
+				if (r_style . has_tab_alignments)
+				{
+					MCMemoryDeallocate(r_style . tab_alignments);
+					r_style . tab_alignments = nil;
+					r_style . tab_alignment_count = 0;
+				}
+				if (MCField::parsetabalignments(t_value, r_style . tab_alignments, r_style . tab_alignment_count))
+				{
+					r_style . has_tab_alignments = true;
+				}
+			}
+			break;
 			case kImportHtmlAttrBgColor:
             {
 				MCColor t_color;
@@ -2238,8 +2260,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         {
                             import_html_begin(ctxt, nil);
                             
-                            MCFieldCharacterStyle t_char_style;
-                            t_char_style = ctxt . styles[ctxt . style_index] . style;
+                            MCFieldCharacterStyle t_tag_style;
+                            t_tag_style = ctxt . styles[ctxt . style_index] . style;
                             
                             uint32_t t_font_size, t_font_style;
                             t_font_size = 0;
@@ -2269,11 +2291,11 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                             }
                             
                             if (t_font_style != 0)
-                                t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
+                                t_tag_style . has_text_style = true, t_tag_style . text_style = t_font_style;
                             if (t_font_size != 0)
-                                t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
+                                t_tag_style . has_text_size = true, t_tag_style . text_size = t_font_size;
 							
-                            import_html_push_tag(ctxt, t_tag . type, t_char_style);
+                            import_html_push_tag(ctxt, t_tag . type, t_tag_style);
                         }
                         else
                             import_html_pop_tag(ctxt, t_tag . type, true);

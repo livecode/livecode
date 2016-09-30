@@ -1854,9 +1854,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
             }
             else if (target != NULL)
 			{
-				MCObject *optr;
-				uint4 parid;
-                if (!target->getobj(ctxt, optr, parid, True)
+				if (!target->getobj(ctxt, optr, parid, True)
 				        || optr->gettype() != CT_STACK)
 				{
                     ctxt . LegacyThrow(EE_STOP_BADTARGET);

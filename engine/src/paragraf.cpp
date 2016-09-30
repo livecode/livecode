@@ -278,10 +278,17 @@ bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)
 {
-	codepoint_t t_cp;
 	uindex_t t_length = MCStringGetLength(p_string);
-	while (p_after < t_length && !TextIsParagraphBreak(MCStringGetCodepointAtIndex(p_string, p_after)))
-		p_after++;
+	while (p_after < t_length)
+	{
+		codepoint_t t_char =
+			MCStringGetCodepointAtIndex(p_string, p_after);
+		
+		if (TextIsParagraphBreak(t_char))
+			break;
+		
+		p_after += MCUnicodeCodepointGetCodeunitLength(t_char);
+	}
 	
 	if (p_after == t_length)
 		return false;
@@ -1318,9 +1325,6 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         // Draw the right-hand side, if required
         if (t_show_back || endindex > i + l)
         {
-            // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
-            MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
-            
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
             // SN-2014-09-11: [[ Bug 13407 ]] Include the part not drawn in case of text overflow
             srect.x = x + lptr -> GetLastSegment() -> GetRightEdge();
@@ -1456,7 +1460,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	
 	dc->save();
 
-	coord_t ascent, descent, leading, linespace, baseline;
+	coord_t ascent, descent, leading, linespace;
 	ascent = fixeda;
 	descent = fixedd;
     leading = 0;
@@ -1578,10 +1582,10 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					if (IsMacLF() && !parent->isautoarm())
 					{
 						MCPatternRef t_pattern;
-						int2 x, y;
+						int2 t_x, t_y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), parent);
 						if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
@@ -1711,17 +1715,17 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_limit = parent -> getrect() . x + parent -> getrect() . width;
 
 			uint2 ct = 0; 
-			int4 x = t[0] + t_delta;
-			while (x <= t_limit)
+			int4 t_x = t[0] + t_delta;
+			while (t_x <= t_limit)
 			{
-				dc->drawline(x, t_inner_border_rect . y, x, t_inner_border_rect . y + t_inner_border_rect . height);
+				dc->drawline(t_x, t_inner_border_rect . y, t_x, t_inner_border_rect . y + t_inner_border_rect . height);
 				
 				if (ct < nt - 1)
-					x = t_delta + t[++ct];
+					t_x = t_delta + t[++ct];
 				else if (nt == 1)
-					x += t[0];
+					t_x += t[0];
 				else
-					x += t[nt - 1] - t[nt - 2];
+					t_x += t[nt - 1] - t[nt - 2];
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
@@ -2163,7 +2167,6 @@ void MCParagraph::deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_st
 	}
 	
 	// Excise the deleted range from the paragraph text
-	uindex_t t_length = gettextlength();
 	/* UNCHECKED */ MCStringRemove(m_text, MCRangeMake(si, ei-si));
 
 	// Eliminate any zero length blocks *after* one we might have ensured

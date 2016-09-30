@@ -5,8 +5,9 @@ Type: command
 Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with | without | [not] matching} [{wildcard pattern | regex pattern}] <filterPattern> [into <targetContainer>]
 
 Summary:
-Filters each line or item in a source container or expression, removing
-the lines, items, keys or elements that do or don't match a pattern.
+Filters each line, item, key or element in a source container or
+expression, removing the lines, items, keys or elements that do or don't
+match a pattern.
 
 Introduced: 1.0
 
@@ -28,8 +29,7 @@ filter items of "apple,banana,cherry" with regex pattern "b.*"
 Example:
 local tSource, tBackscriptObjects
 put the backscripts into tSource
-filter lines \
-      of tSource without regex pattern "^stack.*" into tBackscriptObjects
+filter lines of tSource without regex pattern "^stack.*" into tBackscriptObjects
 -- tBackscriptObjects contains a list of non-stack backscripts
 
 Example:
@@ -42,7 +42,7 @@ Example:
 local tArray
 put true into tArray["foo"]
 put false into tArray["bar"]
-filter tArray with "f*"
+filter keys of tArray with "f*"
 put the keys of tArray is "foo"
 
 Example:

@@ -19,10 +19,10 @@
 				'perfect.c',
 			],
 
-			'cflags_c!':
-			[
-				'-Wstrict-prototypes',
-			],
+            'variables':
+            {
+                'silence_warnings': 1,
+            },
 
 			'msvs_settings':
 			{

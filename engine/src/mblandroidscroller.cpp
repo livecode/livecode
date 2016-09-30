@@ -507,7 +507,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object)
 {
-    MCLog("scrollViewBeginDrag", nil);
+    MCLog("scrollViewBeginDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     
@@ -518,7 +518,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object)
 {
-    MCLog("scrollViewEndDrag", nil);
+    MCLog("scrollViewEndDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     

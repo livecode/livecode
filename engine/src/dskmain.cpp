@@ -78,12 +78,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
-static char apppath[PATH_MAX];
-
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
 	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -314,8 +312,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 
 void X_main_loop_iteration()
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
 
 	////
 

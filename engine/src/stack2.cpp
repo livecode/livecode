@@ -1993,7 +1993,6 @@ void MCStack::reopenwindow()
 
 Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentptr, Window_position wpos,  Object_pos walign)
 {
-	MCRectangle myoldrect = rect;
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
     

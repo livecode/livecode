@@ -73,7 +73,7 @@ installer LiveCode
 		include Runtime.Android
 		include Runtime.Emscripten
 		shortcut "Desktop/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
-		shortcut "Programs/RunRev/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
+		shortcut "Programs/LiveCode/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 	if TargetPlatform is Linux then
 		include Mobile.Linux
 		include Runtime.Android
@@ -608,52 +608,31 @@ component Runtime.iOS
 		file ios:iphonesimulator9.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator9.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator9.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-9_3" place
-		executable ios:iphonesimulator9.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator9.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
-		executable ios:iphonesimulator9.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
-		executable ios:iphonesimulator9.3/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
-		executable ios:iphonesimulator9.3/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
-		executable ios:iphonesimulator9.3/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
-		executable ios:iphonesimulator9.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
-		executable ios:iphonesimulator9.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
-		file ios:iphonesimulator9.3/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator9.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator9.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator9.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator9.3/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator9.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator9.3/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
-		executable ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
-		executable ios:iphoneos8.2/revsecurity.ios-extension as RevSecurity
-		executable ios:iphoneos8.2/revpdfprinter.ios-extension as RevPdfPrinter
-		executable ios:iphoneos8.2/revzip.ios-extension as RevZip
-		executable ios:iphoneos8.2/revxml.ios-extension as RevXml
-		executable ios:iphoneos8.2/revdb.ios-extension as RevDb
-		executable ios:iphoneos8.2/dbsqlite.ios-extension as DbSqlite
-		executable ios:iphoneos8.2/dbmysql.ios-extension as DbMysql
-		file ios:iphoneos8.2/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos8.2/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos8.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
-		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphoneos8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos8.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-10_0" place
+		executable ios:iphonesimulator10.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator10.0/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator10.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator10.0/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator10.0/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator10.0/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator10.0/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator10.0/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator10.0/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator10.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator10.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator10.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator10.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator10.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator10.0/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
-		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].lcext
-		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
-		executable ios:iphoneos9.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
-		executable ios:iphoneos9.2/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
-		executable ios:iphoneos9.2/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
-		executable ios:iphoneos9.2/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
-		executable ios:iphoneos9.2/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
-		executable ios:iphoneos9.2/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
+		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
+		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
+		executable ios:iphoneos9.2/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphoneos9.2/revzip.ios-extension as RevZip
+		executable ios:iphoneos9.2/revxml.ios-extension as RevXml
+		executable ios:iphoneos9.2/revdb.ios-extension as RevDb
+		executable ios:iphoneos9.2/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphoneos9.2/dbmysql.ios-extension as DbMysql
 		file ios:iphoneos9.2/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos9.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos9.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -662,31 +641,29 @@ component Runtime.iOS
 		file ios:iphoneos9.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos9.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos9.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos9.2/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos9.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos9.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos9.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-9_3" place
-		executable ios:iphoneos9.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].lcext
-		executable ios:iphoneos9.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
-		executable ios:iphoneos9.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
-		executable ios:iphoneos9.3/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
-		executable ios:iphoneos9.3/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
-		executable ios:iphoneos9.3/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
-		executable ios:iphoneos9.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
-		executable ios:iphoneos9.3/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
-		file ios:iphoneos9.3/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos9.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos9.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos9.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos9.3/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos9.3/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
-		file ios:iphoneos9.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos9.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos9.3/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphoneos9.3/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos9.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos9.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-10_0" place
+		executable ios:iphoneos10.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].lcext
+		executable ios:iphoneos10.0/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.lcext
+		executable ios:iphoneos10.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.lcext
+		executable ios:iphoneos10.0/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.lcext
+		executable ios:iphoneos10.0/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.lcext
+		executable ios:iphoneos10.0/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.lcext
+		executable ios:iphoneos10.0/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.lcext
+		executable ios:iphoneos10.0/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.lcext
+		file ios:iphoneos10.0/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos10.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos10.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos10.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos10.0/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos10.0/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos10.0/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos10.0/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos10.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos10.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos10.0/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 

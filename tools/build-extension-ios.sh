@@ -52,9 +52,9 @@ FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers"
 if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 	# We set the minimum iOS or simulator version
     if [ $BUILD_DYLIB -eq 1 ]; then
-        MIN_OS_VERSION="-mios-simulator-version-min=5.1.1"
+        MIN_OS_VERSION="-mios-simulator-version-min=6.0.0"
     else
-        MIN_OS_VERSION="-miphoneos-version-min=5.1.1"
+        MIN_OS_VERSION="-miphoneos-version-min=6.0.0"
     fi
 
     ARCHS="-arch ${ARCHS// / -arch }"
@@ -89,7 +89,7 @@ else
 	    if [ ${ARCH} = "arm64" -o ${ARCH} = "x86_64" ]; then
 			MIN_VERSION="7.0.0"
 	    else
-			MIN_VERSION="5.1.1"
+			MIN_VERSION="6.0.0"
 	    fi
 
 		if [ $BUILD_DYLIB -eq 1 ]; then

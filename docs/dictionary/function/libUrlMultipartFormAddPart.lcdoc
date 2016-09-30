@@ -21,25 +21,33 @@ Platforms: desktop, server
 Security: network
 
 Example:
-put empty into tForm
-put "dave" into tName
-put "hello" into tMessage
-if libURLMultipartFormData (tForm, "name", tName, "message", tMessage) \
-     is not empty then
-   ##handle error and exit
-end if
-set the httpHeaders to line 1 of tForm
-delete line 1 of tForm
-put "&lt;file&gt;" & "C:/myfile.gif" into tFile
-put "image/gif" into tType
-put "binary" into tEnc
-if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) \
-    is empty then
-   ##handle error and exit
-else
-   post tForm to url tURL
-   set the httpHeaders to empty
-end if
+command UploadFileToServer pName, pMessage, pFilename
+  put the httpHeaders into tOrigHeaders
+  put empty into tForm
+  put libURLMultipartFormData (tForm, "name", pName, "message", pMessage) into tError
+  
+  if tError is empty then
+    set the httpHeaders to line 1 of tForm
+    delete line 1 of tForm
+    put "&lt;file&gt;" & pFilename into tFile
+    put "image/gif" into tType
+    put "binary" into tEnc
+    put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError
+  end if
+ 
+  if tError is empty then
+    post tForm to url tURL
+    put the result into tError
+  end if
+  
+  set the httpHeaders to tOrigHeaders
+  
+  if tError is not empty then
+    return tError for error
+  else
+    return empty for value
+  end if
+end UploadFileToServer
 
 Parameters:
 value:

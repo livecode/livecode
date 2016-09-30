@@ -514,7 +514,6 @@ bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_loo
 
 	if (t_success)
 	{
-		void *t_addr_ptr = t_info->m_addr;
 		t_success = MCMemoryAllocateCopy(p_sockaddr, p_addrlen, t_info->m_addr);
 		t_info->m_addrlen = p_addrlen;
 

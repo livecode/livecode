@@ -44,13 +44,28 @@ LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
 LCC_LOG = _compiler_test_suite.log
 
+########## lc-run test params
+
+LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
+LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
+
+########## Java FFI DSL test parameters
+
+JAVA_DSL_PARSER ?= $(bin_dir)/java-dsl-parse
+
+JAVA_DSL_PARSER_TESTRUNNER ?= $(top_srcdir)/tests/_javadslparsertestrunner.livecodescript
+
+JAVA_DSL_PARSER_CMD = $(LCS_ENGINE) -ui $(JAVA_DSL_PARSER_TESTRUNNER) run
+
+JAVA_DSL_PARSER_LOG = _java_dsl_parser_test_suite.log
+
 ################################################################
 # Top-level targets
 ################################################################
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check
+check: lcs-check lcb-check compiler-check java-ffi-dsl-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -89,7 +104,7 @@ $(LCM_DIR)/deps.mk: $(LCM_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 	    --output $(LCM_DIR)/$$lcm -- $$lcb >> $@; \
 	done; \
 	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCM_SOURCES) >> $@ ; \
-	sed -i 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
+	sed -i -e 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
 
 ########## Build rules
 
@@ -111,11 +126,13 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 # Engine-based tests
 ################################################################
 
-lcs-check: $(LCS_ENGINE)
+lcs-check: $(LCS_ENGINE) lcm_compile
 	@rm -f $(LCS_LOG)
 	@cmd="$(LCS_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
+
+.PHONY: lcs-check
 
 ################################################################
 # LCB compiler tests
@@ -128,6 +145,19 @@ compiler-check: $(LC_COMPILE)
 	cmd="$(LCC_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
+
+################################################################
+# Basic LCB runner test
+################################################################
+
+lc-run-check: $(LC_RUN) lcm_compile
+	@export LC_RUN="$(LC_RUN)"; \
+	export LCM_DIR="$(LCM_DIR)/lc-run"; \
+	cmd="$(LC_RUN_TEST_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
+
+.PHONY: lc-run-check
 
 ################################################################
 # LCB-only tests
@@ -146,3 +176,15 @@ lcb-check: lcm_compile
 	    $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
 	done; \
 	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
+
+################################################################
+# Java FFI DSL parser tests
+################################################################
+
+java-ffi-dsl-check: $(JAVA_DSL_PARSE)
+	@rm -f $(JAVA_DSL_PARSER_LOG)
+	@export JAVA_DSL_PARSER="$(JAVA_DSL_PARSER)"; \
+	export JAVA_DSL_PARSE_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
+	cmd="$(JAVA_DSL_PARSER_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
