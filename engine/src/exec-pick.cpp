@@ -147,11 +147,11 @@ static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCPickPhotoSourceTypeElementInfo[] =
 {
-	{ "album", kMCCameraSourceTypeFront, false },
-	{ "library", kMCCameraSourceTypeRear, false },
-	{ "camera", kMCCameraSourceTypeUnknown, false },
-	{ "front camera", kMCCameraSourceTypeUnknown, false },
-	{ "rear camera", kMCCameraSourceTypeUnknown, false },
+	{ "album", kMCPhotoSourceTypeAlbum, false },
+	{ "library", kMCPhotoSourceTypeLibrary, false },
+	{ "camera", kMCPhotoSourceTypeCamera, false },
+	{ "front camera", kMCPhotoSourceTypeFrontCamera, false },
+	{ "rear camera", kMCPhotoSourceTypeRearCamera, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickPhotoSourceTypeTypeInfo =
@@ -168,7 +168,7 @@ MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo = &_kMCPickCameraSourceTypeT
 MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo = &_kMCPickCameraFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo = &_kMCPickCamerasFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo = &_kMCPickMediaTypesTypeInfo;
-MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
+MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickPhotoSourceTypeTypeInfo;
 
 //////////
 

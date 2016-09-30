@@ -536,13 +536,6 @@ MCStack::~MCStack()
 		close();
 	extraclose(false);
 
-	if (needs != NULL)
-	{
-		while (nneeds--)
-
-			needs[nneeds]->removelink(this);
-		delete needs;
-	}
 	if (substacks != NULL)
 	{
 		while (substacks != NULL)
@@ -1316,7 +1309,8 @@ bool MCStack::isdeletable(bool p_check_flag)
     //   make sure we throw an error.
     if (parent == NULL || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
-        MCdispatcher->gethome() == this || this -> isediting())
+        MCdispatcher->gethome() == this || this -> isediting() ||
+        MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -1381,7 +1375,10 @@ Boolean MCStack::del(bool p_check_flag)
 {
     if (!isdeletable(true))
 	   return False;
-	
+    
+    MCscreen->ungrabpointer();
+    MCdispatcher->removemenu();
+    
     setstate(True, CS_DELETE_STACK);
     
 	if (opened)
@@ -1427,6 +1424,15 @@ Boolean MCStack::del(bool p_check_flag)
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
+    
+    if (needs != NULL)
+    {
+        while (nneeds--)
+            needs[nneeds]->removelink(this);
+        
+        delete needs;
+        needs = NULL;
+    }
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -1566,6 +1572,12 @@ void MCStack::toolchanged(Tool p_new_tool)
         curcard->toolchanged(p_new_tool);
 }
 
+void MCStack::OnViewTransformChanged()
+{
+	if (curcard != nil)
+		curcard->OnViewTransformChanged();
+}
+
 void MCStack::OnAttach()
 {
 	if (curcard != nil)
@@ -1691,10 +1703,10 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
+bool MCStack::resolve_filename(MCStringRef p_filename, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_filename;
-    if (resolve_relative_path(filename, &t_filename))
+    if (resolve_relative_path(p_filename, &t_filename))
     {
         if (MCS_exists(*t_filename, True))
         {
@@ -1703,7 +1715,7 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
         }
     }
     
-	r_resolved = MCValueRetain(filename);
+	r_resolved = MCValueRetain(p_filename);
 	return true;
 }
 

@@ -83,6 +83,7 @@ Encloses a line of text. (Blank lines are also enclosed in &lt;p&gt;
 * spaceabove="N" appears if the <spaceAbove> has been set for the line.
 * spacebelow="N" appears if the <spaceBelow> has been set for the line.
 * tabstops="N" appears if <tabStops> have been set for the line.
+* tabAlign="left|center|right[,left|center|right...]" appears if <tabAlign> has been set for the line.
 * borderwidth="N" if a <borderWidth> has been set for the line.
 * hgrid="true|false" if the <vGrid> property has been set for the line.
 * vgrid="true|false" if the <hGrid> property has been set for the line.
@@ -283,6 +284,8 @@ The following enhancements were added in version 5.5:
 
 Support was added for &lt;strong&gt; and &lt;em&gt; tags in version 6.0.
 
+Support for the <tabAlign> property was added in version 8.1.2
+
 References: get (command), set (command), charToNum (function),
 colorNames (function), format (function), numToChar (function),
 ASCII (glossary), character set (glossary), chunk (glossary),
@@ -298,6 +301,7 @@ HTMLText (property), imageSource (property), leftIndent (property),
 linkText (property), listStyle (property), metadata (property),
 mimeText (property), padding (property), rightIndent (property),
 RTFText (property), spaceAbove (property), spaceBelow (property),
+tabAlign (property),
 tabStops (property), textAlign (property), textFont (property),
 textShift (property), textSize (property), textStyle (property),
 unicodeText (property), vGrid (property)

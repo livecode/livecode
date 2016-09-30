@@ -558,6 +558,13 @@ inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
 	return MCUnicodeCodepointIsTrailingSurrogate(x);
 }
 
+inline uindex_t MCUnicodeCodepointGetCodeunitLength(codepoint_t cp)
+{
+	if (cp > UNICHAR_MAX)
+		return 2;
+	return 1;
+}
+
 // Returns true if the given codepoint is a base character
 inline bool MCUnicodeCodepointIsBase(uinteger_t x)
 {

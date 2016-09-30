@@ -197,8 +197,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						trect = MCU_reduce_rect(trect, 1);
 						if (state & CS_HILITED)
 						{
-							uint2 i;
-							if (getcindex(DI_HILITE, i) || getpindex(DI_HILITE, i))
+                            uint2 t_index;
+							if (getcindex(DI_HILITE, t_index) || getpindex(DI_HILITE, t_index))
 								setforeground(dc, DI_HILITE, False, False);
 							else
 								dc->setforeground(dc->getgray());
@@ -445,7 +445,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
             }
             
             coord_t starty = sy;
-            uint2 i;
+            uint2 t_line;
             coord_t twidth = 0;
             
             dc->save();
@@ -479,11 +479,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			
 			uindex_t t_totallen = 0;
-			for (i = 0 ; i < nlines ; i++)
+			for (t_line = 0 ; t_line < nlines ; t_line++)
 			{
 				// Note: 'lines' is an array of strings
 				MCValueRef lineval = nil;
-				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
+				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, t_line + 1, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
                 // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
                 twidth = MCFontMeasureTextFloat(m_font, line, getstack() -> getdevicetransform());
@@ -498,7 +498,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				{
 				case F_ALIGN_LEFT:
 				case F_ALIGN_JUSTIFY:
-					if (i == 0)
+					if (t_line == 0)
 					{
 						if (indicator && !(flags & F_SHOW_ICON))
 						{
@@ -869,7 +869,6 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 	if (!(flags & F_AUTO_ARM) && MCcurtheme &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_RADIOBUTTON))
 	{
-		MCRectangle trect;
 		if (!IsNativeGTK())
 		{
 			trect.x = srect.x + leftmargin - 2;

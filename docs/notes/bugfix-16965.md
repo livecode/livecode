@@ -1,0 +1,1 @@
+# Fix incorrect placement of browser widget after stack rect change when fullscreenmode used.

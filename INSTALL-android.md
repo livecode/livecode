@@ -112,7 +112,7 @@ Otherwise, you'll need to build a target in the gyp-generated makefiles:
 
 **Note:** The following information is provided for reference purposes.  It should be possible to build LiveCode for Android on any modern Linux desktop distribution or recent version of Mac OS.
 
-The Linux build environment used for compiling LiveCode for Android is based on Debian Squeeze x86-64, with the following additional packages installed:
+The Linux build environment used for compiling LiveCode for Android is based on Debian Wheezy x86-64, with the following additional packages installed:
 
 * git
 * bzip2

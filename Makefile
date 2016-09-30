@@ -25,7 +25,7 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 8.2 9.2 10.0
+IPHONEOS_VERSIONS ?= 9.2 10.0
 IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.0
 
 IOS_SDKS ?= \
@@ -43,6 +43,14 @@ else
   BUILD_SUBDIR := /livecode
   BUILD_PROJECT := livecode
 endif
+
+# Prettifying output for CI builds
+ifeq ($(TRAVIS),true)
+  XCODEBUILD := set -o pipefail && $(XCODEBUILD)
+  XCODEBUILD_FILTER := | xcpretty
+else
+  XCODEBUILD_FILTER :=
+endif 
 
 include Makefile.common
 
@@ -109,10 +117,12 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
+	  $(XCODEBUILD_FILTER)
 
 check-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
+	  $(XCODEBUILD_FILTER)
 	$(MAKE) check-common-mac
 
 

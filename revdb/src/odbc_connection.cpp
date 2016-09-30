@@ -346,8 +346,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 	SQLHSTMT t_statement;
 	SQLAllocStmt(hdbc,&t_statement);
 	
-	DBCursor_ODBC *t_cursor = NULL;
-	
 	SQLRETURN t_result;
 	if (t_success)
 	{
@@ -369,8 +367,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 
 	char *t_parsed_query;
 	t_parsed_query = p_query;
-
-	int *t_param_sizes = NULL;
 
 	// The placeholder map contains a mapping from bind to argument.
 	PlaceholderMap t_placeholder_map;

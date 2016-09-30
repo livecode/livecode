@@ -5352,7 +5352,6 @@ void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
 void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
 {
 	__MCCanvasColorImpl *t_color;
-	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
 	t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
 	
 	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
@@ -6814,7 +6813,6 @@ bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MC
 
 bool MCSVGParseReal(const char *p_string, MCRange &x_range, real64_t &r_real)
 {
-	real64_t t_real;
 	MCRange t_used;
 	
 	if (!MCSVGTryToParseRangeAsReal(p_string, x_range, &t_used, r_real))

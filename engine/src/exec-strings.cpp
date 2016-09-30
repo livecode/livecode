@@ -987,7 +987,6 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
     MCAutoStringRefAsWString t_wide_string;
     t_wide_string . Lock(p_format);
 
-    const unichar_t *t_pos = *t_wide_string;
     const unichar_t *format = *t_wide_string;
 
 	t_success = MCStringCreateMutable(0, &t_result);
@@ -1973,8 +1972,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	if (t_length == 0)
         MCStringCopy(kMCEmptyString, r_result);
 
-	uint4 offset = 0;
-    MCAutoListRef t_output;
+	MCAutoListRef t_output;
     MCListCreateMutable(p_delimiter, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.

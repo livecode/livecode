@@ -66,7 +66,6 @@ const char *util_strchr(const char *sptr, char target, int l)
 {
   if (!l) l = strlen(sptr);
   const char *eptr = sptr + l;
-  const char *startptr = sptr;
   while (sptr < eptr) {
     if (*sptr == target) 
       return sptr;

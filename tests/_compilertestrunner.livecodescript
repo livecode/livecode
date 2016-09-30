@@ -233,7 +233,7 @@ private command runCompilerTest pInfo, pScriptFile, pTest
    -- Process the assertions and make sure each one matches up
    local tTestOutput
    repeat for each line tAssertion in tTestInfo["assertions"]
-      if doesCompilerOutputSatisfyAssertion(tCompilerOutput, tCompilerExitStatus, tAssertion, tTestInfo["positions"]) then
+      if doesCompilerOutputSatisfyAssertion(tCompilerOutput, tCompilerExitStatus, tAssertion, tTestInfo) then
          put "ok - " after tTestOutput
       else
          put "not ok - " after tTestOutput
@@ -330,7 +330,7 @@ private function listCompilerTestsInFile pFilename
    return tTestNames
 end listCompilerTestsInFile
 
-private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pPositions
+private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pTestInfo
    if item 1 of pAssertion is "success" then
       return pCompilerExitCode is 0
    end if
@@ -347,34 +347,73 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
    end if
 
    set the itemDelimiter to ":"
+
+   local tState
+   put "search" into tState
    repeat for each line tOutputLine in pCompilerOutput
       local tFile, tLine, tColumn, tType, tMessage
+      local tSourceLine, tCharOffset, tOutputChar, tMarker
 
-      -- The format of each output line is:
-      --   <file>:<line>:<col>: (error|warning): <msg>
-      put item 1 of tOutputLine into tFile
-      put item 2 of tOutputLine into tLine
-      put item 3 of tOutputLine into tColumn
-      put word 1 of item 4 of tOutputLine into tType
-      put item 5 to -1 of tOutputLine into tMessage
+      if tState is "search" then
+         -- The format of each output line is:
+         --   <file>:<line>:<col>: (error|warning): <msg>
+         put item 1 of tOutputLine into tFile
+         put item 2 of tOutputLine into tLine
+         put item 3 of tOutputLine into tColumn
+         put word 1 of item 4 of tOutputLine into tType
+         put item 5 to -1 of tOutputLine into tMessage
 
-      -- If the assertion type doesn't match, continue
-      if tAssertionType is not tType then
-         next repeat
+         -- If the assertion type doesn't match, continue
+         if tAssertionType is not tType then
+            next repeat
+         end if
+
+         -- If the assertion message is not within the message, continue
+         if tAssertionPartialMsg is not in tMessage then
+            next repeat
+         end if
+
+         -- If the position does not match, continue
+         if pTestInfo["positions"][tAssertionPos] is not tLine then
+            next repeat
+         end if
+
+         -- If we get here, we have a match so are successful!
+         put "source line" into tState
+
+      else if tState is "source line" then
+         -- The format of the source line output is a space followed
+         -- by the corresponding line of the input source file.  The
+         -- compiler may replace any of the source characters with
+         -- spaces (for example, to remove control characters).
+
+        put " " & line tLine of pTestInfo["code"] into tSourceLine
+
+        repeat with tCharOffset = 1 to the number of chars in tOutputLine
+           put char tCharOffset of tOutputLine into tOutputChar
+           if tOutputChar is not " " and \
+                 tOutputChar is not char tCharOffset of tSourceLine then
+              return false
+           end if
+         end repeat
+
+         put "marker" into tState
+
+      else if tState is "marker" then
+         -- The marker should point at the correct column within the
+         -- input source line
+
+         -- TODO the marker position should come from the position
+         -- indicated in the code block, not from the position
+         -- reported by the compiler.
+         put format(merge("%[[tColumn]]s^"),"") into tMarker
+
+         if tOutputLine is tMarker then
+            return true
+         else
+            return false
+         end if
       end if
-
-      -- If the assertion message is not within the message, continue
-      if tAssertionPartialMsg is not in tMessage then
-         next repeat
-      end if
-
-      -- If the position does not match, continue
-      if pPositions[tAssertionPos] is not tLine then
-         next repeat
-      end if
-
-      -- If we get here, we have a match so are successful!
-      return true
    end repeat
 
    -- We failed to find a suitable output line, so failure

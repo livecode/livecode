@@ -2050,9 +2050,7 @@ Parse_stat MCTextHeightSum::parse(MCScriptPoint &sp, Boolean the)
 
 void MCTextHeightSum::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-	integer_t t_result;
-
-	MCObjectPtr t_object;
+    MCObjectPtr t_object;
 	if (!object->getobj(ctxt, t_object, True))
 	{
 		ctxt . LegacyThrow(EE_TEXT_HEIGHT_SUM_NOOBJECT);

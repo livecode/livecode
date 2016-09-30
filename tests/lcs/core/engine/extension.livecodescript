@@ -19,6 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
+
+    TestDiagnostic the defaultfolder
+    load extension from file "../_tests/_build/lcs/core/engine/_extension.lcm"
+    if the result is not empty then
+       throw "Failed to load test support extension:" && the result
+    end if
 end TestSetup
 
 /////////
@@ -45,3 +51,21 @@ on TestUnloadWidgetModuleAfterDeletion
     send "_TestUnloadWidgetModuleAfterDeletion_DoDeleteAndUnload" to me in 0 millisecs
     wait 1 millisecond with messages
 end TestUnloadWidgetModuleAfterDeletion
+
+/////////
+
+function TestExtensionBridgeNames_Version
+   return the version
+end TestExtensionBridgeNames_Version
+
+on TestExtensionBridgeNames
+   TestAssert "LCS names bridge to LCB strings in execute script", \
+         TestExtensionBridgeNames_ExecuteScript()
+   TestAssert "LCS names bridge to LCB strings in send", \
+         TestExtensionBridgeNames_Send()
+end TestExtensionBridgeNames
+
+on TestExtensionBridgeNumbers
+   TestAssert "LCS numbers bridge to LCB numbers in execute script", \
+         TestExtensionBridgeNumbers_ExecuteScript()
+end TestExtensionBridgeNumbers

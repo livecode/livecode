@@ -706,8 +706,8 @@ void MCGroup::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_i
 	{
         MCObject *t_object = controls;
         MCObject *t_start_object = t_object;
-		uint2 i = 0;
-		do
+		
+        do
 		{
 			MCAutoStringRef t_property;
             

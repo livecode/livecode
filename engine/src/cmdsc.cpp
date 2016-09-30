@@ -587,7 +587,6 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
         if (!ctxt . EvalOptionalExprAsNullableStringRef(newname, EE_CREATE_BADEXP, &t_new_name))
             return;
 
-        MCObject *optr;
         if (script_only_stack)
             MCInterfaceExecCreateScriptOnlyStack(ctxt, *t_new_name);
         else

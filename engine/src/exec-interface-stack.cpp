@@ -119,7 +119,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 {
     // TODO
     uint2 decorations;
-    uint4 flags;
     decorations = WD_CLEAR;
     
     if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
@@ -413,12 +412,17 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
-	MCStringFindAndReplaceChar(p_name, ',', '_', kMCCompareExact);
+	MCAutoStringRef t_new_string;
+	if (t_success)
+		t_success = MCStringMutableCopy(p_name, &t_new_string);
+	
+	if (t_success)
+		t_success = MCStringFindAndReplaceChar(*t_new_string, ',', '_', kMCCompareExact);
 
 	if (t_success)
 	{
 		// If the name is going to be empty, coerce to 'Untitled'.
-		if (MCStringGetLength(p_name) == 0)
+		if (MCStringGetLength(*t_new_string) == 0)
 		{
 			MCAutoStringRef t_untitled;
 			t_success = MCStringCreateWithCString(MCuntitledstring, &t_untitled);
@@ -426,7 +430,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 				MCObject::SetName(ctxt, *t_untitled);
 		}
 		else
-			MCObject::SetName(ctxt, p_name);
+			MCObject::SetName(ctxt, *t_new_string);
 	}
 
 	if (t_success && !ctxt . HasError())
@@ -1188,9 +1192,9 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
-				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
+				MCNewAutoNameRef t_stack_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_stack_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_stack_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)

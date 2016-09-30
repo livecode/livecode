@@ -332,7 +332,6 @@ void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     if (right != NULL)
     {
-        MCValueRef t_value;
         if (!ctxt . EvaluateExpression(right, EE_GROUPING_BADRIGHT, r_value))
             return;
     }
@@ -486,47 +485,47 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				{
 					if (sp . skip_token(SP_FACTOR, TT_THE) == PS_NORMAL)
 					{
-						Symbol_type type;
-						const LT *te;
-						if (sp . next(type) == PS_NORMAL)
+						Symbol_type t_type;
+						const LT *t_te;
+						if (sp . next(t_type) == PS_NORMAL)
 						{
-							if ((sp.lookup(SP_FACTOR, te) == PS_NORMAL
-									&& (te->which == P_DRAG_DATA
-                                        || te->which == P_CLIPBOARD_DATA
-                                        || te->which == P_RAW_CLIPBOARD_DATA
-                                        || te->which == P_RAW_DRAGBOARD_DATA
-                                        || te->which == P_FULL_CLIPBOARD_DATA
-                                        || te->which == P_FULL_DRAGBOARD_DATA)))
+							if ((sp.lookup(SP_FACTOR, t_te) == PS_NORMAL
+									&& (t_te->which == P_DRAG_DATA
+                                        || t_te->which == P_CLIPBOARD_DATA
+                                        || t_te->which == P_RAW_CLIPBOARD_DATA
+                                        || t_te->which == P_RAW_DRAGBOARD_DATA
+                                        || t_te->which == P_FULL_CLIPBOARD_DATA
+                                        || t_te->which == P_FULL_DRAGBOARD_DATA)))
 							{
-								if (te -> which == P_CLIPBOARD_DATA)
+								if (t_te -> which == P_CLIPBOARD_DATA)
 								{
 									if (form == IT_NOT_AMONG)
 										form = IT_NOT_AMONG_THE_CLIPBOARD_DATA;
 									else
 										form = IT_AMONG_THE_CLIPBOARD_DATA;
 								}
-                                else if (te -> which == P_RAW_CLIPBOARD_DATA)
+                                else if (t_te -> which == P_RAW_CLIPBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_RAW_CLIPBOARD_DATA;
                                 }
-                                else if (te -> which == P_RAW_DRAGBOARD_DATA)
+                                else if (t_te -> which == P_RAW_DRAGBOARD_DATA)
                                 {
                                    if (form == IT_NOT_AMONG)
                                        form = IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_RAW_DRAGBOARD_DATA;
                                 }
-                                else if (te -> which == P_FULL_CLIPBOARD_DATA)
+                                else if (t_te -> which == P_FULL_CLIPBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_FULL_CLIPBOARD_DATA;
                                 }
-                                else if (te -> which == P_FULL_DRAGBOARD_DATA)
+                                else if (t_te -> which == P_FULL_DRAGBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA;
@@ -589,7 +588,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
             return;
         
-        bool t_result;
         switch(valid)
         {
             case IV_UNDEFINED:

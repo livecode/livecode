@@ -96,9 +96,9 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 
 	# We set the minimum iOS or simulator version
     if [ $BUILD_DYLIB -eq 1 ]; then
-        MIN_OS_VERSION="-mios-simulator-version-min=5.1.1"
+        MIN_OS_VERSION="-mios-simulator-version-min=6.0.0"
     else
-        MIN_OS_VERSION="-miphoneos-version-min=5.1.1"
+        MIN_OS_VERSION="-miphoneos-version-min=6.0.0"
     fi
 
     ARCHS="-arch ${ARCHS// / -arch }"
@@ -172,6 +172,13 @@ mkdir -p "$SRCROOT/binaries"
 
 SUFFIX="-${SDK_MAJORVERSION}_${SDK_MINORVERSION}"
 if [ "$SDK_PLATFORM" == "iphonesimulator" ]; then
+    /usr/bin/codesign --verbose -f -s "$CODE_SIGN_IDENTITY" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
+    RESULT=$?
+    if [ $RESULT != 0 ]; then
+    	echo "error: code signing"
+		exit $RESULT
+	 fi
+    
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries/$PRODUCT_NAME-Simulator$SUFFIX.dylib"
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries"
     dsymutil "$SRCROOT/binaries/$PRODUCT_NAME.dylib"

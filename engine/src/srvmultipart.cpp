@@ -407,8 +407,6 @@ bool MCMultiPartParseHeader(const char *p_header, MCMultiPartHeaderCallback p_ca
 	bool t_success = true;
 	
 	uint32_t t_index = 0;
-	char *t_value = NULL;
-	char *t_name = NULL;
 	const char *t_next_param = NULL;
 	
 	t_success = read_name(p_header, p_header, t_header.name);
@@ -924,7 +922,6 @@ static MCMultiPartTempFileList *s_temp_files = NULL;
 bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
-	bool t_blocked = true;
 	MCAutoStringRef t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;

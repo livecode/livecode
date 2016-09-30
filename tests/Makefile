@@ -94,7 +94,7 @@ $(LCM_DIR)/deps.mk: $(LCM_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 	    --output $(LCM_DIR)/$$lcm -- $$lcb >> $@; \
 	done; \
 	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCM_SOURCES) >> $@ ; \
-	sed -i 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
+	sed -i -e 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
 
 ########## Build rules
 
@@ -116,11 +116,13 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 # Engine-based tests
 ################################################################
 
-lcs-check: $(LCS_ENGINE)
+lcs-check: $(LCS_ENGINE) lcm_compile
 	@rm -f $(LCS_LOG)
 	@cmd="$(LCS_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
+
+.PHONY: lcs-check
 
 ################################################################
 # LCB compiler tests

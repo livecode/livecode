@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 extern int IsDependencyCompile(void);
 
@@ -60,6 +61,23 @@ void Fatal_InternalInconsistency(const char *p_message)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void
+Debug(const char *p_format, ...)
+{
+	va_list t_args;
+
+	if (s_verbose_level < 1)
+		return;
+
+	va_start(t_args, p_format);
+
+	fprintf(stderr, "debug: ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+
+	va_end(t_args);
+}
 
 void
 Debug_Emit(const char *p_format, ...)
@@ -152,10 +170,44 @@ static void _PrintPosition(long p_position)
     fprintf(stderr, "%s:%ld:%ld: ", t_path, t_row, t_column);
 }
 
+/* Print the source code line that contains p_position, and another
+ * line below it with a caret pointing "up" to the exact character
+ * that the position specifies. */
+static void _PrintContext(long p_position)
+{
+	const char *t_raw_text = NULL;
+	char *t_text = NULL;
+	long t_column;
+	int i;
+	GetRowTextOfPosition(p_position, &t_raw_text);
+	GetColumnOfPosition(p_position, &t_column);
+
+	if (NULL == t_raw_text)
+		return;
+
+	/* Replace ASCII control characters in the raw text with spaces.
+	 * This has two goals: it simplifies aligning the context
+	 * indicator caret, and it ensures that control characters in the
+	 * LCB source code can't screw with your terminal emulator.  Note
+	 * that this doesn't try to cope with invalid Unicode values. */
+	t_text = strdup(t_raw_text);
+	if (NULL == t_text)
+		Fatal_OutOfMemory();
+	for (i = 0; t_text[i] != 0; ++i)
+	{
+		if (t_text[i] < 0x20 || t_text[i] == 0x7F)
+			t_text[i] = ' ';
+	}
+
+	fprintf(stderr, " %s\n %*c\n", t_text, (int)t_column, '^');
+	free(t_text);
+}
+
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
     fprintf(stderr, "error: %s\n", p_message);
+    _PrintContext(p_position);
     s_error_count += 1;
 }
 
@@ -172,6 +224,7 @@ static void _Warning(long p_position, const char *p_message)
     {
         _PrintPosition(p_position);
         fprintf(stderr, "warning: %s\n", p_message);
+        _PrintContext(p_position);
     }
 }
 
@@ -184,13 +237,12 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     fprintf(stderr, "error: ");
     fprintf(stderr, p_message, p_string);
     fprintf(stderr, "\n");
+    _PrintContext(p_position);
     s_error_count += 1;
 }
 
 static void _WarningS(long p_position, const char *p_message, const char *p_string)
 {
-    long t_row, t_column;
-    
     if (IsDependencyCompile())
         return;
 
@@ -200,12 +252,11 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
     }
     else
     {
-        GetColumnOfPosition(p_position, &t_column);
-        GetRowOfPosition(p_position, &t_row);
         _PrintPosition(p_position);
         fprintf(stderr, "warning: ");
         fprintf(stderr, p_message, p_string);
         fprintf(stderr, "\n");
+        _PrintContext(p_position);
     }
 }
 

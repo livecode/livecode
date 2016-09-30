@@ -51,9 +51,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 Checkersize = 64;
 static uint2 Venetiansize = 64;
+#if 0
 static uint2 Zoomsize = 16;
-
-static int2 dissolve_array[DISSOLVE_SIZE] = { 13, 2, 10, 7, 14, 8, 11, 3, 0, 5, 12, 9, 1, 6, 4, 15};
+#endif
 
 static Boolean barneffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 static Boolean checkerboardeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
@@ -419,14 +419,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			{
 				t_context.delta = t_delta;
 				
-				Boolean t_drawn = False;
 				view_platform_updatewindowwithcallback(t_effect_region, MCStackRenderEffect, &t_context);
 				
-				// Now redraw the window with the new image.
-//				if (t_drawn)
-				{
-					MCscreen -> sync(getw());
-				}
+                MCscreen -> sync(getw());
 				
 				// Update the window's blendlevel (if needed)
 				if (old_blendlevel != blendlevel)

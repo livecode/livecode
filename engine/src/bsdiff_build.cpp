@@ -244,9 +244,9 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 		(close(fd)==-1)) err(1,"%s",argv[1]);*/
 	if (t_success)
 	{
-		uint32_t s;
-		t_success = p_old_file -> Measure(s);
-		oldsize = (signed)s;
+		uint32_t t_size;
+		t_success = p_old_file -> Measure(t_size);
+		oldsize = (signed)t_size;
 	}
 	if (t_success)
 		t_success = MCMemoryNewArray(oldsize + 1, old);
@@ -276,9 +276,9 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 		(close(fd)==-1)) err(1,"%s",argv[2]);*/
 	if (t_success)
 	{
-		uint32_t s;
-		t_success = p_new_file -> Measure(s);
-		newsize = (signed)s;
+		uint32_t t_size;
+		t_success = p_new_file -> Measure(t_size);
+		newsize = (signed)t_size;
 	}
 	if (t_success)
 		t_success = MCMemoryNewArray(newsize + 1, newp);
