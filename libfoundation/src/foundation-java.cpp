@@ -19,17 +19,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(TARGET_PLATFORM_LINUX)
+#define TARGET_SUPPORTS_JAVA
+#endif
+
+#ifdef TARGET_SUPPORTS_JAVA
 #ifdef TARGET_PLATFORM_MACOS_X
 #include <JavaVM/jni.h>
-#elif TARGET_SUBPLATFORM_ANDROID
+#else
 #include <jni.h>
+#endif
+#endif
+
+#if defined(TARGET_PLATFORM_LINUX)
+#include <stdlib.h>
+#include <dlfcn.h>
+#endif
+
+#ifdef TARGET_SUBPLATFORM_ANDROID
 extern JNIEnv *MCJavaGetThreadEnv();
 extern JNIEnv *MCJavaAttachCurrentThread();
 extern void MCJavaDetachCurrentThread();
-#endif
-
-#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_SUBPLATFORM_ANDROID)
-#define TARGET_SUPPORTS_JAVA
 #endif
 
 #ifdef TARGET_SUPPORTS_JAVA
@@ -37,13 +47,80 @@ static JNIEnv *s_env;
 static JavaVM *s_jvm;
 #endif
 
-bool __MCJavaInitialize()
+#if defined(TARGET_PLATFORM_LINUX)
+static void *s_jvm_handle = nil;
+
+static bool initialise_weak_link_jvm_linux()
 {
-#ifdef TARGET_PLATFORM_MACOS_X
+    if (s_jvm_handle != nil)
+        return true;
+    
+    const char *t_javahome;
+    t_javahome = getenv("JAVA_HOME");
+    
+    if (t_javahome == nil)
+        return false;
+    
+    const char *t_target = "/jre/lib/amd64/server/libjvm.so";
+    
+    char *t_jvm_lib = new char[strlen(t_javahome) + strlen(t_target) + 1];
+    if (!sprintf(t_jvm_lib, "%s%s", t_javahome, t_target))
+        return false;
+    
+    void *t_jvm;
+    t_jvm = dlopen(t_jvm_lib, RTLD_LAZY);
+    
+    delete[] t_jvm_lib;
+    
+    if (t_jvm == nil)
+        return false;
+    
+    s_jvm_handle = t_jvm;
+    return true;
+}
+
+#endif
+
+static void init_jvm_args(JavaVMInitArgs *x_args)
+{
+#if defined(TARGET_PLATFORM_MACOS_X)
+    JNI_GetDefaultJavaVMInitArgs(x_args);
+#elif defined(TARGET_PLATFORM_LINUX)
+    typedef void (*get_jvm_init_args_ptr)(void *args);
+    get_jvm_init_args_ptr t_get_jvm_init_args = (get_jvm_init_args_ptr)dlsym(s_jvm_handle, "JNI_GetDefaultJavaVMInitArgs");
+    if (t_get_jvm_init_args != nil)
+        t_get_jvm_init_args(x_args);
+#endif
+}
+    
+static bool create_jvm(JavaVMInitArgs *p_args)
+{
+    int ret = 0;
+#if defined(TARGET_PLATFORM_MACOS_X)
+    ret = JNI_CreateJavaVM(&s_jvm, (void **)&s_env, p_args);
+#elif defined(TARGET_PLATFORM_LINUX)
+    typedef int (*create_jvm_ptr)(void **jvm, void **env, void* args);
+    
+    create_jvm_ptr t_create_jvm = (create_jvm_ptr)dlsym(s_jvm_handle, "JNI_CreateJavaVM");
+
+    ret = t_create_jvm((void **)&s_jvm, (void **)&s_env, p_args);
+#endif
+    
+    return ret == 0;
+}
+
+static bool initialise_jvm()
+{
+#if defined(TARGET_PLATFORM_LINUX)
+	if (!initialise_weak_link_jvm_linux())
+		return false;
+#endif
+
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
     JavaVMInitArgs vm_args;
     vm_args.version = JNI_VERSION_1_6;
-    JNI_GetDefaultJavaVMInitArgs(&vm_args);
-
+    init_jvm_args(&vm_args);
+    
     JavaVMOption* options = new JavaVMOption[1];
     options[0].optionString = "-Djava.class.path=/usr/lib/java";
     
@@ -51,17 +128,31 @@ bool __MCJavaInitialize()
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    int ret = JNI_CreateJavaVM(&s_jvm, (void **)&s_env, &vm_args);
-    return ret == 0;
+    return create_jvm(&vm_args);
 #endif
     return true;
 }
 
-void __MCJavaFinalize()
+static void finalise_jvm()
 {
-#ifdef TARGET_PLATFORM_MACOS_X
-    s_jvm->DestroyJavaVM();
+    if (s_jvm != nil)
+    {
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
+        s_jvm -> DestroyJavaVM();
 #endif
+    }
+}
+
+MC_DLLEXPORT_DEF
+bool MCJavaInitialize()
+{
+    return initialise_jvm();
+}
+
+MC_DLLEXPORT_DEF
+void MCJavaFinalize()
+{
+    finalise_jvm();
 }
 
 enum MCJavaCallType {
@@ -141,7 +232,7 @@ static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
 #ifdef TARGET_SUPPORTS_JAVA
 void MCJavaDoAttachCurrentThread()
 {
-#ifdef TARGET_PLATFORM_MACOS_X
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
     s_jvm -> AttachCurrentThread((void **)&s_env, nil);
 #else
     s_env = MCJavaAttachCurrentThread();

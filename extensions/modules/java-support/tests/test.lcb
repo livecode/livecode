@@ -21,7 +21,7 @@ use com.livecode.module.javasupport
 use com.livecode.java
 
 public handler TestObject()
-	if the operating system is not "mac" then
+	if not the operating system is in ["mac", "linux"] then
 		skip test "java object created" because "not implemented on" && the operating system
 	else
 		variable tObj as JObject

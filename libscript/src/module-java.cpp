@@ -42,6 +42,9 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaStringToJString(MCStringRef p_string, MCJ
 
 extern "C" bool com_livecode_java_Initialize(void)
 {
+    if (!MCJavaInitialize())
+        return false;
+    
     if (!MCJavaCreateJavaObjectTypeInfo())
         return false;
     
@@ -50,7 +53,7 @@ extern "C" bool com_livecode_java_Initialize(void)
 
 extern "C" void com_livecode_java_Finalize(void)
 {
-    
+    MCJavaFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
