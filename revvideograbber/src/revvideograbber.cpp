@@ -115,7 +115,7 @@ struct MYBITMAP
 
 MYBITMAP *createmybitmap(uint2 depth, uint2 width, uint2 height)
 {
-  MYBITMAP *image = new (std::nothrow) MYBITMAP;
+  MYBITMAP *image = new (nothrow) MYBITMAP;
   image->width = width;
   image->height = height;
   image->depth = (uint1)depth;
@@ -638,7 +638,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
 				{
 #endif
                     if (InitQT())
-                        gvideograbber = new (std::nothrow) CQTVideoGrabber(windowid);
+                        gvideograbber = new (nothrow) CQTVideoGrabber(windowid);
                     else
                     {
                         // SN-2015-04-17: [[ Bug 13452 ]] Break if qvideograbber
