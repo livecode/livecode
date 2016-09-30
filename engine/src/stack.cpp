@@ -1703,10 +1703,10 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
+bool MCStack::resolve_filename(MCStringRef p_filename, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_filename;
-    if (resolve_relative_path(filename, &t_filename))
+    if (resolve_relative_path(p_filename, &t_filename))
     {
         if (MCS_exists(*t_filename, True))
         {
@@ -1715,7 +1715,7 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
         }
     }
     
-	r_resolved = MCValueRetain(filename);
+	r_resolved = MCValueRetain(p_filename);
 	return true;
 }
 

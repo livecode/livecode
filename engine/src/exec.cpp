@@ -1394,7 +1394,7 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
     while (statements != NULL)
     {
         statements->exec_ctxt(ctxt2);
-        Exec_stat stat = ctxt2 . GetExecStat();
+        stat = ctxt2 . GetExecStat();
         if (stat == ES_ERROR)
         {
             deletestatements(statements);
@@ -2761,10 +2761,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
             if (!ctxt . HasError())
             {
-                integer_t t_value[2];
-                t_value[0] = a;
-                t_value[1] = b;
-                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[2];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;
@@ -2778,12 +2778,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
-                integer_t t_value[4];
-                t_value[0] = a;
-                t_value[1] = b;
-                t_value[2] = c;
-                t_value[3] = d;
-                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[4];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                t_int_value[2] = c;
+                t_int_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;
@@ -2797,12 +2797,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
-                integer_t t_value[4];
-                t_value[0] = a;
-                t_value[1] = b;
-                t_value[2] = c;
-                t_value[3] = d;
-                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[4];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                t_int_value[2] = c;
+                t_int_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;

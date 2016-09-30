@@ -226,7 +226,6 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	// 'code' in 'global' scope).
 	if (MCNameGetCharAtIndex(p_name, 0) == '$')
 	{
-		MCVariable *tmp;
 		for (tmp = MCglobals ; tmp != NULL ; tmp = tmp->getnext())
 			if (tmp->hasname(p_name))
 			{

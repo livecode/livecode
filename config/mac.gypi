@@ -135,6 +135,7 @@
 							'-Werror=unknown-pragmas',
 							'-Werror=missing-field-initializers',
 							'-Werror=objc-literal-compare',
+							'-Werror=shadow',
 						],
 					},
 				},

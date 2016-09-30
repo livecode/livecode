@@ -285,11 +285,11 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 				real8 dx = (real8)(mx - startx);
 				real8 dy = (real8)(my - starty);
 				real8 length = sqrt(dx * dx + dy * dy);
-				real8 angle = atan2(dy, dx);
+				real8 t_angle = atan2(dy, dx);
 				real8 quanta = M_PI * 2.0 / (real8)MCslices;
-				angle = floor((angle + quanta / 2.0) / quanta) * quanta;
-				mx = startx + (int2)(cos(angle) * length);
-				my = starty + (int2)(sin(angle) * length);
+				angle = floor((t_angle + quanta / 2.0) / quanta) * quanta;
+				mx = startx + (int2)(cos(t_angle) * length);
+				my = starty + (int2)(sin(t_angle) * length);
 			}
 			realpoints[nrealpoints - 1].x = mx;
 			realpoints[nrealpoints - 1].y = my;
@@ -724,12 +724,12 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
-	real8 angle = atan2(dy, dx);
-	real8 a1 = angle + 3.0 * M_PI / 4.0;
-	real8 a2 = angle - 3.0 * M_PI / 4.0;
+	real8 t_angle = atan2(dy, dx);
+	real8 a1 = t_angle + 3.0 * M_PI / 4.0;
+	real8 a2 = t_angle - 3.0 * M_PI / 4.0;
 	real8 size = get_arrow_size();
-	pts[0].x = p2.x + (int2)(cos(angle) * size);
-	pts[0].y = p2.y + (int2)(sin(angle) * size);
+	pts[0].x = p2.x + (int2)(cos(t_angle) * size);
+	pts[0].y = p2.y + (int2)(sin(t_angle) * size);
 	pts[1].x = p2.x + (int2)(cos(a1) * size);
 	pts[1].y = p2.y + (int2)(sin(a1) * size);
 	pts[2].x = p2.x + (int2)(cos(a2) * size);

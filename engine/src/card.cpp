@@ -1795,7 +1795,7 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	if (oldparent == this)
 	{
 		MCObjptr *newoptr = NULL;
-		MCObjptr *tptr = objptrs;
+		tptr = objptrs;
 		do
 		{
 			if (tptr->getref() == optr)
@@ -2812,7 +2812,7 @@ MCRectangle MCCard::computecrect()
 }
 
 void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
-                             const MCRectangle &selrect, MCRectangle &drect)
+                             const MCRectangle &p_selrect, MCRectangle &drect)
 {
 	// MW-2008-01-30: [[ Bug 5749 ]] Make sure we check to see if the object is
 	//   selectable - this will recurse up the object tree as necessary.
@@ -2835,7 +2835,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
         t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
         
         MCRectangle t_group_selrect;
-        t_group_selrect = MCU_intersect_rect(selrect, t_group_rect);
+        t_group_selrect = MCU_intersect_rect(p_selrect, t_group_rect);
         
         do
         {
@@ -2854,7 +2854,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		if (MCselectintersect)
 		{
             was = cptr->maskrect(oldrect);
-            is = cptr->maskrect(selrect);
+            is = cptr->maskrect(p_selrect);
 
             // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
             //  recheck the selection intersect
@@ -2867,13 +2867,13 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
                     was = MCU_line_intersect_rect(oldrect, t_rect);
                 
                 if (!is)
-                    is = MCU_line_intersect_rect(selrect, t_rect);
+                    is = MCU_line_intersect_rect(p_selrect, t_rect);
             }
 		}
 		else
 		{
 			was = MCU_rect_in_rect(cptr->getrect(), oldrect);
-			is = MCU_rect_in_rect(cptr->getrect(), selrect);
+			is = MCU_rect_in_rect(cptr->getrect(), p_selrect);
 		}
 		if (is != was)
 		{

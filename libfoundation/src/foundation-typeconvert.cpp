@@ -134,11 +134,11 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 					}
 					else
 					{
-						char c = MCNativeCharFold(*sptr);
-						if (base == 16 && c >= 'a' && c <= 'f')
+						char t_char = MCNativeCharFold(*sptr);
+						if (base == 16 && t_char >= 'a' && t_char <= 'f')
 						{
 							value *= base;
-							value += c - 'a' + 10;
+							value += t_char - 'a' + 10;
 						}
 						else
 							return 0;

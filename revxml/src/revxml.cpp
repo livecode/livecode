@@ -2899,7 +2899,7 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
-				int docID = atoi(args[1]);
+				docID = atoi(args[1]);
 				CXMLDocument *xsltDocument = doclist.find(docID);
 				
 				// MW-2013-09-11: [[ RevXmlXslt ]] Only try to fetch the xsltContext if
