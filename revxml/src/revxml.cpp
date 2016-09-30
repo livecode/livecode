@@ -457,20 +457,24 @@ void XML_AddDTD(char *args[], int nargs, char **retstring,
 	static int dtdcounter = 0;
 	char *result = NULL;
 	if (dtdcounter)
-	if (nargs != 2){
-		*error = True;
-		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else{
-		int docid = atoi(args[0]);
-		CXMLDocument *tdoc = doclist.find(docid);
-		if (!tdoc)
-			result = istrdup(xmlerrors[XMLERR_BADDOCID]);
-		else  if (!tdoc->AddDTD(args[1], strlen(args[1]))) {
-			result = (char *)malloc(1024);
-			sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
-		}
-	}
+    {
+        if (nargs != 2)
+        {
+            *error = True;
+            result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+        }
+        else
+        {
+            int docid = atoi(args[0]);
+            CXMLDocument *tdoc = doclist.find(docid);
+            if (!tdoc)
+                result = istrdup(xmlerrors[XMLERR_BADDOCID]);
+            else  if (!tdoc->AddDTD(args[1], strlen(args[1]))) {
+                result = (char *)malloc(1024);
+                sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
+            }
+        }
+    }
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 

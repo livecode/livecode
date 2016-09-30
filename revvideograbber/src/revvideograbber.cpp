@@ -976,7 +976,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
     		      uint1 *destdata = (uint1 *)new char[destbpl * videoimage->height];
     		     uint1 *dptr = destdata;
     		   uint1 *sptr = videoimage->data;
-    		uint4 cbpl = videoimage->width * 32 + 7 >> 3; 
+    		uint4 cbpl = (videoimage->width * 32 + 7) >> 3; 
     		uint2 h = videoimage->height;
     		while (h--) {
       		memcpy(dptr, sptr, cbpl);

@@ -1483,7 +1483,7 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 		MCRectangle newrect = rect;
 		real8 dt = 0.0;
 		if (curtime >= mptr->starttime + mptr->duration
-		        || rect.x == mptr->donex && rect.y == mptr->doney)
+		        || (rect.x == mptr->donex && rect.y == mptr->doney))
 		{
 			newrect.x = mptr->donex;
 			newrect.y = mptr->doney;
@@ -1531,10 +1531,12 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 				moving = mptr->prev();
 				mptr->remove(moving);
 				if (!mptr->waiting)
+                {
 					if (MClockmessages)
 						delaymessage(mptr->object, MCM_move_stopped);
 					else
 						mptr->object->message(MCM_move_stopped);
+                }
 				delete mptr;
 				if (moving == NULL)
 					mptr = NULL;

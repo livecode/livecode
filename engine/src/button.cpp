@@ -3283,7 +3283,7 @@ uint2 MCButton::getmousetab(int2 &curx)
             totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + 23;
 		}
 		if (totalwidth < rect.width)
-			curx += rect.width - totalwidth >> 1;
+			curx += (rect.width - totalwidth) >> 1;
 		if (mx < curx)
 			return MAXUINT2;
 	}

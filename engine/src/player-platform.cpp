@@ -958,7 +958,7 @@ Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 Boolean MCPlayer::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || showinvisible())
-        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+        || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
     
     Boolean t_success;
@@ -2402,10 +2402,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     }
     
 	if (getflag(F_SHOW_BORDER))
+    {
 		if (getflag(F_3D))
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, rect, borderwidth);
+    }
 	
 	if (!p_isolated)
     {

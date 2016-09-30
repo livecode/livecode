@@ -449,19 +449,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 p_delim, Boolean &done,
 	uint4 startlength = l;
 	uint2 base = 10;
 	if (l && *sptr == '0')
+    {
 		if (l > 2 && MCS_tolower(*(sptr + 1)) == 'x')
 		{
 			base = 16;
 			sptr += 2;
 			l -= 2;
 		}
-		else
-			if (octals)
-			{
-				base = 8;
-				sptr++;
-				l--;
-			}
+		else if (octals)
+        {
+            base = 8;
+            sptr++;
+            l--;
+        }
+    }
 	while (l)
 	{
 		if (isdigit((uint1)*sptr))
@@ -675,7 +676,7 @@ Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (l == 0 || (l > 1 && ((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2]))
+	if (l == 0 || (l > 1 && (((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2])))
 	        || (sptr[1] == '+' || sptr[1] == '-')))))
 		return False;
 	char buff[R8L];
@@ -710,7 +711,7 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (r_len == 0 || (r_len > 1 && ((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2]))
+	if (r_len == 0 || (r_len > 1 && (((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2])))
 	        || (r_str[1] == '+' || r_str[1] == '-')))))
 	{
 		r_done = False;
@@ -1602,10 +1603,12 @@ MCRectangle MCU_clip_rect(const MCRectangle &p_srect,
 			drect.width -= p_x - p_srect.x;
 	}
 	if (p_srect.x + p_srect.width > p_x + p_width)
+	{
 		if (p_srect.x > p_x + p_width)
 			drect.width = 0;
 		else
 			drect.width = p_x + p_width - drect.x;
+	}
 	if (p_srect.y < p_y)
 	{
 		drect.y = p_y;
@@ -1615,10 +1618,12 @@ MCRectangle MCU_clip_rect(const MCRectangle &p_srect,
 			drect.height -= p_y - p_srect.y;
 	}
 	if (p_srect.y + p_srect.height > p_y + p_height)
+	{
 		if (p_srect.y > p_y + p_height)
 			drect.height = 0;
 		else
 			drect.height = p_y + p_height - drect.y;
+	}
 	return drect;
 }
 
@@ -1708,6 +1713,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			drect.height -= one.y + one.height - two.y;
 	else
 		if (one.y == two.y && one.height == two.height)
+        {
 			if (one.x > two.x)
 			{
 				uint2 overlap = two.x + two.width - one.x;
@@ -1716,6 +1722,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			}
 			else
 				drect.width -= one.x + one.width - two.x;
+        }
 	return drect;
 }
 
