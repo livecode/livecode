@@ -282,6 +282,7 @@ void MCMemoryDelete(void *p_record);
 //////////
 
 #include <new>
+using std::nothrow;
 
 // This method provides type-safe construction of an object.
 template<typename T> bool MCMemoryNew(T*& r_record)
