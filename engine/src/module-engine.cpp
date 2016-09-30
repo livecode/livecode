@@ -627,7 +627,8 @@ static hash_t __MCScriptObjectHash(MCValueRef p_value)
 
 static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_description)
 {
-    return false;
+    r_description = MCSTR("<script object>");
+    return true;
 }
 
 static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
