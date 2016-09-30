@@ -78,12 +78,18 @@
         CheckBindings(Inherits)
         CheckBindings(Definitions)
 
-'condition' CheckParameters(TYPELIST, TYPE)
-
-    'rule' CheckParameters(Typelist, template(_, Id, Parameters)):
-        CheckParametersMatch(Typelist, Parameters)
-
-    'rule' CheckParameters(nil, nil):
+    'rule' CheckBindings(TYPE'named(Position, Id, Parameters)):
+        (|
+            QuerySymbolId(Id -> Info)
+            Info'Type -> Type
+            (|
+                where(Type -> nil)
+            ||
+                CheckParameterMatches(named(Position, Id, Parameters), Type)
+            |)
+        ||
+            Error_GenericTypeMismatch(Position)
+        |)
 
 'condition' CheckParametersMatch(TYPELIST, TYPELIST)
 
@@ -102,10 +108,18 @@
         LeftInfo'Index -> LeftIndex
         QuerySymbolId(RightId -> RightInfo)
         RightInfo'Index -> RightIndex
+
         eq(LeftIndex, RightIndex)
+
         CheckParametersMatch(LeftParameters, RightParameters)
 
-    'rule' CheckParameterMatches(named(_, Id, nil), placeholder(_, _)):
+    'rule' CheckParameterMatches(named(_, _, _), placeholder(_, _)):
+
+    'rule' CheckParameterMatches(placeholder(_, _), placeholder(_, _)):
+
+    'rule' CheckParameterMatches(wildcard(_, _), template(_, _, _)):
+
+    'rule' CheckParameterMatches(wildcard(_, _), placeholder(_, _)):
 
 'sweep' CheckBindingsOfConstantExpression(ANY)
 
