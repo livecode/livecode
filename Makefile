@@ -57,6 +57,9 @@ check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin
 	$(MAKE) -C ide/tests bin_dir=../../$*-bin
 	$(MAKE) -C extensions bin_dir=../$*-bin
+	
+configure:
+		./configure
 
 ################################################################
 # Linux rules
@@ -84,7 +87,7 @@ $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 # Android rules
 ################################################################
 
-ANDROID_ARCHS = armv6
+ANDROID_ARCHS = armv7a
 
 config-android-%:
 	./config.sh --platform android-$*
@@ -99,7 +102,7 @@ all-android-%:
 	$(MAKE) config-android-$*
 	$(MAKE) compile-android-$*
 
-$(addsuffix -android,all config compile check): %: %-armv6
+$(addsuffix -android,all config compile check): %: %-armv7a
 
 ################################################################
 # Mac rules
