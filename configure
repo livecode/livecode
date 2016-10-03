@@ -87,6 +87,19 @@ EOF
   exit $1
 }
 
+# [[ TODO ]] Support for the vendor portion of triples
+#    The triples used here are arch-os-abi rather than the more traditional
+#    arch-vendor-os[-abi]. We do this because vendor strings are rare these days
+#    and don't factor into our build process.
+#
+#    If/when this gets implemented, x86 architectures should have 'pc' for the
+#    vendor while the other architectures should use 'none'.
+
+# [[ TODO ]] Android should possibly be a Linux ABI variation?
+#    The LiveCode source code (and therefore build process) regards Android as
+#    a seperate operating system to Linux. While true in many respects, it
+#    doesn't match the "normal" triples like arm-none-linux-androideabi.
+
 guess_host_triple () {
     case "$(uname -s)" in
         Darwin)
