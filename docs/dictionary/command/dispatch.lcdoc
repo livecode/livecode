@@ -3,6 +3,7 @@ Name: dispatch
 Type: command
 
 Syntax: dispatch <message> [ to <target> ][ with {<argumentList>, | arrayName} ]
+Syntax: dispatch <message> [ to <target> ][ with <argumentList> ]
 
 Summary:
 Sends a message to an object via the normal message path.
@@ -20,7 +21,6 @@ Example:
 dispatch "setList" with myVar1, myVar2
 
 Example:
-dispatch "updateFields" with arrayName
 
 Parameters:
 message:
@@ -32,8 +32,6 @@ A reference to any LiveCode object.
 argumentList:
 A comma separated list of expressions containing the arguments to send.
 
-arrayName (array):
-The name of a single array variable.
 
 It (enum):
 Set by <dispatch> to indicate how the message was processed.
@@ -52,8 +50,6 @@ as it allows a <behavior> script to send an 'event' to one of its child
 objects and then perform an action depending on the outcome.
 
 Executing a <dispatch> command causes the <message> to be sent to the
-target object with the given argument list or array data. This message
-passes through the message path in the normal way.
 
 If no <target> is specified, the <message> is sent to ' <me> '. In the
 context of a <behavior>, this is typically the child that is executing
