@@ -22,6 +22,10 @@ constant kVersions = "8.1:7000,8.0:7000,7.0:7000,5.5:5500,2.7:2700"
 constant kVersionsWidget = "8.1:8100,8.0:8000,7.0:7000,5.5:5500,2.7:2700"
 constant kVersionsBlockOverflow = "8.1:8100,8.0:8000,7.0:7000,5.5:5500,2.7:2700"
 
+constant kMinVersion = "7.0"
+constant kWidgetMinVersion = "8.0"
+constant kBlockOverflowMinVersion = "8.1"
+
 local sTestStack, sTestStackWidget, sTestStackBlockOverflow
 
 command TestSetup
@@ -117,6 +121,15 @@ private command __TestSaveAsDefaultFormat pStack, pVersion
    __TestStackFileHasFormat pVersion
 end __TestSaveAsDefaultFormat
 
+private command __TestMinStackFileVersion pStack, pVersion
+   local tVersion, tName
+   set the itemdelimiter to ":"
+   put item 1 of pVersion into tVersion
+   put the short name of pStack into tName
+   
+   TestAssert merge("stack [[tName]] has minStackFileVersion of [[tVersion]]"), the minStackFileVersion of pStack is tVersion
+end __TestMinStackFileVersion
+
 on TestSaveAsFormat
    local tVersion
 
@@ -163,3 +176,10 @@ on TestSaveAsDefaultFormat
    __TestSaveAsDefaultFormat sTestStackWidget, item 1 of kVersionsWidget
    __TestSaveAsDefaultFormat sTestStackBlockOverflow, item 1 of kVersionsBlockOverflow
 end TestSaveAsDefaultFormat
+
+on TestMinStackFileVersion
+   set the itemdelimiter to ","
+   __TestMinStackFileVersion sTestStack, kMinVersion
+   __TestMinStackFileVersion sTestStackWidget, kWidgetMinVersion
+   __TestMinStackFileVersion sTestStackBlockOverflow, kBlockOverflowMinVersion
+end TestMinStackFileVersion

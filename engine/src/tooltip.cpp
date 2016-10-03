@@ -75,11 +75,13 @@ void MCTooltip::mousemove(int2 x, int2 y, MCCard *c)
 	my = y;
 	card = c;
 	if (!MCStringIsEmpty(tip))
+    {
 		if (opened)
 			MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		else
 			if (!(state & CS_NO_FOCUS) && MCtooltipdelay != 0)
 				MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
+    }
 }
 
 void MCTooltip::clearmatch(MCCard *c)

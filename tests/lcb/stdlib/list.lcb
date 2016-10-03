@@ -714,4 +714,8 @@ public handler TestOffsetBeforeZero()
 	test "last offset before (+ve, 0)" when the last offset of [true,false] before 0 in tList is tNoBefore
 end handler
 
+public handler TestConcat()
+	test "concat" when ["x"] & ["y"] is ["x", "y"]
+end handler
+
 end module

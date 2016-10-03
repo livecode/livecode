@@ -417,7 +417,6 @@
 									'rsrc/template-beta-report-entitlement.xcent',
 									'rsrc/template-remote-notification-entitlements.xcent',
 									'rsrc/template-remote-notification-store-entitlements.xcent',
-									'rsrc/template-ResourceRules.plist',
 								],
 							},
 						},

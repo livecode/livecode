@@ -11,6 +11,8 @@ Converts a string from <Unicode> to single-byte text.
 
 Introduced: 1.0
 
+Deprecated: 7.0
+
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile

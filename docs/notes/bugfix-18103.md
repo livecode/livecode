@@ -1,0 +1,1 @@
+# Pass settings parameter to HTML5 builder correctly

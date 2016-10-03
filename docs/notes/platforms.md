@@ -5,9 +5,6 @@ The engine supports a variety of operating systems and versions. This section de
 
 LiveCode supports the following versions of Windows:
 
-* Windows XP SP2 and above
-* Windows Server 2003
-* Windows Vista SP1 and above (both 32-bit and 64-bit)
 * Windows 7 (both 32-bit and 64-bit)
 * Windows Server 2008
 * Windows 8.x (Desktop)
@@ -17,16 +14,23 @@ LiveCode supports the following versions of Windows:
 
 ## Linux
 
-LiveCode supports Linux installations which meet the following requirements:
+LiveCode supports the following Linux distributions, on 32-bit or
+64-bit Intel/AMD or compatible processors:
 
-* Supported CPU architectures:
-  * 32-bit or 64-bit Intel/AMD or compatible processor
+* Ubuntu 14.04 and 16.04
+* Fedora 23 & 24
+* Debian 7 (Wheezy) and 8 (Jessie) [server]
+* CentOS 7 [server]
+
+LiveCode may also run on Linux installations which meet the following
+requirements:
 
 * Required dependencies for core functionality:
   * glibc 2.13 or later
+  * glib 2.0 or later
 
 * Optional requirements for GUI functionality:
-  * GTK/GDK/Glib 2.24 or later
+  * GTK/GDK 2.24 or later
   * Pango with Xft support
   * esd (optional, needed for audio output)
   * mplayer (optional, needed for media player functionality)
@@ -42,39 +46,43 @@ LiveCode supports Linux installations which meet the following requirements:
 ## Mac
 The Mac engine supports:
 
-* 10.6.x (Snow Leopard) on Intel
-* 10.7.x (Lion) on Intel
-* 10.8.x (Mountain Lion) on Intel
 * 10.9.x (Mavericks) on Intel
 * 10.10.x (Yosemite) on Intel
 * 10.11.x (El Capitan) on Intel
+* 10.12.x (Sierra) on Intel
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
 
 Currently, the supported versions of Xcode are:
-* Xcode 4.6 on MacOS X 10.7
-* Xcode 5.1 on MacOS X 10.8
 * Xcode 6.2 on MacOS X 10.9
 * Xcode 6.2 and 7.2 on Mac OS X 10.10
-* Xcode 7.3 on MacOS X 10.11
+* Xcode 8.0 on MacOS X 10.11
+* Xcode 8.0 on MacOS 10.12
 
-It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on Yosemite, you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
+It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on OS X 10.10 (Yosemite), you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 
-We currently support the following iOS Simulators:
+We currently support deployment for the following versions of iOS:
 
-* 6.1
-* 7.1
-* 8.2
+* 8.2 [simulator]
 * 9.2
-* 9.3
+* 10.0
 
 ## Android
+
 
 LiveCode allows you to save your stack as an Android application, and
 also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
+
+The Android engine supports devices using ARMv7 or ARMv8 processors.
+It will run on the following versions of Android:
+
+* 4.1-4.3 (Jelly Bean)
+* 4.4 (KitKat)
+* 5.0-5.1 (Lollipop)
+* 6.0 (Marshmallow)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
@@ -92,7 +100,7 @@ section of the LiveCode IDE's preferences, you can deploy your stack
 to Android devices.
 
 Some users have reported successful Android Watch deployment, but it
-is not yet officially supported.
+is not officially supported.
 
 ## HTML5
 

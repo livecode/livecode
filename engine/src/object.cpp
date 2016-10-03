@@ -552,7 +552,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			return True;
         break;
     default:
-		MCAutoStringRef t_string;
+		MCAutoStringRef t_key_string;
 			
 		// Special keys as their number converted to a string, the rest by value
         // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
@@ -560,26 +560,26 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
         // SN-2015-05-05: [[ Bug 15305 ]] Ensure that the keys are not printing
         //  their numeric value, if not wanted.
         if (key > 0xFF && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
-            /* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%ld", key);
         else if (MCmodifierstate & MS_CONTROL)
-            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%c", (char)key);
 		else
-			t_string = p_string;
+			t_key_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
         {
-			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_command_key_down, *t_key_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
         {
-				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
+				if (message_with_valueref_args(MCM_option_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
         {
-			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_control_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #endif
@@ -858,7 +858,7 @@ void MCObject::deselect()
 
 bool MCObject::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0)
+    if (parent == NULL || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -953,9 +953,9 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		//   differently.
 		if (hptr -> getfileindex() == 0)
         {
-            MCExecContext ctxt(this, nil, nil);
+            MCExecContext ctxt2(this, nil, nil);
             MCAutoStringRef t_id;
-			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
             MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
@@ -1005,9 +1005,9 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
     {
-        MCExecContext ctxt(this, nil, nil);
+        MCExecContext ctxt2(this, nil, nil);
         MCAutoStringRef t_id;
-        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	unlockforexecution();
@@ -1232,6 +1232,12 @@ void MCObject::viewportgeometrychanged(const MCRectangle &p_rect)
 		getNativeLayer()->OnViewportGeometryChanged(p_rect);
 }
 
+void MCObject::OnViewTransformChanged()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnViewTransformChanged();
+}
+
 void MCObject::OnOpen()
 {
 	if (getNativeLayer() != nil)
@@ -1239,6 +1245,18 @@ void MCObject::OnOpen()
 }
 
 void MCObject::OnClose()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnDetach();
+}
+
+void MCObject::OnAttach()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnAttach();
+}
+
+void MCObject::OnDetach()
 {
 	if (getNativeLayer() != nil)
 		getNativeLayer()->OnDetach();
@@ -1718,8 +1736,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 Boolean MCObject::setpatterns(MCStringRef data)
 {
 	uint2 p;
-	Boolean done = False;
-    uindex_t t_start_pos, t_end_pos;
+	uindex_t t_start_pos, t_end_pos;
     t_start_pos = 0;
     t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
@@ -2623,8 +2640,7 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	int2 rx = drect.x + drect.width;
 	int2 ty = drect.y;
 	int2 by = drect.y + drect.height;
-	uint2 i;
-
+	
 	Boolean reversed = style == ETCH_SUNKEN || style == ETCH_SUNKEN_BUTTON;
 	switch (MClook)
 	{
@@ -4230,13 +4246,13 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle MCObject::GetHandle(void)
+MCObjectHandle MCObject::GetHandle(void) const
 {
 	if (m_weak_proxy == NULL)
 	{
 		m_weak_proxy = new MCObjectProxy(this);
         if (!m_weak_proxy)
-            return MCObjectHandle(NULL);
+            return nil;
 	}
 
 	return MCObjectHandle(m_weak_proxy);
@@ -5153,7 +5169,7 @@ uint32_t MCObject::geteffectiveminimumstackfileversion(void)
 {
 	MCRequiredStackFileVersionVisitor t_visitor;
 	t_visitor.required_version = kMCStackFileFormatMinimumExportVersion;
-	visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	visit(kMCObjectVisitorHeirarchical | kMCObjectVisitorRecursive, 0, &t_visitor);
 	return t_visitor.required_version;
 }
 
@@ -5330,9 +5346,9 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectProxy::MCObjectProxy(MCObject *p_object) :
-  m_object(p_object),
-  m_refcount(0)
+MCObjectProxy::MCObjectProxy(const MCObject *p_object) :
+  m_refcount(0),
+  m_object(const_cast<MCObject*>(p_object))
 {
 }
 

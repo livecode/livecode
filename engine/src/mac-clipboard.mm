@@ -274,6 +274,16 @@ MCStringRef MCMacRawClipboard::DecodeTransferredFileList(MCDataRef p_encoded_pat
     return t_path;
 }
 
+MCDataRef MCMacRawClipboard::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
+MCDataRef MCMacRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
 MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
 {
     // If the key is already in UTI form, just pass it out

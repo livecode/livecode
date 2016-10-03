@@ -1252,6 +1252,24 @@ MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
     _kMCInterfaceThemeControlTypeElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceScriptStatusElementInfo[] =
+{
+    { "compiled", kMCInterfaceScriptStatusCompiled, false },
+    { "uncompiled", kMCInterfaceScriptStatusUncompiled, false },
+    { "warning", kMCInterfaceScriptStatusWarning, false },
+    { "error", kMCInterfaceScriptStatusError, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceScriptStatusTypeInfo =
+{
+    "Interface.ScriptStatus",
+    sizeof(_kMCInterfaceScriptStatusElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceScriptStatusElementInfo
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1264,6 +1282,7 @@ MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeI
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceScriptStatusTypeInfo = &_kMCInterfaceScriptStatusTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2687,7 +2706,7 @@ void MCObject::GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns)
 	ctxt . Throw();
 }
 
-void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
+void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 {
 	bool t_success;
 	t_success = true;
@@ -2695,18 +2714,18 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
 	uindex_t t_old_offset = 0;
 	uindex_t t_new_offset = 0;
 	uindex_t t_length;
-	t_length = MCStringGetLength(patterns);
+	t_length = MCStringGetLength(p_patterns);
 
 	for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 	{
 		MCAutoStringRef t_pattern;
 		uint4 t_id;
-		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)
@@ -3421,7 +3440,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_PATTERNS, "patterns" },
 };
 
-void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
+void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef p_props)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCRedrawLockScreen();
@@ -3437,7 +3456,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     {
 		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
 		//   for the property name.
-        if (!MCArrayFetchValue(props, false, MCNAME(s_preprocess_props[j].tag), t_value))
+        if (!MCArrayFetchValue(p_props, false, MCNAME(s_preprocess_props[j].tag), t_value))
             continue;
 
         // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
@@ -3456,7 +3475,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	uintptr_t t_iterator;
 	t_iterator = 0;
     MCNameRef t_key;
-	while(MCArrayIterate(props, t_iterator, t_key, t_value))
+	while(MCArrayIterate(p_props, t_iterator, t_key, t_value))
 	{
 		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;
@@ -4160,9 +4179,9 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
         
-        MCInterfaceTextStyle t_style;
-        t_style . style = t_style_set;
-        SetTextStyle(ctxt, t_style);
+        MCInterfaceTextStyle t_interface_style;
+        t_interface_style . style = t_style_set;
+        SetTextStyle(ctxt, t_interface_style);
         return;
     }
     
@@ -4347,4 +4366,14 @@ void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
 void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
 {
     r_theme = getcontroltype();
+}
+
+void MCObject::GetScriptStatus(MCExecContext& ctxt, intenum_t& r_status)
+{
+    if (hashandlers & HH_DEAD_SCRIPT)
+        r_status = kMCInterfaceScriptStatusError;
+    else if (hlist == nil && flags & F_SCRIPT)
+        r_status = kMCInterfaceScriptStatusUncompiled;
+    else
+        r_status = kMCInterfaceScriptStatusCompiled;
 }

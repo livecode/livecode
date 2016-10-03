@@ -106,11 +106,12 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool 
 #endif
 
 #if defined(USE_AUX_THREAD)
-#include <pthread.h>
+#include "mcmanagedpthread.h"
+#include <signal.h>
 
-static pthread_t s_socket_poll_thread = NULL;
+static MCManagedPThread s_socket_poll_thread;
 static pthread_mutex_t s_socket_list_mutex;
-static bool s_socket_poll_run = false;
+volatile sig_atomic_t s_socket_poll_thread_enabled;
 static int s_socket_poll_signal_pipe[2];
 #endif
 
@@ -144,7 +145,7 @@ Boolean MCSocket::sslinited = False;
 static void MCSocketsLockSocketList(void)
 {
 #if defined(USE_AUX_THREAD)
-    if (s_socket_poll_thread != NULL)
+    if (s_socket_poll_thread)
         pthread_mutex_lock(&s_socket_list_mutex);
 #endif
 }
@@ -152,7 +153,7 @@ static void MCSocketsLockSocketList(void)
 static void MCSocketsUnlockSocketList(void)
 {
 #if defined(USE_AUX_THREAD)
-    if (s_socket_poll_thread != NULL)
+    if (s_socket_poll_thread)
         pthread_mutex_unlock(&s_socket_list_mutex);
 #endif
 }
@@ -187,7 +188,7 @@ static void *MCSocketsPoll(void *p_arg)
     fd_set rmaskfd, wmaskfd, emaskfd;
     int4 maxfd;
     
-    while (s_socket_poll_run)
+    while (s_socket_poll_thread_enabled)
     {
         FD_ZERO(&rmaskfd);
         FD_ZERO(&wmaskfd);
@@ -242,7 +243,7 @@ static bool MCSocketsPollInterrupt(void)
 #if defined(USE_AUX_THREAD)
     if (t_success)
     {
-        if (s_socket_poll_thread == NULL)
+        if (!s_socket_poll_thread)
         {
             if (t_success)
                 t_success = pthread_mutex_init(&s_socket_list_mutex, NULL) == 0;
@@ -250,8 +251,8 @@ static bool MCSocketsPollInterrupt(void)
                 t_success = pipe(s_socket_poll_signal_pipe) == 0;
             if (t_success)
             {
-                s_socket_poll_run = true;
-                t_success = pthread_create(&s_socket_poll_thread, NULL, MCSocketsPoll, NULL) == 0;
+                s_socket_poll_thread_enabled = true;
+                t_success = (0 == s_socket_poll_thread.Create(NULL, MCSocketsPoll, NULL));
             }
         }
         else
@@ -265,8 +266,8 @@ static bool MCSocketsPollInterrupt(void)
 bool MCSocketsInitialize(void)
 {
 #if defined(USE_AUX_THREAD)
-    s_socket_poll_thread = NULL;
-    s_socket_poll_run = false;
+	MCMemoryReinit(s_socket_poll_thread);
+	s_socket_poll_thread_enabled = false;
 #endif
     return true;
 }
@@ -274,14 +275,13 @@ bool MCSocketsInitialize(void)
 void MCSocketsFinalize(void)
 {
 #if defined(USE_AUX_THREAD)
-    if (s_socket_poll_thread != NULL)
+    if (s_socket_poll_thread)
     {
-        s_socket_poll_run = false;
+		s_socket_poll_thread_enabled = false;
         MCSocketsPollInterrupt();
         
         void *t_result;
-        pthread_join(s_socket_poll_thread, &t_result);
-        s_socket_poll_thread = NULL;
+		s_socket_poll_thread.Join(&t_result);
         
         pthread_mutex_destroy(&s_socket_list_mutex);
     }
@@ -330,8 +330,8 @@ bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &
         if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
             MCsockets[i]->resolve_state == kMCSocketStateError)
             continue;
-        if (MCsockets[i]->connected && !MCsockets[i]->closing
-            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+        if ((MCsockets[i]->connected && !MCsockets[i]->closing
+             && !MCsockets[i]->shared) || MCsockets[i]->accepting)
             FD_SET(fd, &r_rmaskfd);
         if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
             FD_SET(fd, &r_wmaskfd);
@@ -1153,6 +1153,98 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 
 bool MCS_hostaddress(MCStringRef &r_host_address)
 {
+#if defined(_MACOSX)
+    bool t_success;
+    t_success = true;
+    
+    SCDynamicStoreRef t_store;
+    t_store = NULL;
+    if (t_success)
+    {
+        t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
+        if (t_store == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_network_key;
+    t_network_key = NULL;
+    if (t_success)
+    {
+        t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
+        if (t_network_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_network_value;
+    t_network_value = NULL;
+    if (t_success)
+    {
+        t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
+        if (t_network_value == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface;
+    t_interface = NULL;
+    if (t_success)
+    {
+        t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
+        if (t_interface == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface_key;
+    t_interface_key = NULL;
+    if (t_success)
+    {
+        t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
+        if (t_interface_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_interface_value;
+    t_interface_value = NULL;
+    if (t_success)
+    {
+        t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
+        if (t_interface_value == NULL)
+            t_success = false;
+    }
+    
+    char *t_result;
+    t_result = NULL;
+    if (t_success)
+    {
+        CFArrayRef t_addresses;
+        t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
+        if (t_addresses != NULL)
+        {
+            CFStringRef t_string;
+            t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
+            if (t_string != NULL)
+                t_result = osx_cfstring_to_cstring(t_string, false, false);
+        }
+    }
+    
+    if (t_interface_value != NULL)
+        CFRelease(t_interface_value);
+    
+    if (t_interface_key != NULL)
+        CFRelease(t_interface_key);
+    
+    if (t_network_value != NULL)
+        CFRelease(t_network_value);
+    
+    if (t_network_key != NULL)
+        CFRelease(t_network_key);
+    
+    if (t_store != NULL)
+        CFRelease(t_store);
+    
+    return MCStringCreateWithCString(t_result, r_host_address);
+ 
+#else
+    
 #if defined(_WINDOWS)
 	if (!wsainit())
 		return NULL;
@@ -1174,102 +1266,13 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 			}
 		}
 	}
-#elif defined(_MACOSX)
-	bool t_success;
-	t_success = true;
 
-	SCDynamicStoreRef t_store;
-	t_store = NULL;
-	if (t_success)
-	{
-		t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
-		if (t_store == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_network_key;
-	t_network_key = NULL;
-	if (t_success)
-	{
-		t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
-		if (t_network_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_network_value;
-	t_network_value = NULL;
-	if (t_success)
-	{
-		t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
-		if (t_network_value == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface;
-	t_interface = NULL;
-	if (t_success)
-	{
-		t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
-		if (t_interface == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface_key;
-	t_interface_key = NULL;
-	if (t_success)
-	{
-		t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
-		if (t_interface_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_interface_value;
-	t_interface_value = NULL;
-	if (t_success)
-	{
-		t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
-		if (t_interface_value == NULL)
-			t_success = false;
-	}
-
-	char *t_result;
-	t_result = NULL;
-	if (t_success)
-	{
-		CFArrayRef t_addresses;
-		t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
-		if (t_addresses != NULL)
-		{
-			CFStringRef t_string;
-			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
-			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false, false);
-		}
-	}
-	
-	if (t_interface_value != NULL)
-		CFRelease(t_interface_value);
-
-	if (t_interface_key != NULL)
-		CFRelease(t_interface_key);
-
-	if (t_network_value != NULL)
-		CFRelease(t_network_value);
-
-	if (t_network_key != NULL)
-		CFRelease(t_network_key);
-
-	if (t_store != NULL)
-		CFRelease(t_store);
-
-	return MCStringCreateWithCString(t_result, r_host_address);
-
-#elif defined(_LINUX)
-#else
 #endif
 
 	r_host_address = MCValueRetain(kMCEmptyString);
     return true;
+    
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1506,7 +1509,7 @@ void MCSocket::readsome()
 		if ((l = recvfrom(fd, dbuffer, l, 0,
 						  (struct sockaddr *)&addr, &addrsize)) < 0)
 		{
-			delete dbuffer;
+			delete[] dbuffer;
 			if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			{
 				error = new char[21 + I4L];
@@ -1518,7 +1521,7 @@ void MCSocket::readsome()
 		else
 		{
 			if (message == NULL)
-				delete dbuffer;
+				delete[] dbuffer;
 			else
 			{
 				char *t = inet_ntoa(addr.sin_addr);
@@ -1938,7 +1941,6 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 // MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this read is encrypted, rather than checking against socket.
 int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 {
-	int4 rc = 0;
 	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;

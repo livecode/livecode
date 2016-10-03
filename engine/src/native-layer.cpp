@@ -55,7 +55,7 @@ MCNativeLayer::MCNativeLayer() :
 	m_visible(false),
 	m_show_for_tool(false),
 	m_can_render_to_context(true),
-	m_defer_geometry_changes(false)
+	m_defer_geometry_changes(true)
 {
 	m_rect = m_viewport_rect = m_deferred_rect = m_deferred_viewport_rect =
 		MCRectangleMake(0, 0, 0, 0);
@@ -83,6 +83,11 @@ void MCNativeLayer::OnDetach()
 bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 {
 	return doPaint(p_context);
+}
+
+void MCNativeLayer::OnViewTransformChanged()
+{
+	doSetGeometry(m_rect);
 }
 
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_new_rect)

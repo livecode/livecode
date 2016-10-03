@@ -526,7 +526,7 @@ inline bool MCUnicodeCodepointIsIdeographic(uinteger_t x)
 extern uinteger_t MCUnicodeCodepointGetBreakClass(uinteger_t x);
 
 // Returns true if the given codepoint is in the high surrogate area
-inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
+inline bool MCUnicodeCodepointIsLeadingSurrogate(codepoint_t x)
 {
 	if (x < 0xD800)
 		return false;
@@ -537,14 +537,32 @@ inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
 	return true;
 }
 
+inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
+{
+	return MCUnicodeCodepointIsLeadingSurrogate(x);
+}
+
+
 // Returns true if the given codepoint is in the low surrogate area
-inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
+inline bool MCUnicodeCodepointIsTrailingSurrogate(codepoint_t x)
 {
 	if (x < 0xDC00)
 		return false;
 	if (x > 0xDFFF)
 		return false;
 	return true;
+}
+
+inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
+{
+	return MCUnicodeCodepointIsTrailingSurrogate(x);
+}
+
+inline uindex_t MCUnicodeCodepointGetCodeunitLength(codepoint_t cp)
+{
+	if (cp > UNICHAR_MAX)
+		return 2;
+	return 1;
 }
 
 // Returns true if the given codepoint is a base character
@@ -556,6 +574,12 @@ inline bool MCUnicodeCodepointIsBase(uinteger_t x)
 	return !MCUnicodeCodepointIsCombiner(x);
 }
 
+// Returns the codepoint formed by combining a low and high surrogate
+inline codepoint_t MCUnicodeCombineSurrogates(unichar_t p_leading, unichar_t p_trailing)
+{
+	return 0x10000U + (((p_leading - 0xD800U) << 10) | (p_trailing - 0xDC00U));
+}
+
 // Compute and advance the current surrogate pair (used by MCUnicodeCodepointAdvance to
 // help the compiler make good choices about inlining - effectively a 'trap' to a very
 // rare case).
@@ -565,7 +589,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = (0x10000U + ((p_input[x_index] - 0xD800U) << 10)) | (p_input[x_index + 1] - 0xDC00U);
+		t_codepoint = MCUnicodeCombineSurrogates(p_input[x_index], p_input[x_index + 1]);
 		x_index += 2;
 		return t_codepoint;
 	}

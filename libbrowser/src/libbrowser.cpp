@@ -677,7 +677,6 @@ bool MCBrowserRunloopWait()
 
 void MCBrowserRunloopBreakWait()
 {
-	MCLog("break wait", nil);
 	if (s_browser_breakwait_func)
 		s_browser_breakwait_func();
 }

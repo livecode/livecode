@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 #include "osspec.h"
+#include "stackfileformat.h"
 
 //////////
 
@@ -118,7 +119,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 {
     // TODO
     uint2 decorations;
-    uint4 flags;
     decorations = WD_CLEAR;
     
     if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
@@ -305,13 +305,13 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
-	{"", kMCStackFullscreenResize},
-	{"exactfit", kMCStackFullscreenExactFit},
-	{"letterbox", kMCStackFullscreenLetterbox},
-	{"noborder", kMCStackFullscreenNoBorder},
-	{"noscale", kMCStackFullscreenNoScale},
+	{"", kMCStackFullscreenResize, false},
+	{"exactfit", kMCStackFullscreenExactFit, false},
+	{"letterbox", kMCStackFullscreenLetterbox, false},
+	{"noborder", kMCStackFullscreenNoBorder, false},
+	{"noscale", kMCStackFullscreenNoScale, false},
     // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
-    {"showAll", kMCStackFullscreenShowAll},
+    {"showAll", kMCStackFullscreenShowAll, false},
 	{"", kMCStackFullscreenModeNone, true},
 };
 
@@ -412,12 +412,17 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
-	MCStringFindAndReplaceChar(p_name, ',', '_', kMCCompareExact);
+	MCAutoStringRef t_new_string;
+	if (t_success)
+		t_success = MCStringMutableCopy(p_name, &t_new_string);
+	
+	if (t_success)
+		t_success = MCStringFindAndReplaceChar(*t_new_string, ',', '_', kMCCompareExact);
 
 	if (t_success)
 	{
 		// If the name is going to be empty, coerce to 'Untitled'.
-		if (MCStringGetLength(p_name) == 0)
+		if (MCStringGetLength(*t_new_string) == 0)
 		{
 			MCAutoStringRef t_untitled;
 			t_success = MCStringCreateWithCString(MCuntitledstring, &t_untitled);
@@ -425,7 +430,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 				MCObject::SetName(ctxt, *t_untitled);
 		}
 		else
-			MCObject::SetName(ctxt, p_name);
+			MCObject::SetName(ctxt, *t_new_string);
 	}
 
 	if (t_success && !ctxt . HasError())
@@ -1187,9 +1192,9 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
-				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
+				MCNewAutoNameRef t_stack_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_stack_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_stack_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)
@@ -1916,7 +1921,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             if (window != NULL)
             {
                 stop_externals();
-                MCscreen->destroywindow(window);
+                destroywindow();
 				MCValueAssign(titlestring, kMCEmptyString);
             }
         }
@@ -2257,4 +2262,25 @@ void MCStack::SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibl
 void MCStack::GetEffectiveShowInvisibleObjects(MCExecContext& ctxt, bool& r_value)
 {
 	r_value = geteffectiveshowinvisibleobjects();
+}
+
+void MCStack::GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version)
+{
+    uint32_t t_version = geteffectiveminimumstackfileversion();
+    
+    if (t_version < kMCStackFileFormatVersion_7_0)
+        t_version = kMCStackFileFormatVersion_7_0;
+    
+    if (t_version % 100 == 0)
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d", t_version / 1000, (t_version % 1000) / 100))
+            return;
+    }
+    else
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d.%d", t_version / 1000, (t_version % 1000) / 100, (t_version % 100) / 10))
+            return;
+    }
+    
+    ctxt . Throw();    
 }

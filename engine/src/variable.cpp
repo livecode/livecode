@@ -1294,8 +1294,7 @@ MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
 
 void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    MCValueRef t_value;
-	if (dimensions == 0 && !isparam)
+    if (dimensions == 0 && !isparam)
 	{
         MCVariable *t_resolved_ref;
             

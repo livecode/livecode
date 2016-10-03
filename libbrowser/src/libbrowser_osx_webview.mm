@@ -124,9 +124,9 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 
 bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value)
 {
-	if (p_number == @(YES))
+	if ([p_number isEqual:@YES])
 		return MCBrowserValueSetBoolean(r_value, true);
-	else if (p_number == @(NO))
+	else if ([p_number isEqual:@NO])
 		return MCBrowserValueSetBoolean(r_value, false);
 	else if (MCCStringEqual([p_number objCType], @encode(int)))
 		return MCBrowserValueSetInteger(r_value, [p_number intValue]);

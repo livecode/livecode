@@ -1541,15 +1541,7 @@ void MCField::GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, ui
 // AL-2014-05-27: [[ Bug 12511 ]] charIndex is a char chunk property
 void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
 {
-    MCParagraph *t_paragraph;
-    t_paragraph = resolveparagraphs(p_part_id);
-
-    findex_t t_line_index, t_char_index;
-    findex_t t_si = si;
-    findex_t t_ei = ei;
-    t_char_index = si;
-    MCParagraph *sptr = indextoparagraph(t_paragraph, t_si, t_ei, &t_line_index);
-
+    findex_t t_char_index = si;
     unresolvechars(p_part_id, t_char_index, t_char_index);
 
     r_value = t_char_index + 1;
@@ -1763,13 +1755,7 @@ void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
     if (si == ei)
         return;
 
-    // MW-2007-07-05: [[ Bug 5099 ]] If this is an image source property we
-    //   force to one character here to ensure unicode chars are rounded
-    //   up and down correctly.
-    findex_t t_ei;
-    t_ei = si + 1;
-
-    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, true, p_part_id, si, t_ei, &MCBlock::SetImageSource, value);
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetImageSource, value);
 }
 
 void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)

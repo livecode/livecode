@@ -216,7 +216,7 @@ MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_nati
 
 @end
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	UIView *t_view;
 	t_view = [[[MCContainerView alloc] init] autorelease];

@@ -242,6 +242,8 @@ MCPropertyInfo MCObject::kProperties[] =
     
     DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
     DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
+
+    DEFINE_RO_OBJ_ENUM_PROPERTY(P_SCRIPT_STATUS, InterfaceScriptStatus, MCObject, ScriptStatus)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -249,65 +251,6 @@ MCObjectPropertyTable MCObject::kPropertyTable =
 	nil,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-static const char *ink_names[] =
-{
-	"clear",
-	"srcAnd",
-	"srcAndReverse",
-	"srcCopy",
-	"notSrcAnd",
-	"noop",
-	"srcXor",
-	"srcOr",
-	"notSrcAndReverse",
-	"notSrcXor",
-	"reverse",
-	"srcOrReverse",
-	"notSrcCopy",
-	"notSrcOr",
-	"notSrcOrReverse",
-	"set",
-	"srcBic",
-	"notSrcBic",
-
-	"blend",
-	"addpin",
-	"addOver",
-	"subPin",
-	"transparent",
-	"addMax",
-	"subOver",
-	"adMin",
-	
-	"blendClear",
-	"blendSrc",
-	"blendDst",
-	"blendSrcOver",
-	"blendDstOver",
-	"blendSrcIn",
-	"blendDstIn",
-	"blendSrcOut",
-	"blendDstOut",
-	"blendSrcAtop",
-	"blendDstAtop",
-	"blendXor",
-	"blendPlus",
-	"blendMultiply",
-	"blendScreen",
-
-	"blendOverlay",
-	"blendDarken",
-	"blendLighten",
-	"blendDodge",
-	"blendBurn",
-	"blendHardLight",
-	"blendSoftLight",
-	"blendDifference",
-	"blendExclusion"
 };
 
 ////////////////////////////////////////////////////////////////////////////////

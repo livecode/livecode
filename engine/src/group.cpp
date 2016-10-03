@@ -283,6 +283,54 @@ void MCGroup::toolchanged(Tool p_new_tool)
 	}
 }
 
+void MCGroup::OnViewTransformChanged()
+{
+	MCControl::OnViewTransformChanged();
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnViewTransformChanged();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
+void MCGroup::OnAttach()
+{
+	MCControl::OnAttach();
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnAttach();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
+void MCGroup::OnDetach()
+{
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnDetach();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+	MCControl::OnDetach();
+}
+
 MCRectangle MCGroup::getviewportgeometry()
 {
 	MCRectangle t_viewport;
@@ -2038,6 +2086,13 @@ bool MCGroup::computeminrect(Boolean scrolling)
 			t_all = true;
 		state = oldstate;
 		
+		// IM-2016-09-27: [[ Bug 17779 ]] redrawselection handles if selected
+		if (getselected())
+		{
+			getcard()->dirtyselection(oldrect);
+			getcard()->dirtyselection(rect);
+		}
+		
 		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
 		geometrychanged(getrect());
 		
@@ -2283,7 +2338,6 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label));
 		MCRectangle textrect;
 		MCStringRef t_label;
-		bool isunicode;
 		MCWidgetInfo winfo;
 		int32_t fascent;
 		winfo.type = WTHEME_TYPE_GROUP_FRAME;
@@ -2333,7 +2387,6 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 		MCRectangle trect = rect;
 		if (flags & F_SHOW_NAME && (!isunnamed() || label != NULL))
 		{
-			uint2 halfwidth = borderwidth >> 1;
 			int32_t fascent, fdescent;
 			fascent = MCFontGetAscent(m_font);
 			fdescent = MCFontGetDescent(m_font);
@@ -3040,7 +3093,7 @@ bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
 	if (getNativeLayer() == nil)
 	{
 		void *t_view;
-		if (!MCNativeLayer::CreateNativeContainer(t_view))
+		if (!MCNativeLayer::CreateNativeContainer(this, t_view))
 			return false;
 		if (!SetNativeView(t_view))
 		{
@@ -3068,23 +3121,4 @@ void MCGroup::scheduledelete(bool p_is_child)
 		}
 		while(t_control != controls);
 	}
-}
-
-MCRectangle MCGroup::geteffectiverect(void) const
-{
-    MCRectangle t_rect;
-    t_rect = MCControl::geteffectiverect();
-    
-    if (controls != NULL)
-    {
-        MCControl *t_control;
-        t_control = controls;
-        do
-        {   t_rect = MCU_union_rect(t_rect, t_control -> geteffectiverect());
-            t_control = t_control -> next();
-        }
-        while(t_control != controls);
-    }
-    
-    return t_rect;
 }

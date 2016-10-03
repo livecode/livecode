@@ -291,7 +291,7 @@ void CB_elementData(const char *data, int length)
 	memcpy(buffer, data, length);
 	buffer[length] = '\0';
 	DispatchMetaCardMessage("revStartXMLData",(char *)buffer);
-	delete buffer;
+	delete[] buffer;
 }
 
 
@@ -457,20 +457,24 @@ void XML_AddDTD(char *args[], int nargs, char **retstring,
 	static int dtdcounter = 0;
 	char *result = NULL;
 	if (dtdcounter)
-	if (nargs != 2){
-		*error = True;
-		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else{
-		int docid = atoi(args[0]);
-		CXMLDocument *tdoc = doclist.find(docid);
-		if (!tdoc)
-			result = istrdup(xmlerrors[XMLERR_BADDOCID]);
-		else  if (!tdoc->AddDTD(args[1], strlen(args[1]))) {
-			result = (char *)malloc(1024);
-			sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
-		}
-	}
+    {
+        if (nargs != 2)
+        {
+            *error = True;
+            result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+        }
+        else
+        {
+            int docid = atoi(args[0]);
+            CXMLDocument *tdoc = doclist.find(docid);
+            if (!tdoc)
+                result = istrdup(xmlerrors[XMLERR_BADDOCID]);
+            else  if (!tdoc->AddDTD(args[1], strlen(args[1]))) {
+                result = (char *)malloc(1024);
+                sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
+            }
+        }
+    }
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
@@ -483,7 +487,6 @@ Example: if xml_ValidateDTD(docid,dtddata) is empty then put "validated"
 void XML_ValidateDTD(char *args[], int nargs, char **retstring,
 				Bool *pass, Bool *error)
 {
-	static int dtdcounter = 0;
 	*pass = False;
 	*error = False;
 	char *result = NULL;
@@ -2883,12 +2886,11 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];
-	char *result;
-
+	
 	xmlChar *doc_txt_ptr;
 	int doc_txt_len;
 
@@ -2901,7 +2903,7 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
-				int docID = atoi(args[1]);
+				docID = atoi(args[1]);
 				CXMLDocument *xsltDocument = doclist.find(docID);
 				
 				// MW-2013-09-11: [[ RevXmlXslt ]] Only try to fetch the xsltContext if
@@ -2957,7 +2959,7 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];

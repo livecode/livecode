@@ -39,6 +39,12 @@ enum Audio_format {
 
 class MCAudioClip : public MCObject
 {
+public:
+    
+    enum { kObjectType = CT_AUDIO_CLIP };
+    
+private:
+    
 	friend class MCHcsnd;
 	uint4 size;
 	int1 *samples;

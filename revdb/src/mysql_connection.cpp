@@ -58,7 +58,7 @@ Bool DBConnection_MYSQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port_string = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
 
 	int t_port;
@@ -310,7 +310,7 @@ bool DBConnection_MYSQL::ExecuteQuery(char *p_query, DBString *p_arguments, int 
 	int t_error_code;
 	if (t_success)
 	{
-		if (t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length))
+		if ((t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length)))
 			t_success = false;
 	}
 

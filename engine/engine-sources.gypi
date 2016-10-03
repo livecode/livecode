@@ -173,6 +173,8 @@
 			'src/unicode.cpp',
 			'src/util.cpp',
 			'src/uuid.cpp',
+			'src/patternmatcher.h',
+			'src/patternmatcher.cpp',
 			
 			# Group "Core - Objects"
 			'src/aclip.h',
@@ -512,6 +514,7 @@
 			'src/sysw32network.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
+			'src/mcmanagedpthread.h',
 			
 			# Group "Text"
 			'src/text.h',

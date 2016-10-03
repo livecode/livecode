@@ -41,5 +41,5 @@ navigation message (glossary), handler (glossary),
 setProp trigger (glossary), message (glossary), command (glossary),
 openStack (message), stack (object), lockMessages (property)
 
-Tags: objects
+Tags: objects, messages
 

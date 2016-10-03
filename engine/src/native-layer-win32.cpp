@@ -78,7 +78,7 @@ void MCNativeLayerWin32::doAttach()
 	t_parent = getStackWindow();
 
 	if (m_viewport_hwnd == nil)
-		/* UNCHECKED */ CreateNativeContainer((void*&)m_viewport_hwnd);
+		/* UNCHECKED */ CreateNativeContainer(m_object, (void*&)m_viewport_hwnd);
 
 	// Set the parent to the stack
 	SetParent(m_viewport_hwnd, t_parent);
@@ -308,9 +308,9 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 extern HINSTANCE MChInst;
 bool getcontainerclass(ATOM &r_class)
 {
-	static ATOM s_container_class = nil;
+	static ATOM s_container_class = 0;
 
-	if (s_container_class == nil)
+	if (s_container_class == 0)
 	{
 		WNDCLASSEX t_class;
 		MCMemoryClear(t_class);
@@ -325,7 +325,7 @@ bool getcontainerclass(ATOM &r_class)
 		DWORD t_err;
 		t_err = GetLastError();
 
-		if (s_container_class == nil)
+		if (s_container_class == 0)
 			return false;
 	}
 
@@ -334,14 +334,14 @@ bool getcontainerclass(ATOM &r_class)
 	return true;
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_container)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_container)
 {
 	ATOM t_class;
 	if (!getcontainerclass(t_class))
 		return false;
 
 	HWND t_container;
-	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, nil);
+	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)p_object->getstack()->getrealwindow(), nil, MChInst, nil);
 
 	DWORD t_err;
 	t_err = GetLastError();

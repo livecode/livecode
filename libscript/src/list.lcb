@@ -1066,4 +1066,36 @@ begin
 	MCListEvalOffsetOfListBefore(IsFirst, Needle, Before, Haystack, output)
 end syntax
 
+----------------------------------------------------------------
+
+public foreign handler MCListEvalConcatenate(in Left as List, \
+		in Right as List, out Result as List) returns nothing \
+		binds to "<builtin>"
+
+/**
+Summary:	Concatenate two lists.
+
+LeftList:	The List to go at the start of the resulting list.
+RightList:	The List to go at the end of the resulting list.
+
+Returns:	A newly created List built from <LeftList> and <RightList>.
+
+Example:
+	variable tVar
+	put ["a", "b"] & ["c", "d"] into tVar
+	-- tVar contains ["a", "b", "c", "d"]
+
+Description:
+Returns a newly-created list consisting of the elements of <LeftList>
+followed by the elements of <RightList>.
+
+Tags: Lists
+*/
+
+syntax ConcatenateLists is left binary operator with concatenation precedence
+    <Left: Expression> "&" <Right: Expression>
+begin
+    MCListEvalConcatenate(Left, Right, output)
+end syntax
+
 end module

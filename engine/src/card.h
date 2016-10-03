@@ -22,7 +22,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCCard : public MCObject
 {
 	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_CARD };
+	
 protected:
+    
+    friend class MCHccard;
 	MCObjptr *objptrs;
 	MCObjptr *kfocused;
 	MCObjptr *oldkfocused;
@@ -90,7 +96,12 @@ public:
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
+	virtual void OnViewTransformChanged();
+	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of card.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
@@ -206,6 +217,11 @@ public:
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
 	void drawselectionrect(MCContext *);
     void drawselectedchildren(MCDC *dc);
+	
+	// IM-2016-09-26: [[ Bug 17247 ]] request redraw of the area occupied by
+	//      selection marquee + handles
+	void dirtyselection(const MCRectangle &p_rect);
+	
     bool updatechildselectedrect(MCRectangle& x_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);

@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "date.h"
 
 #include "foundation-chunk.h"
+#include "patternmatcher.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -859,9 +860,16 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
     {
         if (r_match && t_compiled->matchinfo[t_match_index].rm_so != -1)
         {
-            t_success = MCStringFormat(r_results[i], "%d", t_compiled->matchinfo[t_match_index].rm_so + 1);
+			MCRange t_cu_range, t_char_range;
+			t_cu_range.offset = t_compiled->matchinfo[t_match_index].rm_so;
+			t_cu_range.length = t_compiled->matchinfo[t_match_index].rm_eo - t_compiled->matchinfo[t_match_index].rm_so;
+			MCStringUnmapIndices(p_string,
+								 kMCCharChunkTypeGrapheme,
+								 t_cu_range,
+								 t_char_range);
+            t_success = MCStringFormat(r_results[i], "%d", t_char_range.offset + 1);
             if (t_success)
-                t_success = MCStringFormat(r_results[i + 1], "%d", t_compiled->matchinfo[t_match_index].rm_eo);
+                t_success = MCStringFormat(r_results[i + 1], "%d", t_char_range.offset + t_char_range.length);
         }
         else
         {
@@ -979,7 +987,6 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
     MCAutoStringRefAsWString t_wide_string;
     t_wide_string . Lock(p_format);
 
-    const unichar_t *t_pos = *t_wide_string;
     const unichar_t *format = *t_wide_string;
 
 	t_success = MCStringCreateMutable(0, &t_result);
@@ -1959,183 +1966,13 @@ void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
-bool MCRegexMatcher::compile(MCStringRef& r_error)
-{
-	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
-	//   no reason not to use the cache.
-    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly
-	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
-	if (compiled == nil)
-	{
-        MCR_copyerror(r_error);
-		return false;
-	}
-    return true;
-}
-
-bool MCRegexMatcher::match(MCRange p_range)
-{    
-    // if appropriate, normalize the source string.
-    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly and normalize the source, not the pattern
-    if (options == kMCStringOptionCompareNonliteral || options == kMCStringOptionCompareCaseless)
-    {
-        MCAutoStringRef t_string, normalized_source;
-        MCStringCopySubstring(source, p_range, &t_string);
-        MCStringNormalizedCopyNFC(*t_string, &normalized_source);
-        return MCR_exec(compiled, *normalized_source, MCRangeMake(0, MCStringGetLength(*normalized_source)));
-    }
-    
-	return MCR_exec(compiled, source, p_range);
-
-}
-
-bool MCWildcardMatcher::compile(MCStringRef& r_error)
-{
-    // wildcard patterns are not compiled
-    return true;
-}
-
-#define OPEN_BRACKET '['
-#define CLOSE_BRACKET ']'
-
-static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
-{
-	uindex_t s_index = 0;
-	uindex_t p_index = 0;
-	uint1 scc, c;
-
-	while (s_index < s_length)
-	{
-		scc = *s++;
-		s_index++;
-		c = *p++;
-		p_index++;
-		switch (c)
-		{
-		case OPEN_BRACKET:
-			{
-				bool ok = false;
-				int lc = -1;
-				int notflag = 0;
-
-				if (*p == '!' )
-				{
-					notflag = 1;
-					p++;
-					p_index++;
-				}
-				while (p_index < p_length)
-				{
-					c = *p++;
-					p_index++;
-					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? MCStringsWildcardMatchNative(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
-					else
-						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
-						{
-							c = *p++;
-							p_index++;
-							if (notflag)
-							{
-								if (lc > scc || scc > c)
-									ok = true;
-								else
-									return false;
-							}
-							else
-							{
-								if (lc < scc && scc <= c)
-									ok = true;
-							}
-						}
-						else
-						{
-							if (notflag)
-							{
-								if (scc != c)
-									ok = true;
-								else
-									return false;
-							}
-							else
-								if (scc == c)
-									ok = true;
-							lc = c;
-						}
-				}
-			}
-			return false;
-		case '?':
-			break;
-		case '*':
-			while (*p == '*')
-			{
-				p++;
-				p_index++;
-			}
-			if (*p == 0)
-				return true;
-			--s;
-			--s_index;
-			c = *p;
-            // AL-2014-05-23: [[ Bug 12489 ]] Ensure source string does not overrun length
-			while (*s && s_index < s_length)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
-				        && *p != '?' && *p != OPEN_BRACKET)
-				{
-					s++;
-					s_index++;
-				}
-				else
-					if (MCStringsWildcardMatchNative(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
-						return true;
-			return false;
-		case 0:
-			return scc == 0;
-		default:
-			if (casesensitive)
-			{
-				if (c != scc)
-					return false;
-			}
-			else
-				if (MCS_tolower(c) != MCS_tolower(scc))
-					return false;
-			break;
-		}
-	}
-	while (p_index < p_length && *p == '*')
-	{
-		p++;
-		p_index++;
-	}
-	return p_index == p_length;
-}
-
-bool MCWildcardMatcher::match(MCRange p_source_range)
-{
-    if (native)
-    {
-        const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
-        const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
-        
-        // AL-2014-05-23: [[ Bug 12489 ]] Pass through case sensitivity properly
-        if (t_source != nil && t_pattern != nil)
-            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
-    }
-
-	return MCStringWildcardMatch(source, p_source_range, pattern, options);
-}
-
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
 {
 	uint32_t t_length = MCStringGetLength(p_source);
 	if (t_length == 0)
         MCStringCopy(kMCEmptyString, r_result);
 
-	uint4 offset = 0;
-    MCAutoListRef t_output;
+	MCAutoListRef t_output;
     MCListCreateMutable(p_delimiter, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
@@ -2149,8 +1986,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
     MCStringOptions t_options = ctxt . GetStringComparisonType();
 	while (t_found && t_success)
 	{
-        MCAutoStringRef t_line;
-		t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
+        t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
 		if (!t_found) //last line or item
         {
             t_chunk_range . offset = t_last_offset;

@@ -42,29 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
-{
-	{"textAlign", P_TEXT_ALIGN},
-	{"listStyle", P_LIST_STYLE},
-	{"listDepth", P_LIST_DEPTH},
-	{"listIndent", P_LIST_INDENT},
-	{"firstIndent", P_FIRST_INDENT},
-	{"leftIndent", P_LEFT_INDENT},
-	{"rightIndent", P_RIGHT_INDENT},
-	{"spaceAbove", P_SPACE_ABOVE},
-	{"spaceBelow", P_SPACE_BELOW},
-	{"tabStops", P_TAB_STOPS},
-	{"backgroundColor", P_BACK_COLOR},
-	{"borderWidth", P_BORDER_WIDTH},
-	{"borderColor", P_BORDER_COLOR},
-	{"hGrid", P_HGRID},
-	{"vGrid", P_VGRID},
-	{"dontWrap", P_DONT_WRAP},
-	{"padding", P_PADDING},
-    {"listIndex", P_LIST_INDEX},
-	{nil, P_UNDEFINED},
-};
-
 bool MCParagraph::hasattrs(void)
 {
 	return attrs != nil;
@@ -133,6 +110,20 @@ void MCParagraph::fetchattrs(MCArrayRef src)
             SetTabStops(ctxt, t_tabstops);
             MCMemoryDeallocate(t_tabstops . elements);
             MCMemoryDeallocate(t_uint16_tabs);
+        }
+
+        MCValueRelease(t_stringref_value);
+    }
+
+    if (ctxt . CopyElementAsString(src, MCNAME("tabAlign"), false, t_stringref_value))
+    {
+		MCInterfaceFieldTabAlignments t_alignments;
+		MCMemoryClear(t_alignments);
+
+		if (MCField::parsetabalignments(t_stringref_value, t_alignments.m_alignments, t_alignments.m_count))
+        {
+			SetTabAlignments(ctxt, t_alignments);
+			MCMemoryDeallocate(t_alignments.m_alignments);
         }
 
         MCValueRelease(t_stringref_value);
@@ -512,6 +503,12 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 		memcpy(attrs -> tabs, other . attrs -> tabs, sizeof(uint16_t) * other . attrs -> tab_count);
 	}
 
+	// If the struct has tabalignments then copy them properly
+	if ((other . attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+	{
+		/* UNCHECKED */ MCMemoryAllocateCopy(other . attrs -> alignments, sizeof(intenum_t) * other . attrs -> alignments_count, attrs -> alignments);
+	}
+
 	// MW-2012-12-04: [[ Bug 10577 ]] If the struct has metadata, then copy it properly.
 	if ((other . attrs -> flags & PA_HAS_METADATA) != 0)
         /* UNCHECKED */ MCStringCopy(other . attrs -> metadata, attrs -> metadata);
@@ -526,6 +523,10 @@ void MCParagraph::clearattrs(void)
 	// If we have tabs, then delete them.
 	if ((attrs -> flags & PA_HAS_TABS) != 0)
 		delete attrs -> tabs;
+
+	// If we have tab alignments then delete them.
+	if ((attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+		MCMemoryDeallocate(attrs -> alignments);
 
 	// MW-2012-11-13: [[ ParaMetadata ]] If we have metadata, delete it.
 	if ((attrs -> flags & PA_HAS_METADATA) != 0)
@@ -586,6 +587,12 @@ void MCParagraph::exportattrs(MCFieldParagraphStyle& x_style)
 		x_style . has_tabs = true;	
 		x_style . tabs = attrs -> tabs;
 		x_style . tab_count = attrs -> tab_count;
+	}
+	if ((attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+	{
+		x_style . has_tab_alignments = true;
+		x_style . tab_alignments = attrs -> alignments;
+		x_style . tab_alignment_count = attrs -> alignments_count;
 	}
 	if ((attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
 	{
@@ -695,6 +702,12 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 		attrs -> tab_count = p_style . tab_count;
 		attrs -> tabs = new uint16_t[p_style . tab_count];
 		memcpy(attrs -> tabs, p_style . tabs, sizeof(uint16_t) * p_style . tab_count);
+	}
+	if (p_style . has_tab_alignments)
+	{
+		attrs -> flags |= PA_HAS_TAB_ALIGNMENTS;
+		attrs -> alignments_count = p_style . tab_alignment_count;
+		/* UNCHECKED */ MCMemoryAllocateCopy(p_style . tab_alignments, sizeof(intenum_t) * p_style . tab_alignment_count, attrs -> alignments);
 	}
 	if (p_style . has_background_color)
 	{

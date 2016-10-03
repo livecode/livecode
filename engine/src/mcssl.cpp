@@ -447,8 +447,6 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 
 	static const char magic[]="Salted__";
 
-	int4 res = 0;
-
 	//set up cipher context
 	EVP_CIPHER_CTX ctx;
 	EVP_CIPHER_CTX_init(&ctx);

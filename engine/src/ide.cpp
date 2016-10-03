@@ -345,7 +345,6 @@ static MCColourizeStyle *s_script_styles = NULL;
 static uint4 s_script_style_count = 0;
 
 static uint1 *s_script_class_styles = NULL;
-static uint1 *s_script_operator_styles = NULL;
 static uint1 *s_script_keyword_styles = NULL;
 
 #define SCRIPT_STYLE_ATTRIBUTE_COUNT 7

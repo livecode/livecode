@@ -148,7 +148,7 @@ bool MCWidgetBase::HasProperty(MCNameRef p_property)
 bool MCWidgetBase::HasHandler(MCNameRef p_handler)
 {
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
+    return MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
 }
 
 bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
@@ -163,7 +163,7 @@ bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
 		t_host -> lockforexecution();
 	
     bool t_success;
-    t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
+    t_success = MCScriptSetPropertyInInstance(m_instance, p_property, p_value);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();
@@ -185,7 +185,7 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
 		t_host -> lockforexecution();
 	
     bool t_success;
-    t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
+    t_success = MCScriptGetPropertyInInstance(m_instance, p_property, r_value);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();
@@ -223,7 +223,7 @@ bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_
         return false;
     
     MCTypeInfoRef t_handler_typeinfo;
-    if (!MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
+    if (!MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
         return false;
 
     if (p_is_getter)
@@ -863,7 +863,7 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 	
 	bool t_success;
 	MCAutoValueRef t_retval;
-	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
+	t_success = MCScriptCallHandlerInInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();

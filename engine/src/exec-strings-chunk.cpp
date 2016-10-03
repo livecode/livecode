@@ -386,8 +386,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
         case CT_WORD:
         {
 
-            uindex_t t_space_offset;
-            
             // if there are consecutive spaces at the beginning, skip them
             while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
@@ -440,7 +438,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
-            uint2 t_pos;
             Parse_stat ps = sp.nexttoken();
             
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
@@ -1146,7 +1143,6 @@ bool MCTextChunkIterator_Tokenized::Next()
     MCerrorlock++;
     
     bool t_found = true;
-    uint2 t_pos;
     Parse_stat ps = m_sp -> nexttoken();
     if (ps == PS_ERROR || ps == PS_EOF)
         t_found = false;

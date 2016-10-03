@@ -40,14 +40,20 @@ pixels numbered from the top left corner of the image, left to right,
 then top to bottom. The first byte consists of zeroes, and the last
 three bytes encode the amount of red, green, and blue respectively.
 
-Since each pixel is represented by 4 bytes (4 characters), you can
-obtain the numeric value of any of the color channels for a given pixel
-using the charToNum <function>. For example, the numeric value of the
-red <channel> for the tenth <pixel> is given by the expression
-charToNum(char ((4 * 9) + 2) of the imageData of <image>). The numeric
-value of the green channel is charToNum(char (4 * 9) + 3 of the
-imageData of <image>); and the numeric value of the blue channel is
-charToNum(char (4 * 9) + 4 of the imageData of <image>).
+Since each pixel is represented by 4 bytes, you can obtain the numeric
+value of any of the color channels for a given pixel using the
+<byteToNum> <function>. For example, this is how you might extract the
+color <channel> values from the 10th <pixel> of an image:
+
+```
+local tRed, tGreen, tBlue, tOffset, tData
+put the imageData of image 1 into tData
+put 10 - 1 into tOffset -- Pixel positions start at 0
+
+put byteToNum(byte ((4 * tOffset) + 2) of tData) into tRed
+put byteToNum(byte ((4 * tOffset) + 3) of tData) into tGreen
+put byteToNum(byte ((4 * tOffset) + 4) of tData) into tBlue
+```
 
 >*Important:*  When changing the <imageData> property, make sure the new
 > data is the correct size: 4 bytes per pixel in the image. If you set
@@ -90,7 +96,7 @@ property (glossary), binary file (glossary), pixel (glossary),
 statement (glossary), container (glossary), binary (glossary),
 byte (glossary), channel (glossary), field (keyword), image (keyword),
 image (object), alphaData (property), height (property), width (property),
-imageData (property)
+imageData (property), byteToNum (function)
 
 Tags: multimedia
 

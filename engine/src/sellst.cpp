@@ -272,7 +272,7 @@ MCControl *MCSellist::clone(MCObject *target)
 	return t_result;
 }
 
-Exec_stat MCSellist::group(uint2 line, uint2 pos)
+Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 {
 	MCresult->clear(False);
 	if (objects != NULL && objects->ref->gettype() <= CT_LAST_CONTROL
@@ -306,7 +306,7 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos)
 		MCControl *controls = NULL;
 		while (objects != NULL)
 		{
-			MCSelnode *tptr = objects->remove(objects);
+			tptr = objects->remove(objects);
 			MCControl *cptr = (MCControl *)tptr->ref;
 			delete tptr;
 			if (parent->gettype() == CT_CARD)
@@ -330,7 +330,14 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos)
 		gptr->makegroup(controls, parent);
 		objects = new MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
+		
+		r_group_ptr = gptr;
 	}
+	else
+	{
+		r_group_ptr = nil;
+	}
+	
     return ES_NORMAL;
 }
 
@@ -533,12 +540,9 @@ void MCSellist::continuemove(int2 x, int2 y)
 		}
 		if (cptr->moveable())
 		{
-			// IM-2014-09-09: [[ Bug 13222 ]] Use the layer_setrect method to ensure the old
-			// effectiverect is appropriately dirtied when edittools are displayed for a graphic
-			if (cptr->resizeparent())
-				cptr->setrect(trect);
-			else
-				cptr->layer_setrect(trect, false);
+			// IM-2016-09-27: [[ Bug 17779 ]] Change to always calling layer_setrect, which invalidates selection handles if required.
+			cptr->layer_setrect(trect, false);
+			cptr->resizeparent();
 		}
 		tptr = tptr->next();
 	}

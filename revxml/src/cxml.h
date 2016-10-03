@@ -64,8 +64,8 @@ class CXMLDocument
 public:
 CXMLDocument() {Init();}
 // MDW-2013-09-03: [[ RevXmlXslt ]] new constructors
-CXMLDocument(xmlXPathContextPtr id) {Init(); xpathContext = id;}
-CXMLDocument(xsltStylesheetPtr id) {Init(); xsltID = id;}
+CXMLDocument(xmlXPathContextPtr p_id) {Init(); xpathContext = p_id;}
+CXMLDocument(xsltStylesheetPtr p_id) {Init(); xsltID = p_id;}
 ~CXMLDocument() {Free();}
 inline Bool isinited() {return doc != NULL;}
 Bool Read(char *data, unsigned long tlength, Bool wellformed);

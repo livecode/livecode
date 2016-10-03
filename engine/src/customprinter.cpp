@@ -144,38 +144,37 @@ bool MCCustomPrinterImageFromMCGImage(MCGImageRef p_image, MCCustomPrinterImage 
 	
 	void *t_pixel_cache;
 	t_pixel_cache = nil;
-	
-	if (kMCCustomPrinterImagePixelFormat == kMCGPixelFormatNative)
-		t_pixels = t_raster.pixels;
-	else
-	{
-		if (!MCMemoryAllocate(t_raster.stride * t_raster.height, t_pixel_cache))
-			return false;
+
+#if kMCCustomPrinterImagePixelFormat == kMCGPixelFormatNative
+    t_pixels = t_raster.pixels;
+#else
+    if (!MCMemoryAllocate(t_raster.stride * t_raster.height, t_pixel_cache))
+        return false;
+    
+    uint8_t *t_src;
+    t_src = (uint8_t*)t_raster.pixels;
+    
+    uint8_t *t_dst;
+    t_dst = (uint8_t*)t_pixel_cache;
+    
+    for (uint32_t i = 0; i < t_raster.height; i++)
+    {
+        uint32_t *t_src_row;
+        t_src_row = (uint32_t*)t_src;
+        
+        uint32_t *t_dst_row;
+        t_dst_row = (uint32_t*)t_dst;
+        
+		for (uint32_t j = 0; j < t_raster.width; j++)
+			*t_dst_row++ = MCGPixelFromNative(kMCCustomPrinterImagePixelFormat, *t_src_row++);
 		
-		uint8_t *t_src;
-		t_src = (uint8_t*)t_raster.pixels;
-		
-		uint8_t *t_dst;
-		t_dst = (uint8_t*)t_pixel_cache;
-		
-		for (uint32_t i = 0; i < t_raster.height; i++)
-		{
-			uint32_t *t_src_row;
-			t_src_row = (uint32_t*)t_src;
-			
-			uint32_t *t_dst_row;
-			t_dst_row = (uint32_t*)t_dst;
-			
-			for (uint32_t i = 0; i < t_raster.width; i++)
-				*t_dst_row++ = MCGPixelFromNative(kMCCustomPrinterImagePixelFormat, *t_src_row++);
-			
-			t_src += t_raster.stride;
-			t_dst += t_raster.stride;
-		}
-		
-		t_pixels = t_pixel_cache;
-	}
-	
+        t_src += t_raster.stride;
+        t_dst += t_raster.stride;
+    }
+    
+    t_pixels = t_pixel_cache;
+#endif
+
 	// Fill in the printer image info
 	r_image.width = t_raster.width;
 	r_image.height = t_raster.height;
@@ -636,7 +635,6 @@ bool MCCustomMetaContext::begincomposite(const MCRectangle &p_mark_clip, MCGCont
 	if (t_success)
 		t_success = MCGContextCreate(t_width, t_height, true, t_gcontext);
 
-	MCContext *t_context = nil;
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_gcontext, t_scale, t_scale);

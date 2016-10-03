@@ -29,7 +29,7 @@ MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_nati
 	return nil;
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	return false;
 }

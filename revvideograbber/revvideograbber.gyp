@@ -12,6 +12,11 @@
 			'mac_bundle': 1,
 			'product_prefix': '',
 			'product_name': 'revvideograbber',
+
+			'variables':
+			{
+				'enable_revvideograbber%': '1',
+			},
 			
 			'dependencies':
 			[
@@ -49,9 +54,10 @@
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "win"',
+					'(OS != "mac" and OS != "win") or enable_revvideograbber == 0',
 					{
 						'type': 'none',
+						'mac_bundle': '0',
 					},
 					{
 						'all_dependent_settings':
@@ -73,7 +79,7 @@
 					},
 				],
 				[
-					'OS == "mac"',
+					'OS == "mac" and enable_revvideograbber != 0',
 					{
 						'libraries':
 						[
@@ -87,7 +93,7 @@
 					},
 				],
 				[
-					'OS == "win"',
+					'OS == "win" and enable_revvideograbber != 0',
 					{
 						'include_dirs':
 						[

@@ -149,15 +149,11 @@ bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectV
 //   values to store (stack file format v8.1).
 uint32_t MCBlock::getminimumstackfileversion(void)
 {
-	bool t_is_unicode;
 	// paragraph text is always unicode when saving as version 7.0 or greater.
 	//    since we can't know which version will be used at this point, the
 	//    best we can do is assume unicode text.
-	/* t_is_unicode = !MCStringIsNative(parent->GetInternalStringRef()); */
-	t_is_unicode = true;
-	
 	uint32_t t_index_size;
-	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	t_index_size = sizeof(unichar_t);
 	
 	if (m_index * t_index_size > UINT16_MAX || m_size * t_index_size > UINT16_MAX)
 		return kMCStackFileFormatVersion_8_1;
@@ -760,12 +756,12 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	if (t_next_block != parent -> getblocks())
 	{
 		if (t_next_block -> GetLength() == 0)
-			t_next_block_char = -2;
+			t_next_block_char = CODEPOINT_NONE-1;
 		else
 			t_next_block_char = parent->GetCodepointAtIndex(t_next_block -> m_index);
 	}
 	else
-		t_next_block_char = -1;
+		t_next_block_char = CODEPOINT_NONE;
 
     // FG-2013-10-21 [[ Field speedups ]]
     // Previously, we used to calculate the length of the entire block here in order
@@ -840,7 +836,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
                     t_end_of_block = true;
                 }
                 
-                if (t_next_char == -1 ||
+                if (t_next_char == CODEPOINT_NONE ||
                     MCUnicodeCanBreakBetween(t_this_char, t_next_char))
                 {
                     t_can_break = true;
@@ -1389,10 +1385,10 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			if (IsMacLF() && !f->isautoarm())
 			{
 				MCPatternRef t_pattern;
-				int2 x, y;
+				int2 t_x, t_y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), f);
-				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), f);
 				if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 					f->setforeground(dc, DI_BACK, False, True);
                 else
@@ -1687,20 +1683,13 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool mo
     }
 
 	findex_t i = m_index;
-	coord_t cwidth;
-	findex_t tlen = 0;
-	coord_t twidth = 0;
-	coord_t toldwidth = 0;
-
+	
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
 	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
 	//   platform.
 	coord_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
-    
-    MCRange t_char_range;
-    MCRange t_cp_range;
     
     coord_t t_pos = t_last_width;
     while(i < m_index + m_size)
@@ -1752,8 +1741,7 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 	else
 	{
 		findex_t sptr = i;
-        findex_t t_length = l;
-		
+        
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
         if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;

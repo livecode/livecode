@@ -1047,6 +1047,7 @@ void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
 
 void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player);
+bool MCPlatformPlayerSetNativeParentView(MCPlatformPlayerRef p_player, void *p_parent_view);
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 

@@ -364,7 +364,6 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	// If the pattern is new, put it in the cache.
 	if (!found)
 	{
-		uint2 i;
 		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
 		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
 		{

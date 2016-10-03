@@ -205,6 +205,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_MIN_STACK_FILE_VERSION, String, MCStack, MinStackFileVersion)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -314,6 +316,8 @@ MCStack::MCStack()
     m_attachments = nil;
     
 	view_init();
+    
+    m_is_ide_stack = false;
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -520,6 +524,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     m_document_filename = MCValueRetain(kMCEmptyString);
     
 	view_copy(sref);
+    
+    m_is_ide_stack = sref.m_is_ide_stack;
 }
 
 MCStack::~MCStack()
@@ -530,13 +536,6 @@ MCStack::~MCStack()
 		close();
 	extraclose(false);
 
-	if (needs != NULL)
-	{
-		while (nneeds--)
-
-			needs[nneeds]->removelink(this);
-		delete needs;
-	}
 	if (substacks != NULL)
 	{
 		while (substacks != NULL)
@@ -559,7 +558,7 @@ MCStack::~MCStack()
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		stop_externals();
-		MCscreen->destroywindow(window);
+		destroywindow();
 	}
 
 	while (controls != NULL)
@@ -799,7 +798,7 @@ void MCStack::close()
 		if (flags & F_DESTROY_WINDOW && MCdispatcher -> gethome() != this)
 		{
 			stop_externals();
-			MCscreen->destroywindow(window);
+			destroywindow();
 			window = NULL;
 			cursor = None;
 			MCValueAssign(titlestring, kMCEmptyString);
@@ -829,7 +828,7 @@ void MCStack::kfocus()
 
 	// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 	//   IDE stack.
-	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !getextendedstate(ECS_IDE))
+	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !m_is_ide_stack)
 		MCrecent->addcard(curcard);
 
 	if (state & CS_SUSPENDED)
@@ -917,6 +916,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
+        {
 			if (MCactiveimage != NULL)
 			{
 				MCactiveimage->cutimage();
@@ -924,6 +924,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			}
 			else
 				return MCselected->cut();
+        }
 		if (MCactiveimage != NULL)
 		{
 			MCactiveimage->delimage();
@@ -1097,7 +1098,7 @@ Boolean MCStack::mfocus(int2 x, int2 y)
 	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		MCControl *cptr = curcard->getmfocused();
-		if (x < rect.width || cptr != NULL && !cptr->getstate(CS_SUBMENU))
+		if (x < rect.width || (cptr != NULL && !cptr->getstate(CS_SUBMENU)))
 		{
 			uint1 oldmode = scrollmode;
 			if (menuy < 0 && y < MENU_ARROW_SIZE >> 1)
@@ -1310,7 +1311,8 @@ bool MCStack::isdeletable(bool p_check_flag)
     //   make sure we throw an error.
     if (parent == NULL || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
-        MCdispatcher->gethome() == this || this -> isediting())
+        MCdispatcher->gethome() == this || this -> isediting() ||
+        MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -1375,7 +1377,10 @@ Boolean MCStack::del(bool p_check_flag)
 {
     if (!isdeletable(true))
 	   return False;
-	
+    
+    MCscreen->ungrabpointer();
+    MCdispatcher->removemenu();
+    
     setstate(True, CS_DELETE_STACK);
     
 	if (opened)
@@ -1421,6 +1426,15 @@ Boolean MCStack::del(bool p_check_flag)
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
+    
+    if (needs != NULL)
+    {
+        while (nneeds--)
+            needs[nneeds]->removelink(this);
+        
+        delete needs;
+        needs = NULL;
+    }
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -1487,7 +1501,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 		{
 			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 			view_setstackviewport(rect);
-			realize();
+			createwindow();
 		}
 	}
 
@@ -1558,6 +1572,24 @@ void MCStack::toolchanged(Tool p_new_tool)
 {
     if (curcard != NULL)
         curcard->toolchanged(p_new_tool);
+}
+
+void MCStack::OnViewTransformChanged()
+{
+	if (curcard != nil)
+		curcard->OnViewTransformChanged();
+}
+
+void MCStack::OnAttach()
+{
+	if (curcard != nil)
+		curcard->OnAttach();
+}
+
+void MCStack::OnDetach()
+{
+	if (curcard != nil)
+		curcard->OnDetach();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1673,10 +1705,10 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
+bool MCStack::resolve_filename(MCStringRef p_filename, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_filename;
-    if (resolve_relative_path(filename, &t_filename))
+    if (resolve_relative_path(p_filename, &t_filename))
     {
         if (MCS_exists(*t_filename, True))
         {
@@ -1685,7 +1717,7 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
         }
     }
     
-	r_resolved = MCValueRetain(filename);
+	r_resolved = MCValueRetain(p_filename);
 	return true;
 }
 

@@ -2575,7 +2575,6 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 	if (t_success)
 		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_raster);
 	
-	MCGImageRef t_image = nil;
 	if (t_success)
 	{
 		t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);

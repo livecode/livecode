@@ -1048,6 +1048,7 @@ enum Properties {
     P_FILE_TYPE,
     P_STACK_FILE_TYPE,
 		P_STACK_FILE_VERSION,
+    P_MIN_STACK_FILE_VERSION,
     P_SECURE_MODE,
     P_SERIAL_CONTROL_STRING,
     P_TOOL,
@@ -1731,6 +1732,8 @@ enum Properties {
     
     P_THEME,
     P_THEME_CONTROL_TYPE,
+    
+    P_SCRIPT_STATUS,
     
     __P_LAST,
 };

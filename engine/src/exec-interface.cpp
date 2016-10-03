@@ -369,7 +369,9 @@ static MCExecCustomTypeInfo _kMCInterfaceVisualEffectTypeInfo =
 
 MCExecEnumTypeInfo *kMCInterfaceWindowPositionTypeInfo = &_kMCInterfaceWindowPositionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAlignmentTypeInfo;
-
+MCExecCustomTypeInfo *kMCInterfaceImagePaletteSettingsTypeInfo = &_kMCInterfaceImagePaletteSettingsTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo = &_kMCInterfaceVisualEffectTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo = &_kMCInterfaceVisualEffectArgumentTypeInfo;
 //////////
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
@@ -1691,8 +1693,8 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 	int2 y = p_start . y;
 	while (x != p_end . x || y != p_end . y)
 	{
-		int2 oldx = x;
-		int2 oldy = y;
+		int2 t_oldx = x;
+		int2 t_oldy = y;
 		x = p_start . x + (int2)(ix * (dx * (curtime - starttime) / duration));
 		y = p_start . y + (int2)(iy * (dy * (curtime - starttime) / duration));
 		if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))
@@ -1707,7 +1709,7 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 			y = p_end . y;
 			curtime = endtime;
 		}
-		if (x != oldx || y != oldy)
+		if (x != t_oldx || y != t_oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
 	MCdefaultstackptr->mup(p_which, false);
@@ -1740,7 +1742,15 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
+		// Fetch the codepoint at the given codeunit index
+		codepoint_t t_cp_char =
+			MCStringGetCodepointAtIndex(p_typing, i);
+		
+		// Compute the number of codeunits used by the char
+		uindex_t t_cp_length =
+			MCUnicodeCodepointGetCodeunitLength(t_cp_char);
+		
+		KeySym keysym = t_cp_char;
         MCAutoStringRef t_char;
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
@@ -1753,7 +1763,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, 1), &t_char);
+            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
 			t_string = *t_char;
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
@@ -1764,6 +1774,10 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
+		
+		// If the codepoint was in SMP, then make sure we bump two codeunit
+		// indicies.
+		i += t_cp_length - 1;
 	}
     
     // AL-2014-01-07 return lock mods to false
@@ -2080,12 +2094,32 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
         gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
     else
         gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
-    gptr->makegroup(controls, t_card);
+	gptr->makegroup(controls, t_card);
+	
+	MCAutoValueRef t_id;
+	gptr -> names(P_LONG_ID, &t_id);
+	ctxt . SetItToValue(*t_id);
 }
 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
 {
-	MCselected->group();
+	MCGroup *t_group = nil;
+	if (MCselected->group(ctxt.GetLine(), ctxt.GetPos(), t_group) != ES_NORMAL)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
+	if (t_group != nil)
+	{
+		MCAutoValueRef t_id;
+		t_group -> names(P_LONG_ID, &t_id);
+		ctxt.SetItToValue(*t_id);
+	}
+	else
+	{
+		ctxt.SetItToEmpty();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3178,14 +3212,15 @@ void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new
     t_new_stack -> setparent(MCdispatcher -> gethome());
     t_new_stack -> message(MCM_new_stack);
     t_new_stack -> setflag(False, F_VISIBLE);
-    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
-    t_new_stack -> open();
     t_new_stack -> setasscriptonly(kMCEmptyString);
     
 	if (p_new_name != nil)
 		t_new_stack -> setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoValueRef t_id;
+    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+    t_new_stack -> open();
+    
+    MCAutoValueRef t_id;
 	t_new_stack -> names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3299,7 +3334,6 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     if (t_widget == NULL)
         return;
     t_widget -> bind(p_kind, nil);
-    Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
     

@@ -265,8 +265,6 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 		if (aeclass == kAEMiscStandards
             && (aeid == kAEDoScript || aeid == 'eval'))
 		{
-			DescType rType;
-			Size rSize;  //actual size returned
 			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
 			{
 				byte_t *sptr = new byte_t[rSize + 1];
@@ -303,7 +301,7 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 			err = errAEEventNotHandled;
 	// do nothing if the AE is not handled,
 	// let the standard AE dispacher to dispatch this AE
-	delete p3val;
+	delete[] p3val;
 	return err;
 }
 
@@ -777,7 +775,7 @@ static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_p
 {
     kern_return_t	kernResult;
     CFMutableDictionaryRef classesToMatch;
-    if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
+    if ((kernResult = IOMasterPort(0, masterPort)) != KERN_SUCCESS)
         return kernResult;
     if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
         return kernResult;
@@ -1078,11 +1076,6 @@ static char **fix_environ(void)
 // Thus, we will fork two methods - and dispatch from MCS_startprocess
 static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
 static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
-
-///////////////////////////////////////////////////////////////////////////////
-
-static Boolean hasPPCToolbox = False;
-static Boolean hasAppleEvents = False;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1449,7 +1442,6 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 	short rid;
 	ResType rtype;
 	Str255 rname;  //Pascal string
-	char cstr[256];  //C string
 	char typetmp[5]; //buffer for storing type string in c format
 	SInt16 total = Count1Resources(searchType);
 	if (ResError() != noErr)
@@ -1457,7 +1449,6 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 		errno = ResError();
 		return false;
 	}
-	char buffer[4 + U2L + 255 + U4L + 6];
 	for (SInt16 i = 1 ; i <= total ; i++)
 	{
 		if ((rh = Get1IndResource(searchType, i)) == NULL)
@@ -2385,7 +2376,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return;
         }
         if (p_reply == True)
@@ -2595,7 +2586,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             
             r_value = MCValueRetain(kMCEmptyString);
             return false;
@@ -2718,15 +2709,15 @@ static bool MCS_getentries_for_folder(MCStringRef p_folder, MCSystemListFolderEn
             {
                 FileInfo *t_file_info;
                 t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-                uint4 t_creator;
-                t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-                uint4 t_type;
-                t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
+                uint4 t_file_creator;
+                t_file_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                uint4 t_file_type;
+                t_file_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
                 
                 if (t_file_info != NULL)
                 {
-                    memcpy(t_filetype, (char*)&t_creator, 4);
-                    memcpy(&t_filetype[4], (char *)&t_type, 4);
+                    memcpy(t_filetype, (char*)&t_file_creator, 4);
+                    memcpy(&t_filetype[4], (char *)&t_file_type, 4);
                     t_filetype[8] = '\0';
                 }
                 else
@@ -3346,7 +3337,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_icon_family = NULL;
         if (!t_error && t_src_icon != NULL)
         {
-            OSErr t_os_error;
             IconRefToIconFamily(t_src_icon, kSelectorAllAvailableData, &t_icon_family);
         }
         
@@ -3476,7 +3466,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
 	virtual Boolean SetCurrentFolder(MCStringRef p_path)
     {
-        bool t_success;
         MCAutoStringRefAsUTF8String t_utf8_string;
         if (!t_utf8_string.Lock(p_path))
             return False;
@@ -3722,15 +3711,15 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual Boolean GetDevices(MCStringRef& r_devices)
     {
         MCAutoListRef t_list;
-        io_iterator_t SerialPortIterator = NULL;
-        mach_port_t masterPort = NULL;
+        io_iterator_t SerialPortIterator = 0;
+        mach_port_t masterPort = 0;
         io_object_t thePort;
         if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
         {
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return false;
         }
         if (!MCListCreateMutable('\n', &t_list))
@@ -5945,24 +5934,25 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 		t_pid = 0;
 		if (t_status == noErr)
 		{
-			char *t_name_dup;
-			/* UNCHECKED */ MCStringConvertToUTF8String(MCNameGetString(name), t_name_dup);
-			
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			char *t_doc;
-			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_doc);
-			startprocess_create_argv(t_name_dup, t_doc, t_argc, t_argv);
-			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
-			for(uint32_t i = 0; i < t_argc; i++)
-				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
-			if (!startprocess_read_uint32_t_from_fd(fileno(t_stream), t_pid))
-				t_status = errAuthorizationToolExecuteFailure;
-			
-			delete t_name_dup;
-			delete t_doc;
-			delete[] t_argv;
+			MCAutoStringRefAsUTF8String t_document;
+            MCAutoStringRefAsUTF8String t_name_dup;
+            
+            if(t_document.Lock(doc) && t_name_dup.Lock(MCNameGetString(name)))
+            {
+                startprocess_create_argv((char*)*t_name_dup,(char*)*t_document, t_argc, t_argv);
+                startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
+                for(uint32_t i = 0; i < t_argc; i++)
+                    startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
+                if (!startprocess_read_uint32_t_from_fd(fileno(t_stream), t_pid))
+                    t_status = errAuthorizationToolExecuteFailure;
+                
+                delete[] t_argv;
+            }
+            else
+                t_status = errAuthorizationToolExecuteFailure;
 		}
 		
 		if (t_status == noErr)

@@ -154,7 +154,6 @@ void MCGPathCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 	}
 	else
 	{
-		MCGPathRef t_new_path;
 		MCGPathCopy(self, r_new_path);
 		if (MCGPathIsValid(r_new_path))
 			MCGPathRelease(self);
@@ -1132,7 +1131,6 @@ bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current)
 
 bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last)
 {
-	SkPoint t_point;
 	int t_count;
 	t_count = self->path->countPoints();
 	if (t_count < 2)

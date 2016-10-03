@@ -243,11 +243,9 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 		{
 			if (wmetric == WTHEME_METRIC_PARTSIZE)
 			{
-				MCRectangle twidgetrect;
 				MCRectangle combobuttonrect = srect;
 				combobuttonrect.x += srect.width - 22 - 2;
 				combobuttonrect.width = 18;
-				uint1 comboframesize = 2;
 				if (winfo.part == WTHEME_PART_COMBOTEXT)
 				{
 					HIThemeButtonDrawInfo bNewInfo;

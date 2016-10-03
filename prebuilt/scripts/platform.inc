@@ -1,8 +1,9 @@
 # OSX options
-DEVELOPER="${HOME}/Builds/Platforms/Xcode_3_2_6"
-SDK="MacOSX10.5.sdk"
+DEVELOPER="/Applications/Xcode.app/Contents/Developer"
+PLATFORM_DEVELOPER="${DEVELOPER}/Platforms/MacOSX.platform/Developer"
+SDK="MacOSX10.9.sdk"
 OSXGCCVERSION=4.2
-OSXMIN="10.5"
+OSXMIN="10.6"
 
 # Generic options
 export MAKEFLAGS="-j1"
@@ -23,8 +24,8 @@ fi
 case "${PLATFORM}" in
 	mac)
 		export ARCHS="i386 x86_64"
-		export CC_BASE="${DEVELOPER}/usr/bin/gcc-${OSXGCCVERSION} --sysroot=${DEVELOPER}/SDKs/${SDK} -isysroot ${DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
-		export CXX_BASE="${DEVELOPER}/usr/bin/g++-${OSXGCCVERSION} --sysroot=${DEVELOPER}/SDKs/${SDK} -isysroot ${DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+		export CC_BASE="${DEVELOPER}/usr/bin/gcc --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+		export CXX_BASE="${DEVELOPER}/usr/bin/g++ --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
 		;;
 	linux)
 		export ARCHS="i386 x86_64"

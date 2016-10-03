@@ -481,6 +481,9 @@ void MCScreenDC::refresh_window(Window p_window)
 		//   the need to only do OpenGL calls on the main thread.
         t_old_stack -> deactivatetilecache();
 		
+		// IM-2016-08-17: [[ Bug 18100 ]] Detach old stack from window
+		t_old_stack->OnDetach();
+		
 		m_current_window = nil;
 		m_current_focus = false;
 		m_mouse_x = -100000;
@@ -507,6 +510,9 @@ void MCScreenDC::refresh_window(Window p_window)
 		
 		if (!m_current_focus)
 			focus_window(p_window);
+		
+		// IM-2016-08-17: [[ Bug 18100 ]] Attach new stack to window
+		t_new_stack->OnAttach();
 		
 #ifdef _IOS_MOBILE
 		// MW-2012-03-05: [[ ViewStack ]] Make sure we tell the app's view

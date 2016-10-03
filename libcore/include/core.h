@@ -100,15 +100,15 @@ extern void __MCAssert(const char *file, uint32_t line, const char *message);
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
 
 extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
-#define MCLog(m_format, ...) __MCLog(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLog(...) __MCLog(__FILE__, __LINE__, __VA_ARGS__)
 
 extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format, ...);
-#define MCLogWithTrace(m_format, ...) __MCLogWithTrace(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLogWithTrace(...) __MCLogWithTrace(__FILE__, __LINE__, __VA_ARGS__)
 
 #else
 #define MCAssert(expr)
-#define MCLog(m_format, ...) 
-#define MCLogWithTrace(m_format, ...)
+#define MCLog(...)
+#define MCLogWithTrace(...)
 #endif
 
 #define MC_CONCAT(X,Y) MC_CONCAT_(X,Y)

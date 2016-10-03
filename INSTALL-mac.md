@@ -2,7 +2,7 @@
 
 ![LiveCode Community Logo](http://livecode.com/wp-content/uploads/2015/02/livecode-logo.png)
 
-Copyright © 2015 LiveCode Ltd., Edinburgh, UK
+Copyright © 2015-2016 LiveCode Ltd., Edinburgh, UK
 
 ## Dependencies
 
@@ -10,11 +10,11 @@ Copyright © 2015 LiveCode Ltd., Edinburgh, UK
 
 You must install Xcode.  This will allow you to build LiveCode for:
 
-* OS X desktop systems
 * iPhone OS
 * iPhoneSimulator
 
-You will not be able to compile the "revvideograbber" extension.
+You will not be able to compile the OS X desktop version of LiveCode
+unless you install some older OS X SDKs; see the next section for details.
 
 ### Optional dependencies
 
@@ -24,25 +24,35 @@ Create a directory on your hard disk (say, `/Applications/Xcode-Dev/`).
 
 Download and install each of the following versions of Xcode, placing their app bundles into the specified paths:
 
-  | Xcode version | App path |
-  | ------------- | -------- |
-  | 6.3.1         | /Applications/Xcode-Dev/Xcode_6_3_1.app |
-  | 6.3           | /Applications/Xcode-Dev/Xcode_6_3.app |
-  | 6.2           | /Applications/Xcode-Dev/Xcode_6_2.app |
-  | 5.1.1         | /Applications/Xcode-Dev/Xcode_5_1_1.app |
-  | 4.3.3         | /Applications/Xcode-Dev/Xcode_4_3_3.app |
+| Xcode version | App path                                |
+| ------------- | --------------------------------------- |
+| 8.0           | /Applications/Xcode-Dev/Xcode_8_0.app   |
+| 7.2.1         | /Applications/Xcode-Dev/Xcode_7_2_1.app |
+| 6.2           | /Applications/Xcode-Dev/Xcode_6_2.app   |
+| 5.1.1 [1]     | /Applications/Xcode-Dev/Xcode_5_1_1.app |
+| 4.3.3 [2]     | /Applications/Xcode-Dev/Xcode_4_3_3.app |
+
+Notes:
+1. Required for OS X build excluding "revvideograbber" extension
+2. Required for "revvideograbber" extension
 
 Make sure you run and verify each of the versions of Xcode. Download and install any extra SDKs you need using the "Xcode → Preferences → Downloads" window.
 
 Make `/Applications/Xcode-Dev/Xcode.app` a symlink to the latest version of Xcode available.  For example, run:
 
     cd /Applications/Xcode-Dev
-    ln -s Xcode_6_3_1.app Xcode.app
+    ln -s Xcode_8_0_0.app Xcode.app
 
 After checking out the LiveCode git repository, you need to run a tool to finalize the Xcode setup and to make sure all of the necessary SDKs are installed.  If LiveCode is checked out to `~/git/livecode`, run:
 
     cd /Applications/Xcode-Dev/
     sh ~/git/livecode/tools/setup_xcode_sdks.sh
+
+If you want the setup tool to copy the required SDKs out of the Xcode
+app bundles (so that you can safely delete all but the latest Xcode to
+save disk space), you can run:
+
+    sh ~/git/livecode/tools/setup_xcode_sdks.sh --cache
 
 ## Configuring LiveCode
 

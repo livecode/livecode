@@ -105,6 +105,12 @@ class ButtonMenuCallback;
 
 class MCButton : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_BUTTON };
+    
+private:
+    
 	friend class MCHcbutton;
 	MCCdata *bdata;
 	iconlist *icons;
@@ -112,7 +118,7 @@ class MCButton : public MCControl
 	MCNameRef menuname;
 	MCStringRef menustring;
 	MCField *entry;
-	MCStack *menu;
+	MCObjectHandle menu;
 	MCStringRef acceltext;
 	MCArrayRef tabs;
 	MCPlatformMenuRef m_system_menu;
@@ -156,8 +162,6 @@ class MCButton : public MCControl
     bool m_animate_posted : 1;
 
 public:
-    
-    enum { kObjectType = CT_BUTTON };
     
 	MCButton();
 	MCButton(const MCButton &bref);
@@ -272,11 +276,9 @@ public:
 	{
 		menuhasitemtags = p_hastags;
 	}
-	MCStack *getmenu()
-	{
-		return menu;
-	}
-	uint2 getaccelkey()
+    MCStack *getmenu();
+    
+    uint2 getaccelkey()
 	{
 		return accelkey;
 	}
