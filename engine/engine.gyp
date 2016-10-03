@@ -294,7 +294,7 @@
 						'conditions':
 						[
 							[
-								'target_arch == "armv6" or target_arch == "armv7"',
+								'target_arch == "armv6" or target_arch == "armv7a"',
 								{
 									'ldflags':
 									[
