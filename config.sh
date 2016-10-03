@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
 
+set -u
+
 # Platforms to triples
 platform_to_triple () {
     local platform="$1"
@@ -35,7 +37,7 @@ platform_to_triple () {
             echo "armeabi-android"
             return 0
             ;;
-        android-armv7)
+        android-armv7|android-armv7a)
             echo "armeabi_v7a-android"
             return 0
             ;;
