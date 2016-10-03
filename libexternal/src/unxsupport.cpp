@@ -22,8 +22,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pwd.h>
 #endif
 #include <sys/stat.h>
+#include <new>
 
 #include <revolution/support.h>
+
+using std::nothrow;
 
 #define PATH_MAX 4096
 #define stricmp strcasecmp
