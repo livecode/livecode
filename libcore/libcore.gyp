@@ -70,6 +70,17 @@
 					'include',
 				],
 			},
+			
+			'configurations':
+			{
+				'Debug':
+				{
+					'xcode_settings':
+					{
+						'ONLY_ACTIVE_ARCH': 'NO',
+					},
+				},
+			},
 		},
 	],
 }

@@ -71,7 +71,6 @@
 							'revmobile/revmobile.gyp:external-revandroid',
 							'revmobile/revmobile.gyp:external-reviphone',
 							'revspeech/revspeech.gyp:external-revspeech',
-							'revvideograbber/revvideograbber.gyp:external-revvideograbber',
 							
 							# Server externals
 							'revdb/revdb.gyp:external-revdb-server',
@@ -94,6 +93,7 @@
 						[
 							# Externals
 							'revfont/revfont.gyp:external-revfont',
+							'revvideograbber/revvideograbber.gyp:external-revvideograbber',
 						],
 					},
 				],

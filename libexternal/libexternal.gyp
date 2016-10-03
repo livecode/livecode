@@ -67,7 +67,18 @@
 						},
 					],
 				],
-			}
+			},
+			
+			'configurations':
+			{
+				'Debug':
+				{
+					'xcode_settings':
+					{
+						'ONLY_ACTIVE_ARCH': 'NO',
+					},
+				},
+			},
 		},
 		{
 			'target_name': 'libExternal-symbol-exports',
