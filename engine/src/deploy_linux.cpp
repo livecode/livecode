@@ -504,7 +504,7 @@ static bool MCDeployToLinuxReadSectionHeaders(MCDeployFileRef p_file, typename T
 		return MCDeployThrow(kMCDeployErrorLinuxBadSectionSize);
 
 	// Allocate the array of the entries
-	r_table = new typename T::Shdr[p_header . e_shnum];
+	r_table = new (nothrow) typename T::Shdr[p_header . e_shnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -529,7 +529,7 @@ static bool MCDeployToLinuxReadProgramHeaders(MCDeployFileRef p_file, typename T
 		return MCDeployThrow(kMCDeployErrorLinuxBadSegmentSize);
 
 	// Allocate the array of the entries
-	r_table = new typename T::Phdr[p_header . e_phnum];
+	r_table = new (nothrow) typename T::Phdr[p_header . e_phnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 

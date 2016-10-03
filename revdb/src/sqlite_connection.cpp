@@ -248,7 +248,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	try {
-		ret = new DBCursor_SQLITE(mDB, m_enable_binary);
+		ret = new (nothrow) DBCursor_SQLITE(mDB, m_enable_binary);
 		Dataset *ds = ret->getDataset();
 
 		ds->query(newquery);

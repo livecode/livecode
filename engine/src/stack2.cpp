@@ -858,7 +858,7 @@ void MCStack::startedit(MCGroup *group)
 	editing->setcontrols(NULL);
 
 	// Create a temporary card
-	cards = curcard = new MCCard;
+	cards = curcard = new (nothrow) MCCard;
 
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
@@ -2880,7 +2880,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	t_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGraphicsContext *t_old_context = nil;
-	t_old_context = new MCGraphicsContext(p_context);
+	t_old_context = new (nothrow) MCGraphicsContext(p_context);
 	if (t_old_context != nil)
 		render(t_old_context, t_rect);
 	delete t_old_context;
@@ -3037,7 +3037,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
 			MCGContextConcatCTM(t_context, t_transform);
 			
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 		}
 
 		if (t_success)

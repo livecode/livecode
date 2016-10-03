@@ -231,7 +231,7 @@ Parse_stat MCPrint::parse(MCScriptPoint &sp)
 			{
 				MCScriptPoint oldsp(sp);
 				sp.backup();
-				target = new MCChunk(False);
+				target = new (nothrow) MCChunk(False);
 				MCerrorlock++;
 				if (target->parse(sp, False) != PS_NORMAL)
 				{
@@ -249,7 +249,7 @@ Parse_stat MCPrint::parse(MCScriptPoint &sp)
 	if ((mode != PM_CARD && sp . skip_token(SP_FACTOR, TT_OF) == PS_NORMAL) ||
 		(mode == PM_CARD && !single && target == NULL))
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PRINT_BADTARGET, sp);

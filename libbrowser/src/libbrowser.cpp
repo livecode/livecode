@@ -16,6 +16,7 @@
 
 #include <core.h>
 
+#include <new>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -464,7 +465,7 @@ bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback
 	}
 	
 	MCBrowserEventHandlerWrapper *t_wrapper;
-	t_wrapper = new MCBrowserEventHandlerWrapper(p_callback, p_context);
+	t_wrapper = new (std::nothrow) MCBrowserEventHandlerWrapper(p_callback, p_context);
 	
 	if (t_wrapper == nil)
 		return false;
@@ -509,7 +510,7 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	}
 	
 	MCBrowserJavaScriptHandlerWrapper *t_wrapper;
-	t_wrapper = new MCBrowserJavaScriptHandlerWrapper(p_callback, p_context);
+	t_wrapper = new (std::nothrow) MCBrowserJavaScriptHandlerWrapper(p_callback, p_context);
 	
 	if (t_wrapper == nil)
 		return false;

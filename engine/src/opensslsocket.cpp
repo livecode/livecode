@@ -848,7 +848,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 	}
 	else
 	{
-		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetObject(), mptr);
+		MCSocketread *eptr = new (nothrow) MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetObject(), mptr);
 		eptr->appendto(s->revents);
 		s->setselect();
 		if (s->accepting)
@@ -1009,7 +1009,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	{
 		// MM-2014-02-12: [[ SecureSocket ]] Store against the write if it should be encrypted.
 		//  This way, upon securing a socket, all pending writes will remain unencrypted whilst all new writes will be encrypted.
-		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr, s->secure);
+		MCSocketwrite *eptr = new (nothrow) MCSocketwrite(d, optr, mptr, s->secure);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)
@@ -1116,7 +1116,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
     MCAutoPointer<char_t[]> t_port_chars;
-    t_port_chars = new char_t[U2L];
+    t_port_chars = new (nothrow) char_t[U2L];
     t_length = sprintf((char *)(*t_port_chars), "%d", port);
 
 	MCNewAutoNameRef t_portname;
@@ -1469,7 +1469,7 @@ void MCSocket::acceptone()
 		MCNameRef t_name;
 		MCNameCreate(*n, t_name);
         MCSocket *t_socket;
-        t_socket = new MCSocket(t_name, object, NULL, False, newfd, False, False,False);
+        t_socket = new (nothrow) MCSocket(t_name, object, NULL, False, newfd, False, False,False);
         if (t_socket != NULL)
         {
             MCSocketsAppendToSocketList(t_socket);
@@ -1493,7 +1493,7 @@ void MCSocket::readsome()
 		MCS_socket_ioctl(fd, FIONREAD, t_available);
 		l = t_available;
 
-		char *dbuffer = new char[l + 1]; // don't allocate 0
+		char *dbuffer = new (nothrow) char[l + 1]; // don't allocate 0
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		l++; // Not on MacOS/UNIX?
@@ -1501,7 +1501,7 @@ void MCSocket::readsome()
 		        == SOCKET_ERROR)
 		{
 			delete dbuffer;
-			error = new char[21 + I4L];
+			error = new (nothrow) char[21 + I4L];
 			sprintf(error, "Error %d on socket", WSAGetLastError());
 			doclose();
 		}
@@ -1512,7 +1512,7 @@ void MCSocket::readsome()
 			delete[] dbuffer;
 			if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			{
-				error = new char[21 + I4L];
+				error = new (nothrow) char[21 + I4L];
 				sprintf(error, "Error %d reading socket", errno);
 				doclose();
 			}
@@ -1534,7 +1534,7 @@ void MCSocket::readsome()
 				if (accepting && !IO_findsocket(*t_name, index))
 				{
                     MCSocket *t_socket;
-                    t_socket = new MCSocket(*t_name, object, NULL, True, fd, False, True,False);
+                    t_socket = new (nothrow) MCSocket(*t_name, object, NULL, True, fd, False, True,False);
                     if (t_socket != NULL)
                         MCSocketsAppendToSocketList(t_socket);
 				}
@@ -1542,7 +1542,7 @@ void MCSocket::readsome()
 				MCAutoDataRef t_data;
 				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data);
 				
-				MCParameter *params = new MCParameter;
+				MCParameter *params = new (nothrow) MCParameter;
 				params->setvalueref_argument(*t_name);
 				params->setnext(new MCParameter);
 				params->getnext()->setvalueref_argument(*t_data);
@@ -1576,7 +1576,7 @@ void MCSocket::readsome()
 				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
                 MCSocket *t_socket;
-                t_socket = new MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
+                t_socket = new (nothrow) MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
                 if (t_socket != NULL)
                 {
                     MCSocketsAppendToSocketList(t_socket);
@@ -1642,7 +1642,7 @@ void MCSocket::readsome()
 								error = sslgraberror();
 							else
 							{
-								error = new char[21 + I4L];
+								error = new (nothrow) char[21 + I4L];
 								sprintf(error, "Error %d reading socket", errno);
 							}
 						}
@@ -1691,7 +1691,7 @@ void MCSocket::processreadqueue()
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
-				MCParameter *params = new MCParameter;
+				MCParameter *params = new (nothrow) MCParameter;
 				params->setvalueref_argument(name);
 				params->setnext(new MCParameter);
 				params->getnext()->setvalueref_argument(*t_data);
@@ -1745,7 +1745,7 @@ void MCSocket::writesome()
 					error = sslgraberror();
 				else
 				{
-					error = new char[16 + I4L];
+					error = new (nothrow) char[16 + I4L];
 					sprintf(error, "Error %d on socket", errno);
 				}
 				doclose();
@@ -2019,7 +2019,7 @@ char *MCSocket::sslgraberror()
 		ecode = ERR_get_error();
 		if (ecode != 0)
 		{
-			terror = new char[256];
+			terror = new (nothrow) char[256];
 			ERR_error_string_n(ecode,terror,255);
 		}
 	}

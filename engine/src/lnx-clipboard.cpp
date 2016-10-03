@@ -168,7 +168,7 @@ MCLinuxRawClipboardItem* MCLinuxRawClipboard::CreateNewItem()
         return NULL;
     
     // Create a new data item
-    m_item = new MCLinuxRawClipboardItem(this);
+    m_item = new (nothrow) MCLinuxRawClipboardItem(this);
     m_item->Retain();
     return m_item;
 }
@@ -425,7 +425,7 @@ bool MCLinuxRawClipboard::PullUpdates()
     
     // Create a new item for the new contents
     m_external_data = true;
-    m_item = new MCLinuxRawClipboardItem(this, m_selection, m_drag_context);
+    m_item = new (nothrow) MCLinuxRawClipboardItem(this, m_selection, m_drag_context);
     return (m_item != NULL);
 #else
     return true;
@@ -644,7 +644,7 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
             return false;
         
         // Allocate a new representation object.
-        m_reps[t_index] = t_rep = new MCLinuxRawClipboardItemRep(p_type, p_bytes);
+        m_reps[t_index] = t_rep = new (nothrow) MCLinuxRawClipboardItemRep(p_type, p_bytes);
     }
     
     // If we still have no rep, something went wrong
@@ -792,7 +792,7 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_dra
             m_reps.Extend(t_index + 1);
             
             // Add the new representation
-            m_reps[t_index] = new MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_targets->data);
+            m_reps[t_index] = new (nothrow) MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_targets->data);
             
             // Next item on the target list
             t_targets = t_targets->next;
@@ -862,7 +862,7 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_dra
                 break;
             
             // Add the representation
-            m_reps[t_index] = new MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_atom);
+            m_reps[t_index] = new (nothrow) MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_atom);
         }
         
         // Free the memory containing the atoms

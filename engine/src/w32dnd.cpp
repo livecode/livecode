@@ -109,7 +109,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
 	t_drop_source = NULL;
 	if (t_success)
 	{
-		t_drop_source = new DropSource;
+		t_drop_source = new (nothrow) DropSource;
 		if (t_drop_source != NULL)
 			t_drop_source -> AddRef();
 		else

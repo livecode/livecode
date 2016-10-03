@@ -118,7 +118,7 @@ MCPropertyTable MCProperty::kModePropertyTable =
 
 IO_stat MCDispatch::startup(void)
 {
-	stacks = new MCServerScript;
+	stacks = new (nothrow) MCServerScript;
 	stacks -> setname_cstring("Home");
 	stacks -> setparent(this);
 

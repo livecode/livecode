@@ -347,7 +347,7 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	// If the pattern isn't found with the given flags, then create a new one.
 	if (re == nil)
 	{
-		/* UNCHECKED */ re = new regexp;
+		/* UNCHECKED */ re = new (nothrow) regexp;
 		/* UNCHECKED */ re->pattern = MCValueRetain(exp);
 		re->flags = flags;
 		int status;

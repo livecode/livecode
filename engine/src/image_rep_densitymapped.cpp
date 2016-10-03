@@ -525,7 +525,7 @@ bool MCImageRepCreateDensityMapped(MCStringRef p_filename, const MCImageScaledRe
 	t_rep = nil;
 	
 	if (t_success)
-		t_success = nil != (t_rep = new MCDensityMappedImageRep(p_filename));
+		t_success = nil != (t_rep = new (nothrow) MCDensityMappedImageRep(p_filename));
 	
 	for (uindex_t i = 0; t_success && i < p_count; i++)
 		t_success = t_rep->AddImageSourceWithDensity(static_cast<MCReferencedImageRep*>(p_list[i].rep), p_list[i].scale);

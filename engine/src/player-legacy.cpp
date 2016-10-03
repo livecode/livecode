@@ -351,7 +351,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -985,7 +985,7 @@ bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType
 Boolean MCPlayer::x11_prepare(void)
 {
     if ( m_player == NULL )
-        m_player = new MPlayer();
+        m_player = new (nothrow) MPlayer();
     
     // OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player.
     // MCPlayer::init appears to duplicate the filename buffer, so freeing it after the call should be ok.

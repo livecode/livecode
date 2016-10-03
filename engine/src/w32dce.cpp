@@ -682,7 +682,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 
 	HDC hdc = f_src_dc;
-	char *fontname = new char[LF_FACESIZE];
+	char *fontname = new (nothrow) char[LF_FACESIZE];
 	LOGFONTA logfont;
 	memset(&logfont, 0, sizeof(LOGFONTA));
 	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, strlen(oldfontname));

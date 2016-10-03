@@ -207,7 +207,7 @@ void MCCefLinuxBrowser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_brows
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefLinuxBrowser *t_browser;
-	t_browser = new MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
+	t_browser = new (nothrow) MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
 	
 	if (t_browser == nil)
 		return false;

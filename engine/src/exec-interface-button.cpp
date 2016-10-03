@@ -452,7 +452,7 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
     
 	if (icons == NULL)
 	{
-		icons = new iconlist;
+		icons = new (nothrow) iconlist;
 		memset(icons, 0, sizeof(iconlist));
 	}
     

@@ -174,7 +174,7 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_parent_view, MCCefBrowserBase *&r_browser)
 {
 	MCCefWin32Browser *t_browser;
-	t_browser = new MCCefWin32Browser((HWND)p_parent_view);
+	t_browser = new (nothrow) MCCefWin32Browser((HWND)p_parent_view);
 
 	if (t_browser == nil)
 		return false;

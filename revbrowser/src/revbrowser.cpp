@@ -151,7 +151,7 @@ bool BrowserInstances::FindInstanceById(int p_id, BrowserInstance *&r_instance)
 void BrowserInstances::Add(CWebBrowserBase *p_browser, bool p_is_xbrowser)
 {
 	BrowserInstance *t_instance;
-	t_instance = new BrowserInstance;
+	t_instance = new (std::nothrow) BrowserInstance;
 	t_instance -> next = m_instances;
 	t_instance -> instance_id = ++m_last_instance_id;
 	t_instance -> stack_id = NULL;

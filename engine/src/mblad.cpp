@@ -200,7 +200,7 @@ private:
 void MCAdPostMessage(MCAd *p_ad, MCAdEventType p_type)
 {
     MCCustomEvent *t_event;
-    t_event = new MCAdEvent(p_ad, p_type);
+    t_event = new (nothrow) MCAdEvent(p_ad, p_type);
     if (t_event != nil)
         MCEventQueuePostCustom(t_event);
 }

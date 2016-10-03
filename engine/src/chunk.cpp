@@ -359,7 +359,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						MCperror->add(PE_CHUNK_BADORDER, sp);
 						return PS_ERROR;
 					}
-					curref = new MCCRef;
+					curref = new (nothrow) MCCRef;
 					curref->otype = nterm;
 					if (curref->otype == CT_BACKGROUND || curref->otype == CT_CARD)
 					{
@@ -571,7 +571,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						MCperror -> add(PE_PROPERTY_NOTOF, sp);
 						return PS_ERROR;
 					}
-					source = new MCChunk(False);
+					source = new (nothrow) MCChunk(False);
 					if (static_cast<MCChunk *>(source) -> parse(sp, False) != PS_NORMAL)
 					{
 						MCperror->add(PE_PROPERTY_BADCHUNK, sp);
@@ -847,7 +847,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
 
                 // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails 
                 MCScriptPoint sp(ctxt, *t_value);
-                MCChunk *tchunk = new MCChunk(False);
+                MCChunk *tchunk = new (nothrow) MCChunk(False);
                 MCerrorlock++;
                 Symbol_type type;
                 if (tchunk->parse(sp, False) == PS_NORMAL

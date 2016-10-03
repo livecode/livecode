@@ -76,7 +76,7 @@ MCStacklist::~MCStacklist()
 
 void MCStacklist::add(MCStack *sptr)
 {
-	MCStacknode *tptr = new MCStacknode(sptr);
+	MCStacknode *tptr = new (nothrow) MCStacknode(sptr);
 	tptr->appendto(stacks);
 	if (this == MCstacks) // should be done with subclass
 		top(sptr);

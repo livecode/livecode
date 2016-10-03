@@ -244,7 +244,7 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
         return NULL;
     
     DATABASEREC *t_result;
-    t_result = new DATABASEREC;
+    t_result = new (nothrow) DATABASEREC;
 #if (defined _MACOSX && !defined _MAC_SERVER)
     t_result -> driverref = (CFBundleRef)t_handle;
 #elif (defined _WINDOWS) || defined _WINDOWS_SERVER
@@ -584,7 +584,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 			qsort(t_map, t_element_count, sizeof(unsigned int), SortKeysCallback);
 
 			// If there are multiple elements...
-			t_values = new DBString[t_element_count];
+			t_values = new (nothrow) DBString[t_element_count];
 			for (int i = 0; i < t_element_count; i++)
 			{
 				char *t_key_buffer;
@@ -634,7 +634,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		}
 	}
 
-	t_values = new DBString[p_argument_count - 2];
+	t_values = new (nothrow) DBString[p_argument_count - 2];
 	for (int i = 2; i < p_argument_count; i++)
 	{
 		Bool t_is_binary;

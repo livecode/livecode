@@ -837,9 +837,9 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
         case kMCChunkTypeSentence:
         case kMCChunkTypeTrueWord:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_ICU(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_ICU(p_text, p_chunk_type);
             break;
         case kMCChunkTypeLine:
         case kMCChunkTypeItem:
@@ -850,44 +850,44 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
                 t_delimiter = p_item_delimiter;
  
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
             break;
 
             break;
         case kMCChunkTypeParagraph:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
             break;
             break;
         case kMCChunkTypeWord:
             // AL-2015-10-08: [[ Bug 16161 ]] Word chunk needs to be passed line delimiter
             //  as words are also delimited by line breaks.
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
+                t_iterator = new (nothrow) MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
             break;
         case kMCChunkTypeCharacter:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Grapheme(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Grapheme(p_text, p_chunk_type);
             break;
         case kMCChunkTypeCodepoint:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
             break;
         case kMCChunkTypeCodeunit:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codeunit(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
             break;
         default:
             MCAssert(false);

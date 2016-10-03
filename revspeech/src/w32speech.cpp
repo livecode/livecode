@@ -27,12 +27,12 @@ INarrator *InstantiateNarrator(NarratorProvider p_provider)
 	if (p_provider == kNarratorProviderDefault)
 	{
 		INarrator *t_narrator;
-		t_narrator = new WindowsSAPI5Narrator();
+		t_narrator = new (nothrow) WindowsSAPI5Narrator();
 		if (!t_narrator -> Initialize())
 		{
 			delete t_narrator;
 
-			t_narrator = new WindowsSAPI4Narrator();
+			t_narrator = new (nothrow) WindowsSAPI4Narrator();
 			if (!t_narrator -> Initialize())
 			{
 				delete t_narrator;

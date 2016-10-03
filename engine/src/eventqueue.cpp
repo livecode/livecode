@@ -1188,7 +1188,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	}
 	else
 	{
-		t_touch = new MCTouch;
+		t_touch = new (nothrow) MCTouch;
 		t_touch -> next = s_touches;
 		t_touch -> id = p_id;
 		

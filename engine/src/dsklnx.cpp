@@ -341,7 +341,7 @@ static iconv_t fetch_converter(const char *p_encoding)
         t_converter = iconv_open("UTF-16LE", p_encoding);
 
         ConverterRecord *t_record;
-        t_record = new ConverterRecord;
+        t_record = new (nothrow) ConverterRecord;
         t_record -> next = s_records;
         t_record -> encoding = p_encoding;
         t_record -> converter = t_converter;
@@ -868,7 +868,7 @@ public:
     virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
     {
 #ifdef NOSETENV
-        char *dptr = new char[strlen(p_name) + strlen(p_value) + 2];
+        char *dptr = new (nothrow) char[strlen(p_name) + strlen(p_value) + 2];
         sprintf(dptr, "%s=%s", p_name, p_value);
         putenv(dptr);
 #else
@@ -1169,7 +1169,7 @@ public:
         fptr = fopen(*t_path_utf, "wb+");
 
         if (fptr != nil)
-            t_handle = new MCStdioFileHandle(fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(fptr);
 
         return t_handle;
     }
@@ -1199,7 +1199,7 @@ public:
                     //   rather than '-1'.
                     if (t_buffer != MAP_FAILED)
                     {
-                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
+                        t_handle = new (nothrow) MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
                     }
                 }
@@ -1227,7 +1227,7 @@ public:
 
         if (t_fptr != NULL)
         {
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
         }
 
         return t_handle;
@@ -1261,7 +1261,7 @@ public:
             setbuf(t_fptr, NULL);
 
         if (t_fptr != NULL)
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
 
         return t_handle;
     }
@@ -1290,7 +1290,7 @@ public:
         {
             configureSerialPort((short)fileno(t_fptr));
 
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
         }
 
         return t_handle;
@@ -1354,7 +1354,7 @@ public:
 		 * path, a path separator character, and any possible filename. */
 		size_t t_path_len = strlen(*t_path);
 		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
-		char *t_entry_path = new char[t_entry_path_len + 1];
+		char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 		strcpy (t_entry_path, *t_path);
 		if ((*t_path)[t_path_len - 1] != '/')
 		{
@@ -1895,7 +1895,7 @@ public:
                     {
                         /* UNCHECKED */ t_doc_sys.Lock(p_doc);
 
-                        argv = new char *[3];
+                        argv = new (nothrow) char *[3];
                         argv[0] = t_name_copy;
                         argv[1] = (char *)*t_doc_sys;
                         argc = 2;
