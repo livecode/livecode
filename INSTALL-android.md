@@ -36,9 +36,9 @@ Create a standalone toolchain (this simplifies setting up the build environment)
 
 ````bash
 android-ndk-r10e/build/tools/make-standalone-toolchain.sh \
-    --toolchain=arm-linux-androideabi-clang3.5 \
-    --platform=android-10 \
-    --install-dir=${HOME}/android/toolchain/standalone
+    --toolchain=arm-linux-androideabi-clang \
+    --platform=android-16 \
+    --install-dir=${HOME}/android/toolchain/standalone-arm-linux-androideabi
 ````
 
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
