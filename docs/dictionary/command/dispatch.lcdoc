@@ -2,7 +2,6 @@ Name: dispatch
 
 Type: command
 
-Syntax: dispatch <message> [ to <target> ][ with {<argumentList>, | arrayName} ]
 Syntax: dispatch <message> [ to <target> ][ with <argumentList> ]
 
 Summary:
@@ -18,9 +17,36 @@ Example:
 dispatch "updateWidget"
 
 Example:
-dispatch "setList" with myVar1, myVar2
+on mouseUp
+  local tWidth, tHeight
+   
+  put 200 into tWidth
+  put 100 into tHeight
+  dispatch "setSize" with tWidth, tHeight
+end mouseUp
+
+on setSize pWidth, pHeight
+  set the width of graphic "myRectangle" to pWidth
+  set the height of graphic "myRectangle" to pHeight
+end setSize
 
 Example:
+# An example of using an array as an argument
+
+on mouseUp
+  local tDataArray
+  
+  put "Mickey" into tDataArray["firstName"]
+  put "Mouse" into tDataArray["lastName"]
+  
+  dispatch "updateUI" to card "myCard" with "Hello World", tDataArray
+end mouseUp
+
+on updateUI pTitle, @pArray
+  put pTitle into field "Title"
+  put pArray["firstName"] into field "First Name"
+  put pArray["lastName"] into field "Last Name"
+end updateUI
 
 Parameters:
 message:
@@ -31,7 +57,7 @@ A reference to any LiveCode object.
 
 argumentList:
 A comma separated list of expressions containing the arguments to send.
-
+Arrays are expressions and are valid to send as arguments.
 
 It (enum):
 Set by <dispatch> to indicate how the message was processed.
@@ -50,6 +76,8 @@ as it allows a <behavior> script to send an 'event' to one of its child
 objects and then perform an action depending on the outcome.
 
 Executing a <dispatch> command causes the <message> to be sent to the
+target object with the given argument list. This message passes through
+the message path in the normal way.
 
 If no <target> is specified, the <message> is sent to ' <me> '. In the
 context of a <behavior>, this is typically the child that is executing
