@@ -18,30 +18,30 @@ interface TypeVariable<D> inherits Type
 end interface
 
 interface GenericDeclaration
-	method getTypeParameters() returns TypeVariable[]
+	method getTypeParameters() returns TypeVariable<?>[]
 end interface
 
 interface Member
 	constant DECLARED as int
 	constant PUBLIC as int
 	
-	method getDeclaringClass() returns Class
+	method getDeclaringClass() returns Class<?>
 end interface
 
 class Constructor<T>
 	method equals(obj as Object) returns boolean
-	method getDeclaringClass() returns Class
-	method getExceptionTypes() returns Class[]
+	method getDeclaringClass() returns Class<?>
+	method getExceptionTypes() returns Class<?>[]
 	method getGenericExceptionTypes() returns Type[]
 	method getGenericParameterTypes() returns Type[]
 	method getModifiers() returns int
 	method getName() returns String
-	method getParameterTypes() returns Class[]
+	method getParameterTypes() returns Class<?>[]
 	method getTypeParameters() returns TypeVariable<Constructor>[]
 	method hashCode() returns int
 	method isSynthetic() returns boolean
 	method isVarArgs() returns boolean
-	--method newInstance(Object... initargs) returns T
+	method newInstance(obj as Object, ...) returns T
 	method toGenericString() returns String
 	method toString() returns String
 end class
@@ -52,7 +52,7 @@ class Field inherits Object implements Member
 	method getBoolean(obj as Object) returns boolean
 	method getByte(obj as Object) returns byte
 	method getChar(obj as Object) returns char
-	method getDeclaringClass() returns Class
+	method getDeclaringClass() returns Class<?>
 	method getDouble(obj as Object) returns double
 	method getFloat(obj as Object) returns float
 	method getGenericType() returns Type
@@ -61,7 +61,7 @@ class Field inherits Object implements Member
 	method getModifiers() returns int
 	method getName() returns String
 	method getShort(obj as Object) returns short
-	method getType() returns Class
+	method getType() returns Class<?>
 	method hashCode() returns int
 	method isEnumConstant() returns boolean
 	method isSynthetic() returns boolean
@@ -80,16 +80,16 @@ end class
 
 class Method
 	method equals(obj as Object) returns boolean
-	method getDeclaringClass() returns Class
+	method getDeclaringClass() returns Class<?>
 	method getDefaultValue() returns Object
-	method getExceptionTypes() returns Class[]
+	method getExceptionTypes() returns Class<?>[]
 	method getGenericExceptionTypes() returns Type[]
 	method getGenericParameterTypes() returns Type[]
 	method getGenericReturnType() returns Type
 	method getModifiers() returns int
 	method getName() returns String
-	method getParameterTypes() returns Class[]
-	method getReturnType() returns Class
+	method getParameterTypes() returns Class<?>[]
+	method getReturnType() returns Class<?>
 	method getTypeParameters() returns TypeVariable<Method>[]
 	method hashCode() returns int
 	method isBridge() returns boolean

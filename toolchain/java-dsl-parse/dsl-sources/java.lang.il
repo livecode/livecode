@@ -8,9 +8,8 @@ use java.lang.reflect.Method
 use java.lang.reflect.Field
 
 class Object
-	constructor Object()
-	
-	final method getClass() returns Class
+    constructor Object()
+	final method getClass() returns Class<?>
 	method hashCode() returns int
 	method equals(obj as Object) returns boolean
 	protected method clone() returns Object
@@ -24,28 +23,29 @@ class Object
 end class
 
 class Class<T> inherits Object implements GenericDeclaration, Type
-	method asSubclass(clazz as Class) returns Class
+	method asSubclass(clazz as Class<?>) returns Class<?>
 	method cast(obj as Object) returns T
 	method desiredAssertionStatus() returns boolean
+	class method forName(className as String) returns Class<?>
 	method getCanonicalName() returns String
-	method getClasses() returns Class[]
-	method getComponentType() returns Class
-	method getConstructors() returns Constructor[]
-	method getDeclaredClasses() returns Class[]
-	method getDeclaredConstructors() returns Constructor[]
+	method getClasses() returns Class<?>[]
+	method getComponentType() returns Class<?>
+	method getConstructors() returns Constructor<?>[]
+	method getDeclaredClasses() returns Class<?>[]
+	method getDeclaredConstructors() returns Constructor<?>[]
 	method getDeclaredField(name as String) returns Field
 	method getDeclaredFields() returns Field[]
 	method getDeclaredMethods() returns Method[]
-	method getDeclaringClass() returns Class
-	method getEnclosingClass() returns Class
-	method getEnclosingConstructor() returns Constructor
+	method getDeclaringClass() returns Class<?>
+	method getEnclosingClass() returns Class<?>
+	method getEnclosingConstructor() returns Constructor<?>
 	method getEnclosingMethod() returns Method
 	method getEnumConstants() returns T[]
 	method getField(name as String) returns Field
 	method getFields() returns Field[]
 	method getGenericInterfaces() returns Type[]
 	method getGenericSuperclass() returns Type
-	method getInterfaces() returns Class[]
+	method getInterfaces() returns Class<?>[]
 	method getMethods() returns Method[]
 	method getModifiers() returns int
 	method getName() returns String
@@ -54,7 +54,7 @@ class Class<T> inherits Object implements GenericDeclaration, Type
 	method getTypeParameters() returns TypeVariable<Class<T>>[]
 	method isAnonymousClass() returns boolean
 	method isArray() returns boolean
-	method isAssignableFrom(cls as Class) returns boolean
+	method isAssignableFrom(cls as Class<?>) returns boolean
 	method isEnum() returns boolean
 	method isInstance(obj as Object) returns boolean
 	method isInterface() returns boolean
