@@ -264,7 +264,7 @@ Requests' menu item at the top of the GitHub website.
 
 **Sign the CLA if you haven't already**
 
-Go to the list of pull requests and click on the the link to your pull request.
+Go to the list of pull requests and click on the link to your pull request.
 If you have not signed the Contributor's Agreement, livecode-vulcan will have commented (or will soon!)
 to ask you to:
 1. Sign the LiveCode CLA
