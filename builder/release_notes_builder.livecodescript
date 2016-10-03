@@ -1386,12 +1386,12 @@ private function GitGetRelevantTags pType
    
    put 0 into tStart
    repeat for each line tLine in tTags
-      add 1 to tStart
       if tLine begins with sNumericVersion then
          exit repeat
       end if
+      add 1 to tStart
    end repeat
-   put line (tStart - 1) to -1 of tTags into tTags
+   put line tStart to -1 of tTags into tTags
    
    repeat for each line tLine in tTags
       if not (tLine begins with sNumericVersion) then
