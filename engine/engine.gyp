@@ -262,11 +262,11 @@
 				],
 				[
 					# Use a linker script to add the project and payload sections to the Linux executable
-					'OS == "linux"',
+					'OS == "linux" or (OS == "android" and target_arch != "armv6" and target_arch != "armv7a")',
 					{
 						'ldflags':
 						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -282,14 +282,26 @@
 						
 						'sources':
 						[
-							'engine/standalone-android.link',
+							'engine/standalone-android-arm.link',
 						],
 						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
-							'-Wl,-T,$(abs_srcdir)/engine/standalone-android.link',
+						],
+						
+						'conditions':
+						[
+							[
+								'target_arch == "armv6" or target_arch == "armv7"',
+								{
+									'ldflags':
+									[
+										'-Wl,-T,$(abs_srcdir)/engine/standalone-android-arm.link',
+									],
+								},
+							],
 						],
 
 						'actions':
