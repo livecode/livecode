@@ -137,6 +137,16 @@
 						],
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/linux',
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':
