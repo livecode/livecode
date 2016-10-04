@@ -47,7 +47,7 @@ An abbreviated object <ID> looks like this: field ID 2238
 
 >*Note:* The <abbreviated> <keyword> is implemented internally as a
 > <property>, and appears in the <propertyNames>. However, it cannot be
-> used as a <property> in an <expression>, nor with the <set command>.
+> used as a <property> in an <expression>, nor with the set <command>.
 
 Changes:
 The form the abbreviated owner was introduced in version 2.0. In
