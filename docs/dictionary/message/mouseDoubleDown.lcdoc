@@ -12,7 +12,7 @@ image
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -23,10 +23,14 @@ on mouseDoubleDown myButton -- open a file in an another application
 end mouseDoubleDown
 
 Parameters:
-pButtonNumber (enum): Specifies which mouse button was pressed:
-- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
-- "2": the middle button on Unix systems.
-- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
+mouseButtonNumber (enum):
+The mouseButtonNumber specifies which mouse button was pressed:
+
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 Handle the <mouseDoubleDown> <message> to perform an action when the
@@ -40,16 +44,17 @@ The <mouseDoubleDown> <message> is sent only when the <Browse tool> is
 being used. If an <unlock|unlocked> <field> is clicked with <mouse
 button> 1 or 2, no <mouseDoubleDown> <message> is sent.
 
->*Important:*  If the user clicks a transparent <pixel> in an <image>,
+>*Note:*  If the user clicks a transparent <pixel> in an <image>,
 > the <mouseDoubleDown> <message> is sent to the <object(glossary)>
 > behind the <image>, not to the <image>.
 
-References: object (glossary), double-click (glossary),
-mouse pointer (glossary), pixel (glossary), Browse tool (glossary),
-mouse button (glossary), message (glossary), unlock (glossary),
-card (glossary), field (glossary), image (glossary), control (keyword),
-mouseDoubleUp (message), mouseStillDown (message),
-doubleClickDelta (property), doubleClickInterval (property)
+References: , Browse tool (glossary), card (glossary), 
+control (glossary), double-click (glossary), 
+doubleClickDelta (property), doubleClickInterval (property), 
+field (glossary), image (glossary), message (glossary), 
+mouse button (glossary), mouse pointer (glossary), 
+mouseDoubleUp (message), mouseStillDown (message), object (glossary), 
+pass (command), pixel (glossary), unlock (glossary)
 
 Tags: ui
 
