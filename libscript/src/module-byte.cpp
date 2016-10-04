@@ -197,19 +197,16 @@ extern "C" MC_DLLEXPORT_DEF void MCByteExecDeleteLastByteOf(MCDataRef& x_target)
     MCByteExecDeleteByteOf(-1, x_target);
 }
 
-extern "C" MC_DLLEXPORT_DEF bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& x_iterand, MCDataRef p_data)
+extern "C" MC_DLLEXPORT_DEF bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCDataGetLength(p_data))
         return false;
-	
-	MCDataRef t_byte;
-    if (!MCDataCopyRange(p_data, MCRangeMake(t_offset, 1), t_byte))
+    
+    if (!MCDataCopyRange(p_data, MCRangeMake(t_offset, 1), r_iterand))
         return false;
-	
-	MCValueAssign(x_iterand, t_byte);
     
     x_iterator = (void *)(t_offset + 1);
     

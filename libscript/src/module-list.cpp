@@ -406,17 +406,16 @@ extern "C" MC_DLLEXPORT_DEF void MCListEvalEmpty(MCProperListRef& r_output)
     r_output = MCValueRetain(kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT_DEF bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& x_iterand, MCProperListRef p_list)
+extern "C" MC_DLLEXPORT_DEF bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCProperListGetLength(p_list))
         return false;
-	
-	
-	MCValueAssign(x_iterand, MCProperListFetchElementAtIndex(p_list, t_offset));
-	
+    
+    r_iterand = MCValueRetain(MCProperListFetchElementAtIndex(p_list, t_offset));
+    
     x_iterator = (void *)(t_offset + 1);
     
     return true;

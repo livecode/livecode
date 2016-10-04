@@ -245,7 +245,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCharExecDeleteLastCharOf(MCStringRef& x_targe
 //   repeat for each char tChar in tVar
 //   end repeat
 // Will result in tChar containing the value it had at the point of end repeat.
-extern "C" MC_DLLEXPORT_DEF bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& x_iterand, MCStringRef p_string)
+extern "C" MC_DLLEXPORT_DEF bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
 {
     MCTextChunkIterator *t_iterator;
     bool t_first;
@@ -258,18 +258,15 @@ extern "C" MC_DLLEXPORT_DEF bool MCCharRepeatForEachChar(void*& x_iterator, MCSt
     }
     else
         t_iterator = (MCTextChunkIterator *)x_iterator;
-	
-	MCStringRef t_char;
+    
     if (t_iterator -> Next())
-        t_iterator -> CopyString(t_char);
+        t_iterator -> CopyString(r_iterand);
     else
     {
         delete t_iterator;
         return false;
     }
-	
-	MCValueAssign(x_iterand, t_char);
-	
+    
     x_iterator = (void *)(t_iterator);
     
     return true;

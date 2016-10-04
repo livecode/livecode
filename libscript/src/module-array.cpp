@@ -163,7 +163,7 @@ extern "C" MC_DLLEXPORT_DEF void MCArrayEvalEmpty(MCArrayRef& r_output)
     r_output = MCValueRetain(kMCEmptyArray);
 }
 
-extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& x_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
 {
     MCValueRef t_value;
     // If this is a numerical array, do it in order
@@ -190,13 +190,12 @@ extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachElement(void*& x_iterator, 
         
         x_iterator = (void *)(t_ptr);
     }
-	
-	MCValueAssign(x_iterand, t_value);
-	
+    
+    r_iterand = MCValueRetain(t_value);
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& x_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
 {
     MCNameRef t_key;
     MCValueRef t_value;
@@ -206,8 +205,8 @@ extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachKey(void*& x_iterator, MCSt
     
     if (!MCArrayIterate(p_array, t_offset, t_key, t_value))
         return false;
-	
-	MCValueAssign(x_iterand, MCNameGetString(t_key));
+    
+    r_iterand = MCValueRetain(MCNameGetString(t_key));
     
     x_iterator = (void *)(t_offset);
     

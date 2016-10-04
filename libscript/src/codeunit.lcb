@@ -40,7 +40,7 @@ public foreign handler MCCodeunitEvalContains(in Source as String, in Needle as 
 public foreign handler MCCodeunitEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, inout Iterand as optional String, in Container as String) returns CBool binds to "<builtin>"
+public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, out Iterand as String, in Container as String) returns CBool binds to "<builtin>"
 
 public foreign handler MCCodeunitFetchFirstCodeunitOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitStoreFirstCodeunitOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"

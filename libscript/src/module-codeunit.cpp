@@ -186,20 +186,17 @@ extern "C" MC_DLLEXPORT_DEF void MCCodeunitExecDeleteLastCodeunitOf(MCStringRef&
 //   repeat for each char tCodeunit in tVar
 //   end repeat
 // Will result in tCodeunit containing the value it had at the point of end repeat.
-extern "C" MC_DLLEXPORT_DEF bool MCCodeunitRepeatForEachCodeunit(void*& x_iterator, MCStringRef& x_iterand, MCStringRef p_string)
+extern "C" MC_DLLEXPORT_DEF bool MCCodeunitRepeatForEachCodeunit(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCStringGetLength(p_string))
         return false;
-	
-	MCStringRef t_codeunit;
-    if (!MCStringCopySubstring(p_string, MCRangeMake(t_offset, 1), t_codeunit))
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMake(t_offset, 1), r_iterand))
         return false;
-	
-	MCValueAssign(x_iterand, t_codeunit);
-	
+    
     x_iterator = (void *)(t_offset + 1);
     
     return true;
