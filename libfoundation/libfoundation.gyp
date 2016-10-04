@@ -138,7 +138,7 @@
 					},
 				],
 				[
-					'OS == "linux"',
+					'OS == "linux" or OS == "mac"',
 					{
 						'include_dirs':
 						[
@@ -192,7 +192,6 @@
 										[
 											'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 											'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
-											'$(SDKROOT)/System/Library/Frameworks/JavaVM.framework',
 										],
 									},
 									{
