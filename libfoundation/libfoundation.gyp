@@ -139,7 +139,7 @@
 					},
 				],
 				[
-					'OS == "linux"',
+					'OS == "linux"', 
 					{
 						'include_dirs':
 						[
@@ -147,6 +147,14 @@
 							'<(javahome)/include/linux',
 						],
 					},
+					'OS == "mac"',
+					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/darwin',
+						],
+					},					
 				],
 			],
 			
@@ -193,7 +201,6 @@
 										[
 											'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 											'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
-											'$(SDKROOT)/System/Library/Frameworks/JavaVM.framework',
 										],
 									},
 									{
@@ -201,7 +208,6 @@
 										[
 											'-framework', 'CoreFoundation',
 											'-framework', 'Foundation',
-											'-framework', 'JavaVM',
 										],
 									},
 								],
