@@ -60,7 +60,10 @@ Currently, the supported versions of Xcode are:
 * Xcode 8.0 on MacOS X 10.11
 * Xcode 8.0 on MacOS 10.12
 
-It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on OS X 10.10 (Yosemite), you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
+It is also possible to set other versions of Xcode, to allow testing
+on a wider range of iOS simulators. For instance, on MacOS 10.12
+(Sierra), you can add *Xcode 6.2* in the *Mobile Support* preferences,
+to let you test your stack on the *iOS Simulator 8.2*.
 
 We currently support deployment for the following versions of iOS:
 
