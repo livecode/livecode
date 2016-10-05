@@ -27,16 +27,12 @@ determine how the <object|object's> color is displayed. When the
 <object(glossary)> --red, green, and blue--is raised to be equal to
 white. 
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), transfer mode (glossary),
 property (glossary), keyword (glossary), blend (keyword),
-reverse (keyword), notSrcOrReverse (keyword), notSrcAndReverse (keyword),
-subOver (keyword), adMin (keyword), srcAndReverse (keyword),
-srcBic (keyword), set (keyword), addOver (keyword), srcAnd (keyword),
-subPin (keyword), transparent (keyword), clear (keyword),
-srcCopy (keyword), notSrcAnd (keyword), addMax (keyword),
-notSrcBic (keyword), srcOr (keyword), noOp (keyword), srcXOr (keyword),
-notSrcXOr (keyword), notSrcOr (keyword), srcOrReverse (keyword),
-addPin (keyword), ink (property), pixels (property)
+set (keyword), ink (property), pixels (property)
 
 Tags: ui
 
