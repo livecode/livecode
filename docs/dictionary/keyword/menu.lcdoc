@@ -42,10 +42,10 @@ item|menu items>.)
 
 The syntax for menu item strings is:
 
-    [<flags>] <label> ['/' <accelerator> ['|' <tag>]]
+    [﹤flags﹥] ﹤label﹥ ['/' ﹤accelerator﹥ ['|' ﹤tag﹥]]
 
 
-Where `<flags>` may include:
+Where `﹤flags﹥` may include:
 
 * `!c`, `!n`, `!r`: the menu item has respectively, a check, no check,
   or a selected radio button
@@ -55,15 +55,15 @@ Where `<flags>` may include:
   menu item; use this to create submenus
 
 
-The `<accelerator>` can be specified as one of:
+The `﹤accelerator﹥` can be specified as one of:
 
-* `<char>`: Command key + specified char
-* `<keyname>`: Named key without modifiers
-* `<modifiers> <char>`: Specified modifiers + character
-* `<modifiers> <keyname>`: Specified modifiers + named key
+* `﹤char﹥`: Command key + specified char
+* `﹤keyname﹥`: Named key without modifiers
+* `﹤modifiers﹥ ﹤char﹥`: Specified modifiers + character
+* `﹤modifiers﹥ ﹤keyname﹥`: Specified modifiers + named key
 
 
-In the `<accelerator>`, `<modifiers>` is either:
+In the `﹤accelerator﹥`, `﹤modifiers﹥` is either:
 
 * a space separated list of: 'command' or 'cmd', 'control' or 'ctrl',
   'option' or 'opt', 'alt', 'shift'; in this case the keyname/char
@@ -75,8 +75,8 @@ In the `<accelerator>`, `<modifiers>` is either:
   * `%`: Control
 
 
-    In this case no space between the sequence and keyname/char is
-    required 
+In this case no space between the sequence and keyname/char is
+required 
 
 
 The following named keys are supported:
@@ -102,17 +102,17 @@ A tag will only be recognised following the `<accelerator>`.  To specify
 a menu tag without an accelerator shortcut, an empty `<accelerator>` can
 be specified using `/|` followed by the tag text.
 
-**Note:** As Windows and Linux do not have the 'Command' modifier, on
-those platforms 'Command' is an synonym for 'Control'. To ensure
-cross-platform uniformity it is important that you use 'Command' in
-preference to 'Control' since 'Control' on Mac OS X is a less
-frequently used modifier.
+> **Note:** As Windows and Linux do not have the 'Command' modifier, on
+> those platforms 'Command' is an synonym for 'Control'. To ensure
+> cross-platform uniformity it is important that you use 'Command' in
+> preference to 'Control' since 'Control' on Mac OS X is a less
+> frequently used modifier.
 
-**Cross-platform note:** The <menu> decoration has no effect on <Mac OS>
-and <OS X|OS X systems>. On <Windows|Windows systems>, the <menu>
-decoration must be set along with the <maximize> or <minimize>
-decorations:you cannot use <maximize> or <minimize> without including
-<menu>.
+> **Cross-platform note:** The <menu> decoration has no effect on <Mac OS>
+> and <OS X|OS X systems>. On <Windows|Windows systems>, the <menu>
+> decoration must be set along with the <maximize> or <minimize>
+> decorations:you cannot use <maximize> or <minimize> without 
+> including <menu>.
 
 References: doMenu (command), menus (function), property (glossary),
 menu item (glossary), OS X (glossary), Windows (glossary),
