@@ -40,9 +40,16 @@ Whenever you set the <blendLevel> <property> of an <image>, its <ink>
 > images in <PICT> format.
 
 References: object (glossary), property (glossary), keyword (glossary),
-transfer mode (glossary), PICT (glossary), blend (keyword),
-image (keyword), notSrcCopy (keyword), ink (property),
+transfer mode (glossary), PICT (glossary), 
+image (keyword), addMax(keyword), adMin(keyword), 
+addPin(keyword), addOver(keyword), clear(keyword), 
+noOp(keyword), notSrcAnd(keyword), notSrcAndReverse(keyword), 
+notSrcBic(keyword), notSrcCopy(keyword), notSrcOr(keyword), 
+notSrcOrReverse(keyword), notSrcXOr(keyword), reverse(keyword), 
+set(keyword), srcAnd(keyword), srcAndReverse(keyword), srcBic(keyword), 
+srcCopy(keyword), srcOr(keyword), srcOrReverse(keyword), 
+srcXOr(keyword), subOver(keyword), subPin(keyword), 
+transparent(keyword), ink (property),
 blendLevel (property), pixels (property)
 
 Tags: multimedia
-
