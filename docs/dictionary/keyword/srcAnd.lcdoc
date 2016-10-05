@@ -18,8 +18,8 @@ Example:
 set the ink of graphic "Outline" to srcAnd
 
 The result:
-Each component of the resulting color is equal to the result of this
-expression:. 
+Each component of the resulting color rgb value is equal to the 
+result of this expression. 
 
 Description:
 Use the <srcAnd> <keyword> to make the light-colored parts of an object
@@ -42,12 +42,20 @@ completely opaque.
 For example, suppose an object's color is 45,0,255, and the color of the
 pixels under the object is 20,45,100. If the <srcAnd> <transfer mode> is
 used, the <object|object's> displayed color is 4,0,100 (the decimal
-equivalent). 
+equivalent). In <binary(glossary)> this is:
+
+    00101101, 00000000, 11111111
+    00010100, 00101101, 01100100 Logic AND
+    ========  ========  ========
+    00000100, 00000000, 01100100
 
 The <srcAnd> mode can be used only on <Unix> and <Windows|Windows
 systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink>
 <property> is set to this mode appear as though their <ink> were set to
 <noOp>. 
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
