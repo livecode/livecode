@@ -28,7 +28,7 @@ A codeunit refers to the encoded units in which codepoints are stored
 
 Use the expression 
 
-the number of codeunits of tString
+    the number of codeunits of tString
 
 to find out how many codeunits make up a Unicode string.
 
