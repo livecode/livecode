@@ -28,7 +28,7 @@ leaves a field that hasn't been changed.
 The selection is removed from a field (and the field loses focus) when
 another window is brought to the front, when the user clicks in another
 field, or when the user tabs out of the field. The field also loses
-focus when the <select> command is used to select text in another field.
+focus when the <select> <command> is used to select text in another field.
 However, the <exitField> message is not sent when the user clicks
 another point in the same field.
 
@@ -46,8 +46,10 @@ changed or not--you must handle both <closeField> and <exitField>.
 > <put> command, then <exitField> will still be sent. <closeField> is 
 > only sent when the contents are changed by the user.
 
-References: put (command), select (command), openField (message), 
-closeField (message), focusOut (message), menuMode (property)
+References: put (command), select (command),
+openField (message), closeField message (message),
+openField message (message), closeField (message), focusOut (message),
+menuMode (property)
 
 Tags: ui
 
