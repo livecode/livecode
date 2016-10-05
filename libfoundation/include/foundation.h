@@ -1774,6 +1774,9 @@ MC_DLLEXPORT bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeign
 
 //////////
 
+MC_DLLEXPORT bool MCJavaInitialize();
+MC_DLLEXPORT void MCJavaFinalize();
+    
 MC_DLLEXPORT MCTypeInfoRef MCJavaGetObjectTypeInfo();
 MC_DLLEXPORT bool MCJavaCreateJavaObjectTypeInfo();
     
