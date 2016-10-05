@@ -335,7 +335,7 @@ char * getDiagnosticRecord(SQLHSTMT p_statement)
 bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count, SQLHSTMT &p_statement, SQLRETURN &p_result)
 {
 	if (!isConnected)
-		return NULL;
+		return false;
 	
 	unsigned int t_query_length;
 	t_query_length = strlen(p_query);
@@ -345,8 +345,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 	
 	SQLHSTMT t_statement;
 	SQLAllocStmt(hdbc,&t_statement);
-	
-	DBCursor_ODBC *t_cursor = NULL;
 	
 	SQLRETURN t_result;
 	if (t_success)
@@ -369,8 +367,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 
 	char *t_parsed_query;
 	t_parsed_query = p_query;
-
-	int *t_param_sizes = NULL;
 
 	// The placeholder map contains a mapping from bind to argument.
 	PlaceholderMap t_placeholder_map;

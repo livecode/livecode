@@ -120,6 +120,25 @@ void MCEngineScriptObjectAllowAccess(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCValueRef
+MCEngineEvalScriptResult (MCExecContext& ctxt)
+{
+	if (MCresult->isclear())
+	{
+		return nil;
+	}
+
+	MCAutoValueRef t_result(MCresult->getvalueref());
+	if (!MCExtensionConvertFromScriptType(ctxt, kMCAnyTypeInfo,
+	                                      InOut(t_result)))
+	{
+		return nil;
+	}
+	return t_result.Take();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT_DEF MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
@@ -444,9 +463,7 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     MCParameter *t_params;
-    MCValueRef t_result;
     t_params = nil;
-    t_result = nil;
     
     if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
         goto cleanup;
@@ -468,12 +485,9 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     else
         s_last_message_was_handled = false;
 
-	/* Provide a return value iff the result was set */
-	t_result = MCValueRetain(MCresult->isclear() ? kMCNull : MCresult->getvalueref());
-    
 cleanup:
     MCEngineFreeScriptParameters(t_params);
-    return t_result;
+    return MCEngineEvalScriptResult(ctxt);
 }
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
@@ -569,8 +583,9 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_s
         MCEngineThrowScriptError();
         return nil;
     }
-    
-    return MCValueRetain(MCresult -> getvalueref());
+
+	MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+	return MCEngineEvalScriptResult(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,6 +638,8 @@ static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
     __MCScriptObjectEqual,
     __MCScriptObjectHash,
     __MCScriptObjectDescribe,
+    nil,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

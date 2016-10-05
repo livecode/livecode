@@ -295,8 +295,6 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 		return;
 	}
 #endif
-
-	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -212,23 +212,6 @@ typedef struct
 	const char *token;
 } ModKeyToken;
 
-static ModKeyToken modifier_tokens[] =
-	{
-		{MS_SHIFT, 5, "shift"},
-		{MS_SHIFT, 1, "@"},
-		{MS_ALT, 6, "option"},
-		{MS_ALT, 3, "opt"},
-		{MS_ALT, 3, "alt"},
-		{MS_ALT, 1, "#"},
-		{MS_MAC_CONTROL, 7, "control"},
-		{MS_MAC_CONTROL, 4, "ctrl"},
-		{MS_MAC_CONTROL, 1, "%"},
-		{MS_CONTROL, 7, "command"},
-		{MS_CONTROL, 3, "cmd"},
-		{MS_CONTROL, 1, "^"},
-		{0, 0, NULL}
-	};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCButton::kProperties[] =
@@ -314,7 +297,6 @@ MCButton::MCButton()
 	menucontrol = MENUCONTROL_NONE;
 	menulines = DEFAULT_MENU_LINES;
 	menuhasitemtags = false;
-	menu = NULL; //stack based menu
 	m_system_menu = NULL;
 	entry = NULL;
 	tabs = MCValueRetain(kMCEmptyArray);
@@ -354,7 +336,6 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	menucontrol = bref.menucontrol;
 	menuhasitemtags = bref.menuhasitemtags;
 	menustring = MCValueRetain(bref.menustring);
-	menu = NULL;
 	m_system_menu = NULL;
 	entry = NULL;
 	tabs = MCValueRetain(kMCEmptyArray);
@@ -412,8 +393,11 @@ MCButton::~MCButton()
 
 void MCButton::removelink(MCObject *optr)
 {
-	if (optr == menu)
-		menu = NULL;
+	if (menu.IsBound() && optr == menu)
+    {
+        MCValueAssign(menuname, kMCEmptyName);
+        menu = nil;
+    }
 }
 
 bool MCButton::imagechanged(MCImage *p_image, bool p_deleting)
@@ -497,8 +481,8 @@ void MCButton::open()
 				break;
 			default:
 				findmenu(true);
-				if (!MCNameIsEmpty(menuname) && menu != NULL)
-					menu->installaccels(getstack());
+				if (!MCNameIsEmpty(menuname) && menu.IsValid())
+					menu.GetAs<MCStack>()->installaccels(getstack());
 				break;
 			}
 		}
@@ -715,15 +699,15 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 		case XK_WheelUp:
 		case XK_WheelLeft:
 		case XK_WheelRight:
-			if (menu -> getcontrols() -> gettype() == CT_FIELD)
-				if (menu -> getcontrols() -> kdown(p_string, key))
+			if (menu.GetAs<MCStack>() -> getcontrols() -> gettype() == CT_FIELD)
+				if (menu.GetAs<MCStack>() -> getcontrols() -> kdown(p_string, key))
 					return True;
 			break;
 		case XK_space:
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			menu->menukdown(p_string, key, &t_pick, menuhistory);
+			menu.GetAs<MCStack>()->menukdown(p_string, key, &t_pick, menuhistory);
 
 			// This check must be for null (not empty) because an empty pick
 			// indicates that the function succeeded while a null pick means
@@ -757,7 +741,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				MCmenuobjectptr = NULL;
 			return True;
 		default:	
-			MCButton *mbptr = menu->findmnemonic(t_char);
+			MCButton *mbptr = menu.GetAs<MCStack>()->findmnemonic(t_char);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
@@ -771,7 +755,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 					else
 						t_label = mbptr->getlabeltext();
 	
-					menu->menukdown(p_string, key, &t_pick, menuhistory);
+					menu.GetAs<MCStack>()->menukdown(p_string, key, &t_pick, menuhistory);
 					Exec_stat es = handlemenupick(t_label, nil);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
@@ -856,7 +840,10 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 		if ( sptr == NULL)
 			return False;
 
-		sptr->translatecoords(menu, tx, ty);
+        if (!(menu.IsValid()))
+            return False;
+        
+		sptr->translatecoords(menu.GetAs<MCStack>(), tx, ty);
 		MCRectangle trect = sptr->getrect();
 		Boolean handled = menu->mfocus(tx, ty);
 		tx = x + trect.x;
@@ -936,7 +923,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 				{
 					uint2 fheight;
 					fheight = gettextheight();
-					MCField *fptr = (MCField *)menu->getcontrols();
+					MCField *fptr = (MCField *)menu.GetAs<MCStack>()->getcontrols();
 					fptr->vscroll(my < rect.y + rect.height ? -fheight : fheight, True);
 					fptr->resetscrollbars(True);
 				}
@@ -1140,6 +1127,9 @@ Boolean MCButton::mdown(uint2 which)
 	state |= CS_MFOCUSED;
 	if (state & CS_SUBMENU && (menubutton == 0 || (uint1)which == menubutton))
 	{
+        if (!(menu.IsValid()))
+            return False;
+        
         // SN-2014-08-26: [[ Bug 13201 ]] mx/my are now related to the button's rectangle,
         //  not the stack's rectangle anymore.
         // SN-2014-10-17: [[ Bug 13675 ]] mx/my refer to the button's rectangle on Mac only
@@ -1164,7 +1154,7 @@ Boolean MCButton::mdown(uint2 which)
 			return mfocus(mx, my);
 		}
 	}
-	if ((!MCNameIsEmpty(menuname) || menu != NULL || getstyleint(flags) == F_MENU)
+	if ((!MCNameIsEmpty(menuname) || menu.IsValid() || getstyleint(flags) == F_MENU)
 	        && (menubutton == 0 || (uint1)which == menubutton)
 	        && (entry == NULL || !MCU_point_in_rect(entry->getrect(), mx, my))
 	        && (getstack()->gettool(this) == T_BROWSE
@@ -1294,7 +1284,11 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		}
 
 		state &= ~CS_MFOCUSED;
-		if (state & CS_FIELD_GRAB)
+		
+        if (!(menu.IsValid()))
+            return False;
+        
+        if (state & CS_FIELD_GRAB)
 		{
 			state &= ~CS_FIELD_GRAB;
 			if (state & CS_SUBMENU)
@@ -1343,7 +1337,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		// MW-2008-03-27; [[ Bug 6225 ]] Make sure we send a mouseUp in this case
 		//   by setting the menupoppedup global.
 		MCmenupoppedup = true;
-		menu->menumup(which, &t_pick, menuhistory);
+		menu.GetAs<MCStack>()->menumup(which, &t_pick, menuhistory);
 		MCmenupoppedup = false;
 		if (state & CS_IGNORE_MENU)
             closemenu(True, True);
@@ -1383,7 +1377,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     // that we need to check is the rect of the stack containing
                     // the menu).
                     MCRectangle t_rect = t_menu->getstack()->getrect();
-                    t_outside = !MCU_point_in_rect(rect, mx, my);
+                    t_outside = !MCU_point_in_rect(t_rect, mx, my);
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
@@ -1457,7 +1451,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 	}
 	if (state & CS_GRAB)
 	{
-		if (flags && F_AUTO_HILITE)
+		if (flags & F_AUTO_HILITE)
 		{
 			if (starthilite)
 				state &= ~CS_HILITED;
@@ -1601,7 +1595,7 @@ Boolean MCButton::doubledown(uint2 which)
 {
 	int2 tx = mx;
 	int2 ty = my;
-	if (menu)
+	if (menu.IsValid())
 	{
 		MCStack *sptr = MCmousestackptr;
 		MCRectangle trect = sptr->getrect();
@@ -1618,7 +1612,7 @@ Boolean MCButton::doubledown(uint2 which)
 			state |= CS_FIELD_GRAB;
 			return entry->doubledown(which);
 		}
-		else if (state & CS_SUBMENU && menu && MCU_point_in_rect(menu->getrect(), tx, ty))
+		else if (state & CS_SUBMENU && menu.IsValid() && MCU_point_in_rect(menu->getrect(), tx, ty))
 		{
 			state |= CS_FIELD_GRAB;
 			return menu->doubledown(which);
@@ -1637,7 +1631,7 @@ Boolean MCButton::doubleup(uint2 which)
 		state &= ~CS_FIELD_GRAB;
 		if (entry != NULL)
 			return entry->doubleup(which);
-		else if (state & CS_SUBMENU && menu)
+		else if (state & CS_SUBMENU && menu.IsValid())
 			return menu -> doubleup(which);
 	}
 	return MCControl::doubleup(which);
@@ -1710,7 +1704,7 @@ void MCButton::applyrect(const MCRectangle &nrect)
 
 	// MW-2010-06-07: [[ Bug 8746 ]] Make sure we rebuild the menu after freeing it,
 	//   thus ensuring accelerators are not lost.
-	if (menu != NULL)
+	if (menu.IsValid())
 	{
 		freemenu(False);
 		findmenu(true);
@@ -1740,19 +1734,22 @@ void MCButton::closemenu(Boolean kfocus, Boolean disarm)
 		}
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
-		if (kfocus && !(state & CS_MFOCUSED))
-		{
-			menu->setstate(True, CS_KFOCUSED); // override state
-			menu->kunfocus();
-		}
-		MCButton *focused = (MCButton *)menu->getcurcard()->getmfocused();
-		if (focused != NULL && focused->gettype() == CT_BUTTON
-		        && focused->getmenumode() == WM_CASCADE)
-			focused->closemenu(kfocus, disarm);
+        if (menu.IsValid())
+        {
+            if (kfocus && !(state & CS_MFOCUSED))
+            {
+                menu->setstate(True, CS_KFOCUSED); // override state
+                menu->kunfocus();
+            }
+        
+            MCButton *focused = (MCButton *)menu.GetAs<MCStack>()->getcurcard()->getmfocused();
+            if (focused != NULL && focused->gettype() == CT_BUTTON
+                    && focused->getmenumode() == WM_CASCADE)
+                focused->closemenu(kfocus, disarm);
 
-		menu -> mode_closeasmenu();
-		menu->close();
-
+            menu.GetAs<MCStack>() -> mode_closeasmenu();
+            menu->close();
+        }
 		state &= ~(CS_SUBMENU | CS_MOUSE_UP_MENU);
 		menudepth--;
 	}
@@ -1942,8 +1939,8 @@ void MCButton::activate(Boolean notify, KeySym p_key)
         t_disabled = false;
 		MCAutoStringRef t_pick;
 		
-		if (menu != NULL)
-			menu->findaccel(p_key, &t_pick, t_disabled);
+		if (menu.IsValid())
+			menu.GetAs<MCStack>()->findaccel(p_key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
 		else if (m_system_menu != nil)
 			getmacmenuitemtextfromaccelerator(m_system_menu, p_key, MCmodifierstate, &t_pick, false);
@@ -2336,10 +2333,15 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 	newmenu->menuwindow = True;
 	MCdispatcher->appendpanel(newmenu);
 	if (m->parent == this)
-		menu = newmenu;
+    {
+		menu = newmenu->GetHandle();
+        newmenu -> addneed(this);
+    }
 	else
 	{
-		m->parent->menu = newmenu;
+		m->parent->menu = newmenu->GetHandle();
+        newmenu -> addneed(m->parent);
+        
 		m->parent->menumode = WM_CASCADE;
 		if (getstyleint(menuflags) == F_CHECK || getstyleint(menuflags) == F_RADIO)
 			m->parent->leftmargin += CHECK_SIZE + leftmargin;
@@ -2557,16 +2559,18 @@ public:
 
 Boolean MCButton::findmenu(bool p_just_for_accel)
 {
-	Boolean isunicode = hasunicode();
 	if (!MCNameIsEmpty(menuname))
 	{
-		if (menu == NULL)
+		if (!(menu.IsValid()))
 		{
 			MCerrorlock++;
-			menu = getstack()->findstackname(menuname);
-			MCerrorlock--;
-			if (menu != NULL)
-				menu->addneed(this);
+            MCStack * t_stack = getstack()->findstackname(menuname);
+            MCerrorlock--;
+            if (t_stack != nil)
+            {
+			    menu = t_stack->GetHandle();
+				t_stack->addneed(this);
+            }
 		}
 	}
 	else if (!MCStringIsEmpty(menustring) && getstyleint(flags) == F_MENU)
@@ -2576,7 +2580,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 			MCValueRelease(tabs);
 			/* UNCHECKED */ MCStringSplit(menustring, MCSTR("\n"), nil, kMCStringOptionCompareExact, tabs);
 		}
-		else if (menu == NULL)
+		else if (!(menu.IsValid()))
 		{
 			uint2 fheight;
 			fheight = gettextheight();
@@ -2603,11 +2607,15 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 				MCU_set_rect(trect, 0, 0, rect.width, height + 4);
 				trect = MCU_reduce_rect(trect, MClook == LF_MOTIF ? DEFAULT_BORDER : 1);
 				fptr->setrect(trect);
-				/* UNCHECKED */ MCStackSecurityCreateStack(menu);
-
-				menu->setparent(this);
-				menu->createmenu(fptr, rect.width, height + 4);
-				MCdispatcher->appendpanel(menu);
+                MCStack * t_menu;
+                if (!MCStackSecurityCreateStack(t_menu))
+                    return False;
+                
+				t_menu->setparent(this);
+				t_menu->createmenu(fptr, rect.width, height + 4);
+				MCdispatcher->appendpanel(t_menu);
+                menu = t_menu->GetHandle();
+                t_menu -> addneed(this);
 			}
 			else
 			{
@@ -2653,7 +2661,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 			MCValueAssign(tabs, kMCEmptyArray);
 		}
 	}
-	return menu != NULL;
+	return menu.IsValid();
 }
 
 void MCButton::setmenuhandler(MCButtonMenuHandler *p_handler)
@@ -2734,7 +2742,7 @@ void MCButton::openmenu(Boolean grab)
 	        && cascade_sptr->getmode() < WM_PULLDOWN)
 	{
 		MCmousestackptr->kfocusset(this);
-		if (menu == NULL && !findmenu())
+		if (!(menu.IsValid()) && !findmenu())
 			return;
 	}
 	if (IsMacLFAM() &&
@@ -2785,17 +2793,17 @@ void MCButton::openmenu(Boolean grab)
 			}
 			rel.x += labelwidth;
 			rel.width -= labelwidth;
-			menu->menuset(menuhistory, rect.height >> 1);
+			menu.GetAs<MCStack>()->menuset(menuhistory, rect.height >> 1);
 		}
 
-		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
-		menu -> mode_openasmenu(t_did_grab ? sptr : NULL);
+		menu.GetAs<MCStack>()->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
+		menu.GetAs<MCStack>() -> mode_openasmenu(t_did_grab ? sptr : NULL);
 		
 		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
 		if (menumode == WM_OPTION && MCNameIsEmpty(menuname))
 		{
 			MCField *t_field = NULL;
-			MCObjptr *t_obj = menu->getcurcard()->getrefs();
+			MCObjptr *t_obj = menu.GetAs<MCStack>()->getcurcard()->getrefs();
 			MCObjptr *t_iter = t_obj;
 			do
 			{
@@ -2816,9 +2824,9 @@ void MCButton::openmenu(Boolean grab)
 		}
 		int2 tx = mx;
 		int2 ty = my;
-		sptr->translatecoords(menu, tx, ty);
+		sptr->translatecoords(menu.GetAs<MCStack>(), tx, ty);
 		menu->mfocus(tx, ty);
-		menu->resetcursor(True);
+		menu.GetAs<MCStack>()->resetcursor(True);
 		if (!(state & CS_MFOCUSED))
 			menu->kfocusnext(True);
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -2833,24 +2841,23 @@ void MCButton::freemenu(Boolean force)
 #ifdef _MAC_DESKTOP
 	macfreemenu();
 #endif
-	if (menu != NULL && !(state & CS_SUBMENU))
+	if (menu.IsValid() && !(state & CS_SUBMENU))
 	{
 		if (!MCNameIsEmpty(menuname))
 		{
-			menu->removeaccels(getstack());
-			menu->removeneed(this);
-			menu = NULL;
+			menu.GetAs<MCStack>()->removeaccels(getstack());
+			menu.GetAs<MCStack>()->removeneed(this);
+			menu = nil;
 		}
 		else
 		{
 			if (!MCStringIsEmpty(menustring) || force)
 			{
 				closemenu(False, True);
-				MCdispatcher->removepanel(menu);
+				MCdispatcher->removepanel(menu.GetAs<MCStack>());
 				MCstacks->deleteaccelerator(this, NULL);
-				menu->removeneed(this);
-				delete menu;
-				menu = NULL;
+				menu.GetAs<MCStack>()->removeneed(this);
+				menu = nil;
 			}
 		}
 	}
@@ -2918,7 +2925,7 @@ bool MCButton::menuisopen()
 #ifdef _MAC_DESKTOP
 	return macmenuisopen();
 #else
-	return menu != nil && menu->getopened();
+	return menu.IsValid() && menu->getopened();
 #endif
 }
 
@@ -3276,7 +3283,7 @@ uint2 MCButton::getmousetab(int2 &curx)
             totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + 23;
 		}
 		if (totalwidth < rect.width)
-			curx += rect.width - totalwidth >> 1;
+			curx += (rect.width - totalwidth) >> 1;
 		if (mx < curx)
 			return MAXUINT2;
 	}
@@ -3806,8 +3813,6 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 	}
 
-	uint4 tacceltextsize;
-
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
 	if (accelkey < 256)
@@ -3863,6 +3868,11 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		}
 	}
 	return IO_NORMAL;
+}
+
+MCStack * MCButton::getmenu()
+{
+    return menu.GetAs<MCStack>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

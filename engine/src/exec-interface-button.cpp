@@ -807,8 +807,8 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 	if (opened)
 	{
-		if (findmenu(true) && menu != nil)
-			menu->installaccels(getstack());
+		if (findmenu(true) && menu.IsValid())
+			menu.GetAs<MCStack>()->installaccels(getstack());
 	}
 }
 

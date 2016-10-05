@@ -417,9 +417,10 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 
 IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
-	char tnewheader[kMCStackFileVersionStringLength];
+	char tnewheader[kMCStackFileVersionStringLength + 1];
 	if (IO_read(tnewheader, kMCStackFileVersionStringLength, stream) != IO_NORMAL)
 		return IO_ERROR;
+	tnewheader[kMCStackFileVersionStringLength] = '\0'; /* nul-terminate */
 	
 	// AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
 	if (!MCStackFileParseVersionNumber(tnewheader, r_version))
@@ -1004,7 +1005,10 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 	{
 		MCAutoStringRef t_script_body;
 
-		// Write out the standard script stack header, and then the script itself
+        // Ensure script isn't encrypted if a password was removed in session
+        sptr -> unsecurescript(sptr);
+        
+        // Write out the standard script stack header, and then the script itself
 		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
 		// Convert line endings - but only if the native line ending isn't CR!

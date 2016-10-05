@@ -405,12 +405,12 @@ on TestReadFromProcess
    else if the platform is "macos" or the platform contains "linux" then
       put "/bin/sh" into tProcess
       
-      open process tProcess for update
+      open process tProcess for binary update
       
       write "echo " & quote & "foo" & quote & LF to process tProcess
       
-      read from process tProcess for  1 line
-      put char 1 to 3 of  it into tOutput
+      read from process tProcess for 3 bytes
+      put it into tOutput
       
       TestAssert "Reading from process", tOutput is "foo"
       

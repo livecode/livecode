@@ -1102,7 +1102,6 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	
 	MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
 	
-	char *t_params = NULL;
 	uint32_t t_index = 0;
 	
 	char **t_names = NULL;

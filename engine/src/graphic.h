@@ -43,6 +43,12 @@ enum
 
 class MCGraphic : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_GRAPHIC };
+    
+private:
+    
 	uint2 linesize;
 	uint2 angle;
 	uint2 startangle;

@@ -109,3 +109,14 @@ MCStringRef MCAndroidRawClipboard::DecodeTransferredFileList(MCDataRef p_data) c
 {
     return NULL;
 }
+
+MCDataRef MCAndroidRawClipboard::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	return NULL;
+}
+
+MCDataRef MCAndroidRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
+{
+	return NULL;
+}
+

@@ -40,14 +40,16 @@ void Error_CouldNotWriteInterfaceFile(const char *path);
 void Error_MalformedToken(long position, const char *token);
 void Error_MalformedSyntax(long position);
 void Error_IntegerLiteralOutOfRange(long position);
+void Error_InvalidIntegerLiteral(long position);
+void Error_InvalidDoubleLiteral(long position);
     
 void Warning_EmptyUnicodeEscape(long position);
 void Warning_UnicodeEscapeTooBig(long position);
 
 void Error_Bootstrap(const char *format, ...);
 
+void Debug(const char *p_format, ...);
 void Debug_Emit(const char *p_format, ...);
-    
 void Debug_Depend(const char *p_format, ...);
 
 #ifdef __cplusplus

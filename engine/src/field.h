@@ -44,6 +44,7 @@ struct MCFieldParagraphStyle
 	bool has_space_above : 1;
 	bool has_space_below : 1;
 	bool has_tabs : 1;
+	bool has_tab_alignments : 1;
 	bool has_background_color : 1;
 	bool has_border_width : 1;
 	bool has_list_indent : 1;
@@ -74,6 +75,8 @@ struct MCFieldParagraphStyle
 	int16_t space_below;
 	uint16_t tab_count;
 	uint16_t *tabs;
+	uindex_t tab_alignment_count;
+	intenum_t *tab_alignments;
 	uint32_t background_color;
 	uint32_t border_color;
     MCStringRef metadata;
@@ -194,6 +197,12 @@ enum MCFieldStylingMode
 
 class MCField : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_FIELD };
+    
+private:
+    
 	friend class MCHcfield;
 	MCCdata *fdata;
 	MCCdata *oldfdata;
@@ -263,8 +272,6 @@ class MCField : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
 public:
-
-    enum { kObjectType = CT_FIELD };
     
     // SN-2014-11-04: [[ Bug 13934 ]] Refactor the laying out the field when setting properties
     friend MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings);
@@ -575,6 +582,10 @@ public:
 	//   routine to do both stops and widths.
 	static bool parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count);
 	static void formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef& r_result);
+
+	// IM-2016-09-22: [[ Bug 14645 ]] Convert tab alignments array to / from string
+	static bool parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count);
+	static bool formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result);
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
 	//   start and end in the given field.

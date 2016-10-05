@@ -516,11 +516,6 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
             return IO_NORMAL;
 		}
 	}
-	
-    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
-	old_rect = rect;
-    
-	return IO_NORMAL;
 }
 
 IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
@@ -941,7 +936,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		// MW-2012-10-10: [[ IdCache ]] Lookup the object in the cache.
 		MCObject *t_object;
 		t_object = findobjectbyid(inid);
-		if (t_object != nil && (type == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == type))
+		if (t_object != nil && ((type == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == type))
 			return (MCControl *)t_object;
 
 		MCControl *tobj = controls;
@@ -1663,11 +1658,11 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
-		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
+		if ((nc->gettype() == CT_FIELD && MClook != LF_MOTIF)
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
 			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
-			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
+			if (IsMacLF() || nc->gettype() == CT_FIELD || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
 	
@@ -1745,8 +1740,8 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
             focused = curcard->getkfocused();
         MCButton *bptr = (MCButton *)focused;
         if (focused != NULL && (focused->gettype() == CT_FIELD
-                                || focused->gettype() == CT_BUTTON
-                                && bptr->getmenumode() != WM_CASCADE))
+                                || (focused->gettype() == CT_BUTTON
+                                    && bptr->getmenumode() != WM_CASCADE)))
         {
             bool t_has_tags = bptr->getmenuhastags();
             
@@ -2279,6 +2274,7 @@ void MCStack::checksharedgroups(void)
 	do
 	{
 		if (t_control -> gettype() == CT_GROUP && !static_cast<MCGroup *>(t_control) -> isshared())
+        {
 			if (MCMemoryResizeArray(t_group_count + 1, t_groups, t_group_count))
 			{
 				t_groups[t_group_count - 1] . id = t_control -> getid();
@@ -2292,7 +2288,7 @@ void MCStack::checksharedgroups(void)
 				checksharedgroups_slow();
 				return;
 			}
-		
+        }
 		t_control = t_control -> next();
 	}
 	while(t_control != controls);

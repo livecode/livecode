@@ -491,7 +491,3 @@ MCTextFilter* MCTextFilterCreate(const void *p_data, uindex_t p_length, MCString
     return t_chain;
 }
 
-void MCTextFilterRelease(MCTextFilter *t_chain)
-{
-    delete t_chain;
-}

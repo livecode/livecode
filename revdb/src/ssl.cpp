@@ -14,9 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#if !defined(_SERVER)
 static bool s_ssl_loaded = false;
 
-#if !defined(_SERVER)
 extern "C" int initialise_weak_link_crypto(void);
 extern "C" int initialise_weak_link_ssl(void);
 bool load_ssl_library()

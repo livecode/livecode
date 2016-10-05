@@ -2386,7 +2386,9 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 	t_symtab_command = nil;
 	t_dysymtab_command = nil;
 	if (t_success)
+    {
 		for(uint32_t i = 0; i < t_header . ncmds; i++)
+        {
 			if (t_commands[i] -> cmd == LC_SEGMENT)
 			{
 				segment_command *t_command;
@@ -2398,6 +2400,8 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 				t_symtab_command = (symtab_command *)t_commands[i];
 			else if (t_commands[i] -> cmd == LC_DYSYMTAB)
 				t_dysymtab_command = (dysymtab_command *)t_commands[i];
+        }
+    }
 
 	// The 'linkedit' segment contains all the data used by the symtab
 	// and dysymtab commands. We need to rebuild this segment in the following

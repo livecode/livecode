@@ -112,7 +112,7 @@ void MCU_init()
     }
     else
     {
-        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCLog("Warning: Failed to seed random number generator");
         MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
     }
     MCU_srand();
@@ -429,7 +429,7 @@ char *MCU_strtok(char *s, const char *delim)
 	return True == t_converted;
 }
 
-int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
+int4 MCU_strtol(const char *&sptr, uint4 &l, int1 p_delim, Boolean &done,
                 Boolean reals, Boolean octals)
 {
 	done = False;
@@ -449,19 +449,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 	uint4 startlength = l;
 	uint2 base = 10;
 	if (l && *sptr == '0')
+    {
 		if (l > 2 && MCS_tolower(*(sptr + 1)) == 'x')
 		{
 			base = 16;
 			sptr += 2;
 			l -= 2;
 		}
-		else
-			if (octals)
-			{
-				base = 8;
-				sptr++;
-				l--;
-			}
+		else if (octals)
+        {
+            base = 8;
+            sptr++;
+            l--;
+        }
+    }
 	while (l)
 	{
 		if (isdigit((uint1)*sptr))
@@ -476,7 +477,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 			if (isspace((uint1)*sptr))
 			{
 				MCU_skip_spaces(sptr, l);
-				if (l && *sptr == c)
+				if (l && *sptr == p_delim)
 				{
 					sptr++;
 					l--;
@@ -484,7 +485,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 				break;
 			}
 			else
-				if (l && c && *sptr == c)
+				if (l && p_delim && *sptr == p_delim)
 				{
 					sptr++;
 					l--;
@@ -519,7 +520,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 								while (l && *sptr == '0');
 							if (l == 0)
 								break;
-							if (*sptr == c || isspace((uint1)*sptr))
+							if (*sptr == p_delim || isspace((uint1)*sptr))
 							{
 								sptr++;
 								l--;
@@ -530,11 +531,11 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 					}
 					else
 					{
-						char c = MCS_tolower(*sptr);
-						if (base == 16 && c >= 'a' && c <= 'f')
+						char t_char = MCS_tolower(*sptr);
+						if (base == 16 && t_char >= 'a' && t_char <= 'f')
 						{
 							value *= base;
-							value += c - 'a' + 10;
+							value += t_char - 'a' + 10;
 						}
 						else
 							return 0;
@@ -675,7 +676,7 @@ Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (l == 0 || (l > 1 && ((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2]))
+	if (l == 0 || (l > 1 && (((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2])))
 	        || (sptr[1] == '+' || sptr[1] == '-')))))
 		return False;
 	char buff[R8L];
@@ -710,7 +711,7 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (r_len == 0 || (r_len > 1 && ((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2]))
+	if (r_len == 0 || (r_len > 1 && (((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2])))
 	        || (r_str[1] == '+' || r_str[1] == '-')))))
 	{
 		r_done = False;
@@ -1183,7 +1184,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
-	uint2 x, y;
+	uint2 t_x, t_y;
 	bool ignore = false;
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
@@ -1235,8 +1236,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		{
 			if (flags & F_OPAQUE)
 			{
-				x = origin_horiz;
-				y = origin_vert;
+				t_x = origin_horiz;
+				t_y = origin_vert;
 			}
 			else
 			{
@@ -1245,31 +1246,31 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		}
 		else if (count < 90) // quadrant 1
 		{
-			x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
-			y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
+			t_x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
+			t_y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
 		}
 		else if (count < 180) // quadrant 2
 		{
-			x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
-			y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
+			t_x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
+			t_y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
 		}
 		else if (count < 270) // quadrant 3
 		{
-			x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
-			y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
+			t_x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
+			t_y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
 		}
 		else // quadrant 4
 		{
-			x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
-			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
+			t_x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
+			t_y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
 		}
 
 		if (ignore == false)
 		{
-			if (x != points[i-1] . x || y != points[i-1] . y)
+			if (t_x != points[i-1] . x || t_y != points[i-1] . y)
 			{
-				points[i] . x = x;
-				points[i] . y = y;
+				points[i] . x = t_x;
+				points[i] . y = t_y;
 				i++;
 			}
 		}
@@ -1358,26 +1359,26 @@ Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 	return True;
 }
 
-void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h)
+void MCU_set_rect(MCRectangle &rect, int2 p_x, int2 p_y, uint2 p_w, uint2 p_h)
 {
-	rect.x = x;
-	rect.y = y;
-	rect.width = w;
-	rect.height = h;
+	rect.x = p_x;
+	rect.y = p_y;
+	rect.width = p_w;
+	rect.height = p_h;
 }
 
-void MCU_set_rect(MCRectangle32 &rect, int32_t x, int32_t y, int32_t w, int32_t h)
+void MCU_set_rect(MCRectangle32 &rect, int32_t p_x, int32_t p_y, int32_t p_w, int32_t p_h)
 {
-	rect.x = x;
-	rect.y = y;
-	rect.width = w;
-	rect.height = h;
+	rect.x = p_x;
+	rect.y = p_y;
+	rect.width = p_w;
+	rect.height = p_h;
 }
 
-Boolean MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y)
+Boolean MCU_point_in_rect(const MCRectangle &srect, int2 p_x, int2 p_y)
 {
-	if (x >= srect.x && x < srect.x + srect.width
-	        && y >= srect.y && y < srect.y + srect.height)
+	if (p_x >= srect.x && p_x < srect.x + srect.width
+	        && p_y >= srect.y && p_y < srect.y + srect.height)
 		return True;
 	return False;
 }
@@ -1421,76 +1422,76 @@ bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line)
 }
 
 
-static inline double distance_to_point(int4 x, int4 y, int4 px, int4 py)
+static inline double distance_to_point(int4 p_x, int4 p_y, int4 p_px, int4 p_py)
 {
 	double dx, dy;
 
-	dx = px - x;
-	dy = py - y;
+	dx = p_px - p_x;
+	dy = p_py - p_y;
 
 	return dx * dx + dy * dy;
 }
 
-double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y)
+double MCU_squared_distance_from_line(int4 p_sx, int4 p_sy, int4 p_ex, int4 p_ey, int4 p_x, int4 p_y)
 {
 	double dx, dy;
 	double d;
 
-	dx = ex - sx;
-	dy = ey - sy;
+	dx = p_ex - p_sx;
+	dy = p_ey - p_sy;
 
 	if (dx == 0 && dy == 0)
-		d = distance_to_point(x, y, sx, sy);
+		d = distance_to_point(p_x, p_y, p_sx, p_sy);
 	else
 	{
 		double pdx, pdy;
 		double u;
 
-		pdx = x - sx;
-		pdy = y - sy;
+		pdx = p_x - p_sx;
+		pdy = p_y - p_sy;
 
 		u = (pdx * dx + pdy * dy) / (dx * dx + dy * dy);
 
 		if (u <= 0)
-			d = distance_to_point(x, y, sx, sy);
+			d = distance_to_point(p_x, p_y, p_sx, p_sy);
 		else if (u >= 1)
-			d = distance_to_point(x, y, ex, ey);
+			d = distance_to_point(p_x, p_y, p_ex, p_ey);
 		else
-			d = distance_to_point((int4)(sx + u * dx), (int4)(sy + u * dy), x, y);
+			d = distance_to_point((int4)(p_sx + u * dx), (int4)(p_sy + u * dy), p_x, p_y);
 	}
 
 	return d;
 }
 
 
-Boolean MCU_point_on_line(MCPoint *points, uint2 npoints,
-                          int2 x, int2 y, uint2 linesize)
+Boolean MCU_point_on_line(MCPoint *p_points, uint2 p_npoints,
+                          int2 p_x, int2 p_y, uint2 p_linesize)
 {
 	// OK-2008-12-04: [[Bug 7292]] - Old code replaced with stuff copied from pathprocess.cpp
 	uint2 i;
-	for (i = 0 ; i < npoints -  1 ; i++)
+	for (i = 0 ; i < p_npoints -  1 ; i++)
 	{
 		// SMR 1913 expand radius for hit testing lines
-		linesize >>= 1;
-		linesize *= linesize;
+		p_linesize >>= 1;
+		p_linesize *= p_linesize;
 
 		double t_distance;
-		t_distance = MCU_squared_distance_from_line(points[i]. x, points[i] . y, points[i + 1] . x, points[i + 1] . y, x, y);
-		if (t_distance < linesize + (4 * 4))
+		t_distance = MCU_squared_distance_from_line(p_points[i]. x, p_points[i] . y, p_points[i + 1] . x, p_points[i + 1] . y, p_x, p_y);
+		if (t_distance < p_linesize + (4 * 4))
 			return True;
 	}
 	return False;
 }
 
-Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints, int2 x, int2 y)
+Boolean MCU_point_in_polygon(MCPoint *p_points, uint2 p_npoints, int2 p_x, int2 p_y)
 {
 	// SMR 1958 don't do check if no points
-	if (npoints <= 1)
+	if (p_npoints <= 1)
 		return False;
-	MCU_offset_points(points, npoints, -x, -y);
+	MCU_offset_points(p_points, p_npoints, -p_x, -p_y);
 
-	MCPoint *endLp = &points[npoints];
-	MCPoint *lp = points;
+	MCPoint *endLp = &p_points[p_npoints];
+	MCPoint *lp = p_points;
 
 	uint2 ncross = 0;
 	int2 sign = lp->y < 0 ? -1 : 1;
@@ -1518,7 +1519,7 @@ Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints, int2 x, int2 y)
 				ncross++;
 		}
 	}
-	MCU_offset_points(points, npoints, x, y);
+	MCU_offset_points(p_points, p_npoints, p_x, p_y);
 	if (ncross & 1)
 		return True;
 	return False;
@@ -1574,51 +1575,55 @@ MCRectangle MCU_center_rect(const MCRectangle &one, const MCRectangle &two)
 	return drect;
 }
 
-MCRectangle MCU_bound_rect(const MCRectangle &srect,
-                           int2 x, int2 y, uint2 width, uint2 height)
+MCRectangle MCU_bound_rect(const MCRectangle &p_srect,
+                           int2 p_x, int2 p_y, uint2 p_width, uint2 p_height)
 {
-	MCRectangle drect = srect;
-	if (drect.x + drect.width > x + width)
-		drect.x = x + width - drect.width;
-	if (drect.x < x)
-		drect.x = x;
-	if (drect.y + drect.height > y + height)
-		drect.y = y + height - drect.height;
-	if (drect.y < y)
-		drect.y = y;
+	MCRectangle drect = p_srect;
+	if (drect.x + drect.width > p_x + p_width)
+		drect.x = p_x + p_width - drect.width;
+	if (drect.x < p_x)
+		drect.x = p_x;
+	if (drect.y + drect.height > p_y + p_height)
+		drect.y = p_y + p_height - drect.height;
+	if (drect.y < p_y)
+		drect.y = p_y;
 	return drect;
 }
 
-MCRectangle MCU_clip_rect(const MCRectangle &srect,
-                          int2 x, int2 y, uint2 width, uint2 height)
+MCRectangle MCU_clip_rect(const MCRectangle &p_srect,
+                          int2 p_x, int2 p_y, uint2 p_width, uint2 p_height)
 {
-	MCRectangle drect = srect;
-	if (srect.x < x)
+	MCRectangle drect = p_srect;
+	if (p_srect.x < p_x)
 	{
-		drect.x = x;
-		if (x - srect.x > srect.width)
+		drect.x = p_x;
+		if (p_x - p_srect.x > p_srect.width)
 			drect.width = 0;
 		else
-			drect.width -= x - srect.x;
+			drect.width -= p_x - p_srect.x;
 	}
-	if (srect.x + srect.width > x + width)
-		if (srect.x > x + width)
+	if (p_srect.x + p_srect.width > p_x + p_width)
+	{
+		if (p_srect.x > p_x + p_width)
 			drect.width = 0;
 		else
-			drect.width = x + width - drect.x;
-	if (srect.y < y)
-	{
-		drect.y = y;
-		if (y - srect.y > srect.height)
-			drect.height = 0;
-		else
-			drect.height -= y - srect.y;
+			drect.width = p_x + p_width - drect.x;
 	}
-	if (srect.y + srect.height > y + height)
-		if (srect.y > y + height)
+	if (p_srect.y < p_y)
+	{
+		drect.y = p_y;
+		if (p_y - p_srect.y > p_srect.height)
 			drect.height = 0;
 		else
-			drect.height = y + height - drect.y;
+			drect.height -= p_y - p_srect.y;
+	}
+	if (p_srect.y + p_srect.height > p_y + p_height)
+	{
+		if (p_srect.y > p_y + p_height)
+			drect.height = 0;
+		else
+			drect.height = p_y + p_height - drect.y;
+	}
 	return drect;
 }
 
@@ -1708,6 +1713,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			drect.height -= one.y + one.height - two.y;
 	else
 		if (one.y == two.y && one.height == two.height)
+        {
 			if (one.x > two.x)
 			{
 				uint2 overlap = two.x + two.width - one.x;
@@ -1716,6 +1722,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			}
 			else
 				drect.width -= one.x + one.width - two.x;
+        }
 	return drect;
 }
 
@@ -2939,7 +2946,7 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
         if (!MCStringCopy(*t_path, &t_filename))
             return nil;
     }
-    else
+    else if (MCcmd)
     {
         uindex_t t_last_slash_index;
         if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
@@ -2951,7 +2958,8 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
             return nil;
     }
 
-    t_handle = MCS_loadmodule(*t_filename);
+	if (*t_filename != nil)
+    	t_handle = MCS_loadmodule(*t_filename);
     
     return t_handle;
 }

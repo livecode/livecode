@@ -63,6 +63,12 @@ struct MCPlayerCallback
 //  since we use &MCControl::kPropertyTable
 class MCPlayer : public MCControl, public MCPlayerInterface
 {
+public:
+    
+    enum { kObjectType = CT_PLAYER };
+
+private:
+    
     MCPlayer *nextplayer;
     
 	MCPlatformPlayerRef m_platform_player;

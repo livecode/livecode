@@ -45,6 +45,7 @@ void GetColumnOfPosition(PositionRef position, long *r_column);
 void GetRowOfPosition(PositionRef position, long *r_row);
 void GetFileOfPosition(PositionRef position, FileRef *r_file);
 void GetFilenameOfPosition(PositionRef position, const char **r_filename);
+void GetRowTextOfPosition(PositionRef position, const char **r_text);
 
 void GetCurrentPosition(PositionRef *r_result);
 void yyGetPos(PositionRef *r_result);
@@ -60,6 +61,7 @@ int MoveToNextFile(void);
 void GetFilePath(FileRef file, const char **r_path);
 void GetFileName(FileRef file, const char **r_name);
 void GetFileIndex(FileRef file, long *r_index);
+const char *GetFileLineText(FileRef file, long p_row);
 int GetFileWithIndex(long index, FileRef *r_file);
 int GetCurrentFile(FileRef *r_file);
 

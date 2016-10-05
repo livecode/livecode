@@ -405,8 +405,10 @@ void REVDB_QUIT()
 			}
 		}
 		if (databaserec && databaserec ->releaseconnectionptr)
+        {
 			(*databaserec->releaseconnectionptr)(tconnection);
-		break;
+            break;
+        }
 	}
 	connlist->clear();
 	DATABASERECList::iterator theIterator2;
@@ -646,7 +648,6 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 			t_name += 2;
 		}	
 
-		int t_return_value;
 		ExternalString t_value;
 		t_value . buffer = NULL;
 		t_value . length = 0;
