@@ -1017,9 +1017,17 @@ bool MCS_getentries(MCStringRef p_folder,
                     bool p_files,
                     bool p_detailed,
                     MCListRef& r_list)
-{    
+{
+	MCAutoStringRef t_resolved_folder;
+	MCAutoStringRef t_native_folder;
+	if (p_folder != nil)
+	{
+		if (!(MCS_resolvepath(p_folder, &t_resolved_folder) &&
+			  MCS_pathtonative(*t_resolved_folder, &t_native_folder)))
+			return false;
+	}
+	
 	MCAutoListRef t_list;
-    
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
@@ -1036,7 +1044,7 @@ bool MCS_getentries(MCStringRef p_folder,
 			return false;
 	}
     
-	if (!MCsystem -> ListFolderEntries(p_folder, MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(*t_native_folder, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
