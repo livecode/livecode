@@ -1,0 +1,54 @@
+/*
+Copyright (C) 2015-2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.java.tests
+
+use com.livecode.java
+use com.livecode.__INTERNAL._testlib
+
+public handler TestCreateJObject()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "java object creation succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tObj as JObject
+	put GetObject("java.lang.Object", []) into tObj
+	
+	test "java object creation succeeds" when true
+end handler
+
+public handler TestRoundTripJString()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "string round trips through java" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tString as String
+	put "lcb string" into tString
+	
+	variable tJString as JObject
+	put StringToJString(tString) into tJString
+	
+	variable tNewString as String
+	put StringFromJString(tJString) into tNewString
+	
+	test "string round trips through java" when tNewString is tString
+
+end handler
+
+end module
