@@ -35,6 +35,9 @@ background and border are not drawn and seem to disappear, letting
 > spot with a non-rectangular shape, use a <curve> or <polygon>
 > <graphic(keyword)> and set its <ink> property to <noOp>.
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), transfer mode (glossary),
 property (glossary), keyword (glossary), polygon (keyword),
 opaque (keyword), notSrcCopy (keyword), curve (keyword),
