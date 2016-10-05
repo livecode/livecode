@@ -32,12 +32,18 @@ the colors underneath it.
 
 For example, suppose an object's color is 25,250,150, and the color of
 the pixels under the object is 60,40,100. If the <subOver> mode is used,
-the <object|object's> displayed color is 220,210,50.
+the <object|object's> displayed color is 220,210,50. This is because 
+25 - 60 in the red component is -35. This is then subtracted from 255 to
+produce a value of 220. Neither the green or blue components need to 
+roll back from 255.
 
 The <subOver> mode can be used only on <Mac OS|Mac OS systems>. On
 <Unix> and <Windows|Windows systems>, <object|objects> whose <ink>
 <property> is set to this mode appears as though their <ink> were set to
-<srcCopy>. 
+<srcCopy>.
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
