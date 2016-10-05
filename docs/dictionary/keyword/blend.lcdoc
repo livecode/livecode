@@ -39,8 +39,11 @@ Whenever you set the <blendLevel> <property> of an <image>, its <ink>
 >*Important:*  The setting of the <blend> <property> has no effect on
 > images in <PICT> format.
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), property (glossary), keyword (glossary),
-transfer mode (glossary), PICT (glossary), blend (keyword),
+transfer mode (glossary), PICT (glossary),
 image (keyword), notSrcCopy (keyword), ink (property),
 blendLevel (property), pixels (property)
 
