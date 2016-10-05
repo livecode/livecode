@@ -21,9 +21,9 @@ Description:
 Use the <pointer> <keyword> to edit a <stack>.
 
 When using the Pointer tool, the cursor is an arrow. Use this tool to
-select, resize, and move controls.
+select, resize, and move <control(glossary)|controls>.
 
-You cannot edit the objects in stacks whose cantModify <property> is
+You cannot edit the objects in stacks whose <cantModify> <property> is
 true or <stacks> which are being displayed as a <palette>, <modeless
 dialog box|modeless dialog>, or <modal dialog box|modal dialog>. Only
 <stacks> displayed as an <editable window> can be edited. (Use the
