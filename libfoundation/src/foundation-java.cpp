@@ -143,10 +143,14 @@ static void finalise_jvm()
     }
 }
 
+
+static bool s_java_initialised = false;
+
 MC_DLLEXPORT_DEF
 bool MCJavaInitialize()
 {
-    return initialise_jvm();
+    s_java_initialised = initialise_jvm();
+    return true;
 }
 
 MC_DLLEXPORT_DEF
@@ -612,6 +616,9 @@ static hash_t __MCJavaObjectHash(MCValueRef p_value)
 static bool __MCJavaObjectDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
 #ifdef TARGET_SUPPORTS_JAVA
+    if (!s_java_initialised)
+        return false;
+    
     MCJavaObjectRef t_obj = static_cast<MCJavaObjectRef>(p_value);
     
     jobject t_target = (jobject)MCJavaObjectGetObject(t_obj);
@@ -774,6 +781,9 @@ bool MCJavaCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStrin
 MC_DLLEXPORT_DEF
 bool MCJavaCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
+    if (!s_java_initialised)
+        return false;
+    
 #ifdef TARGET_SUPPORTS_JAVA
     jmethodID t_method_id = (jmethodID)p_method_id;
 
@@ -832,6 +842,9 @@ bool MCJavaCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_t
 
 MC_DLLEXPORT_DEF bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string)
 {
+    if (!s_java_initialised)
+        return false;
+    
 #ifdef TARGET_SUPPORTS_JAVA
     jstring t_string;
     t_string = (jstring)MCJavaObjectGetObject(p_object);
@@ -843,6 +856,9 @@ MC_DLLEXPORT_DEF bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, 
 
 MC_DLLEXPORT_DEF bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object)
 {
+    if (!s_java_initialised)
+        return false;
+    
 #ifdef TARGET_SUPPORTS_JAVA
     jstring t_string;
     if (!__MCJavaStringToJString(p_string, t_string))
@@ -856,6 +872,9 @@ MC_DLLEXPORT_DEF bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJa
 
 MC_DLLEXPORT_DEF bool MCJavaCallConstructor(MCNameRef p_class_name, MCListRef p_args, MCJavaObjectRef& r_object)
 {
+    if (!s_java_initialised)
+        return false;
+    
     void *t_jobject_ptr = nil;
 #ifdef TARGET_SUPPORTS_JAVA
     MCJavaDoAttachCurrentThread();
@@ -889,6 +908,9 @@ MC_DLLEXPORT_DEF bool MCJavaCallConstructor(MCNameRef p_class_name, MCListRef p_
 MC_DLLEXPORT_DEF void *MCJavaGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_signature)
 {
     void *t_method_id_ptr = nil;
+ 
+    if (!s_java_initialised)
+        return t_method_id_ptr;
     
 #ifdef TARGET_SUPPORTS_JAVA
     MCAutoStringRef t_class_path;
