@@ -37,7 +37,10 @@ the <object|object's> displayed color is 127,40,120.
 The <addPin> mode can be used only on <Mac OS|Mac OS systems>.  On
 <Unix> and <Windows|Windows systems>, <object|objects> whose <ink>
 <property> is set to this mode appears as though their <ink> were set to
-<srcCopy>. 
+<srcCopy>.
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
