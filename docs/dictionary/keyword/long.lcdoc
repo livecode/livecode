@@ -26,11 +26,11 @@ Example:
 put the long seconds
 
 Example:
-set the defaultfolder to "/"
+set the defaultFolder to "/"
 put the detailed files
 
 Example:
-set the defaultfolder to "/"
+set the defaultFolder to "/"
 put the long folders
 
 Description:
@@ -39,6 +39,9 @@ Use the <long> <keyword> to obtain a date, time, name, ID, or list of
 
 In general, a <long> form is longer than either the <short> form or the
 <abbreviated> form.
+
+When used with a <files> or <folders> <function> it has the same effect
+as using the term 'the detailed files' or 'the detailed folders'.
 
 If the useSystemDate <property> is set to false, a long <date> looks
 like this: Thursday, June 22, 2000
