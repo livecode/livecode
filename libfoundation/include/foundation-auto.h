@@ -50,7 +50,13 @@ public:
 	{
 	}
     
-    inline explicit MCAutoValueRefBase(T p_value)
+    inline MCAutoValueRefBase(const MCAutoValueRefBase& other) :
+      m_value(nil)
+    {
+        Reset(other.m_value);
+    }
+    
+    inline MCAutoValueRefBase(T p_value)
 		: m_value(nil)
 	{
         if (p_value)
