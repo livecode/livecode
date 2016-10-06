@@ -1063,8 +1063,6 @@ bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfo
     MCValueRelease(self);
     
     return false;
-    
-    return true;
 }
 
 MC_DLLEXPORT_DEF
