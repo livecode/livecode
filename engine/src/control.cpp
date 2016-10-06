@@ -492,6 +492,11 @@ Boolean MCControl::del(bool p_check_flag)
 	default:
 		break;
 	}
+
+	// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
+	if (getselected())
+		getcard()->dirtyselection(rect);
+
 	uint2 num = 0;
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
