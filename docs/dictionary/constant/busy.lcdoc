@@ -47,9 +47,14 @@ However, the first is easier to read and understand in LiveCode.
 > include it when you create your <standalone application|standalone>.
 > Make sure the "Cursors" option on the Inclusions section on the
 > General screen of the <Standalone Application Settings> window is
-> checked. 
+> checked.
 
-References: constant (command), watch (constant), six (constant),
+>*Note:*  This does not bring up the busy symbol on mobile devices.
+> To bring up the busy indicator on Android or iOS use
+> the <mobileBusyIndicatorStart> command.
+
+References: constant (command), mobileBusyIndicatorStart (command),
+watch (constant), six (constant),
 repeat (control structure), Standalone Application Settings (glossary),
 cursor (glossary), standalone application (glossary), loop (glossary),
 cursor (property)
