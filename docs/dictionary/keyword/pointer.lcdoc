@@ -33,5 +33,6 @@ References: topLevel (command), select (command), palette (command),
 choose (command), tool (function), stacks (function), object (glossary),
 keyword (glossary), property (glossary), modeless dialog box (glossary),
 editable window (glossary), modal dialog box (glossary),
-command (glossary), stack (object)
+command (glossary), control(glossary), stack (object),
+cantModify (property)
 
