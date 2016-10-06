@@ -17,7 +17,11 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of button 2 to addOver
 
-The result:
+
+Description:
+Use the <addOver> <keyword> to combine an <object|object's> color with
+the colors underneath it.
+
 The <ink> <property> determines how an <object|object's> colors combine
 with the colors of the <pixels> underneath the <object(glossary)> to
 control how the <object|object's> color is displayed. When the <addOver>
@@ -25,10 +29,6 @@ mode is used, each component of the <object(glossary)> color--red,
 green, and blue--is added to the corresponding component of the color
 underneath. If the result is greater than 255, the component rolls over,
 back to zero.
-
-Description:
-Use the <addOver> <keyword> to combine an <object|object's> color with
-the colors underneath it.
 
 For example, suppose an object's color is 25,220,150, and the color of
 the pixels under the object is 60,40,100. If the <addOver> mode is used,
