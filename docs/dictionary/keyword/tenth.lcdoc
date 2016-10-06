@@ -17,7 +17,7 @@ Example:
 put the ID of tenth card into myID
 
 Example:
-multiply the tenth word of currentAmounts by ten
+multiply the tenth word of tCurrentAmounts by ten
 
 Description:
 Use the <tenth> <keyword> in an <object reference> or <chunk
