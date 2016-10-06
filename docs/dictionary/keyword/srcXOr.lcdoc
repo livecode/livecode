@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of field "Meld" of group 1 to srcXOr
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
 
 Description:
 Use the <srcXOr> <keyword> to combine an object's colors with the color
