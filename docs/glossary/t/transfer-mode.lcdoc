@@ -14,34 +14,42 @@ underneath it.
 
 The following is a non-exhaustive list of transfer modes:
 
-* <addMax(keyword)>
-* <adMin(keyword)>
-* <addPin(keyword)>
-* <addOver(keyword)>
-* <blend(keyword)>
-* <clear(keyword)>
-* <noOp(keyword)>
-* <notSrcAnd(keyword)>
-* <notSrcAndReverse(keyword)>
-* <notSrcBic(keyword)>
-* <notSrcCopy(keyword)>
-* <notSrcOr(keyword)>
-* <notSrcOrReverse(keyword)>
-* <notSrcXOr(keyword)>
-* <reverse(keyword)>
+* <addMax>
+* <adMin>
+* <addPin>
+* <addOver>
+* <blend>
+* <clear>
+* <noOp>
+* <notSrcAnd>
+* <notSrcAndReverse>
+* <notSrcBic>
+* <notSrcCopy>
+* <notSrcOr>
+* <notSrcOrReverse>
+* <notSrcXOr>
+* <reverse>
 * <set(keyword)>
-* <srcAnd(keyword)>
-* <srcAndReverse(keyword)>
-* <srcBic(keyword)>
-* <srcCopy(keyword)>
-* <srcOr(keyword)>
-* <srcOrReverse(keyword)>
-* <srcXOr(keyword)>
-* <subOver(keyword)>
-* <subPin(keyword)>
-* <transparent(keyword)>
+* <srcAnd>
+* <srcAndReverse>
+* <srcBic>
+* <srcCopy>
+* <srcOr>
+* <srcOrReverse>
+* <srcXOr>
+* <subOver>
+* <subPin>
+* <transparent>
 
 References: object (glossary), pixel (glossary)
+addMax (keyword), adMin (keyword), addPin (keyword), addOver (keyword),
+blend (keyword), clear (keyword), noOp (keyword), notSrcAnd (keyword), 
+notSrcAndReverse (keyword), notSrcBic (keyword), notSrcCopy (keyword), 
+notSrcOr (keyword), notSrcOrReverse (keyword), notSrcXOr (keyword), 
+reverse (keyword), set (keyword), srcAnd (keyword), 
+srcAndReverse (keyword), srcBic (keyword), srcCopy (keyword), 
+srcOr (keyword), srcOrReverse (keyword), srcXOr (keyword), 
+subOver (keyword), subPin (keyword), transparent (keyword)
 
 Tags: ui
 
