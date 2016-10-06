@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of graphic "Outline" to srcAnd
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
 
 Description:
 Use the <srcAnd> <keyword> to make the light-colored parts of an object
