@@ -36,8 +36,8 @@ The <exitField> message is sent to buttons whose <menuMode> is
 "comboBox", since the type-in box in a combo box behaves like a field.
 
 The <exitField> message is sent only if the field's contents have not
-changed since the last time it received the <openField> message. If a
-field is closing and its contents have changed, the <closeField> message
+changed since the last time it received the <openField>. If a
+field is closing and its contents have changed, the <closeField>
 is sent instead of <exitField>. This means that if you want to take an
 action when the selection is removed from a field--whether the field has
 changed or not--you must handle both <closeField> and <exitField>.
@@ -47,8 +47,7 @@ changed or not--you must handle both <closeField> and <exitField>.
 > only sent when the contents are changed by the user.
 
 References: put (command), select (command),
-openField (message), closeField message (message),
-openField message (message), closeField (message), focusOut (message),
+openField (message), closeField (message), focusOut (message),
 menuMode (property)
 
 Tags: ui
