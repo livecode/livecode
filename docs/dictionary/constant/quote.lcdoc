@@ -17,7 +17,7 @@ Example:
 if last char of it is quote then delete last char of it
 
 Example:
-put quote & field 2 & quote into responseToPost
+put quote & field 2 & quote into tResponseToPost
 
 Description:
 Use the <quote> <constant> to embed quotes in a string, and to refer to
