@@ -17,10 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of card button 1 to notSrcAnd
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
-
 Description:
 Use the <notSrcAndReverse> <keyword> to invert the colors under an
 object and make the light parts opaque.
