@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of scrollbar "Progress" to notSrcXOr
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
 
 Description:
 Use the <notSrcXOr> <keyword> to invert the colors of an
