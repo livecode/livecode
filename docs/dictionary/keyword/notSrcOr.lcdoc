@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of button ID 9 to notSrcOr
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
 
 Description:
 Use the <notSrcOr> <keyword> to invert the colors of an
