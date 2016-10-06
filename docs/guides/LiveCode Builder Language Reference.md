@@ -913,3 +913,31 @@ available as **the result**.
 > **Note:** Handlers which return no value (i.e. have nothing as their
 > result type) can still be used in call expressions. In this case the
 > value of the call is **nothing**.
+
+## Experimental Features
+
+**Warning**: This section describes current language features and syntax
+that are considered experimental and unstable.  They are likely to change
+or go away without warning.
+
+### Safe Foreign Handlers
+
+    SafeForeignHandler
+      : '____safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
+
+By default foreign handlers are considered unsafe and thus can only be used in
+unsafe blocks, or unsafe handlers. However, at the moment it is possible for a
+foreign handler to actually be safe if it has been explicitly written to wrap
+a foreign function so it can be easily used from LCB.
+
+Specifically, it is reasonable to consider a foreign handler safe if it
+conforms to the following rules:
+
+ - Parameter types and return type are either ValueRefs, or bridgeable types
+ - Return values of ValueRef type are retained
+ - If the function fails then MCErrorThrow has been used
+ - 'out' mode parameters are only changed if the function succeeds
+ - A return value is only provided if the function succeeds
+
+Examples of foreign handlers which can be considered safe are all the foreign
+handlers which bind to syntax in the LCB standard library.
