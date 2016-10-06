@@ -17,10 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of card field ID 8 to srcOrReverse
 
-The result:
-Each component of the resulting color rgb value is equal to the
-result of this expression. 
-
 
 Description:
 Use the <srcOrReverse> <keyword> to invert the color underneath the
