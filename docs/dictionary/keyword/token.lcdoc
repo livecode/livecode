@@ -31,18 +31,13 @@ Use the <token> keyword to parse a LiveCode statement.
 A token is a string of characters delimited by certain punctuation
 marks. The rules for deciding what a token is are as follows:
 
-1. Each of the following characters is a token: =, +, -, *, /, [, ], (,
-   ), {, }, &lt;, &gt;, and comma (,).
-
-
-2. Each of the following characters is a token delimiter: ; (semicolon),
+1. Each of the following characters is a token:   +  -  =  *  /  [  ]  ( 
+   )  {  }  &lt;  &gt;  and comma (,).
+2. Each of the following characters is a token delimiter: semicolon (;),
    space, return, and tab.
-
-
 3. Each string of any other characters that is either separated by one
    of the above characters, or delimited by double quotes, is a token.
    The token does not include the separating character(s).
-
 
 A single token can contain multiple characters, but not multiple words,
 items, or lines.
