@@ -26,7 +26,7 @@ By default, the <markerFilled> <property> of newly created
 
 Description:
 Use the <markerFilled> <property> to change the <appearance> of the
-small shapes at each <vertex> of a <graphic>.
+small shapes at each <vertex> of a <graphic(object)>.
 
 Irregular polygon graphics can be drawn with a marker at each vertex,
 whose shape is defined by the markerPoints <property>. If the
@@ -34,7 +34,7 @@ whose shape is defined by the markerPoints <property>. If the
 <borderPattern> or <borderColor>. If it is false, the marker shapes are
 hollow. 
 
-If the style <property> of the <graphic> is not polygon or curve, the
+If the style <property> of the <graphic(keyword)> is not polygon or curve, the
 setting of its <markerFilled> <property> has no effect.
 
 If the markerPoints <property> is empty or the <markerDrawn> <property>
