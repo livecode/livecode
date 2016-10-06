@@ -28,12 +28,12 @@ Parameters:
 string1 (string):
 A <literal string> of <character|characters> (<delimit|delimited> with 
 <double quote|double quotes>), or <expression|expressions> that evaluate 
-to strings. 
+to <string|strings>. 
 
 string2 (string):
 A <literal string> of <character|characters> (<delimit|delimited> with 
 <double quote|double quotes>), or <expression|expressions> that evaluate 
-to strings. 
+to <string|strings>. 
 
 Description:
 Use the & <operator> to create a single <string> out of two or more
