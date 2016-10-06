@@ -23,11 +23,11 @@ put return after word 1 of theData
 Example:
 local thisChar, aLongTextString
 repeat for each char thisChar in aLongTextString
-  if thisChar is return then
-    exit repeat
-  else
-    -- do other stuff
-  end if
+    if thisChar is return then
+        exit repeat
+    else
+        -- do other stuff
+    end if
 end repeat
 
 Description:
@@ -54,21 +54,20 @@ carriage return (<ASCII> 13), and the end-of-line <delimiter> for
 10) to end lines.
 
 >*Note:* If you specify text mode with the <open driver>, <open file>,
-> or <open process> <command|commands>,
-LiveCode translates line feed <characters> to the appropriate
-end-of-line marker for the current <platform(glossary)> before writing
-data, and translates the current <platform(glossary)|platform's>
-end-of-line <delimiter> to a line feed after reading data. If you
-specify binary mode with these <command|commands>, LiveCode does not
-perform this automatic translation. Likewise, if you put data into a
-<file> <URL> or get data from it, end-of-line translation is performed,
-but not if you put data into or get data from a <binfile> <URL>.
+> or <open process> <command|commands>, LiveCode translates line 
+> feed <characters> to the appropriate end-of-line marker for the 
+> current <platform(glossary)> before writing data, and translates the 
+> current <platform(glossary)|platform's> end-of-line <delimiter> to a 
+> line feed after reading data. If you specify binary mode with 
+> these <command|commands>, LiveCode does not perform this automatic 
+> translation. Likewise, if you put data into a <file> <URL> or get data 
+> from it, end-of-line translation is performed, but not if you put data 
+> into or get data from a <binfile> <URL>.
 
 >*Note:* Starting with LiveCode v. 7, all text is stored as <Unicode>.
-> If you send text outside
-LiveCode you should convert it to the desired encoding using
-<textEncode>. If you receive text into LiveCode you should convert it to
-Unicode using <textDecode>.
+> If you send text outside LiveCode you should convert it to the desired 
+> encoding using <textEncode>. If you receive text into LiveCode you 
+> should convert it to Unicode using <textDecode>.
 
 Changes:
 The LF synonym was added in version 2.0.
