@@ -22,14 +22,15 @@ Use the <true> <constant> to indicate that a <property> is turned on or
 that a <logical> <expression> evaluates to true.
 
 In many cases, the <true> <constant> can be omitted without changing the
-meaning of the <statement>. For 
-example, 'if the lockText of field 1 is true then' is equivalent to:
+meaning of the <statement>. For example, the following two <if> 
+<statement|statements> are true:
 
-    if the lockText of field 1 then
+    if the lockText of field 1 is true then ...
+    if the lockText of field 1 then ...
 
 References: constant (command), false (constant), property (glossary),
 logical (glossary), statement (glossary), expression (glossary),
-string (keyword)
+string (keyword), if (control structure)
 
 Tags: math
 
