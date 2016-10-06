@@ -1212,12 +1212,10 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					continue;
-					break;
 				case TT_FINALLY:
 					state = TS_FINALLY;
 					curstatement = NULL;
 					continue;
-					break;
 				case TT_END:
 					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
 					{

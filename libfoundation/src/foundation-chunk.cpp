@@ -854,15 +854,14 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
             else
                 t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
             break;
-
-            break;
+            
         case kMCChunkTypeParagraph:
             if (p_range != nil)
                 t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
             else
                 t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
             break;
-            break;
+            
         case kMCChunkTypeWord:
             // AL-2015-10-08: [[ Bug 16161 ]] Word chunk needs to be passed line delimiter
             //  as words are also delimited by line breaks.

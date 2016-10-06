@@ -318,7 +318,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// we support for this kind of printing (yet?)
 			return true;
 		}
-		break;
 	case MARK_TYPE_IMAGE:
 		{
 			// Devices have to support unmasked images (otherwise we couldn't
@@ -340,7 +339,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 
 			return m_device -> CanRenderImage(t_image);
 		}
-		break;
 	case MARK_TYPE_METAFILE:
 	case MARK_TYPE_EPS:
 	case MARK_TYPE_THEME:
@@ -364,7 +362,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			t_group . opacity = p_mark -> group . opacity / 255.0;
 			return m_device -> CanRenderGroup(t_group);
 		}
-		break;
 	case MARK_TYPE_LINK:
 		// We can always render links natively - even if this is a no-op.
 		return true;
