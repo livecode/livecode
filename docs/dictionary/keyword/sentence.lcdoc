@@ -34,7 +34,7 @@ but not multiple lines.
 >*Note:*  The sentence chunk includes the punctuation mark at the end of
 > the sentence, if there is one. It will also include any trailing
 > spaces. The rules describing Unicode sentence breaks are available at
-> <a> http://www.unicode.org/reports/tr29/#Sentence_Boundaries</a>.
+> http://www.unicode.org/reports/tr29/#Sentence_Boundaries
 
 References: item (keyword), character (keyword), segment (keyword),
 trueWord (keyword), line (keyword), word (keyword), token (keyword),
