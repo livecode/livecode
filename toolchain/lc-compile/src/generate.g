@@ -61,6 +61,9 @@
 
 'action' GenerateSingleModule(MODULE)
 
+    'rule' GenerateSingleModule(Module:module(_, import, Id, Definitions)):
+		-- do nothing for import modules
+
     'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
         ModuleDependencyList <- nil
         
