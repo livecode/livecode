@@ -31,14 +31,14 @@ To write data to the printer port, use the <write to file> <command>.
 
 To use the modem port on Mac OS systems, use the 'modem:' <keyword>.
 (LiveCode does not support additional serial <port|ports>.) To use
-serial <port|ports> on <Windows|Windows systems>, use the <COMnColon|COM1:>
-through <COMnColon|COM9:> <keyword|keywords>.
+serial <port|ports> on <Windows|Windows systems>, use the <COMn:|COM1:>
+through <COMn:|COM9:> <keyword|keywords>.
 
 References: write to file (command), close file (command),
 open file (command), write to driver (command), read from file (command),
 property (glossary), keyword (glossary), Windows (glossary),
 command (glossary), Mac OS (glossary), port (glossary), 
-<COMnColon|COMn:> (keyword), serialControlString (property)
+COMn: (keyword), serialControlString (property)
 
 Tags: networking
 
