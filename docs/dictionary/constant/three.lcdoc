@@ -17,8 +17,7 @@ Example:
 repeat three times -- same as "repeat 3 times"
 
 Description:
-Use the <three> <constant> when it is easier to read than the numeral
-3<a/>. 
+Use the <three> <constant> when it is easier to read than the numeral 3. 
 
 References: constant (command), third (keyword)
 
