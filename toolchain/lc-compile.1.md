@@ -5,7 +5,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_
 
-**lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
+**lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_...
 
 **lc-compile** [_OPTION_ ...] --deps [_DEPSMODE_] [--] _LCBFILE_...
 
@@ -31,7 +31,7 @@ is not specified, then **lc-compile** may additionally generate an interface
   file.  If _OUTFILE_ already exists, it will be overwritten.
 
 * --outputc _OUTFILE_:
-  Generate LiveCode bytecode as a static array embedded in C source code in
+  Generate LiveCode bytecode as a static array(s) embedded in C source code in
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
 
