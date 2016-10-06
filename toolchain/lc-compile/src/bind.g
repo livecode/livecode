@@ -298,11 +298,15 @@
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
 
+	'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+		DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
+		DefineParameters(Name, Parameters)
+
     'rule' Define(ModuleId, unsafe(_, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _))):
         DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
 
-    'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+    'rule' Define(ModuleId, unsafe(_, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _))):
         DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
