@@ -2239,7 +2239,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
     
     codepoint_t t_source_cp, t_pattern_cp;
     
-    while (t_source_filter -> HasData())
+    while (t_source_filter -> HasData() && t_pattern_filter -> HasData())
     {
         t_source_cp = t_source_filter -> GetNextCodepoint();
         t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
