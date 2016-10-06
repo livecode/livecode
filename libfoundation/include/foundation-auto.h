@@ -82,6 +82,9 @@ public:
     
     void Reset(T value = nil)
     {
+        if (value == m_value)
+                return;
+        
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
