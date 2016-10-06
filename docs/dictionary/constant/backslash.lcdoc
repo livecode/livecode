@@ -17,8 +17,7 @@ Example:
 put theDrive & backslash & theNode into windowsStylePath
 
 Description:
-Use the <backslash> <constant> as an easier-to-read replacement for "\"
-<a/>. 
+Use the <backslash> <constant> as an easier-to-read replacement for "\". 
 
 References: constant (command), slash (constant), character (keyword)
 
