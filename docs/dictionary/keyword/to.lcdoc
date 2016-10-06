@@ -15,7 +15,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-drag button 5 from firstPoint to secondPoint with shiftKey
+drag button 5 from myFirstPoint to mySecondPoint with shiftKey
 
 Example:
 copy myButton to this card
@@ -24,7 +24,7 @@ Example:
 seek to 102 in file "/usr/bin/supfiles/man"
 
 Example:
-set the isRaining of me to true
+set the cIsRaining of me to true
 
 Description:
 Use the <to> <keyword> to complete a <command> that requires it.
