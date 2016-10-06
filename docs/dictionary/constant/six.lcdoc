@@ -17,8 +17,7 @@ Example:
 beep six -- same as "beep 6"
 
 Description:
-Use the <six> <constant> when it is easier to read than the numeral
-6<a/>. 
+Use the <six> <constant> when it is easier to read than the numeral 6. 
 
 References: constant (command), busy (constant), sixth (keyword)
 
