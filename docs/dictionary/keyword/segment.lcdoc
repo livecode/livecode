@@ -7,7 +7,7 @@ Type: keyword
 Syntax: segment
 
 Summary:
-Designates a space-<delimit|delimited> or <quoted> <string> as part of a
+Designates a <space>-<delimit|delimited> or <quoted> <string> as part of a
 <chunk expression>.
 
 Introduced: 7.0
@@ -22,17 +22,17 @@ get last segment of the long name of this stack
 Description:
 Use the segment keyword to refer to one or more words in a container.
 
-A segment is delimited by one or more spaces, tabs, or returns, or
-enclosed by double quotes. A single segment can contain multiple
-characters and multiple items, but not multiple lines.
+A segment is delimited by one or more <space|spaces>, <tab|tabs>, 
+or <return(constant)|returns>, or enclosed by double quotes. A single segment 
+can contain multiple characters and multiple items, but not multiple lines.
 
->*Note:*  Segments are delimited by double quotes ("), but not by curved
-> quotes (""). LiveCode does not treat curved quotes as quotes.
+>*Note:*  Segments are delimited by double quotes (""), but not by curved
+> quotes (“”). LiveCode does not treat curved quotes as quotes.
 
 References: quoted (glossary), chunk expression (glossary),
 delimit (glossary), string (keyword), item (keyword), character (keyword),
 sentence (keyword), trueWord (keyword), line (keyword), words (keyword),
-token (keyword), paragraph (keyword)
+token (keyword), paragraph (keyword), space (constant), tab (constant),
+return (constant)
 
 Tags: text processing
-
