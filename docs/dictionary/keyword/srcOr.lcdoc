@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of control 11 to srcOr
 
-The result:
-Each component of the resulting color rgb value is equal to the 
-result of this expression. 
 
 Description:
 Use the <srcOr> <keyword> to make the dark-colored parts of an object
