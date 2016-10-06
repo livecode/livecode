@@ -77,7 +77,6 @@
 			'src/scriptpt.h',
 			'src/statemnt.h',
 			'src/variable.h',
-			'src/variable_impl.h',
 			'src/visual.h',
 			'src/answer.cpp',
 			'src/ask.cpp',

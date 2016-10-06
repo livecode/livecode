@@ -933,42 +933,6 @@ static char *get_array(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element, &t_ctxt);
 
 	return NULL;
-
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-
-		MCVariableValue& t_var_value = var -> getvalue();
-
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *set_array(const char *arg1, const char *arg2,
@@ -1512,42 +1476,6 @@ static char *get_array_utf8(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element_utf8, &t_ctxt);
     
 	return NULL;
-    
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-        
-		MCVariableValue& t_var_value = var -> getvalue();
-        
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-            
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *get_array_utf8_text(const char *arg1, const char *arg2,

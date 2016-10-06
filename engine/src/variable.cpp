@@ -1543,7 +1543,7 @@ bool MCVarref::dofree(MCExecContext& ctxt)
 	return t_container -> remove(ctxt);
 }
 
-//
+// Resolve references to the appropriate element refered to by this Varref.
 bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 {
     if (dimensions == 0 && !isparam)
@@ -1637,110 +1637,6 @@ void MCVarref::getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_leng
     
     fetchcontainer(ctxt) -> getpath(r_path, r_length);
 }
-
-// Resolve references to the appropriate element refered to by this Varref.
-// On return:
-//   r_var contains the variable containing the element
-//   r_parent_hash contains the Hashentry containing the array containing the element
-//   r_hash is the Hashentry being referred to.
-//
-// If p_add is true, then nested arrays will be created as neeeded.
-// If p_dont_destroy is true, then no string to array conversion will be carried out in lookup_hash
-// 
-// If r_parent_hash and r_hash are NULL, the element is the variable's value
-// If r_parent_hash is NULL and r_hash is not NULL, the element is a key of the variable's value
-//
-#if 0
-Exec_stat MCVarref::resolve(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_parent, MCHashentry*& r_hash, bool p_add)
-{
-	MCVariable *t_var;
-	t_var = fetchvar(ep);
-
-	MCVariableValue *t_parent;
-	t_parent = &(t_var -> getvalue());
-	
-	MCHashentry *t_hash;
-	t_hash = NULL;
-	
-	if (dimensions != 0)
-	{
-		MCExpression **t_dimensions;
-		if (dimensions == 1)
-			t_dimensions = &exp;
-		else
-			t_dimensions = exps;
-		
-		MCExecPoint ep2(ep);
-		for(uint4 i = 0; i < dimensions; ++i)
-		{
-			if (t_dimensions[i] -> eval(ep2) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-				return ES_ERROR;
-			}
-			
-			if (ep2 . getformat() == VF_ARRAY)
-			{
-				MCVariableArray *t_array;
-				t_array = ep2 . getarray() -> get_array();
-				if (!t_array -> issequence())
-				{
-					MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-					return ES_ERROR;
-				}
-				
-				MCExecPoint ep3(ep);
-				for(uint32_t t_index = 1; t_index <= t_array -> getnfilled(); t_index += 1)
-				{
-					MCHashentry *t_entry;
-					t_entry = t_array -> lookupindex(t_index, False);
-					if (t_entry == NULL)
-					{
-						MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-						return ES_ERROR;
-					}
-					
-					t_entry -> value . fetch(ep3);
-				
-					if (t_hash != NULL)
-						t_parent = &t_hash -> value;
-
-					if (t_parent != NULL && t_parent -> lookup_hash(ep, ep3 . getsvalue(), p_add, t_hash) != ES_NORMAL)
-						return ES_ERROR;
-					
-					// MW-2009-01-15: If we failed to find the hash entry, then make sure we
-					//   set the parent to NULL to stop further searches. Failing to do this
-					//   means tArray[a][b][c] returns tArray[a][c] if tArray[a][b] doesn't
-					//   exist.
-					if (t_hash == NULL)
-						t_parent = NULL;
-				}
-			}
-			else
-			{
-				if (t_hash != NULL)
-					t_parent = &t_hash -> value;
-
-				if (t_parent != NULL && t_parent -> lookup_hash(ep, ep2 . getsvalue(), p_add, t_hash) != ES_NORMAL)
-					return ES_ERROR;
-					
-				// MW-2009-01-15: If we failed to find the hash entry, then make sure we
-				//   set the parent to NULL to stop further searches. Failing to do this
-				//   means tArray[a][b][c] returns tArray[a][c] if tArray[a][b] doesn't
-				//   exist.
-				if (t_hash == NULL)
-					t_parent = NULL;
-			}
-		}
-	}
-
-	r_var = t_var;
-	r_parent = t_parent;
-	r_hash = t_hash;
-
-	return ES_NORMAL;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
