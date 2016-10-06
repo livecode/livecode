@@ -1355,6 +1355,10 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
                 t_msg.DeleteParameters();
             }
             
+            // A message has been removed from the queue, so don't increment the
+            // counter on this iteration.
+            i -= 1;
+            
             curtime = MCS_time();
             
             t_handled = True;
