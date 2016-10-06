@@ -25,7 +25,7 @@ replace the <selection>.
 Certain <command|commands>--in particular, the <cut> and <copy>
 <command|commands>--operate on the <selected> text.
 
->*Note:* The selection <keyword> is implemented internally as a
+>*Note:* The <selection> <keyword> is implemented internally as a
 > <function(control structure)> and appears in the <functionNames>.
 > However, unlike most <function(glossary)|functions>, the <selection>
 > lets you put things into it, and behaves like a <container> rather
