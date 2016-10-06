@@ -146,15 +146,6 @@ Function names:
 * Whenever adding a function, add a comment that explains precisely:
   * What the function does, under what conditions it succeeds, and how it behaves when it fails
   * What the function expects as inputs, and what outputs it generates
-* When disabling code with a false condition, prefix the condition with 
-  `/* DISABLES CODE */`. For example:
-
-  ````
-  if (/* DISABLES CODE */ (false))
-  {
-     /* <body> */
-  }
-  ````
 
 #### Layout and style
 

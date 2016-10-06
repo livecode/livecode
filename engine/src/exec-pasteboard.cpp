@@ -279,7 +279,7 @@ MCTransferType MCPasteboardFindTransferTypeForLegacyClipboard(const MCClipboard*
     // passed that the behaviour can now be corrected but, until then, it is
     // disabled and the "text over images" method is used instead.
     //
-    if (/* DISABLES CODE */ (false))
+    if (false)
     {
         // If we have both an image and text on the clipboard, whichever one comes
         // first determines what we resolve the clipboard type to be.
