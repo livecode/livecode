@@ -37,8 +37,8 @@ through <COMn:|COM9:> <keyword|keywords>.
 References: write to file (command), close file (command),
 open file (command), write to driver (command), read from file (command),
 property (glossary), keyword (glossary), Windows (glossary),
-command (glossary), Mac OS (glossary), port (glossary), 
-COMn: (keyword), serialControlString (property)
+command (glossary), Mac OS (glossary),   port (glossary), 
+serialControlString (property), COMn: (keyword)
 
 Tags: networking
 
