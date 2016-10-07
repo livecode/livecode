@@ -279,10 +279,10 @@ typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define _DEBUG_MEMORY
 
-inline void *operator new(size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
-inline void *operator new[](size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new(size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new[](size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 
-inline void *operator new(size_t, void *p, const char *, int)
+inline void *operator new(size_t, void *p, const char *, long)
 {
 	return p;
 }
