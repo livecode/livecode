@@ -1105,7 +1105,7 @@ function revSBStackNameFromScriptLibraryName pLib
    return pLib
 end revSBStackNameFromScriptLibraryName
 
-constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
+constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC,Debugger"
 private function revSBScriptLibraries
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
@@ -2024,6 +2024,13 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
          appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
          appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
       end if
+      
+      if tLibrary is "Debugger" then
+         local tInterfaces
+         put the networkInterfaces into tInterfaces
+         replace return with comma in tInterfaces
+         appendToStringList "revDebuggerSetNetworkInterfaces" && quote & tInterfaces & quote, tStartupScript
+      end if
    end repeat
    
    local tLoadedLibraries
@@ -2201,6 +2208,9 @@ private command __InitialiseInclusionDependencies
    
    // XMLRPC requires revxml
    revSBAddDependencyForInclusion "scriptLibraries", "XMLRPC", "scriptLibraries", "XML"
+   
+   // Debugger requires Metadata
+   revSBAddDependencyForInclusion "scriptLibraries", "Debugger", "scriptLibraries", "Metadata"
 end __InitialiseInclusionDependencies
 
 command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny
