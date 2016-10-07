@@ -266,7 +266,7 @@ void MCPendingMessagesList::DeleteMessage(size_t p_index, bool p_delete_params)
     }
     
     // Clear the vacated entry at the end
-    m_array[m_count - 1] = {};
+    m_array[m_count - 1] = MCPendingMessage();
     
     m_count -= 1;
 }
@@ -1150,7 +1150,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
         if (m_messages[t_index].m_time > time)
             break;
     
-    m_messages.InsertMessageAtIndex(t_index, {optr, mptr, time, params, id});
+    m_messages.InsertMessageAtIndex(t_index, MCPendingMessage(optr, mptr, time, params, id));
 }
 
 // MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
@@ -1245,10 +1245,13 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subo
     {
         const MCPendingMessage& t_msg = m_messages[i - 1];
         
-        // If this message refers to a dead object, take this opportunity to
-        // prune it from the pending queue
-        if (!t_msg.m_object.IsValid())
-            cancelmessageindex(i - 1, true);
+	// If this message refers to a dead object, take this opportunity to
+	// prune it from the pending queue
+	if (!t_msg.m_object.IsValid())
+	{
+	    cancelmessageindex(i - 1, true);
+	    continue;
+	}
         
         if (t_msg.m_object.Get() == optr
 		        && (mptr == NULL || MCNameIsEqualTo(*t_msg.m_message, mptr, kMCCompareCaseless))

@@ -117,6 +117,36 @@ public:
     MCParameter*        m_params;
     uint32_t            m_id;
     
+    // [[ C++11 ]] Replace with `MCPendingMessage() = default;`
+    MCPendingMessage() :
+      m_object(),
+      m_message(),
+      m_time(0),
+      m_params(nil),
+      m_id(0)
+    {
+    }
+
+    // [[ C++11 ]] Replace with `MCPendingMessage(const MCPendingMessage&) = default;`
+    MCPendingMessage(const MCPendingMessage& other) :
+      m_object(other.m_object),
+      m_message(other.m_message),
+      m_time(other.m_time),
+      m_params(other.m_params),
+      m_id(other.m_id)
+    {
+    }
+
+    // [[ C++11 ]] Replace with `MCPendingMessage(MCObject*, MCNameRef, real64_t, MCParameter*, uint32_t) = default;`
+    MCPendingMessage(MCObject* p_object, MCNameRef p_message, real64_t p_time, MCParameter* p_params, uint32_t p_id) :
+      m_object(p_object),
+      m_message(p_message),
+      m_time(p_time),
+      m_params(p_params),
+      m_id(p_id)
+    {
+    }
+
     MCPendingMessage& operator= (const MCPendingMessage& other)
     {
         m_object = other.m_object;
