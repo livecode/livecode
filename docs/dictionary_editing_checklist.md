@@ -153,7 +153,7 @@ Directly beneath the editing section there is a **Propose file change** section.
  
   - Name the change appropriately. Normally something like this:
   
-  > [[ Community Docs ]] entryName various fixes
+  > [[ Documentation ]] entryName various fixes
   - If more than one change has been made, summarize the changes made in the content area beneath the title.
 
   - Click **Create Pull Request**.
