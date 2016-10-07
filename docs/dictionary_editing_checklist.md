@@ -132,8 +132,11 @@ Once the document is open for editing you can begin to make changes. You probabl
   - Notes indented (blockquoted) and the category of note word; e.g., *Note*, italicized:
 
   &gt;&#42;Note:&#42;Fine points requiring further explanation. 
+  
   &gt;&#42;Important:&#42; Like a note, but more critical to be aware of. 
+  
   &gt;&#42;Warning:&#42; Things that can cause problems or damage if you're not careful. 
+  
   &gt;&#42;Tip:&#42; Helpful tips and techniques for using this token.
 
   
