@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32sapi4speech.h"
 
+#include <core.h>
+
 static char *path_from_native(const char *p_path)
 {
 	char *t_path;

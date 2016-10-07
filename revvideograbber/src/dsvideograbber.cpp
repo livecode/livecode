@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef _UNICODE
 
 #include <revolution/external.h>
+#include <core.h>
 
 #include "dsvideograbber.h"
 #include "Vfw.h"

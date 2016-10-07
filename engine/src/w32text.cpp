@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32prefix.h"
 
 #include "w32text.h"
+#include <foundation.h>
 
 WideCString::WideCString(LPCSTR p_ansi_string, int p_length)
 {

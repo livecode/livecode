@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <windows.h>
 #include <cstring>
 #include <revolution/support.h>
+#include <core.h>
 
 char *string_from_utf16(const unsigned short *p_utf16_string, int p_utf16_length)
 {

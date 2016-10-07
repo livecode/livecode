@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32sapi5speech.h"
 
+#include <core.h>
+
 #define VOICE_TYPE_STRING 64
 #define PITCH_XML_STRING 30
 
