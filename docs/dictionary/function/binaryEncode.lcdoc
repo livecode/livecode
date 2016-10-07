@@ -27,7 +27,7 @@ charToNum(binaryEncode("B*","01111111")) -- returns 127
 
 Parameters:
 formatsList:
-The formatsList consists of one or more dataTypes, each followed
+The <formatsList> consists of one or more dataTypes, each followed
 optionally by an amount. A dataType is one of the following single
 letters: x: output amount null characters
 
@@ -95,7 +95,7 @@ adding a zero to the end to make the dataString two <characters> long.
 References: function (control structure), numToChar (function),
 format (function), return (glossary), binary file (glossary),
 value (glossary), null (glossary), encode (glossary),
-binaryvalue (glossary), hexadecimal (glossary), string (keyword),
+binary data (glossary), hexadecimal (glossary), string (keyword),
 character (keyword), characters (keyword)
 
 Tags: text processing
