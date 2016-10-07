@@ -5,7 +5,7 @@ Type: function
 Syntax: binaryDecode(<formatsList>, <data>, <variablesList>)
 
 Summary:
-<Decodesbinary data> and places it into the specified
+Decodes binary data and places it into the specified
 <variable|variables>. 
 
 Introduced: 1.0
@@ -28,7 +28,7 @@ binaryDecode(myFormat,placeHolder,importantStuff)
 
 Parameters:
 formatsList:
-The formatsList consists of one or more dataTypes, each followed
+The < consists> of one or more dataTypes, each followed
 optionally by an amount. A dataType is one of the following single
 letters: x: skip next amount bytes of data
 
@@ -38,7 +38,7 @@ A string of encoded binary data.
 variablesList:
 A comma-separated list of local or global variable names. The number of
 variable names must be the same as the number of dataTypes specified in
-the formatsList, and the variables must already exist.
+the <formatsList>, and the variables must already exist.
 
 amount:
 - a: convert next amount bytes of data to characters
@@ -64,11 +64,12 @@ The amount corresponding to each dataType is an integer or
 the * character. If no amount is specified, the dataType is
 used for a single byte of data. The * character causes the rest of the
 data to be converted according to the formatType, so it should appear
-only as the last character in the formatsList.
+only as the last character in the <formatsList>.
+
 >*Important:* If you specify an amount with a string dataType (a or A), 
-the binaryDecode function places amount bytes in the next variable of the 
-variablesList. If you specify an amount with a numeric dataType, the function 
-places amount chunks of data in the next amount variables of the variablesList.
+the <binaryDecode> function places amount bytes in the next variable of the 
+<variablesList>. If you specify an amount with a numeric dataType, the function 
+places amount chunks of data in the next amount variables of the <variablesList>.
 For example, the dataType "a3" requires only one variable, which will
 hold a 3-characterstring, but the dataType "h3" requires three
 variables, each of which will hold a single hex digit.
@@ -119,6 +120,5 @@ was actually converted. Here is an example:
 References: put (command), function (control structure),
 numToChar (function), format (function), value (function),
 return (glossary), binary file (glossary), variable (glossary),
-handler (glossary), local variable (glossary),
-Decodesbinary data (glossary), byte (glossary), command (glossary)
+handler (glossary), local variable (glossary), byte (glossary), command (glossary)
 
