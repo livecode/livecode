@@ -2474,7 +2474,9 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 	MCValueAssign(MChcstat, kMCEmptyString);
 
     char* t_name;
-    /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+    if(!MCStringConvertToCString(name, t_name))
+		return IO_ERROR;
+	
 	MCHcstak *hcstak = new MCHcstak(t_name);
 	hcstat_append("Loading stack %s...", t_name);
 	uindex_t startlen = MCStringGetLength(MChcstat);
