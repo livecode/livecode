@@ -2477,7 +2477,7 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
     /* UNCHECKED */ MCStringConvertToCString(name, t_name);
 	MCHcstak *hcstak = new MCHcstak(t_name);
 	hcstat_append("Loading stack %s...", t_name);
-	uint2 startlen = MCStringGetLength(MChcstat);
+	uindex_t startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();
