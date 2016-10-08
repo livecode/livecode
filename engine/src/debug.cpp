@@ -559,6 +559,10 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 	uindex_t t_input_length;
 
 	t_input_length = MCStringGetLength(p_input);
+	
+	if (t_input_length == 0)
+		return;
+	
 	bool t_found;
 	t_found = true;
 
@@ -597,16 +601,12 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 		if (t_success)
 			t_success = MCStringDivideAtChar(*t_hname_tail, ',', kMCCompareExact, &t_vname, &t_express);
 
-        // AL-2015-07-31: [[ Bug 15822 ]] Don't abort parsing if a given line is not correctly formatted
-        bool t_valid_watch;
-        t_valid_watch = t_success;
+        MCObjectPtr t_object;
+		bool t_resolved_object;
+		if (t_success)
+			t_resolved_object = MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
         
-		MCObjectPtr t_object;
-        // SN-2014-09-18: [[ Bug 13453 ]] With an empty string (no watchedVariables anymore), TryToResolveObject fails
-		if (t_valid_watch)
-			t_valid_watch = MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
-        
-        if (t_valid_watch)
+        if (t_success)
         {
 			// OK-2010-01-14: [[Bug 6506]] - Allow globals in watchedVariables
 			//   If the object and handler are empty we assume its a global, otherwise
@@ -620,7 +620,11 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 				if (t_new_watches != nil)
 				{
 					MCwatchedvars = t_new_watches;
-					MCwatchedvars[MCnwatchedvars] . object = t_object . object;
+					if (t_resolved_object)
+						MCwatchedvars[MCnwatchedvars] . object = t_object . object;
+					else
+						MCwatchedvars[MCnwatchedvars] . object = nil;
+					
 					if (MCStringGetLength(*t_hname) != 0)
 						/* UNCHECKED */ MCNameCreate(*t_hname, MCwatchedvars[MCnwatchedvars] . handlername);
 					else
@@ -648,37 +652,38 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 	{
 		for (uint32_t i = 0 ; i < MCnwatchedvars ; i++)
 		{		
-		// OK-2010-01-14: [[Bug 6506]] - WatchedVariables support for globals
-			if (MCwatchedvars[i] . object != NULL)
+			MCAutoListRef t_watched_var;
+			t_success = MCListCreateMutable(',', &t_watched_var);
+			
+			if (t_success)
 			{
-				MCAutoListRef t_watched_var;
-				t_success = MCListCreateMutable(',', &t_watched_var);
-				
-				if (t_success)
+				if (MCwatchedvars[i] . object != NULL)
 				{
 					MCAutoValueRef t_var_id;
 					t_success = MCwatchedvars[i] . object -> names(P_LONG_ID, &t_var_id) &&
-								MCListAppend(*t_watched_var, *t_var_id);
+							MCListAppend(*t_watched_var, *t_var_id);
 				}
-							
-				if (t_success)
-				{
-					if (MCwatchedvars[i] . handlername == NULL)
-						t_success = MCListAppend(*t_watched_var, kMCEmptyString);
-					else
-						t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].handlername);
-				}
-				
-				if (t_success)
-					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].varname);
-
-                // SN-2014-09-18: [[ Bug 13453 ]] A watched variable's expression is never nil
-				if (t_success)
-					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].expression);
-
-				if (t_success)
-					t_success = MCListAppend(*t_watches_list, *t_watched_var);
+				else
+					t_success = MCListAppend(*t_watched_var, kMCEmptyString);
 			}
+						
+			if (t_success)
+			{
+				if (MCwatchedvars[i] . handlername == NULL)
+					t_success = MCListAppend(*t_watched_var, kMCEmptyString);
+				else
+					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].handlername);
+			}
+			
+			if (t_success)
+				t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].varname);
+
+			// SN-2014-09-18: [[ Bug 13453 ]] A watched variable's expression is never nil
+			if (t_success)
+				t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].expression);
+
+			if (t_success)
+				t_success = MCListAppend(*t_watches_list, *t_watched_var);
 		}
 	}
 
