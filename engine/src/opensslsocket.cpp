@@ -1500,7 +1500,7 @@ void MCSocket::readsome()
 		if ((l = recvfrom(fd, dbuffer, l, 0, (struct sockaddr *)&addr, &addrsize))
 		        == SOCKET_ERROR)
 		{
-			delete dbuffer;
+			delete[] dbuffer;
 			error = new char[21 + I4L];
 			sprintf(error, "Error %d on socket", WSAGetLastError());
 			doclose();
