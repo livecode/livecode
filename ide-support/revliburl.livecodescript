@@ -2058,7 +2058,7 @@ function ulBuildHttpRequest pUrl
          end if
       end repeat
       if laSocketSecured[tSocket] is false then
-         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] into tRequest
+         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] into tRequest
          
          -- MM-2014-06-05: [[ Bug 12566 ]] Make sure we authenticate the proxy.
          if laUrlProxy[pUrl] <> empty then
