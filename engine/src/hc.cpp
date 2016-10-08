@@ -1998,10 +1998,16 @@ IO_stat MCHcstak::read(IO_handle stream)
 				while (tsize--)
 				{
 					if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+					{
+						delete[] tbuffer;
 						return IO_ERROR;
+					}
 					while ((byte == '\n' || byte == '\r') && tsize--)
 						if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+						{
+							delete[] tbuffer;
 							return IO_ERROR;
+						}
 					if (byte == ':')
 						break;
 					tbuf[tcount++] = hqx[byte - '!'];
