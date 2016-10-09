@@ -2,7 +2,7 @@ Name: menuPick
 
 Type: message
 
-Syntax: menuPick <pChosenItem> [| <pSubmenuName>], <pPreviousTab>
+Syntax: menuPick <chosenItem> {| <submenuName>}, <previousTab>
 
 Summary:
 Sent to a <button(object)> when a <menu item> is chosen from the <menu>
