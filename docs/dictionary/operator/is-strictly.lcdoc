@@ -2,7 +2,7 @@ Name: is strictly
 
 Type: operator
 
-Syntax: <value> is strictly [ nothing | a boolean | an integer | a real | a string | a binary string | an array ]
+Syntax: <value> is strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array }
 
 Summary:
 Evaluates to true if the actual type of <value> is the specified type.
@@ -27,7 +27,7 @@ the compress of "Hello World!" is strictly a binary string -- evaluates to true
 
 Parameters:
 value:
-The expression to test the type of.
+The expression which will be tested for its type.
 
 Description:
 Use the <is strictly> operator to determine the true type of a
