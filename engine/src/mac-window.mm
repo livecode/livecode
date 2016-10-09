@@ -2046,9 +2046,10 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 				RealizeAndNotify();
 			*(void**)r_value = m_window_handle;
 			return true;
+		
+		default:
+			return false;
 	}
-	
-	return false;
 }
 
 void MCMacPlatformWindow::DoShow(void)

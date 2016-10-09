@@ -529,12 +529,16 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
         t_event -> custom . event -> Dispatch();
         break;
 		
-#ifdef _MOBILE
 	case kMCEventTypeTouch:
+#ifdef _MOBILE
 		handle_touch(t_event -> touch . stack, t_event -> touch . phase, t_event -> touch . id, t_event -> touch . taps, t_event -> touch . x, t_event -> touch . y);
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeMotion:
+#ifdef _MOBILE
 		{
 			MCNameRef t_message;
 			MCStringRef t_motion;
@@ -556,28 +560,46 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(t_message, t_motion);
 		}
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeAcceleration:
+#ifdef _MOBILE
 		{
 			MCAutoStringRef t_value;
             /* UNCHECKED */ MCStringFormat(&t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
 			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_acceleration_changed, *t_value);
 		}
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeOrientation:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(MCM_orientation_changed);
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeLocation:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_location_changed : MCM_location_error);
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeHeading:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
-		break;
+#else
+		MCUnreachable();
 #endif
+		break;
 	}
 }
 

@@ -143,6 +143,9 @@ static bool ParserReport(ParserRef self, Position p_where, ParserError p_error, 
 			fprintf(stderr, "%s'%s' expected\n", i == 0 ? "" : " or ", p_hints[i]);
 		}
 		break;
+	case kParserErrorNone:
+		abort();
+		break;
 	}
 	
 	self -> syntax_error = true;

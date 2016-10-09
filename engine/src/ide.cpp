@@ -2486,6 +2486,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
             case kMCIdeFilterPropertyType:
                 MCStringCreateWithNativeChars((char_t*)p_object -> gettypestring(), strlen(p_object -> gettypestring()), (MCStringRef&)&t_left_value);
                 break;
+			case kMCIdeFilterPropertyNone:
+				break;
         }
 
         bool t_accept;
@@ -2543,6 +2545,10 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 
             }
             break;
+				
+			case kMCIdeFilterOperatorNone:
+				break;
+				
         }
 
         if (t_accept)

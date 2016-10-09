@@ -317,6 +317,9 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dx = r . x;
             dw = r . width;
             break;
+		case kMCGravityNone:
+			MCUnreachable();
+			break;
     }
     
     switch(p_gravity)
@@ -348,6 +351,9 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dy = r . y;
             dh = r . height;
             break;
+		case kMCGravityNone:
+			MCUnreachable();
+			break;
     }
     
     drawme(dc, 0, 0, rect . width, rect . height, dx, dy, dw, dh);

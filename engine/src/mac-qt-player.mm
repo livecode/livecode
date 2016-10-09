@@ -771,6 +771,8 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
             break;
+		default:
+			MCUnreachable();
 	}
     
     m_synchronizing = false;
@@ -906,6 +908,9 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyScalefactor:
             *(double *)r_value = m_scale;
 			break;
+		
+		default:
+			MCUnreachable();
 	}
 }
 

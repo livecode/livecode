@@ -292,9 +292,10 @@ enum MCGFillRule
 {
 	kMCGFillRuleNonZero,
 	kMCGFillRuleEvenOdd,
-	
-	kMCGFillRuleCount
 };
+
+static const intenum_t kMCGFillRuleCount = 2;
+
 
 enum MCGPaintStyle
 {
@@ -360,27 +361,30 @@ enum MCGBlendMode
 	kMCGBlendModeLegacyAdMin,
 	kMCGBlendModeLegacyBlendSource,
 	kMCGBlendModeLegacyBlendDestination,
-	
-	kMCGBlendModeCount,
 };
+
+static const intenum_t kMCGBlendModeCount = 54;
+
 
 enum MCGJoinStyle
 {
 	kMCGJoinStyleBevel,
 	kMCGJoinStyleRound,
 	kMCGJoinStyleMiter,
-	
-	kMCGJoinStyleCount
 };
+
+static const intenum_t kMCGJoinStyleCount = 3;
+
 
 enum MCGCapStyle
 {
 	kMCGCapStyleButt,
 	kMCGCapStyleRound,
 	kMCGCapStyleSquare,
-	
-	kMCGCapStyleCount
 };
+
+static const intenum_t kMCGCapStyleCount = 3;
+
 
 enum MCGRasterFormat
 {
@@ -397,9 +401,10 @@ enum MCGImageFilter
 	kMCGImageFilterLow,
 	kMCGImageFilterMedium,
     kMCGImageFilterHigh,
-    
-    kMCGImageFilterCount
 };
+
+static const intenum_t kMCGImageFilterCount = 4;
+
 
 enum MCGGradientFunction
 {
@@ -411,9 +416,10 @@ enum MCGGradientFunction
 	kMCGLegacyGradientSpiral,
 	kMCGLegacyGradientXY,
 	kMCGLegacyGradientSqrtXY,
-	
-	kMCGGradientFunctionCount
 };
+
+static const intenum_t kMCGGradientFunctionCount = 7;
+
 
 enum MCGGradientTileMode
 {
