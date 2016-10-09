@@ -9,7 +9,7 @@ Summary:
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -17,36 +17,35 @@ Example:
 put "foo" & "bar" -- evaluates to "foobar"
 
 Example:
-put myVar & return & return into otherVar
+local myVar, otherVar
+put myVar & quote & "hello" & quote into otherVar
 
 Example:
+local theData
 get offset(return & space, theData)
 
 Parameters:
 string1 (string):
-And <string2> are <docRef src="glossary/Values_and/385.xml">literal
-strings</docRef> of <docRef
-src="dictionary/keyword/1485.xml">characters</docRef> (<docRef
-src="glossary/Text_and_D/159.xml">delimited</docRef> with <docRef
-src="glossary/Text_and_D/465.xml">double quotes</docRef>), or <docRef
-src="glossary/Writing_Tr/152.xml">expressions</docRef> that <docRef
-src="glossary/Writing_Tr/104.xml">evaluate</docRef> to <docRef
-src="glossary/Text_and_D/529.xml">strings</docRef>. 
+A <literal string> of <character|characters> (<delimit|delimited> with 
+<double quote|double quotes>), or <expression|expressions> that evaluate 
+to <string|strings>. 
 
 string2 (string):
-
-
-The result:
-The result of the  <operator> is a <string> consisting of <string1>
-followed by <string2>.
+A <literal string> of <character|characters> (<delimit|delimited> with 
+<double quote|double quotes>), or <expression|expressions> that evaluate 
+to <string|strings>. 
 
 Description:
 Use the & <operator> to create a single <string> out of two or more
-parts. 
+parts. That is, <string2> is appended immediately after <string1> 
+with no intervening space. 
 
-References: split (command), quote (constant), string (glossary),
-concatenate (glossary), operator (glossary), \ (keyword),
-string (keyword)
+
+References: character (glossary), concatenate (glossary), 
+delimit (glossary), double quote (glossary), evaluate (glossary), 
+expression (glossary), literal string (glossary), offset (function), 
+operator (glossary), quote (constant), return (constant), 
+string (glossary)
 
 Tags: text processing
 
