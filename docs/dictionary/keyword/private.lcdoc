@@ -2,7 +2,7 @@ Name: private
 
 Type: keyword
 
-Syntax: private (command|function) <handlerName> <parameterList>
+Syntax: private {command|function} <handlerName> <parameterList>
 
 Summary:
 The <private> keyword makes a function or command local to the script in
