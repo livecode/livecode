@@ -2,7 +2,7 @@ Name: is not strictly
 
 Type: operator
 
-Syntax: <value> is not strictly [ nothing | a boolean | an integer | a real | a string | a binary string | an array ]
+Syntax: <value> is not strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array }
 
 Summary:
 Evaluates to true if the actual type of <value> is not the specified
@@ -28,7 +28,7 @@ the compress of "Hello World!" is not strictly a binary string -- evaluates to f
 
 Parameters:
 value:
-The expression to test the type of.
+The expression which will be tested for its type.
 
 Description:
 Use the <is not strictly> operator to determine what the true type of
