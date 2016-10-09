@@ -2,12 +2,12 @@ Name: &gt;=
 
 Type: operator
 
-Syntax: <value1> &gt;= value2
+Syntax: <value1> >= <value2>
 
 Summary:
-Compares two <value(glossary)|values> and <return|returns> true if the
-first <value(function)> is greater than or equal to the second
-<value(function)>, false otherwise.
+Compares two <value|values> and <return|returns> true if the
+first <value> is greater than or equal to the second
+<value>, false otherwise.
 
 Introduced: 1.0
 
@@ -16,43 +16,54 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-22 = 23
+put 22 >= 23
+-- evaluates to false
 
 Example:
-myValue = 0
+local theCount
+if theCount >= 0 then
+  go next card
+end if
 
 Parameters:
 value1:
 The operands value1 and value2 can be numbers, literal strings of
-characters (delimited with double quotes), or any sources of value.
+characters (<delimit|delimited> with double quotes), or any sources 
+of <value>.
+
+value2: 
+The operands value1 and value2 can be numbers, literal strings of
+characters (<delimit|delimited> with double quotes), or any sources
+of <value>.
 
 Description:
-Use the = (greater than or equal to) <operator> to compare two numbers
+Use the >= (greater than or equal to) <operator> to compare two numbers
 or to compare the alphabetical order of two <string|strings>.
 
-When comparing strings, the = <operator> compares the two <value|values>
+When comparing strings, the >= <operator> compares the two <value|values>
 <character> by <character>, using the <ASCII|ASCII value> of each
 <character>. For example, "z" comes after "a" in the <ASCII> <character
 set>, so the following are all true:
 
-    "z" ="z"
-    "z" = "a"
-    "zz" = "za"
+    "z" >="z"
+    "z" >= "a"
+    "zz" >= "za"
 
 
 If the strings are of different lengths, so that the trailing characters
 in one string are compared to missing characters in the other, the
-missing characters are considered to have lower value than any
-character. For example, "abc" = "ab".
+missing characters are considered to have lower <value> than any
+character. For example, "abc" >= "ab".
 
-If the <caseSensitive> <a> property</a> is true, the comparison between
+If the <caseSensitive> <property> is true, the comparison between
 two <string|strings> treats uppercase letters as coming before lowercase
 letters. If the <caseSensitive> <property> is false, the comparison is
 not <case-sensitive>, so a is considered equivalent to A.
 
-References: max (function), value (function), property (glossary),
-ASCII (glossary), value (glossary), return (glossary),
-operator (glossary), string (glossary), character set (glossary),
-case-sensitive (glossary), character (keyword), &lt;= (operator),
-&gt; (operator), caseSensitive (property)
+References: &gt; (operator), &lt;= (operator), ASCII (glossary), 
+case-sensitive (glossary), caseSensitive (property), 
+character (keyword), character set (glossary), delimit (glossary), 
+double quote (glossary), max (function), operator (glossary), 
+property (glossary), return (glossary), string (glossary), 
+value (glossary)
 
