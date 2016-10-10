@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
@@ -185,16 +185,16 @@ MCAbstractRasterStackSurface::Composite(MCGRectangle p_dest_rect,
  * ================================================================ */
 
 MCHtmlCanvasStackSurface::MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect)
-    : m_surface(nil),
-      m_region(nil),
-      m_rect(p_rect)
+	: m_surface(nil),
+	m_region(nil),
+	m_rect(p_rect)
 {
-    ;
+	;
 }
 
 MCHtmlCanvasStackSurface::~MCHtmlCanvasStackSurface()
 {
-    delete[] m_surface;
+	delete[] m_surface;
 
 	if (nil != m_region)
 	{
@@ -205,20 +205,20 @@ MCHtmlCanvasStackSurface::~MCHtmlCanvasStackSurface()
 bool
 MCHtmlCanvasStackSurface::Lock()
 {
-    // Allocate a buffer for us to use, if not already done
-    if (m_surface == nil)
-    {
-        m_surface = new uint8_t[m_rect.size.width * m_rect.size.height * sizeof(uint32_t)];
-    }
+	// Allocate a buffer for us to use, if not already done
+	if (m_surface == nil)
+	{
+		m_surface = new uint8_t[m_rect.size.width * m_rect.size.height * sizeof(uint32_t)];
+	}
 
-    return m_surface != nil;
+	return m_surface != nil;
 }
 
 void
 MCHtmlCanvasStackSurface::Unlock()
 {
-    // This is implemented in JavaScript
-    MCEmscriptenBlitToMainCanvas(m_surface, m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height);
+	// This is implemented in JavaScript
+	MCEmscriptenBlitToMainCanvas(m_surface, m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height);
 }
 
 MCGRegionRef
@@ -233,7 +233,7 @@ MCHtmlCanvasStackSurface::GetRegion()
 
 	/* Compute the region from the surface */
 	MCGRegionCreate(m_region);
-    MCGRegionSetRect(m_region, m_rect);
+	MCGRegionSetRect(m_region, m_rect);
 
 	return m_region;
 }
@@ -243,7 +243,7 @@ MCHtmlCanvasStackSurface::GetStride()
 {
 	MCAssert(nil != m_surface);
 
-    return m_rect.size.width * sizeof(uint32_t);
+	return m_rect.size.width * sizeof(uint32_t);
 }
 
 MCGRasterFormat
@@ -257,9 +257,9 @@ MCHtmlCanvasStackSurface::GetPixelBuffer(MCGIntegerRectangle p_area)
 {
 	MCAssert(nil != m_surface);
 
-    uint8_t *pix_buf = (m_surface +
-                       (p_area.origin.y-m_rect.origin.y) * GetStride() +
-                       (p_area.origin.x-m_rect.origin.x) * sizeof(uint32_t));
+	uint8_t *pix_buf = (m_surface +
+	                    (p_area.origin.y-m_rect.origin.y) * GetStride() +
+	                    (p_area.origin.x-m_rect.origin.x) * sizeof(uint32_t));
 
-    return static_cast<void *>(pix_buf);
+	return static_cast<void *>(pix_buf);
 }

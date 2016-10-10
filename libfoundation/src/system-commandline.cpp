@@ -1,26 +1,26 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+   Copyright (C) 2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
 #include <foundation-auto.h>
 
 #if defined(__WINDOWS__)
-#	include <windows.h>
+#       include <windows.h>
 #endif
 
 /* ---------------------------------------------------------------- */
@@ -202,7 +202,7 @@ MC_DLLEXPORT_DEF bool
 MCSCommandLineCapture (uindex_t p_arg_count, const char *p_arg_array[])
 {
 	return
-		__MCSCommandLineCaptureNameAndArguments<>(p_arg_count, p_arg_array);
+	        __MCSCommandLineCaptureNameAndArguments<>(p_arg_count, p_arg_array);
 }
 
 /* ================================================================
@@ -273,7 +273,7 @@ __MCSWindowsCommandLineGet (uindex_t & r_argc,
 	t_args_w32 = GetCommandLineW ();
 	t_arg_array_w32 = CommandLineToArgvW (t_args_w32, &t_arg_count_w32);
 	if (NULL == t_arg_array_w32)
-		return false; /* FIXME proper error */
+		return false;  /* FIXME proper error */
 
 	r_argc = t_arg_count_w32;
 	r_argv = t_arg_array_w32;

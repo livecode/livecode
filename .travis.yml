@@ -35,19 +35,27 @@ env:
 # Install any required tools
 before_install:
   - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
       rvm --default use 2.2.1
       gem install xcpretty
+
+      brew update
+      brew install uncrustify
     fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
-install: 
+install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
-script: |
+script:
+- |
+  if which uncrustify; then
+    make check-indent
+  fi
+- |
   case "${TRAVIS_OS_NAME}" in
     linux)
       BUILD_PLATFORM=linux

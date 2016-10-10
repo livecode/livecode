@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_EMSCRIPTEN_STACK_SURFACE_H__
 #define __MC_EMSCRIPTEN_STACK_SURFACE_H__
@@ -83,8 +83,8 @@ protected:
 class MCHtmlCanvasStackSurface : public MCAbstractRasterStackSurface
 {
 public:
-    MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect);
-    virtual ~MCHtmlCanvasStackSurface();
+	MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect);
+	virtual ~MCHtmlCanvasStackSurface();
 
 	/* Lock and unlock the surface. */
 	virtual bool Lock();
@@ -96,9 +96,9 @@ protected:
 	virtual MCGRasterFormat GetFormat();
 	virtual void *GetPixelBuffer(MCGIntegerRectangle p_area);
 
-    uint8_t *m_surface;
+	uint8_t *m_surface;
 	MCGRegionRef m_region;
-    MCGIntegerRectangle m_rect;
+	MCGIntegerRectangle m_rect;
 };
 
 #endif /* !__MC_EMSCRIPTEN_STACK_SURFACE_H__ */

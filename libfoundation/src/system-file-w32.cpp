@@ -1,19 +1,19 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+   Copyright (C) 2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define __MCS_INTERNAL_API__
 #include <foundation.h>
@@ -207,7 +207,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 
 	return MCDataCreateWithBytesAndRelease (t_buffer, t_total_read, r_data);
 
- error_cleanup:
+error_cleanup:
 	/* UNCHECKED */ CloseHandle (t_handle);
 	MCMemoryDeallocate (t_buffer);
 	return false;
@@ -295,19 +295,19 @@ __MCSFileSetContents (MCStringRef p_native_path,
 		                                         &t_temp_path);
 
 		MCErrorCreateAndThrowWithMessage (
-		    kMCSFileIOErrorTypeInfo,
-		    MCSTR("Failed to rename file '%{temp_path}' to '%{path}': %{description}"),
-		    "path", *t_path,
-		    "temp_path", *t_temp_path,
-		    "description", *t_description,
-		    "error_code", *t_error_code,
-		    NULL);
+			kMCSFileIOErrorTypeInfo,
+			MCSTR("Failed to rename file '%{temp_path}' to '%{path}': %{description}"),
+			"path", *t_path,
+			"temp_path", *t_temp_path,
+			"description", *t_description,
+			"error_code", *t_error_code,
+			NULL);
 
 		goto error_cleanup;
 	}
 	return true;
 
- error_cleanup:
+error_cleanup:
 	/* FIXME explicitly finish stream */
 	MCValueRelease (t_stream);
 	/* UNCHECKED */ DeleteFileW (t_temp_path_w32);
@@ -408,7 +408,7 @@ __MCSFilePathToNative (MCStringRef p_path,
 
 bool
 __MCSFilePathFromNative (MCStringRef p_native_path,
-                        MCStringRef & r_path)
+                         MCStringRef & r_path)
 {
 	uindex_t t_len;
 	t_len = MCStringGetLength (p_native_path);
@@ -666,8 +666,8 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	                             kMCStringOptionCompareExact))
 		/* Trim last character */
 		MCStringCopySubstring (p_native_path,
-		    MCRangeMake (0, MCStringGetLength (p_native_path) - 1),
-		    &t_native_path);
+		                       MCRangeMake (0, MCStringGetLength (p_native_path) - 1),
+		                       &t_native_path);
 	else
 		MCStringCopy (p_native_path, &t_native_path);
 
@@ -753,7 +753,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	FindClose (t_find_handle);
 	return t_entries.TakeAsProperList (r_native_entries);
 
- error_cleanup:
+error_cleanup:
 	FindClose (t_find_handle);
 	return false;
 }

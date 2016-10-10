@@ -22,6 +22,7 @@
 XCODEBUILD ?= xcodebuild
 WINE ?= wine
 EMMAKE ?= emmake
+UNCRUSTIFY ?= uncrustify
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
@@ -45,7 +46,7 @@ else
 endif
 
 # Prettifying output for CI builds
-XCODEBUILD_FILTER ?= 
+XCODEBUILD_FILTER ?=
 
 include Makefile.common
 
@@ -201,3 +202,13 @@ check-emscripten:
 all-emscripten:
 	$(MAKE) config-emscripten
 	$(MAKE) compile-emscripten
+
+################################################################
+# Developer assistance
+################################################################
+
+indent:
+	UNCRUSTIFY=$(UNCRUSTIFY) tools/uncrustify.sh
+
+check-indent:
+	UNCRUSTIFY=$(UNCRUSTIFY) tools/uncrustify.sh --check

@@ -1,30 +1,30 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+   Copyright (C) 2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
 #include <foundation-auto.h>
 
-#define MCS_FILE_CONVERT_PATH(path, native_path)	  \
-	MCAutoStringRef native_path##__auto; \
+#define MCS_FILE_CONVERT_PATH(path, native_path)          \
+	MCAutoStringRef native_path ## __auto; \
 	MCStringRef native_path; \
-	do { if (!__MCSFilePathToNative (path, & native_path##__auto)) \
-			return false; \
-		native_path = * native_path##__auto; \
+	do { if (!__MCSFilePathToNative (path, &native_path ## __auto)) \
+		     return false; \
+	     native_path = *native_path ## __auto; \
 	} while (0)
 
 /* ================================================================
@@ -231,24 +231,24 @@ __MCSFileInitialize (void)
 {
 	/* Create error types */
 	if (!MCNamedErrorTypeInfoCreate(
-	        MCNAME("livecode.lang.FileIOError"),
-			MCNAME("file"),
-	        MCSTR("File input/output error for '%{path}': %{description}"),
-	        kMCSFileIOErrorTypeInfo))
+		    MCNAME("livecode.lang.FileIOError"),
+		    MCNAME("file"),
+		    MCSTR("File input/output error for '%{path}': %{description}"),
+		    kMCSFileIOErrorTypeInfo))
 		return false;
 
 	if (!MCNamedErrorTypeInfoCreate (
-	        MCNAME("livecode.lang.EndOfFileError"),
-			MCNAME("file"),
-	        MCSTR("End of file '%{path}'"),
-	        kMCSFileEndOfFileErrorTypeInfo))
+		    MCNAME("livecode.lang.EndOfFileError"),
+		    MCNAME("file"),
+		    MCSTR("End of file '%{path}'"),
+		    kMCSFileEndOfFileErrorTypeInfo))
 		return false;
 
 	if (!MCNamedErrorTypeInfoCreate (
-	        MCNAME("livecode.lang.InvalidFilenameError"),
-			MCNAME("file"),
-	        MCSTR("No valid native path representation for path '%{path}'"),
-	        kMCSFileInvalidPathErrorTypeInfo))
+		    MCNAME("livecode.lang.InvalidFilenameError"),
+		    MCNAME("file"),
+		    MCSTR("No valid native path representation for path '%{path}'"),
+		    kMCSFileInvalidPathErrorTypeInfo))
 		return false;
 
 	return true;

@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_EMSCRIPTEN_SYSTEM_H__
 #define __MC_EMSCRIPTEN_SYSTEM_H__
@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * System abstraction layer
  * ================================================================ */
 
-class MCEmscriptenSystem: public MCSystemInterface
+class MCEmscriptenSystem : public MCSystemInterface
 {
 public:
 	MCEmscriptenSystem(void);
@@ -77,7 +77,7 @@ public:
 	virtual Boolean DeleteFile(MCStringRef p_path);
 
 	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name,
-	                                MCStringRef p_new_name);
+	                                   MCStringRef p_new_name);
 
 	virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name);
 	virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name);
@@ -165,9 +165,9 @@ public:
 	virtual bool AlternateLanguages(MCListRef & r_list);
 
 	virtual bool GetDNSservers(MCListRef & r_list);
-    
-    virtual void ShowMessageDialog(MCStringRef title,
-                                   MCStringRef message);
+
+	virtual void ShowMessageDialog(MCStringRef title,
+	                               MCStringRef message);
 };
 
 MCSystemInterface * MCDesktopCreateEmscriptenSystem(void);

@@ -1,19 +1,19 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
@@ -116,7 +116,7 @@ __MCSRandomBytes (void *x_buffer,
 	CryptReleaseContext (t_provider, 0);
 	return true;
 
- error_cleanup:
+error_cleanup:
 	if (t_provider)
 		CryptReleaseContext (t_provider, 0);
 	return false;
@@ -132,7 +132,7 @@ __MCSRandomBytes (void *x_buffer,
                   size_t p_buffer_length)
 {
 
-#	if defined(__MAC__) || defined(__IOS__)
+#       if defined(__MAC__) || defined(__IOS__)
 	/* ---------- arc4random(3) library function
 	 *
 	 * On OSX >= 10.7 and on most versions of iOS, there's an
@@ -157,7 +157,7 @@ __MCSRandomBytes (void *x_buffer,
 			return true;
 		}
 	}
-#	endif /* __MAC__ || __IOS__ */
+#       endif /* __MAC__ || __IOS__ */
 
 	/* ---------- POSIX random number device
 	 *

@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <SkPaint.h>
 #include <SkTypeface.h>
@@ -35,11 +35,19 @@ public:
 	                              uint16_t p_size,
 	                              uint16_t p_style);
 
-	virtual MCFontStruct *getfontstruct() { return &m_font_info; }
+	virtual MCFontStruct *getfontstruct() {
+		return &m_font_info;
+	}
 
-	virtual MCNameRef getname() { return *m_requested_name;  }
-	virtual uint16_t getsize()  { return m_requested_size;  }
-	virtual uint16_t getstyle() { return m_requested_style; }
+	virtual MCNameRef getname() {
+		return *m_requested_name;
+	}
+	virtual uint16_t getsize()  {
+		return m_requested_size;
+	}
+	virtual uint16_t getstyle() {
+		return m_requested_style;
+	}
 
 	virtual MCFontnode *next();
 	virtual void appendto(MCFontnode *& list);
@@ -66,28 +74,28 @@ MCFontnode::MCFontnode(MCNameRef p_name,
                        uint16_t p_size,
                        uint16_t p_style)
 	: m_requested_name(p_name),
-	  m_requested_size(p_size),
-	  m_requested_style(p_style)
+	m_requested_size(p_size),
+	m_requested_style(p_style)
 {
-    // Load the font as requested
+	// Load the font as requested
 	m_font_info.fid = emscripten_get_font_by_name(p_name, p_style);
 
-    // Calculate the metrics for this typeface and size
-    SkPaint t_paint;
-    t_paint.setTypeface((SkTypeface*)m_font_info.fid);
-    t_paint.setTextSize(p_size);
-        
-    SkPaint::FontMetrics t_metrics;
-        
-    t_paint.getFontMetrics(&t_metrics);
-        
-    // SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
-    m_font_info.m_ascent = -t_metrics.fAscent;
-    m_font_info.m_descent = t_metrics.fDescent;
-    m_font_info.m_leading = t_metrics.fLeading;
-    m_font_info.m_xheight = t_metrics.fXHeight;
+	// Calculate the metrics for this typeface and size
+	SkPaint t_paint;
+	t_paint.setTypeface((SkTypeface*)m_font_info.fid);
+	t_paint.setTextSize(p_size);
 
-    m_font_info.size = p_size;
+	SkPaint::FontMetrics t_metrics;
+
+	t_paint.getFontMetrics(&t_metrics);
+
+	// SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
+	m_font_info.m_ascent = -t_metrics.fAscent;
+	m_font_info.m_descent = t_metrics.fDescent;
+	m_font_info.m_leading = t_metrics.fLeading;
+	m_font_info.m_xheight = t_metrics.fXHeight;
+
+	m_font_info.size = p_size;
 }
 
 MCFontnode::~MCFontnode()
@@ -288,10 +296,10 @@ MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name,
 
 MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file)
 {
-    MCAutoStringRefAsSysString t_sys_path;
-    /* UNCHECKED */ t_sys_path.Lock(p_file);
+	MCAutoStringRefAsSysString t_sys_path;
+	/* UNCHECKED */ t_sys_path.Lock(p_file);
 
-    MCSysFontHandle t_handle = (MCSysFontHandle)SkTypeface::CreateFromFile(*t_sys_path);
-    MCAssert(t_handle != nil);
-    return t_handle;
+	MCSysFontHandle t_handle = (MCSysFontHandle)SkTypeface::CreateFromFile(*t_sys_path);
+	MCAssert(t_handle != nil);
+	return t_handle;
 }

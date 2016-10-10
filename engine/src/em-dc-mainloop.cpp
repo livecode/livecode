@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-dc-mainloop.h"
 #include "em-dc.h"
@@ -51,7 +51,7 @@ void MCU_initialize_names(void);
 
 /* Returns 0 on big-endian platforms, 1 on little-endian */
 static Boolean
-/*byte_swapped*/MCEmscriptenIsLittleEndian(void)
+/*byte_swapped*/ MCEmscriptenIsLittleEndian(void)
 {
 	return (1 != htons(1)) ? 1 : 0;
 }
@@ -59,7 +59,7 @@ static Boolean
 /* Create a $<N> variable for a numbered command-line argument
  * string */
 static bool
-/*create_var*/MCEmscriptenCreateArgVar(MCStringRef p_arg, uint32_t p_number)
+/*create_var*/ MCEmscriptenCreateArgVar(MCStringRef p_arg, uint32_t p_number)
 {
 	MCAutoStringRef t_name_str;
 	MCVariable *t_variable;
@@ -94,7 +94,7 @@ static bool
 
 /* Create the $# variable (number of command line arguments) */
 static bool
-/*create_var*/MCEmscriptenCreateArgCountVar(uint32_t p_number)
+/*create_var*/ MCEmscriptenCreateArgCountVar(uint32_t p_number)
 {
 	MCVariable *t_variable;
 	if (!MCVariable::ensureglobal(MCNAME("$#"), t_variable))
@@ -193,7 +193,7 @@ X_init(int argc,
 	--MCwaitdepth;
 	return true;
 
- error_cleanup:
+error_cleanup:
 	--MCwaitdepth;
 	return false;
 }

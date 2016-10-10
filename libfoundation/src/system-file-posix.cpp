@@ -1,19 +1,19 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+   Copyright (C) 2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
@@ -169,7 +169,7 @@ __MCSFileGetContentsStream (MCStringRef p_native_path,
 
 	return t_success;
 
- file_too_large:
+file_too_large:
 	MCMemoryDeallocate (t_buffer);
 	/* UNCHECKED */ fclose (p_cstream);
 	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("File '%{path}' is too large"), 0);
@@ -213,7 +213,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 	{
 		if (!__MCSFileGetContentsRegular (p_native_path, &t_stat_buf, t_fd,
 		                                  t_buffer, t_length))
-			return false; /* Error should already be set */
+			return false;  /* Error should already be set */
 	}
 	else
 	{
@@ -228,7 +228,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 
 		if (!__MCSFileGetContentsStream (p_native_path, t_cstream,
 		                                 t_buffer, t_length))
-			return false; /* Error should already be set */
+			return false;  /* Error should already be set */
 	}
 
 	/* Store the data in a dataref */
@@ -365,10 +365,10 @@ __MCSFileSetContents (MCStringRef p_native_path,
 	if (0 != rename (*t_temp_path_sys, *t_path_sys))
 	{
 		t_save_errno = errno;
-        
-        /* UNCHECKED */ unlink (*t_temp_path_sys);
-        errno = t_save_errno;
-        
+
+		/* UNCHECKED */ unlink (*t_temp_path_sys);
+		errno = t_save_errno;
+
 		/* Report rename error */
 		MCAutoStringRef t_description, t_path, t_temp_path;
 		MCAutoNumberRef t_error_code;
@@ -381,13 +381,13 @@ __MCSFileSetContents (MCStringRef p_native_path,
 		                                         &t_temp_path);
 
 		return MCErrorCreateAndThrowWithMessage (
-		           kMCSFileIOErrorTypeInfo,
-		           MCSTR("Failed to rename file '%{temp_path}' to '%{path}': %{description}"),
-		           "path", *t_path,
-		           "temp_path", *t_temp_path,
-		           "description", *t_description,
-		           "error_code", *t_error_code,
-		           NULL);
+			kMCSFileIOErrorTypeInfo,
+			MCSTR("Failed to rename file '%{temp_path}' to '%{path}': %{description}"),
+			"path", *t_path,
+			"temp_path", *t_temp_path,
+			"description", *t_description,
+			"error_code", *t_error_code,
+			NULL);
 	}
 
 	return true;
@@ -469,8 +469,8 @@ __MCSFilePathToNative (MCStringRef p_path,
                        MCStringRef & r_native_path)
 {
 	return
-		__MCSFilePathValidate (p_path) &&
-		MCStringCopy (p_path, r_native_path);
+	        __MCSFilePathValidate (p_path) &&
+	        MCStringCopy (p_path, r_native_path);
 }
 
 bool
@@ -687,7 +687,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 		if (!MCStringCreateWithSysString (t_raw_entries[i]->d_name,
 		                                  t_entries[i]))
 #else
-        if (!MCStringCreateWithBytes((const byte_t *)t_raw_entries[i]->d_name, strlen(t_raw_entries[i]->d_name), kMCStringEncodingUTF8, false, t_entries[i]))
+		if (!MCStringCreateWithBytes((const byte_t *)t_raw_entries[i]->d_name, strlen(t_raw_entries[i]->d_name), kMCStringEncodingUTF8, false, t_entries[i]))
 #endif
 			goto error_cleanup;
 	}
@@ -696,7 +696,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	free (t_raw_entries);
 	return t_entries.TakeAsProperList (r_native_entries);
 
- error_cleanup:
+error_cleanup:
 	free (t_raw_entries);
 	return false;
 }
