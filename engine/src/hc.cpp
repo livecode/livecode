@@ -2013,9 +2013,9 @@ IO_stat MCHcstak::read(IO_handle stream)
 					tbuf[tcount++] = hqx[byte - '!'];
 					if (tcount == 4)
 					{
-						uint1ptr[boffset++] = tbuf[0] << 2 | tbuf[1] >> 4;
-						uint1ptr[boffset++] = tbuf[1] << 4 | tbuf[2] >> 2;
-						uint1ptr[boffset++] = tbuf[2] << 6 | tbuf[3];
+						uint1ptr[boffset++] = uint1(tbuf[0] << 2 | tbuf[1] >> 4);
+						uint1ptr[boffset++] = uint1(tbuf[1] << 4 | tbuf[2] >> 2);
+						uint1ptr[boffset++] = uint1(tbuf[2] << 6 | tbuf[3]);
 						tcount = 0;
 					}
 				}
