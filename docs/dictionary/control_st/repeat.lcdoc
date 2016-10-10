@@ -6,20 +6,24 @@ Syntax:     repeat <loopForm>
       <statementList>
     end repeat
     
-Syntax:  repeat {forever | while <condition> | until <condition>} 
+Syntax:     repeat {forever | while <condition> | until <condition>} 
       <statementList> ; end repeat
 
-Syntax:  repeat [for] <number> [times]
-      <statementList> ; end repeat
+Syntax:     repeat [for] <number> [times]
+      <statementList>
+    end repeat
       
-Syntax:  repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
-      <statementList> ; end repeat
+Syntax:     repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
+      <statementList>
+    end repeat
 
-Syntax:  repeat for each <chunkType> <labelVariable> in <container>
-      <statementList> ; end repeat
+Syntax:     repeat for each <chunkType> <labelVariable> in <container>
+      <statementList>
+    end repeat
       
-Syntax:  repeat for each {element | key} <labelVariable> in <array>
-      <statementList> ; end repeat
+Syntax:     repeat for each {element | key} <labelVariable> in <array>
+      <statementList>
+    end repeat
 
 
 Summary:
