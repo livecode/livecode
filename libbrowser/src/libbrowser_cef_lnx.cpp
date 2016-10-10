@@ -80,7 +80,7 @@ bool MCCefLinuxBrowser::GetXWindow(Window &r_window)
 	Window t_window;
 	t_window = t_browser->GetHost()->GetWindowHandle();
 
-	if (t_window == nil)
+	if (t_window == None)
 		return false;
 
 	r_window = t_window;
