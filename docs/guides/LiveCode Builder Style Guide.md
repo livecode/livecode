@@ -264,7 +264,7 @@ Example:
 
 ### Classic control properties
 
-Where possible, try to make the names and and effects of widget
+Where possible, try to make the names and effects of widget
 properties as similar as possible to properties of classic controls.
 For example:
 

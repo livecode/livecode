@@ -18,7 +18,7 @@ Example:
 set the borderWidth of me to it
 
 Example:
-put the short ID of me into savedID
+put the short ID of me into tSavedID
 
 Example:
 put me into myVariable -- puts contents, if me is a container

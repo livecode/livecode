@@ -41,7 +41,7 @@ make sure none of these <command|commands> is <execute|executed> between
 the time you set <it> and the time you read its <value>. If you need to
 save the <value> of <it> for later use, store it in another <variable> :
 
-    put it into savedFilePath
+    put it into tSavedFilePath
 
 
 References: ask (command), read from process (command),

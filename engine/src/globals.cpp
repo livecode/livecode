@@ -1464,7 +1464,7 @@ int X_close(void)
 	for(uint4 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);
 
-	delete MCstacknames;
+	delete[] MCstacknames; /* allocated with new[] */
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();
