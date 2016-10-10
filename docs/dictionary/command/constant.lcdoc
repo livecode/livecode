@@ -14,15 +14,15 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-constant defaultName="Jones"
+constant kDefaultName="Jones"
 
 Example:
-constant entryA="EF9993333WX786",entryB="GJ773281YX342"
+constant kEntryA="EF9993333WX786",kEntryB="GJ773281YX342"
 
 Parameters:
 constantsList (enum):
-The constantsList consists of one or more name=value pairs, separated by
-commas: 
+The constantsList consists of one or more name=value pairs, 
+separated by commas: 
 
 -  The name is any string.
 -  The value is any literal string.
@@ -39,7 +39,9 @@ A constant cannot be defined as an array, only as a single value.
 >*Note:*  Choose easy-to-understand names for
 > <constant(glossary)|constants> to improve the readability of your
 > code. Use <constant(glossary)|constants> as substitutes for long or
-> convoluted <string|strings>.
+> convoluted <string|strings>. Use the prefix letter k for your constant
+> names to follow convention and make it easy to recognise. See the
+> Tips For Writing Good Code in the Livecode Script Guide.
 
 If you place the <constant> <statement> in a <handler>, you can use the
 <constant(command)> anywhere in the <handler>. If you place the
