@@ -1837,137 +1837,123 @@ public:
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
 
-        if (!p_elevated)
-        {
-            int tochild[2];
-            int toparent[2];
-            if (reading)
-                if (pipe(toparent) != 0)
-                    noerror = False;
-            if (noerror && writing)
-                if (pipe(tochild) != 0)
-                {
-                    noerror = False;
-                    if (reading)
-                    {
-                        close(toparent[0]);
-                        close(toparent[1]);
-                    }
-                }
-            if (noerror)
-            {
-                if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
-                {
-                    MCAutoStringRefAsSysString t_name_sys;
-                    // SN-2014-08-22: [[ Bug 12903 ]] t_doc_sys was only defined in the
-                    //  bock it locks the document string.
-                    MCAutoStringRefAsSysString t_doc_sys;
-                    /* UNCHECKED */ t_name_sys.Lock(MCNameGetString(p_name));
+        MCAutoStringRef t_name;
 
-                    char **argv = NULL;
-                    char *t_name_copy = strclone(*t_name_sys);
-                    uint2 argc = 0;
-                    if (p_doc == NULL || MCStringGetNativeCharAtIndex(p_doc, 0) == '\0')
-                    {
-                        char *sptr = t_name_copy;
-                        while (*sptr)
-                        {
-                            while (isspace(*sptr))
-                                sptr++;
-                            MCU_realloc((char **)&argv, argc, argc + 2, sizeof(char *));
-                            if (*sptr == '"')
-                            {
-                                argv[argc++] = ++sptr;
-                                while (*sptr && *sptr != '"')
-                                    sptr++;
-                            }
-                            else
-                            {
-                                argv[argc++] = sptr;
-                                while (*sptr && !isspace(*sptr))
-                                    sptr++;
-                            }
-                            if (*sptr)
-                                *sptr++ = '\0';
-                        }
-                    }
-                    else
-                    {
-                        /* UNCHECKED */ t_doc_sys.Lock(p_doc);
+		if (p_elevated)
+		{
+			if (!MCStringFormat(&t_name, "pkexec --disable-internal-agent %@",
+			                    p_name))
+				return false;
+		}
+		else
+		{
+			if (!MCStringCopy(MCNameGetString(p_name), &t_name))
+				return false;
+		}
 
-                        argv = new char *[3];
-                        argv[0] = t_name_copy;
-                        argv[1] = (char *)*t_doc_sys;
-                        argc = 2;
-                    }
-                    argv[argc] = NULL;
-                    if (reading)
-                    {
-                        close(toparent[0]);
-                        close(1);
-                        dup(toparent[1]);
-                        close(2);
-                        dup(toparent[1]);
-                        close(toparent[1]);
-                    }
-                    else
-                    {
-                        close(1);
-                        close(2);
-                    }
-                    if (writing)
-                    {
-                        close(tochild[1]);
-                        close(0);
-                        dup(tochild[0]);
-                        close(tochild[0]);
-                    }
-                    else
-                        close(0);
-                    execvp(argv[0], argv);
-                    delete[] t_name_copy;
-                    _exit(-1);
-                }
-                CheckProcesses();
-                if (reading)
-                {
-                    close(toparent[1]);
-                    MCS_lnx_nodelay(toparent[0]);
-                    MCprocesses[index].ihandle = OpenFd(toparent[0], kMCOpenFileModeRead);
-                }
-                if (writing)
-                {
-                    close(tochild[0]);
-                    MCprocesses[index].ohandle = OpenFd(tochild[1], kMCOpenFileModeWrite);
-                }
-            }
-        }
-        else
-        {
-            extern bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
-            int32_t t_pid, t_input_fd, t_output_fd;
-            if (MCSystemOpenElevatedProcess(MCNameGetString(p_name), t_pid, t_input_fd, t_output_fd))
-            {
-                MCprocesses[MCnprocesses++] . pid = t_pid;
-                CheckProcesses();
-                if (reading)
-                {
-                    MCS_lnx_nodelay(t_input_fd);
-                    MCprocesses[index] . ihandle = OpenFd(t_input_fd, kMCOpenFileModeRead);
-                }
-                else
-                    close(t_input_fd);
+		int tochild[2];
+		int toparent[2];
+		if (reading)
+			if (pipe(toparent) != 0)
+				noerror = False;
+		if (noerror && writing)
+			if (pipe(tochild) != 0)
+			{
+				noerror = False;
+				if (reading)
+				{
+					close(toparent[0]);
+					close(toparent[1]);
+				}
+			}
+		if (noerror)
+		{
+			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+			{
+				MCAutoStringRefAsSysString t_name_sys;
+				// SN-2014-08-22: [[ Bug 12903 ]] t_doc_sys was only defined in the
+				//  bock it locks the document string.
+				MCAutoStringRefAsSysString t_doc_sys;
+				/* UNCHECKED */ t_name_sys.Lock(*t_name);
 
-                if (writing)
-                    MCprocesses[index] . ohandle = OpenFd(t_output_fd, kMCOpenFileModeWrite);
-                else
-                    close(t_output_fd);
+				char **argv = NULL;
+				char *t_name_copy = strclone(*t_name_sys);
+				uint2 argc = 0;
+				if (p_doc == NULL || MCStringGetNativeCharAtIndex(p_doc, 0) == '\0')
+				{
+					char *sptr = t_name_copy;
+					while (*sptr)
+					{
+						while (isspace(*sptr))
+							sptr++;
+						MCU_realloc((char **)&argv, argc, argc + 2, sizeof(char *));
+						if (*sptr == '"')
+						{
+							argv[argc++] = ++sptr;
+							while (*sptr && *sptr != '"')
+								sptr++;
+						}
+						else
+						{
+							argv[argc++] = sptr;
+							while (*sptr && !isspace(*sptr))
+								sptr++;
+						}
+						if (*sptr)
+							*sptr++ = '\0';
+					}
+				}
+				else
+				{
+					/* UNCHECKED */ t_doc_sys.Lock(p_doc);
 
-                noerror = True;
-            }
-            else
-                noerror = False;
-        }
+					argv = new char *[3];
+					argv[0] = t_name_copy;
+					argv[1] = (char *)*t_doc_sys;
+					argc = 2;
+				}
+				argv[argc] = NULL;
+				if (reading)
+				{
+					close(toparent[0]);
+					close(1);
+					dup(toparent[1]);
+					close(2);
+					dup(toparent[1]);
+					close(toparent[1]);
+				}
+				else
+				{
+					close(1);
+					close(2);
+				}
+				if (writing)
+				{
+					close(tochild[1]);
+					close(0);
+					dup(tochild[0]);
+					close(tochild[0]);
+				}
+				else
+					close(0);
+				execvp(argv[0], argv);
+				delete[] t_name_copy;
+				_exit(-1);
+			}
+			CheckProcesses();
+			if (reading)
+			{
+				close(toparent[1]);
+				MCS_lnx_nodelay(toparent[0]);
+				MCprocesses[index].ihandle = OpenFd(toparent[0], kMCOpenFileModeRead);
+			}
+			if (writing)
+			{
+				close(tochild[0]);
+				MCprocesses[index].ohandle = OpenFd(tochild[1], kMCOpenFileModeWrite);
+			}
+		}
+
         if (!noerror || MCprocesses[index].pid == -1)
         {
             if (noerror)

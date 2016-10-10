@@ -556,7 +556,6 @@
 			'src/osxflst.cpp',
 			
 			# Group "Desktop - Linux"
-			'src/lnxelevate.cpp',
 			'src/lnxflst.cpp',
 			
             # Group "Desktop - Windows"

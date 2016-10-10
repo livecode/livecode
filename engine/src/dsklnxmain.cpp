@@ -116,10 +116,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	// Terminate the envp array
 	t_envp[envc] = nil;
 	
-	extern int MCSystemElevatedMain(int, char* argv[]);
-	if (argc == 3&& strcmp(argv[1], "-elevated-slave") == 0)
-		return MCSystemElevatedMain(argc, argv);
-	
 	if (!X_init(argc, t_argv, t_envp))
     {
 		// Try to print an informative error message or, failing that, just
