@@ -1445,8 +1445,8 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 				}
 			}
 			
-			if (IO_NORMAL == stat)
-				/* UNCHECKED */ setcompressedbitmap(t_compressed);
+			if (IO_NORMAL == stat && !setcompressedbitmap(t_compressed))
+				stat = IO_ERROR;
 			
 			MCImageFreeCompressedBitmap(t_compressed);
 			
