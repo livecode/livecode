@@ -6,7 +6,7 @@ Syntax: do <statementList>
 
 Syntax: do <statementList> in <caller>
 
-Syntax: do <statementList> as a <lternateLanguageName>
+Syntax: do <statementList> as <alternateLanguageName>
 
 Summary:
 <execute|Executes> a list of <statement|statements>.
@@ -38,9 +38,6 @@ string that evaluates to a statement.
 caller:
 Has the effect of executing the statementList in the context of the
 handler. 
-
-lternateLanguageName:
-
 
 alternateLanguageName:
 On Mac OS and OS X systems, the alternateLanguageName is a script
