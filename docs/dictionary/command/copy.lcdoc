@@ -2,7 +2,7 @@ Name: copy
 
 Type: command
 
-Syntax: copy [<object> [to {<card> | group | stack} ]] | [<chunk> of <field>]
+Syntax: copy {[<object> [to {<card> | group | stack} ]] | [<chunk> of <field>]}
 
 Summary:
 Copies <selected> text or an <object(glossary)> to the <clipboard> or to
@@ -37,10 +37,10 @@ instead of being placed in the clipboard, and the clipboard is left
 unchanged. 
 
 chunk:
-
+Expression to define a range of the field
 
 field:
-
+The object from which the text chunk will be derived
 
 It:
 If a destination <card>, group, or stack is specified, the <copy>
