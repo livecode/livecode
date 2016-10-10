@@ -55,7 +55,7 @@ the <templatePlayer> to true before executing the <play video> command.
 Looping a video is only supported on iOS 3.2 and later.
 
 A section of a video can be played by setting the <playSelection>
-property of the <templatePlayer> to true before executing the play video
+property of the <templatePlayer> to true before executing the <play video>
 command. This will use the <startTime> and <endTime> properties of the
 <templatePlayer> to determine what section to play. The values of these
 properties are interpreted as the number of milliseconds from the
