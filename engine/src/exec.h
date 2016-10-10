@@ -4382,6 +4382,9 @@ extern MCExecMethodInfo *kMCNetworkExecPostToUrlMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecAcceptConnectionsOnPortMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecAcceptDatagramConnectionsOnPortMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecAcceptSecureConnectionsOnPortMethodInfo;
+extern MCExecMethodInfo *kMCNetworkExecAcceptConnectionsOnAddressMethodInfo;
+extern MCExecMethodInfo *kMCNetworkExecAcceptDatagramConnectionsOnAddressMethodInfo;
+extern MCExecMethodInfo *kMCNetworkExecAcceptSecureConnectionsOnAddressMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecReadFromSocketForMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecReadFromSocketUntilMethodInfo;
 extern MCExecMethodInfo *kMCNetworkExecWriteToSocketMethodInfo;
@@ -4432,6 +4435,10 @@ void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
 void MCNetworkExecAcceptDatagramConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
 void MCNetworkExecAcceptSecureConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message, bool p_with_verification);
+
+void MCNetworkExecAcceptConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
+void MCNetworkExecAcceptDatagramConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
+void MCNetworkExecAcceptSecureConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
 
 void MCNetworkExecReadFromSocketFor(MCExecContext& ctxt, MCNameRef p_socket, uint4 p_count, int p_unit_type, MCNameRef p_message);
 void MCNetworkExecReadFromSocketUntil(MCExecContext& ctxt, MCNameRef p_socket, MCStringRef p_sentinel, MCNameRef p_message);

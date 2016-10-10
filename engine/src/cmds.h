@@ -942,6 +942,7 @@ class MCAccept : public MCStatement
 {
 	MCExpression *port;
 	MCExpression *message;
+	MCExpression *name;
 	Boolean datagram;
 	Boolean secure;
 	Boolean secureverify;
@@ -950,6 +951,7 @@ public:
 	MCAccept()
 	{
 		port = message = NULL;
+		name = NULL;
 		datagram = False;
 		secure = False;
 		certificate = NULL;

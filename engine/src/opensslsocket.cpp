@@ -1060,10 +1060,25 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
     MCSocketsPollInterrupt();
 }
 
-MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile)
+MCSocket *MCS_accept(uint2 port, MCNameRef p_name, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile)
 {
 	if (!MCS_init_sockets())
 		return NULL;
+	
+	mc_sockaddr_in_t t_addr;
+	
+	if (p_name != nil)
+	{
+		if (!MCS_name_to_sockaddr(MCNameGetString(p_name), t_addr))
+			return nil;
+	}
+	else
+	{
+		memset((char *)&t_addr, 0, sizeof(t_addr));
+		t_addr.sin_family = AF_INET;
+		t_addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
+		t_addr.sin_port = MCSwapInt16HostToNetwork(port);
+	}
 
 	MCSocketHandle sock = socket(AF_INET, datagram ? SOCK_DGRAM : SOCK_STREAM, 0);
 	if (!MCS_valid_socket(sock))
@@ -1082,15 +1097,9 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	int on = 1;
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 
-	mc_sockaddr_in_t addr;
-
-	memset((char *)&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
-	addr.sin_port = MCSwapInt16HostToNetwork(port);
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
-	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
+	if (bind(sock, (struct sockaddr *)&t_addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
 	        || (!MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER, datagram ? FD_READ : FD_ACCEPT))
 			|| (MCnoui && WSAEventSelect(sock, g_socket_wakeup, datagram ? FD_READ : FD_ACCEPT)))
@@ -1103,7 +1112,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 		return NULL;
 	}
 #else
-	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	if (bind(sock, (struct sockaddr *)&t_addr, sizeof(t_addr)) < 0)
 	{
 		MCresult->sets("Error binding socket");
 		close(sock);
@@ -1112,17 +1121,25 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	if (!datagram)
 		listen(sock, SOMAXCONN);
 #endif
-    
-    // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
-    uindex_t t_length;
-    MCAutoPointer<char_t[]> t_port_chars;
-    t_port_chars = new char_t[U2L];
-    t_length = sprintf((char *)(*t_port_chars), "%d", port);
-
+	
 	MCNewAutoNameRef t_portname;
-	if (!MCNameCreateWithNativeChars(*t_port_chars, t_length, &t_portname))
-        return nil;
-    
+	if (p_name == nil)
+	{
+		MCAutoPointer<char_t[]> t_port_chars;
+		// AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
+		uindex_t t_length;
+		t_port_chars = new char_t[U2L];
+		t_length = sprintf((char *)(*t_port_chars), "%d", port);
+
+		if (!MCNameCreateWithNativeChars(*t_port_chars, t_length, &t_portname))
+			return nil;
+	}
+	else
+	{
+		if (!MCNameClone(p_name, &t_portname))
+			return nil;
+	}
+	
 	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 
