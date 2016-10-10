@@ -2,7 +2,7 @@ Name: touchEnd
 
 Type: message
 
-Syntax: touchEnd <pTouchID>
+Syntax: touchEnd <touchID>
 
 Summary:
 Sent when the user ends a touch sequence
@@ -19,9 +19,9 @@ on touchEnd
 end touchEnd
 
 Parameters:
-pTouchID:
-A number which uniquely identifies a sequence of touch messages
-corresponding to an individual, physical touch action
+touchID:
+A number which uniquely identifies an individual physical touch action from  
+a sequence of touch messages 
 
 Description:
 Handle the <touchEnd> message to perform an action when the user ends a
@@ -30,7 +30,7 @@ touch sequence.
 The <touchEnd> message is sent to the control which received the
 <touchStart> message which began the touch sequence.
 
-The <pTouchID> parameter is a number which uniquely identifies a sequence of
+The <touchID> parameter is a number which uniquely identifies a sequence of
 touch messages corresponding to an individual, physical touch action.
 All such sequences start with a <touchStart> message, have one or more
 <touchMove> messages and finish with either a <touchEnd> or a
