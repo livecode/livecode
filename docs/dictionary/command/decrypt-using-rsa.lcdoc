@@ -2,7 +2,11 @@ Name: decrypt using rsa
 
 Type: command
 
-Syntax: decrypt <source> using rsa with {public | private} key <key> [and passphrase <passphrase>]
+Syntax: decrypt <message> using rsa with {public | private} key <key> [and passphrase <passphrase>]
+
+Summary:
+Used to decrypt a file or string with RSA public or private keys 
+and an optional passphrase.
 
 Introduced: 4.6
 
@@ -19,9 +23,6 @@ Example:
 decrypt field 1 using rsa with private key tPrivateKey
 
 Parameters:
-source:
-
-
 key:
 The key to be used for the decryption, in PEM format
 
@@ -36,12 +37,12 @@ Use the <decrypt using rsa> command to decrypt a message using RSA
 public key encryption.
 
 Use the form
-decrypt <message> with private key <key> 
+'decrypt <message> with private key <key> '
 to decode a message that a sender has encrypted with its corresponding
 public key.
 
 Use the form
-decrypt <message> with public key <key> 
+'decrypt <message> with public key <key>' 
 to verify that a message has been encoded with the corresponding private
 key, and there has come from one of its holders (this is a verify
 operation). 
