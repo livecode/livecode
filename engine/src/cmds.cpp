@@ -322,7 +322,7 @@ MCDo::~MCDo()
 {
 	delete source;
 	delete alternatelang;
-	delete widget;
+	delete object;
 }
 
 Parse_stat MCDo::parse(MCScriptPoint &sp)
@@ -342,8 +342,8 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 			caller = true;
 		else
 		{
-			widget = new MCChunk(False);
-			if (widget->parse(sp, False) != PS_NORMAL)
+			object = new MCChunk(False);
+			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_DO_BADENV, sp);
 				return PS_ERROR;
@@ -370,18 +370,25 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
         return;
     
-	if (widget)
+	if (object)
 	{
 		MCObject *t_object;
 		uint32_t t_parid;
-		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+		if (!object->getobj(ctxt, t_object, t_parid, True))
 		{
-			ctxt.LegacyThrow(EE_DO_BADWIDGETEXP);
+			ctxt.LegacyThrow(EE_DO_BADOBJECTEXP);
 			return;
 		}
 		
-		MCInterfaceExecDoInWidget(ctxt, *t_script, (MCWidget*)t_object);
-		return;
+        if (t_object->gettype() == CT_WIDGET)
+        {
+            MCInterfaceExecDoInWidget(ctxt, *t_script, (MCWidget*)t_object);
+        }
+        else
+        {
+            t_object -> domess(*t_script);
+        }
+        return;
 	}
 	
     if (browser)
@@ -422,9 +429,9 @@ void MCDo::compile(MCSyntaxFactoryRef ctxt)
 
 	source -> compile(ctxt);
 
-	if (widget != nil)
+	if (object != nil)
 	{
-		widget->compile(ctxt);
+		object->compile(ctxt);
 		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDoInWidgetMethodInfo);
 	}
 	else if (browser)

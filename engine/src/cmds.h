@@ -90,7 +90,7 @@ class MCDo : public MCStatement
 {
 	MCExpression *source;
 	MCExpression *alternatelang;
-	MCChunk *widget;
+	MCChunk *object;
 protected:
 	bool browser : 1;
 	Boolean debug : 1;
@@ -103,7 +103,7 @@ public:
 		browser = false;
 		debug = False;
 		caller = false;
-		widget = nil;
+		object = nil;
 	}
 	virtual ~MCDo();
 	virtual Parse_stat parse(MCScriptPoint &);
