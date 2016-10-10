@@ -2,7 +2,7 @@ Name: revXMLRPC_SetMethod
 
 Type: command
 
-Syntax: revXMLRPC_SetMethod <XML-RPC document>,<method name>
+Syntax: revXMLRPC_SetMethod <XML_RPC_documentID>,<method_name>
 
 Summary:
 Sets the name of the method in an XML-RPC document structure.
@@ -21,10 +21,13 @@ Example:
 revXMLRPC_SetMethod theRequest,"sample.elizabethanInsult"
 
 Parameters:
-documentID:
+XML_RPC_documentID:
 The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request. method name: The the method name to be called upon
-execution of the XML-RPC document documentID.
+XML-RPC request. 
+
+method_name: 
+The the method name to be called upon execution of the XML-RPC 
+documents documentID.
 
 The result:
 If the <revXMLRPC_SetMethod> <command> encounters an error, the <result>
