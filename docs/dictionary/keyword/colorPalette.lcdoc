@@ -13,6 +13,8 @@ OS: mac, windows, linux
 
 Platforms: desktop, server
 
-References: reserved word (glossary), colors (property),
-backgroundColor (property), foregroundColor (property)
+Description:
+The <color palette|colorPalette> <keyword> is <reserved word|reserved> for internal use only.
 
+References: reserved word (glossary), colors (property), keyword (glossary),
+backgroundColor (property), foregroundColor (property), color palette (glossary)
