@@ -399,7 +399,12 @@ typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsLPCWSTR;
 class MCAutoStringRefAsLPWSTR
 {
 public:
-	MCAutoStringRefAsLPWSTR() {}
+	MCAutoStringRefAsLPWSTR() :
+	  m_buffer(nil),
+	  m_size(0)
+	{
+	}
+
 	~MCAutoStringRefAsLPWSTR()
 	{
 		Unlock();

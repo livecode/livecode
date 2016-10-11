@@ -25,7 +25,7 @@ stringToSearch (string):
 A string is an expression that evaluates to a string.
 
 Description:
-Use the <is not among> operator to find out whether a string exists as
+Use the <is not among> operator to find out whether a string does not exist as
 an entire word, item, or line of another string.
 
 The <valueToFind> must be a single word, item, or line (whichever chunk

@@ -417,9 +417,10 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 
 IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
-	char tnewheader[kMCStackFileVersionStringLength];
+	char tnewheader[kMCStackFileVersionStringLength + 1];
 	if (IO_read(tnewheader, kMCStackFileVersionStringLength, stream) != IO_NORMAL)
 		return IO_ERROR;
+	tnewheader[kMCStackFileVersionStringLength] = '\0'; /* nul-terminate */
 	
 	// AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
 	if (!MCStackFileParseVersionNumber(tnewheader, r_version))

@@ -3171,7 +3171,13 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
     {
         // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
         if (gettype() >= CT_GROUP)
+		{
             static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+
+			// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object shown / hidden
+			if (getselected())
+				getcard()->dirtyselection(rect);
+		}
     }
     
 	if (dirty)

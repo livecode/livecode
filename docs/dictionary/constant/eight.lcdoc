@@ -17,8 +17,7 @@ Example:
 set the bottomMargin of the target to eight
 
 Description:
-Use the <eight> <constant> when it is easier to read than the numeral
-8<a/>. 
+Use the <eight> <constant> when it is easier to read than the numeral 8. 
 
 References: constant (command), hand (constant), eighth (keyword)
 

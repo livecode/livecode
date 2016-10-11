@@ -18,7 +18,7 @@ Example:
 "22,33" is within "22,17,150,200" -- evaluates to true
 
 Example:
-the mouseLoc is within the rect of this stack
+the mouseLoc is within the rect of this card
 
 Parameters:
 point:

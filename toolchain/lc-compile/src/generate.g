@@ -61,6 +61,9 @@
 
 'action' GenerateSingleModule(MODULE)
 
+    'rule' GenerateSingleModule(Module:module(_, import, Id, Definitions)):
+		-- do nothing for import modules
+
     'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
         ModuleDependencyList <- nil
         
@@ -871,6 +874,18 @@
     'rule' DestroyParameterRegisters(nil):
         -- nothing
 
+'action' RemoveIndexFromInvokeSignature(INVOKESIGNATURE, INT -> INVOKESIGNATURE)
+
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(_, Index, Remaining), RemoveIndex -> Remaining):
+        eq(Index, RemoveIndex)
+
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(Mode, Index, Tail), RemoveIndex -> ChangedSig):
+        RemoveIndexFromInvokeSignature(Tail, RemoveIndex -> ChangedTail)
+        where(invokesignature(Mode, Index, ChangedTail) -> ChangedSig)
+
+    'rule' RemoveIndexFromInvokeSignature(nil, _ -> nil):
+
+
 'sweep' DestroyVariableRegisters(ANY)
 
     'rule' DestroyVariableRegisters(STATEMENT'variable(_, Id, _)):
@@ -1081,21 +1096,34 @@
         
         EmitPosition(Position)
         EmitCreateRegister(-> IteratorReg)
+        EmitCreateRegister(-> IterationVarTempReg)
         EmitAssignUndefined(IteratorReg)
+        EmitAssignUndefined(IterationVarTempReg)
         GenerateExpression(Result, Context, Container -> TargetReg)
-        
-        EmitResolveLabel(RepeatHead)
+
+        -- Remove the variable of iteration from the argument list as a
+        -- temporary will be used in the invoke
         GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
+        RemoveIndexFromInvokeSignature(Signature, 0 -> RemainingSignature)
+        where(Arguments -> expressionlist(IterationVar, RemainingArgs))
+
+        EmitResolveLabel(RepeatHead)
+        GenerateInvoke_EvaluateArgumentForOut(Result, Context, IterationVar)
+        GenerateInvoke_EvaluateArguments(Result, Context, RemainingSignature, RemainingArgs)
         EmitCreateRegister(-> ContinueReg)
         EmitBeginInvoke(Index, Context, ContinueReg)
         EmitContinueInvoke(IteratorReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(IterationVarTempReg)
+        GenerateInvoke_EmitInvokeArguments(RemainingArgs)
         EmitContinueInvoke(TargetReg)
         EmitEndInvoke()
 
         EmitJumpIfFalse(ContinueReg, RepeatTail)
-        
+
+        -- Iteration successful, copy the temporary iteration var into its place
+        EmitGetRegisterAttachedToExpression(IterationVar -> IterationVarReg)
+        EmitAssign(IterationVarReg, IterationVarTempReg)
+
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
