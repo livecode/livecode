@@ -6,9 +6,15 @@ Type: glossary
 
 Description:
 A LiveCode module capable of receiving <message|messages>. One of the
-building blocks of a LiveCode application.
+building blocks of a LiveCode application. Objects include <stack|stacks>, 
+<card|cards> and <control|controls>. <control|Controls> include 
+<button|buttons>, <field|fields>, <image|images>, <graphic|graphics>, 
+<player|players>, <EPS|EPS objects>, <scrollbar|scrollbars>, and <group|groups>.
 
-References: message (glossary)
+References: message (glossary), card (glossary), stack (glossary),
+control (glossary), button (glossary), field (glossary), image (glossary),
+graphic (glossary), player (glossary), EPS (glossary), scrollbar (glossary),
+group (glossary), widget (object)
 
 Tags: objects
 
