@@ -23,28 +23,28 @@ Parameters:
 toolName (enum):
 
 -   select: select a rectangle in an image 	
-    * pencil: draw freehand in an image 
-    * bucket: fill a shape in an image 
-    * brush: draw brushstrokes in an image 
-    * eraser: erase an area in an image 
-    * spray can: draw airbrush strokes in an image 
-    * rectangle: draw a rectangle or square shape 
-    * line: draw a straight line in an image 
-    * round rect: draw a rectangle with rounded corners in an image 
-    * oval: draw an oval or circle shape in an image 
-    * polygon: draw a polygon in an image 
-    * curve: draw a curved line in an image 
-    * regular polygon: draw a regular polygon shape in an image 
-    * dropper: pick up a color from an image
--   "browse": perform actions such as clicking buttons and typing in
+-   pencil: draw freehand in an image 
+-   bucket: fill a shape in an image 
+-   brush: draw brushstrokes in an image 
+-   eraser: erase an area in an image 
+-   spray can: draw airbrush strokes in an image 
+-   rectangle: draw a rectangle or square shape 
+-   line: draw a straight line in an image 
+-   round rect: draw a rectangle with rounded corners in an image 
+-   oval: draw an oval or circle shape in an image 
+-   polygon: draw a polygon in an image 
+-   curve: draw a curved line in an image 
+-   regular polygon: draw a regular polygon shape in an image 
+-   dropper: pick up a color from an image
+-   browse: perform actions such as clicking buttons and typing in
     fields 
--   "pointer": select, move, or resize objects
--   "button": create all styles of button objects
--   "field": create all styles of field objects
--   "scrollbar": create all styles of scrollbar objects
--   "graphic": create all styles of graphic objects
--   "image": create paint images
--   "player": create sound and video player objects
+-   pointer: select, move, or resize objects
+-   button: create all styles of button objects
+-   field: create all styles of field objects
+-   scrollbar: create all styles of scrollbar objects
+-   graphic: create all styles of graphic objects
+-   image: create paint images
+-   player: create sound and video player objects
 
 
 Description:
