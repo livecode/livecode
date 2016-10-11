@@ -42,9 +42,9 @@ A <;> character which is used within a <literal string> does not signal
 a new <line>, because the <;> is treated as part of the <string> instead
 of being treated as a line break.
 
-The advantages of using the <;> character are fewer physical lines of code
-which can mean marginally smaller stack file sizes. The disadvantages are 
-that it can be harder to read and debug the code for some.
+The advantage of using the <;> character are fewer physical lines of code
+which can mean marginally smaller stack file sizes. The disadvantage is 
+that it can be harder to read and debug the code.
 
 References: line (glossary), string (glossary), literal string (glossary),
 statement (glossary), script editor (glossary), execute (glossary),
