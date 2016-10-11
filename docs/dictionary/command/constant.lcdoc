@@ -20,12 +20,12 @@ Example:
 constant kEntryA="EF9993333WX786",kEntryB="GJ773281YX342"
 
 Parameters:
-constantsList (enum):
-The constantsList consists of one or more name=value pairs, 
+constantsList:
+The constantsList consists of one or more <name>=<value> pairs, 
 separated by commas: 
 
--  The name is any string.
--  The value is any literal string.
+-  The <name> is any string.
+-  The <value> is any literal string.
 
 
 Description:
