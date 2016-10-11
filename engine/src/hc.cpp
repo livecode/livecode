@@ -1998,18 +1998,24 @@ IO_stat MCHcstak::read(IO_handle stream)
 				while (tsize--)
 				{
 					if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+					{
+						delete[] tbuffer;
 						return IO_ERROR;
+					}
 					while ((byte == '\n' || byte == '\r') && tsize--)
 						if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+						{
+							delete[] tbuffer;
 							return IO_ERROR;
+						}
 					if (byte == ':')
 						break;
 					tbuf[tcount++] = hqx[byte - '!'];
 					if (tcount == 4)
 					{
-						uint1ptr[boffset++] = tbuf[0] << 2 | tbuf[1] >> 4;
-						uint1ptr[boffset++] = tbuf[1] << 4 | tbuf[2] >> 2;
-						uint1ptr[boffset++] = tbuf[2] << 6 | tbuf[3];
+						uint1ptr[boffset++] = uint1(tbuf[0] << 2 | tbuf[1] >> 4);
+						uint1ptr[boffset++] = uint1(tbuf[1] << 4 | tbuf[2] >> 2);
+						uint1ptr[boffset++] = uint1(tbuf[2] << 6 | tbuf[3]);
 						tcount = 0;
 					}
 				}
@@ -2474,10 +2480,12 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 	MCValueAssign(MChcstat, kMCEmptyString);
 
     char* t_name;
-    /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+    if(!MCStringConvertToCString(name, t_name))
+		return IO_ERROR;
+	
 	MCHcstak *hcstak = new MCHcstak(t_name);
 	hcstat_append("Loading stack %s...", t_name);
-	uint2 startlen = MCStringGetLength(MChcstat);
+	uindex_t startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();

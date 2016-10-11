@@ -303,12 +303,13 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         
         if (!p_parameters->eval_argument(ctxt, &t_value))
             return ES_ERROR;
-        MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		if (!ctxt . ConvertToString(*t_value, &t_string))
+			return ES_ERROR;
         
-        if (!ctxt . ConvertToString(*t_value, &t_string))
-            return ES_ERROR;
-        
-        // If we want UTF8 use a different conversion method.
+		MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		// If we want UTF8 use a different conversion method.
         if (t_wants_utf8)
             MCStringConvertToUTF8String(*t_string, args[nargs++]);
         else

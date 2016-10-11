@@ -1212,7 +1212,7 @@ void MCParagraph::computerects(int32_t x, int32_t y, int32_t p_layout_width, uin
 	t_total_width = r_inner . width + t_left_margin + t_right_margin;
 	if (t_total_width > p_layout_width)
 	{
-		int32_t t_offset;
+		int32_t t_offset = 0;
 		switch(gettextalign())
 		{
 		case kMCParagraphTextAlignLeft:
@@ -1225,6 +1225,8 @@ void MCParagraph::computerects(int32_t x, int32_t y, int32_t p_layout_width, uin
 		case kMCParagraphTextAlignRight:
 			t_offset = p_layout_width - t_total_width;
 			break;
+		default:
+			MCUnreachableReturn();
 		}
 		r_inner . x += t_offset;
 		r_outer . x += t_offset;

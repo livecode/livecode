@@ -571,7 +571,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 				// MW-2006-05-04: Bug 3506 - crash in specific case due to not checking result of sp.lookup
 				// MW-2007-09-11: [[ Bug 5242 ]] - the alternate of this if used to fail if te == NULL, this
 				//   can happen though if we are looking at a variable chunk.
-				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && t_te -> which == CT_STACK)
+				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && Chunk_term(t_te -> which) == CT_STACK)
 				{
 					if (sp.parseexp(False, True, &exsstack) != PS_NORMAL)
 					{
