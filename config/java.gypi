@@ -66,6 +66,8 @@
 				'<(javac_wrapper_path)',
 				'<(javac_path)',
 				'1.5',
+				'-Xlint',
+				'-g:none',
 				'-d', '<(PRODUCT_DIR)/>(java_classes_dir_name)',
 				'-implicit:none',
 				'-classpath', '>(java_classpath_param)',

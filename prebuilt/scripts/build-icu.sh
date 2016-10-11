@@ -72,9 +72,23 @@ function buildICU {
 				fi
 				;;
 			android)
-				CONFIG_TYPE="Linux --host=arm-linux-androideabi --with-cross-build=${HOST_ICU_DIR} --disable-tools"
+				CONFIG_TYPE="Linux --with-cross-build=${HOST_ICU_DIR} --disable-tools"
 				export ANDROID_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
 				export ANDROID_CXXFLAGS="${ANDROID_CFLAGS}"
+				case "${ARCH}" in
+					armv6|armv7a)
+						CONFIG_TYPE="${CONFIG_TYPE} --host=arm-linux-androideabi"
+						;;
+					arm64_v8a)
+						CONFIG_TYPE="${CONFIG_TYPE} --host=aarch64-linux-android"
+						;;
+					x86)
+						CONFIG_TYPE="${CONFIG_TYPE} --host=i686-linux-android"
+						;;
+					*)
+						CONFIG_TYPE="${CONFIG_TYPE} --host=${ARCH}-linux-android"
+						;;
+				esac
 				;;
 			emscripten)
 				CONFIG_FLAGS="--with-cross-build=${HOST_ICU_DIR}"

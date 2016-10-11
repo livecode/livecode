@@ -23,6 +23,12 @@
 		'-fno-rtti',
 	],
 	
+	'ldflags':
+	[
+		# Don't force all calls to go through the PLT
+		'-Wl,-Bsymbolic',
+	],
+			
 	'target_conditions':
 	[
 		[

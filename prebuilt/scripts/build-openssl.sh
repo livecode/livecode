@@ -42,18 +42,25 @@ function buildOpenSSL {
 				fi
 				;;
 			linux)
-        if [ "${ARCH}" == "x86_64" ] ; then
-          SPEC="linux-x86_64"
+        		if [ "${ARCH}" == "x86_64" ] ; then
+          			SPEC="linux-x86_64"
 				else
-		      SPEC="linux-generic32"
+		      		SPEC="linux-generic32"
 				fi
 				;;
 			android)
-				if [ "${ARCH}" == "armv6" ] ; then
-					SPEC="android"
-				else
-					SPEC="android-armv7"
-				fi
+				case "${ARCH}" in
+					armv7a)
+						SPEC="android-armv7" ;;
+					i?86|x86)
+						SPEC="android-x86" ;;
+					x86_64)
+						SPEC="linux-x86_64" ;;
+					mipsel)
+						SPEC="android-mips" ;;
+					*)
+						SPEC="android" ;;
+				esac
 				;;
 			ios)
 				if [ "${ARCH}" == "x86_64" ] ; then
@@ -82,6 +89,10 @@ function buildOpenSSL {
 		if [ ! -d "${OPENSSL_ARCH_SRC}" ] ; then
 			echo "Duplicating OpenSSL source directory for ${NAME}"
 			cp -r "${OPENSSL_SRC}" "${OPENSSL_ARCH_SRC}"
+			
+			# Adjust the configure script for Android to avoid a flag that only
+			# works with GCC and not Clang (but otherwise doesn't affect the build)
+			sed -i -e "s/-mandroid//g" "${OPENSSL_ARCH_SRC}/Configure"
 		fi
 	
 		# Get the command used to build a previous copy, if any

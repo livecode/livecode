@@ -88,16 +88,45 @@ function setCCForArch {
 			fi
 			;;
 		android)
-			if [ "$1" == "armv6" ] ; then
-				export CC="${ANDROID_CC} ${ANDROID_CFLAGS}"
-				export CXX="${ANDROID_CXX} ${ANDROID_CXXFLAGS}"
-			else
-				export CC="${ANDROID_CC} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
-				export CXX="${ANDROID_CXX} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CXXFLAGS}"
-				EXTRA_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
-			fi
+			local arch="$1"
+			
+			ANDROID_CC_NAME=${ANDROID_CC_NAME:-clang}
+			ANDROID_CXX_NAME=${ANDROID_CXX_NAME:-clang}
+			
+			ANDROID_ARCH_TOOLCHAIN_VAR="ANDROID_TOOLCHAIN_${arch}"
+			ANDROID_ARCH_CFLAGS_VAR="ANDROID_CFLAGS_${arch}"
+			ANDROID_TOOLCHAIN="${!ANDROID_ARCH_TOOLCHAIN_VAR}"
+			
+			# We disable the integrated assembler in Clang here as some libraries
+			# (OpenSSL in particular) use older styles of assembler code that
+			# the Clang assembler rejects (but which GCC+GAS accepts)
+			ANDROID_CC="${ANDROID_TOOLCHAIN}-${ANDROID_CC_NAME} -no-integrated-as"
+			ANDROID_CXX="${ANDROID_TOOLCHAIN}-${ANDROID_CXX_NAME} -no-integrated-as"
+			ANDROID_LINK="${ANDROID_TOOLCHAIN}-${ANDROID_CXX_NAME}"
+			ANDROID_AR="${ANDROID_TOOLCHAIN}-ar"
+			ANDROID_OBJCOPY="${ANDROID_TOOLCHAIN}-objcopy"
+			ANDROID_RANLIB="${ANDROID_TOOLCHAIN}-ranlib"
+			ANDROID_STRIP="${ANDROID_TOOLCHAIN}-strip"
+			
+			case "${arch}" in
+				armv7a)
+					export CC="${ANDROID_CC} ${!ANDROID_ARCH_CFLAGS_VAR} ${ANDROID_CFLAGS}"
+					export CXX="${ANDROID_CXX} ${!ANDROID_ARCH_CFLAGS_VAR} ${ANDROID_CXXFLAGS}"
+					EXTRA_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
+					;;
+				*)
+					export CC="${ANDROID_CC} ${!ANDROID_ARCH_CFLAGS_VAR} ${ANDROID_CFLAGS}"
+					export CXX="${ANDROID_CXX} ${!ANDROID_ARCH_CFLAGS_VAR} ${ANDROID_CXXFLAGS}"
+					;;
+			esac
+			
 			export LINK="${ANDROID_LINK} ${EXTRA_LDFLAGS} ${ANDROID_LDFLAGS}"
+			export AR="${ANDROID_AR}"
+			export OBJCOPY="${ANDROID_OBJCOPY}"
+			export RANLIB="${ANDROID_RANLIB}"
+			export STRIP="${ANDROID_STRIP}"
 			export LD="${LINK}"
+			
 			;;
 		ios)
 			XCODE=${IOS_XCODE[$SUBPLATFORM_INDEX]}
