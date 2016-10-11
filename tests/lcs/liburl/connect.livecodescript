@@ -17,9 +17,10 @@ on TestCONNECTHeader
    set the httpproxy to "http://127.0.0.1:99999"
    
    put url ("https://" & kTestHost) into tValue
+   
    put liburlLastHTTPHeaders() into tHeaders
    
-   put "CONNECT" && kTestHost & ":443 HTTP/1.1" & cr & \
+   put "CONNECT" && kTestHost & ":443 HTTP/1.1" & crlf & \
          "Host: " & kTestHost & ":443" into tExpectedHeader
    
    TestAsset "correct CONNECT header", tHeaders is tExpectedHeader
