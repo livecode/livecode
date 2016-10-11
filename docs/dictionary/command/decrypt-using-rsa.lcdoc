@@ -36,23 +36,23 @@ Description:
 Use the <decrypt using rsa> command to decrypt a message using RSA
 public key encryption.
 
-Use the form
-'decrypt <message> with private key <key> '
-to decode a message that a sender has encrypted with its corresponding
-public key.
+To decode a message that a sender has encrypted with its corresponding
+public key, use the form:
 
-Use the form
-'decrypt <message> with public key <key>' 
-to verify that a message has been encoded with the corresponding private
-key, and there has come from one of its holders (this is a verify
-operation). 
+    decrypt tMessage with private key tPrivateKey
 
-Generating key pairs
-Public-private key pairs can be generated using the OpenSSL suite of
-command-line tools. For example: openssl genrsa -out private_key.pem 512
-openssl rsa -pubout -in private_key.pem -out public_key.pem
-Will generate a key pair of size 512-bits, placing the private key in
-private_key.pem and the public key in public_key.pem.
+As a verify operation to ensure that a message has been encoded with the 
+corresponding private key and it has come from one of its holders, 
+use the form:
+
+    decrypt tMessage with public key tPublicKey
+
+> **Generating key pairs - **
+> Public-private key pairs can be generated using the OpenSSL suite of
+> command-line tools. For example: openssl genrsa -out private_key.pem 512
+> openssl rsa -pubout -in private_key.pem -out public_key.pem
+> Will generate a key pair of size 512-bits, placing the private key in
+> private_key.pem and the public key in public_key.pem.
 
 For more information on these utilities see
 http://www.openssl.org/docs/apps/rsa.html and
