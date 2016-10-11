@@ -26,10 +26,11 @@ If you want to execute a single statement, place the <then> <keyword>
 before the <statement> on the same line, as in these examples:
 
     if 1+1 = 2 then doSomethingTrite
+    
 or
+
     if someConditionObtains()
     then performAnAction
-
 
 If you want to execute multiple statements, place the <then> <keyword>
 on the line before the list of <statement|statements>, 
