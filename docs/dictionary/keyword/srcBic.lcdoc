@@ -28,8 +28,11 @@ object--red, green, and blue--is raised to be equal to white.
 
 The <srcBic> mode can be used only on <Mac OS|Mac OS systems>. On <Unix>
 and <Windows|Windows systems>, <object|objects> whose <ink> <property>
-is set to this mode appears as though their <href
-tag="dictionary/keyword/1658.xml"/> were set to <srcCopy>.
+is set to this mode appears as though their <transfer mode> were set 
+to <srcCopy>.
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), srcCopy (glossary),
 Windows (glossary), transfer mode (glossary), keyword (glossary),

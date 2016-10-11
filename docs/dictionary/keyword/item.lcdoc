@@ -18,7 +18,7 @@ Example:
 get item 2 of field "Name"
 
 Example:
-put it into item 3 of line thisRecord of myNamesDB
+put it into item 3 of line tThisRecord of myNamesDB
 
 Description:
 Use the <item> <keyword> to refer to a specific <chunk> of data in a

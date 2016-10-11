@@ -302,7 +302,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
             MCValueRelease(MCstacknames[i]);
 		}
         MCnstacks = 0;
-		delete MCstacknames;
+        delete[] MCstacknames; /* Allocated with new[] */
 		MCstacknames = NULL;
 		MCeerror->clear();
 	}

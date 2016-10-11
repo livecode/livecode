@@ -404,11 +404,8 @@ void REVDB_QUIT()
 				break;
 			}
 		}
-		if (databaserec && databaserec ->releaseconnectionptr)
-        {
+		if (databaserec != NULL && databaserec ->releaseconnectionptr != NULL)
 			(*databaserec->releaseconnectionptr)(tconnection);
-            break;
-        }
 	}
 	connlist->clear();
 	DATABASERECList::iterator theIterator2;

@@ -14,10 +14,10 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-if last char of it is slash then put true into isAFolder
+if last char of it is slash then put true into tIsAFolder
 
 Description:
-Use the <slash> <constant> as an easier-to-read replacement for "/"<a/>.
+Use the <slash> <constant> as an easier-to-read replacement for "/".
 
 References: constant (command), backslash (constant), character (keyword)
 

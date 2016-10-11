@@ -14,11 +14,10 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-subtract seven from dayOfWeek
+subtract seven from tDayOfWeek
 
 Description:
-Use the <seven> <constant> when it is easier to read than the numeral
-7<a/>. 
+Use the <seven> <constant> when it is easier to read than the numeral 7. 
 
 References: constant (command), cross (constant), seventh (keyword)
 

@@ -17,8 +17,8 @@ Example:
 if offset(it,pathName) &gt; nine then put true into longFldr
 
 Description:
-Use the <nine> <constant> when it is easier to read than the numeral
-9<a/>. 
+Use the <nine> <constant> when it is easier to read than 
+the numeral 9. 
 
 References: constant (command), iBeam (constant)
 

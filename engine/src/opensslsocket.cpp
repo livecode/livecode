@@ -1500,7 +1500,7 @@ void MCSocket::readsome()
 		if ((l = recvfrom(fd, dbuffer, l, 0, (struct sockaddr *)&addr, &addrsize))
 		        == SOCKET_ERROR)
 		{
-			delete dbuffer;
+			delete[] dbuffer;
 			error = new char[21 + I4L];
 			sprintf(error, "Error %d on socket", WSAGetLastError());
 			doclose();
@@ -1520,9 +1520,7 @@ void MCSocket::readsome()
 #endif
 		else
 		{
-			if (message == NULL)
-				delete[] dbuffer;
-			else
+			if (message != NULL)
 			{
 				char *t = inet_ntoa(addr.sin_addr);
 				MCAutoStringRef n;
@@ -1540,16 +1538,18 @@ void MCSocket::readsome()
 				}
 				
 				MCAutoDataRef t_data;
-				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data);
-				
-				MCParameter *params = new MCParameter;
-				params->setvalueref_argument(*t_name);
-				params->setnext(new MCParameter);
-				params->getnext()->setvalueref_argument(*t_data);
-				params->getnext()->setnext(new MCParameter);
-				params->getnext()->getnext()->setvalueref_argument(name);
-				MCscreen->addmessage(object, message, curtime, params);
+				if (MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data))
+				{
+					MCParameter *params = new MCParameter;
+					params->setvalueref_argument(*t_name);
+					params->setnext(new MCParameter);
+					params->getnext()->setvalueref_argument(*t_data);
+					params->getnext()->setnext(new MCParameter);
+					params->getnext()->getnext()->setvalueref_argument(name);
+					MCscreen->addmessage(object, message, curtime, params);
+				}
 			}
+			delete[] dbuffer;
 		}
 		added = True;
 		doread = False;

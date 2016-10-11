@@ -22,7 +22,7 @@ Description:
 Use the <selection> <keyword> to get the currently <selected> text or to
 replace the <selection>.
 
-Certain commands--in particular, the cut and <copy>
+Certain <command|commands>--in particular, the <cut> and <copy>
 <command|commands>--operate on the <selected> text.
 
 >*Note:* The <selection> <keyword> is implemented internally as a
@@ -31,10 +31,10 @@ Certain commands--in particular, the cut and <copy>
 > lets you put things into it, and behaves like a <container> rather
 > than a <function(control structure)>.
 
-References: copy (command), function (control structure),
+References: cut (command), copy (command), function (control structure),
 selectedLoc (function), mouseColor (function), functionNames (function),
 keyword (glossary), command (glossary), function (glossary),
-container (glossary), intersect (keyword), selection (keyword),
+container (glossary), intersect (keyword),
 openField (message), selectionChanged (message),
 selectGroupedControls (property), selected (property)
 
