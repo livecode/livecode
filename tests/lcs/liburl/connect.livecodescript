@@ -20,8 +20,8 @@ on TestCONNECTHeader
    
    put liburlLastHTTPHeaders() into tHeaders
    
-   put "CONNECT" && kTestHost & ":443 HTTP/1.1" & crlf & \
+   put "CONNECT" && kTestHost & ":443 HTTP/1.1" & cr & \
          "Host: " & kTestHost & ":443" into tExpectedHeader
    
-   TestAsset "correct CONNECT header", tHeaders is tExpectedHeader
+   TestAssert "correct CONNECT header", tHeaders is tExpectedHeader
 end TestCONNECTHeader
