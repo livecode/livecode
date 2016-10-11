@@ -17,6 +17,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local tCurrentName
 put the name of this card into tCurrentName
 
 Example:
