@@ -107,8 +107,7 @@
                         GenerateModules(Modules)
                     |)
                 ||
-                    where(Modules -> modulelist(Head, _))
-                    Generate(Head)
+					GenerateModules(Modules)
                 |)
             |)
         |)
@@ -181,6 +180,9 @@
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
+		Name'Name -> NameName
+        GetStringOfNameLiteral(NameName -> NameString)
+		AddImportedModuleName(NameString)
 
     'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
@@ -271,7 +273,7 @@
             (|
                 -- In bootstrap mode, all modules have to be listed on command line.
                 IsBootstrapCompile()
-            ||
+			||
                 AddImportedModuleFile(NameString)
             |)
         ||
