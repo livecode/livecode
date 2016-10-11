@@ -2,28 +2,35 @@ Name: repeat
 
 Type: control structure
 
-Syntax:     repeat <loopForm>
-      <statementList>
-    end repeat
+Syntax:
+repeat <loopForm>
+    <statementList>
+end repeat
     
-Syntax:     repeat {forever | while <condition> | until <condition>} 
-      <statementList> ; end repeat
+Syntax:     
+repeat {forever | while <condition> | until <condition>} 
+    <statementList>
+end repeat
 
-Syntax:     repeat [for] <number> [times]
-      <statementList>
-    end repeat
+Syntax:     
+repeat [for] <number> [times]
+    <statementList>
+end repeat
       
-Syntax:     repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
-      <statementList>
-    end repeat
+Syntax:     
+repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
+    <statementList>
+end repeat
 
-Syntax:     repeat for each <chunkType> <labelVariable> in <container>
-      <statementList>
-    end repeat
+Syntax:     
+repeat for each <chunkType> <labelVariable> in <container>
+    <statementList>
+end repeat
       
-Syntax:     repeat for each {element | key} <labelVariable> in <array>
-      <statementList>
-    end repeat
+Syntax:     
+repeat for each {element | key} <labelVariable> in <array>
+    <statementList>
+end repeat
 
 
 Summary:
@@ -141,9 +148,8 @@ following example, the `go` command is executed at least once, since
 `the mouseClick` is not checked until after the `go` command:
 
     repeat forever
-
-    go next card
-    if the mouseClick then exit repeat -- user clicked
+        go next card
+        if the mouseClick then exit repeat -- user clicked
     end repeat
 
 
@@ -161,9 +167,8 @@ statements are executed. This example scrolls through the cards until
 the user clicks the mouse:
 
     repeat until the mouseClick
-
-    go next card
-    wait for 100 milliseconds
+        go next card
+        wait for 100 milliseconds
     end repeat
 
 
@@ -174,8 +179,7 @@ field is less than the given amount:
     put empty into field "myField"
     put 20 into tCount
     repeat while the number of characters in field "myField" < tCount
-
-    put "X" after field "myField"
+        put "X" after field "myField"
     end repeat
 
 
@@ -196,8 +200,7 @@ Use the for number times form if you want to execute the <statementList>
 a fixed number of times. The following simple example beeps three times:
 
     repeat for 3 times
-
-    beep
+        beep
     end repeat
 
 
@@ -205,8 +208,7 @@ Note that `for` and `times` are optional. For example the following is
 also valid:
 
     repeat 3
-
-    beep
+        beep
     end repeat
 
 
@@ -239,8 +241,7 @@ the current card. The counter <variable> *x* is 1 during the first
 <iteration>, 2 during the second, and so on:
 
     repeat with x = 1 to the number of controls
-
-    show control x
+        show control x
     end repeat
 
 
@@ -249,8 +250,7 @@ counter <variable> *myLine* is 20 during the first <iteration>, 18
 during the second, and so on:
 
     repeat with myLine = 20 down to 1 step -2
-
-    put myLine
+        put myLine
     end repeat
 
 
@@ -259,9 +259,8 @@ in the loop. However, doing this is not recommended, because it makes
 the loop logic difficult to follow:
 
     repeat with x = 1 to 20 -- this loop actually repeats ten times
-
-    answer x
-    add 1 to x -- not recommended
+        answer x
+        add 1 to x -- not recommended
     end repeat
 
 
@@ -281,8 +280,7 @@ example changes a return-<delimit|delimited> list to a
 comma-<delimit|delimited> list:
 
     repeat for each line thisLine in myList
-
-    put thisLine & comma after newList
+        put thisLine & comma after newList
     end repeat
     delete the last char of newList
 
@@ -297,12 +295,9 @@ each <element(glossary)> in an <array>. The following example gets only
 the multi-word entries in an <array> of phrases:
 
     repeat for each element thisIndexTerm in arrayOfTerms
-
-    if the number of words in thisIndexTerm > 1 then
-
-    put thisIndexTerm & return after multiWordTerms
-
-    end if
+        if the number of words in thisIndexTerm > 1 then
+            put thisIndexTerm & return after multiWordTerms
+        end if
     end repeat
 
 
