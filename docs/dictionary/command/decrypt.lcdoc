@@ -2,7 +2,7 @@ Name: decrypt
 
 Type: command
 
-Syntax: decrypt <source> using <cipher> with [password|key] <passorkey> [and salt <saltvalue>] [and IV <IVvalue>] [at <bitvalue> bit]
+Syntax: decrypt <source> using <cipher> with {password|key} <passorkey> [and salt <saltvalue>] [and IV <IVvalue>] [at <bitvalue> bit]
 
 Summary:
 Decrypt data using a cipher
