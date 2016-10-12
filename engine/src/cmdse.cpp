@@ -124,11 +124,11 @@ void MCAccept::exec_ctxt(MCExecContext &ctxt)
         return;
     
     if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
+		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
+		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, uint16_t(t_port), *t_message, secureverify == True);
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
+		MCNetworkExecAcceptConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
