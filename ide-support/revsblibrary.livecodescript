@@ -1005,9 +1005,9 @@ function utilityChooseIconFile pTargetPlatform
   
   # Roughly preserves old behavior, just using answer file with type instead of filter.
   local tIconFile
-  if pTargetPlatform is "Mac OS X" and ((the platform is "MacOS" and char 1 of the systemVersion is "1") or (the platform is "Win32") or (the platform is "Linux")) then
+  if pTargetPlatform is "Mac OS X" then
     put "Icon Resource Files|icns|ICNS" after tTypes
-  else if pTargetPlatform is "Windows" and (the platform is "Win32" or the platform is "Linux" or (the platform is "MacOS" and char 1 of the systemVersion is "1")) then
+  else if pTargetPlatform is "Windows" then
     put "Icon Files|ico|ICO" after tTypes
   end if
   
