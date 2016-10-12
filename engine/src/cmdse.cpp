@@ -60,6 +60,7 @@ MCAccept::~MCAccept()
 {
 	delete port;
 	delete message;
+	delete name;
 }
 
 Parse_stat MCAccept::parse(MCScriptPoint &sp)
@@ -69,14 +70,32 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 		secure = True;
 	else if (sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_DATAGRAM) == PS_NORMAL)
 		datagram = True;
+	
 	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // connections
 	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // on
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // port
-	if (sp.parseexp(False, True, &port) != PS_NORMAL)
+	
+	if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) == PS_NORMAL) // host
+	{
+		if (sp.parseexp(False, True, &name) != PS_NORMAL)
+		{
+			MCperror->add(PE_ACCEPT_BADEXP, sp);
+			return PS_ERROR;
+		}
+	}
+	else if (sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED) == PS_NORMAL) // port
+	{
+		if (sp.parseexp(False, True, &port) != PS_NORMAL)
+		{
+			MCperror->add(PE_ACCEPT_BADEXP, sp);
+			return PS_ERROR;
+		}
+	}
+	else
 	{
 		MCperror->add(PE_ACCEPT_BADEXP, sp);
 		return PS_ERROR;
 	}
+	
 	sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH); // with
 	sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED); // message
 	if (sp.parseexp(False, True, &message) != PS_NORMAL)
@@ -99,40 +118,75 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 
 void MCAccept::exec_ctxt(MCExecContext &ctxt)
 {
-    
-    uinteger_t t_port;
-    if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
-        return;
-    
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
         return;
-    
-    if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
-	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
+	
+	if (port != nil)
+	{
+		uinteger_t t_port;
+		if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
+			return;
+		
+		if (datagram)
+			MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
+		else if (secure)
+			MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, uint16_t(t_port), *t_message, secureverify == True);
+		else
+			MCNetworkExecAcceptConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
+	}
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
+	{
+		MCNewAutoNameRef t_name;
+		if (!ctxt . EvalExprAsNameRef(name, EE_ACCEPT_BADEXP, &t_name))
+			return;
+		
+		if (datagram)
+			MCNetworkExecAcceptDatagramConnectionsOnAddress(ctxt, *t_name, *t_message);
+		else if (secure)
+			MCNetworkExecAcceptSecureConnectionsOnAddress(ctxt, *t_name, *t_message, secureverify == True);
+		else
+			MCNetworkExecAcceptConnectionsOnAddress(ctxt, *t_name, *t_message);
+	}
+	
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	port -> compile(ctxt);
 	message -> compile(ctxt);
 
-	if (datagram)
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptDatagramConnectionsOnPortMethodInfo);
-	else if (secure)
+	if (port != nil)
 	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
+		port -> compile(ctxt);
 
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptSecureConnectionsOnPortMethodInfo);
+		if (datagram)
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptDatagramConnectionsOnPortMethodInfo);
+		else if (secure)
+		{
+			MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptSecureConnectionsOnPortMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptConnectionsOnPortMethodInfo);
 	}
 	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptConnectionsOnPortMethodInfo);
+	{
+		name -> compile(ctxt);
+
+		if (datagram)
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptDatagramConnectionsOnAddressMethodInfo);
+		else if (secure)
+		{
+			MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
+			
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptSecureConnectionsOnAddressMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptConnectionsOnAddressMethodInfo);
+	}
 	
 	MCSyntaxFactoryEndStatement(ctxt);
 }

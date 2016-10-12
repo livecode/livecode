@@ -61,6 +61,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Network, PostToUrl, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptConnectionsOnPort, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptDatagramConnectionsOnPort, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptSecureConnectionsOnPort, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptConnectionsOnAddress, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptDatagramConnectionsOnAddress, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptSecureConnectionsOnAddress, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, ReadFromSocketFor, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, ReadFromSocketUntil, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, WriteToSocket, 3)
@@ -599,7 +602,7 @@ void MCNetworkExecCloseSocket(MCExecContext& ctxt, MCNameRef p_socket)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_with_verification)
+void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MCNameRef p_name, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_with_verification)
 {
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
 	MCresult -> clear();
@@ -607,24 +610,39 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
-	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram ? True : False, p_secure ? True : False, p_with_verification ? True : False, kMCEmptyString);
+	MCSocket *s = MCS_accept(p_port, p_name, ctxt . GetObject(), p_message, p_datagram ? True : False, p_secure ? True : False, p_with_verification ? True : False, kMCEmptyString);
 	if (s != NULL)
         MCSocketsAppendToSocketList(s);
 }
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message)
 {
-	MCNetworkExecPerformAcceptConnections(ctxt, p_port, p_message, false, false, false);
+	MCNetworkExecPerformAcceptConnections(ctxt, p_port, nil, p_message, false, false, false);
 }
 
 void MCNetworkExecAcceptDatagramConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message)
 {
-	MCNetworkExecPerformAcceptConnections(ctxt, p_port, p_message, true, false, false);
+	MCNetworkExecPerformAcceptConnections(ctxt, p_port, nil, p_message, true, false, false);
 }
 
 void MCNetworkExecAcceptSecureConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message, bool p_with_verification)
 {
-	MCNetworkExecPerformAcceptConnections(ctxt, p_port, p_message, false, true, p_with_verification);
+	MCNetworkExecPerformAcceptConnections(ctxt, p_port, nil, p_message, false, true, p_with_verification);
+}
+
+void MCNetworkExecAcceptConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message)
+{
+	MCNetworkExecPerformAcceptConnections(ctxt, 0, p_name, p_message, false, false, false);
+}
+
+void MCNetworkExecAcceptDatagramConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message)
+{
+	MCNetworkExecPerformAcceptConnections(ctxt, 0, p_name, p_message, true, false, false);
+}
+
+void MCNetworkExecAcceptSecureConnectionsOnAddress(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification)
+{
+	MCNetworkExecPerformAcceptConnections(ctxt, 0, p_name, p_message, false, true, p_with_verification);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

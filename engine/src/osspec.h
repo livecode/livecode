@@ -193,7 +193,7 @@ extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, 
 extern void MCS_close_socket(MCSocket *s);
 extern MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
-extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile);
+extern MCSocket *MCS_accept(uint2 p, MCNameRef p_name, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile);
 extern bool MCS_ha(MCSocket *s, MCStringRef& r_string);
 extern bool MCS_hn(MCStringRef& r_string);
 extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);

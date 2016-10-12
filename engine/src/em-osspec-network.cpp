@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCSocket *
 MCS_accept(uint16_t p_port,
+		   MCNameRef p_name,
            MCObject *p_object,
            MCNameRef p_message,
            Boolean p_datagram,
