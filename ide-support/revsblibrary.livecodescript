@@ -1896,7 +1896,10 @@ function revSBIncludedExternalPath pTarget, pName
    return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
-private command __ResolveIncludedExternal pTarget, @xFiles
+private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
+   local tHasResources
+   put false into tHasResources
+   
    -- Added to support Ext inclusion
    if xFiles begins with "!" then
       
@@ -1923,36 +1926,49 @@ private command __ResolveIncludedExternal pTarget, @xFiles
             
             if tContents is not empty then
                appendToStringList tContents, xFiles
+               put true into tHasResources
             end if
          end if
          
       end if
    end if
+   put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
-   local tManifest
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      local tResolvedFile
-      __ResolveIncludedExternal pTarget, tFile
+      local tResolvedFile, tHasResources
+      __ResolveIncludedExternal pTarget, tFile, tHasResources
+      
       -- tFile may now list multiple files if it was an external with a resources directory
       repeat for each line tResolvedFile in tFile
+         local tDataA, tFlattenStructure
+         
          if tResolvedFile ends with "/" then
             delete char -1 of tResolvedFile
          end if
          
          if the last item of tResolvedFile is "*" then
-            delete the last item of tFile
+            delete the last item of tResolvedFile
          end if
          
          local tIsAbsolute, tName
          put tResolvedFile begins with "/" or char 2 to 3 of tResolvedFile is ":/" into tIsAbsolute
+         
+         # Flatten structure of external resources
+         if tIsAbsolute or tHasResources then
+            put item -1 of tResolvedFile into tDataA["name"]
+         else
+            put tResolvedFile into tDataA["name"]
+         end if
+         
          if not tIsAbsolute then
             put pBaseFolder & slash before tResolvedFile
          end if
+         put tResolvedFile into tDataA["resolved"]
          
-         appendToStringList tResolvedFile, rFiles
+         addToList tDataA, rFileData
       end repeat
    end repeat
 end revSBResolveCopyFilesList
