@@ -24,7 +24,7 @@ end deployUsableIosSdk
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
-   put deploySanatizeSystemVersion() into tMacVersion
+   put deploySanitizeSystemVersion() into tMacVersion
    if tMacVersion < 100800 then
       put "6.1,4.6" into tList[1]
    else if tMacVersion < 100900 then
@@ -561,7 +561,7 @@ end deployIsValidSDK
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function deploySanatizeSystemVersion
+function deploySanitizeSystemVersion
    set the itemDel to "."
    get the systemVersion   
    if the length of item 2 of it is 0 then
@@ -576,6 +576,6 @@ function deploySanatizeSystemVersion
    end if   
    replace "." with empty in it
    return it
-end deploySanatizeSystemVersion
+end deploySanitizeSystemVersion
 
 ////////////////////////////////////////////////////////////////////////////////
