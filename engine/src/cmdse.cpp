@@ -69,21 +69,36 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 		secure = True;
 	else if (sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_DATAGRAM) == PS_NORMAL)
 		datagram = True;
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // connections
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // on
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // port
-	if (sp.parseexp(False, True, &port) != PS_NORMAL)
+	
+	Parse_stat t_stat = PS_NORMAL;
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_CONNECTIONS);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_ON);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_PORT);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &port);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &message);
+		
+	if (PS_NORMAL != t_stat)
 	{
 		MCperror->add(PE_ACCEPT_BADEXP, sp);
 		return PS_ERROR;
 	}
-	sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH); // with
-	sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED); // message
-	if (sp.parseexp(False, True, &message) != PS_NORMAL)
-	{
-		MCperror->add(PE_ACCEPT_BADEXP, sp);
-		return PS_ERROR;
-	}
+	
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
 	        && sp.skip_token(SP_SSL, TT_STATEMENT, SSL_VERIFICATION) != PS_NORMAL)
 	{
