@@ -102,7 +102,7 @@ A numbers or an <expression|expressions> that evaluates to a number.
 increment (number):
 A numbers or an <expression|expressions> that evaluates to a number.
 
-counter:
+counterVariable:
 A legal <variable> name.
 
 labelVariable:
