@@ -206,7 +206,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	// Initialize the paragraph attrs to default values.
     if (t_stat == IO_NORMAL)
     {
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
         attrs -> flags = t_flags;
     }
 
@@ -244,7 +244,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		t_stat = checkloadstat(IO_read_uint2(&attrs -> tab_count, stream));
 		if (t_stat == IO_NORMAL)
 		{
-			attrs -> tabs = new uint16_t[attrs -> tab_count];
+			attrs -> tabs = new (nothrow) uint16_t[attrs -> tab_count];
 			for(uint32_t i = 0; i < attrs -> tab_count && t_stat == IO_NORMAL; i++)
 				t_stat = checkloadstat(IO_read_uint2(&attrs -> tabs[i], stream));
 		}
@@ -491,7 +491,7 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 		return;
 
 	// Make a new attrs structure.
-	attrs = new MCParagraphAttrs;
+	attrs = new (nothrow) MCParagraphAttrs;
 	
 	// Copy across all the fields byte-wise.
 	memcpy(attrs, other . attrs, sizeof(MCParagraphAttrs));
@@ -499,7 +499,7 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 	// If the struct has tabs, then copy them properly.
 	if ((other . attrs -> flags & PA_HAS_TABS) != 0)
 	{
-		attrs -> tabs = new uint16_t[other . attrs -> tab_count];
+		attrs -> tabs = new (nothrow) uint16_t[other . attrs -> tab_count];
 		memcpy(attrs -> tabs, other . attrs -> tabs, sizeof(uint16_t) * other . attrs -> tab_count);
 	}
 
@@ -659,7 +659,7 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 {
 	clearattrs();
 	
-	attrs = new MCParagraphAttrs;
+	attrs = new (nothrow) MCParagraphAttrs;
 	if (p_style . has_text_align)
 	{
 		attrs -> flags |= PA_HAS_TEXT_ALIGN;
@@ -700,7 +700,7 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 	{
 		attrs -> flags |= PA_HAS_TABS;
 		attrs -> tab_count = p_style . tab_count;
-		attrs -> tabs = new uint16_t[p_style . tab_count];
+		attrs -> tabs = new (nothrow) uint16_t[p_style . tab_count];
 		memcpy(attrs -> tabs, p_style . tabs, sizeof(uint16_t) * p_style . tab_count);
 	}
 	if (p_style . has_tab_alignments)
@@ -788,7 +788,7 @@ void MCParagraph::setliststyle(uint32_t p_new_list_style)
 	else
 	{
 		if (attrs == nil)
-			attrs = new MCParagraphAttrs;
+			attrs = new (nothrow) MCParagraphAttrs;
 		if ((attrs -> flags & PA_HAS_LIST_STYLE) == 0)
 		{
 			attrs -> flags |= PA_HAS_LIST_STYLE;
@@ -811,7 +811,7 @@ void MCParagraph::setmetadata(MCStringRef p_metadata)
 		return;
 
 	if (attrs == nil)
-		attrs = new MCParagraphAttrs;
+		attrs = new (nothrow) MCParagraphAttrs;
     attrs -> flags |= PA_HAS_METADATA;
     /* UNCHECKED */ MCValueInter(p_metadata, attrs -> metadata);
 }
@@ -829,7 +829,7 @@ void MCParagraph::setlistindex(uint32_t p_new_list_index)
 	else
 	{
 		if (attrs == nil)
-			attrs = new MCParagraphAttrs;
+			attrs = new (nothrow) MCParagraphAttrs;
 
 		attrs -> flags |= PA_HAS_LIST_INDEX;
 		attrs -> list_index = p_new_list_index;

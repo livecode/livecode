@@ -468,7 +468,7 @@
 //		MCOldFonttablenode *fnptr = findtablenode(*t_node);
 //		if (fnptr == NULL)
 //		{
-//			fnptr = new MCOldFonttablenode;
+//			fnptr = new (nothrow) MCOldFonttablenode;
 //			char *temp;
 //			/* UNCHECKED */ MCStringConvertToCString(*t_node, temp);
 //			fnptr->name = strclone(temp);
@@ -569,7 +569,7 @@
 //			tmp = tmp->next();
 //		}
 //		while (tmp != fonts);
-//	tmp = new MCOldFontnode(fname, size, style);
+//	tmp = new (nothrow) MCOldFontnode(fname, size, style);
 //	tmp->appendto(fonts);
 //	return tmp->getfont(fname, size, style);
 //}

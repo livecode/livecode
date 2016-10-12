@@ -151,7 +151,7 @@ extern "C" MC_DLLEXPORT_DEF MCScriptObjectRef MCEngineExecResolveScriptObject(MC
     
 	// Create a new chunk object to parse the reference into.
     MCChunk *t_chunk;
-    t_chunk = new MCChunk(False);
+    t_chunk = new (nothrow) MCChunk(False);
     if (t_chunk == nil)
     {
         MCErrorThrowOutOfMemory();
@@ -436,7 +436,7 @@ static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListR
         }
         
 		MCParameter *t_param;
-		t_param = new MCParameter;
+		t_param = new (nothrow) MCParameter;
 		t_param -> setvalueref_argument(t_value);
         
 		if (t_last_param == nil)

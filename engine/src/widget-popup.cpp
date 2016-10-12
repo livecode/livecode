@@ -171,7 +171,7 @@ private:
 		if (m_widget != nil)
 			return true;
 		
-		m_widget = new MCWidget();
+		m_widget = new (nothrow) MCWidget();
 		if (m_widget == nil)
 			return MCErrorThrowOutOfMemory();
 		
@@ -369,7 +369,7 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	MCWidgetPopup *t_popup;
 	t_popup = nil;
 	
-	t_popup = new MCWidgetPopup();
+	t_popup = new (nothrow) MCWidgetPopup();
 	if (t_popup == nil)
 	{
 		// TODO - throw memory error

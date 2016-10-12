@@ -163,7 +163,7 @@ MCWin32RawClipboardItem* MCWin32RawClipboardCommon::CreateNewItem()
 		return NULL;
 
 	// Create a new data item
-	m_item = new MCWin32RawClipboardItem(this);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this);
 	m_item->Retain();
 	return m_item;
 }
@@ -522,7 +522,7 @@ bool MCWin32RawClipboardCommon::SetToIDataObject(IDataObject* p_object)
 
 	// Create a wrapper for this object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, p_object);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, p_object);
 	return true;
 }
 
@@ -685,7 +685,7 @@ bool MCWin32RawClipboard::PullUpdates()
 
 	// Create a new item to wrap this data object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, t_contents);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, t_contents);
 
 	if (t_contents != NULL)
 		t_contents->Release();
@@ -812,7 +812,7 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 			return false;
 
 		// Allocate a new representation object.
-		m_reps[t_index] = t_rep = new MCWin32RawClipboardItemRep(this, p_type, p_bytes);
+		m_reps[t_index] = t_rep = new (nothrow) MCWin32RawClipboardItemRep(this, p_type, p_bytes);
 	}
 
 	// If we still have no rep, something went wrong
@@ -875,7 +875,7 @@ MCWin32DataObject* MCWin32RawClipboardItem::GetDataObject()
 
 	// If the data object doesn't exist yet, create it now
 	if (m_object == NULL)
-		m_object = new MCWin32DataObject;
+		m_object = new (nothrow) MCWin32DataObject;
 
 	return static_cast<MCWin32DataObject*> (m_object);
 }
@@ -908,7 +908,7 @@ void MCWin32RawClipboardItem::GenerateRepresentations() const
 			break;
 
 		// Create a new representation object
-		m_reps[t_index] = new MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
+		m_reps[t_index] = new (nothrow) MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
 	}
 
 	// Release the enumerator object
@@ -1208,7 +1208,7 @@ HRESULT MCWin32DataObject::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppe
 	}
 
 	// Create a new enumerator object
-	*ppenumFormatEtc = new MCWin32DataObjectFormatEnum(this, 0);
+	*ppenumFormatEtc = new (nothrow) MCWin32DataObjectFormatEnum(this, 0);
 	return S_OK;
 }
 
@@ -1374,7 +1374,7 @@ HRESULT MCWin32DataObjectFormatEnum::Clone(IEnumFORMATETC** ppenum)
 		return E_INVALIDARG;
 
 	// Create a copy of this object
-	*ppenum = new MCWin32DataObjectFormatEnum(m_object, m_index);
+	*ppenum = new (nothrow) MCWin32DataObjectFormatEnum(m_object, m_index);
 	return S_OK;
 }
 

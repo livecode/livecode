@@ -279,10 +279,10 @@ typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define _DEBUG_MEMORY
 
-inline void *operator new(size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
-inline void *operator new[](size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new(size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new[](size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 
-inline void *operator new(size_t, void *p, const char *, int)
+inline void *operator new(size_t, void *p, const char *, long)
 {
 	return p;
 }
@@ -549,21 +549,6 @@ struct MCFontStruct
 //  iOS Device or iOS Simulator
 #if defined TARGET_SUBPLATFORM_IPHONE
 #include <TargetConditionals.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  NEW / DELETE REDEFINTIONS
-//
-
-#include <new>
-
-// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
-void *operator new (size_t size) throw();
-void *operator new[] (size_t size) throw();
 #endif
 
 //////////////////////////////////////////////////////////////////////

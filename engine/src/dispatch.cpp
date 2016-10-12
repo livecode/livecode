@@ -819,14 +819,14 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     if (stacks == NULL)
     {
         MCnoui = True;
-        MCscreen = new MCUIDC;
+        MCscreen = new (nothrow) MCUIDC;
         /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
         MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
         stacks->setparent(this);
         stacks->setname_cstring("revScript");
         uint4 size = (uint4)MCS_fsize(stream);
         MCAutoPointer<char> script;
-        script = new char[size + 2];
+        script = new (nothrow) char[size + 2];
         (*script)[size] = '\n';
         (*script)[size + 1] = '\0';
         if (IO_read(*script, size, stream) != IO_NORMAL)
@@ -1614,7 +1614,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
-		fonts = new MCFontlist;
+		fonts = new (nothrow) MCFontlist;
 #endif
 	return fonts->getfont(fname, size, style, printer);
 }
@@ -1623,7 +1623,7 @@ MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef
 {
 #if defined(_MACOSX) || defined (_MAC_SERVER) || defined (TARGET_SUBPLATFORM_IPHONE)
     if (fonts == nil)
-        fonts = new MCFontlist;
+        fonts = new (nothrow) MCFontlist;
     return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
@@ -1902,7 +1902,7 @@ check:
                     }
                 }
                 
-				iptr = new MCImage;
+				iptr = new (nothrow) MCImage;
                 iptr->appendto(imagecache);
                 iptr->SetText(*ctxt, *t_data);
 				iptr->setname(*t_image_name);
@@ -2041,7 +2041,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 #endif
 	
 	if (m_externals == nil)
-		m_externals = new MCExternalHandlerList;
+		m_externals = new (nothrow) MCExternalHandlerList;
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
@@ -2106,7 +2106,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             MCExecContext ctxt(nil, nil, nil);
 
 			MCImage *t_image;
-			t_image = new MCImage;
+			t_image = new (nothrow) MCImage;
 			t_image -> open();
 			t_image -> openimage();
 			t_image -> SetText(ctxt, *t_data);
@@ -2147,7 +2147,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
-				t_objects = new MCImage(*MCtemplateimage);
+				t_objects = new (nothrow) MCImage(*MCtemplateimage);
 				t_objects -> open();
 				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();

@@ -1269,7 +1269,7 @@ void MCControl::start(Boolean canclone)
 			}
 			else
 			{
-				Ustruct *us = new Ustruct;
+				Ustruct *us = new (nothrow) Ustruct;
 				us->type = UT_SIZE;
 				us->ud.rect = rect;
 				MCundos->freestate();
@@ -1577,7 +1577,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_HSCROLLBAR)
 			{
-				hsb = new MCScrollbar(*MCtemplatescrollbar);
+				hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				hsb->setparent(this);
 				hsb->setflag(False, F_TRAVERSAL_ON);
 				hsb->setflag(flags & F_3D, F_3D);
@@ -1623,7 +1623,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_VSCROLLBAR)
 			{
-				vsb = new MCScrollbar(*MCtemplatescrollbar);
+				vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				vsb->setparent(this);
 				vsb->setflag(False, F_TRAVERSAL_ON);
 				vsb->setflag(flags & F_3D, F_3D);

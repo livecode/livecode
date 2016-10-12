@@ -106,7 +106,7 @@ struct MCActiveTouch
 MCScreenDC::MCScreenDC(void)
 {
 	// Initialize the window stacks.
-	m_main_windows = new MCWindowStack;
+	m_main_windows = new (nothrow) MCWindowStack;
 	
 	// Initialize the list of active touches.
 	m_active_touches = nil;
@@ -254,7 +254,7 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 			uint32_t t_touch_id;
 			t_touch_id = ++m_last_touch_id;
 			
-			t_touch = new MCActiveTouch;
+			t_touch = new (nothrow) MCActiveTouch;
 			t_touch -> ident = t_touch_id;
 			t_touch -> touch = p_touch_handle;
 			t_touch -> next = m_active_touches;
@@ -548,7 +548,7 @@ void MCScreenDC::unfocus_current_window(void)
 MCMobileBitmap *MCMobileBitmapCreate(uint32_t width, uint32_t height, bool mono)
 {
 	MCMobileBitmap *t_bitmap;
-	t_bitmap = new MCMobileBitmap;
+	t_bitmap = new (nothrow) MCMobileBitmap;
 	t_bitmap -> width = width;
 	t_bitmap -> height = height;
 	if (mono)

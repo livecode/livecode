@@ -105,7 +105,7 @@ void MCMetaContext::begin(bool p_overlap)
 	}
 
 	MCMarkState *t_new_state;
-	t_new_state = new MCMarkState;
+	t_new_state = new (nothrow) MCMarkState;
 	
 	MCMark *t_root_mark;
 	t_root_mark = NULL;
@@ -932,7 +932,7 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 					t_success = begincomposite(t_dst_clip, t_context);
 				
 				if (t_success)
-					t_success = nil != (t_gfx_context = new MCGraphicsContext(t_context));
+					t_success = nil != (t_gfx_context = new (nothrow) MCGraphicsContext(t_context));
 				
 				if (t_success)
 				{

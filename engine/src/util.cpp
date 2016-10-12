@@ -621,7 +621,7 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 	if (d == NULL || s <  R8L)
 	{
 		delete d;
-		d = new char[R8L];
+		d = new (nothrow) char[R8L];
 		s = R8L;
 	}
 	if (n < 0.0 && n >= -MC_EPSILON)
@@ -1100,7 +1100,7 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 #if !defined(_DEBUG_MEMORY)
 void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 {
-	char *ndata = new char[nsize * csize];
+	char *ndata = new (nothrow) char[nsize * csize];
 	if (data != NULL)
 	{
 		if (nsize > osize)
@@ -1190,7 +1190,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
 		delete[] points;
-		points = new MCPoint[4 * QA_NPOINTS + 1];
+		points = new (nothrow) MCPoint[4 * QA_NPOINTS + 1];
 	}
 
 	MCRectangle tr = rect;
@@ -1978,7 +1978,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 
 	unichar_t *t_dst;
 	uindex_t t_length;
-    t_dst = new unichar_t[t_length + 1];
+    t_dst = new (nothrow) unichar_t[t_length + 1];
 	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
@@ -2041,7 +2041,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
     uindex_t t_length;
     t_length = MCStringGetLength(in);
     
-    t_unicode_str = new unichar_t[t_length + 1];
+    t_unicode_str = new (nothrow) unichar_t[t_length + 1];
     t_length = MCStringGetChars(in, MCRangeMake(0, t_length), t_unicode_str);
     t_unicode_str[t_length] = 0;
 
@@ -2728,7 +2728,7 @@ void MCDictionary::Set(uint4 p_id, MCString p_value)
 	t_node = Find(p_id);
 	if (t_node == NULL)
 	{
-		t_node = new Node;
+		t_node = new (nothrow) Node;
 		t_node -> next = m_nodes;
 		t_node -> key = p_id;
 		m_nodes = t_node;
@@ -2759,7 +2759,7 @@ void MCDictionary::Pickle(void*& r_buffer, uint4& r_length)
 		t_size += ((t_node -> length + 3) & ~3) + 8;
 
 	char *t_buffer;
-	t_buffer = new char[t_size];
+	t_buffer = new (nothrow) char[t_size];
 	
 	char *t_buffer_ptr;
 	t_buffer_ptr = t_buffer;
@@ -3025,54 +3025,3 @@ MCU_is_token(MCStringRef p_string)
 
 	return true;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifndef _DEBUG_MEMORY
-
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if defined __VISUALC__ || TARGET_IPHONE_SIMULATOR
-void *operator new (size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete (void *p)
-{
-    free(p);
-}
-
-void *operator new[] (size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p)
-{
-    free(p);
-}
-#else
-void *operator new (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete (void *p) throw()
-{
-    free(p);
-}
-
-void *operator new[] (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p) throw()
-{
-    free(p);
-}
-#endif
-
-#endif
-

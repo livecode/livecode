@@ -52,11 +52,11 @@ bool MCAndroidSystem::Initialize(void)
     
     // Initialize our case mapping tables
     
-    MCuppercasingtable = new uint1[256];
+    MCuppercasingtable = new (nothrow) uint1[256];
     for(uint4 i = 0; i < 256; ++i)
         MCuppercasingtable[i] = (uint1)toupper((uint1)i);
     
-    MClowercasingtable = new uint1[256];
+    MClowercasingtable = new (nothrow) uint1[256];
     for(uint4 i = 0; i < 256; ++i)
         MClowercasingtable[i] = (uint1)tolower((uint1)i);
     

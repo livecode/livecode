@@ -332,7 +332,7 @@ bool MCCefInitialise(void)
 			t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
 	}
 	
-	CefRefPtr<CefApp> t_app = new MCCefBrowserApp();
+	CefRefPtr<CefApp> t_app = new (nothrow) MCCefBrowserApp();
 	
 	if (t_success)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
@@ -1053,7 +1053,7 @@ public:
 bool MCCefBrowserBase::Initialize()
 {
 	// create client and browser
-	m_client = new MCCefBrowserClient(this);
+	m_client = new (nothrow) MCCefBrowserClient(this);
 	
 	CefWindowInfo t_window_info;
 	CefBrowserSettings t_settings;
@@ -1343,7 +1343,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_result.Clear();
 	
 	CefRefPtr<CefStringVisitor> t_visitor;
-	t_visitor = new MCStringVisitor(t_result);
+	t_visitor = new (nothrow) MCStringVisitor(t_result);
 	
 	m_browser->GetMainFrame()->GetSource(t_visitor);
 	
@@ -1799,7 +1799,7 @@ bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MC
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 {
 	MCCefBrowserFactory *t_factory;
-	t_factory = new MCCefBrowserFactory();
+	t_factory = new (nothrow) MCCefBrowserFactory();
 	
 	if (t_factory == nil)
 		return false;

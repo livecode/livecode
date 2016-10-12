@@ -730,7 +730,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 	}
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-	char *dataptr = new char[datasize];
+	char *dataptr = new (nothrow) char[datasize];
 	long *aLong = (long *)dataptr;
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
@@ -828,7 +828,7 @@ static void QTEffectsQuery(void **effectatomptr)
 	numeffects = QTCountChildrenOfType(effectatom, kParentAtomIsContainer,
 	                                   kEffectNameAtom);
 	neffects = 0;
-	qteffects = new QTEffect[numeffects];
+	qteffects = new (nothrow) QTEffect[numeffects];
 	uint2 i;
 	for (i = 1; i <= numeffects; i++)
 	{
@@ -847,7 +847,7 @@ static void QTEffectsQuery(void **effectatomptr)
 			                    &qteffects[neffects].type, NULL);
 			QTLockContainer(effectatom);
 			QTGetAtomDataPtr(effectatom, nameatom, &datasize, (Ptr *)&sptr);
-			qteffects[neffects].token = new char[datasize+1];
+			qteffects[neffects].token = new (nothrow) char[datasize+1];
 			memcpy(qteffects[neffects].token,sptr,datasize);
 			qteffects[neffects].token[datasize] = '\0';
 			QTUnlockContainer(effectatom);

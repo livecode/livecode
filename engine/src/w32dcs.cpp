@@ -161,7 +161,7 @@ Boolean MCScreenDC::open()
 	f_src_dc = CreateCompatibleDC(NULL);
 	f_dst_dc = CreateCompatibleDC(NULL);
 
-	vis = new MCVisualInfo;
+	vis = new (nothrow) MCVisualInfo;
 
 	ncolors = 0;
 			redbits = greenbits = bluebits = 8;
@@ -723,7 +723,7 @@ uintptr_t MCScreenDC::dtouint(Drawable d)
 
 Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
-	w = new _Drawable;
+	w = new (nothrow) _Drawable;
 	w->type = DC_WINDOW;
 	w->handle.window = (MCSysWindowHandle)id;
 	return True;
@@ -780,7 +780,7 @@ Window MCScreenDC::getroot()
 {
 	static Meta::static_ptr_t<_Drawable> mydrawable;
 	if (mydrawable == DNULL)
-		mydrawable = new _Drawable;
+		mydrawable = new (nothrow) _Drawable;
 	mydrawable->type = DC_WINDOW;
 	mydrawable->handle.window = (MCSysWindowHandle)GetDesktopWindow();
 	return mydrawable;
@@ -1419,7 +1419,7 @@ void MCScreenDC::redrawbackdrop(void)
 		if (backdrop_badge != NULL && backdrop_hard)
 		{
 			MCContext *t_gfxcontext = nil;
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 
 			if (t_success)
 			{

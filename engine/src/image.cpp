@@ -702,7 +702,7 @@ void MCImage::freeundo(Ustruct *us)
 MCControl *MCImage::clone(Boolean attach, Object_pos p, bool invisible)
 {
 	recompress();
-	MCImage *newiptr = new MCImage(*this);
+	MCImage *newiptr = new (nothrow) MCImage(*this);
 	if (attach)
 		newiptr->attach(p, invisible);
 	return newiptr;
@@ -1034,8 +1034,8 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
             if (t_stat == IO_NORMAL)
 			{
-				s_control_colors = new MCColor[s_control_color_count];
-				s_control_color_names = new MCStringRef[s_control_color_count];
+				s_control_colors = new (nothrow) MCColor[s_control_color_count];
+				s_control_color_names = new (nothrow) MCStringRef[s_control_color_count];
 				if (nil == s_control_colors || nil == s_control_color_names)
 					t_stat = checkloadstat(IO_ERROR);
 			}
@@ -1627,7 +1627,7 @@ bool MCImage::convert_to_mutable()
 	{
 		t_success = lockbitmap(t_bitmap, true);
 		if (t_success)
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		unlockbitmap(t_bitmap);
 	}
 	else
@@ -1636,7 +1636,7 @@ bool MCImage::convert_to_mutable()
 		if (t_success)
 		{
 			MCImageBitmapClear(t_bitmap);
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		}
 		MCImageFreeBitmap(t_bitmap);
 	}

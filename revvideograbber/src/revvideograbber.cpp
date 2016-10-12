@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <string.h>
 #include <math.h>
 
+#include <core.h>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -113,7 +115,7 @@ struct MYBITMAP
 
 MYBITMAP *createmybitmap(uint2 depth, uint2 width, uint2 height)
 {
-  MYBITMAP *image = new MYBITMAP;
+  MYBITMAP *image = new (nothrow) MYBITMAP;
   image->width = width;
   image->height = height;
   image->depth = (uint1)depth;
@@ -626,7 +628,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
                 // SN-2015-04-23: [[ Bug 15255 ]] Windows now defaults to directX
 #ifdef WIN32
 				if (_strnicmp(args[1], "vfw",strlen("vfw")) == 0)
-                    gvideograbber = new CWinVideoGrabber(windowid);
+                    gvideograbber = new (nothrow) CWinVideoGrabber(windowid);
                 else if (_strnicmp(args[1], "qt",strlen("qt")) == 0)
                 {
 #else
@@ -636,7 +638,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
 				{
 #endif
                     if (InitQT())
-                        gvideograbber = new CQTVideoGrabber(windowid);
+                        gvideograbber = new (nothrow) CQTVideoGrabber(windowid);
                     else
                     {
                         // SN-2015-04-17: [[ Bug 13452 ]] Break if qvideograbber
@@ -647,7 +649,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
                 }
 #ifdef WIN32
                 else
-                    gvideograbber = new CDirectXVideoGrabber(windowid);
+                    gvideograbber = new (nothrow) CDirectXVideoGrabber(windowid);
 #endif
 				int left,top,right,bottom;
                 // SN-2015-04-23: [[ Bug 15255 ]] Checking that qtvideograbber

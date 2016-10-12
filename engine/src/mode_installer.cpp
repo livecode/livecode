@@ -1218,7 +1218,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
-        t_script = new char[p_length];
+        t_script = new (nothrow) char[p_length];
         if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read startup script");

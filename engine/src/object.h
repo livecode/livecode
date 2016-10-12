@@ -450,7 +450,8 @@ struct MCPatternInfo
 	MCPatternRef pattern;
 };
 
-class MCObject : public MCDLlist
+class MCObject :
+  public MCDLlist
 {
 protected:
 	uint4 obj_id;
@@ -560,6 +561,7 @@ public:
 	MCObject();
 	MCObject(const MCObject &oref);
 	virtual ~MCObject();
+    
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 

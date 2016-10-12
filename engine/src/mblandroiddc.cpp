@@ -2890,7 +2890,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2908,7 +2908,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2916,7 +2916,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 	// Safe and immediate -> post to front of event queue
 	// Unsafe/Safe and deferred -> post to back of event queue
 	MCRunOnMainThreadEvent *t_event;
-	t_event = new MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
+	t_event = new (nothrow) MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
 	if ((p_options & kMCExternalRunOnMainThreadDeferred) != 0)
 		MCEventQueuePostCustom(t_event);
 	else

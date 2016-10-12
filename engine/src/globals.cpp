@@ -1045,8 +1045,8 @@ X_open_environment_variables(MCStringRef envp[])
 
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
     MCresultmode = kMCExecResultModeReturn;
 
@@ -1083,7 +1083,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     
     ////
     
-	MCpatternlist = new MCImageList();
+	MCpatternlist = new (nothrow) MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
 	MCmb -> setmsg();
@@ -1135,31 +1135,31 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCDeletedObjectsSetup();
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
-	MCtemplateaudio = new MCAudioClip;
+	MCtemplateaudio = new (nothrow) MCAudioClip;
 	MCtemplateaudio->init();
-	MCtemplatevideo = new MCVideoClip;
-	MCtemplategroup = new MCGroup;
-	MCtemplatecard = new MCCard;
-	MCtemplatebutton = new MCButton;
-	MCtemplategraphic = new MCGraphic;
-	MCtemplatescrollbar = new MCScrollbar;
-	MCtemplateplayer = new MCPlayer;
-	MCtemplateimage = new MCImage;
-	MCtemplatefield = new MCField;
+	MCtemplatevideo = new (nothrow) MCVideoClip;
+	MCtemplategroup = new (nothrow) MCGroup;
+	MCtemplatecard = new (nothrow) MCCard;
+	MCtemplatebutton = new (nothrow) MCButton;
+	MCtemplategraphic = new (nothrow) MCGraphic;
+	MCtemplatescrollbar = new (nothrow) MCScrollbar;
+	MCtemplateplayer = new (nothrow) MCPlayer;
+	MCtemplateimage = new (nothrow) MCImage;
+	MCtemplatefield = new (nothrow) MCField;
 	
-	MCtooltip = new MCTooltip;
+	MCtooltip = new (nothrow) MCTooltip;
 
     MCclipboard = MCClipboard::CreateSystemClipboard();
     MCdragboard = MCClipboard::CreateSystemDragboard();
     MCselection = MCClipboard::CreateSystemSelectionClipboard();
     MCclipboardlockcount = 0;
 	
-	MCundos = new MCUndolist;
-	MCselected = new MCSellist;
-	MCstacks = new MCStacklist;
-    MCtodestroy = new MCStacklist;
-	MCrecent = new MCCardlist;
-	MCcstack = new MCCardlist;
+	MCundos = new (nothrow) MCUndolist;
+	MCselected = new (nothrow) MCSellist;
+	MCstacks = new (nothrow) MCStacklist;
+    MCtodestroy = new (nothrow) MCStacklist;
+	MCrecent = new (nothrow) MCCardlist;
+	MCcstack = new (nothrow) MCCardlist;
 
 #ifdef _LINUX_DESKTOP
 	MCValueAssign(MCvcplayer, MCSTR("xanim"));
@@ -1181,7 +1181,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
-	MCdispatcher = new MCDispatch;
+	MCdispatcher = new (nothrow) MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
 
 	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
@@ -1190,7 +1190,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCResInitPixelScaling();
 	
 	if (MCnoui)
-		MCscreen = new MCUIDC;
+		MCscreen = new (nothrow) MCUIDC;
 	else
 	{
 		MCscreen = MCCreateScreenDC();
@@ -1209,7 +1209,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
-	MCtemplateeps = new MCEPS;
+	MCtemplateeps = new (nothrow) MCEPS;
 
 	MCsystemFS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS);
 	MCsystemCS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS);
@@ -1235,7 +1235,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 	
-    MCwidgeteventmanager = new MCWidgetEventManager;
+    MCwidgeteventmanager = new (nothrow) MCWidgetEventManager;
     
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.

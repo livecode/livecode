@@ -573,10 +573,10 @@ void X_main_loop(void)
 		if (t_stat == ES_NOT_HANDLED && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
 			MCHandlerlist *t_handlerlist;
-			t_handlerlist = new MCHandlerlist;
+			t_handlerlist = new (nothrow) MCHandlerlist;
 			
 			MCHandler *t_handler;
-			t_handler = new MCHandler(HT_MESSAGE, true);
+			t_handler = new (nothrow) MCHandler(HT_MESSAGE, true);
 			
 			MCScriptPoint sp(MCserverscript, t_handlerlist, MCSTR(s_default_error_handler));
 			
