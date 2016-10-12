@@ -208,7 +208,7 @@ MCMovingList::~MCMovingList()
 MCPendingMessagesList::~MCPendingMessagesList()
 {
     // Delete all messages remaining on the queue
-    for (size_t i = GetCount(); i > 0; i++)
+    for (size_t i = GetCount(); i > 0; i--)
         DeleteMessage(i - 1, true);
     
     MCMemoryDelete(m_array);
