@@ -2,7 +2,7 @@ Name: redo
 
 Type: command
 
-Syntax: <reserved word|reserved word>
+Syntax: redo
 
 Summary:
 The <redo> <command> is not implemented and is <reserved word|reserved>.
