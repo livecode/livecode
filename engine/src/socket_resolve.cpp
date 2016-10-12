@@ -434,7 +434,7 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
     
 	memset((char *)r_addr, 0, sizeof(struct sockaddr_in));
 	r_addr->sin_family = AF_INET;
-	r_addr->sin_port = MCSwapInt16HostToNetwork(port);
+	r_addr->sin_port = MCSwapInt16HostToNetwork(uint16_t(port));
     
     MCAutoPointer<char> t_name_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_name, &t_name_cstring);
