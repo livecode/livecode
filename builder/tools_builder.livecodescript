@@ -106,7 +106,7 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
          filter tArchiveFiles with "Android/External-*"
          revZipCloseArchive pFolder & slash & tLCExt
          
-         if tArchiveFiles is not empty then
+         if tArchiveFiles is empty then
             get shell(merge("rm -fv '[[ tLCExt ]]'"))
          end if
       end repeat

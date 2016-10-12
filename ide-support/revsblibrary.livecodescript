@@ -300,7 +300,7 @@ end __revSBCopyFolder
 # Marcus van Houdt
 private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
    -- Stat the source file
-   local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
+   local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
    
    if tResult is empty then
@@ -317,15 +317,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       get the detailed files
       filter it with (the urlEncode of item -1 of pSourceFile) & "*"
       set the itemDelimiter to ","
-      put item 2 of it into tDataForkSize
-      put item 3 of it into tRsrcForkSize
+      put item 2 of it into tSize
       put item 8 of it into tUser
       put item 9 of it into tGroup
       put item 10 of it into tPermissions
       put item 11 of it into tFileType
-      
-      local tTotalSize
-      put tDataForkSize + tRsrcForkSize into tTotalSize
       
       if there is a file pTargetFile then
          delete file pTargetFile
@@ -362,7 +358,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    local tAmountCopied
    if tResult is empty then
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-         send pCallback && 0, tTotalSize to pCallbackTarget
+         send pCallback && 0, tSize to pCallbackTarget
       end if
       repeat forever
          read from file pSourceFile for 1048576
@@ -380,7 +376,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
          end if
          add the number of chars of it to tAmountCopied
          if pCallbackTarget is not empty and there is a pCallbackTarget then
-            send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+            send pCallback && tAmountCopied, tSize to pCallbackTarget
          end if
       end repeat
    end if
@@ -390,19 +386,6 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    if pSourceFile is among the lines of the openFiles then
       close file pSourceFile
-   end if
-   
-   if tResult is empty then
-      if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
-         set the itemDelimiter to ","
-         repeat for each line tRsrcDetails in getResources(pSourceFile)
-            get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
-            add item 4 of tRsrcDetails to tAmountCopied
-            if pCallbackTarget is not empty and there is a pCallbackTarget then
-               send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-            end if
-         end repeat
-      end if
    end if
    
    # OK-2007-11-30 : Modified to work for Linux too
