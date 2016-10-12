@@ -525,10 +525,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next pending message time.
 		real8 t_pending_eventtime;
-		if (nmessages == 0)
+		if (m_messages.GetCount() == 0)
 			t_pending_eventtime = exittime;
 		else
-			t_pending_eventtime = messages[0] . time;
+			t_pending_eventtime = m_messages[0].m_time;
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next system event time.
 		real8 t_system_eventtime;

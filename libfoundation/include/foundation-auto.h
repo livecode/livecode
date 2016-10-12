@@ -50,7 +50,13 @@ public:
 	{
 	}
     
-    inline explicit MCAutoValueRefBase(T p_value)
+    inline MCAutoValueRefBase(const MCAutoValueRefBase& other) :
+      m_value(nil)
+    {
+        Reset(other.m_value);
+    }
+    
+    inline MCAutoValueRefBase(T p_value)
 		: m_value(nil)
 	{
         if (p_value)
@@ -82,6 +88,9 @@ public:
     
     void Reset(T value = nil)
     {
+        if (value == m_value)
+                return;
+        
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
