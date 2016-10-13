@@ -23,15 +23,15 @@ put the number of segments in tText -- returns 3
 
 Description:
 Use the <segments> keyword together with the <number> <function> to 
-refer to one or more <words> or group of <chars|characters> in a container.
+refer to one or more <words> or group of <char|characters> in a container.
 
 A <segment> is <delimit|delimited> by one or more <space|spaces>, 
 <tab|tabs>, or <return(constant)|returns>, or enclosed by 
 <double quote|double quotes>. A single <segment> can contain 
-multiple <chars|characters> and multiple <items> or <words>, but 
-not multiple <lines>.
+multiple <char|characters> and multiple <item|items> or <word|words>, but 
+not multiple <line|lines>.
 
->*Note:*  Segments are delimited by <double quote|double quotes> ("), 
+>*Note:*  <segment|Segments> are delimited by <double quote|double quotes> ("), 
 > but not by curved quotes (“ or ”). LiveCode does not treat curved 
 > quotes as <quote|quotes>.
 
