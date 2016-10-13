@@ -2286,7 +2286,7 @@ void MCObject::senderror()
 		MCerrorptr = this;
 	MCAutoStringRef t_eerror;
 	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
-	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
+	MCscreen->delaymessage(MCerrorlockptr ? MCerrorlockptr : MCerrorptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
 	MCerrorptr = nil;
 }
