@@ -298,7 +298,7 @@ MCObject::~MCObject()
 	MCB_clearbreaks(this);
 
 	if (MCerrorptr == this)
-		MCerrorptr = NULL;
+		MCerrorptr = nil;
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
@@ -1165,7 +1165,7 @@ Exec_stat MCObject::handle(Handler_type htype, MCNameRef mess, MCParameter *para
 		}
 	}
 
-	if (stat == ES_ERROR && MCerrorptr == NULL)
+	if (stat == ES_ERROR && !MCerrorptr)
 		MCerrorptr = this;
 
 	return stat;
@@ -2282,13 +2282,13 @@ void MCObject::senderror()
 		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
-	if (MCerrorptr == NULL)
+	if (!MCerrorptr)
 		MCerrorptr = this;
 	MCAutoStringRef t_eerror;
 	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
 	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
-	MCerrorptr = NULL;
+	MCerrorptr = nil;
 }
 
 void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)

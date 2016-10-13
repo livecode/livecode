@@ -1938,7 +1938,7 @@ void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCerrorptr != nil)
+    if (MCerrorptr)
     {
         r_object . object = MCerrorptr;
         r_object . part_id = 0;
