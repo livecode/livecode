@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OBJECT_H
 
 #include "dllst.h"
-#include "globals.h"
 #include "imagebitmap.h"
 #include "objdefs.h"
 #include "parsedef.h"

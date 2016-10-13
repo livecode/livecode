@@ -33,6 +33,7 @@
 #include "card.h"
 #include "redraw.h"
 #include "eventqueue.h"
+#include "globals.h"
 
 #include "dispatch.h"
 #include "notify.h"
