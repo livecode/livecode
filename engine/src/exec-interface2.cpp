@@ -2438,7 +2438,7 @@ void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data,
 
 void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdefaultstackptr != nil)
+    if (MCdefaultstackptr)
     {
         r_object . object = MCdefaultstackptr;
         r_object . part_id = 0;

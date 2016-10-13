@@ -1263,7 +1263,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             break;
         case kMCExternalContextQueryDefaultStack:
         {
-            if (MCdefaultstackptr == nil)
+            if (!MCdefaultstackptr)
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
@@ -1276,7 +1276,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             break;
         case kMCExternalContextQueryDefaultCard:
         {
-            if (MCdefaultstackptr == nil)
+            if (!MCdefaultstackptr)
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
