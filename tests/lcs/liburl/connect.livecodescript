@@ -14,7 +14,7 @@ end TestSetup
 
 on TestCONNECTHeader
    constant kTestHost = "google.com"
-   set the httpproxy to "http://127.0.0.1:99999"
+   set the httpproxy to "http://127.0.0.1:65535"
    
    put url ("https://" & kTestHost) into tValue
    
