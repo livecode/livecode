@@ -18,19 +18,21 @@ Example:
 set the decorations of stack "Help" to "minimize, menu"
 
 Description:
-Use the <minimize> <keyword> to turn a window's <minimize button> on or
-off. 
+Use the <minimize> <keyword> to turn a <systemWindow|window>'s <minimize button> 
+on or off. 
 
 Setting a stack's <decorations> <property> to <minimize> automatically
-includes <title> in the value of the <decorations>, turning on the
-window's <title bar>.
+includes 'title' in the value of the <decorations>, turning on the
+<systemWindow|window>'s <title bar>. The name on the <title bar> can be set 
+ +using the <systemWindow|window>'s <label> property.
 
-On Windows systems, the menu decoration must be set along with
+On Windows systems, the <menu> <decorations|decoration> must be set along with
 <minimize> : you cannot use <minimize> without including <menu>.
 
 References: property (glossary), title bar (glossary), keyword (glossary),
 minimize button (glossary), title (keyword), menu (keyword),
-decorations (property), systemWindow (property), title (property)
+decorations (property), systemWindow (property), zoomBox (property),
+label (property)
 
 Tags: windowing
 
