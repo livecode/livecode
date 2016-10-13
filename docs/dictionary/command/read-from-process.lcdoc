@@ -2,7 +2,7 @@ Name: read from process
 
 Type: command
 
-Syntax: read from process <processName> [at <start>] {until {<strin> g | empty | end | EOF} | for <amoun> t [<chunkType>]} [in <time>]
+Syntax: read from process <processName> [at <start>] {until {<string> | empty | end | EOF} | for <amount> [<chunkType>]} [in <time>]
 
 Summary:
 Accepts the output of a <process> that was opened with the <open
@@ -37,12 +37,6 @@ the open processcommand.
 start:
 The start specifies the character or byte position in the process output
 where you want to begin reading.
-
-strin:
-
-
-amoun:
-
 
 chunkType:
 One of chars, characters, words, items, lines, int1, uInt1, int2, uint2,
@@ -131,4 +125,3 @@ command (glossary), process (glossary), uInt2 (keyword), string (keyword),
 int1 (keyword), characters (keyword), int4 (keyword), integer (keyword),
 int2 (keyword), real4 (keyword), uInt4 (keyword), stdin (keyword),
 it (keyword), uInt1 (keyword), character (keyword), real8 (keyword)
-
