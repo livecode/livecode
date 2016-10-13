@@ -294,7 +294,7 @@ MCPlayer *MCtemplateplayer;
 MCImage *MCtemplateimage;
 MCField *MCtemplatefield;
 
-MCImage *MCmagimage;
+MCImageHandle MCmagimage;
 MCMagnify *MCmagnifier;
 MCObject *MCdragsource;
 MCObject *MCdragdest;

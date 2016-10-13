@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "aclip.h"
 #include "stack.h"
 #include "player.h"
+#include "image.h"
 
 #include "foundation-locale.h"
 
@@ -212,7 +213,7 @@ extern MCPlayer *MCtemplateplayer;
 extern MCImage *MCtemplateimage;
 extern MCField *MCtemplatefield;
 
-extern MCImage *MCmagimage;
+extern MCImageHandle MCmagimage;
 extern MCMagnify *MCmagnifier;
 extern MCObject *MCdragsource;
 extern MCObject *MCdragdest;
