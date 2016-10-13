@@ -216,7 +216,7 @@ extern MCField *MCtemplatefield;
 
 extern MCImageHandle MCmagimage;
 extern MCMagnifyHandle MCmagnifier;
-extern MCObject *MCdragsource;
+extern MCObjectHandle MCdragsource;
 extern MCObject *MCdragdest;
 extern MCField *MCactivefield;
 extern MCField *MCclickfield;

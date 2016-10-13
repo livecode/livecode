@@ -660,7 +660,7 @@ void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragsource == nil)
+	if (!MCdragsource)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1870,7 +1870,7 @@ void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragsource != nil)
+    if (MCdragsource)
     {
         r_object . object = MCdragsource;
         r_object . part_id = 0;

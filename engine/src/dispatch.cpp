@@ -1365,7 +1365,7 @@ void MCDispatch::wmdrag(Window w)
         MCdragboard->Clear();
         MCdragboard->PushUpdates(true);
 
-		MCdragsource = NULL;
+		MCdragsource = nil;
 		MCdragdest = NULL;
 		MCdropfield = NULL;
 		MCdragtargetptr = NULL;
@@ -1377,7 +1377,7 @@ void MCDispatch::wmdrag(Window w)
         // removed (this might happen, for example, if a script encountered
         // an error after placing some of the drag data).
         MCdragboard->Clear();
-		MCdragsource = NULL;
+		MCdragsource = nil;
 		MCdragdest = NULL;
 		MCdropfield = NULL;
 		MCdragtargetptr = NULL;
@@ -2188,7 +2188,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 void MCDispatch::dodrop(bool p_source)
 {
-	if (!m_drag_end_sent && MCdragsource != NULL && (MCdragdest == NULL || MCdragaction == DRAG_ACTION_NONE))
+	if (!m_drag_end_sent && MCdragsource && (MCdragdest == NULL || MCdragaction == DRAG_ACTION_NONE))
 	{
 		// We are only the source
 		m_drag_end_sent = true;
@@ -2207,10 +2207,9 @@ void MCDispatch::dodrop(bool p_source)
 		//   when the drag is over. Note that we have to check that the source was a field in this case since we don't
 		//   need to do anything if it is not!
 		// IM-2014-02-28: [[ Bug 11715 ]] dragsource may have changed or unset after sending message so check for valid ptr
-		if (MCdragsource != nil && MCdragsource -> gettype() == CT_FIELD)
+		if (MCdragsource && MCdragsource -> gettype() == CT_FIELD)
 		{
-			MCField *t_field;
-			t_field = static_cast<MCField *>(MCdragsource);
+			MCField *t_field = MCdragsource.GetAs<MCField>();
 			t_field -> setstate(False, CS_DRAG_TEXT);
 			t_field -> computedrag();
 			t_field -> getstack() -> resetcursor(True);
@@ -2240,7 +2239,7 @@ void MCDispatch::dodrop(bool p_source)
 
 	// If source is a field and the engine handled the start of the drag operation
 	bool t_auto_source;
-	t_auto_source = MCdragsource != NULL && MCdragsource -> gettype() == CT_FIELD && MCdragsource -> getstate(CS_SOURCE_TEXT);
+	t_auto_source = MCdragsource && MCdragsource -> gettype() == CT_FIELD && MCdragsource -> getstate(CS_SOURCE_TEXT);
 
 	// If dest is a field and the engine handled the accepting of the operation
 	bool t_auto_dest;
@@ -2251,8 +2250,7 @@ void MCDispatch::dodrop(bool p_source)
 	if (t_auto_source && t_auto_dest && MCdragsource == MCdragdest)
 	{
 		// Source and target are the same field
-		MCField *t_field;
-		t_field = static_cast<MCField *>(MCdragsource);
+		MCField *t_field = MCdragsource.GetAs<MCField>();
 
 		findex_t t_from_start_index, t_from_end_index;
 		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
@@ -2315,7 +2313,7 @@ void MCDispatch::dodrop(bool p_source)
 	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
+		MCdragsource.GetAs<MCField>()->selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
     t_auto_drop = MCdragdest != NULL;
@@ -2376,7 +2374,7 @@ void MCDispatch::dodrop(bool p_source)
 	}
 
 	bool t_auto_end;
-	if (MCdragsource != NULL)
+	if (MCdragsource)
 	{
 		m_drag_end_sent = true;
 #ifdef WIDGETS_HANDLE_DND
@@ -2394,12 +2392,12 @@ void MCDispatch::dodrop(bool p_source)
 	else
 		t_auto_end = false;
 
-	if (t_auto_source && t_auto_end && MCdragsource != NULL && MCdragaction == DRAG_ACTION_MOVE)
+	if (t_auto_source && t_auto_end && MCdragsource && MCdragaction == DRAG_ACTION_MOVE)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
 		MCRedrawLockScreen();
-		static_cast<MCField *>(MCdragsource) -> deletetext(t_src_start, t_src_end);
+		MCdragsource.GetAs<MCField>()->deletetext(t_src_start, t_src_end);
 		MCRedrawUnlockScreen();
 
 		// MW-2012-02-08: [[ TextChanged ]] Invoke textChanged as this method
