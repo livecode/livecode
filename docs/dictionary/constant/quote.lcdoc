@@ -17,6 +17,7 @@ Example:
 if last char of it is quote then delete last char of it
 
 Example:
+local tResponseToPost
 put quote & field 2 & quote into tResponseToPost
 
 Description:
