@@ -393,14 +393,14 @@ public:
     }
     
     template <class U>
-    bool operator==(const U* other) const
+    bool operator==(const typename MCObjectProxy<U>::Handle& other) const
     {
-        return operator==(Handle(other));
+        return m_proxy == other.m_proxy;
     }
     template <class U>
-    bool operator!=(const U* other) const
+    bool operator!=(const typename MCObjectProxy<U>::Handle& other) const
     {
-        return !operator==(other);
+        return !(operator==(other));
     }
     
     // Performs a retain on the underlying proxy without an RAII wrapper. This
