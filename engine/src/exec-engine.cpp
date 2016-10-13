@@ -909,7 +909,7 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 {
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
-    if (MCdefaultstackptr != nil && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
+    if (MCdefaultstackptr && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
     {
         switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
         {

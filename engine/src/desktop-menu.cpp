@@ -893,7 +893,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// If the menu is the icon menu, send an 'iconMenuOpening' message.
 	if (((MCScreenDC *)MCscreen) -> isiconmenu(p_menu))
 	{
-		if (MCdefaultstackptr != NULL)
+		if (MCdefaultstackptr)
 			MCdefaultstackptr -> getcard() -> message(MCM_icon_menu_opening);
 		return;
 	}
@@ -1002,7 +1002,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	{
 		if (((MCScreenDC *)MCscreen) -> isiconmenu(t_last_menu))
 		{
-			if (MCdefaultstackptr != NULL)
+			if (MCdefaultstackptr)
 				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, *t_result);
 		}
 		else

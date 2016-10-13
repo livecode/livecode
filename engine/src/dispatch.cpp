@@ -2121,7 +2121,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		return false;
 	}
 	
-	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
+	if (MCdefaultstackptr && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
 	{
 		MCObject *t_objects;
 		t_objects = NULL;
