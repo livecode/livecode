@@ -226,7 +226,7 @@ MCGroup::~MCGroup()
 	}
 	if (this == MCdefaultmenubar)
 	{
-		MCdefaultmenubar = NULL;
+		MCdefaultmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	delete vscrollbar;
