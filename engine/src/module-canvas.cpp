@@ -19,6 +19,7 @@
 #include "prefix.h"
 
 #include "image.h"
+#include "stack.h"
 #include "widget.h"
 
 #include "module-canvas.h"

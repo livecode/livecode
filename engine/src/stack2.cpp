@@ -118,7 +118,7 @@ void MCStack::checkdestroy()
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
 	{
-		MCStack *sptr = (MCStack *)parent;
+		MCStack *sptr = parent.GetAs<MCStack>();
 		sptr->checkdestroy();
 	}
 }
@@ -730,7 +730,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname, uint32_t p_version)
 	{
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
-			sptr = (MCStack *)sptr->parent;
+			sptr = sptr->parent.GetAs<MCStack>();
 		return MCdispatcher->savestack(sptr, p_fname, p_version);
 	}
 	return IO_NORMAL;

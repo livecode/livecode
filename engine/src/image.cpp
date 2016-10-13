@@ -2179,7 +2179,7 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 
 MCGFloat MCImage::getdevicescale(void)
 {
-	if (getstack() == nil)
+	if (!getstack())
 		return 1.0;
 	else
 		return getstack()->getdevicescale();

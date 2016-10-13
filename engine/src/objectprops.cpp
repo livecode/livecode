@@ -797,7 +797,7 @@ MCInterfaceTheme MCObject::gettheme() const
 {
     if (m_theme != kMCInterfaceThemeEmpty)
         return m_theme;
-    else if (parent != nil)
+    else if (parent)
         return parent->gettheme();
     else
         return kMCInterfaceThemeNative;

@@ -503,7 +503,7 @@ Boolean MCControl::del(bool p_check_flag)
 	{
 	case CT_CARD:
 		{
-			MCCard *cptr = (MCCard *)parent;
+			MCCard *cptr = parent.GetAs<MCCard>();
 			if (!cptr->removecontrol(this, False, True))
 				return False;
 			getstack()->removecontrol(this);
@@ -511,13 +511,13 @@ Boolean MCControl::del(bool p_check_flag)
 		}
 	case CT_GROUP:
 		{
-			MCGroup *gptr = (MCGroup *)parent;
+			MCGroup *gptr = parent.GetAs<MCGroup>();
 			gptr->removecontrol(this, True);
 			break;
 		}
 	default:
 		{ //stack
-			MCStack *sptr = (MCStack *)parent;
+			MCStack *sptr = parent.GetAs<MCStack>();
 			sptr->removecontrol(this);
 		}
 	}
@@ -545,7 +545,7 @@ void MCControl::paste(void)
 		return;
 
 	parent = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-	MCCard *cptr = (MCCard *)parent;
+	MCCard *cptr = parent.GetAs<MCCard>();
 	obj_id = 0;
 	//newcontrol->resetfontindex(oldstack);
 	if (!MCU_point_in_rect(cptr->getrect(), rect.x + (rect.width >> 1),
@@ -748,7 +748,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	if (invisible)
 		setflag(False, F_VISIBLE);
 
-	if (parent == NULL || parent->gettype() == CT_CARD
+	if (!parent || parent->gettype() == CT_CARD
 	        || parent->gettype() == CT_STACK)
 	{
 		MCCard *card = getcard(cid);
@@ -757,7 +757,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	}
 	else
 	{
-		MCGroup *gptr = (MCGroup *)parent;
+		MCGroup *gptr = parent.GetAs<MCGroup>();
 		gptr->appendcontrol(this);
 	}
 	newmessage();
