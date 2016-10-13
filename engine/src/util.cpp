@@ -175,7 +175,7 @@ void MCU_resetprops(Boolean update)
 	MCerrorlockptr = NULL;
 	MCinterrupt = False;
 	MCdragspeed = 0;
-	MCdynamiccard = NULL;
+	MCdynamiccard = nil;
 	MCdynamicpath = False;
 	MCexitall = False;
     
@@ -1892,7 +1892,7 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 			{
 				// MW-2011-01-05: Make sure dynamicpath global is sensible.
 				Boolean olddynamic = MCdynamicpath;
-				MCdynamicpath = MCdynamiccard != NULL;
+				MCdynamicpath = MCdynamiccard.IsValid();
 
 				// PASS STATE FIX
 				Exec_stat oldstat = stat;

@@ -2076,7 +2076,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	Exec_stat t_stat;
 	t_stat = MCU_dofrontscripts(p_type, p_message, p_params);
 	Boolean olddynamic = MCdynamicpath;
-	MCdynamicpath = MCdynamiccard != NULL;
+	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		t_stat = handle(p_type, p_message, p_params, this);
 

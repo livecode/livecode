@@ -1225,7 +1225,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	// Dispatch the message
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
 	Boolean olddynamic = MCdynamicpath;
-	MCdynamicpath = MCdynamiccard != NULL;
+	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
 		{
