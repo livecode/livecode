@@ -1522,7 +1522,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 	{
 		MCcursor = t_cursor;
         MCcursorid = t_cursor_id;
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 			MCmousestackptr->resetcursor(True);
 		else
 			MCdefaultstackptr->resetcursor(True);
@@ -1542,7 +1542,7 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
     // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
     MCdefaultcursor = t_cursor;
     MCdefaultcursorid = p_value;
-    if (MCmousestackptr != NULL)
+    if (MCmousestackptr)
         MCmousestackptr->resetcursor(True);
     else
         MCdefaultstackptr->resetcursor(True);
@@ -2309,7 +2309,7 @@ void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr;
         r_object . part_id = 0;
@@ -2368,7 +2368,7 @@ void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     // OK-2009-01-19: Refactored to ensure behaviour is the same as the mouseControl.
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr->getcard()->getmousecontrol();
         r_object . part_id = 0;

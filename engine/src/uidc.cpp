@@ -376,7 +376,7 @@ void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCmousestackptr;
 	r_loc = MCPointMake(MCmousex, MCmousey);
 
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
 }
 

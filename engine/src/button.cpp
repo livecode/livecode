@@ -2705,7 +2705,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 
 void MCButton::openmenu(Boolean grab)
 {
-	if (!opened || MCmousestackptr == NULL)
+	if (!opened || !MCmousestackptr)
 		return;
 	if (!MCNameIsEmpty(menuname) && !MCModeMakeLocalWindows())
 		return;
