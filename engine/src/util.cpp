@@ -1855,7 +1855,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	ctxt . GetObject()->getstack()->resetcursor(True);
 	if (MCcurtool == T_BROWSE)
 		MCstacks->restartidle();
-	if (MCtopstackptr != NULL)
+	if (MCtopstackptr)
 		MCtopstackptr->updatemenubar();
     
     MCStacknode *t_node, *t_first_node;

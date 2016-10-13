@@ -27,6 +27,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sysdefs.h"
 #include "mcsemaphore.h"
 
+#include "object.h"
+#include "card.h"
+#include "group.h"
+#include "aclip.h"
+#include "stack.h"
+#include "player.h"
+
 #include "foundation-locale.h"
 
 typedef struct _Streamnode Streamnode;
@@ -174,12 +181,12 @@ extern MCStacklist *MCtodestroy;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
-extern MCStack *MCtopstackptr;
 extern MCStack *MCdefaultstackptr;
 extern MCStack *MCstaticdefaultstackptr;
 extern MCStack *MCmousestackptr;
 extern MCStack *MCclickstackptr;
 extern MCStack *MCfocusedstackptr;
+extern MCStackHandle MCtopstackptr;
 extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
 extern MCCard *MCdynamiccard;
