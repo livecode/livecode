@@ -767,7 +767,7 @@ void MCStack::close()
 	}
 	if (MCmousestackptr == this)
 	{
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 		int2 x, y;
 		MCscreen->querymouse(x, y);
 		if (MCU_point_in_rect(curcard->getrect(), x, y))
@@ -1145,7 +1145,7 @@ void MCStack::mfocustake(MCControl *target)
 void MCStack::munfocus(void)
 {
 	if (MCmousestackptr == this)
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 	if (curcard != 0)
 	{
 		if (gettool(this) != T_SELECT)

@@ -124,7 +124,7 @@ void MCU_watchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = True;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr->resetcursor(force);
 	}
 }
@@ -135,7 +135,7 @@ void MCU_unwatchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = False;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr -> resetcursor(force);
 	}
 }
@@ -149,7 +149,7 @@ void MCU_resetprops(Boolean update)
 			if (!MClockcursor)
 				MCcursor = None;
 			MCwatchcursor = False;
-			if (MCmousestackptr != NULL)
+			if (MCmousestackptr)
 				MCmousestackptr->resetcursor(True);
 			else
 				MCdefaultstackptr->resetcursor(True);

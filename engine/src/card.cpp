@@ -3455,8 +3455,8 @@ Exec_stat MCCard::closecontrols(void)
 // is a property of the mouseControl. Will return NULL if no mouseControl exists.
 MCControl *MCCard::getmousecontrol(void)
 {
-	if (MCmousestackptr == NULL)
-		return NULL;
+	if (!MCmousestackptr)
+		return nil;
 
 	MCControl *t_focused;
 	t_focused = MCmousestackptr -> getcard() -> getmfocused();

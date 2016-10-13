@@ -2205,7 +2205,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
         }
         else
         {
-            if (MCmousestackptr == NULL)
+            if (!MCmousestackptr)
                 MCscreen->querymouse(trect.x, trect.y);
             else
             {

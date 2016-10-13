@@ -1474,7 +1474,7 @@ void MCDispatch::wmdragenter(Window w)
     MCdragboard->PullUpdates();
 
     // Change the mouse focus to the stack that has had the drag enter it
-	if (MCmousestackptr != NULL && target != MCmousestackptr)
+	if (MCmousestackptr && target != MCmousestackptr)
 		MCmousestackptr -> munfocus();
 
 	MCmousestackptr = target;
@@ -1511,7 +1511,7 @@ void MCDispatch::wmdragleave(Window w)
 	if (target != NULL && target == MCmousestackptr)
 	{
 		MCmousestackptr -> munfocus();
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 	}
     
     // We are no longer the drop target and no longer care about the drag data.
@@ -1532,7 +1532,7 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 		dodrop(false);
 
     // The drag operation has ended. Remove the drag board contents.
-	MCmousestackptr = NULL;
+	MCmousestackptr = nil;
     MCdragboard->Clear();
 	m_drag_target = false;
 
