@@ -192,11 +192,11 @@ extern MCObjectHandle MCmenuobjectptr;
 extern MCCardHandle MCdynamiccard;
 extern Boolean MCdynamicpath;
 extern MCGroup *MCsavegroupptr;
-extern MCAudioClip *MCacptr;
 extern MCObjectHandle MCerrorptr;
 extern MCObjectHandle MCerrorlockptr;
 extern MCGroupHandle MCdefaultmenubar;
 extern MCGroupHandle MCmenubar;
+extern MCAudioClipHandle MCacptr;
 extern MCPlayerHandle MCplayers;
 
 extern MCStack *MCtemplatestack;

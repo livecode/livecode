@@ -341,7 +341,7 @@ void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 		MCstaticdefaultstackptr = stacks;
 	if (sptr == MCdefaultstackptr)
 		MCdefaultstackptr = MCstaticdefaultstackptr;
-	if (MCacptr != NULL && MCacptr->getmessagestack() == sptr)
+	if (MCacptr && MCacptr->getmessagestack() == sptr)
 		MCacptr->setmessagestack(NULL);
 	Boolean oldstate = MClockmessages;
 	MClockmessages = True;

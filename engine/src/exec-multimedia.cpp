@@ -284,7 +284,7 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 #ifndef FEATURE_PLATFORM_AUDIO
     MCU_play();
 #endif
-    if (MCacptr != nil && MCacptr -> isPlaying())
+    if (MCacptr && MCacptr -> isPlaying())
 	{
 		MCacptr -> getstringprop(ctxt, 0, P_NAME, False, r_sound);
 		return;
@@ -608,8 +608,8 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	
 	MCNewAutoNameRef t_clipname;
 	/* UNCHECKED */ MCNameCreate(p_clip, &t_clipname);
-	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP))) == NULL && 
-		(MCacptr = (MCAudioClip *)(sptr->getobjname(CT_AUDIO_CLIP, *t_clipname))) == NULL)
+	if (!(MCacptr = MCObjectCast<MCAudioClip>(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP)))
+		&& !(MCacptr = MCObjectCast<MCAudioClip>(sptr->getobjname(CT_AUDIO_CLIP, *t_clipname))))
 	{
 		IO_handle stream;
 		
@@ -634,7 +634,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 			MCS_close(stream);
 			MCresult->sets("error reading audioClip");
 			delete MCacptr;
-			MCacptr = NULL;
+			MCacptr = nil;
 			ctxt . Throw();
 			return;
 		}
@@ -642,7 +642,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	}
 	MCacptr->setlooping(p_looping);
 	MCU_play();
-	if (MCacptr != NULL)
+	if (MCacptr)
 		MCscreen->addtimer(MCacptr, MCM_internal, p_looping ? LOOP_RATE : PLAY_RATE);
 }
 

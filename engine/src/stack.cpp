@@ -759,7 +759,7 @@ void MCStack::close()
 	// MW-2011-09-12: [[ MacScroll ]] Clear the current scroll setting from the stack.
 	clearscroll();
 	
-	if (MCacptr != NULL && MCacptr->getmessagestack() == this)
+	if (MCacptr && MCacptr->getmessagestack() == this)
 		MCacptr->setmessagestack(NULL);
 	if (state & CS_ICONIC)
 	{
