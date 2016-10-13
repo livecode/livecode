@@ -23,7 +23,7 @@ that a <logical> <expression> evaluates to true.
 
 In many cases, the <true> <constant> can be omitted without changing the
 meaning of the <statement>. For example, the following two <if> 
-<statement|statements> are true:
+<statement|statements> are equivalent:
 
     if the lockText of field 1 is true then ...
     if the lockText of field 1 then ...
