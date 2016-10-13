@@ -295,7 +295,7 @@ MCImage *MCtemplateimage;
 MCField *MCtemplatefield;
 
 MCImageHandle MCmagimage;
-MCMagnify *MCmagnifier;
+MCMagnifyHandle MCmagnifier;
 MCObject *MCdragsource;
 MCObject *MCdragdest;
 MCField *MCactivefield;
