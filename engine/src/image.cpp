@@ -1397,7 +1397,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 								stat = IO_ERROR;
 							
 							if (IO_NORMAL == stat)
-								IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream);
+								stat = IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream);
 						}
 						
 						if (IO_NORMAL != stat)
