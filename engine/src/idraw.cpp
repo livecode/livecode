@@ -458,7 +458,7 @@ void MCImage::magredrawdest(const MCRectangle &brect)
 
 void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 {
-	if (MCmagnifier == NULL)
+	if (!MCmagnifier)
 		endmag(False);
 
 	MCRectangle t_mr;

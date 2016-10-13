@@ -57,7 +57,7 @@ void MCMagnify::close()
 	MCObject::close();
 	if (MCmagimage)
 		MCmagimage->endmag(False);
-	MCmagnifier = NULL;
+	MCmagnifier = nil;
 }
 
 Boolean MCMagnify::kfocusnext(Boolean top)

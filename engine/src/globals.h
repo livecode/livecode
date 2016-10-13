@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "player.h"
 #include "image.h"
+#include "magnify.h"
 
 #include "foundation-locale.h"
 
@@ -214,7 +215,7 @@ extern MCImage *MCtemplateimage;
 extern MCField *MCtemplatefield;
 
 extern MCImageHandle MCmagimage;
-extern MCMagnify *MCmagnifier;
+extern MCMagnifyHandle MCmagnifier;
 extern MCObject *MCdragsource;
 extern MCObject *MCdragdest;
 extern MCField *MCactivefield;
