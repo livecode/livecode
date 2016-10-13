@@ -283,7 +283,7 @@ public:
         Set(p_proxy);
     }
     
-    Handle(const MCObject* p_object) :
+    explicit Handle(const T* p_object) :
       m_proxy(nullptr)
     {
         Set(p_object);
