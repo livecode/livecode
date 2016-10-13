@@ -24,14 +24,14 @@ shell(field "Command")
 Example:
 shell("attrib main.rev +R")
 
+Example:
+get shell("say" && "hello world") -- Will say the phrase on MacOSX
+
 Parameters:
 commandLine (string):
 
 
-Returns:
-The <shell> <function> <return|returns> a <string>.
-
-The result:
+The result (string):
 The value returned by the <shell> <function> is the result of the
 <commandLine>, including any <error message|error messages> the
 <commandLine> generates. (On <Unix|Unix systems>, the <stdout> and
