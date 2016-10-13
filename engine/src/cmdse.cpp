@@ -118,7 +118,13 @@ void MCAccept::exec_ctxt(MCExecContext &ctxt)
     uinteger_t t_port;
     if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
         return;
-    
+	
+	if (t_port > UINT16_MAX)
+	{
+		ctxt . LegacyThrow(EE_ACCEPT_BADEXP);
+		return;
+	}
+	
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
         return;

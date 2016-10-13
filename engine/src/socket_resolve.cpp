@@ -425,7 +425,14 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
 			}
 		}
         else
+		{
             port = MCNumberFetchAsInteger(*t_port_number);
+			if (port > UINT16_MAX)
+			{
+				MCresult->sets("not a valid port");
+				return false;
+			}
+		}
     }
     else
         t_name = MCValueRetain(*t_name_in);
