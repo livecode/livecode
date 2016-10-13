@@ -60,7 +60,7 @@ static MCPoint qa_points[QA_NPOINTS + 1];
 static void MCU_play_message()
 {
 	MCAudioClip *acptr = MCacptr;
-	MCacptr = NULL;
+	MCacptr = nil;
     // PM-2014-12-22: [[ Bug 14269 ]] Nil checks to prevent a crash
 	MCStack *sptr = (acptr != NULL ? acptr->getmessagestack() : NULL);
 	if (sptr != NULL)
@@ -74,13 +74,13 @@ static void MCU_play_message()
 
 void MCU_play()
 {
-	if (MCacptr != NULL && !MCacptr->play())
+	if (MCacptr && !MCacptr->play())
 		MCU_play_message();
 }
 
 void MCU_play_stop()
 {
-	if (MCacptr != NULL)
+	if (MCacptr)
 	{
 		MCacptr->stop(True);
 		MCU_play_message();

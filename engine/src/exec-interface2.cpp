@@ -2586,7 +2586,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
-        (MCacptr != NULL && MCacptr -> hasname(p_name)))
+        (MCacptr && MCacptr -> hasname(p_name)))
             t_clip = MCacptr;
     
     if (t_clip != nil)
