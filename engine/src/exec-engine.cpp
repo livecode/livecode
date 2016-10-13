@@ -1917,7 +1917,7 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmenuobjectptr != nil)
+    if (MCmenuobjectptr)
     {
         r_object . object = MCmenuobjectptr;
         r_object . part_id = 0;

@@ -274,12 +274,12 @@ Boolean MCdynamicpath;
 MCObject *MCerrorptr;
 MCObject *MCerrorlockptr;
 MCObjectPtr MCtargetptr;
-MCObject *MCmenuobjectptr;
 MCGroup *MCsavegroupptr;
 MCGroup *MCdefaultmenubar;
 MCGroup *MCmenubar;
 MCPlayer *MCplayers;
 MCAudioClip *MCacptr;
+MCObjectHandle MCmenuobjectptr;
 
 MCStack *MCtemplatestack;
 MCAudioClip *MCtemplateaudio;

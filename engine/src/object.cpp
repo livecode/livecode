@@ -1194,7 +1194,7 @@ void MCObject::closemenu(Boolean kfocus, Boolean disarm)
 		attachedmenu = NULL;
 		menudepth--;
 		if (MCmenuobjectptr == this)
-			MCmenuobjectptr = NULL;
+			MCmenuobjectptr = nil;
 	}
 }
 
