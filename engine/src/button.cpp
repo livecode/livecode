@@ -738,7 +738,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				message_with_args(MCM_mouse_release, menubutton);
 			state &= ~CS_IGNORE_MENU;
 			if (MCmenuobjectptr == this)
-				MCmenuobjectptr = NULL;
+				MCmenuobjectptr = nil;
 			return True;
 		default:	
 			MCButton *mbptr = menu->findmnemonic(t_char);
@@ -761,7 +761,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 						message_with_args(MCM_mouse_up, menubutton);
 				}
 				if (MCmenuobjectptr == this)
-					MCmenuobjectptr = NULL;
+					MCmenuobjectptr = nil;
 				return True;
 			}
 			else
@@ -1399,7 +1399,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		}
 		state &= ~CS_IGNORE_MENU;
 		if (MCmenuobjectptr == this)
-			MCmenuobjectptr = NULL;
+			MCmenuobjectptr = nil;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 		if (!opened)
@@ -2757,7 +2757,7 @@ void MCButton::openmenu(Boolean grab)
 	{
 		state |= CS_SUBMENU | CS_ARMED;
 		reseticon();
-		if (MCmenuobjectptr == NULL)
+		if (!MCmenuobjectptr)
 			MCmenuobjectptr = this;
 		mymenudepth = ++menudepth;
 		MCStack *sptr = menumode == WM_POPUP ? MCmousestackptr : getstack();
