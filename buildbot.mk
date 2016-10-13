@@ -62,6 +62,19 @@ compile:
 .PHONY: compile
 
 ################################################################
+# Testsuite
+################################################################
+
+check:
+	@set -e; \
+	case "$(BUILD_PLATFORM)" in \
+	    linux* | mac*) $(MAKE) check ;; \
+	    *) echo "Can't run tests on $(BUILD_PLATFORM)" ;; \
+	esac
+
+.PHONY: check
+
+################################################################
 # Archive / extract built binaries
 ################################################################
 
