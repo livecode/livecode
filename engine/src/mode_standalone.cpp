@@ -886,7 +886,7 @@ IO_stat MCDispatch::startup(void)
 			MCscreen -> wait(t_end_time - MCS_time(), True, False);
 		
 		destroystack(t_banner_stack, True);
-		MCtopstackptr = NULL;
+		MCtopstackptr = nil;
 		
 		MCMemoryDeallocate((void *)t_info . banner_stackfile . getstring());
 	}
@@ -1142,7 +1142,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

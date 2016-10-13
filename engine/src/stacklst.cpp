@@ -206,7 +206,7 @@ void MCStacklist::top(MCStack *sptr)
 	}
 
 	uint2 pass = WM_TOP_LEVEL;
-	MCtopstackptr = NULL;
+	MCtopstackptr = nil;
 	do
 	{
 		tptr = stacks;

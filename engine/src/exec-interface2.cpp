@@ -2285,7 +2285,7 @@ void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_o
 
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtopstackptr != nil)
+    if (MCtopstackptr)
     {
         r_object . object = MCtopstackptr;
         r_object . part_id = 0;

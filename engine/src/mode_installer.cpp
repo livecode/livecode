@@ -1619,7 +1619,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

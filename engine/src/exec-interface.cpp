@@ -1956,7 +1956,7 @@ void MCInterfaceExecUngroupObject(MCExecContext& ctxt, MCObject *p_group)
 
 void MCInterfaceExecUngroupSelection(MCExecContext& ctxt)
 {
-	if (MCtopstackptr != NULL)
+	if (MCtopstackptr)
 	{
 		MCObject *t_group;
 		t_group = MCselected->getfirst();
@@ -3028,7 +3028,7 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
             // AL-2014-11-24: [[ Bug 14076 ]] Don't override window mode with WM_DRAWER
 			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, p_mode);
 	}
-	else if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
+	else if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode);
 	else
 		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, p_mode);
@@ -3081,7 +3081,7 @@ void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNa
 
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
 {
-	if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
+	if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCdefaultstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 	else
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
@@ -4485,7 +4485,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	else
 	{
 		// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
-		if (ctxt . GetObject()->getstack()->getopened() || MCtopstackptr == NULL)
+		if (ctxt . GetObject()->getstack()->getopened() || !MCtopstackptr)
 			parentptr = ctxt . GetObject() -> getstack();
 		else
 			parentptr = MCtopstackptr;

@@ -391,7 +391,7 @@ IO_stat MCDispatch::startup(void)
             //	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
             destroystack(sptr, True);
-            MCtopstackptr = NULL;
+            MCtopstackptr = nil;
             MCquit = False;
             MCenvironmentactive = False;
             
@@ -807,7 +807,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
