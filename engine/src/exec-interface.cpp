@@ -659,7 +659,7 @@ void MCInterfaceEvalClickField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickStack(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickstackptr == nil)
+	if (!MCclickstackptr)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;

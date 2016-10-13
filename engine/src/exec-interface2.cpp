@@ -2297,7 +2297,7 @@ void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickstackptr != nil)
+    if (MCclickstackptr)
     {
         r_object . object = MCclickstackptr;
         r_object . part_id = 0;

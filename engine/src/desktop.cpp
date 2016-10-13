@@ -407,7 +407,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCeventtime = MCPlatformGetEventTime();
     
         // PM-2015-03-30: [[ Bug 15091 ]] When we "go to card X" on mouseDown, MCclickstackptr becomes nil because of MCStack::close().  
-        if (MCclickstackptr == nil)
+        if (!MCclickstackptr)
             MCclickstackptr = MCmousestackptr;
         
 		MCObject *t_target;
