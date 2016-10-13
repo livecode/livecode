@@ -481,7 +481,7 @@ void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCclickstackptr;
 	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
 
-	if (MCclickstackptr != nil)
+	if (MCclickstackptr)
 		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
 }
 

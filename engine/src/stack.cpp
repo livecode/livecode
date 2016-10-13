@@ -776,7 +776,7 @@ void MCStack::close()
 		}
 	}
 	if (MCclickstackptr == this)
-		MCclickstackptr = NULL;
+		MCclickstackptr = nil;
 	if (MCfocusedstackptr == this)
 		MCfocusedstackptr = NULL;
 	if (!(state & CS_ICONIC))
