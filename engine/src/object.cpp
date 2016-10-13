@@ -5221,6 +5221,26 @@ bool MCObject::isancestorof(MCObject *p_object)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void MCObject::signallisteners(Properties which)
+{
+    if (m_listening && which != P_CUSTOM_PROPERTY_SET)
+    {
+        m_properties_changed |= kMCPropertyChangedMessageTypePropertyChanged;
+        MCobjectpropertieschanged = True;
+    }
+}
+
+void MCObject::signallistenerswithmessage(uint8_t p_message)
+{
+    if (m_listening)
+    {
+        m_properties_changed |= p_message;
+        MCobjectpropertieschanged = True;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);

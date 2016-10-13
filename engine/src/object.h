@@ -1117,24 +1117,10 @@ public:
 		m_properties_changed = kMCPropertyChangedMessageTypeNone;
 	}
 	
-	inline void signallisteners(Properties which)
-	{
-		if (m_listening && which != P_CUSTOM_PROPERTY_SET)
-		{
-			m_properties_changed |= kMCPropertyChangedMessageTypePropertyChanged;
-			MCobjectpropertieschanged = True;
-		}
-	}
+	void signallisteners(Properties which);
 	
-	inline void signallistenerswithmessage(uint8_t p_message)
-	{
-		if (m_listening)
-		{
-			m_properties_changed |= p_message;
-			MCobjectpropertieschanged = True;
-		}
-	}	
-	
+	void signallistenerswithmessage(uint8_t p_message);
+    
 	uint8_t propertieschanged(void)
 	{
 		if (m_properties_changed != kMCPropertyChangedMessageTypeNone)
