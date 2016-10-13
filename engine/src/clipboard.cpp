@@ -23,6 +23,7 @@
 #include "object.h"
 #include "stack.h"
 #include "styledtext.h"
+#include "globals.h"
 
 
 class MCClipboard::AutoLock
