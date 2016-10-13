@@ -1117,7 +1117,7 @@ void MCUIDC::configureIME(int32_t x, int32_t y)
 
 void MCUIDC::updatemenubar(Boolean force)
 {
-	if (MCdefaultmenubar == NULL)
+	if (!MCdefaultmenubar)
 		MCdefaultmenubar = MCmenubar;
 
 	MCGroup *newMenuGroup;

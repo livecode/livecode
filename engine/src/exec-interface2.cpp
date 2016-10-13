@@ -1575,7 +1575,7 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
-	if (MCdefaultmenubar == nil)
+	if (!MCdefaultmenubar)
 	{
 		r_value = MCValueRetain(kMCEmptyName);
 		return;
@@ -3047,7 +3047,7 @@ void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
         return;
     }
     
-    if (MCdefaultmenubar != nil)
+    if (MCdefaultmenubar)
     {
         r_menubar . object = MCdefaultmenubar;
         r_menubar . part_id = 0;

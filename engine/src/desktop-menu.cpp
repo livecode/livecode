@@ -573,7 +573,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	
 	MCGroup *newMenuGroup; //pointer to the menu group
 	static MCGroup *curMenuGroup = NULL; //current menu bar handle
-	if (MCdefaultmenubar == NULL)   // the menu of first stack opened becomes
+	if (!MCdefaultmenubar)   // the menu of first stack opened becomes
 		MCdefaultmenubar = MCmenubar; // the default menu bar automatically
 	//get current menu group
 	if (MCmenubar != NULL)
@@ -928,7 +928,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
         // SN-2014-11-06: [[ Bug 13836 ]] MCmenubar (or MCdefaultmenubar) should get mouseDown, not the target (it gets menuPick)
         if (MCmenubar != nil)
             MCmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
-        else if (MCdefaultmenubar != nil)
+        else if (MCdefaultmenubar)
             MCdefaultmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		s_menubar_lock_count -= 1;
         MCRedrawUnlockScreen();
