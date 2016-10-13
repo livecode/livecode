@@ -226,11 +226,11 @@ extern const uint4 constant_table_size = ELEMENTS(constant_table);
 
 static LT accept_table[] =
     {
-        {"connections", TT_UNDEFINED, AC_UNDEFINED},
+        {"connections", TT_UNDEFINED, AC_CONNECTIONS},
         {"datagram", TT_UNDEFINED, AC_DATAGRAM},
         {"datagrams", TT_UNDEFINED, AC_DATAGRAM},
-        {"on", TT_UNDEFINED, AC_UNDEFINED},
-        {"port", TT_UNDEFINED, AC_UNDEFINED},
+        {"on", TT_UNDEFINED, AC_ON},
+        {"port", TT_UNDEFINED, AC_PORT},
         {"secure", TT_UNDEFINED, AC_SECURE}
     };
 

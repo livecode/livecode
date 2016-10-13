@@ -1086,8 +1086,22 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	memset((char *)&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
+	
+	if (MCdefaultnetworkinterface != NULL)
+	{
+		MCAutoStringRef MCdefaultnetworkinterface_string;
+		if (!MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string) ||
+			!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, addr))
+		{
+			MCresult->sets("can't resolve network interface");
+			return NULL;
+		}
+	}
+	else
+		addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
+	
 	addr.sin_port = MCSwapInt16HostToNetwork(port);
+	
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
