@@ -778,7 +778,7 @@ void MCStack::close()
 	if (MCclickstackptr == this)
 		MCclickstackptr = nil;
 	if (MCfocusedstackptr == this)
-		MCfocusedstackptr = NULL;
+		MCfocusedstackptr = nil;
 	if (!(state & CS_ICONIC))
 		MCstacks->remove(this);
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
@@ -888,7 +888,7 @@ void MCStack::kunfocus()
 	if (!(state & CS_KFOCUSED))
 		return;
 	if (MCfocusedstackptr == this)
-		MCfocusedstackptr = NULL;
+		MCfocusedstackptr = nil;
 	state &= ~CS_KFOCUSED;
 	if (!opened)
 		return;

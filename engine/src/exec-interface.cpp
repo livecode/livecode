@@ -1272,7 +1272,7 @@ void MCInterfaceEvalMouseColor(MCExecContext& ctxt, MCColor& r_color)
 
 void MCInterfaceEvalFocusedObject(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfocusedstackptr == nil)
+	if (!MCfocusedstackptr)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1491,7 +1491,7 @@ void MCInterfaceExecBeep(MCExecContext& ctxt, integer_t p_count)
 
 void MCInterfaceExecFocusOnNothing(MCExecContext &ctxt)
 {
-	if (MCfocusedstackptr != NULL && MCfocusedstackptr -> getcard() != NULL)
+	if (MCfocusedstackptr && MCfocusedstackptr -> getcard() != NULL)
 		MCfocusedstackptr -> getcard() -> kunfocus();
 #ifdef _MOBILE
 	// Make sure the IME is forced closed if explicitly asked to be.
