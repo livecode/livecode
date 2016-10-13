@@ -350,12 +350,17 @@ public:
     // Pointer-like access
     T* Get() const
     {
-        MCAssert(IsValid());
+        MCAssert(!IsBound() || IsValid());
+        
+        if (!IsBound())
+            return nullptr;
+        
         return m_proxy->Get();
     }
     T* operator-> () const
     {
-        return Get();
+        MCAssert(IsValid());
+        return m_proxy->Get();
     }
     operator T* () const
     {
