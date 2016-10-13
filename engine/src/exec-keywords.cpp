@@ -207,7 +207,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	{
 		stat = MCU_dofrontscripts(is_function ? HT_FUNCTION : HT_MESSAGE, name, params);
 		Boolean olddynamic = MCdynamicpath;
-		MCdynamicpath = MCdynamiccard != NULL;
+		MCdynamicpath = MCdynamiccard.IsValid();
 		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
         {
             if (is_function)

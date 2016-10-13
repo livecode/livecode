@@ -189,7 +189,7 @@ extern MCStackHandle MCclickstackptr;
 extern MCStackHandle MCfocusedstackptr;
 extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
-extern MCCard *MCdynamiccard;
+extern MCCardHandle MCdynamiccard;
 extern Boolean MCdynamicpath;
 extern MCObject *MCerrorptr;
 extern MCObject *MCerrorlockptr;
