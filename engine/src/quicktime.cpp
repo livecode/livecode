@@ -660,10 +660,8 @@ void MCQTRecordDialog()
 
 static CGrafPtr s_qt_target_port = nil;
 
-static MCGImageRef s_qt_start_image = nil;
 static CGrafPtr s_qt_start_port = NULL;
 
-static MCGImageRef s_qt_end_image = nil;
 static CGrafPtr s_qt_end_port = NULL;
 
 static QTAtomContainer s_qt_effect_desc = NULL;
@@ -672,7 +670,7 @@ static ImageDescriptionHandle s_qt_sample_desc = NULL;
 static ImageDescriptionHandle s_qt_start_desc = NULL;
 static ImageDescriptionHandle s_qt_end_desc = NULL;
 static TimeBase s_qt_timebase = NULL;
-static ImageSequence s_qt_effect_seq = NULL;
+static ImageSequence s_qt_effect_seq = 0;
 
 static Boolean s_qt_reverse = False;
 
@@ -720,7 +718,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 			case codecParameterDialogConfirm:
 			case userCanceledErr:
 				QTDismissStandardParameterDialog(createdDialogID);
-				createdDialogID =nil;
+				createdDialogID = 0;
 				break;
 		}
 	}
@@ -732,7 +730,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 	}
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-	char *dataptr = new char[datasize];
+	char *dataptr = new (nothrow) char[datasize];
 	long *aLong = (long *)dataptr;
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
@@ -830,7 +828,7 @@ static void QTEffectsQuery(void **effectatomptr)
 	numeffects = QTCountChildrenOfType(effectatom, kParentAtomIsContainer,
 	                                   kEffectNameAtom);
 	neffects = 0;
-	qteffects = new QTEffect[numeffects];
+	qteffects = new (nothrow) QTEffect[numeffects];
 	uint2 i;
 	for (i = 1; i <= numeffects; i++)
 	{
@@ -849,7 +847,7 @@ static void QTEffectsQuery(void **effectatomptr)
 			                    &qteffects[neffects].type, NULL);
 			QTLockContainer(effectatom);
 			QTGetAtomDataPtr(effectatom, nameatom, &datasize, (Ptr *)&sptr);
-			qteffects[neffects].token = new char[datasize+1];
+			qteffects[neffects].token = new (nothrow) char[datasize+1];
 			memcpy(qteffects[neffects].token,sptr,datasize);
 			qteffects[neffects].token[datasize] = '\0';
 			QTUnlockContainer(effectatom);
@@ -1173,7 +1171,7 @@ bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_
 void MCQTEffectEnd(void)
 {
 	if (s_qt_effect_seq != 0)
-		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = NULL;
+		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = 0;
 	
 	if (s_qt_timebase != NULL)
 		DisposeTimeBase(s_qt_timebase), s_qt_timebase = NULL;

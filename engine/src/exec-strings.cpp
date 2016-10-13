@@ -987,7 +987,6 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
     MCAutoStringRefAsWString t_wide_string;
     t_wide_string . Lock(p_format);
 
-    const unichar_t *t_pos = *t_wide_string;
     const unichar_t *format = *t_wide_string;
 
 	t_success = MCStringCreateMutable(0, &t_result);
@@ -1973,8 +1972,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	if (t_length == 0)
         MCStringCopy(kMCEmptyString, r_result);
 
-	uint4 offset = 0;
-    MCAutoListRef t_output;
+	MCAutoListRef t_output;
     MCListCreateMutable(p_delimiter, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
@@ -2025,7 +2023,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 {
     // Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    matcher = new (nothrow) MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
     
@@ -2036,7 +2034,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
 {
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    matcher = new (nothrow) MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))
@@ -2215,7 +2213,7 @@ void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type
 {
     if (nitems > 1)
     {
-        MCSortnode *tmp = new MCSortnode[nitems];
+        MCSortnode *tmp = new (nothrow) MCSortnode[nitems];
         MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options);
         delete[] tmp;
     }
@@ -2400,7 +2398,7 @@ static void MCStringsSortIndirect(uindex_t *p_items, uint4 nitems, comparator_t 
     if (nitems == 0)
         return;
     
-    uindex_t *tmp = new uindex_t[nitems];
+    uindex_t *tmp = new (nothrow) uindex_t[nitems];
     MCStringsDoSortIndirect(p_items, nitems, tmp, is_less_or_equal, context);
     delete[] tmp;
 }
@@ -2501,7 +2499,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     t_temp_items = nil;
     if (p_by != nil)
     {
-        t_temp_items = new MCValueRef[p_count];
+        t_temp_items = new (nothrow) MCValueRef[p_count];
         MCerrorlock++;
         for(uindex_t i = 0; i < p_count; i++)
         {
@@ -2519,7 +2517,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     
     // Build the vector of indicies to sort.
     uindex_t *t_indicies;
-    t_indicies = new uindex_t[p_count];
+    t_indicies = new (nothrow) uindex_t[p_count];
     for(uindex_t i = 0; i < p_count; i++)
         t_indicies[i] = i;
     
@@ -2535,7 +2533,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         {
             // DateTime is sorted by seconds.
             double *t_seconds;
-            t_seconds = new double[p_count];
+            t_seconds = new (nothrow) double[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 MCDateTime t_datetime;
@@ -2553,7 +2551,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         case ST_NUMERIC:
         {
             double *t_numbers;
-            t_numbers = new double[p_count];
+            t_numbers = new (nothrow) double[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 if (MCValueIsEmpty(t_items[i]))
@@ -2609,7 +2607,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         case ST_BINARY:
         {
             MCDataRef *t_datas;
-            t_datas = new MCDataRef[p_count];
+            t_datas = new (nothrow) MCDataRef[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 if (!ctxt . ConvertToData(t_items[i], t_datas[i]))
@@ -2636,7 +2634,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             else
             {
                 MCStringRef *t_strings;
-                t_strings = new MCStringRef[p_count];
+                t_strings = new (nothrow) MCStringRef[p_count];
                 for(uindex_t i = 0; i < p_count; i++)
                 {
                     if (!ctxt . ConvertToString(t_items[i], t_strings[i]) ||
@@ -2660,7 +2658,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
             
             MCDataRef *t_datas;
-            t_datas = new MCDataRef[p_count];
+            t_datas = new (nothrow) MCDataRef[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 MCAutoStringRef t_string;

@@ -76,7 +76,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 		return NULL;
 
 	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
+	t_result = new (nothrow) DATABASEREC;
 	t_result -> driverref = t_module;
 	t_result -> idcounterptr = (idcounterrefptr)GetProcAddress(t_module, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)GetProcAddress(t_module, "newdbconnectionref");
@@ -165,7 +165,7 @@ void MCU_fix_path(char *cstr)
 
 char *MCS_getcurdir(void)
 {
-  char *t_path = new char[PATH_MAX + 2];
+  char *t_path = new (nothrow) char[PATH_MAX + 2];
   GetCurrentDirectory(PATH_MAX +1, (LPTSTR)t_path);
   MCU_path2std(t_path);
   return t_path;

@@ -592,11 +592,7 @@ typedef const struct __CFData *CFDataRef;
 //
 
 #if defined(__cplusplus) /* C++ */
-#	if defined(__GCC__)
-#		define nil __null
-#	else
-#		define nil uintptr_t(0)
-#	endif
+#   define nil nullptr
 
 #else /* C */
 #	if defined(__GCC__)
@@ -657,6 +653,16 @@ typedef struct __MCLocale* MCLocaleRef;
 
 #include <foundation-stdlib.h>
 #include <math.h>
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NEW AND DELETE OPERATORS
+//
+
+#ifdef __cplusplus
+# include <new>
+using std::nothrow;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -905,11 +911,11 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #else
 
-#define MCAssert(expr)
+#define MCAssert(expr) (void) (expr)
 
-#define MCLog(m_format, ...) 
+#define MCLog(...) (void) (__VA_ARGS__)
 
-#define MCLogWithTrace(m_format, ...)
+#define MCLogWithTrace(...) (void) (__VA_ARGS__)
 
 #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
 
@@ -1071,24 +1077,12 @@ MC_DLLEXPORT void MCMemoryDelete(void *p_record);
 
 }
 
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline void *operator new (size_t, void *p_block, bool)
-{
-	return p_block;
-}
-
 template<typename T> bool MCMemoryNew(T*& r_record)
 {
 	void *t_record;
 	if (MCMemoryNew(sizeof(T), t_record))
 	{
-        r_record = new(t_record, true) T;
+        r_record = new (t_record) T;
 		return true;
 	}
 	return false;
@@ -2109,7 +2103,7 @@ MC_DLLEXPORT const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 // The native length may be different from the string char count.
 MC_DLLEXPORT const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
-// Returns the Unicode codepoint at the given codepoint index
+// Returns the Unicode codepoint at the given index
 MC_DLLEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the char at the given index.
@@ -3296,6 +3290,7 @@ MC_DLLEXPORT void MCPickleRelease(MCPickleRecordInfo *info, void *record);
 MC_DLLEXPORT bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted);
 MC_DLLEXPORT bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
 MC_DLLEXPORT bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
+MC_DLLEXPORT bool MCTypeConvertDataToReal(MCDataRef p_data, real64_t& r_converted, bool p_convert_octals = false);
 
 }
     

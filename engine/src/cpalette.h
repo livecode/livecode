@@ -31,7 +31,7 @@ public:
     
     enum { kObjectType = CT_COLOR_PALETTE };
     using MCMixinObjectHandle<MCColors>::GetHandle;
-    
+   
 private:
     
 	uint4 selectedcolor;

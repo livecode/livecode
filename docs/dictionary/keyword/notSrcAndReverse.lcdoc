@@ -17,10 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of card button 1 to notSrcAnd
 
-The result:
-Each component of the resulting color is equal to the result of this
-expression:. 
-
 Description:
 Use the <notSrcAndReverse> <keyword> to invert the colors under an
 object and make the light parts opaque.
@@ -38,19 +34,14 @@ compute the color of each <pixel> :
    color is expressed as three integers between zero and 255--one for
    each of red, green, and blue--then the inverse of each component is
    equal to 255 minus the component's value.)
-
-
 2. Each component of the color underneath the object is changed to its
    inverse. 
-
-
 3. LiveCode performs a bitAnd <operation> on each component of the
    inverted object color with the corresponding component of the
    inverted color under the <object(glossary)>.
 
-
-    (255 - object component) bitAnd (255 - background component)
-
+Therefore the calculation made per pixel color is:
+   (255 - object component) bitAnd (255 - background component)
 
 The effect is that the color of the object is reversed, and the darker
 an object is, the more transparent it is. Black parts of an object are
@@ -59,12 +50,20 @@ completely transparent, and white parts are completely opaque.
 For example, suppose an object's color is 120,0,255, and the color of
 the pixels under the object is 50,20,240. If the <notSrcAndReverse>
 <transfer mode> is used, the <object|object's> displayed color is
-135,235,0. 
+135,235,0. In <binary(glossary)> it is:
+
+   10000111, 11111111, 00000000
+   11001101, 11101011, 00001111 Logic AND
+   ========  ========  ========
+   10000101, 11101011, 00000000
 
 The <notSrcAndReverse> mode can be used only on <Unix> and
 <Windows|Windows systems>. On <Mac OS|Mac OS systems>, <object|objects>
 whose <ink> <property> is set to this mode appear as though their <ink>
 were set to <srcCopy>.
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), pixel (glossary),
 operation (glossary), Windows (glossary), transfer mode (glossary),

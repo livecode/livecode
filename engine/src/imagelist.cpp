@@ -382,7 +382,7 @@ MCPatternRef MCImageList::allocpat(uint4 id, MCObject *optr)
 		}
 	while (tptr != images);
 	
-	/* UNCHECKED */ tptr = new MCImageListNode(newim);
+	/* UNCHECKED */ tptr = new (nothrow) MCImageListNode(newim);
 	tptr->appendto(images);
 	tptr->allocimage(newim, pat);
 	return pat;

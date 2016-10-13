@@ -293,7 +293,6 @@ static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 	// MM-2012-03-09: [[Bug]] Make sure we don't try and copy empty tags (causes a crash on Lion)
 	if (t_success)
     {
-        MCValueRef t_tag;
         if (!MCStringIsEmpty(t_items[0]))
             self -> tag = MCValueRetain(t_items[0]);
     }
@@ -647,12 +646,6 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else 
 		[t_panel setCanCreateDirectories: YES];
 	
-	if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
-	{
-		// show accessory view when dialog opens
-		[t_panel setAccessoryViewDisclosed: YES];
-	}
-	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
 }
 
@@ -724,9 +717,6 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
              contentView: (NSView*) p_view
 {
     self = [super init];
-    
-    NSButton *t_ok_button;
-    NSButton *t_cancel_button;
     
     // Get the colour picker's view and store it
     mColorPanel = p_panel;

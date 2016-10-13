@@ -429,7 +429,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		MCAudioClip *aptr = sref.aclips;
 		do
 		{
-			MCAudioClip *newaclip = new MCAudioClip(*aptr);
+			MCAudioClip *newaclip = new (nothrow) MCAudioClip(*aptr);
 			newaclip->setid(aptr->getid());
 			newaclip->appendto(aclips);
 			newaclip->setparent(this);
@@ -442,7 +442,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		MCVideoClip *vptr = sref.vclips;
 		do
 		{
-			MCVideoClip *newvclip = new MCVideoClip(*vptr);
+			MCVideoClip *newvclip = new (nothrow) MCVideoClip(*vptr);
 			newvclip->setid(vptr->getid());
 			newvclip->appendto(vclips);
 			newvclip->setparent(this);
@@ -458,7 +458,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	if (nstackfiles != 0)
 	{
 		uint2 ts = nstackfiles;
-		stackfiles = new MCStackfile[ts];
+		stackfiles = new (nothrow) MCStackfile[ts];
 		while (ts--)
 		{
 			stackfiles[ts].stackname = MCValueRetain(sref.stackfiles[ts].stackname);
@@ -469,7 +469,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		stackfiles = NULL;
 	if (sref.linkatts != NULL)
 	{
-		linkatts = new Linkatts;
+		linkatts = new (nothrow) Linkatts;
 		memcpy(linkatts, sref.linkatts, sizeof(Linkatts));
         
 		linkatts->colorname = linkatts->colorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->colorname);
@@ -536,13 +536,6 @@ MCStack::~MCStack()
 		close();
 	extraclose(false);
 
-	if (needs != NULL)
-	{
-		while (nneeds--)
-
-			needs[nneeds]->removelink(this);
-		delete needs;
-	}
 	if (substacks != NULL)
 	{
 		while (substacks != NULL)
@@ -923,6 +916,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
+        {
 			if (MCactiveimage != NULL)
 			{
 				MCactiveimage->cutimage();
@@ -930,6 +924,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			}
 			else
 				return MCselected->cut();
+        }
 		if (MCactiveimage != NULL)
 		{
 			MCactiveimage->delimage();
@@ -1103,7 +1098,7 @@ Boolean MCStack::mfocus(int2 x, int2 y)
 	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		MCControl *cptr = curcard->getmfocused();
-		if (x < rect.width || cptr != NULL && !cptr->getstate(CS_SUBMENU))
+		if (x < rect.width || (cptr != NULL && !cptr->getstate(CS_SUBMENU)))
 		{
 			uint1 oldmode = scrollmode;
 			if (menuy < 0 && y < MENU_ARROW_SIZE >> 1)
@@ -1316,7 +1311,8 @@ bool MCStack::isdeletable(bool p_check_flag)
     //   make sure we throw an error.
     if (parent == NULL || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
-        MCdispatcher->gethome() == this || this -> isediting())
+        MCdispatcher->gethome() == this || this -> isediting() ||
+        MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -1381,7 +1377,10 @@ Boolean MCStack::del(bool p_check_flag)
 {
     if (!isdeletable(true))
 	   return False;
-	
+    
+    MCscreen->ungrabpointer();
+    MCdispatcher->removemenu();
+    
     setstate(True, CS_DELETE_STACK);
     
 	if (opened)
@@ -1427,6 +1426,15 @@ Boolean MCStack::del(bool p_check_flag)
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
+    
+    if (needs != NULL)
+    {
+        while (nneeds--)
+            needs[nneeds]->removelink(this);
+        
+        delete needs;
+        needs = NULL;
+    }
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -1566,6 +1574,12 @@ void MCStack::toolchanged(Tool p_new_tool)
         curcard->toolchanged(p_new_tool);
 }
 
+void MCStack::OnViewTransformChanged()
+{
+	if (curcard != nil)
+		curcard->OnViewTransformChanged();
+}
+
 void MCStack::OnAttach()
 {
 	if (curcard != nil)
@@ -1587,7 +1601,7 @@ void MCStack::loadexternals(void)
 	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
-	m_externals = new MCExternalHandlerList;
+	m_externals = new (nothrow) MCExternalHandlerList;
 
 	MCAutoArrayRef t_array;
 	/* UNCHECKED */ MCStringSplit(externalfiles, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
@@ -1691,10 +1705,10 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
+bool MCStack::resolve_filename(MCStringRef p_filename, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_filename;
-    if (resolve_relative_path(filename, &t_filename))
+    if (resolve_relative_path(p_filename, &t_filename))
     {
         if (MCS_exists(*t_filename, True))
         {
@@ -1703,7 +1717,7 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
         }
     }
     
-	r_resolved = MCValueRetain(filename);
+	r_resolved = MCValueRetain(p_filename);
 	return true;
 }
 

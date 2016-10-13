@@ -126,6 +126,12 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 		MCField::formattabstops(P_TAB_STOPS, p_style . tabs, p_style . tab_count, &t_string);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabStops"), *t_string);
 	}
+	if (p_style . has_tab_alignments || p_effective)
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCField::formattabalignments(p_style . tab_alignments, p_style . tab_alignment_count, &t_string);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabAlign"), *t_string);
+	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
@@ -430,7 +436,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
 	t_new_paragraph -> setparent(this);
 	t_new_paragraph -> inittext();
 	
@@ -617,8 +623,8 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
     if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCArrayRef t_array;
-		/* UNCHECKED */ ctxt . ConvertToArray(t_valueref, t_array);
-		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
+		if (ctxt . ConvertToArray(t_valueref, t_array))
+            /* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);
 	}
 	// Get the metadata (if any)
 	MCAutoStringRef t_metadata;

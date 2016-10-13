@@ -386,8 +386,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
         case CT_WORD:
         {
 
-            uindex_t t_space_offset;
-            
             // if there are consecutive spaces at the beginning, skip them
             while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
@@ -440,7 +438,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
-            uint2 t_pos;
             Parse_stat ps = sp.nexttoken();
             
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
@@ -1125,7 +1122,7 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
 {
-    m_sp = new MCScriptPoint(p_text);
+    m_sp = new (nothrow) MCScriptPoint(p_text);
 }
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
@@ -1133,7 +1130,7 @@ MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text,
     MCAutoStringRef t_substring;
     MCStringCopySubstring(m_text, p_restriction, &t_substring);
     MCValueAssign(m_text, *t_substring);
-    m_sp = new MCScriptPoint(m_text);
+    m_sp = new (nothrow) MCScriptPoint(m_text);
 }
 
 MCTextChunkIterator_Tokenized::~MCTextChunkIterator_Tokenized()
@@ -1146,7 +1143,6 @@ bool MCTextChunkIterator_Tokenized::Next()
     MCerrorlock++;
     
     bool t_found = true;
-    uint2 t_pos;
     Parse_stat ps = m_sp -> nexttoken();
     if (ps == PS_ERROR || ps == PS_EOF)
         t_found = false;
@@ -1168,7 +1164,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStr
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
         return tci;
     }
     
@@ -1180,7 +1176,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ct
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
         return tci;
     }
     

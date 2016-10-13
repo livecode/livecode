@@ -106,7 +106,7 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
          filter tArchiveFiles with "Android/External-*"
          revZipCloseArchive pFolder & slash & tLCExt
          
-         if tArchiveFiles is not empty then
+         if tArchiveFiles is empty then
             get shell(merge("rm -fv '[[ tLCExt ]]'"))
          end if
       end repeat
@@ -640,12 +640,45 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
       throw "failure"
    end if
 
-   -- Find the signing identity and sign the app bundle
+   -- Find the signing identity
+   local tSigningId
    get findSigningIdentity()
+   put it into tSigningId
    if it is not empty then
+      -- Sign the iOS simulator dylibs
+      local tIosRuntimes
+      put folders(tAppBundle & "/Contents/Tools/Runtime/iOS") into tIosRuntimes
+      repeat for each line tLine in tIosRuntimes
+         -- Ignore device builds
+         if not (tLine begins with "Simulator-") then next repeat
+
+         -- Get the list of all iOS externals in this folder
+         local tRuntimeFolder
+         local tRuntimeContents
+         put tAppBundle & "/Contents/Tools/Runtime/iOS/" & tLine into tRuntimeFolder
+         put files(tRuntimeFolder) into tRuntimeContents
+         repeat for each line tFile in tRuntimeContents
+            -- Ignore files that aren't dylibs
+            local tFullPath
+            put tRuntimeFolder & "/" & tFile into tFullPath
+            get shell("file" && escapeArg(tFullPath))
+            if tFile is "Standalone" or "Mach-O" is not among the words of it then next repeat
+
+            -- Sign the extension
+            -- The "--force" parameter strips the existing signature (which was
+            -- made using a not-valid-for-distribution profile)
+            builderLog "message", "Signing iOS extension" && "'" & tFullPath & "'"
+            get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullPath))
+            if the result is not zero then
+                builderLog "error", "Could not sign iOS extension:" && it
+                throw "failure"
+            end if
+         end repeat
+      end repeat
+
       builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
       wait 1 second
-      get shell("/usr/bin/codesign --sign" && word 2 of it && "--deep --verbose=2" && escapeArg(tAppBundle))
+      get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--deep --verbose=2" && escapeArg(tAppBundle))
       if the result is not zero then
          builderLog "error", "Could not sign macosx app bundle:" && it
          throw "failure"

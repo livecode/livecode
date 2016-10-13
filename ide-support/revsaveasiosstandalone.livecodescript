@@ -275,12 +275,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- Copy in the resource rules and provisioning profile
    if pTarget is "Device" then
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "ResourceRules.plist")) into \
-            url ("binfile:" & pAppBundle & slash & "ResourceRules.plist")
-      if the result is not empty then
-         throw "unable to create ResourceRules.plist file"
-      end if
-      
       put url ("binfile:~/Library/MobileDevice/Provisioning Profiles/" & pSettings["ios,profile"] & ".mobileprovision") into \
             url ("binfile:" & pAppBundle & slash & "embedded.mobileprovision")
       if the result is not empty then
@@ -488,8 +482,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
-   -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redircts, we use symlinks with the iOS 8 sim.
-   if char 1 of tSDKs["sim"]["suffix"] < 8 then
+   -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
+   -- PM-2016-09-16: [[ Bug 18414 ]] iOS 10 - tSDKs["sim"]["suffix"] is x_y on iOS x.y
+   local tSimVersion, tOldItemDel
+   put tSDKs["sim"]["suffix"] into tSimVersion
+   put the itemdel into tOldItemDel
+   set the itemdel to"_"
+   if item 1 of tSimVersion < 8 then
       put tRedirects into tDeploy["redirects"]
    else
       put empty into tDeploy["redirects"]
@@ -507,6 +506,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          end if
       end repeat
    end if
+   set the itemdel to tOldItemDel
    
    -- Output file to create
    put pAppBundle & slash & tName into tDeploy["output"]
@@ -693,11 +693,22 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
       end if
       
+      -- make sure you have permission to clear extended attributes from bundle files
+      get shell("chmod -R u+w" && quote & pAppBundle & quote)
+      if the result is not 0 then
+         throw "setting permissions failed with error:" && it
+      end if
+      
+      -- clear extended attributes from bundle files
+      get shell("xattr -cr" && quote & pAppBundle & quote)
+      if the result is not 0 then
+         throw "clearing extended attributes failed with error:" && it
+      end if
+      
       --try
       -- Perform the codesigning of the main bundle
       local tResult
       put shell("/usr/bin/codesign --verbose -f -s" && quote & tCertificate & quote && \
-            "--resource-rules=" & quote & pAppBundle & slash & "ResourceRules.plist" & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -938,8 +949,8 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- Start with an empty redirects list
    put empty into rRedirects
    
-   local tFiles
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFiles
+   local tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
@@ -947,26 +958,15 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    --
    local tManifest
    set the itemDelimiter to slash
-   repeat for each line tFile in tFiles
-      local tIsAbsolute, tName
-      put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
-      if the last item of tFile is "*" then
-         delete the last item of tFile
-      end if
-      if tFile begins with pBaseFolder then
-         put item (the number of items of pBaseFolder + 1) to -1 of tFile  into tName
-      else
-         put item -1 of tFile into tName
-      end if
-      
-      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tName
+   repeat for each element tFile in tFileData
+      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tFile["name"]
       
       -- MW-2010-12-16: [[ Bug 9238 ]] Check for 'resources' folder
-      if item 1 of tName is "Resources" then
+      if item 1 of tFile["name"] is "Resources" then
          throw "iOS apps that contain a top-level folder called 'Resources' will fail to run"
       end if
       
-      addToManifest tFile, tName, pAppBundle, tManifest, rRedirects
+      addToManifest tFile["resolved"], tFile["name"], pAppBundle, tManifest, rRedirects
    end repeat
    
    -- Remove trailing delimiter
@@ -1170,12 +1170,12 @@ end revCopyMobileStackFiles
 
 private function revGetMinimumOSByArch pMinimumOS 
    local tMinimumOSByArch  
-   -- MM-2013-09-23: We only support iOS 4.3 and later
    -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
-   --  same for all archs, and we only support version >= 5.1.1
+   --  same for all archs
+   -- We only support version >= 6.0
    --
-   if pMinimumOS is empty or pMinimumOS <= "5.1" then
-      put "5.1.1" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS < "6.0" then
+      put "6.0" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS after tMinimumOSByArch["i386"]
    end if
@@ -1645,9 +1645,6 @@ function mapFilePath pPath
          else
             put tRepo & slash & "engine/rsrc/mobile-template.plist" into tPath
          end if
-         break
-      case "ResourceRules.plist"
-         put tRepo & slash & "engine/rsrc/template-ResourceRules.plist" into tPath
          break
       case "Entitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-entitlements.xcent" into tPath

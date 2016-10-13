@@ -968,7 +968,7 @@ void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_scrip
 		ctxt . LegacyThrow(EE_INSERT_NOTLICENSED);
 		return;
 	}
-	MCObjectList *olptr = new MCObjectList(p_script);
+	MCObjectList *olptr = new (nothrow) MCObjectList(p_script);
 	olptr->insertto(listptr);
 }
 
@@ -1319,7 +1319,7 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             MCAutoStringRef t_expression;
             /* UNCHECKED */ MCStringCopySubstring(p_script, t_exp_range, &t_expression);
             
-            MCParameter *newparam = new MCParameter;
+            MCParameter *newparam = new (nothrow) MCParameter;
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
@@ -1804,7 +1804,7 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
     ctxt . ConvertToString(p_value, &t_string);
     MCScriptPoint sp(ctxt, *t_string);
 
-    MCChunk *tchunk = new MCChunk(False);
+    MCChunk *tchunk = new (nothrow) MCChunk(False);
     MCerrorlock++;
     Symbol_type type;
     
@@ -1906,8 +1906,6 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     // (indicated by getparentscript() of the EP being non-NULL) 'me'
     // refers to the derived object context, otherwise it is the object
     // we were compiled in.
-    
-    MCObjectPtr t_object;
     
     if (ctxt . GetParentScript() == NULL)
         r_object . object = nil; // destobj!

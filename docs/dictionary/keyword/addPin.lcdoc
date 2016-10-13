@@ -17,7 +17,11 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of button "Bar" to addPin
 
-The result:
+
+Description:
+Use the <addPin> <keyword> to combine an <object|object's> color with
+the colors underneath it.
+
 The <ink> <property> determines how an <object|object's> colors combine
 with the colors of the <pixels> underneath the <object(glossary)> to
 determine how the <object|object's> color is displayed. When the
@@ -26,10 +30,6 @@ color--red, green, and blue--is added to the corresponding component of
 the color underneath. If the resulting number is greater than 127 (the
 maximum), 127 is used for that component.
 
-Description:
-Use the <addPin> <keyword> to combine an <object|object's> color with
-the colors underneath it.
-
 For example, suppose an object's color is 240,0,100, and the color of
 the pixels under the object is 60,40,20. If the <addPin> mode is used,
 the <object|object's> displayed color is 127,40,120.
@@ -37,7 +37,10 @@ the <object|object's> displayed color is 127,40,120.
 The <addPin> mode can be used only on <Mac OS|Mac OS systems>.  On
 <Unix> and <Windows|Windows systems>, <object|objects> whose <ink>
 <property> is set to this mode appears as though their <ink> were set to
-<srcCopy>. 
+<srcCopy>.
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),

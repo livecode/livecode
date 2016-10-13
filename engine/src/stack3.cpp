@@ -277,7 +277,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	
 	if (flags & F_LINK_ATTS)
 	{
-		linkatts = new Linkatts;
+		linkatts = new (nothrow) Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -333,7 +333,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		{
 		case OT_CARD:
 			{
-				MCCard *newcard = new MCCard;
+				MCCard *newcard = new (nothrow) MCCard;
 				newcard->setparent(this);
 				if ((stat = newcard->load(stream, version)) != IO_NORMAL)
 				{
@@ -347,7 +347,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_GROUP:
 			{
-				MCGroup *newgroup = new MCGroup;
+				MCGroup *newgroup = new (nothrow) MCGroup;
 				newgroup->setparent(this);
 				if ((stat = newgroup->load(stream, version)) != IO_NORMAL)
 				{
@@ -360,7 +360,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_BUTTON:
 			{
-				MCButton *newbutton = new MCButton;
+				MCButton *newbutton = new (nothrow) MCButton;
 				newbutton->setparent(this);
 				if ((stat = newbutton->load(stream, version)) != IO_NORMAL)
 				{
@@ -373,7 +373,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_FIELD:
 			{
-				MCField *newfield = new MCField;
+				MCField *newfield = new (nothrow) MCField;
 				newfield->setparent(this);
 				if ((stat = newfield->load(stream, version)) != IO_NORMAL)
 				{
@@ -386,7 +386,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_IMAGE:
 			{
-				MCImage *newimage = new MCImage;
+				MCImage *newimage = new (nothrow) MCImage;
 				newimage->setparent(this);
 				if ((stat = newimage->load(stream, version)) != IO_NORMAL)
 				{
@@ -400,7 +400,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_SCROLLBAR:
 			{
-				MCScrollbar *newscrollbar = new MCScrollbar;
+				MCScrollbar *newscrollbar = new (nothrow) MCScrollbar;
 				newscrollbar->setparent(this);
 				if ((stat = newscrollbar->load(stream, version)) != IO_NORMAL)
 				{
@@ -412,7 +412,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_GRAPHIC:
 			{
-				MCGraphic *newgraphic = new MCGraphic;
+				MCGraphic *newgraphic = new (nothrow) MCGraphic;
 				newgraphic->setparent(this);
 				if ((stat = newgraphic->load(stream, version)) != IO_NORMAL)
 				{
@@ -424,7 +424,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_PLAYER:
 			{
-				MCPlayer *newplayer = new MCPlayer;
+				MCPlayer *newplayer = new (nothrow) MCPlayer;
 				newplayer->setparent(this);
 				if ((stat = newplayer->load(stream, version)) != IO_NORMAL)
 				{
@@ -437,7 +437,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_MCEPS:
 			{
-				MCEPS *neweps = new MCEPS;
+				MCEPS *neweps = new (nothrow) MCEPS;
 				neweps->setparent(this);
 				if ((stat = neweps->load(stream, version)) != IO_NORMAL)
 				{
@@ -449,7 +449,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
         case OT_WIDGET:
             {
-                MCWidget *newwidget = new MCWidget;
+                MCWidget *newwidget = new (nothrow) MCWidget;
                 newwidget->setparent(this);
                 if ((stat = newwidget->load(stream, version)) != IO_NORMAL)
                 {
@@ -461,7 +461,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
             break;
 		case OT_MAGNIFY:
 			{
-				MCMagnify *newmag = new MCMagnify;
+				MCMagnify *newmag = new (nothrow) MCMagnify;
 				newmag->setparent(this);
 				if ((stat = newmag->load(stream, version)) != IO_NORMAL)
 				{
@@ -473,7 +473,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_COLORS:
 			{
-				MCColors *newcolors = new MCColors;
+				MCColors *newcolors = new (nothrow) MCColors;
 				newcolors->setparent(this);
 				if ((stat = newcolors->load(stream, version)) != IO_NORMAL)
 				{
@@ -485,7 +485,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_AUDIO_CLIP:
 			{
-				MCAudioClip *newaclip = new MCAudioClip;
+				MCAudioClip *newaclip = new (nothrow) MCAudioClip;
 				newaclip->setparent(this);
 				if ((stat = newaclip->load(stream, version)) != IO_NORMAL)
 				{
@@ -497,7 +497,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_VIDEO_CLIP:
 			{
-				MCVideoClip *newvclip = new MCVideoClip;
+				MCVideoClip *newvclip = new (nothrow) MCVideoClip;
 				newvclip->setparent(this);
 				if ((stat = newvclip->load(stream, version)) != IO_NORMAL)
 				{
@@ -516,11 +516,6 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
             return IO_NORMAL;
 		}
 	}
-	
-    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
-	old_rect = rect;
-    
-	return IO_NORMAL;
 }
 
 IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
@@ -941,7 +936,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		// MW-2012-10-10: [[ IdCache ]] Lookup the object in the cache.
 		MCObject *t_object;
 		t_object = findobjectbyid(inid);
-		if (t_object != nil && (type == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == type))
+		if (t_object != nil && ((type == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == type))
 			return (MCControl *)t_object;
 
 		MCControl *tobj = controls;
@@ -1663,11 +1658,11 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
-		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
+		if ((nc->gettype() == CT_FIELD && MClook != LF_MOTIF)
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
 			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
-			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
+			if (IsMacLF() || nc->gettype() == CT_FIELD || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
 	
@@ -1745,8 +1740,8 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
             focused = curcard->getkfocused();
         MCButton *bptr = (MCButton *)focused;
         if (focused != NULL && (focused->gettype() == CT_FIELD
-                                || focused->gettype() == CT_BUTTON
-                                && bptr->getmenumode() != WM_CASCADE))
+                                || (focused->gettype() == CT_BUTTON
+                                    && bptr->getmenumode() != WM_CASCADE)))
         {
             bool t_has_tags = bptr->getmenuhastags();
             
@@ -2279,6 +2274,7 @@ void MCStack::checksharedgroups(void)
 	do
 	{
 		if (t_control -> gettype() == CT_GROUP && !static_cast<MCGroup *>(t_control) -> isshared())
+        {
 			if (MCMemoryResizeArray(t_group_count + 1, t_groups, t_group_count))
 			{
 				t_groups[t_group_count - 1] . id = t_control -> getid();
@@ -2292,7 +2288,7 @@ void MCStack::checksharedgroups(void)
 				checksharedgroups_slow();
 				return;
 			}
-		
+        }
 		t_control = t_control -> next();
 	}
 	while(t_control != controls);

@@ -669,10 +669,10 @@ static MCExecEnumTypeInfo _kMCInterfaceLookAndFeelTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfacePaintCompressionElementInfo[] =
 {
-	{ "png", EX_PNG },
-	{ "jpeg", EX_JPEG },
-	{ "gif", EX_GIF },
-	{ "rle", EX_PBM },
+	{ "png", EX_PNG, false },
+	{ "jpeg", EX_JPEG, false },
+	{ "gif", EX_GIF, false },
+	{ "rle", EX_PBM, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
@@ -686,8 +686,8 @@ static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceProcessTypeElementInfo[] =
 {
-	{ "background", 0 },
-	{ "foreground", 1 },
+	{ "background", 0, false },
+	{ "foreground", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
@@ -701,8 +701,8 @@ static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceSelectionModeElementInfo[] =
 {
-	{ "surround", 0 },
-	{ "intersect", 1 },
+	{ "surround", 0, false },
+	{ "intersect", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
@@ -774,7 +774,6 @@ void MCInterfaceGetLookAndFeel(MCExecContext& ctxt, intenum_t& r_value)
 
 void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 {
-	MCTheme *newtheme = NULL;
 	MCField *oldactive = MCactivefield;
 	if (oldactive != NULL)
 		oldactive->kunfocus();
@@ -3772,7 +3771,7 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
 		t_source_handle = p_source . object -> GetHandle();
 		t_new_owner_handle = t_new_owner -> GetHandle();
-		t_new_target_handle = t_new_target != NULL ? t_new_target->GetHandleAs<MCObject>() : MCObjectHandle(NULL);
+		t_new_target_handle = t_new_target != nil ? t_new_target -> GetHandle() : nil;
         
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;

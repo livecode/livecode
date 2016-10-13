@@ -31,7 +31,7 @@ public:
     
     enum { kObjectType = CT_MAGNIFY };
     using MCMixinObjectHandle<MCMagnify>::GetHandle;
-    
+   
 protected:
 	uint2 inside;
 public:

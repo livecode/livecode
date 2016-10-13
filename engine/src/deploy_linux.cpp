@@ -504,7 +504,7 @@ static bool MCDeployToLinuxReadSectionHeaders(MCDeployFileRef p_file, typename T
 		return MCDeployThrow(kMCDeployErrorLinuxBadSectionSize);
 
 	// Allocate the array of the entries
-	r_table = new typename T::Shdr[p_header . e_shnum];
+	r_table = new (nothrow) typename T::Shdr[p_header . e_shnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -529,7 +529,7 @@ static bool MCDeployToLinuxReadProgramHeaders(MCDeployFileRef p_file, typename T
 		return MCDeployThrow(kMCDeployErrorLinuxBadSegmentSize);
 
 	// Allocate the array of the entries
-	r_table = new typename T::Phdr[p_header . e_phnum];
+	r_table = new (nothrow) typename T::Phdr[p_header . e_phnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -707,17 +707,21 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	if (t_success && (!MCStringIsEmpty(p_params . payload)) && t_payload_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoPayloadSection);
 
-	// Next check that there are no sections after the project section.
-	// (This check implies there are no segments after the project section
-	// since the section table is ordered by vaddr and segments can only
-	// contain stuff in sections).
+	// Next check that there are no loadable sections after the project section.
+	// (This check implies there are no loadable segments after the project
+	// section since the section table is ordered by vaddr within segments and
+    // we check segment ordering later).
 	if (t_success)
-		for(typename T::Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+    {
+		for (typename T::Shdr* t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+        {
 			 if (t_section -> sh_addr > t_project_section -> sh_addr)
 			 {
 				 t_success = MCDeployThrow(kMCDeployErrorLinuxBadSectionOrder);
 				 break;
 			 }
+         }
+    }
 
 	// Now we must search for the segment containing the payload/project sections.
 	// At present, we required that these sections sit in their own segment and
@@ -802,15 +806,17 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		else
 			t_payload_delta = 0;
 
-		// If the project section is not the last one, then work out the
-		// subsequent section data size/offset.
-		if (t_project_section - t_section_headers + 1 < t_header . e_shnum)
-		{
-			t_end_offset = (t_project_section + 1) -> sh_offset;
-			t_end_size = (t_section_headers[t_header . e_shnum - 1] . sh_offset + t_section_headers[t_header . e_shnum - 1] . sh_size) - t_end_offset;
-		}
-		else
-			t_end_offset = t_end_size = 0;
+        // The sections of the file are not strictly ordered so the 
+        // remainder of the file requires examining the whole section table.
+        t_end_offset = t_project_section->sh_offset + t_project_section->sh_size;
+            
+        t_end_size = 0;
+        for (size_t i = 0; i < t_header.e_shnum; i++)
+        {
+            uint32_t t_section_end = t_section_headers[i].sh_offset + t_section_headers[i].sh_size;
+            if (t_section_end > t_end_offset + t_end_size)
+                t_end_size = t_section_end - t_end_offset;
+        }
 
 		//
 
@@ -821,16 +827,45 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		t_project_section -> sh_addr += t_payload_delta;
 		t_project_section -> sh_size = t_project_size;
 
-		t_project_segment -> p_filesz = t_payload_size + t_project_size;
-		t_project_segment -> p_memsz = t_payload_size + t_project_size;
+		t_project_segment -> p_filesz += t_payload_delta + t_project_delta;
+		t_project_segment -> p_memsz += t_payload_delta + t_project_delta;
 
-		for(typename T::Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+        // Update the sections that follow the project/payload
+		for (typename T::Shdr* t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+        {
 			if (t_section -> sh_offset >= t_end_offset)
 				t_section -> sh_offset += t_project_delta + t_payload_delta;
+        }
 
-		t_header . e_shoff += t_project_delta + t_payload_delta;
+        // Adjust the section header table offset if it comes after the adjusted
+        // sections.
+        if (t_header.e_shoff >= t_end_offset)
+            t_header.e_shoff += t_project_delta + t_payload_delta;
+              
+        // Adjust the segment header table offset if it coems after the adjusted
+        // sections.
+        if (t_header.e_phoff >= t_end_offset)
+            t_header.e_phoff += t_project_delta + t_payload_delta;
 
-		//
+		// Update the segments that follow the project/payload
+        // Note that segments aren't necessarily in increasing order of file
+        // offset.
+        for (typename T::Phdr* t_segment = t_program_headers; t_segment < t_program_headers + t_header.e_phnum; t_segment += 1)
+        {
+            // Skip segments that precede the segment we adjusted
+            if (t_segment == t_project_segment || t_segment->p_offset < t_end_offset)
+                continue;
+            
+            // If any of these segments is a LOAD segment, we've broken the file!
+            if (t_segment->p_type == PT_LOAD)
+            {
+                t_success = MCDeployThrow(kMCDeployErrorLinuxBadSectionOrder);
+                break;
+            }
+            
+            // Adjust the file offset for the segment contents
+            t_segment->p_offset += t_payload_delta + t_project_delta;
+        }
 
 		t_section_table_size = t_header . e_shnum * sizeof(typename T::Shdr);
 		t_section_table_offset = t_header . e_shoff;

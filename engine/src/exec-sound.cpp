@@ -46,12 +46,12 @@ MC_EXEC_DEFINE_SET_METHOD(Sound, AudioCategory, 2)
 
 static MCExecEnumTypeElementInfo _kMCSoundAudioCategoryElementInfo[] =
 {
-    { "ambient", kMCSoundAudioCategoryAmbient},
-    { "solo ambient", kMCSoundAudioCategorySoloAmbient},
-    { "playback", kMCSoundAudioCategoryPlayback},
-    { "record", kMCSoundAudioCategoryRecord},
-    { "play and record", kMCSoundAudioCategoryPlayAndRecord},
-    { "audio processing", kMCSoundAudioCategoryAudioProcessing}
+    { "ambient", kMCSoundAudioCategoryAmbient, false},
+    { "solo ambient", kMCSoundAudioCategorySoloAmbient, false},
+    { "playback", kMCSoundAudioCategoryPlayback, false},
+    { "record", kMCSoundAudioCategoryRecord, false},
+    { "play and record", kMCSoundAudioCategoryPlayAndRecord, false},
+    { "audio processing", kMCSoundAudioCategoryAudioProcessing, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundAudioCategoryTypeInfo =
@@ -65,9 +65,9 @@ MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo = &_kMCSoundAudioCategoryTypeI
 
 static MCExecEnumTypeElementInfo _kMCSoundChannelStatusElementInfo[] =
 {
-    { "stopped", kMCSoundChannelStatusStopped},
-    { "paused", kMCSoundChannelStatusPaused},
-    { "playing", kMCSoundChannelStatusPlaying}
+    { "stopped", kMCSoundChannelStatusStopped, false},
+    { "paused", kMCSoundChannelStatusPaused, false},
+    { "playing", kMCSoundChannelStatusPlaying, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundChannelStatusTypeInfo =
@@ -81,9 +81,9 @@ MCExecEnumTypeInfo* kMCSoundChannelStatusTypeInfo = &_kMCSoundChannelStatusTypeI
 
 static MCExecEnumTypeElementInfo _kMCSoundChannelPlayTypeElementInfo[] =
 {
-    { "play now", kMCSoundChannelPlayNow},
-    { "play next", kMCSoundChannelPlayNext},
-    { "play looping", kMCSoundChannelPlayLooping}
+    { "play now", kMCSoundChannelPlayNow, false},
+    { "play next", kMCSoundChannelPlayNext, false},
+    { "play looping", kMCSoundChannelPlayLooping, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundChannelPlayTypeInfo =

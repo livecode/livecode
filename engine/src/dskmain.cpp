@@ -78,12 +78,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
-static char apppath[PATH_MAX];
-
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
 	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -125,8 +123,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	// Make sure certain things are already created before MCS_init. This is
 	// required right now because the Windows MCS_init uses MCS_query_registry
 	// which needs these things.
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::create(MCresult);
 #endif
 
@@ -304,7 +302,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
             MCValueRelease(MCstacknames[i]);
 		}
         MCnstacks = 0;
-		delete MCstacknames;
+        delete[] MCstacknames; /* Allocated with new[] */
 		MCstacknames = NULL;
 		MCeerror->clear();
 	}
@@ -314,8 +312,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 
 void X_main_loop_iteration()
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
 
 	////
 

@@ -366,7 +366,7 @@ void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
 	if (t_type.cbFormat != 0)
 	{
 		CoTaskMemFree(t_type.pbFormat);
-		t_type.cbFormat = nil;
+		t_type.cbFormat = 0;
 		t_type.pbFormat = nil;
 	}
 	if (t_type.pUnk != nil)
@@ -1518,7 +1518,7 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 MCWin32DSPlayer *MCWin32DSPlayerCreate()
 {
 	MCWin32DSPlayer *t_player;
-	t_player = new MCWin32DSPlayer();
+	t_player = new (nothrow) MCWin32DSPlayer();
 
 	if (t_player == nil)
 		return nil;

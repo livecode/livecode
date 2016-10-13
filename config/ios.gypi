@@ -28,8 +28,8 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_VERSION': '',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'IPHONEOS_DEPLOYMENT_TARGET[arch=armv7]': '5.1.1',
-		'IPHONEOS_DEPLOYMENT_TARGET[arch=i386]': '5.1.1',
+		'IPHONEOS_DEPLOYMENT_TARGET[arch=armv7]': '6.0.0',
+		'IPHONEOS_DEPLOYMENT_TARGET[arch=i386]': '6.0.0',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=arm64]': '7.0.0',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=x86_64]': '7.0.0',
 		'ENABLE_BITCODE': 'No',
@@ -40,8 +40,10 @@
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 		
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
+		'DEVELOPMENT_TEAM': 'SA2BUJR53Y',
 	},
 	
 	'target_defaults':
@@ -188,6 +190,10 @@
 						[ 
 							'-Wall', 
 							'-Wextra', 
+
+							'-Wno-conversion',
+							'-Wno-shorten-64-to-32',
+
 							'-Werror=declaration-after-statement',
 							'-Werror=delete-non-virtual-dtor',
 							'-Werror=overloaded-virtual',
@@ -196,6 +202,7 @@
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-parentheses',
+							'-Werror=conversion-null',
 						],
 					},
 				},

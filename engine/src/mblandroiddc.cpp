@@ -48,7 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include <jni.h>
-#include <pthread.h>
+#include "mcmanagedpthread.h"
 #include <android/log.h>
 #include <android/bitmap.h>
 #include <GLES/gl.h>
@@ -78,10 +78,10 @@ typedef void (*co_yield_callback_t)(void *);
 // fact we don't have direct access to the run-loop. The Android UI runs on one
 // thread, while the engine runs on its own.
 
-static pthread_t s_android_ui_thread;
-static pthread_t s_android_engine_thread;
+static MCManagedPThread s_android_ui_thread;
+static MCManagedPThread s_android_engine_thread;
 
-static pthread_t s_coroutine_thread;
+static MCManagedPThread *s_coroutine_thread;
 static pthread_mutex_t s_coroutine_mutex;
 static pthread_cond_t s_coroutine_condition;
 
@@ -1289,11 +1289,11 @@ static void *mobile_main(void *arg)
 
 	// Initialize and the run the main loop
 
-	MCLog("Calling X_init", 0);
+	MCLog("Calling X_init");
 
 	if (!X_init(argc, t_args, envc, t_env))
 	{
-		MCLog("X_init failed", 0);
+		MCLog("X_init failed");
 
 		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
 		// finish LiveCodeActivity
@@ -1312,7 +1312,7 @@ static void *mobile_main(void *arg)
 		return (void *)1;
 	}
 
-	MCLog("Calling mode initialize", 0);
+	MCLog("Calling mode initialize");
 
 	// Load device-specific configuration
 	MCAndroidLoadDeviceConfiguration();
@@ -1325,7 +1325,7 @@ static void *mobile_main(void *arg)
 	while(s_android_bitmap == nil)
 		co_yield_to_android();
 
-	MCLog("Starting up project", 0);
+	MCLog("Starting up project");
 	send_startup_message(false);
     
     // PM-2015-02-02: [[ Bug 14456 ]] Make sure the billing provider is properly initialized before a preopenstack/openstack message is sent
@@ -1334,7 +1334,7 @@ static void *mobile_main(void *arg)
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
     
-	MCLog("Hiding splash screen", 0);
+	MCLog("Hiding splash screen");
 	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
 
 	while(s_engine_running)
@@ -1343,9 +1343,9 @@ static void *mobile_main(void *arg)
 			break;
 	}
 
-	MCLog("Shutting down project", 0);
+	MCLog("Shutting down project");
 	
-	MCLog("Calling X_close", 0);
+	MCLog("Calling X_close");
 	X_close();
 
 	// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
@@ -1373,16 +1373,16 @@ static void *mobile_main(void *arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void co_yield(pthread_t p_yieldee)
+static void co_yield(MCManagedPThread & p_yieldee)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	s_coroutine_thread = p_yieldee;
+	s_coroutine_thread = &p_yieldee;
 	pthread_mutex_unlock(&s_coroutine_mutex);
 
 	pthread_cond_signal(&s_coroutine_condition);
 
 	pthread_mutex_lock(&s_coroutine_mutex);
-	while(s_coroutine_thread != pthread_self())
+	while (!s_coroutine_thread->IsCurrent())
 		pthread_cond_wait(&s_coroutine_condition, &s_coroutine_mutex);
 	pthread_mutex_unlock(&s_coroutine_mutex);
 }
@@ -1390,7 +1390,7 @@ static void co_yield(pthread_t p_yieldee)
 static void co_enter_engine(void)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	while(s_coroutine_thread != pthread_self())
+	while (!s_coroutine_thread->IsCurrent())
 		pthread_cond_wait(&s_coroutine_condition, &s_coroutine_mutex);
 	pthread_mutex_unlock(&s_coroutine_mutex);
 }
@@ -1398,7 +1398,7 @@ static void co_enter_engine(void)
 static void co_leave_engine(void)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	s_coroutine_thread = s_android_ui_thread;
+	s_coroutine_thread = &s_android_ui_thread;
 	pthread_mutex_unlock(&s_coroutine_mutex);
 
 	pthread_cond_signal(&s_coroutine_condition);
@@ -1974,22 +1974,25 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
     MCModulesInitialize();
     MCScriptInitialize();
     
-	MCLog("doCreate called", 0);
+	MCLog("doCreate called");
 
 	// Make sure the engine isn't running
 	s_engine_running = false;
 
 	// The android ui thread is this one
+	MCMemoryReinit(s_android_ui_thread);
 	s_android_ui_thread = pthread_self();
 
 	// Initialize our mutex, condition and initial coroutine
 	pthread_mutex_init(&s_coroutine_mutex, NULL);
 	pthread_cond_init(&s_coroutine_condition, NULL);
-	s_coroutine_thread = s_android_ui_thread;
+	s_coroutine_thread = &s_android_ui_thread;
 
 	// Now we must create the engine thread, it will immediately yield.
-	s_android_engine_thread = nil;
-	if (pthread_create(&s_android_engine_thread, nil, mobile_main, nil) != 0)
+	MCMemoryReinit(s_android_engine_thread);
+
+	s_android_engine_thread.Create(nil, mobile_main, nil);
+	if (!s_android_engine_thread)
 	{
 		s_engine_running = false;
 		return;
@@ -2032,12 +2035,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 	// Next we yield to engine which will run until the creation phase is done.
 	MCLog("Yielding to engine thread to perform initialization phase", 0);
 	co_yield_to_engine();
-	MCLog("Engine has initialized", 0);
+	MCLog("Engine has initialized");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, jobject object)
 {
-	MCLog("doDestroy called", 0);
+	MCLog("doDestroy called");
 
 	if (!s_engine_running)
 		return;
@@ -2071,9 +2074,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 	s_android_activity = nil;
 
 	void *t_result;
-	MCLog("Engine has finalized", 0);
-	pthread_join(s_android_engine_thread, &t_result);
-	s_android_engine_thread = nil;
+	MCLog("Engine has finalized");
+	s_android_engine_thread.Join(&t_result);
 
 	pthread_cond_destroy(&s_coroutine_condition);
 	pthread_mutex_destroy(&s_coroutine_mutex);
@@ -2081,32 +2083,32 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestart(JNIEnv *env, jobject object, jobject view)
 {
-	MCLog("doRestart called", 0);
+	MCLog("doRestart called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStart(JNIEnv *env, jobject object)
 {
-	MCLog("doStart called", 0);
+	MCLog("doStart called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStop(JNIEnv *env, jobject object)
 {
-	MCLog("doStop called", 0);
+	MCLog("doStop called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv *env, jobject object)
 {
-	MCLog("doPause called", 0);
+	MCLog("doPause called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object)
 {
-	MCLog("doResume called", 0);
+	MCLog("doResume called");
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object)
 {
-	MCLog("doLowMemory called", 0);
+	MCLog("doLowMemory called");
 	static_cast<MCScreenDC *>(MCscreen) -> compact_memory();
 }
 
@@ -2342,7 +2344,7 @@ static MCStringRef s_media_content = nil;
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content)
 {
-	MCLog("doMediaDone called - passing arg", 0);
+	MCLog("doMediaDone called - passing arg");
 
     if (s_media_content != nil)
         MCValueRelease(s_media_content);
@@ -2650,7 +2652,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceCh
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceCreated(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceCreated called", 0);
+	MCLog("doSurfaceCreated called");
 
 	// Get the openglview methods
 	if (s_openglview_start_method == nil)
@@ -2682,7 +2684,7 @@ static void doSurfaceDestroyedCallback(void *)
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceDestroyed(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceDestroyed called", 0);
+	MCLog("doSurfaceDestroyed called");
 
 	co_yield_to_engine_and_call(doSurfaceDestroyedCallback, nil);
 
@@ -2711,7 +2713,7 @@ static void doSurfaceChangedCallback(void *p_is_init)
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceChanged(JNIEnv *env, jobject object, jobject p_view)
 {
-	MCLog("doSurfaceChanged called", 0);
+	MCLog("doSurfaceChanged called");
 
 	bool t_is_init;
 	t_is_init = false;
@@ -2851,9 +2853,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env
 
 bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_options)
 {
-	pthread_t t_current_thread;
-	t_current_thread = pthread_self();
-	
 	// If this is a jump, then handle things differently.
 	if ((p_options & (kMCExternalRunOnMainThreadJumpToUI | kMCExternalRunOnMainThreadJumpToEngine)) != 0)
 	{
@@ -2862,14 +2861,14 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		
 		if ((p_options & kMCExternalRunOnMainThreadJumpToUI) != 0)
 		{
-			if (t_current_thread == s_android_ui_thread)
+			if (s_android_ui_thread.IsCurrent())
 				((co_yield_callback_t)p_callback)(p_callback_state);
 			else
 				co_yield_to_android_and_call((co_yield_callback_t)p_callback, p_callback_state);
 		}
 		else
 		{
-			if (t_current_thread == s_android_engine_thread)
+			if (s_android_engine_thread.IsCurrent())
 				((co_yield_callback_t)p_callback)(p_callback_state);
 			else
 				co_yield_to_engine_and_call((co_yield_callback_t)p_callback, p_callback_state);
@@ -2880,7 +2879,8 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 	
 	// If the current thread is not the engine thread, then we must poke
 	// the main thread (i.e. we are on a non-main thread).
-	if (t_current_thread != s_android_engine_thread && t_current_thread != s_android_ui_thread)
+	if (!s_android_engine_thread.IsCurrent() &&
+	    !s_android_ui_thread.IsCurrent())
 	{
 		if ((p_options & kMCExternalRunOnMainThreadPost) == 0)
 		{
@@ -2890,7 +2890,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2908,7 +2908,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2916,7 +2916,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 	// Safe and immediate -> post to front of event queue
 	// Unsafe/Safe and deferred -> post to back of event queue
 	MCRunOnMainThreadEvent *t_event;
-	t_event = new MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
+	t_event = new (nothrow) MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
 	if ((p_options & kMCExternalRunOnMainThreadDeferred) != 0)
 		MCEventQueuePostCustom(t_event);
 	else

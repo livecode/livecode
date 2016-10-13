@@ -121,7 +121,7 @@ static MCNotifySyncEvent *MCNotifySyncEventCreate(void)
 		return MCListPopFront(s_sync_events);
 
 	MCNotifySyncEvent *t_event;
-	t_event = new MCNotifySyncEvent;
+	t_event = new (nothrow) MCNotifySyncEvent;
 	t_event -> next = NULL;
 
 #if defined(USE_WINTHREADS)
@@ -232,7 +232,7 @@ static bool MCNotifyIsMainThread(void)
 #if defined(USE_WINTHREADS)
 	return GetCurrentThreadId() == s_main_thread_id;
 #elif defined(USE_PTHREADS)
-	return pthread_self() == s_main_thread;
+	return pthread_equal(pthread_self(), s_main_thread);
 #else
 #error Threading API not specified
 #endif
@@ -377,7 +377,7 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	MCNotification *t_notification;
 	t_notification = NULL;
 	if (t_success)
-		t_notification = new MCNotification;
+		t_notification = new (nothrow) MCNotification;
 
 	// Fill it in.
 	if (t_success)

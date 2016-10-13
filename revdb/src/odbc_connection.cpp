@@ -284,7 +284,7 @@ DBCursor *DBConnection_ODBC::sqlQuery(char *p_query, DBString *p_arguments, int 
 		SQLNumResultCols(t_statement, &t_column_count);
 		if (t_column_count != 0)
 		{
-			t_cursor = new DBCursor_ODBC();
+			t_cursor = new (nothrow) DBCursor_ODBC();
 			if (!t_cursor -> open((DBConnection *)this, t_statement, p_rows))
 			{
 				delete t_cursor;
@@ -335,7 +335,7 @@ char * getDiagnosticRecord(SQLHSTMT p_statement)
 bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count, SQLHSTMT &p_statement, SQLRETURN &p_result)
 {
 	if (!isConnected)
-		return NULL;
+		return false;
 	
 	unsigned int t_query_length;
 	t_query_length = strlen(p_query);
@@ -345,8 +345,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 	
 	SQLHSTMT t_statement;
 	SQLAllocStmt(hdbc,&t_statement);
-	
-	DBCursor_ODBC *t_cursor = NULL;
 	
 	SQLRETURN t_result;
 	if (t_success)
@@ -369,8 +367,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 
 	char *t_parsed_query;
 	t_parsed_query = p_query;
-
-	int *t_param_sizes = NULL;
 
 	// The placeholder map contains a mapping from bind to argument.
 	PlaceholderMap t_placeholder_map;
@@ -401,7 +397,7 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 		if (t_result == SQL_SUCCESS || t_result == SQL_SUCCESS_WITH_INFO)
 		{
 			int *t_argument_sizes;
-			t_argument_sizes = new int[t_placeholder_map . length];
+			t_argument_sizes = new (nothrow) int[t_placeholder_map . length];
 			BindVariables(t_statement, p_arguments, p_argument_count, t_argument_sizes, &t_placeholder_map);
 			t_result = SQLExecute(t_statement);
 			delete[] t_argument_sizes;
@@ -611,7 +607,7 @@ void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
 		char *resultptr = result;
 		if (ncolumns)
 		{
-			newcursor = new DBCursor_ODBC();
+			newcursor = new (nothrow) DBCursor_ODBC();
 			if (newcursor->open((DBConnection *)this, querycursor, 1))
 			{
 				if (!newcursor->getEOF())

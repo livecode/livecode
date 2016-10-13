@@ -156,7 +156,7 @@ unsigned long SSLError(MCStringRef& errbuf)
     if (ecode)
     {
         MCAutoPointer<char> t_errbuf;
-        t_errbuf = new char[256];
+        t_errbuf = new (nothrow) char[256];
         ERR_error_string_n(ecode,&t_errbuf,255);
         /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
     }
@@ -446,8 +446,6 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	}
 
 	static const char magic[]="Salted__";
-
-	int4 res = 0;
 
 	//set up cipher context
 	EVP_CIPHER_CTX ctx;

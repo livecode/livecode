@@ -48,7 +48,7 @@ local lvHTTPProxy              -- The proxy server (if any) configured by the sy
 local lvProxyBypassList        -- URLs that bypass any proxy settings
 
 -- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
-local lvExtDriver, lvExtIsBlocking
+local lvExtDriver
 
 ---------------------------------------------------------------------
 ##http locals
@@ -111,7 +111,6 @@ private function loadExternalDriver pDriver
 
    put ulExtInitDriver() into tResult
    if tResult is empty then
-      put ulExtIsBlocking() into lvExtIsBlocking
       put pDriver into lvExtDriver
    else
       # External driver initialisation failed, so don't use it as a behavior for libURL
@@ -125,7 +124,6 @@ end loadExternalDriver
 private command unloadExternalDriver
    if lvExtDriver is not empty then
       ulExtRemoveDriver
-      put false into lvExtIsBlocking
       put empty into lvExtDriver
    end if
 
@@ -259,7 +257,7 @@ on getUrl x
    if newUrl is among the keys of laLoadingUrls and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -303,7 +301,7 @@ on postUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -349,7 +347,7 @@ on putUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -395,7 +393,7 @@ on deleteUrl x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -612,19 +610,11 @@ on ulGetFormat pUrl,pCount
       # clear status before resolving hostname
       put empty into laStatus[pUrl]
       
-      ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
-      ## an extra parameter will throw an error, so encase in a try ... catch block
-      ## and call without callback handler
-      try
-         get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
-      catch pError
-         get hostNameToAddress(tResolveHost)
-         if the result is empty then ulHostNameToAddressCallback tResolveHost, it
-      end try
+      get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
       ## I.M. 2010-03-11  Need to check result and handle immediate failure where
       ##  no callback message will be sent
       if the result is not empty then
-         ulHostNameToAddressCallback tResolveHost, empty
+         ulHostNameToAddressCallback tResolveHost, empty, the result
       end if
       
       if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
@@ -638,7 +628,7 @@ end ulGetFormat
 
 ################################################################################
 
-on ulHostNameToAddressCallback, pHostname, pIP
+on ulHostNameToAddressCallback pHostname, pIP, pOptionalError
    local tURL, tOffset
    local tPre, tHost, tPort, tUser, tPass, tFilename, tURLHost, tURLPort
    local tConnectHost, tBadAddress
@@ -666,7 +656,11 @@ on ulHostNameToAddressCallback, pHostname, pIP
    end if
    
    if tBadAddress then
-      put "invalid host address" into laUrlErrorStatus[tURL]
+      if pOptionalError is not empty then
+         put pOptionalError into laUrlErrorStatus[tURL]
+      else
+         put "invalid host address" into laUrlErrorStatus[tURL]
+      end if
       if laLoadReq[tURL] then
          put "error" into laUrlLoadStatus[tURL]
          delete local laLoadingUrls[tURL]
@@ -714,7 +708,7 @@ on ulHostNameToAddressCallback, pHostname, pIP
       end if
    end if
    
-   ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
+   ## AL-2013-07-30: [[ Bug 10796 ]] HTTP "get URL" omits port number from HOST header
    ## delete this array at the end so that 'get url' can use the port and protocol data.
    subtract 1 from laURLFormat[tURL]["references"]
    if laURLFormat[tURL]["references"] is 0 then
@@ -1308,6 +1302,7 @@ on ulDoProcess x,y
          
          ##normal case
       case laLength[laUrl[x]] is not empty
+      case laStatusCode[laUrl[x]] is "204"  -- When a 204 is returned no data is returned, just the length of the data in the header.
          
          put  laTmpData[laUrl[x]] into tData
          ulStoreData laUrl[x],tData
@@ -2060,7 +2055,7 @@ function ulBuildHttpRequest pUrl
          end if
       end repeat
       if laSocketSecured[tSocket] is false then
-         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] into tRequest
+         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] into tRequest
          
          -- MM-2014-06-05: [[ Bug 12566 ]] Make sure we authenticate the proxy.
          if laUrlProxy[pUrl] <> empty then
@@ -3237,6 +3232,12 @@ on socketError x, pErr
       if x is among the lines of keys(laFTPCommandStatus) then ##may be waiting for a server reply
          put pErr into laFTPCommandStatus[x] ##unblock waits
       end if
+      
+      ## Handle cleanup for load url
+      if laLoadReq[laUrl[x]] then
+         ulHttpLateCleanUp x
+      end if
+        
    else if x is among the lines of keys(laControlXDataMap)then##must be ftp passive data socket
       put laControlXDataMap[x] into tControlSocket
       put false into laStatus[laUrl[tControlSocket]] ##unblock waits
@@ -3294,7 +3295,7 @@ on ulDeleteLocals
   
   repeat for each item e in line 3 of the localNames
     -- CW-2016-06-11: [[ External driver support ]] Don't clear locals that determine what driver is in use.
-    if e is not "lvExtDriver" and e is not "lvExtIsBlocking" then
+    if e is not "lvExtDriver" then
       get "delete" && "local" && e
       do it
     end if
@@ -3564,7 +3565,13 @@ end libUrlSetLogField
 ---------------------------
 on libUrlSetStatusCallback pMessage,pObject
   ##pObject must be a long ID
-  if pMessage <> empty and exists(pObject)  then
+  ##Allow empty value in which case we use send to self.
+  if pMessage is not empty and the paramCount is 1 then
+    put pMessage & comma into lvStatusCallback
+  else if pMessage is not empty and the paramCount is 2 then
+    if not exists(pObject) then
+      return "invalid callback target object" for error
+    end if
     put pMessage & comma & pObject into lvStatusCallback
   else
     put empty into lvStatusCallback
@@ -3911,7 +3918,7 @@ on ulSendAuthMessage pMethod, pUrl, pHeaderString
     end if
   end repeat
   if tMessage <> empty and exists(tObject) then
-    send tMessage && quote & pUrl & quote & "," & pHeaderString to tObject
+    send tMessage &&  "pUrl, pHeaderString" to tObject
     return the result ## must ensure this contains data
   else
     return empty ##possible problems
@@ -3938,15 +3945,20 @@ on ulSendMessage pUrl
 end ulSendMessage
 ----------------------------
 on ulSendCallback pUrl, pStatus
-  local tMessage,tObject
+  local tMessage,tObject,tSendStr
   
   if lvStatusCallback is empty then exit ulSendCallback
   put item 1 of lvStatusCallback into tMessage
 
   put item 2 to -1 of lvStatusCallback into tObject   ##modified dc 220905
+  put tMessage && "pURL, pStatus" into tSendStr
+  
   if exists(tObject) then
     ## need quotes for the url formatting and the possibility of multiple items in second argument
-    send tMessage &&  quote & pUrl & quote & comma & quote & pStatus & quote to tObject in 0 milliseconds
+    send tSendStr to tObject in 0 milliseconds
+   else
+    # If no target then just send to self so it propagates through message path.
+    send tSendStr to me in 0 milliseconds
   end if
 end ulSendCallback
 -----------------------------
@@ -4213,15 +4225,50 @@ function ulStripUrl pUrl
 end ulStripUrl
 --------------------------------
 function ul_TraceLocals ##DEBUG ROUTINE, used in development
-  local e,tRetVal,tDoString
+  local e,tRetVal,tDoString,tKeys
   
   repeat for each item e in line 3 of the localNames
     put e & cr after tRetVal
-    put "put keys(" & e & ") & cr after tRetVal" into tDoString
+    put "put the keys of" && e && "into tKeys" into tDoString
+    do tDoString
+    if tKeys is empty then
+       put "put" && e && "& cr after tRetVal" into tDoString
+    else
+       put "put ul_PrintKeys(" & e & ") & cr after tRetVal" into tDoString
+    end if
     do tDoString
   end repeat
   return tRetVal
 end ul_TraceLocals
+--------------------------------
+function ul_PrintKeys @pArray, pDimension
+   local tKeys, tKey, tText
+   
+   if pDimension is empty then put 0 into pDimension
+    
+   put the keys of pArray into tKeys
+   sort tKeys numeric
+     
+   repeat for each line tKey in tKeys
+      if pArray[tKey] is an array then
+         put _printCharXTimes(space, pDimension * 5) & tKey & cr after tText
+         put ul_PrintKeys(pArray[tKey], pDimension + 1) after tText
+      else
+         put _printCharXTimes(space, pDimension * 5) &  tKey & ":" && line 1 of pArray[tKey] & cr after tText
+      end if
+   end repeat
+     
+   return tText
+end ul_PrintKeys
+-------------------------------- 
+private function _printCharXTimes pChar, pTimes
+   local tStr
+     
+   repeat with i = 1 to pTimes
+      put pChar after tStr
+   end repeat
+   return tStr
+end _printCharXTimes
 --------------------------------
 function ulFtpCommand pCommandString, pSocket
   ##executes ftp commands

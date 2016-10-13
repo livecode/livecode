@@ -48,7 +48,7 @@ int UnicodeToUTF8(uint2 *lpSrcStr, int cchSrc, char *lpDestStr, int cchDest);
 static char *unidecode(char *unistring, int tsize)
 {
   int length = tsize >> 1;
-  char *sansiptr = new char[tsize];
+  char *sansiptr = new (nothrow) char[tsize];
   char *ansiptr = sansiptr;
   char *uniptr = unistring;  
   while (length--)
@@ -306,10 +306,10 @@ Bool DBCursor_ODBC::getFieldsInformation()
 	SQLULEN dbsize;
 	SQLSMALLINT decDigits;
 	SQLSMALLINT nullablePtr;
-	fields = new DBField *[fieldCount];
+	fields = new (nothrow) DBField *[fieldCount];
 	for (unsigned int i=0; i < (unsigned int)fieldCount; i++)
 	{
-		DBField_ODBC *ofield = new DBField_ODBC();
+		DBField_ODBC *ofield = new (nothrow) DBField_ODBC();
 		fields[i] = (DBField *)ofield;
 		retcode = SQLDescribeColA(ODBC_res, i+1, (SQLCHAR *)ofield->fieldName, F_NAMESIZE, &buflen, &dbtype, &dbsize, &decDigits, &nullablePtr);
 		if ((retcode != SQL_SUCCESS) && (retcode != SQL_SUCCESS_WITH_INFO))
@@ -434,9 +434,9 @@ Bool DBCursor_ODBC::getFieldsInformation()
 			ofield -> maxlength = ofield -> maxlength + 1;
 
 		if (ofield -> fieldType == FT_WSTRING)
-			ofield -> data = new char[ofield -> maxlength + 2];
+			ofield -> data = new (nothrow) char[ofield -> maxlength + 2];
 		else
-			ofield -> data = new char[ofield -> maxlength + 1];
+			ofield -> data = new (nothrow) char[ofield -> maxlength + 1];
 		totalsize += ofield->maxlength;
 		ofield->freeBuffer = True;
 	}
@@ -549,11 +549,16 @@ Bool DBCursor_ODBC::getRowData()
 
 char *DBCursor_ODBC::getErrorMessage()
 {
-		SQLINTEGER	error;        /* Not used */
-		SWORD	errormsgsize; /* Not used */
-		DBConnection_ODBC * odbcconn = (DBConnection_ODBC *)connection;
-		SQLRETURN err = SQLErrorA(odbcconn->getHENV(), odbcconn->getHDBC(), ODBC_res, NULL, &error, (SQLCHAR *)errmsg, SQL_MAX_MESSAGE_LENGTH-1, &errormsgsize);
+    SQLINTEGER	error;        /* Not used */
+    SWORD	errormsgsize; /* Not used */
+    DBConnection_ODBC * odbcconn = (DBConnection_ODBC *)connection;
+    SQLRETURN err = SQLErrorA(odbcconn->getHENV(), odbcconn->getHDBC(), ODBC_res, NULL, &error, (SQLCHAR *)errmsg, SQL_MAX_MESSAGE_LENGTH-1, &errormsgsize);
+    
+    if (err == SQL_SUCCESS)
 		return errmsg;
+    else
+        return (char *)DBNullValue;
+    
 }
 
 

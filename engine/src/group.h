@@ -139,6 +139,8 @@ public:
 	virtual void OnAttach();
 	virtual void OnDetach();
 
+	virtual void OnViewTransformChanged();
+	
 	virtual void geometrychanged(const MCRectangle &p_rect);
 
 	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
@@ -150,11 +152,6 @@ public:
     virtual void scheduledelete(bool p_is_child);
     
     virtual bool isdeletable(bool p_check_flag);
-    
-    // This call computes the pixel bounds of the group, rather than
-    // just its active bounds - transients, bitmap effects and selection
-    // handles of a group's children may extend beyond the group's bounds.
-    virtual MCRectangle geteffectiverect(void) const;
     
     void drawselectedchildren(MCDC *dc);
     bool updatechildselectedrect(MCRectangle& x_rect);

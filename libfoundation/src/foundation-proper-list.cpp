@@ -773,7 +773,7 @@ bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCo
         if (!__MCProperListResolveIndirect(self))
             return false;
     
-    MCValueRef *t_temp_array = new MCValueRef[t_item_count];
+    MCValueRef *t_temp_array = new (nothrow) MCValueRef[t_item_count];
     
     MCProperListDoStableSort(self -> list, t_item_count, t_temp_array, p_reverse, p_callback, context);
     

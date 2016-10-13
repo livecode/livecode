@@ -60,7 +60,7 @@ static MCString s_contacts_selected = "";
 
 bool MCSystemPickContact(int32_t& r_result)
 {
-    MCLog("MCSystemPickContact", NULL);
+    MCLog("MCSystemPickContact");
     MCAndroidEngineRemoteCall("pickContact", "i", &r_result);
     s_contact_status = kMCAndroidContactWaiting;
     while (s_contact_status == kMCAndroidContactWaiting)
@@ -110,7 +110,7 @@ void MCAndroidShowContactCanceled(int32_t p_contact_id)
 
 bool MCSystemCreateContact(int32_t& r_result)
 {
-    MCLog("MCSystemCreateContact", NULL);
+    MCLog("MCSystemCreateContact");
     MCAndroidEngineRemoteCall("createContact", "i", &r_result);
     s_contact_status = kMCAndroidContactWaiting;
     while (s_contact_status == kMCAndroidContactWaiting)
@@ -156,7 +156,7 @@ bool MCSystemUpdateContact(MCArrayRef p_contact,
 						   MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
-    MCLog("MCSystemUpdateContact", NULL);
+    MCLog("MCSystemUpdateContact");
 	bool t_success = true;
 	
 	jobject t_map = nil;
@@ -215,7 +215,7 @@ bool MCSystemRemoveContact(int32_t p_contact_id)
 
 bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 {
-    MCLog("MCSystemAddContact", NULL);
+    MCLog("MCSystemAddContact");
 	
 	bool t_success = true;
 	jobject t_map = nil;

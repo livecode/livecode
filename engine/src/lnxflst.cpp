@@ -114,12 +114,13 @@ MCNewFontlist::~MCNewFontlist()
 bool MCNewFontlist::create(void)
 {
 #ifdef _SERVER
-	// MM-2013-09-13: [[ RefactorGraphics ]] We don't link to glib and gobject on server by default (but both are needed for font support, so added here).
-	if (initialise_weak_link_pango() == 0 ||
-		initialise_weak_link_pangoft2() == 0 ||
-        initialise_weak_link_pangocairo() == 0 ||
-		initialise_weak_link_gobject() == 0 ||
-		initialise_weak_link_glib() == 0)
+	// Unlike on desktop, the server build does not require GLib to run so it
+	// needs to be loaded here
+	if (!initialise_weak_link_glib() ||
+		!initialise_weak_link_gobject() ||
+		!initialise_weak_link_pango() ||
+		!initialise_weak_link_pangoft2() ||
+		!initialise_weak_link_pangocairo())
 		return false;
 #else
 	if (initialise_weak_link_pango() == 0 ||
@@ -161,7 +162,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 		if (MCNameIsEqualTo(p_family, t_font -> family) && p_size == t_font -> size && p_style == t_font -> style)
 			return t_font;
 
-	t_font = new MCNewFontStruct;
+	t_font = new (nothrow) MCNewFontStruct;
 	t_font -> family = MCValueRetain(p_family);
 	t_font -> size = p_size;
 	t_font -> style = p_style;
@@ -549,7 +550,7 @@ public:
 MCFontlist *MCFontlistCreateNew(void)
 {
 	MCNewFontlist *t_fontlist;
-	t_fontlist = new MCNewFontlist;
+	t_fontlist = new (nothrow) MCNewFontlist;
 	if (!t_fontlist -> create())
 	{
 		delete t_fontlist;

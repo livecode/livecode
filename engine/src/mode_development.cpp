@@ -542,7 +542,7 @@ bool MCObjectListAppend(MCObjectList *&x_list, MCObject *p_object, bool p_unique
 	MCObjectList *t_newobject;
 	t_newobject = nil;
 	
-	t_newobject = new MCObjectList(p_object);
+	t_newobject = new (nothrow) MCObjectList(p_object);
 	
 	if (t_newobject == nil)
 		return false;
@@ -1491,7 +1491,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
 static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
 {    
     MCObject *objptr = NULL;
-    MCChunk *tchunk = new MCChunk(False);
+    MCChunk *tchunk = new (nothrow) MCChunk(False);
     MCerrorlock++;
     MCScriptPoint sp(p_string);
     if (tchunk->parse(sp, False) == PS_NORMAL)

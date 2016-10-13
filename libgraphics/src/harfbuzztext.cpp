@@ -207,12 +207,12 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 		}
         
         hb_skia_face_t *t_face;
-        t_face = new hb_skia_face_t;
+        t_face = new (nothrow) hb_skia_face_t;
             
         t_face -> typeface = p_typeface;
         t_face -> size = p_size;
         
-        t_hb_sk_face = new MCHarfbuzzSkiaFace;
+        t_hb_sk_face = new (nothrow) MCHarfbuzzSkiaFace;
         t_hb_sk_face -> face = nil;
         t_hb_sk_face -> skia_face = nil;
 

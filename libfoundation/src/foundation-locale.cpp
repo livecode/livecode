@@ -27,6 +27,7 @@
 #include "unicode/timezone.h"
 #include "unicode/uclean.h"
 
+#include "foundation.h"
 #include "foundation-auto.h"
 
 
@@ -267,7 +268,7 @@ bool MCLocaleCreateWithName(MCStringRef p_name, MCLocaleRef &r_locale)
     
     // Convert it into an engine locale
     __MCLocale *t_locale;
-    t_locale = new __MCLocale(*t_icu_locale);
+    t_locale = new (nothrow) __MCLocale(*t_icu_locale);
     
     // All done
     r_locale = t_locale;
@@ -729,7 +730,7 @@ bool MCTimeZoneCreate(MCStringRef p_name, MCTimeZoneRef &r_tz)
         return false;
     
     // Create the LiveCode time zone object
-    r_tz = new __MCTimeZone(*t_tz);
+    r_tz = new (nothrow) __MCTimeZone(*t_tz);
     return true;
 }
 
@@ -1046,7 +1047,7 @@ bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_typ
         return false;
     
     // Use the ICU break iterator object to create the engine object
-    r_iter = new __MCBreakIterator(*t_iter);
+    r_iter = new (nothrow) __MCBreakIterator(*t_iter);
     return true;
 }
 
@@ -1143,10 +1144,13 @@ bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_ite
         // if the intervening chars contain a letter or number then it was a valid 'word'
         while (t_left_break < t_right_break)
         {
-            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                break;
-            if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                t_left_break++;
+			codepoint_t t_cp =
+				MCStringGetCodepointAtIndex(self, t_left_break);
+			
+			if (MCStringCodepointIsWordPart(t_cp))
+				break;
+			
+			t_left_break += MCUnicodeCodepointGetCodeunitLength(t_cp);
         }
         
         if (t_left_break < t_right_break)

@@ -143,6 +143,13 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    if pStack = empty then
       put the short name of the topStack into pStack
    end if
+   
+   -- Script only stacks can not store standalone settings so don't allow them as targets
+   if the scriptOnly of stack pStack then
+      answer error "Script only stacks are not currently supported as standalone mainstacks"
+      exit revSaveAsStandalone
+   end if
+   
    if the fileName of stack pStack = empty then
       put "edited" into gREVStackStatus[pStack]
    end if
@@ -283,6 +290,21 @@ command revDoSaveAsStandalone pStack, pFolder
    
    revStandaloneProgress "Preparing to build standalone..."
    
+   -- pre build message
+   local tHasDesktop
+   repeat for each item tTarget in revSBDesktopTargets()
+      if sStandaloneSettingsA[tTarget] then
+         put true into tHasDesktop
+         exit repeat
+      end if
+   end repeat
+   
+   if tHasDesktop then
+      try
+         dispatch "savingStandalone" to stack pStack
+      end try
+   end if
+   
    try
       -- Create an appropriate output dir
       local tOutputFolder
@@ -300,14 +322,8 @@ command revDoSaveAsStandalone pStack, pFolder
          end if
       end repeat
       
-      -- Add all the widgets that are present on the stack to the 
-      -- extensions settings key
-      revSBUpdateSettingsForWidgets pStack, sStandaloneSettingsA
-      
       -- If we're searching for inclusions, do it here 
-      if sStandaloneSettingsA["inclusions"] = "search" then 
-         revSearchForInclusions pStack, sStandaloneSettingsA
-      end if
+      revSearchForInclusions pStack, sStandaloneSettingsA
       
       -- keep a copy of the standalone settings to restore after each build
       local tStandaloneSettingsA
@@ -352,6 +368,14 @@ command revDoSaveAsStandalone pStack, pFolder
                break
          end switch
       end repeat
+      
+      -- post build message
+      if tHasDesktop then
+         try
+            dispatch "standaloneSaved" to stack pStack with pFolder & slash
+         end try
+      end if
+      
    catch tError
       revAbort
       if word 1 of tError = "Standalone:" then 
@@ -493,21 +517,12 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
    
    set the defaultStack to the short name of stack tStackFileName
    
-   -- pre build message
-   try
-      dispatch "savingStandalone" to stack tStackFileName
-   end try
-   
    put tStackName into rStackName
    put tStackFileName into rStackFileName
    put tStackFileList into rStackFileList
 end revStandalonePreBuild
 
 private on revStandalonePostBuild pStackFileName, pFolder
-   -- post build message
-   try
-      dispatch "standaloneSaved" to stack pStackFileName with pFolder
-   end try
 end revStandalonePostBuild
 
 private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSourceFile, \ 
@@ -515,7 +530,7 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
    -- copy resources (inclusions) to files
    revCopyResources pStack, pStackFileList, pDirectory
    
-   revCopyScriptLibraries pStackSourceFile, pTarget
+   revCopyScriptLibraries pStack, pTarget
    
    revCopyFiles pDirectory, pStackPath
    
@@ -655,7 +670,7 @@ command revSaveAsMacStandalone pStack, pFolder
       
       revRedirectMacOSResources tStandalonePath
       
-      __ReloadOriginalStackFile tStackFileName
+      __ReloadOriginalStackFile tStackFileName, pStack
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
@@ -821,7 +836,7 @@ command revSaveAsWindowsStandalone pStack, pFolder
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
-      __ReloadOriginalStackFile tStackFileName
+      __ReloadOriginalStackFile tStackFileName, pStack
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
@@ -879,7 +894,7 @@ command revSaveAsLinuxStandalone pStack, pFolder
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
-      __ReloadOriginalStackFile tStackFileName
+      __ReloadOriginalStackFile tStackFileName, pStack
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
@@ -888,7 +903,16 @@ command revSaveAsLinuxStandalone pStack, pFolder
 end revSaveAsLinuxStandalone
 
 
-private command  __ReloadOriginalStackFile pStackPath
+private command  __ReloadOriginalStackFile pStackPath, pStack
+   if there is a stack pStack then
+      local tOldLock
+      put the lockMessages into tOldLock
+      lock messages
+      set the cantDelete of stack pStack to false
+      delete stack pStack
+      set the lockMessages to tOldLock
+   end if
+   
    local tError
    try
       get the short name of stack pStackPath
@@ -1356,9 +1380,7 @@ private function revSaveStackFile pStack, pSubList, pRelativePath, pDirectory
          put tLine,pRelativePath&tFileName & return after tCopyFiles
       end repeat
    end if
-   -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
-   set the cantDelete of stack pStack to false
-   delete stack pStack
+   
    delete char -1 of tCopyFiles
    return tCopyFiles
 end revSaveStackFile
@@ -1923,8 +1945,8 @@ private function revSaveToFolder pFolder, pStack, pGeneric
    # already contain ".rev". In this case, the stack ends up being called something.rev.rev,
    # and the standalone builder breaks further along because it makes assumptions about 
    # the stack's filename. I'm not 100% sure that this fix is correct...
-   if not (tFileName ends with ".livecode" or tFileName ends with ".rev") then 
-      put ".rev" after tFileName
+   if not (tFileName ends with ".livecodescript" or tFileName ends with ".livecode" or tFileName ends with ".rev") then 
+      put ".livecode" after tFileName
    end if
    lock screen
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by

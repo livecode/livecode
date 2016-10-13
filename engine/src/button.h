@@ -111,7 +111,7 @@ public:
     
     enum { kObjectType = CT_BUTTON };
     using MCMixinObjectHandle<MCButton>::GetHandle;
-    
+ 
 private:
     
 	friend class MCHcbutton;
@@ -121,7 +121,7 @@ private:
 	MCNameRef menuname;
 	MCStringRef menustring;
 	MCField *entry;
-	MCStack *menu;
+	MCObjectHandle menu;
 	MCStringRef acceltext;
 	MCArrayRef tabs;
 	MCPlatformMenuRef m_system_menu;
@@ -279,11 +279,9 @@ public:
 	{
 		menuhasitemtags = p_hastags;
 	}
-	MCStack *getmenu()
-	{
-		return menu;
-	}
-	uint2 getaccelkey()
+    MCStack *getmenu();
+    
+    uint2 getaccelkey()
 	{
 		return accelkey;
 	}

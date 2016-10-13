@@ -125,6 +125,38 @@ output "  return 1;";
 output "}";
 output ;
 
+# Support code for 'could not find library' message boxes
+# The order of tools for displaying messages is:
+#    zenity
+#    wish (part of Tk)
+#    xmessage
+#
+# The engine is about to die anyway so this doesn't do any error checking. It
+# also doesn't wait for command completion to prevent hanging waiting for the
+# user to click.
+#
+output ;
+output "#if defined(_LINUX)";
+output "static void failed_required_link(const char* libname, const char* liblist)";
+output "{";
+output "  const char* dialog =";
+output "    \"zenity --error --title \\\"\$TITLE\\\" --text \\\"\$TEXT\\\" 2>/dev/null 1>/dev/null && \"";
+output "    \"echo \\\"wm state . withdrawn ; tk_messageBox -icon error -message \\\\\\\"\$TEXT\\\\\\\" -title \\\\\\\"\$TITLE\\\\\\\" -type ok ; exit \\\" | wish && \"";
+output "    \"xmessage -center -buttons OK -default OK \\\"\$TITLE:\\\" \\\"\$TEXT\\\"\" ";
+output "	;";
+output ;
+output "  char* error = new char[65536];";
+output "  char* command = new char[65536];";
+output ;
+output "  snprintf(error, 65536, \"Failed to load library \\\'%s\\\' (tried %s)\", libname, liblist);";
+output "  snprintf(command, 65536, \"TITLE=\\\"LiveCode startup error\\\" TEXT=\\\"%s\\\" /bin/sh -c \\\'%s\\\' &\", error, dialog);";
+output "  fprintf(stderr, \"Fatal: failed to load library \\\'%s\\\' (tried %s)\\n\", libname, liblist);";
+output "  int ignored = system(command); (void)ignored;";
+output "  exit(-1);";
+output "}";
+output "#endif";
+output ;
+
 # Process each module
 foreach my $module (keys %moduleDetails)
 {
@@ -233,6 +265,7 @@ sub generateModule
     output "}";
     output ;
 
+
     output "int initialise_weak_link_${module}(void)";
     output "{";
 
@@ -249,12 +282,24 @@ sub generateModule
 	
     output "{";
     output "#ifdef _DEBUG";
-    output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
+    output "    fprintf(stderr, \"Warning: could not load library: $unixLibrary\\n\");";
     output "#endif";
     output "return 0;";
     output "}";
     output "return -1;";
     output "}";
+	
+	output ;
+	output "#if defined(_LINUX)";
+	output "void initialise_required_weak_link_${module}(void)";
+	output "{";
+	output "  if (!initialise_weak_link_${module}())";
+	output "  {";
+	output "    failed_required_link(\"${module}\", \"${unixLibrary}\");";
+	output "  }";
+	output "}";
+	output "#endif";
+	output ;
 	
 	foreach my $symbol (@symbols)
 	{

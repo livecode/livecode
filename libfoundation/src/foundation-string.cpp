@@ -1581,31 +1581,31 @@ MC_DLLEXPORT_DEF
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
 {
 	__MCAssertIsString(self);
-
-	// Calculate the code unit index for the given codepoint
-	MCRange t_codepoint_idx, t_codeunit_idx;
-    t_codepoint_idx = MCRangeMake(p_index, 1);
-    if (!MCStringMapCodepointIndices(self, t_codepoint_idx, t_codeunit_idx))
-        return 0;
  
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    /* Allow trailing null character */
+    MCAssert(p_index <= MCStringGetLength(self));
+	
+	// If the string is native, map the native encoded char to unicode and
+	// return.
     if (__MCStringIsNative(self))
     {
         char_t native_char = self -> native_chars[p_index];
         return MCUnicodeCharMapFromNative(native_char);
     }
-    
-    // Get the codepoint at this index
-    unichar_t t_lead, t_trail;
-    t_lead = self -> chars[t_codeunit_idx.offset];
-    if (t_codeunit_idx.length == 1)
-        return t_lead;
-    
-    // We have a surrogate pair
-    t_trail = self -> chars[t_codeunit_idx.offset + 1];
-    return MCStringSurrogatesToCodepoint(t_lead, t_trail);
+	
+	// If the codeunit at the given index is a leading surrogate, and the next
+	// one is a trailing surrogate then build the pair into a codepoint.
+	if (MCUnicodeCodepointIsLeadingSurrogate(self->chars[p_index]) &&
+		MCUnicodeCodepointIsTrailingSurrogate(self->chars[p_index+1]))
+	{
+		return MCUnicodeSurrogatesToCodepoint(self->chars[p_index], self->chars[p_index+1]);
+	}
+	
+	// The codeunit at the given index is not part of a (valid) surrogate pair.
+	return self->chars[p_index];
 }
 
 MC_DLLEXPORT_DEF
@@ -2310,13 +2310,18 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
         if (MCLocaleBreakIteratorIsBoundary(t_iter, t_right_break))
         {
             // if the intervening chars contain a letter or number then it was a valid 'word'
-            while (t_left_break < t_right_break)
-            {
-                if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                    break;
-                if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                    t_left_break++;
-            }
+			while (t_left_break < t_right_break)
+			{
+				codepoint_t t_cp =
+					MCStringGetCodepointAtIndex(self, t_left_break);
+				
+				if (MCStringCodepointIsWordPart(t_cp))
+					break;
+				
+				t_left_break++;
+				if (t_cp > UNICHAR_MAX)
+					t_left_break++;
+			}
             
             if (t_left_break < t_right_break)
                 t_start++;
@@ -2342,10 +2347,14 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             // if the intervening chars contain a letter or number then it was a valid 'word'
             while (t_left_break < t_right_break)
             {
-                if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+				// NB: GetCodepointAtIndex takes a code-unit index
+				codepoint_t t_cp =
+					MCStringGetCodepointAtIndex(self, t_left_break);
+                if (MCStringCodepointIsWordPart(t_cp))
                     break;
-                if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                    t_left_break++;
+				
+				// If the char is in the SMP, it is two codeunits long.
+				t_left_break += MCUnicodeCodepointGetCodeunitLength(t_cp);
             }
             
             if (t_left_break < t_right_break)
@@ -4010,7 +4019,7 @@ bool MCStringDelimitedOffset(MCStringRef self,
         
         if (r_before != nil)
         {
-            if (t_before > 0)
+            if (t_index > p_skip)
             {
                 r_before -> offset = p_range . offset + t_before;
                 r_before -> length = 1;
@@ -5123,8 +5132,13 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 
 bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 
+	// Ensure the string is not indirect
+	if (__MCStringIsIndirect(self))
+		if (!__MCStringResolveIndirect(self))
+			return false;
+	
 	if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
 	{
 		// Simplest case, just substitute pattern for replacement.
@@ -5148,6 +5162,8 @@ bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_rep
 
 bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
+	__MCAssertIsMutableString(self);
+	
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
@@ -5570,7 +5586,7 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
 MC_DLLEXPORT_DEF
 bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoint_t p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
@@ -5626,7 +5642,7 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
 MC_DLLEXPORT_DEF
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 	__MCAssertIsString(p_pattern);
 	__MCAssertIsString(p_replacement);
 
@@ -6508,7 +6524,6 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 {
 	__MCAssertIsString(p_string);
 
-    bool t_success;
     uindex_t t_byte_count;
     if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
         return false;

@@ -17,8 +17,7 @@ Example:
 if ten is in field "Score" then beep
 
 Description:
-Use the <ten> <constant> when it is easier to read than the number
-10<a/>. 
+Use the <ten> <constant> when it is easier to read than the number 10. 
 
 References: constant (command), tenth (keyword)
 

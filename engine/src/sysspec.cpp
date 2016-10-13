@@ -61,12 +61,6 @@ extern uint32_t MCSystemPerformTextConversion(const char *string, uint32_t strin
 
 MCSystemInterface *MCsystem;
 
-#ifdef TARGET_SUBPLATFORM_ANDROID
-static volatile int *s_mainthread_errno;
-#else
-static int *s_mainthread_errno;
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
@@ -243,11 +237,11 @@ void MCS_common_init(void)
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
 #if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
-	MCuppercasingtable = new uint1[256];
+	MCuppercasingtable = new (nothrow) uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
 	
-	MClowercasingtable = new uint1[256];
+	MClowercasingtable = new (nothrow) uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif
@@ -260,7 +254,7 @@ void MCS_common_init(void)
 	MCStackSecurityInit();
 }
 
-void MCS_init(void)
+void MCS_preinit()
 {
 #if defined(_WINDOWS_SERVER)
 	MCsystem = MCDesktopCreateWindowsSystem();
@@ -283,7 +277,14 @@ void MCS_init(void)
 #else
 #error Unknown server platform.
 #endif
+}
 
+void MCS_init()
+{
+    // Do the pre-init if not already complete
+    if (MCsystem == nil)
+        MCS_preinit();
+    
 #ifdef _SERVER
 #ifndef _WINDOWS_SERVER
 	signal(SIGUSR1, handle_signal);
@@ -454,13 +455,11 @@ void MCS_utf8tonative(const char *p_utf8, uint4 p_utf8_length, char *&r_native, 
 
 void MCS_seterrno(int value)
 {
-//	*s_mainthread_errno = value;
     MCsystem -> SetErrno(value);
 }
 
 int MCS_geterrno(void)
 {
-//	return *s_mainthread_errno;
     return MCsystem -> GetErrno();
 }
 
@@ -1010,9 +1009,17 @@ bool MCS_getentries(MCStringRef p_folder,
                     bool p_files,
                     bool p_detailed,
                     MCListRef& r_list)
-{    
+{
+	MCAutoStringRef t_resolved_folder;
+	MCAutoStringRef t_native_folder;
+	if (p_folder != nil)
+	{
+		if (!(MCS_resolvepath(p_folder, &t_resolved_folder) &&
+			  MCS_pathtonative(*t_resolved_folder, &t_native_folder)))
+			return false;
+	}
+	
 	MCAutoListRef t_list;
-    
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
@@ -1029,7 +1036,7 @@ bool MCS_getentries(MCStringRef p_folder,
 			return false;
 	}
     
-	if (!MCsystem -> ListFolderEntries(p_folder, MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(*t_native_folder, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
@@ -1142,14 +1149,14 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size)
 {
 	MCMemoryFileHandle *t_handle;
-    t_handle = new MCMemoryFileHandle(p_data, p_size);
+    t_handle = new (nothrow) MCMemoryFileHandle(p_data, p_size);
 	return t_handle;
 }
 
 IO_handle MCS_fakeopenwrite(void)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle();
+	t_handle = new (nothrow) MCMemoryFileHandle();
 	return t_handle;
 }
 
@@ -1217,7 +1224,7 @@ bool MCS_tmpnam(MCStringRef& r_path)
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
 	MCSystemFileHandle *t_handle;
-	t_handle = new MCCustomFileHandle(p_callbacks, p_state);
+	t_handle = new (nothrow) MCCustomFileHandle(p_callbacks, p_state);
 	return t_handle;
 }
 

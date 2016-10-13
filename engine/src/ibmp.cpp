@@ -346,9 +346,6 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 			t_success = IO_NORMAL == IO_write(t_color, sizeof(uint8_t), 4, p_stream);
 		}
 
-		uint32_t t_pixel_mask = (1 << t_depth) - 1;
-		uint32_t t_first_shift = 8 - t_depth;
-
 		// bmp row order is bottom to top, so point to last row
 		uint8_t *t_src_ptr = (uint8_t*)t_indexed->data + (t_height - 1) * t_indexed->stride;
 		while (t_success && t_src_ptr >= t_indexed->data)
@@ -732,8 +729,6 @@ bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 			else
 			{
 				// absolute mode
-				uint8_t t_byte, t_upper, t_lower;
-				
 				uint8_t t_run_buffer[256];
 				uint32_t t_run_bytes;
 				t_run_bytes = (t_value + 1) & ~0x1;
@@ -791,9 +786,8 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 				
 				uint32_t t_current_shift = t_first_shift;
-				uint8_t t_byte = 0;
-
-				for (uint32_t x = 0; x < p_bitmap->width; x++)
+				
+                for (uint32_t x = 0; x < p_bitmap->width; x++)
 				{
 					*t_dst_row++ = p_color_table[(*t_src_row >> t_current_shift) & t_pixel_mask];
 					if (t_current_shift == 0)
@@ -1107,7 +1101,7 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	MCBitmapStructImageLoader *t_loader;
     t_loader = NULL;
 	if (t_success)
-		t_success = nil != (t_loader = new MCBitmapStructImageLoader(p_stream));
+		t_success = nil != (t_loader = new (nothrow) MCBitmapStructImageLoader(p_stream));
 
 	MCBitmapFrame *t_frames;
 	t_frames = nil;
@@ -1174,7 +1168,7 @@ bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 bool MCImageLoaderCreateForBMPStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCBitmapImageLoader *t_loader;
-	t_loader = new MCBitmapImageLoader(p_stream);
+	t_loader = new (nothrow) MCBitmapImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -1502,7 +1496,7 @@ bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 	uindex_t t_token_size;
 
 	if (t_success)
-		t_success = nil != (m_reader = new MCNetPBMTokenReader(GetStream()));
+		t_success = nil != (m_reader = new (nothrow) MCNetPBMTokenReader(GetStream()));
 
 	if (t_success)
 		t_success = m_reader->GetToken(t_token, t_token_size);
@@ -1677,7 +1671,7 @@ bool MCNetPBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count
 bool MCImageLoaderCreateForNetPBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCNetPBMImageLoader *t_loader;
-	t_loader = new MCNetPBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCNetPBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2045,7 +2039,7 @@ bool MCXBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXBMImageLoader *t_loader;
-	t_loader = new MCXBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2121,8 +2115,7 @@ static bool xpm_next_color(const char *p_line, uindex_t p_line_start, uindex_t p
 {
 	uindex_t t_next_token_start, t_next_token_end;
 	uindex_t t_key;
-	bool t_have_color = false;
-
+	
 	r_color_end = r_color_start = p_line_start;
 
 	if (!xpm_next_token(p_line, p_line_start, p_line_end, r_color_start, r_color_end))
@@ -2187,7 +2180,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start < 6)
 		return false;
 	
-	uint32_t t_value = 0;
 	uint8_t t_color[3];
 	for (uint32_t i = 0; i < 3; i++)
 	{
@@ -2203,8 +2195,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 
 static bool xpm_parse_v3_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))
@@ -2311,8 +2301,6 @@ bool xpm_read_v3_header(IO_handle p_stream, uindex_t &r_width, uindex_t &r_heigh
 
 static bool xpm_parse_v1_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))
@@ -2625,7 +2613,7 @@ bool MCXPMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXPMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXPMImageLoader *t_loader;
-	t_loader = new MCXPMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXPMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2746,7 +2734,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	stream = GetStream();
 	
 	MCColor *colors = nil;
-	colors = new MCColor[m_fh.ncolors];
+	colors = new (nothrow) MCColor[m_fh.ncolors];
 	t_success = colors != nil;
 
 	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
@@ -2772,7 +2760,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 		uint4 bytes = m_fh.bytes_per_line * m_fh.pixmap_height;
 		if (m_fh.bits_per_pixel == 1)
 			bytes *= m_fh.pixmap_depth;
-		t_newimage_data = new char[bytes];
+		t_newimage_data = new (nothrow) char[bytes];
 		t_success = t_newimage_data != nil &&
 			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
 	}
@@ -2874,7 +2862,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXWDStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXWDImageLoader *t_loader;
-	t_loader = new MCXWDImageLoader(p_stream);
+	t_loader = new (nothrow) MCXWDImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;

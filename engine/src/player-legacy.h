@@ -42,7 +42,7 @@ public:
     
     enum { kObjectType = CT_PLAYER };
     using MCMixinObjectHandle<MCPlayer>::GetHandle;
-    
+  
 private:
     
 #ifdef FEATURE_MPLAYER

@@ -300,7 +300,7 @@ end __revSBCopyFolder
 # Marcus van Houdt
 private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
    -- Stat the source file
-   local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
+   local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
    
    if tResult is empty then
@@ -317,15 +317,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       get the detailed files
       filter it with (the urlEncode of item -1 of pSourceFile) & "*"
       set the itemDelimiter to ","
-      put item 2 of it into tDataForkSize
-      put item 3 of it into tRsrcForkSize
+      put item 2 of it into tSize
       put item 8 of it into tUser
       put item 9 of it into tGroup
       put item 10 of it into tPermissions
       put item 11 of it into tFileType
-      
-      local tTotalSize
-      put tDataForkSize + tRsrcForkSize into tTotalSize
       
       if there is a file pTargetFile then
          delete file pTargetFile
@@ -362,7 +358,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    local tAmountCopied
    if tResult is empty then
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-         send pCallback && 0, tTotalSize to pCallbackTarget
+         send pCallback && 0, tSize to pCallbackTarget
       end if
       repeat forever
          read from file pSourceFile for 1048576
@@ -380,7 +376,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
          end if
          add the number of chars of it to tAmountCopied
          if pCallbackTarget is not empty and there is a pCallbackTarget then
-            send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+            send pCallback && tAmountCopied, tSize to pCallbackTarget
          end if
       end repeat
    end if
@@ -390,19 +386,6 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    if pSourceFile is among the lines of the openFiles then
       close file pSourceFile
-   end if
-   
-   if tResult is empty then
-      if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
-         set the itemDelimiter to ","
-         repeat for each line tRsrcDetails in getResources(pSourceFile)
-            get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
-            add item 4 of tRsrcDetails to tAmountCopied
-            if pCallbackTarget is not empty and there is a pCallbackTarget then
-               send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-            end if
-         end repeat
-      end if
    end if
    
    # OK-2007-11-30 : Modified to work for Linux too
@@ -918,7 +901,7 @@ private command __RecursiveStackFileList pStack, @xStackFiles
    repeat for each key tStack in tStackFiles
       if there is not a stack tStackFiles[tStack] then put tFileName before tStackFiles[tStack]
       if there is a stack tStackFiles[tStack] then
-         appendToList the effective fileName of stack tStackFiles[tStack], xStackFiles
+         appendToStringList the effective fileName of stack tStackFiles[tStack], xStackFiles
          __RecursiveStackFileList tStack, xStackFiles
       end if
    end repeat
@@ -1005,9 +988,9 @@ function utilityChooseIconFile pTargetPlatform
   
   # Roughly preserves old behavior, just using answer file with type instead of filter.
   local tIconFile
-  if pTargetPlatform is "Mac OS X" and ((the platform is "MacOS" and char 1 of the systemVersion is "1") or (the platform is "Win32") or (the platform is "Linux")) then
+  if pTargetPlatform is "Mac OS X" then
     put "Icon Resource Files|icns|ICNS" after tTypes
-  else if pTargetPlatform is "Windows" and (the platform is "Win32" or the platform is "Linux" or (the platform is "MacOS" and char 1 of the systemVersion is "1")) then
+  else if pTargetPlatform is "Windows" then
     put "Icon Files|ico|ICO" after tTypes
   end if
   
@@ -1913,7 +1896,10 @@ function revSBIncludedExternalPath pTarget, pName
    return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
-private command __ResolveIncludedExternal pTarget, @xFiles
+private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
+   local tHasResources
+   put false into tHasResources
+   
    -- Added to support Ext inclusion
    if xFiles begins with "!" then
       
@@ -1940,36 +1926,49 @@ private command __ResolveIncludedExternal pTarget, @xFiles
             
             if tContents is not empty then
                appendToStringList tContents, xFiles
+               put true into tHasResources
             end if
          end if
          
       end if
    end if
+   put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
-   local tManifest
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      local tResolvedFile
-      __ResolveIncludedExternal pTarget, tFile
+      local tResolvedFile, tHasResources
+      __ResolveIncludedExternal pTarget, tFile, tHasResources
+      
       -- tFile may now list multiple files if it was an external with a resources directory
       repeat for each line tResolvedFile in tFile
+         local tDataA, tFlattenStructure
+         
          if tResolvedFile ends with "/" then
             delete char -1 of tResolvedFile
          end if
          
          if the last item of tResolvedFile is "*" then
-            delete the last item of tFile
+            delete the last item of tResolvedFile
          end if
          
          local tIsAbsolute, tName
          put tResolvedFile begins with "/" or char 2 to 3 of tResolvedFile is ":/" into tIsAbsolute
+         
+         # Flatten structure of external resources
+         if tIsAbsolute or tHasResources then
+            put item -1 of tResolvedFile into tDataA["name"]
+         else
+            put tResolvedFile into tDataA["name"]
+         end if
+         
          if not tIsAbsolute then
             put pBaseFolder & slash before tResolvedFile
          end if
+         put tResolvedFile into tDataA["resolved"]
          
-         appendToStringList tResolvedFile, rFiles
+         addToList tDataA, rFileData
       end repeat
    end repeat
 end revSBResolveCopyFilesList
@@ -1996,20 +1995,6 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
-command revSBUpdateSettingsForWidgets pStack, @xSettings
-   local tExtensions
-   put revSBListWidgetsInUse(pStack) into tExtensions
-   if tExtensions is empty then
-      exit revSBUpdateSettingsForWidgets
-   end if
-   
-   if xSettings["extensions"] is not empty then
-      put return after xSettings["extensions"]
-   end if
-   
-   put tExtensions after xSettings["extensions"] 
-end revSBUpdateSettingsForWidgets
-
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    
@@ -2024,8 +2009,14 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       appendToStringList tExtensionFile, tModules
    end repeat
    
-   local tLibraryStack
+   local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
+      -- Special-case data grid at the moment, as it is not initialised 
+      -- using revLoadLibrary
+      if tLibrary is "DataGrid" then
+         put true into tIncludeDataGrid
+         next repeat
+      end if
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
@@ -2078,7 +2069,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    end if
    
    -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+   if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
       appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
    end if
    
@@ -2288,17 +2279,21 @@ on initialiseSearchForInclusions
    # Database
    put "cRevDatabase" into sPatternsA["Database"]["Property"]
    put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    put "scriptLibraries" into sPatternsA["Database"]["Key"]
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "URL,resetAll" into sPatternsA["Internet"]["Script"]
    put "scriptLibraries" into sPatternsA["Internet"]["Key"]
    
    # XML
-   put "revXML" into sPatternsA["XMLRPC"]["Root"]
-   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
+   put "revXML" into sPatternsA["XML"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XML"]["Script"]
+   put "scriptLibraries" into sPatternsA["XML"]["Key"]
+   
+    # XMLRPC
+   put "revXMLRPC_" into sPatternsA["XMLRPC"]["Root"]
    put "scriptLibraries" into sPatternsA["XMLRPC"]["Key"]
    
    # Speech
@@ -2356,59 +2351,76 @@ private command revSmartChecking pStackFilesList, @xSettings
    put xSettings into tNewSettings
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
-   revStandaloneProgress "Auto detecting library inclusions..."
+   
    lock messages
    
-   put empty into tNewSettings["scriptLibraries"]
-   put true into tNewSettings["cursors"]
-   put false into tNewSettings["answerDialog"]
-   put false into tNewSettings["askDialog"]
-   put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
-   put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
-   put false into tNewSettings["pdfPrinter"]
+   if tNewSettings["inclusions"] is "search" then
+      
+      revStandaloneProgress "Auto detecting library inclusions..."
+      
+      put empty into tNewSettings["scriptLibraries"]
+      put true into tNewSettings["cursors"]
+      put false into tNewSettings["answerDialog"]
+      put false into tNewSettings["askDialog"]
+      put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
+      put false into tNewSettings["pdfPrinter"]
+      
+      # OK-2007-11-13 : Support for LiveCode print dialogs
+      put false into tNewSettings["revolutionPrintDialogs"]
+      
+      put empty into tNewSettings["databaseDrivers"]
+      put empty into tNewSettings["externals"]
+      
+      put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
+      put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
+      
+   end if
    
-   # OK-2007-11-13 : Support for LiveCode print dialogs
-   put false into tNewSettings["revolutionPrintDialogs"]
-   
-   put empty into tNewSettings["databaseDrivers"]
-   put empty into tNewSettings["externals"]
-   
-   put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
-   put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
+   local tWidgetKinds
+   put xSettings["extensions"] into tWidgetKinds
+   split tWidgetKinds by return as set
    
    repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
       repeat for each line tStack in tStacksList
-         # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
-         if the password of stack tStack then
-            revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
-            exit revSmartChecking
+         if tNewSettings["inclusions"] is "search" then
+            # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
+            if the password of stack tStack then
+               revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
+               exit revSmartChecking
+            end if
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
          end repeat
       end repeat
    end repeat
    
+   put the keys of tWidgetKinds into tNewSettings["extensions"]
    -- Update the output settings
    put tNewSettings into xSettings
    unlock messages
 end revSmartChecking
 
-private command revCheckObject pObject,pUserLibraries, @xSettings
-   -- Should never get here if the stack is password protected
-   if the password of stack (revTargetStack(pObject)) then
-      exit revCheckObject
+private command revCheckObject pObject,pUserLibraries, @xSettings, @xWidgetKinds
+   
+   if word 1 of pObject is "widget" then
+      put true into xWidgetKinds[the kind of pObject]
+   end if
+   
+   if xSettings["inclusions"] is not "search" then
+      return empty
    end if
    
    -- Keep the progress indicator updated
@@ -2474,7 +2486,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          # Allow regex search patterns
          local tRegex
          repeat for each item tRegex in sPatternsA[tLib]["Regex"]
-            if matchText(tScript,tRegex) then
+            if matchText(tScript,"(?i)"&tRegex) then
                revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
@@ -2484,12 +2496,12 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       
       -- Detect widgets created in script
       repeat for each key tWidget in revIDEExtensions("widget","installed", false)
-         if tWidget is among the lines of xSettings["extensions"] then
+         if xWidgetKinds[tWidget] then
             next repeat
          end if
          
          if lineOffset(tWidget, tScript) is not 0 then
-            revSBAddInclusion tWidget, "extensions", xSettings
+            put true into xWidgetKinds[tWidget]
          end if
       end repeat
       

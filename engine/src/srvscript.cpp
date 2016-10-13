@@ -151,7 +151,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	}
 
 	// Create a new entry.
-	t_file = new File;
+	t_file = new (nothrow) File;
 	t_file -> next = m_files;
     t_file -> filename = MCValueRetain(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
@@ -184,7 +184,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 			if (t_type == ST_DATA)
 			{
 				// A data token turns into an Echo command.
-				t_statement = new MCEcho;
+				t_statement = new (nothrow) MCEcho;
 				if (t_statement != NULL && t_statement -> parse(sp) != PS_NORMAL)
 				{
 					MCperror->add(PE_SCRIPT_BADECHO, sp);
@@ -211,7 +211,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 					if (t_symbol != nil && (t_symbol -> which == HT_MESSAGE || t_symbol -> which == HT_FUNCTION))
 					{
 						MCHandler *t_new_handler;
-						t_new_handler = new MCHandler((uint1)t_symbol -> which, t_is_private);
+						t_new_handler = new (nothrow) MCHandler((uint1)t_symbol -> which, t_is_private);
 						t_new_handler -> setfileindex(m_current_file -> index);
 						if (t_new_handler -> parse(sp, false) == PS_NORMAL && !hlist -> hashandler((Handler_type)t_symbol -> which, t_new_handler -> getname()))
 						{
@@ -238,13 +238,13 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 					switch (t_symbol -> which)
 					{
 						case S_GLOBAL:
-							t_statement = new MCGlobal;
+							t_statement = new (nothrow) MCGlobal;
 							break;
 						case S_LOCAL:
-							t_statement = new MCLocalVariable;
+							t_statement = new (nothrow) MCLocalVariable;
 							break;
 						case S_CONSTANT:
-							t_statement = new MCLocalConstant;
+							t_statement = new (nothrow) MCLocalConstant;
 							break;
 						default:
 							t_statement = NULL;
@@ -280,7 +280,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 			else if (t_type == ST_ID)
 			{
 				// Treat it as a call
-				t_statement = new MCComref(sp . gettoken_nameref());
+				t_statement = new (nothrow) MCComref(sp . gettoken_nameref());
 				if (t_statement -> parse(sp) != PS_NORMAL)
 				{
 					MCperror -> add(PE_SCRIPT_BADCOMMAND, sp);
@@ -332,12 +332,12 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 
 	if (hlist == NULL)
 	{
-		hlist = new MCHandlerlist;
+		hlist = new (nothrow) MCHandlerlist;
 	}
 	
 	if (m_ctxt == NULL)
 	{
-		m_ctxt = new MCExecContext(this, hlist, NULL);
+		m_ctxt = new (nothrow) MCExecContext(this, hlist, NULL);
 		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
 		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
 	}
@@ -394,7 +394,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 
 		uindex_t t_length;
 		t_length = MCDataGetLength (*t_file_contents);
-		t_file -> script = new char[t_length + 1];
+		t_file -> script = new (nothrow) char[t_length + 1];
 
 		MCMemoryCopy (t_file -> script,
 					  MCDataGetBytePtr (*t_file_contents),

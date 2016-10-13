@@ -228,7 +228,7 @@ fi
 # Default Xcode target SDK
 if test -z "$XCODE_TARGET_SDK"; then
  case ${OS} in
-   mac) XCODE_TARGET_SDK="macosx10.8" ;;
+   mac) XCODE_TARGET_SDK="macosx10.9" ;;
    ios) XCODE_TARGET_SDK="iphoneos" ;;
  esac
 fi
@@ -354,6 +354,12 @@ if test "${OS}" = "emscripten" ; then
 fi
 
 
+# Building on Travis
+if [ "${TRAVIS}" = "true" ] ; then
+    DISABLE_REVVIDEOGRABBER=-Denable_revvideograbber=0
+fi 
+
+
 ################################################################
 # Invoke gyp
 ################################################################
@@ -406,7 +412,8 @@ case ${OS} in
     invoke_gyp $basic_args "-DOS=${OS}" \
                            "-Dtarget_sdk=${XCODE_TARGET_SDK}" \
                            "-Dhost_sdk=${XCODE_HOST_SDK}" \
-                           "-Dtarget_arch=${TARGET_ARCH}" "$@"
+                           "-Dtarget_arch=${TARGET_ARCH}" "$@" \
+                           ${DISABLE_REVVIDEOGRABBER}
     ;;
   *)
     echo "ERROR: Bad configuration for generating project files"

@@ -30,7 +30,7 @@ public:
     
     enum { kObjectType = CT_VIDEO_CLIP };
     using MCMixinObjectHandle<MCVideoClip>::GetHandle;
-    
+
 private:
     
 	real8 scale;

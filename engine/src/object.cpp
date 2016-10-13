@@ -190,8 +190,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	ncolors = oref.ncolors;
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
@@ -552,7 +552,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			return True;
         break;
     default:
-		MCAutoStringRef t_string;
+		MCAutoStringRef t_key_string;
 			
 		// Special keys as their number converted to a string, the rest by value
         // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
@@ -560,26 +560,26 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
         // SN-2015-05-05: [[ Bug 15305 ]] Ensure that the keys are not printing
         //  their numeric value, if not wanted.
         if (key > 0xFF && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
-            /* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%ld", key);
         else if (MCmodifierstate & MS_CONTROL)
-            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%c", (char)key);
 		else
-			t_string = p_string;
+			t_key_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
         {
-			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_command_key_down, *t_key_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
         {
-				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
+				if (message_with_valueref_args(MCM_option_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
         {
-			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_control_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #endif
@@ -858,7 +858,7 @@ void MCObject::deselect()
 
 bool MCObject::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0)
+    if (parent == NULL || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -953,9 +953,9 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		//   differently.
 		if (hptr -> getfileindex() == 0)
         {
-            MCExecContext ctxt(this, nil, nil);
+            MCExecContext ctxt2(this, nil, nil);
             MCAutoStringRef t_id;
-			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
             MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
@@ -1005,9 +1005,9 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
     {
-        MCExecContext ctxt(this, nil, nil);
+        MCExecContext ctxt2(this, nil, nil);
         MCAutoStringRef t_id;
-        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	unlockforexecution();
@@ -1230,6 +1230,12 @@ void MCObject::viewportgeometrychanged(const MCRectangle &p_rect)
 {
 	if (getNativeLayer() != nil)
 		getNativeLayer()->OnViewportGeometryChanged(p_rect);
+}
+
+void MCObject::OnViewTransformChanged()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnViewTransformChanged();
 }
 
 void MCObject::OnOpen()
@@ -1730,8 +1736,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 Boolean MCObject::setpatterns(MCStringRef data)
 {
 	uint2 p;
-	Boolean done = False;
-    uindex_t t_start_pos, t_end_pos;
+	uindex_t t_start_pos, t_end_pos;
     t_start_pos = 0;
     t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
@@ -1774,8 +1779,8 @@ uint2 MCObject::createcindex(uint2 di)
 	MCColor *oldcolors = colors;
 	MCStringRef *oldnames = colornames;
 	ncolors++;
-	colors = new MCColor[ncolors];
-	colornames = new MCStringRef[ncolors];
+	colors = new (nothrow) MCColor[ncolors];
+	colornames = new (nothrow) MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -2327,7 +2332,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCAutoPointer<char[]> tmptypestring;
     if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
-        tmptypestring = new char[strlen(itypestring) + 7];
+        tmptypestring = new (nothrow) char[strlen(itypestring) + 7];
         if (parent->gettype() == CT_GROUP)
             sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
         else
@@ -2455,7 +2460,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			MCscreen->cancelmessageobject(this, MCM_idle);
 			hashandlers = 0;
 			if (hlist == NULL)
-				hlist = new MCHandlerlist;
+				hlist = new (nothrow) MCHandlerlist;
 			
 			getstack() -> unsecurescript(this);
 			
@@ -2628,15 +2633,14 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCLineSegment[bwidth * 2];
-		b = new MCLineSegment[bwidth * 2];
+		t = new (nothrow) MCLineSegment[bwidth * 2];
+		b = new (nothrow) MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
 	int2 ty = drect.y;
 	int2 by = drect.y + drect.height;
-	uint2 i;
-
+	
 	Boolean reversed = style == ETCH_SUNKEN || style == ETCH_SUNKEN_BUTTON;
 	switch (MClook)
 	{
@@ -2874,7 +2878,7 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	// SMR 1947, suppress parsing errors
 	MCerrorlock++;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
@@ -2911,7 +2915,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -3064,7 +3068,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	// MW-2014-01-07: [[ bug 11632 ]] Use the offscreen variant of the context so its
 	//   type field is appropriate for use by the player.
-	MCContext *t_context = new MCOffscreenGraphicsContext(t_gcontext);
+	MCContext *t_context = new (nothrow) MCOffscreenGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
@@ -3248,8 +3252,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
@@ -4329,7 +4333,7 @@ static void compute_objectshape_mask(MCObject *p_object, const MCObjectShape& p_
 	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_rect));
 
 	MCContext *t_gfxcontext = nil;
-	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 	
 	// Make sure the object is opened.
 	bool t_needs_open;
@@ -5330,9 +5334,9 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectProxyBase::MCObjectProxyBase(MCObject *p_object) :
-m_object(p_object),
-m_refcount(0)
+MCObjectProxyBase::MCObjectProxyBase(const MCObject *p_object) :
+  m_refcount(0),
+  m_object(const_cast<MCObject*>(p_object))
 {
 }
 

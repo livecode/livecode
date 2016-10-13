@@ -150,13 +150,13 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 {
 	Parse_stat stat;
-	Symbol_type type;
+	Symbol_type t_type;
 	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
 	prop = isprop;
 
-	if (sp.next(type) != PS_NORMAL)
+	if (sp.next(t_type) != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_NONAME, sp);
 		return PS_ERROR;
@@ -166,7 +166,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
-	if (type != ST_ID ||
+	if (t_type != ST_ID ||
 			sp.lookup(SP_COMMAND, te) != PS_NO_MATCH ||
 			(sp.lookup(SP_FACTOR, te) != PS_NO_MATCH &&
 			te -> type == TT_FUNCTION))
@@ -176,11 +176,11 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	}
 	if (prop)
 	{
-		if (sp.next(type) == PS_NORMAL)
+		if (sp.next(t_type) == PS_NORMAL)
 		{
-			if (type == ST_LB)
+			if (t_type == ST_LB)
 			{
-				if (sp.next(type) != PS_NORMAL || type != ST_ID)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_ID)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -189,7 +189,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				if (newparam(sp) != PS_NORMAL)
 					return PS_ERROR;
 
-				if (sp.next(type) != PS_NORMAL || type != ST_RB)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_RB)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -204,14 +204,15 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
     bool t_needs_it;
     t_needs_it = true;
     
-	while (sp.next(type) == PS_NORMAL)
+	while (sp.next(t_type) == PS_NORMAL)
 	{
-		if (type == ST_SEP)
+		if (t_type == ST_SEP)
 			continue;
-		const LT *te;
-		MCExpression *newfact = NULL;
-		if (type != ST_ID
-		        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+		const LT *t_te;
+		
+        MCExpression *newfact = NULL;
+		if (t_type != ST_ID
+		        || sp.lookup(SP_FACTOR, t_te) != PS_NO_MATCH
 		        || sp.lookupconstant(&newfact) == PS_NORMAL)
 		{
 			delete newfact;
@@ -241,7 +242,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	MCStatement *newstatement = NULL;
 	while (True)
 	{
-		if ((stat = sp.next(type)) != PS_NORMAL)
+		if ((stat = sp.next(t_type)) != PS_NORMAL)
 		{
 			if (stat == PS_EOL)
 			{
@@ -259,16 +260,16 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				return PS_ERROR;
 			}
 		}
-		if (type == ST_DATA)
-			newstatement = new MCEcho;
+		if (t_type == ST_DATA)
+			newstatement = new (nothrow) MCEcho;
 		else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 		{
-			if (type != ST_ID)
+			if (t_type != ST_ID)
 			{
 				MCperror->add(PE_HANDLER_NOCOMMAND, sp);
 				return PS_ERROR;
 			}
-			newstatement = new MCComref(sp.gettoken_nameref());
+			newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 		}
 		else
 		{
@@ -278,7 +279,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				newstatement = MCN_new_statement(te->which);
 				break;
 			case TT_END:
-				if ((stat = sp.next(type)) != PS_NORMAL)
+				if ((stat = sp.next(t_type)) != PS_NORMAL)
 				{
 					MCperror->add(PE_HANDLER_NOEND, sp);
 					return PS_ERROR;
@@ -328,7 +329,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	if (newnparams == 0)
 		newparams = NULL;
 	else
-		newparams = new MCContainer *[newnparams];
+		newparams = new (nothrow) MCContainer *[newnparams];
     
 	Boolean err = False;
 	for (i = 0 ; i < newnparams ; i++)
@@ -362,7 +363,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
             // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
             //  param type, with this handler and param index, so that use of the get command syncs up correctly.
             if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
-                m_it = new MCVarref(this, i, True);
+                m_it = new (nothrow) MCVarref(this, i, True);
             
 			plist = plist->getnext();
 		}
@@ -405,7 +406,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		vars = NULL;
 	else
 	{
-		vars = new MCVariable *[nvnames];
+		vars = new (nothrow) MCVariable *[nvnames];
 		i = nvnames;
 		while (i--)
 		{
@@ -588,14 +589,14 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 	for (i = 0 ; i < nvnames ; i++)
 		if (MCNameIsEqualTo(p_name, vinfo[i] . name, kMCCompareCaseless))
 		{
-			*dptr = new MCVarref(this, i, False);
+			*dptr = new (nothrow) MCVarref(this, i, False);
 			return PS_NORMAL;
 		}
 
 	for (i = 0 ; i < npnames ; i++)
 		if (MCNameIsEqualTo(p_name, pinfo[i] . name, kMCCompareCaseless))
 	{
-			*dptr = new MCVarref(this, i, True);
+			*dptr = new (nothrow) MCVarref(this, i, True);
 			return PS_NORMAL;
 		}
 
@@ -644,7 +645,7 @@ Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_r
 		}
 	}
 
-	*r_ref = new MCVarref(this, nvnames++, False);
+	*r_ref = new (nothrow) MCVarref(this, nvnames++, False);
 
 	return PS_NORMAL;
 }
@@ -655,7 +656,7 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 	for (i = 0 ; i < nconstants ; i++)
 		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
 		{
-			*dptr = new MCLiteral(cinfo[i].value);
+			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
 		}
 	return hlist->findconstant(p_name, dptr);

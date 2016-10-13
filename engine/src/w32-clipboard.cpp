@@ -163,7 +163,7 @@ MCWin32RawClipboardItem* MCWin32RawClipboardCommon::CreateNewItem()
 		return NULL;
 
 	// Create a new data item
-	m_item = new MCWin32RawClipboardItem(this);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this);
 	m_item->Retain();
 	return m_item;
 }
@@ -315,6 +315,193 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	return t_decoded;
 }
 
+MCDataRef MCWin32RawClipboardCommon::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	const char *t_header_template = "Version:0.9\r\nStartHTML:%010d\r\nEndHTML:%010d\r\nStartFragment:%010d\r\nEndFragment:%010d\r\n";
+	const char *t_doc_prefix = "<html><body><!--StartFragment -->";
+	const char *t_doc_suffix = "<!--EndFragment --></body></html>";
+
+	uindex_t t_starthtml, t_endhtml, t_startfragment, t_endfragment;
+	// length of header will be length of template + difference between placeholder length and inserted string length
+	// numbers are padded to 10 digits using '0's
+	t_starthtml = strlen(t_header_template) + 4 * (10 - 5);
+	t_startfragment = t_starthtml + strlen(t_doc_prefix);
+	t_endfragment = t_startfragment + MCDataGetLength(p_html);
+	t_endhtml = t_endfragment + strlen(t_doc_suffix);
+
+	MCAutoStringRef t_header;
+	MCAutoStringRef t_start_string;
+	MCAutoStringRef t_end_string;
+
+	if (!MCStringFormat(&t_header, t_header_template, t_starthtml, t_endhtml, t_startfragment, t_endfragment))
+		return nil;
+
+	MCAutoDataRef t_header_data;
+	if (!MCStringEncode(*t_header, kMCStringEncodingUTF8, false, &t_header_data))
+		return nil;
+
+	MCAutoDataRef t_data;
+	if (!MCDataMutableCopy(*t_header_data, &t_data))
+		return nil;
+
+	if (!MCDataAppendBytes(*t_data, (const byte_t*)t_doc_prefix, strlen(t_doc_prefix)))
+		return nil;
+
+	if (!MCDataAppend(*t_data, p_html))
+		return nil;
+
+	if (!MCDataAppendBytes(*t_data, (const byte_t*)t_doc_suffix, strlen(t_doc_suffix)))
+		return nil;
+
+	return t_data.Take();
+}
+
+bool MCWin32RawClipboardGetHTMLDataHeader(MCDataRef p_data, uindex_t &x_index, MCStringRef &r_key, MCStringRef &r_value)
+{
+	MCAutoStringRef t_key;
+	MCAutoStringRef t_value;
+
+	uindex_t t_length;
+	t_length = MCDataGetLength(p_data);
+
+	const byte_t *t_data_ptr;
+	t_data_ptr = MCDataGetBytePtr(p_data);
+
+	uindex_t t_index = x_index;
+
+	for (uint32_t i = t_index; i < t_length; i++)
+	{
+		if (char(t_data_ptr[i]) == ':')
+		{
+			if (!MCStringCreateWithBytes(t_data_ptr + t_index, i - t_index, kMCStringEncodingUTF8, false, &t_key))
+				return false;
+			t_index = i + 1;
+			break;
+		}
+
+		// end of line with no ':' char - not a header
+		if (char(t_data_ptr[i]) == '\r' || char(t_data_ptr[i]) == '\n')
+			return false;
+
+		// start of html data - no header
+		if (char(t_data_ptr[i]) == '<')
+			return false;
+	}
+
+	// reached end without finding key
+	if (*t_key == nil)
+		return false;
+
+	// look for end of line - may be cr, lf, or crlf
+	for (uindex_t i = t_index; i < t_length; i++)
+	{
+		// end of line
+		if (char(t_data_ptr[i]) == '\r' || char(t_data_ptr[i]) == '\n')
+		{
+			if (!MCStringCreateWithBytes(t_data_ptr + t_index, i - t_index, kMCStringEncodingUTF8, false, &t_value))
+				return false;
+			t_index = i + 1;
+			// check for crlf
+			if (char(t_data_ptr[i]) == '\r' && t_index < t_length && char(t_data_ptr[t_index]) == '\n')
+				t_index++;
+
+			break;
+		}
+	}
+
+	// reached end without finding line ending
+	if (*t_value == nil)
+		return false;
+
+	r_key = t_key.Take();
+	r_value = t_value.Take();
+
+	x_index = t_index;
+
+	return true;
+}
+
+MCDataRef MCWin32RawClipboardCommon::DecodeTransferredHTML(MCDataRef p_data) const 
+{
+	bool t_success = true;
+
+	uindex_t t_index = 0;
+
+	index_t t_starthtml = -1;
+	index_t t_endhtml = -1;
+	index_t t_startfragment = -1;
+	index_t t_endfragment = -1;
+	index_t t_startselection = -1;
+	index_t t_endselection = -1;
+
+	MCStringRef t_headerkey = nil;
+	MCStringRef t_headervalue = nil;
+
+	while (MCWin32RawClipboardGetHTMLDataHeader(p_data, t_index, t_headerkey, t_headervalue))
+	{
+		MCAutoNumberRef t_number;
+		if (MCStringIsEqualToCString(t_headerkey, "starthtml", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_starthtml = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endhtml", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endhtml = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "startfragment", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_startfragment = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endfragment", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endfragment = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "startselection", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_startselection = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endselection", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endselection = MCNumberFetchAsInteger(*t_number);
+		}
+
+		MCValueRelease(t_headerkey);
+		MCValueRelease(t_headervalue);
+		t_headerkey = nil;
+		t_headervalue = nil;
+	}
+
+	uindex_t t_start = -1;
+	uindex_t t_end = -1;
+
+	if (t_starthtml != -1 && t_endhtml != -1)
+	{
+		t_start = t_starthtml;
+		t_end = t_endhtml;
+	}
+
+	if (t_startfragment != -1 && t_endfragment != -1)
+	{
+		t_start = t_startfragment;
+		t_end = t_endfragment;
+	}
+
+	t_end = MCClamp(t_end, 0, MCDataGetLength(p_data));
+	t_start = MCClamp(t_start, 0, t_end);
+
+	MCDataRef t_decoded;
+	if (MCDataCopyRange(p_data, MCRangeMakeMinMax(t_start, t_end), t_decoded))
+		return t_decoded;
+
+	return nil;
+}
+
 void MCWin32RawClipboardCommon::SetDirty()
 {
 	m_dirty = true;
@@ -335,7 +522,7 @@ bool MCWin32RawClipboardCommon::SetToIDataObject(IDataObject* p_object)
 
 	// Create a wrapper for this object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, p_object);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, p_object);
 	return true;
 }
 
@@ -498,7 +685,7 @@ bool MCWin32RawClipboard::PullUpdates()
 
 	// Create a new item to wrap this data object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, t_contents);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, t_contents);
 
 	if (t_contents != NULL)
 		t_contents->Release();
@@ -625,7 +812,7 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 			return false;
 
 		// Allocate a new representation object.
-		m_reps[t_index] = t_rep = new MCWin32RawClipboardItemRep(this, p_type, p_bytes);
+		m_reps[t_index] = t_rep = new (nothrow) MCWin32RawClipboardItemRep(this, p_type, p_bytes);
 	}
 
 	// If we still have no rep, something went wrong
@@ -688,7 +875,7 @@ MCWin32DataObject* MCWin32RawClipboardItem::GetDataObject()
 
 	// If the data object doesn't exist yet, create it now
 	if (m_object == NULL)
-		m_object = new MCWin32DataObject;
+		m_object = new (nothrow) MCWin32DataObject;
 
 	return static_cast<MCWin32DataObject*> (m_object);
 }
@@ -721,7 +908,7 @@ void MCWin32RawClipboardItem::GenerateRepresentations() const
 			break;
 
 		// Create a new representation object
-		m_reps[t_index] = new MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
+		m_reps[t_index] = new (nothrow) MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
 	}
 
 	// Release the enumerator object
@@ -1021,7 +1208,7 @@ HRESULT MCWin32DataObject::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppe
 	}
 
 	// Create a new enumerator object
-	*ppenumFormatEtc = new MCWin32DataObjectFormatEnum(this, 0);
+	*ppenumFormatEtc = new (nothrow) MCWin32DataObjectFormatEnum(this, 0);
 	return S_OK;
 }
 
@@ -1187,7 +1374,7 @@ HRESULT MCWin32DataObjectFormatEnum::Clone(IEnumFORMATETC** ppenum)
 		return E_INVALIDARG;
 
 	// Create a copy of this object
-	*ppenum = new MCWin32DataObjectFormatEnum(m_object, m_index);
+	*ppenum = new (nothrow) MCWin32DataObjectFormatEnum(m_object, m_index);
 	return S_OK;
 }
 

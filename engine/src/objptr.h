@@ -21,16 +21,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OBJPTR_H
 
 #include "dllst.h"
+#include "object.h"
+#include "mccontrol.h"
+#include "group.h"
 
 class MCObjptr : public MCDLlist
 {
-protected:
-	uint4 id;
-	MCControl *objptr;
-	MCObject *parent;
+private:
+    
+	uint32_t            m_id;
+	MCObjectHandle      m_objptr;
+	MCObjectHandle      m_parent;
+    
 public:
+    
+    MCDLlistAdaptorFunctions(MCObjptr)
+    
 	MCObjptr();
-	virtual ~MCObjptr();
+	~MCObjptr();
 
 	bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
@@ -38,53 +46,21 @@ public:
 	IO_stat save(IO_handle stream, uint4 p_part);
 	void setparent(MCObject *newparent);
 	MCControl *getref();
+    MCObjectHandle Get();
 	void setref(MCControl *optr);
 	void clearref();
-	uint4 getid();
-	void setid(uint4 id);
+	uint32_t getid();
+	void setid(uint32_t id);
 
 	// MW-2011-08-08: [[ Groups ]] Returns the referenced object as an MCGroup
 	//   or nil, if it isn't a group.
 	MCGroup *getrefasgroup(void)
 	{
-		MCObject *t_group;
-		t_group = (MCObject *)getref();
-		if (t_group -> gettype() != CT_GROUP)
-			return NULL;
-		return (MCGroup *)t_group;
-	}
-
-	MCObjptr *next()
-	{
-		return (MCObjptr *)MCDLlist::next();
-	}
-	MCObjptr *prev()
-	{
-		return (MCObjptr *)MCDLlist::prev();
-	}
-	void totop(MCObjptr *&list)
-	{
-		MCDLlist::totop((MCDLlist *&)list);
-	}
-	void insertto(MCObjptr *&list)
-	{
-		MCDLlist::insertto((MCDLlist *&)list);
-	}
-	void appendto(MCObjptr *&list)
-	{
-		MCDLlist::appendto((MCDLlist *&)list);
-	}
-	void append(MCObjptr *node)
-	{
-		MCDLlist::append((MCDLlist *)node);
-	}
-	void splitat(MCObjptr *node)
-	{
-		MCDLlist::splitat((MCDLlist *)node) ;
-	}
-	MCObjptr *remove(MCObjptr *&list)
-	{
-		return (MCObjptr *)MCDLlist::remove((MCDLlist *&)list);
+		MCControl* t_ref = getref();
+        if (t_ref == nil || t_ref->gettype() != CT_GROUP)
+            return nil;
+        
+        return static_cast<MCGroup*>(t_ref);
 	}
 };
 #endif

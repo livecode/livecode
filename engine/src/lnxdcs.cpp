@@ -76,20 +76,21 @@ GdkDisplay *MCdpy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" int initialise_weak_link_X11(void);
-extern "C" int initialise_weak_link_gobject(void);
-extern "C" int initialise_weak_link_gdk(void);
+extern "C" int initialise_required_weak_link_X11();
+extern "C" int initialise_required_weak_link_glib();
+extern "C" int initialise_required_weak_link_gobject();
+extern "C" int initialise_required_weak_link_gdk();
+extern "C" int initialise_required_weak_link_gdk_pixbuf();
+extern "C" int initialise_required_weak_link_cairo();
+
 extern "C" int initialise_weak_link_gtk(void);
 extern "C" int initialise_weak_link_gtk_color_dialog(void);
 extern "C" int initialise_weak_link_gtk_file_dialog(void);
 extern "C" int initialise_weak_link_gtk_print_dialog(void);
 extern "C" int initialise_weak_link_gnome_vfs ( void ) ;
-extern "C" int initialise_weak_link_glib ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
-extern "C" int initialise_weak_link_gdk_pixbuf(void);
-extern "C" int initialise_weak_link_cairo(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -201,18 +202,11 @@ static void on_retrieve_surrounding(GtkIMContext *p_context, gpointer p_data)
 Boolean MCScreenDC::open()
 {
 	// We require GDK in order to do any windowing at all
-    bool t_has_gdk;
-    t_has_gdk = initialise_weak_link_X11() != 0
-        && initialise_weak_link_gobject() != 0
-        && initialise_weak_link_gdk() != 0
-        && initialise_weak_link_gdk_pixbuf() != 0
-        && initialise_weak_link_cairo() != 0;
-    
-    if (!t_has_gdk)
-    {
-        // TODO: implement
-        exit(1);
-    }
+    initialise_required_weak_link_X11();
+    initialise_required_weak_link_gobject();
+    initialise_required_weak_link_gdk();
+    initialise_required_weak_link_gdk_pixbuf();
+    initialise_required_weak_link_cairo();
     
     gdk_init(0, NULL);
     //gdk_threads_init();
@@ -221,7 +215,7 @@ Boolean MCScreenDC::open()
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
 	MCutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0)	;
 	
-	MCimagecache = new MCXImageCache ;
+	MCimagecache = new (nothrow) MCXImageCache ;
 	
     if (MCdisplayname == NULL)
         MCdisplayname = gdk_get_display();
@@ -523,22 +517,9 @@ Boolean MCScreenDC::open()
         g_signal_connect(m_im_context, "preedit-start", G_CALLBACK(&on_preedit_start), this);
         g_signal_connect(m_im_context, "retrieve-surrounding", G_CALLBACK(&on_retrieve_surrounding), this);
     }
-    
-	/*MCXVideo = false ;
-	if ( initialise_weak_link_libxv () != 0 ) 
-	{
-		XvAdaptorInfo	*ai;
-		unsigned int	p_num_adaptors;
-		int ret ;
-		ret = XvQueryAdaptors(dpy, DefaultRootWindow(dpy), &p_num_adaptors, &ai);
-		
-		MCXVideo = (( ret == Success ) && ( p_num_adaptors >  0 )) ;
-	}
-    */
 		
 	if ( initialise_weak_link_gnome_vfs() != 0 )
 	{
-		initialise_weak_link_glib();
 		MCuselibgnome = initialise_weak_link_libgnome();
 		gnome_vfs_init();
 	}

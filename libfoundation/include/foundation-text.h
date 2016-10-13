@@ -222,13 +222,10 @@ private:
 };
 
 
-// Utility functions for creating filter chains
+// Utility functions for creating filter chains - the returned objects should
+// be released by calling 'delete'.
 MCTextFilter *MCTextFilterCreate(MCStringRef, MCStringOptions);
 MCTextFilter *MCTextFilterCreate(MCDataRef, MCStringEncoding, MCStringOptions);
 MCTextFilter *MCTextFilterCreate(const void *, uindex_t, MCStringEncoding, MCStringOptions, bool from_end = false);
-
-// Equivalent to deleting the text filter
-void MCTextFilterRelease(MCTextFilter *);
-
 
 #endif

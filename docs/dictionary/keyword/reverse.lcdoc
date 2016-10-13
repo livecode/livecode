@@ -38,6 +38,9 @@ pixel under the object is 60,250,100. If the <reverse> mode is used, the
 <pixel|pixel's> displayed color is 195,5,155<a/>. (255 minus 60 is 195,
 255 minus 250 is 5, and 255 minus 100 is 155.)
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), property (glossary), keyword (glossary),
 pixel (glossary), transfer mode (glossary), notSrcCopy (keyword),
 ink (property), pixels (property)

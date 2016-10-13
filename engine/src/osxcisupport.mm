@@ -47,8 +47,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_sr
 #define OBJC_LEAVE \
 	[__t_pool release];
 
-static bool s_coreimage_present = false;
-
 typedef struct __coreimage_visualeffect_t coreimage_visualeffect_t;
 typedef coreimage_visualeffect_t *coreimage_visualeffect_ref_t;
 struct __coreimage_visualeffect_t
@@ -405,7 +403,6 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 	{
 		CIContext *t_context = nil;
 		rei_boolean_t t_result = true;
-		Rect t_rect;
 		
 		OBJC_ENTER(false)
 		

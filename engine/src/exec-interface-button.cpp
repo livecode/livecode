@@ -452,7 +452,7 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
     
 	if (icons == NULL)
 	{
-		icons = new iconlist;
+		icons = new (nothrow) iconlist;
 		memset(icons, 0, sizeof(iconlist));
 	}
     
@@ -807,8 +807,8 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 	if (opened)
 	{
-		if (findmenu(true) && menu != nil)
-			menu->installaccels(getstack());
+		if (findmenu(true) && menu.IsValid())
+			menu.GetAs<MCStack>()->installaccels(getstack());
 	}
 }
 

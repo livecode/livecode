@@ -31,6 +31,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+	AddImportedModuleName
     GetFilenameOfPosition
 
     InitializeLiterals
@@ -375,6 +376,7 @@
 'action' GetUndefinedPosition(-> Position: POS)
 
 'condition' AddImportedModuleFile(Name: STRING)
+'action' AddImportedModuleName(Name: STRING)
 
 'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
 
@@ -384,7 +386,7 @@
 'action' FinalizeLiterals()
 
 'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
-'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
+'condition' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)

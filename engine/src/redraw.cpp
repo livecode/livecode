@@ -358,6 +358,10 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 		return;
 	}
 
+	// IM-2016-09-26: [[ Bug 17247 ]] dirty old selection rect
+	if (getselected())
+		getcard()->dirtyselection(rect);
+	
 	MCRectangle t_old_effectiverect;
 	t_old_effectiverect = geteffectiverect();
 
@@ -368,6 +372,10 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 		p_redraw_all = true;
 		
 	setrect(p_new_rect);
+
+	// IM-2016-09-26: [[ Bug 17247 ]] dirty new selection rect
+	if (getselected())
+		getcard()->dirtyselection(rect);
 
 	layer_changeeffectiverect(t_old_effectiverect, p_redraw_all, t_is_visible);
 }
@@ -555,8 +563,12 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 			return;
 		}
 		
-		// Otherwise intersect the dirty rect with the parent's effective rect.
-		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_parent_control -> geteffectiverect());
+		// Otherwise intersect the dirty rect with the parent's rect.
+		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_control -> parent -> getrect());
+
+		// Expand due to bitmap effects (if any).
+		if (t_parent_control -> m_bitmap_effects != nil)
+			MCBitmapEffectsComputeBounds(t_parent_control -> m_bitmap_effects, t_dirty_rect, t_dirty_rect);
 
 		t_control = t_parent_control;
 	}
@@ -939,7 +951,7 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	MCGContextConcatCTM(p_target, t_transform);
 	
 	MCGraphicsContext *t_gfx_context;
-	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	/* UNCHECKED */ t_gfx_context = new (nothrow) MCGraphicsContext(p_target);
 	
 	MCRectangle t_user_rect;
 	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));

@@ -274,7 +274,7 @@ void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integ
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->purchase_time != nil)
+    if (t_android_data->purchase_time != 0)
     {
         r_date = (integer_t)(t_android_data->purchase_time);
         return;
@@ -766,7 +766,7 @@ bool MCStorePostProductRequestResponse(MCStringRef p_product_id)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;
-    t_event = new MCStoreProductRequestResponseEvent(p_product_id);
+    t_event = new (nothrow) MCStoreProductRequestResponseEvent(p_product_id);
     t_success = t_event != nil;
     
     if (t_success)
@@ -813,7 +813,7 @@ bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;
-    t_event = new MCStoreProductRequestErrorEvent(p_product, p_error);
+    t_event = new (nothrow) MCStoreProductRequestErrorEvent(p_product, p_error);
     t_success = t_event != nil;
     
     if (t_success)

@@ -170,6 +170,10 @@ static MCMiniZipRef s_payload_minizip = nil;
 static void *s_payload_loaded_data = nil;
 static void *s_payload_mapped_data = nil;
 static uint32_t s_payload_mapped_size = 0;
+#else
+#ifdef _DEBUG
+static void *s_payload_data = nil;
+#endif
 #endif
 
 #ifdef _WINDOWS
@@ -178,10 +182,6 @@ static uint32_t s_payload_mapped_size = 0;
 HANDLE s_payload_file_handle = nil;
 HANDLE s_payload_file_map = nil;
 static void *s_payload_mapped_data = nil;
-#endif
-
-#ifdef _DEBUG
-static void *s_payload_data = nil;
 #endif
 
 class MCInternalPayloadOpen: public MCStatement
@@ -1218,7 +1218,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
-        t_script = new char[p_length];
+        t_script = new (nothrow) char[p_length];
         if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read startup script");
@@ -1277,8 +1277,7 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
-
+	
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
 	
@@ -1304,7 +1303,8 @@ IO_stat MCDispatch::startup(void)
 	{
 //#ifdef _DEBUG
 #if 0
-		MCStack *t_stack;
+        char *openpath = t_mccmd; //point to MCcmd string
+        MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
@@ -1375,7 +1375,6 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	///* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 

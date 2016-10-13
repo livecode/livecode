@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -106,10 +106,26 @@ static id s_SimRuntime_class = nil;
 //   A device type must be choosen when launching the iOS 8 simulator.
 - (id)getSimDeviceSet
 {
-	//NSLog(@"received getSimDeviceSet");
-	if (s_SimDeviceSet_class != nil)
-		return [[s_SimDeviceSet_class defaultSet] availableDevices];
-	return nil;
+    //NSLog(@"received getSimDeviceSet");
+    if (s_SimDeviceSet_class == nil || s_SimRuntime_class == nil)
+        return nil;
+
+    // As of Xcode 8, the default device set is not necessarily the device set used by the current simulator.
+    // This can happen if multiple versions of Xcode is installed.
+    // So for Xcode 8 and later, make sure we fetch the device set used by the current service context.
+    id t_default_set;
+    t_default_set = [s_SimDeviceSet_class defaultSet];
+    id t_current_dev_set;
+    t_current_dev_set = nil;
+    if (t_default_set != nil && [s_SimDeviceSet_class respondsToSelector: @selector(setForSetPath: serviceContext:)])
+        t_current_dev_set = [s_SimDeviceSet_class setForSetPath: [t_default_set setPath] serviceContext: s_SimRuntime_class];
+
+    if (t_current_dev_set == nil)
+        t_current_dev_set = t_default_set;
+    if (t_current_dev_set != nil)
+        return [t_current_dev_set availableDevices];
+    
+    return nil;
 }
 
 // MM-2014-10-07: [[ Bug 13584 ]] Return the set of runtimes that the current sim supports.
@@ -224,7 +240,7 @@ int main(int argc, char *argv[])
 					t_core_sim_bundle = [NSBundle bundleWithPath: t_core_sim_path];
 					t_success = [t_core_sim_bundle load];
 					
-					//NSLog(@"CoreSimBundle %d", t_success);					
+					//NSLog(@"CoreSimBundle %d", t_success);
 				}
 			}
 			
@@ -255,11 +271,28 @@ int main(int argc, char *argv[])
 		
 		// MM-2014-10-07: [[ Bug 13584 ]] Fetch the SimRuntime class, required to return the set of runtime environments the current sim supports.
 		//   e.g. iOS7 sim, iOS 8 sim etc.
-		s_SimRuntime_class = NSClassFromString(@"SimRuntime");
-		
+        // As of Xcode 8, the SimRuntime class no longer returns a valid set of supported runtimes.
+        // Instead, we need to use the SimServiceContext class, making sure we fetch the correct context for the current version of Xcode.
+        id t_service_context;
+        t_service_context = NSClassFromString(@"SimServiceContext");
+		// PM-2016-09-19: [[ Bug 18422] We want to use SimServiceContext class *only* in xcode 8
+        if (t_service_context != nil && [t_service_context respondsToSelector:@selector(sharedServiceContextForDeveloperDir: error:)])
+        {
+            NSString *t_dev_dir;
+            t_dev_dir = [NSString stringWithFormat: @"%s", argv[1]];
+            NSError *t_error;
+            t_error = nil;
+            s_SimRuntime_class = [t_service_context sharedServiceContextForDeveloperDir: t_dev_dir error: t_error];
+            
+            if (t_error != nil)
+                s_SimRuntime_class = nil;
+        }
+        else
+            s_SimRuntime_class = NSClassFromString(@"SimRuntime");
+
 		s_keep_running = YES;
-		while(s_keep_running && 
-			  [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]] ||
+        while((s_keep_running && 
+               [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]]) ||
 			  [NSConnection currentConversation] != nil)
 			;
 		

@@ -1,6 +1,6 @@
 ﻿script "TesterLib"
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -248,3 +248,77 @@ function TesterTapCombine pAnalysisA, pAnalysisB
    end if
    return tCombined
 end TesterTapCombine
+
+----------------------------------------------------------------
+-- Logging helpers
+----------------------------------------------------------------
+
+local sLogInfo
+
+-- Figure out what the highlighting escape codes are for the terminal
+--
+-- FIXME this really doesn't work properly if LiveCode's stdout
+-- *isn't* a TTY.
+private command logInit
+   if sLogInfo is false or sLogInfo is an array then
+      exit logInit
+   end if
+
+   -- We can only do colour on Linux and OS X
+   if the platform is not "Linux" and the platform is not "MacOS" then
+      put false into sLogInfo
+   end if
+
+   -- Check if colouring is possible
+   local tTput
+   put shell("tput colors") into tTput
+   if the result is not empty or tTput <= 8 then
+      put false into sLogInfo
+   end if
+
+   -- Get colours
+   put shell("tput sgr0") into sLogInfo["normal"]
+   put shell("tput bold") into sLogInfo["bold"]
+   put shell("tput setaf 1") into sLogInfo["red"]
+   put shell("tput setaf 2") into sLogInfo["green"]
+   put shell("tput setaf 3") into sLogInfo["yellow"]
+   put shell("tput setaf 6") into sLogInfo["cyan"]
+end logInit
+
+private function logHighlight pString
+  logInit
+  if pString is "fail" then
+     return sLogInfo["red"] & sLogInfo["bold"] & pString & sLogInfo["normal"]
+  else if pString is "xfail" or pString is "xpass" then
+     return sLogInfo["yellow"] & pString & sLogInfo["normal"]
+  else if pString is "pass" then
+     return sLogInfo["green"] & pString & sLogInfo["normal"]
+  else if pString is "skip" then
+     return sLogInfo["cyan"] & pString & sLogInfo["normal"]
+  else
+     return pString
+  end if
+end logHighlight
+
+command TesterLog pStatus, pDescription
+   local tMessage
+   put logHighLight(the toUpper of pStatus) into tMessage
+   put ":" after tMessage
+   if the number of chars in pStatus < 5 then
+      put space after tMessage
+   end if
+   
+   write tMessage && pDescription & return to stdout
+end TesterLog
+
+command TesterLogSummaryLine pTapResults, pTestName
+   local tTotal, tPassed, tWorst, tMessage
+
+   put pTapResults["xpass"] + pTapResults["pass"] + pTapResults["skip"] into tPassed
+   put TesterTapGetTestCount(pTapResults) into tTotal
+
+   put TesterTapGetWorstResult(pTapResults) into tWorst
+   put pTestName into tMessage
+   put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   TesterLog tWorst, tMessage
+end TesterLogSummaryLine

@@ -314,7 +314,7 @@ static bool MCGContextCreateWithBitmap(SkBitmap& p_bitmap, MCGContextRef& r_cont
 	t_canvas = nil;
 	if (t_success)
 	{
-		t_canvas = new SkCanvas(p_bitmap);
+		t_canvas = new (nothrow) SkCanvas(p_bitmap);
 		t_success = t_canvas != NULL;
 	}
 	
@@ -577,7 +577,7 @@ void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 	
 	// We now create a canvas the same size as the device clip.
 	SkCanvas *t_new_canvas;
-	t_new_canvas = new SkCanvas(t_new_bitmap);
+	t_new_canvas = new (nothrow) SkCanvas(t_new_bitmap);
 	if (t_new_canvas == nil)
 	{
 		self -> is_valid = false;
@@ -813,7 +813,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	
 	// We now create a canvas the same size as the device clip.
 	SkCanvas *t_new_canvas;
-	t_new_canvas = new SkCanvas(t_new_bitmap);
+	t_new_canvas = new (nothrow) SkCanvas(t_new_bitmap);
 	
 	if (t_new_canvas == nil)
 	{
@@ -1023,7 +1023,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	{
 		case kMCGBlurTypeNormal:
 		{
-			uint8_t *t_blur_ptr, *t_mask_ptr;
+			uint8_t *t_blur_ptr;
 			t_blur_ptr = t_blurred_mask . fImage;
 			
 			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
@@ -2127,7 +2127,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_paint_style == kMCGPaintStyleStippled)
 		{
-			t_stipple = new SkStippleMaskFilter();
+			t_stipple = new (nothrow) SkStippleMaskFilter();
 			t_success = t_stipple != NULL;			
 		}
 	}	
@@ -2492,7 +2492,6 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 		t_matrix = self->layer->canvas->getTotalMatrix();
 
 		MCGRectangle t_tmp_src;
-		MCGFloat t_src_width, t_src_height;
 		if (p_src != nil)
 			t_tmp_src = *p_src;
 		else
@@ -3022,7 +3021,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_ef
 		t_layer_info . fPaintBits = SkLayerDrawLooper::kEntirePaint_Bits;
 		t_layer_info . fColorMode = SkXfermode::kSrc_Mode;	
 		
-		t_looper = new SkLayerDrawLooper;
+		t_looper = new (nothrow) SkLayerDrawLooper;
 		t_success = t_looper != NULL;
 	}
 	
@@ -3067,12 +3066,12 @@ void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_ef
 		SkImageFilter *t_blur_image_filter;
 		if (t_success)
 		{			
-			SkImageFilter *t_blur = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
-			SkImageFilter *t_invert = new MCGMaskInvertImageFilter(t_blur);
+			SkImageFilter *t_blur = new (nothrow) MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			SkImageFilter *t_invert = new (nothrow) MCGMaskInvertImageFilter(t_blur);
 			t_blur_image_filter = t_invert;
 			
 			
-			//t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, p_effects . inner_glow . inverted, NULL);
+			//t_blur_image_filter = new (nothrow) MCGMaskExtractImageFilter(t_blur_mask_filter, p_effects . inner_glow . inverted, NULL);
 			//t_success = t_blur_image_filter != NULL;
 		}
 		
@@ -3124,7 +3123,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_ef
 		SkImageFilter *t_blur_image_filter;
 		if (t_success)
 		{
-			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			t_blur_image_filter = new (nothrow) MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
 			t_success = t_blur_image_filter != NULL;
 		}
 		
@@ -3160,14 +3159,14 @@ void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_ef
 		SkImageFilter *t_blur_image_filter;
 		if (t_success)
 		{
-			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			t_blur_image_filter = new (nothrow) MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
 			t_success = t_blur_image_filter != NULL;
 		}
 		
 		SkImageFilter *t_offset_image_filter;
 		if (t_success)
 		{
-			t_offset_image_filter = new SkOffsetImageFilter(MCGFloatToSkScalar(p_effects . drop_shadow . x_offset), 
+			t_offset_image_filter = new (nothrow) SkOffsetImageFilter(MCGFloatToSkScalar(p_effects . drop_shadow . x_offset), 
 															MCGFloatToSkScalar(p_effects . drop_shadow . y_offset), t_blur_image_filter);
 			t_success = t_offset_image_filter != NULL;
 		}

@@ -295,8 +295,6 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 		return;
 	}
 #endif
-
-	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -627,7 +625,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
             /* UNCHECKED */ ctxt . ConvertToData(*t_url, &t_data);
             stream = MCS_fakeopen(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
 		}
-		MCacptr = new MCAudioClip;
+		MCacptr = new (nothrow) MCAudioClip;
 		MCacptr->setdisposable();
 		if (!MCacptr->import(p_clip, stream))
 		{

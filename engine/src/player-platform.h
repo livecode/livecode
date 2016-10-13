@@ -69,7 +69,7 @@ public:
     
     enum { kObjectType = CT_PLAYER };
     using MCMixinObjectHandle<MCPlayer>::GetHandle;
-
+    
 private:
     
     MCPlayer *nextplayer;

@@ -37,7 +37,6 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 static bool s_inside_focus_event = false;
 
 //static MCMacPlatformWindow *s_focused_window = nil;

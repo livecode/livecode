@@ -22,13 +22,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "stack.h"
+#include "foundation.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#define UINDEX_MAX UINT32_MAX
-#define UINDEX_MIN UINT32_MIN
-#define UINTPTR_MAX UINT32_MAX
-#define UINTPTR_MIN UINT32_MIN
 
 class MCStackIdCache
 {
@@ -374,7 +370,7 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 {
 	if (m_id_cache == nil)
 	{
-		m_id_cache = new MCStackIdCache;
+		m_id_cache = new (nothrow) MCStackIdCache;
 		if (!m_id_cache -> RehashBuckets(1))
 		{
 			delete m_id_cache;

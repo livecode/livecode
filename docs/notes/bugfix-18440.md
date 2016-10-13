@@ -1,0 +1,1 @@
+# Respect SB Copy Files pane relative / absolute path distinction on mobile

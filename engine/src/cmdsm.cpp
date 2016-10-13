@@ -88,7 +88,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	if (sp.next(type) != PS_NORMAL || type != ST_ID || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_ADD_BADDEST, sp);
@@ -242,7 +242,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_DIVIDE_BADDEST, sp);
@@ -407,7 +407,7 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -587,7 +587,7 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add

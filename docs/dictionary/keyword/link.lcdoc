@@ -31,8 +31,9 @@ single <word>. This makes <grouped text> handy to use for <hypertext> or
 >*Note:*  Each continuous run of "link"-styled text is considered a
 > single <grouped text|text group>, even if you <selected> part of the
 > text and set its <textStyle> to "link", and set the <textStyle> of the
-> other part later. It is not possible for two separate <grouped
-> text|text groups> to exist if there are no <characters> between them.
+> other part later. It is not possible for two 
+> separate <grouped text|text groups> to exist if there are 
+> no <characters> between them.
 
 To show which text in a field is grouped, it is underlined and displayed
 in the color specified by the <linkColor> <property>. Use the <hide

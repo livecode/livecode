@@ -43,7 +43,7 @@ public:
     
     enum { kObjectType = CT_SCROLLBAR };
     using MCMixinObjectHandle<MCScrollbar>::GetHandle;
-    
+   
 private:
     
 	real8 thumbpos;

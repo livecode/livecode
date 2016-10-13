@@ -56,7 +56,7 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, 
 {
 	bool t_success = true;
 	MCVariableValue *t_element;
-	t_element = new MCVariableValue();
+	t_element = new (nothrow) MCVariableValue();
 	
 	t_success = t_element != nil &&
 		t_element->assign_string(p_value) &&

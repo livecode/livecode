@@ -369,7 +369,9 @@ static MCExecCustomTypeInfo _kMCInterfaceVisualEffectTypeInfo =
 
 MCExecEnumTypeInfo *kMCInterfaceWindowPositionTypeInfo = &_kMCInterfaceWindowPositionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAlignmentTypeInfo;
-
+MCExecCustomTypeInfo *kMCInterfaceImagePaletteSettingsTypeInfo = &_kMCInterfaceImagePaletteSettingsTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo = &_kMCInterfaceVisualEffectTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo = &_kMCInterfaceVisualEffectArgumentTypeInfo;
 //////////
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
@@ -377,7 +379,7 @@ bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCO
 	bool t_found;
 	t_found = false;
 	
-	MCChunk *tchunk = new MCChunk(False);
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
 	MCerrorlock++;
 	MCScriptPoint sp(long_id);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
@@ -1530,43 +1532,43 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 	{
 		case RT_TEMPLATE_AUDIO_CLIP:
 			delete MCtemplateaudio;
-			MCtemplateaudio = new MCAudioClip;
+			MCtemplateaudio = new (nothrow) MCAudioClip;
 			break;
 		case RT_TEMPLATE_BUTTON:
 			delete MCtemplatebutton;
-			MCtemplatebutton = new MCButton;
+			MCtemplatebutton = new (nothrow) MCButton;
 			break;
 		case RT_TEMPLATE_CARD:
 			delete MCtemplatecard;
-			MCtemplatecard = new MCCard;
+			MCtemplatecard = new (nothrow) MCCard;
 			break;
 		case RT_TEMPLATE_EPS:
 			delete MCtemplateeps;
-			MCtemplateeps = new MCEPS;
+			MCtemplateeps = new (nothrow) MCEPS;
 			break;
 		case RT_TEMPLATE_FIELD:
 			delete MCtemplatefield;
-			MCtemplatefield = new MCField;
+			MCtemplatefield = new (nothrow) MCField;
 			break;
 		case RT_TEMPLATE_GRAPHIC:
 			delete MCtemplategraphic;
-			MCtemplategraphic = new MCGraphic;
+			MCtemplategraphic = new (nothrow) MCGraphic;
 			break;
 		case RT_TEMPLATE_GROUP:
 			delete MCtemplategroup;
-			MCtemplategroup = new MCGroup;
+			MCtemplategroup = new (nothrow) MCGroup;
 			break;
 		case RT_TEMPLATE_IMAGE:
 			delete MCtemplateimage;
-			MCtemplateimage = new MCImage;
+			MCtemplateimage = new (nothrow) MCImage;
 			break;
 		case RT_TEMPLATE_SCROLLBAR:
 			delete MCtemplatescrollbar;
-			MCtemplatescrollbar = new MCScrollbar;
+			MCtemplatescrollbar = new (nothrow) MCScrollbar;
 			break;
 		case RT_TEMPLATE_PLAYER:
 			delete MCtemplateplayer;
-			MCtemplateplayer = new MCPlayer;
+			MCtemplateplayer = new (nothrow) MCPlayer;
 			break;
 		case RT_TEMPLATE_STACK:
 			delete MCtemplatestack;
@@ -1574,7 +1576,7 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 			break;
 		case RT_TEMPLATE_VIDEO_CLIP:
 			delete MCtemplatevideo;
-			MCtemplatevideo = new MCVideoClip;
+			MCtemplatevideo = new (nothrow) MCVideoClip;
 			break;
 		default:
 			break;
@@ -1691,8 +1693,8 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 	int2 y = p_start . y;
 	while (x != p_end . x || y != p_end . y)
 	{
-		int2 oldx = x;
-		int2 oldy = y;
+		int2 t_oldx = x;
+		int2 t_oldy = y;
 		x = p_start . x + (int2)(ix * (dx * (curtime - starttime) / duration));
 		y = p_start . y + (int2)(iy * (dy * (curtime - starttime) / duration));
 		if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))
@@ -1707,7 +1709,7 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 			y = p_end . y;
 			curtime = endtime;
 		}
-		if (x != oldx || y != oldy)
+		if (x != t_oldx || y != t_oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
 	MCdefaultstackptr->mup(p_which, false);
@@ -1740,7 +1742,15 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
+		// Fetch the codepoint at the given codeunit index
+		codepoint_t t_cp_char =
+			MCStringGetCodepointAtIndex(p_typing, i);
+		
+		// Compute the number of codeunits used by the char
+		uindex_t t_cp_length =
+			MCUnicodeCodepointGetCodeunitLength(t_cp_char);
+		
+		KeySym keysym = t_cp_char;
         MCAutoStringRef t_char;
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
@@ -1753,7 +1763,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, 1), &t_char);
+            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
 			t_string = *t_char;
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
@@ -1764,6 +1774,10 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
+		
+		// If the codepoint was in SMP, then make sure we bump two codeunit
+		// indicies.
+		i += t_cp_length - 1;
 	}
     
     // AL-2014-01-07 return lock mods to false
@@ -2148,7 +2162,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				t_object -> getstack() -> removeaclip(t_aclip);
 			}
 			else
-				t_aclip = new MCAudioClip(*static_cast<MCAudioClip *>(t_object));
+				t_aclip = new (nothrow) MCAudioClip(*static_cast<MCAudioClip *>(t_object));
 
 			t_new_object = t_aclip;
 			p_dst . object -> getstack() -> appendaclip(t_aclip);
@@ -2164,7 +2178,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				t_object -> getstack() -> removevclip(t_aclip);
 			}
 			else
-				t_aclip = new MCVideoClip(*static_cast<MCVideoClip *>(t_object));
+				t_aclip = new (nothrow) MCVideoClip(*static_cast<MCVideoClip *>(t_object));
 
 			t_new_object = t_aclip;
 			p_dst . object -> getstack() -> appendvclip(t_aclip);
@@ -2662,7 +2676,7 @@ void MCInterfaceExecMoveObject(MCExecContext& ctxt, MCObject *p_target, MCPoint 
 		break;
 	}
 
-	MCPoint *t_motion = new MCPoint[p_motion_count];
+	MCPoint *t_motion = new (nothrow) MCPoint[p_motion_count];
 	for (uindex_t i = 0; i < p_motion_count; i++)
 		t_motion[i] = p_motion[i];
 
@@ -3198,14 +3212,15 @@ void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new
     t_new_stack -> setparent(MCdispatcher -> gethome());
     t_new_stack -> message(MCM_new_stack);
     t_new_stack -> setflag(False, F_VISIBLE);
-    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
-    t_new_stack -> open();
     t_new_stack -> setasscriptonly(kMCEmptyString);
     
 	if (p_new_name != nil)
 		t_new_stack -> setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoValueRef t_id;
+    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+    t_new_stack -> open();
+    
+    MCAutoValueRef t_id;
 	t_new_stack -> names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3315,11 +3330,10 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
         return;
     }
     
-    MCWidget* t_widget = new MCWidget();
+    MCWidget* t_widget = new (nothrow) MCWidget();
     if (t_widget == NULL)
         return;
     t_widget -> bind(p_kind, nil);
-    Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
     
@@ -3788,7 +3802,7 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 
 	if (t_stream != NULL)
 	{
-		MCAudioClip *aptr = new MCAudioClip;
+		MCAudioClip *aptr = new (nothrow) MCAudioClip;
 		if (!aptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
@@ -3814,7 +3828,7 @@ void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename)
 
 	if (t_stream != NULL)
 	{
-		MCVideoClip *vptr = new MCVideoClip;
+		MCVideoClip *vptr = new (nothrow) MCVideoClip;
 		if (!vptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
@@ -3894,7 +3908,7 @@ void MCInterfaceExecImportObjectFromArray(MCExecContext& ctxt, MCArrayRef p_arra
     }
     
     MCWidget *t_widget;
-    t_widget = new MCWidget;
+    t_widget = new (nothrow) MCWidget;
     if (t_widget == NULL)
         return;
     
@@ -4694,12 +4708,12 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 {
 	MCEffectList *effectptr = MCcur_effects;
 	if (effectptr == nil)
-		MCcur_effects = effectptr = new MCEffectList;
+		MCcur_effects = effectptr = new (nothrow) MCEffectList;
 	else
 	{
 		while (effectptr->next != NULL)
 			effectptr = effectptr->next;
-		effectptr->next = new MCEffectList;
+		effectptr->next = new (nothrow) MCEffectList;
 		effectptr = effectptr->next;
 	}
 	
@@ -4719,7 +4733,7 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 	{
         t_arg = p_effect . arguments[i];
 		MCEffectArgument *t_kv;
-		t_kv = new MCEffectArgument;
+		t_kv = new (nothrow) MCEffectArgument;
 		t_kv -> next = t_arguments;
 		t_kv -> key = MCValueRetain(t_arg . key);
 		t_kv -> value = MCValueRetain(t_arg . value);

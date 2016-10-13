@@ -172,3 +172,12 @@ Each test is a `.cpp` file added to the `test` directory for the program or libr
 When you add a new C++ test source file, you need to add it to the target's corresponding `module_test_sources` gyp variable.  These are currently set in the top-level `.gyp` file for each project, except for the engine, for which you should edit the `engine_test_source_files` variable in `engine/engine-sources.gypi`.
 
 For more information on writing C++ tests with Google Test, please consult the [Google Test documentation](https://github.com/google/googletest/blob/master/googletest/docs/Documentation.md).
+
+## Other tests
+
+The lc-run program has some basic smoke tests for its command-line
+interface and start-up process.  You can find them in
+`tests/_lcruntests.livecodescript`, with support files in
+`tests/lc-run/`.  lc-run is used to run the LiveCode Builder tests
+mentioned above; only add to the smoke tests for things that *can't*
+be tested by writing a "normal" LiveCode Builder test.

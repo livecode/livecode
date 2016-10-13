@@ -49,7 +49,7 @@ public:
     
     enum { kObjectType = CT_GRAPHIC };
     using MCMixinObjectHandle<MCGraphic>::GetHandle;
-    
+   
 private:
     
 	uint2 linesize;

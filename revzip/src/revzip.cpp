@@ -1266,7 +1266,6 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 	
 		for( int i = 0; i < t_num_files; ++i )
 		{
-			const char* t_line = NULL;
 			struct zip_stat t_stat;
 
 			// SN-2015-03-11: [[ Bug 14413 ]] We want to get the bitflags

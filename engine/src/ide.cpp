@@ -115,7 +115,7 @@ MCIdeState *MCIdeState::Find(MCField *p_field)
 			return t_state;
 		}
 
-	t_state = new MCIdeState;
+	t_state = new (nothrow) MCIdeState;
 	t_state -> f_next = s_states;
 	t_state -> f_field = p_field;
 	s_states = t_state;
@@ -189,7 +189,7 @@ Parse_stat MCIdeScriptAction::parse_target(MCScriptPoint& p_script,MCChunk*& r_t
 
 	if (t_status == PS_NORMAL)
 	{
-		r_target = new MCChunk(True);
+		r_target = new (nothrow) MCChunk(True);
 		t_status = r_target -> parse(p_script, False);
 	}
 	
@@ -345,7 +345,6 @@ static MCColourizeStyle *s_script_styles = NULL;
 static uint4 s_script_style_count = 0;
 
 static uint1 *s_script_class_styles = NULL;
-static uint1 *s_script_operator_styles = NULL;
 static uint1 *s_script_keyword_styles = NULL;
 
 #define SCRIPT_STYLE_ATTRIBUTE_COUNT 7
@@ -468,7 +467,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
     case TYPE_CLASSES:
         {
             if (s_script_class_styles == NULL)
-                s_script_class_styles = new uint1[__COLOURIZE_CLASS_COUNT__];
+                s_script_class_styles = new (nothrow) uint1[__COLOURIZE_CLASS_COUNT__];
             else
             {
                 for(uint4 t_class = 0; t_class < __COLOURIZE_CLASS_COUNT__; ++t_class)
@@ -514,7 +513,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
     case TYPE_KEYWORDS:
         {
             if (s_script_keyword_styles == NULL)
-                s_script_keyword_styles = new uint1[SCRIPT_KEYWORD_COUNT];
+                s_script_keyword_styles = new (nothrow) uint1[SCRIPT_KEYWORD_COUNT];
             else
             {
                 for(uint4 t_keyword = 0; t_keyword < SCRIPT_KEYWORD_COUNT; ++t_keyword)
@@ -1811,7 +1810,7 @@ Parse_stat MCIdeScriptTokenize::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_script = new MCChunk(True);
+		m_script = new (nothrow) MCChunk(True);
 		t_stat = m_script -> parse(sp, False);
 	}
 
@@ -1993,7 +1992,7 @@ Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
 	
 	if (t_status == PS_NORMAL)
 	{
-		m_target = new MCChunk(False);
+		m_target = new (nothrow) MCChunk(False);
 		t_status = m_target -> parse(p_script, False);
 	}
 
@@ -2185,7 +2184,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
                     Handler_type t_htype;
                     if (searchforhandler(t_object, sp.gettoken_nameref(), t_htype) &&
                         t_htype == HT_MESSAGE)
-                        t_call = new MCComref(sp.gettoken_nameref());
+                        t_call = new (nothrow) MCComref(sp.gettoken_nameref());
                 }
             }
         }
@@ -2310,7 +2309,7 @@ Parse_stat MCIdeSyntaxTokenize::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_script = new MCChunk(True);
+		m_script = new (nothrow) MCChunk(True);
 		t_stat = m_script -> parse(sp, False);
 	}
 
@@ -2382,7 +2381,7 @@ Parse_stat MCIdeSyntaxCompile::parse(MCScriptPoint& sp)
 	
 	if (t_stat == PS_NORMAL)
 	{
-		m_target = new MCChunk(False);
+		m_target = new (nothrow) MCChunk(False);
 		t_stat = m_target -> parse(sp, False);
 	}
 	
@@ -2400,7 +2399,7 @@ void MCIdeSyntaxCompile::exec_ctxt(MCExecContext &ctxt)
     }
 
     MCHandlerlist *t_hlist;
-    t_hlist = new MCHandlerlist;
+    t_hlist = new (nothrow) MCHandlerlist;
     if (t_hlist -> parse(optr, optr -> _getscript()) == PS_NORMAL)
     {
         MCSyntaxFactoryRef t_factory;
@@ -2581,7 +2580,7 @@ Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_stack = new MCChunk(false);
+		m_stack = new (nothrow) MCChunk(false);
 		t_stat = m_stack -> parse(sp, False);
 	}
 	

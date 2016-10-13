@@ -70,7 +70,6 @@ end getCommandLineInfo
 command CompilerTestRunnerMain
    local tInfo
    put getCommandLineInfo() into tInfo
-   logInit
 
    switch tInfo["args"][1]
       case "run"
@@ -102,9 +101,9 @@ private command doRun pInfo
    if tScript is empty then
       runAllScripts pInfo
    else if tCommand is empty then
-      runTestScript pInfo, tScript
+      runCompilerTestScript pInfo, tScript
    else
-      runTestCommand pInfo, tScript, tCommand
+      runCompilerTest pInfo, tScript, tCommand
    end if
 
    put the result into tAnalysis
@@ -189,7 +188,7 @@ private command runTestProcessOutput pScriptfile, pCommand, pOutput
    local tTapResults
    put TesterTapAnalyse(tTestLog) into tTapResults
 
-   logSummaryLine tTapResults, (TesterGetPrettyTestName(pScriptFile, "compilertest") & ":" && pCommand)
+   TesterLogSummaryLine tTapResults, (TesterGetPrettyTestName(pScriptFile, "compilertest") & ":" && pCommand)
 
    return tTapResults
 end runTestProcessOutput
@@ -210,7 +209,7 @@ private command runCompilerTest pInfo, pScriptFile, pTest
    put tempName() into tTestInterfaceFile
    put textEncode(tTestInfo["code"], "utf8") into url ("binfile:" & tTestFile)
    reportCompilerTestDiag format("output test source file to '%s'", tTestFile)
-   reportCompilerTestDiag tTestInfo["code"]
+   reportCompilerTestDiagWithLineNumbers tTestInfo["code"]
 
    -- Build the command line
    local tCompilerCmdLine
@@ -232,8 +231,9 @@ private command runCompilerTest pInfo, pScriptFile, pTest
    reportCompilerTestDiag tCompilerOutput
 
    -- Process the assertions and make sure each one matches up
+   local tTestOutput
    repeat for each line tAssertion in tTestInfo["assertions"]
-      if doesCompilerOutputSatisfyAssertion(tCompilerOutput, tCompilerExitStatus, tAssertion, tTestInfo["positions"]) then
+      if doesCompilerOutputSatisfyAssertion(tCompilerOutput, tCompilerExitStatus, tAssertion, tTestInfo) then
          put "ok - " after tTestOutput
       else
          put "not ok - " after tTestOutput
@@ -330,7 +330,7 @@ private function listCompilerTestsInFile pFilename
    return tTestNames
 end listCompilerTestsInFile
 
-private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pPositions
+private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pTestInfo
    if item 1 of pAssertion is "success" then
       return pCompilerExitCode is 0
    end if
@@ -347,34 +347,73 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
    end if
 
    set the itemDelimiter to ":"
+
+   local tState
+   put "search" into tState
    repeat for each line tOutputLine in pCompilerOutput
       local tFile, tLine, tColumn, tType, tMessage
+      local tSourceLine, tCharOffset, tOutputChar, tMarker
 
-      -- The format of each output line is:
-      --   <file>:<line>:<col>: (error|warning): <msg>
-      put item 1 of tOutputLine into tFile
-      put item 2 of tOutputLine into tLine
-      put item 3 of tOutputLine into tColumn
-      put word 1 of item 4 of tOutputLine into tType
-      put item 5 to -1 of tOutputLine into tMessage
+      if tState is "search" then
+         -- The format of each output line is:
+         --   <file>:<line>:<col>: (error|warning): <msg>
+         put item 1 of tOutputLine into tFile
+         put item 2 of tOutputLine into tLine
+         put item 3 of tOutputLine into tColumn
+         put word 1 of item 4 of tOutputLine into tType
+         put item 5 to -1 of tOutputLine into tMessage
 
-      -- If the assertion type doesn't match, continue
-      if tAssertionType is not tType then
-         next repeat
+         -- If the assertion type doesn't match, continue
+         if tAssertionType is not tType then
+            next repeat
+         end if
+
+         -- If the assertion message is not within the message, continue
+         if tAssertionPartialMsg is not in tMessage then
+            next repeat
+         end if
+
+         -- If the position does not match, continue
+         if pTestInfo["positions"][tAssertionPos] is not tLine then
+            next repeat
+         end if
+
+         -- If we get here, we have a match so are successful!
+         put "source line" into tState
+
+      else if tState is "source line" then
+         -- The format of the source line output is a space followed
+         -- by the corresponding line of the input source file.  The
+         -- compiler may replace any of the source characters with
+         -- spaces (for example, to remove control characters).
+
+        put " " & line tLine of pTestInfo["code"] into tSourceLine
+
+        repeat with tCharOffset = 1 to the number of chars in tOutputLine
+           put char tCharOffset of tOutputLine into tOutputChar
+           if tOutputChar is not " " and \
+                 tOutputChar is not char tCharOffset of tSourceLine then
+              return false
+           end if
+         end repeat
+
+         put "marker" into tState
+
+      else if tState is "marker" then
+         -- The marker should point at the correct column within the
+         -- input source line
+
+         -- TODO the marker position should come from the position
+         -- indicated in the code block, not from the position
+         -- reported by the compiler.
+         put format(merge("%[[tColumn]]s^"),"") into tMarker
+
+         if tOutputLine is tMarker then
+            return true
+         else
+            return false
+         end if
       end if
-
-      -- If the assertion message is not within the message, continue
-      if tAssertionPartialMsg is not in tMessage then
-         next repeat
-      end if
-
-      -- If the position does not match, continue
-      if pPositions[tAssertionPos] is not tLine then
-         next repeat
-      end if
-
-      -- If we get here, we have a match so are successful!
-      return true
    end repeat
 
    -- We failed to find a suitable output line, so failure
@@ -400,6 +439,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
       throw format("can't open file '%s'", pScriptFile)
    end if
 
+   local tScript
    read from file pScriptFile until end
    put it into tScript
 
@@ -459,6 +499,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             put empty into tCode
             put empty into tExpectation
             put empty into tAssertions
+            put empty into tPositions
             put "code" into tState
          else if tToken is "%EXPECT" then
             -- We only allow %EXPECT directives after code blocks
@@ -642,67 +683,13 @@ private command reportCompilerTestDiag pMessage
    end if
 end reportCompilerTestDiag
 
-----------------------------------------------------------------
--- Logging helpers
-----------------------------------------------------------------
-
-local sLogInfo
-
--- Figure out what the highlighting escape codes are for the terminal
---
--- FIXME this really doesn't work properly if LiveCode's stdout
--- *isn't* a TTY.
-private command logInit
-   -- We can only do colour on Linux and OS X
-   if the platform is not "Linux" and the platform is not "MacOS" then
-      put false into sLogInfo
+private command reportCompilerTestDiagWithLineNumbers pMessage
+   if $LCC_VERBOSE is not empty then
+      local tLineNumber
+      put 1 into tLineNumber
+      repeat for each line tLine in pMessage
+         write "DIAG:" && format("%4d", tLineNumber) && ":" && tLine & return to stderr
+         add 1 to tLineNumber
+      end repeat
    end if
-
-   -- Check if colouring is possible
-   local tTput
-   put shell("tput colors") into tTput
-   if the result is not empty or tTput <= 8 then
-      put false into sLogInfo
-   end if
-
-   -- Get colours
-   put shell("tput sgr0") into sLogInfo["normal"]
-   put shell("tput bold") into sLogInfo["bold"]
-   put shell("tput setaf 1") into sLogInfo["red"]
-   put shell("tput setaf 2") into sLogInfo["green"]
-   put shell("tput setaf 3") into sLogInfo["yellow"]
-   put shell("tput setaf 6") into sLogInfo["cyan"]
-end logInit
-
-private function logHighlight pString
-  if pString is "fail" then
-     return sLogInfo["red"] & sLogInfo["bold"] & pString & sLogInfo["normal"]
-  else if pString is "xfail" or pString is "xpass" then
-     return sLogInfo["yellow"] & pString & sLogInfo["normal"]
-  else if pString is "pass" then
-     return sLogInfo["green"] & pString & sLogInfo["normal"]
-  else if pString is "skip" then
-     return sLogInfo["cyan"] & pString & sLogInfo["normal"]
-  else
-     return pString
-  end if
-end logHighlight
-
-private command logSummaryLine pTapResults, pTestName
-   local tTotal, tPassed, tWorst, tMessage
-
-   put pTapResults["xpass"] + pTapResults["pass"] + pTapResults["skip"] into tPassed
-   put TesterTapGetTestCount(pTapResults) into tTotal
-
-   put TesterTapGetWorstResult(pTapResults) into tWorst
-   put logHighLight(the toUpper of tWorst) into tMessage
-   put ":" after tMessage
-   if the number of chars in tWorst < 5 then
-      put space after tMessage
-   end if
-
-   put space & pTestName after tMessage
-
-   put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
-   write tMessage & return to stdout
-end logSummaryLine
+end reportCompilerTestDiagWithLineNumbers

@@ -360,7 +360,7 @@ inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_
 bool MCGPointParse(MCStringRef p_string, MCGPoint &r_point)
 {
 	bool t_success;
-	t_success = nil;
+	t_success = false;
 	
 	MCProperListRef t_items;
 	t_items = nil;
@@ -5333,7 +5333,6 @@ void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
 void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
 {
 	__MCCanvasColorImpl *t_color;
-	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
 	t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
 	
 	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
@@ -6026,7 +6025,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canv
     t_pixel_count = t_width * t_height;
     
     uint32_t *t_my_pixels, *t_data_ptr;
-    t_my_pixels = new uint32_t[t_pixel_count];
+    t_my_pixels = new (nothrow) uint32_t[t_pixel_count];
     memcpy(t_my_pixels, t_pixels, t_pixel_count * sizeof(uint32_t));
     
     t_data_ptr = t_my_pixels;
@@ -6067,6 +6066,8 @@ static MCValueCustomCallbacks kMCCanvasRectangleCustomValueCallbacks =
 	__MCCanvasRectangleEqual,
 	__MCCanvasRectangleHash,
 	__MCCanvasRectangleDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPointCustomValueCallbacks =
@@ -6077,6 +6078,8 @@ static MCValueCustomCallbacks kMCCanvasPointCustomValueCallbacks =
 	__MCCanvasPointEqual,
 	__MCCanvasPointHash,
 	__MCCanvasPointDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
@@ -6087,6 +6090,8 @@ static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
 	__MCCanvasColorEqual,
 	__MCCanvasColorHash,
 	__MCCanvasColorDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasTransformCustomValueCallbacks =
@@ -6097,6 +6102,8 @@ static MCValueCustomCallbacks kMCCanvasTransformCustomValueCallbacks =
 	__MCCanvasTransformEqual,
 	__MCCanvasTransformHash,
 	__MCCanvasTransformDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
@@ -6107,6 +6114,8 @@ static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
 	__MCCanvasImageEqual,
 	__MCCanvasImageHash,
 	__MCCanvasImageDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
@@ -6117,6 +6126,8 @@ static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
 	nil,
 	nil,
 	nil,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasSolidPaintCustomValueCallbacks =
@@ -6127,6 +6138,8 @@ static MCValueCustomCallbacks kMCCanvasSolidPaintCustomValueCallbacks =
 	__MCCanvasSolidPaintEqual,
 	__MCCanvasSolidPaintHash,
 	__MCCanvasSolidPaintDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPatternCustomValueCallbacks =
@@ -6137,6 +6150,8 @@ static MCValueCustomCallbacks kMCCanvasPatternCustomValueCallbacks =
 	__MCCanvasPatternEqual,
 	__MCCanvasPatternHash,
 	__MCCanvasPatternDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasGradientCustomValueCallbacks =
@@ -6147,6 +6162,8 @@ static MCValueCustomCallbacks kMCCanvasGradientCustomValueCallbacks =
 	__MCCanvasGradientEqual,
 	__MCCanvasGradientHash,
 	__MCCanvasGradientDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasGradientStopCustomValueCallbacks =
@@ -6157,6 +6174,8 @@ static MCValueCustomCallbacks kMCCanvasGradientStopCustomValueCallbacks =
 	__MCCanvasGradientStopEqual,
 	__MCCanvasGradientStopHash,
 	__MCCanvasGradientStopDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPathCustomValueCallbacks =
@@ -6167,6 +6186,8 @@ static MCValueCustomCallbacks kMCCanvasPathCustomValueCallbacks =
 	__MCCanvasPathEqual,
 	__MCCanvasPathHash,
 	__MCCanvasPathDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
@@ -6177,6 +6198,8 @@ static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
 	__MCCanvasEffectEqual,
 	__MCCanvasEffectHash,
 	__MCCanvasEffectDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
@@ -6187,6 +6210,8 @@ static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
 	__MCCanvasFontEqual,
 	__MCCanvasFontHash,
 	__MCCanvasFontDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
@@ -6197,6 +6222,8 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasEqual,
 	__MCCanvasHash,
 	__MCCanvasDescribe,
+    nil,
+    nil,
 };
 
 bool MCCanvasTypesInitialize()
@@ -6767,7 +6794,6 @@ bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MC
 
 bool MCSVGParseReal(const char *p_string, MCRange &x_range, real64_t &r_real)
 {
-	real64_t t_real;
 	MCRange t_used;
 	
 	if (!MCSVGTryToParseRangeAsReal(p_string, x_range, &t_used, r_real))

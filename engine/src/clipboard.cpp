@@ -372,7 +372,13 @@ bool MCClipboard::AddLiveCodeStyledText(MCDataRef p_pickled_text)
         // This type is optional as it may not be a faithful representation
         MCAutoDataRef t_html(ConvertStyledTextToHTML(p_pickled_text));
         if (*t_html != NULL)
-            t_success = t_item->AddRepresentation(t_type_string, *t_html);
+		{
+			MCAutoDataRef t_encoded;
+			t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(*t_html);
+			t_success = *t_encoded != nil;
+			if (t_success)
+	            t_success = t_item->AddRepresentation(t_type_string, *t_encoded);
+		}
     }
     
     // Also attempt to add as plain text, so we have a fall-back
@@ -459,6 +465,12 @@ bool MCClipboard::AddHTML(MCDataRef p_html)
     if (t_item == NULL)
         return false;
     
+	// Encode the HTML in the required format for the clipboard
+	MCAutoDataRef t_encoded;
+	t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(p_html);
+	if (*t_encoded == nil)
+		return false;
+
     // Add the data to the clipboard with the correct type
     MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML);
     if (t_type_string == NULL)
@@ -849,13 +861,19 @@ bool MCClipboard::CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const
     MCAutoDataRef t_html;
     if (CopyAsData(kMCRawClipboardKnownTypeHTML, &t_html))
     {
-        // Convert to LiveCode styled text
-        MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_html);
-        if (t_pickled_text != NULL)
-        {
-            r_pickled_text = t_pickled_text;
-            return true;
-        }
+		MCAutoDataRef t_decodedhtml;
+		t_decodedhtml.Reset(m_clipboard->DecodeTransferredHTML(*t_html));
+
+		if (*t_decodedhtml != nil)
+		{
+			// Convert to LiveCode styled text
+			MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_decodedhtml);
+			if (t_pickled_text != NULL)
+			{
+				r_pickled_text = t_pickled_text;
+				return true;
+			}
+		}
     }
     
     // Finally, try plain text.
@@ -935,7 +953,17 @@ bool MCClipboard::CopyAsRTF(MCDataRef& r_rtf_data) const
 
 bool MCClipboard::CopyAsHTML(MCDataRef& r_html_data) const
 {
-    return CopyAsData(kMCRawClipboardKnownTypeHTML, r_html_data);
+	MCAutoDataRef t_data;
+	if (!CopyAsData(kMCRawClipboardKnownTypeHTML, &t_data))
+		return false;
+
+	MCDataRef t_decoded = nil;
+	t_decoded = m_clipboard->DecodeTransferredHTML(*t_data);
+	if (t_decoded == nil)
+		return false;
+
+	r_html_data = t_decoded;
+	return true;
 }
 
 bool MCClipboard::CopyAsPNG(MCDataRef& r_png) const
@@ -1340,7 +1368,7 @@ MCClipboard* MCClipboard::CreateSystemSelectionClipboard()
 MCClipboard* MCClipboard::CreateSystemDragboard()
 {
     // Drag boards are created in a locked state
-    MCClipboard* t_dragboard = new MCClipboard(MCRawClipboard::CreateSystemDragboard());
+    MCClipboard* t_dragboard = new (nothrow) MCClipboard(MCRawClipboard::CreateSystemDragboard());
     t_dragboard->Lock(true);
     t_dragboard->Clear();
     return t_dragboard;

@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -376,20 +376,45 @@ MCRunParseCommandLine (int argc,
  * VM initialisation and launch
  * ---------------------------------------------------------------- */
 
+/* lc-run permits loading of "composite module files", which are made
+ * by concatenating multiple .lcm modules together.  It does this by
+ * just repeatedly trying to load modules from a file input stream
+ * until there's no data left in it.  In a composite module file, the
+ * first module in the file is treated as the "main" module. */
+
+/* Loads modules from p_filename, appending them to x_modules and
+ * returning true iff all modules loaded successfully and at least one
+ * module was loaded. */
 static bool
-MCRunLoadModule (MCStringRef p_filename,
-                 MCScriptModuleRef & r_module)
+MCRunLoadModulesFromFile (MCStringRef p_filename,
+                          MCAutoScriptModuleRefArray & x_modules)
 {
 	MCAutoDataRef t_module_data;
-	MCAutoScriptModuleRef t_module;
+	MCAutoValueRefBase<MCStreamRef> t_stream;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCScriptCreateModuleFromData (*t_module_data, &t_module))
+	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
+	                                MCDataGetLength (*t_module_data),
+	                                &t_stream))
 		return false;
 
-	r_module = MCScriptRetainModule (*t_module);
+	size_t t_available = 0;
+	do
+	{
+		MCAutoScriptModuleRef t_module;
+
+		if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+			return false;
+
+		x_modules.Push(*t_module);
+
+		if (!MCStreamGetAvailableForRead (*t_stream, t_available))
+			return false;
+	}
+	while (t_available > 0);
+
 	return true;
 }
 
@@ -398,23 +423,21 @@ MCRunLoadModules (MCStringRef p_filename,
                   MCProperListRef p_load_filenames,
                   MCScriptModuleRef & r_module)
 {
-	/* Load main module */
-	MCAutoScriptModuleRef t_module;
-	if (!MCRunLoadModule (p_filename, &t_module))
+	/* Load main module file, keeping main module */
+	MCAutoScriptModuleRefArray t_modules;
+	if (!MCRunLoadModulesFromFile (p_filename, t_modules))
 		return false;
+
+	MCAutoScriptModuleRef t_module(t_modules[0]);
 
 	/* Load other modules */
-	MCAutoScriptModuleRefArray t_load_modules;
 	uindex_t t_num_load = MCProperListGetLength (p_load_filenames);
-
-	if (!t_load_modules.New(t_num_load))
-		return false;
 
 	for (uindex_t i = 0; i < t_num_load; ++i)
 	{
 		MCValueRef t_element;
 		t_element = MCProperListFetchElementAtIndex (p_load_filenames, i);
-		if (!MCRunLoadModule ((MCStringRef) t_element, t_load_modules[i]))
+		if (!MCRunLoadModulesFromFile (MCStringRef(t_element), t_modules))
 			return false;
 	}
 
@@ -434,7 +457,7 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 	MCAutoProperListRef t_handler_list; /* List of MCNameRef */
 	MCAutoStringRef t_message;
 
-	if (!MCScriptCopyHandlersOfModule (p_module, &t_handler_list))
+	if (!MCScriptListHandlerNamesOfModule (p_module, &t_handler_list))
 		return false;
 
 	if (!MCStringMutableCopy (kMCEmptyString, &t_message))
@@ -450,8 +473,8 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 		                              kMCNameTypeInfo));
 		t_handler_name = (MCNameRef) t_handler_val;
 
-		if (!MCScriptQueryHandlerOfModule (p_module, t_handler_name,
-		                                   t_signature))
+		if (!MCScriptQueryHandlerSignatureOfModule (p_module, t_handler_name,
+		                                            t_signature))
 			return false;
 
 		/* Only accept handlers with arity 0 */
@@ -513,7 +536,7 @@ main (int argc,
 		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
 			MCRunStartupError(MCSTR("Create Instance"));
 
-		if (!MCScriptCallHandlerOfInstance(*t_instance,
+		if (!MCScriptCallHandlerInInstance(*t_instance,
 		                                   t_config.m_handler,
 		                                   NULL, 0,
 		                                   &t_ignored_retval))

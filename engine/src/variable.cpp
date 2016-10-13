@@ -44,7 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool MCVariable::create(MCVariable*& r_var)
 {
 	MCVariable *self;
-	self = new MCVariable;
+	self = new (nothrow) MCVariable;
 	if (self == nil)
 		return false;
 
@@ -1216,7 +1216,7 @@ bool MCContainer::set_real(double p_real)
 
 bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer*& r_container)
 {
-	r_container = new MCContainer;
+	r_container = new (nothrow) MCContainer;
 	r_container -> m_variable = p_var;
 	r_container -> m_length = 0;
     r_container -> m_path = nil;
@@ -1226,7 +1226,7 @@ bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer*& r_containe
 
 bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container)
 {
-	r_container = new MCContainer;
+	r_container = new (nothrow) MCContainer;
 	r_container -> m_variable = p_var;
 	r_container -> m_path = p_path;
 	r_container -> m_length = p_length;
@@ -1294,8 +1294,7 @@ MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
 
 void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    MCValueRef t_value;
-	if (dimensions == 0 && !isparam)
+    if (dimensions == 0 && !isparam)
 	{
         MCVariable *t_resolved_ref;
             
@@ -1748,7 +1747,7 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue
 bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback p_callback, void *p_context, MCVariable*& r_var)
 {
 	MCDeferredVariable *self;
-	self = new MCDeferredVariable;
+	self = new (nothrow) MCDeferredVariable;
 	if (self == nil)
 		return false;
 

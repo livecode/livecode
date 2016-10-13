@@ -1,0 +1,1 @@
+# Fix video of player not automatically resized when setting filename

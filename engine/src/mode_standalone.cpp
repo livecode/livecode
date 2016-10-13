@@ -90,19 +90,19 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(__EMSCRIPTEN__)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -225,7 +225,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeRedirect:
 	{
 		char *t_redirect;
-		t_redirect = new char[p_length];
+		t_redirect = new (nothrow) char[p_length];
 		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
@@ -243,7 +243,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeFontmap:
     {
         char *t_fontmap;
-        t_fontmap = new char[p_length];
+        t_fontmap = new (nothrow) char[p_length];
         if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read fontmap");
@@ -708,7 +708,6 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
 
 #ifdef _DEBUG
 	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check

@@ -146,7 +146,7 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 		clear(False);
 	if (MCactivefield != NULL)
 		MCactivefield->unselect(True, True);
-	MCSelnode *nodeptr = new MCSelnode(objptr);
+	MCSelnode *nodeptr = new (nothrow) MCSelnode(objptr);
 	nodeptr->appendto(objects);
 	if (p_sendmessage)
 		objptr->message(MCM_selected_object_changed);
@@ -306,7 +306,7 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 		MCControl *controls = NULL;
 		while (objects != NULL)
 		{
-			MCSelnode *tptr = objects->remove(objects);
+			tptr = objects->remove(objects);
 			MCControl *cptr = (MCControl *)tptr->ref;
 			delete tptr;
 			if (parent->gettype() == CT_CARD)
@@ -328,7 +328,7 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 		else
 			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
 		gptr->makegroup(controls, parent);
-		objects = new MCSelnode(gptr);
+		objects = new (nothrow) MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
 		
 		r_group_ptr = gptr;
@@ -476,7 +476,7 @@ Boolean MCSellist::del()
 				cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
 				if (cptr->del(true))
 				{
-					Ustruct *us = new Ustruct;
+					Ustruct *us = new (nothrow) Ustruct;
 					us->type = UT_DELETE;
 					us->ud.layer = num;
 					MCundos->savestate(cptr, us);
@@ -540,12 +540,9 @@ void MCSellist::continuemove(int2 x, int2 y)
 		}
 		if (cptr->moveable())
 		{
-			// IM-2014-09-09: [[ Bug 13222 ]] Use the layer_setrect method to ensure the old
-			// effectiverect is appropriately dirtied when edittools are displayed for a graphic
-			if (cptr->resizeparent())
-				cptr->setrect(trect);
-			else
-				cptr->layer_setrect(trect, false);
+			// IM-2016-09-27: [[ Bug 17779 ]] Change to always calling layer_setrect, which invalidates selection handles if required.
+			cptr->layer_setrect(trect, false);
+			cptr->resizeparent();
 		}
 		tptr = tptr->next();
 	}
@@ -565,7 +562,7 @@ Boolean MCSellist::endmove()
 	do
 	{
 		MCControl *cptr = (MCControl *)tptr->ref;
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_MOVE;
 		us->ud.deltas.x = lastx - startx;
 		us->ud.deltas.y = lasty - starty;

@@ -132,7 +132,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	}
 	
 	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
+	t_result = new (nothrow) DATABASEREC;
 	t_result -> driverref = t_bundle;
 	t_result -> idcounterptr = (idcounterrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("setidcounterref"));
 	t_result -> newconnectionptr = (new_connectionrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("newdbconnectionref"));
@@ -171,7 +171,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	}
 	
 	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
+	t_result = new (nothrow) DATABASEREC;
 	
 	t_result -> driverref = t_driver_handle;
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
@@ -276,7 +276,7 @@ void MCU_fix_path(char *cstr)
 
 char *MCS_getcurdir()
 {
-	char *t_path = new char[PATH_MAX + 2];
+	char *t_path = new (nothrow) char[PATH_MAX + 2];
 	getcwd(t_path, PATH_MAX);
 	return t_path;
 }
@@ -309,7 +309,7 @@ char *MCS_resolvepath(const char *p_path)
       pw = getpwnam(tpath + 1);
     if (pw == NULL)
       return NULL;
-    tildepath = new char[strlen(pw->pw_dir) + strlen(tptr) + 2];
+    tildepath = new (nothrow) char[strlen(pw->pw_dir) + strlen(tptr) + 2];
     strcpy(tildepath, pw->pw_dir);
     if (*tptr) {
       strcat(tildepath, "/");
@@ -332,16 +332,16 @@ char *MCS_resolvepath(const char *p_path)
   if (lstat(tildepath, (struct stat *)&buf) != 0 || !S_ISLNK(buf.st_mode))
     return tildepath;
   int size;
-  char *newname = new char[PATH_MAX + 2];
+  char *newname = new (nothrow) char[PATH_MAX + 2];
   if ((size = readlink(tildepath, newname, PATH_MAX)) < 0) {
     delete tildepath;
-    delete newname;
+    delete[] newname;
     return NULL;
   }
   delete tildepath;
   newname[size] = '\0';
   if (newname[0] != '/') {
-    char *fullpath = new char[strlen(p_path) + strlen(newname) + 2];
+    char *fullpath = new (nothrow) char[strlen(p_path) + strlen(newname) + 2];
     strcpy(fullpath, p_path);
     char *sptr = strrchr(fullpath, '/');
     if (sptr == NULL)
@@ -349,9 +349,9 @@ char *MCS_resolvepath(const char *p_path)
     else
       sptr++;
     strcpy(sptr, newname);
-    delete newname;
+    delete[] newname;
     newname = MCS_resolvepath(fullpath);
-    delete fullpath;
+    delete[] fullpath;
   }
   return newname;
 
