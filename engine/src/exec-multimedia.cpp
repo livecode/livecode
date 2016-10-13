@@ -209,7 +209,7 @@ void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string)
 	MCAutoListRef t_list;
 	bool t_playing = false;
 	bool t_success = true;
-	if (MCplayers != nil)
+	if (MCplayers)
 	{
 		t_success = MCListCreateMutable('\n', &t_list);
 
@@ -871,7 +871,7 @@ void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
     if (MCSystemSetPlayLoudness(p_loudness))
         return;
 #endif
-    if (MCplayers != NULL)
+    if (MCplayers)
     {
         MCPlayer *tptr = MCplayers;
         while (tptr != NULL)

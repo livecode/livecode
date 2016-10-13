@@ -72,7 +72,7 @@ public:
 
 private:
     
-    MCPlayer *nextplayer;
+    MCPlayerHandle nextplayer;
     
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;

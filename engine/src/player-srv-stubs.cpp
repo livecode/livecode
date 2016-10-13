@@ -531,7 +531,7 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
-	if (MCplayers != NULL)
+	if (MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
