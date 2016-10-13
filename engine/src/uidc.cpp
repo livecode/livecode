@@ -1121,7 +1121,7 @@ void MCUIDC::updatemenubar(Boolean force)
 		MCdefaultmenubar = MCmenubar;
 
 	MCGroup *newMenuGroup;
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		newMenuGroup = MCmenubar;
 	else
 		newMenuGroup = MCdefaultmenubar;

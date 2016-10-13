@@ -221,7 +221,7 @@ MCGroup::~MCGroup()
 	}
 	if (this == MCmenubar)
 	{
-		MCmenubar = NULL;
+		MCmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	if (this == MCdefaultmenubar)

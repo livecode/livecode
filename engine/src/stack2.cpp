@@ -931,11 +931,15 @@ void MCStack::updatemenubar()
 	if (opened && state & CS_KFOCUSED && !MClockmenus)
 	{
         if (!hasmenubar() || (state & CS_EDIT_MENUS
-                              && mode < WM_PULLDOWN && mode != WM_PALETTE)
-		        || (gettool(this) != T_BROWSE && MCdefaultmenubar != NULL))
-			MCmenubar = NULL;
+            && mode < WM_PULLDOWN && mode != WM_PALETTE)
+            || (gettool(this) != T_BROWSE && MCdefaultmenubar))
+        {
+			MCmenubar = nil;
+        }
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, (getmenubar()));
+        {
+			MCmenubar = MCObjectCast<MCGroup>(getobjname(CT_GROUP, (getmenubar())));
+        }
 		MCscreen->updatemenubar(False);
 	}
 }

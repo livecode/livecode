@@ -3266,7 +3266,7 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 	case CT_BUTTON:
 		return MCtemplatebutton;
 	case CT_MENU:
-		r_parent = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
+		r_parent = MCmenubar ? MCmenubar : MCdefaultmenubar;
 		return MCtemplatebutton;
 	case CT_SCROLLBAR:
 		return MCtemplatescrollbar;
