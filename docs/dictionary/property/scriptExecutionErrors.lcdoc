@@ -1,0 +1,63 @@
+Name: scriptExecutionErrors
+
+Type: property
+
+Syntax: put the scriptExecutionErrors
+
+Summary:
+Reports a list of all possible LiveCode script execution errors.
+
+Introduced: 1.0
+
+OS: mac, windows, linux, html5
+
+Platforms: desktop, server
+
+Example:
+-- Use of scriptExecutionErros in a try statement
+on mouseUp
+  local tVar, tErr
+  try
+    put "foo" in tErr -- syntax error in this line
+  catch tErr
+    put line (item 1 of tErr) of the scriptExecutionErrors
+    -- reports details about the error
+  end try
+end mouseUp
+
+Value:
+The <scriptExecutionErrors> returns a return-separated list containing 
+descriptions of all possible <execution error|errors> <throw|thrown> 
+during handler <execute|execution>.
+
+Description:
+Use the <scriptExecutionErrors> property to get a list of all possible 
+errors <throw|thrown> during handler <execute|execution>. When a 
+script <throw|throws> an error during <execute|execution> it 
+returns a four-<item(glossary)>, comma separated error code, as follows:
+
+* <item(keyword)> 1 - the line number of the <scriptExecutionErrors> that 
+describes the error. 
+* <item(keyword)> 2 - the line number of the script where the execution 
+error occurs. 
+* <item(keyword)> 3 - the character position on the line of the token or 
+command that threw the error. 
+* <item(keyword)> 4 (optional) - the token or command that threw the 
+error.
+
+In the example above might return an error code in the **catch** clause, 
+such that the variable tErr would contain something like this:
+
+    573,4,13,in
+
+This would indicate that the error description is found on line 573 of 
+the <scriptExecutionErrors>, and that the error occured on line 4 of 
+the script, on character 13, the token 'in'.
+
+The <scriptExecutionErrors> property is read-only and cannot be set.
+
+References: catch (keyword), error message (glossary), execute (glossary), 
+execution error (glossary), item (glossary), item (keyword), 
+scriptExecutionError (message), try (control structure), 
+throw (control structure)
+
