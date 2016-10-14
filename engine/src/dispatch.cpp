@@ -1367,7 +1367,7 @@ void MCDispatch::wmdrag(Window w)
 
 		MCdragsource = nil;
 		MCdragdest = nil;
-		MCdropfield = NULL;
+		MCdropfield = nil;
 		MCdragtargetptr = NULL;
 		m_drag_source = false;
 	}
@@ -1379,7 +1379,7 @@ void MCDispatch::wmdrag(Window w)
         MCdragboard->Clear();
 		MCdragsource = nil;
 		MCdragdest = nil;
-		MCdropfield = NULL;
+		MCdropfield = nil;
 		MCdragtargetptr = NULL;
 		m_drag_source = false;
 	}
@@ -2222,7 +2222,7 @@ void MCDispatch::dodrop(bool p_source)
 		return;
 
 	// Setup global variables for a field drop
-	MCdropfield = NULL;
+	MCdropfield = nil;
 	MCdropchar = 0;
 
 	findex_t t_start_index, t_end_index;
@@ -2336,7 +2336,7 @@ void MCDispatch::dodrop(bool p_source)
     //
     // There is a case above for if they are the same field so getting here
     // implies that the source and destination are different fields.
-	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield != NULL)
+	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
@@ -2365,7 +2365,7 @@ void MCDispatch::dodrop(bool p_source)
 		//   was called as a result of a user action (drop from different field).
 		MCactivefield -> textchanged();
 	}
-	else if (MCdropfield != NULL)
+	else if (MCdropfield)
 	{
 		MCdropfield->setstate(False, CS_DRAG_TEXT);
 		MCdropfield->computedrag();
