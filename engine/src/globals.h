@@ -392,7 +392,7 @@ extern Window MCgtkthemewindow;
 extern uint4 MCruntimebehaviour;
 
 extern MCDragAction MCdragaction;
-extern MCObject *MCdragtargetptr;
+extern MCObjectHandle MCdragtargetptr;
 extern MCDragActionSet MCallowabledragactions;
 extern uint4 MCdragimageid;
 extern MCPoint MCdragimageoffset;

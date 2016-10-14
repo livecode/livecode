@@ -1315,7 +1315,7 @@ void MCDispatch::wmdrag(Window w)
 
 	// Did an object indicate that it is draggable (by setting itself as the
     // drag object) and by putting some data on the drag board?
-	if (!MCdragboard->IsEmpty() && MCdragtargetptr != NULL)
+	if (!MCdragboard->IsEmpty() && MCdragtargetptr)
 	{
 		m_drag_source = true;
 		m_drag_end_sent = false;
@@ -1325,7 +1325,7 @@ void MCDispatch::wmdrag(Window w)
 		MCImage *t_image;
 		t_image = NULL;
 		if (MCdragimageid != 0)
-			t_image = MCdragtargetptr != NULL ? MCdragtargetptr -> resolveimageid(MCdragimageid) : resolveimageid(MCdragimageid);
+			t_image = MCdragtargetptr ? MCdragtargetptr -> resolveimageid(MCdragimageid) : resolveimageid(MCdragimageid);
 		
 		MCdragsource = MCdragtargetptr;
 
@@ -1338,12 +1338,11 @@ void MCDispatch::wmdrag(Window w)
 			/* FIXME This is horrible */
 			if (MCdragtargetptr->gettype() != CT_WIDGET)
 			{
-				static_cast<MCControl *>(MCdragtargetptr)->munfocus();
+				MCdragtargetptr.GetAs<MCControl>()->munfocus();
 			}
 			else
 			{
-				MCwidgeteventmanager ->
-					event_munfocus(static_cast<MCWidget *>(MCdragtargetptr));
+				MCwidgeteventmanager->event_munfocus(MCdragtargetptr.GetAs<MCWidget>());
 			}
 			MCdragtargetptr->getcard()->ungrab();
 		}
@@ -1368,7 +1367,7 @@ void MCDispatch::wmdrag(Window w)
 		MCdragsource = nil;
 		MCdragdest = nil;
 		MCdropfield = nil;
-		MCdragtargetptr = NULL;
+		MCdragtargetptr = nil;
 		m_drag_source = false;
 	}
 	else
@@ -1380,7 +1379,7 @@ void MCDispatch::wmdrag(Window w)
 		MCdragsource = nil;
 		MCdragdest = nil;
 		MCdropfield = nil;
-		MCdragtargetptr = NULL;
+		MCdragtargetptr = nil;
 		m_drag_source = false;
 	}
 }

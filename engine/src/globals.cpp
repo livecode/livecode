@@ -253,7 +253,7 @@ MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
 uint4 MCdragimageid;
 MCPoint MCdragimageoffset;
-MCObject *MCdragtargetptr;
+MCObjectHandle MCdragtargetptr;
 uint2 MCdragdelta = 4;
 
 MCUndolist *MCundos;
