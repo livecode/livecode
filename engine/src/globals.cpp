@@ -305,7 +305,7 @@ MCFieldHandle MCdropfield;
 int4 MCdropchar;
 MCImageHandle MCactiveimage;
 MCImageHandle MCeditingimage;
-MCTooltip *MCtooltip;
+MCTooltipHandle MCtooltip;
 
 MCUIDC *MCscreen;
 MCPrinter *MCprinter;
@@ -1287,7 +1287,7 @@ int X_close(void)
 
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
-	MCtooltip = NULL;
+	MCtooltip = nil;
 
 	MCValueRelease(MChttpproxy);
 	MCValueRelease(MCpencolorname);

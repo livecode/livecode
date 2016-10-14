@@ -1313,6 +1313,7 @@ enum Chunk_term {
     CT_OPTION,
 
     CT_STACK,
+    CT_TOOLTIP,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
     CT_BACKGROUND,
