@@ -472,7 +472,7 @@ void MCField::open()
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 	}
 	else
@@ -540,7 +540,7 @@ void MCField::close()
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 		if (paragraphs != NULL)
 		{

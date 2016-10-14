@@ -1734,7 +1734,7 @@ void MCField::clearfound()
 	{
 		foundoffset = 0;
 		foundlength = 0;
-		MCfoundfield = NULL;
+		MCfoundfield = nil;
 		if (opened)
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.

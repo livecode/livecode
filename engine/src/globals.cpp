@@ -300,7 +300,7 @@ MCObjectHandle MCdragsource;
 MCObjectHandle MCdragdest;
 MCFieldHandle MCactivefield;
 MCFieldHandle MCclickfield;
-MCField *MCfoundfield;
+MCFieldHandle MCfoundfield;
 MCField *MCdropfield;
 int4 MCdropchar;
 MCImage *MCactiveimage;
