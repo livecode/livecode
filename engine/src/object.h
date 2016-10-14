@@ -572,7 +572,7 @@ protected:
 	MCParentScriptUse *parent_script;
 
 	// MW-2009-08-25: Pointer to the object's weak reference (if any).
-    template <class T> friend typename MCObjectProxy<T>::Handle MCMixinObjectHandle<T>::GetHandle();
+	template <class T> friend typename MCObjectProxy<T>::Handle MCMixinObjectHandle<T>::GetHandle() const;
 	mutable MCObjectProxyBase* m_weak_proxy;
 
 	// MW-2011-07-21: For now, make this a uint4 as imageSrc references can make
