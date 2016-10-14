@@ -228,7 +228,7 @@ extern int4 MCdropchar;
 extern MCImageHandle MCactiveimage;
 extern MCImageHandle MCeditingimage;
 extern MCTooltipHandle MCtooltip;
-extern MCStack *MCmbstackptr;
+extern MCStackHandle MCmbstackptr;
 
 extern MCUIDC *MCscreen;
 extern MCPrinter *MCprinter;

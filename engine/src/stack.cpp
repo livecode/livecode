@@ -602,7 +602,7 @@ MCStack::~MCStack()
 			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
 	if (MCmbstackptr == this)
-		MCmbstackptr = NULL;
+		MCmbstackptr = nil;
     if (MCtopstackptr == this)
     {
         MCtopstackptr = nil;

@@ -678,7 +678,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 		t_msg_box = MCmessageboxredirect;
 	else
 	{
-		if (MCmbstackptr == nil)
+		if (!MCmbstackptr)
 			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 		t_msg_box = MCmbstackptr;
 	}
