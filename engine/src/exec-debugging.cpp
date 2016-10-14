@@ -134,7 +134,7 @@ void MCDebuggingSetTraceReturn(MCExecContext& ctxtm, bool p_value)
 
 void MCDebuggingGetTraceStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCtracestackptr == nil)
+	if (!MCtracestackptr)
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 		return;
