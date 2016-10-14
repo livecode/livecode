@@ -299,7 +299,7 @@ MCMagnifyHandle MCmagnifier;
 MCObjectHandle MCdragsource;
 MCObjectHandle MCdragdest;
 MCFieldHandle MCactivefield;
-MCField *MCclickfield;
+MCFieldHandle MCclickfield;
 MCField *MCfoundfield;
 MCField *MCdropfield;
 int4 MCdropchar;

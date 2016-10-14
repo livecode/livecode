@@ -220,7 +220,7 @@ extern MCMagnifyHandle MCmagnifier;
 extern MCObjectHandle MCdragsource;
 extern MCObjectHandle MCdragdest;
 extern MCFieldHandle MCactivefield;
-extern MCField *MCclickfield;
+extern MCFieldHandle MCclickfield;
 extern MCField *MCfoundfield;
 extern MCField *MCdropfield;
 extern int4 MCdropchar;

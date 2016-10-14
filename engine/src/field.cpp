@@ -533,7 +533,7 @@ void MCField::close()
 		if ((state & CS_IBEAM) != 0)
 			getstack() -> clearibeam();
 		if (MCclickfield == this)
-			MCclickfield = NULL;
+			MCclickfield = nil;
 		if (MCactivefield == this)
 			MCactivefield = nil;
 		if (MCfoundfield == this)
@@ -2130,7 +2130,7 @@ void MCField::do_recompute(bool p_force_layout)
 	while (pgptr != paragraphs);
 	resetscrollbars(False);
 	if (MCclickfield == this)
-		MCclickfield = NULL;
+		MCclickfield = nil;
 
 	// MW-2006-03-21: Bug 3344/3377 - Fix the focus border lingering
 	if (cursorfield == this)
