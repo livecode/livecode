@@ -222,7 +222,7 @@ extern MCObjectHandle MCdragdest;
 extern MCFieldHandle MCactivefield;
 extern MCFieldHandle MCclickfield;
 extern MCFieldHandle MCfoundfield;
-extern MCField *MCdropfield;
+extern MCFieldHandle MCdropfield;
 extern int4 MCdropchar;
 extern MCImage *MCactiveimage;
 extern MCImage *MCeditingimage;

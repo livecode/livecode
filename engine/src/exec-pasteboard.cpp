@@ -635,7 +635,7 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
 
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdropfield == nil)
+	if (!MCdropfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
