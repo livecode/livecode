@@ -297,7 +297,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          -- Now attempt to process the external
          if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tLibsBuildFolder) then
             -- Add the external to the list to load
-            put char 1 to -7 of tFile["resolved"] & return after tExternals
+            put char 1 to -7 of tFile["name"] & return after tExternals
          end if
       end repeat
       delete the last char of tExternals
