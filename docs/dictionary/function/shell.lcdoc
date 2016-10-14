@@ -16,22 +16,22 @@ OS: mac, windows, linux
 Platforms: desktop, server
 
 Example:
-shell("ls -l *.txt") -- returns a listing of the current dir on Unix
+put shell("ls -l *.txt") into myList -- returns a listing of the current dir on Unix
 
 Example:
-shell(field "Command")
+get shell(field "Command") -- runs the shell command entered into the field labelled "Command"
 
 Example:
-shell("attrib main.rev +R")
+get shell("attrib main.rev +R") -- sets the read-only (+R or +r) attribute of file "main.rev" on MSWindows
 
 Example:
-get shell("say" && "hello world") -- Will say the phrase on MacOSX
+get shell("say" && "hello world") -- Will say the phrase on MacOS
 
 Parameters:
 commandLine (string):
 
 
-The result (string):
+Returns:
 The value returned by the <shell> <function> is the result of the
 <commandLine>, including any <error message|error messages> the
 <commandLine> generates. (On <Unix|Unix systems>, the <stdout> and
