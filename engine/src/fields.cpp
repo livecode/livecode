@@ -205,7 +205,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								toffset = t_where.offset;
@@ -234,7 +234,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								foundlength = MCStringGetLength(tofind);
@@ -248,7 +248,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 					case FM_STRING:
 						if (first)
 						{
-							if (MCfoundfield != NULL && MCfoundfield != this)
+							if (MCfoundfield && MCfoundfield != this)
 								MCfoundfield->clearfound();
 							foundoffset = toffset + t_where.offset;
 							foundlength = MCStringGetLength(tofind);

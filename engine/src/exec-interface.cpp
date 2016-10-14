@@ -850,7 +850,7 @@ void MCInterfaceEvalMouseStack(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -864,7 +864,7 @@ void MCInterfaceEvalFoundChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -880,7 +880,7 @@ void MCInterfaceEvalFoundText(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -896,7 +896,7 @@ void MCInterfaceEvalFoundLine(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -921,7 +921,7 @@ void MCInterfaceEvalFoundField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -4442,7 +4442,7 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 {
 	if (MCStringGetLength(p_needle) == 0)
 	{
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		ctxt .SetTheResultToCString(MCnotfoundstring);
 		return;

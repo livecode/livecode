@@ -2354,7 +2354,7 @@ void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCfoundfield != nil)
+    if (MCfoundfield)
     {
         r_object . object = MCfoundfield;
         r_object . part_id = 0;
