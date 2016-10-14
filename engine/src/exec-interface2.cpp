@@ -2320,7 +2320,7 @@ void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickfield != nil)
+    if (MCclickfield)
     {
         r_object . object = MCclickfield;
         r_object . part_id = 0;

@@ -564,7 +564,7 @@ void MCInterfaceEvalClickLoc(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickChar(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -578,7 +578,7 @@ void MCInterfaceEvalClickChar(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -594,7 +594,7 @@ void MCInterfaceEvalClickText(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -608,7 +608,7 @@ void MCInterfaceEvalClickCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -622,7 +622,7 @@ void MCInterfaceEvalClickChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -638,7 +638,7 @@ void MCInterfaceEvalClickLine(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;

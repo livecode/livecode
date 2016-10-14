@@ -749,7 +749,7 @@ Boolean MCCard::mdown(uint2 which)
 	MCtooltip->closetip();
 	MCControl *cptr = NULL;
 
-	MCclickfield = NULL;
+	MCclickfield = nil;
 	mgrabbed = True;
 	if (mfocused != NULL)
 	{
