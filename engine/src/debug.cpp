@@ -54,8 +54,7 @@ Boolean MCtracereturn = True;
 uint4 MCtraceuntil = MAXUINT2;
 uint2 MCtracedelay = 500;
 
-// MW-2004-11-17: Added to allow deletion of Message Box
-MCStack *MCmbstackptr = NULL;
+MCStackHandle MCmbstackptr = nil;
 
 Breakpoint *MCbreakpoints = nil;
 uint2 MCnbreakpoints = 0;
@@ -144,10 +143,10 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 	if (!MCModeHandleMessageBoxChanged(ctxt, p_string))
 	{
 		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
-		if (MCmbstackptr == NULL)
+		if (!MCmbstackptr)
 			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 			
-		if (MCmbstackptr != NULL)
+		if (MCmbstackptr)
 		{
 			Window_mode newmode = MCmbstackptr->userlevel() == 0 ? WM_MODELESS
 														: (Window_mode)(MCmbstackptr->userlevel() + WM_TOP_LEVEL_LOCKED);
