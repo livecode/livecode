@@ -2332,7 +2332,7 @@ void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactivefield != nil)
+    if (MCactivefield)
     {
         r_object . object = MCactivefield;
         r_object . part_id = 0;

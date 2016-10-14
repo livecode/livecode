@@ -767,7 +767,7 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 
 void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
 		r_selected_range = MCRangeMake(UINDEX_MAX, 0);
@@ -789,7 +789,7 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 
 void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_index = 0;
 		return;
@@ -809,7 +809,7 @@ void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoi
 
 void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_first_line_rect = MCRectangleMake(0, 0, 0, 0);
 		r_actual_range = MCRangeMake(UINDEX_MAX, 0);
@@ -836,7 +836,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
 {
-    if (MCactivefield == nil)
+    if (!MCactivefield)
     {
         r_chars = nil;
         r_char_count = 0;
@@ -860,7 +860,7 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
     // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
@@ -1077,7 +1077,7 @@ static void synthesize_move_with_shift(MCField *p_field, Field_translations p_ac
 // and dispatch them rather than go through actions.
 void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	switch(p_action)

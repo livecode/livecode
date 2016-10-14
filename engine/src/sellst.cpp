@@ -144,7 +144,7 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 	if (objects != NULL && (objptr->getstack() != objects->ref->getstack()
 	                        || objects->ref->gettype() < CT_GROUP))
 		clear(False);
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield->unselect(True, True);
 	MCSelnode *nodeptr = new (nothrow) MCSelnode(objptr);
 	nodeptr->appendto(objects);

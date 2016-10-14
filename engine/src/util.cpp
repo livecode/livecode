@@ -1849,7 +1849,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
 	MCeditingimage = NULL;
-	if (MCactivefield != NULL
+	if (MCactivefield
 	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
 		MCactivefield->getstack()->kunfocus();
 	ctxt . GetObject()->getstack()->resetcursor(True);

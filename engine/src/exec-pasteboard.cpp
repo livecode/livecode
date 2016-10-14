@@ -1050,7 +1050,7 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> copytext();
 	else if (MCactiveimage != NULL)
 		MCactiveimage -> copyimage();
@@ -1070,7 +1070,7 @@ void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_
 
 void MCPasteboardExecCut(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> cuttext();
 	else if (MCactiveimage != NULL)
 		MCactiveimage -> cutimage();

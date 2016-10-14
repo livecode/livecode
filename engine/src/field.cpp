@@ -535,7 +535,7 @@ void MCField::close()
 		if (MCclickfield == this)
 			MCclickfield = NULL;
 		if (MCactivefield == this)
-			MCactivefield = NULL;
+			MCactivefield = nil;
 		if (MCfoundfield == this)
 		{
 			foundoffset = 0;
@@ -572,7 +572,7 @@ void MCField::kfocus()
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
         
-        if (MCactivefield != NULL && MCactivefield != this)
+        if (MCactivefield && MCactivefield != this)
             MCactivefield->unselect(True, True);
         MCactivefield = this;
         clearfound();
@@ -662,7 +662,7 @@ void MCField::kunfocus()
 			if (!(state & CS_KFOCUSED) && MCactivefield == this
 			        && !focusedparagraph->isselection()
 			        && firstparagraph == lastparagraph)
-				MCactivefield = NULL;
+				MCactivefield = nil;
 		}
 	}
     
