@@ -88,7 +88,7 @@ private:
 #endif
 
 #endif
-	MCPlayer *nextplayer;
+	MCPlayerHandle nextplayer;
     
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
