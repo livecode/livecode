@@ -1831,7 +1831,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	if (t_new_tool == MCcurtool)
 		return;
 
-	if (MCeditingimage != NULL)
+	if (MCeditingimage)
 		MCeditingimage -> canceldraw();
 
 	MCcurtool = t_new_tool;
@@ -1841,7 +1841,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		MCselected->clear(True);
 	if (MCactiveimage && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
-	MCeditingimage = NULL;
+	MCeditingimage = nil;
 	if (MCactivefield
 	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
 		MCactivefield->getstack()->kunfocus();
