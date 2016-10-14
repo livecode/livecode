@@ -278,7 +278,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				MCdefaultstackptr->getcard()->message(MCM_shut_down);
 				MCquit = True;
 				MCexitall = True;
-				MCtracestackptr = NULL;
+				MCtracestackptr = nil;
 				MCtraceabort = True;
 				MCtracereturn = True;
 				break;

@@ -252,7 +252,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	MCretcode = 0;
 	MCquit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
     

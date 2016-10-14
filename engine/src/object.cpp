@@ -932,7 +932,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	lockforexecution();
     MCExecContext ctxt(this, hlist, hptr);
-	if (MCtracestackptr != NULL && MCtracereturn)
+	if (MCtracestackptr && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
@@ -989,7 +989,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 
     MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
 	ctxt.SetParentScript(parentscript);
-	if (MCtracestackptr != NULL && MCtracereturn)
+	if (MCtracestackptr && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())

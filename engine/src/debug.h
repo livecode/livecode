@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_DEBUG_H__
 #define __MC_DEBUG_H__
 
+#include "stack.h"
+
 //
 // script debugger functions
 //
@@ -44,7 +46,7 @@ struct Watchvar
 #define MAX_CONTEXTS 100
 
 extern MCExecContext *MCECptr;
-extern MCStack *MCtracestackptr;
+extern MCStackHandle MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;
 extern Boolean MCtraceabort;

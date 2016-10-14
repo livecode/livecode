@@ -929,7 +929,7 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 	MCquit = True;
 	MCquitisexplicit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
 }

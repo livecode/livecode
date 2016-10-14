@@ -89,7 +89,7 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 			MCdefaultstackptr->getcard()->message(MCM_shut_down);
 			MCquit = True;
 			MCexitall = True;
-			MCtracestackptr = NULL;
+			MCtracestackptr = nil;
 			MCtraceabort = True;
 			MCtracereturn = True;
 			r_terminate = true;

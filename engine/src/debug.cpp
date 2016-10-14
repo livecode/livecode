@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecContext *MCECptr;
-MCStack *MCtracestackptr;
+MCStackHandle MCtracestackptr;
 Window MCtracewindow;
 Boolean MCtrace;
 Boolean MCtraceabort;
@@ -177,7 +177,7 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	MCU_resetprops(True);
 
 	MCtrace = False;
-	if (MCtracestackptr != NULL)
+	if (MCtracestackptr)
 		MCtracewindow = MCtracestackptr->getw();
 	else
 		MCtracewindow = ctxt.GetObject()->getw();
@@ -214,7 +214,7 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 			exitall = True;
 		}
 		else
-			if (MCtracestackptr != NULL)
+			if (MCtracestackptr)
 				MCtrace = True;
 	 }
 	 MCcheckstack = oldcheck;
