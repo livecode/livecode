@@ -1409,7 +1409,7 @@ void MCControl::leave()
 		}
 		oldfocused->message(MCM_drag_leave);
 		MCdragaction = DRAG_ACTION_NONE;
-		MCdragdest = NULL;
+		MCdragdest = nil;
 	}
 	else
 		oldfocused->message(MCM_mouse_leave);

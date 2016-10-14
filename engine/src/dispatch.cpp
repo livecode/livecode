@@ -1366,7 +1366,7 @@ void MCDispatch::wmdrag(Window w)
         MCdragboard->PushUpdates(true);
 
 		MCdragsource = nil;
-		MCdragdest = NULL;
+		MCdragdest = nil;
 		MCdropfield = NULL;
 		MCdragtargetptr = NULL;
 		m_drag_source = false;
@@ -1378,7 +1378,7 @@ void MCDispatch::wmdrag(Window w)
         // an error after placing some of the drag data).
         MCdragboard->Clear();
 		MCdragsource = nil;
-		MCdragdest = NULL;
+		MCdragdest = nil;
 		MCdropfield = NULL;
 		MCdragtargetptr = NULL;
 		m_drag_source = false;
@@ -2188,7 +2188,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 void MCDispatch::dodrop(bool p_source)
 {
-	if (!m_drag_end_sent && MCdragsource && (MCdragdest == NULL || MCdragaction == DRAG_ACTION_NONE))
+	if (!m_drag_end_sent && MCdragsource && (!MCdragdest || MCdragaction == DRAG_ACTION_NONE))
 	{
 		// We are only the source
 		m_drag_end_sent = true;
@@ -2227,9 +2227,9 @@ void MCDispatch::dodrop(bool p_source)
 
 	findex_t t_start_index, t_end_index;
 	t_start_index = t_end_index = 0;
-	if (MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD)
+	if (MCdragdest && MCdragdest -> gettype() == CT_FIELD)
 	{
-		MCdropfield = static_cast<MCField *>(MCdragdest);
+		MCdropfield = MCdragdest.GetAs<MCField>();
 		if (MCdragdest -> getstate(CS_DRAG_TEXT))
 		{
 			MCdropfield -> locmark(False, False, False, False, True, t_start_index, t_end_index);
@@ -2243,7 +2243,7 @@ void MCDispatch::dodrop(bool p_source)
 
 	// If dest is a field and the engine handled the accepting of the operation
 	bool t_auto_dest;
-	t_auto_dest = MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
+	t_auto_dest = MCdragdest && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
 
     // Is the engine handling this drag internally AND the same field is both
     // the source and destination for the drag?
@@ -2315,8 +2315,7 @@ void MCDispatch::dodrop(bool p_source)
 	if (t_auto_source)
 		MCdragsource.GetAs<MCField>()->selectedmark(False, t_src_start, t_src_end, False);
 
-	bool t_auto_drop;
-    t_auto_drop = MCdragdest != NULL;
+	bool t_auto_drop = MCdragdest.IsValid();
     if (t_auto_drop)
     {
 #ifdef WIDGETS_HANDLE_DND

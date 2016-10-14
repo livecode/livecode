@@ -649,7 +649,7 @@ void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragdest == nil)
+	if (!MCdragdest)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1882,7 +1882,7 @@ void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_obje
 
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdragdest;
         r_object . part_id = 0;
@@ -1894,7 +1894,7 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 
 void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdropfield;
         r_object . part_id = 0;
