@@ -288,7 +288,7 @@ void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 				t_parentscript = ctxt . GetParentScript();
 				if ((t_parentscript == NULL && MCbreakpoints[i].object == ctxt.GetObject()) ||
 					(t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject()))
-                    MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
+                    MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, *MCbreakpoints[i].info);
 			}
 	}
 }
@@ -375,17 +375,18 @@ void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
 
 void MCB_clearbreaks(MCObject *p_for_object)
 {
-	for(unsigned int n = 0; n < MCnbreakpoints; ++n)
-		if (p_for_object == NULL || MCbreakpoints[n] . object == p_for_object)
+	for(size_t n = 0; n < MCnbreakpoints; ++n)
+    {
+		if (p_for_object == nil || MCbreakpoints[n].object == p_for_object)
 		{
-			MCbreakpoints[n] . object = NULL;
-			MCValueAssign(MCbreakpoints[n] . info, kMCEmptyString);
+			MCbreakpoints[n].Clear();
 		}
+    }
 	
-	if (p_for_object == NULL)
+	if (p_for_object == nil && MCbreakpoints != nil)
 	{
 		MCnbreakpoints = 0;
-		free(MCbreakpoints);
+		MCMemoryDestroy(MCbreakpoints);
 		MCbreakpoints = nil;
 	}
 }
@@ -404,7 +405,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 		// MW-2005-06-26: Fix breakpoint crash issue - ignore any breakpoints with NULL object
 		for (uint32_t i = 0 ; i < MCnbreakpoints ; i++)
 		{
-			if (MCbreakpoints[i] . object != NULL)
+			if (MCbreakpoints[i].object)
 			{
 				MCAutoListRef t_breakpoint;
 				t_success = MCListCreateMutable(',', &t_breakpoint);
@@ -423,9 +424,9 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 								MCListAppend(*t_breakpoint, *t_line);
 				}
 				
-				if (t_success && !MCStringIsEmpty(MCbreakpoints[i] . info))
+				if (t_success && !MCStringIsEmpty(*MCbreakpoints[i].info))
 				{
-					t_success = MCListAppend(*t_breakpoint, MCbreakpoints[i] . info);
+					t_success = MCListAppend(*t_breakpoint, *MCbreakpoints[i].info);
 				}
 
 				if (t_success)
@@ -515,15 +516,12 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
             if (t_valid_break)
 			{
 				Breakpoint *t_new_breakpoints;
-				t_new_breakpoints = (Breakpoint *)realloc(MCbreakpoints, sizeof(Breakpoint) * (MCnbreakpoints + 1));
-				if (t_new_breakpoints != nil)
-				{
-					MCbreakpoints = t_new_breakpoints;
-					MCbreakpoints[MCnbreakpoints] . object = t_object . object;
-					MCbreakpoints[MCnbreakpoints] . line = (uint32_t)t_line;
-					MCbreakpoints[MCnbreakpoints] . info = MCValueRetain(*t_info);
-					MCnbreakpoints++;
-				}
+                if (!MCMemoryReallocate(MCbreakpoints, sizeof(Breakpoint) * (MCnbreakpoints + 1), t_new_breakpoints))
+                    break;
+                
+                MCbreakpoints = t_new_breakpoints;
+                new (&MCbreakpoints[MCnbreakpoints]) Breakpoint(t_object.object->GetHandle(), t_line, *t_info);
+                MCnbreakpoints++;
 			}
 		}
 		t_last_offset = t_return_offset + 1;
@@ -534,16 +532,17 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 
 void MCB_clearwatches(void)
 {
-	while (MCnwatchedvars--)
+	for (size_t i = 0; i < MCnwatchedvars; i++)
 	{
-		MCNameDelete(MCwatchedvars[MCnwatchedvars].handlername);
-		MCNameDelete(MCwatchedvars[MCnwatchedvars].varname);
-		MCValueRelease(MCwatchedvars[MCnwatchedvars].expression);
+		MCwatchedvars[i].Clear();
 	}
-	MCnwatchedvars = 0;
 
-	free(MCwatchedvars);
-	MCwatchedvars = nil;
+    if (MCwatchedvars != nil)
+    {
+        MCnwatchedvars = 0;
+        MCMemoryDestroy(MCwatchedvars);
+        MCwatchedvars = nil;
+    }
 }
 
 void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
@@ -612,23 +611,25 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 				t_object . object != nil)
 			{
 				Watchvar *t_new_watches;
-				t_new_watches = (Watchvar *)realloc(MCwatchedvars, sizeof(Watchvar) * (MCnwatchedvars + 1));
-				if (t_new_watches != nil)
-				{
-					MCwatchedvars = t_new_watches;
-					if (t_resolved_object)
-						MCwatchedvars[MCnwatchedvars] . object = t_object . object;
-					else
-						MCwatchedvars[MCnwatchedvars] . object = nil;
-					
-					if (MCStringGetLength(*t_hname) != 0)
-						/* UNCHECKED */ MCNameCreate(*t_hname, MCwatchedvars[MCnwatchedvars] . handlername);
-					else
-						MCwatchedvars[MCnwatchedvars] . handlername = nil;
-					/* UNCHECKED */ MCNameCreate(*t_vname, MCwatchedvars[MCnwatchedvars] . varname);
-					MCwatchedvars[MCnwatchedvars] . expression = MCValueRetain(*t_express);
-					MCnwatchedvars++;
-				}
+                if (!MCMemoryReallocate(MCwatchedvars, sizeof(Watchvar) * (MCnwatchedvars + 1), t_new_watches))
+                {
+                    t_success = false;
+                    break;
+                }
+                
+                MCObjectHandle t_objecthandle;
+                MCNewAutoNameRef t_handlername;
+                MCNewAutoNameRef t_varname;
+                
+                if (t_resolved_object)
+                    t_objecthandle = t_object.object;
+                
+                /* UNCHECKED */ MCNameCreate(*t_hname, &t_handlername);
+                /* UNCHECKED */ MCNameCreate(*t_vname, &t_varname);
+                
+                MCwatchedvars = t_new_watches;
+                new (&MCwatchedvars[MCnwatchedvars]) Watchvar(t_objecthandle, *t_handlername, *t_varname, *t_express);
+                MCnwatchedvars++;
 			}
 		}
 		t_last_offset = t_return_offset + 1;
@@ -653,7 +654,7 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 			
 			if (t_success)
 			{
-				if (MCwatchedvars[i] . object != NULL)
+				if (MCwatchedvars[i].object)
 				{
 					MCAutoValueRef t_var_id;
 					t_success = MCwatchedvars[i] . object -> names(P_LONG_ID, &t_var_id) &&
@@ -665,18 +666,18 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 						
 			if (t_success)
 			{
-				if (MCwatchedvars[i] . handlername == NULL)
+				if (!MCwatchedvars[i].handlername)
 					t_success = MCListAppend(*t_watched_var, kMCEmptyString);
 				else
-					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].handlername);
+					t_success = MCListAppend(*t_watched_var, *MCwatchedvars[i].handlername);
 			}
 			
 			if (t_success)
-				t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].varname);
+				t_success = MCListAppend(*t_watched_var, *MCwatchedvars[i].varname);
 
 			// SN-2014-09-18: [[ Bug 13453 ]] A watched variable's expression is never nil
 			if (t_success)
-				t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].expression);
+				t_success = MCListAppend(*t_watched_var, *MCwatchedvars[i].expression);
 
 			if (t_success)
 				t_success = MCListAppend(*t_watches_list, *t_watched_var);

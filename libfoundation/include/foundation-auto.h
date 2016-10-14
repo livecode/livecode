@@ -96,9 +96,14 @@ public:
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
     }
     
-    inline T& operator ! (void)
+    inline operator bool ()
     {
-		return m_value;
+        return m_value != nil;
+    }
+    
+    inline bool operator ! ()
+    {
+		return m_value == nil;
     }
     
     // The give method places the given value into the container without
