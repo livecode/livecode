@@ -139,7 +139,7 @@ void MCGraphicsExecFlipSelection(MCExecContext& ctxt, bool p_horizontal)
         return;
     }
     
-	if (MCactiveimage != nil)
+	if (MCactiveimage)
 		MCactiveimage->flipsel(p_horizontal);
 }
 
@@ -163,7 +163,7 @@ void MCGraphicsExecFlipImage(MCExecContext& ctxt, MCImage *p_image, bool p_horiz
 	MCcurtool = MColdtool;
     
     // IM-2013-06-28: [[ Bug 10999 ]] ensure MCactiveimage is not null when calling endsel() method
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
         MCactiveimage -> endsel();
 }
 

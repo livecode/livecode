@@ -1052,7 +1052,7 @@ void MCPasteboardExecCopy(MCExecContext& ctxt)
 {
 	if (MCactivefield)
 		MCactivefield -> copytext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
 	else
 		MCselected -> copy();
@@ -1072,7 +1072,7 @@ void MCPasteboardExecCut(MCExecContext& ctxt)
 {
 	if (MCactivefield)
 		MCactivefield -> cuttext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
 	else
 		MCselected -> cut();

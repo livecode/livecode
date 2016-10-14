@@ -303,7 +303,7 @@ MCFieldHandle MCclickfield;
 MCFieldHandle MCfoundfield;
 MCFieldHandle MCdropfield;
 int4 MCdropchar;
-MCImage *MCactiveimage;
+MCImageHandle MCactiveimage;
 MCImage *MCeditingimage;
 MCTooltip *MCtooltip;
 

@@ -2096,7 +2096,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 	}
 	
-	if (MCactiveimage != NULL && MCclipboard->HasImage())
+	if (MCactiveimage && MCclipboard->HasImage())
 	{
         // There is a selected image object and there is an image on the
         // clipboard so paste the image into it.

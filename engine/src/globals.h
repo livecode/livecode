@@ -224,7 +224,7 @@ extern MCFieldHandle MCclickfield;
 extern MCFieldHandle MCfoundfield;
 extern MCFieldHandle MCdropfield;
 extern int4 MCdropchar;
-extern MCImage *MCactiveimage;
+extern MCImageHandle MCactiveimage;
 extern MCImage *MCeditingimage;
 extern MCTooltip *MCtooltip;
 extern MCStack *MCmbstackptr;

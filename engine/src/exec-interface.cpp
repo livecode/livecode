@@ -1132,7 +1132,7 @@ void MCInterfaceEvalSelectedField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalSelectedImage(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactiveimage == nil)
+	if (!MCactiveimage)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -2286,7 +2286,7 @@ void MCInterfaceExecDelete(MCExecContext& ctxt)
 {
 	if (MCactivefield)
 		MCactivefield->deleteselection(False);
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage->delimage();	
 	else
 		MCselected->del();
