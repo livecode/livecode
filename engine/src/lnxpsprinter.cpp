@@ -68,7 +68,7 @@ char *getdefaultprinter(void)
     MCAutoStringRef t_string;
     char *t_cstring;
 
-	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
+    MCtemplatestack->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 
     /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
     /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
