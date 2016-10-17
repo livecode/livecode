@@ -116,7 +116,7 @@ public:
 	{
 		if (m_argument_count == kMaxArguments ||
 			!Allocate(sizeof(void *),
-					  __alignof__(void *),
+					  alignof(void *),
 					  m_argument_values[m_argument_count]))
 		{
 			return MCErrorThrowOutOfMemory();
@@ -208,13 +208,13 @@ __MCScriptComputeSlotAttributes(const MCResolvedTypeInfo& p_slot_type,
 		MCHandlerTypeInfoIsForeign(p_slot_type.type))
 	{
 		r_slot_size = sizeof(void*);
-		r_slot_align = __alignof__(void *);
+		r_slot_align = alignof(void*);
 		r_slot_drop = nil;
 		return;
 	}
-	
+
 	r_slot_size = sizeof(void*);
-	r_slot_align = __alignof__(void*);
+	r_slot_align = alignof(void*);
 	r_slot_drop = __MCScriptDropValueRef;
 }
 
