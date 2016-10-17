@@ -21,13 +21,18 @@ Example:
 get flushEvents("all")
 
 Parameters:
-eventType:
-One of the following: all: ignore all waiting events mouseDown: ignore
-mouse presses mouseUp: ignore mouse releases keyDown: ignore keypresses
-keyUp: ignore key releases autoKey: ignore key repeats disk: ignore
-disk-related events activate: ignore windows being brought to the front
-highLevel: ignore Apple Events (on Mac OS and OS X systems) system:
-ignore operating system events
+eventType (string):
+One of the following:
+-  all: ignore all waiting events
+-  mouseDown: ignore mouse presses
+-  mouseUp: ignore mouse releases
+-  keyDown: ignore keypresses
+-  keyUp: ignore key releases
+-  autoKey: ignore key repeats
+-  disk: ignore disk-related events
+-  activate: ignore windows being brought to the front
+-  highLevel: ignore Apple Events (on Mac OS and OS X systems)
+-  system: ignore operating system events
 
 Returns:
 The <flushEvents> <function> always <return|returns> empty.
