@@ -26,35 +26,39 @@ Example:
 read from process myProcess for 10 int4s in 250 milliseconds
 
 Parameters:
-processName:
+processName (string):
 The processName specifies the name and location of the process you want
 to read from. It must be the same as the path you used with the open
-process command.>*Important:* The processName is case-sensitive, even on
-platforms where file names are not case-sensitive. It must be exactly
-the same--including the case of characters--as the name you used with
-the open processcommand.
+process command.
+>*Important:*  The <processName> is <case-sensitive>, even on
+> <platform|platforms> where file names are not <case-sensitive>. It
+> must be exactly the same--including the case of characters--as the
+> name you used with the <open process> <command>.
 
-start:
-The start specifies the character or byte position in the process output
-where you want to begin reading.
 
-chunkType:
-One of chars, characters, words, items, lines, int1, uInt1, int2, uint2,
-int4, or uint4. The read from process command reads amount of the
-specified chunkType. If you don't specify a chunkType, amount characters
-are read.
+start (string):
+The <start> specifies the <character> or <byte> position in the
+<process> output where you want to begin reading.
+
+chunkType (enum):
+The <chunkType> is one of chars, characters, words, items, lines, int1,
+uInt1, int2, uint2, int4, or uint4. The <read from process> <command>
+reads <amount> of the specified <chunkType>. If you don't specify a
+<chunkType>, <amount> <characters> are read.
 
 time:
-The time to wait for the read to be completed, in milliseconds, seconds,
-or ticks.
+The <time> is the time to wait for the read to be completed, in
+<milliseconds>, seconds, or <ticks>.
 
 string (string):
-When LiveCode encounters the string in the process output, it stops
-reading. If the string is not encountered, the read from process command
-continues reading as long as there is data to be read.
+The <string> is any <expression> that <evaluate|evaluates> to a
+<string>. When LiveCode encounters the <string> in the <process> output,
+it stops reading. If the <string> is not encountered, the <read from
+process> <command> continues reading as long as there is data to be
+read. 
 
-amount:
-A positive integer and specifies how much data to read.
+amount (integer):
+The <amount> is a positive <integer> and specifies how much data to read.
 
 It:
 The data is placed in the <it variable> after reading. If you specified
@@ -77,37 +81,13 @@ Description:
 Use the <read from process> <command> to get the output data from
 another program.
 
->*Important:*  The <processName> is <case-sensitive>, even on
-> <platform|platforms> where file names are not <case-sensitive>. It
-> must be exactly the same--including the case of characters--as the
-> name you used with the <open processcommand>.
-
-The <start> specifies the <character> or <byte> position in the
-<process> output where you want to begin reading.
-
-The <string> is any <expression> that <evaluate|evaluates> to a
-<string>. When LiveCode encounters the <string> in the <process> output,
-it stops reading. If the <string> is not encountered, the <read from
-process> <command> continues reading as long as there is data to be
-read. 
-
-The <amount> is a positive <integer> and specifies how much data to
-read. 
-
-The <chunkType> is one of chars, characters, words, items, lines, int1,
-uInt1, int2, uint2, int4, or uint4. The <read from process> <command>
-reads <amount> of the specified <chunkType>. If you don't specify a
-<chunkType>, <amount> <characters> are read.
-
-The <time> is the time to wait for the read to be completed, in
-<milliseconds>, seconds, or <ticks>.
-
-The until <string> form reads data until the specified string is
-encountered. The until end and until eof forms read data until the
-process specifies it is finished. When until empty is used the data is
-read in at specified time intervals. If, when checked, the data is empty
-the <openProcesses function> is used to check whether the process has
-finished. 
+The **until** form reads data until the specified string is
+encountered. 
+The until end and until eof forms read data until the
+process specifies it is finished. 
+When until empty is used the data is read in at specified time intervals.
+If, when checked, the data is empty, the <openProcesses function> is used 
+to check whether the process has finished. 
 
 Changes:
 Support for using the read from process command on OS X systems was
