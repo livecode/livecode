@@ -21,17 +21,11 @@ ad:
 The name of the loaded ad to delete.
 
 The result:
-If successful, the result is empty.
-The result contains: not registered with service, if you did not
-register your app id using <mobileAdRegister> before calling
-<mobileAdDelete>. 
+-   'empty': If successful.
+-   'not registered with service': if you did not register your app id using <mobileAdRegister> before calling <mobileAdCreate>. 
+-   'ad already exists': if an ad of the given name already exists.
+-   'could not create ad': if the ad could not be created. This is the case, if the app does not have Internet permissions or the registered app key is not valid.
 
-The result contains: ad cannot be found, if an ad of the given name
-cannot be found.
-
-The result contains: could not create ad, if the ad could not be
-created. This is the case, if the app does not have Internet permissions
-or the registered app key is not valid.
 
 Description:
 Use the <mobileAdDelete> command to delete a given ad.
