@@ -2,7 +2,7 @@ Name: libURLFollowHttpRedirects
 
 Type: command
 
-Syntax: libURLFollowHttpRedirects &lt;true|false&gt;
+Syntax: libURLFollowHttpRedirects {true|false}
 
 Summary:
 Set this to true if you want libURL GET requests to follow HTTP
