@@ -40,8 +40,10 @@
  * standard (because C++'s offsetof is only present for C
  * compatibility and is only defined for operations on C types).
  * Disable GCC's offsetof warnings for these macros */
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
 
 MC_PICKLE_BEGIN_RECORD(MCScriptDefinedType)
     MC_PICKLE_UINDEX(index)
@@ -192,7 +194,9 @@ MC_PICKLE_BEGIN_RECORD(MCScriptModule)
 MC_PICKLE_END_RECORD()
 
 /* Re-enable invalid-offsetof warnings */
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -941,8 +941,10 @@ inline bool MCScriptBytecodeDispatchR(MCScriptBytecodeOp p_op,
 									  const Visitor& p_visitor,
 									  Arg& p_arg)
 {
+#ifdef __GNUC__
 	_Pragma("GCC diagnostic push")
 	_Pragma("GCC diagnostic error \"-Wswitch\"")
+#endif
 	switch(p_op)
 	{
 		MC_SCRIPT_DISPATCH_BYTECODE_OP(Jump)
@@ -959,8 +961,10 @@ inline bool MCScriptBytecodeDispatchR(MCScriptBytecodeOp p_op,
 		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignArray)
 		MC_SCRIPT_DISPATCH_BYTECODE_OP(Reset)
 	}
+#ifdef __GNUC__
 	_Pragma("GCC diagnostic pop")
-	
+#endif
+
 	return true;
 }
 
