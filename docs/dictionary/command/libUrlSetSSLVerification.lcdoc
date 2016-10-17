@@ -4,6 +4,9 @@ Type: command
 
 Syntax: libURLSetSSLVerification {true|false}
 
+Summary:
+Allows for server credential authentication.
+
 Associations: internet library
 
 Introduced: 2.5
