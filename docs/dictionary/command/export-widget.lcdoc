@@ -2,7 +2,7 @@ Name: export widget
 
 Type: command
 
-Syntax: export <widget> to array arrayVar
+Syntax: export <widget> to array <arrayVar>
 
 Summary:
 Exports the state of the given widget in a form which can be imported
@@ -15,7 +15,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, mobile
 
 Example:
-export widget 1 to array tMyArray
+export widget 1 to array myArray
 
 Parameters:
 widget:
@@ -35,8 +35,7 @@ typically the values of all the widget's persistent properties, although
 its exact structure is defined by the widget.
 
 >*Note:* The <export widget> command is subject to change throughout the
-> 8.0 
-development cycle.
+> 8.0 development cycle.
 
 References: import widget (command), create widget (command)
 
