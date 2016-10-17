@@ -2,7 +2,7 @@ Name: encrypt using rsa
 
 Type: command
 
-Syntax: encrypt <source> using rsa with {public | private} key <key> [and passphrase <passphrase>]
+Syntax: encrypt <message> using rsa with {public | private} key <key> [and passphrase <passphrase>]
 
 Summary:
 Encrypt data using the RSA algorithm.
@@ -22,9 +22,6 @@ Example:
 encrypt thisMessage using rsa with private key privateKey
 
 Parameters:
-source:
-
-
 key:
 The key to be used for the encryption, in PEM format
 
@@ -38,22 +35,22 @@ Description:
 Use the <encrypt using rsa> command to encrypt a message using RSA
 public key encryption.
 
-Use the form 
-encrypt <message> with public key <key> 
-to encode a message that you only want to be decoded by the holder of
-the private key.
+To encode a message that you only want to be decoded by the holder of
+the private key, use the form:
 
-Use the form 
-encrypt <message> with private key <key> 
-to encode a message that a receiver can then verify has come from one of
-the holders of the private key (this is a signing operation).
+    encrypt <message> with public key <key> 
 
-Generating key pairs
-Public-private key pairs can be generated using the OpenSSL suite of
-command-line tools. For example: openssl genrsa -out private_key.pem 512
-openssl rsa -pubout -in private_key.pem -out public_key.pem
-Will generate a key pair of size 512-bits, placing the private key in
-private_key.pem and the public key in public_key.pem.
+As a signing operation, to encode a message that a receiver can then verify 
+has come from one of the holders of the private key, use the form:
+
+    encrypt <message> with private key <key> 
+
+> **Generating key pairs - **
+> Public-private key pairs can be generated using the OpenSSL suite of
+> command-line tools. For example: openssl genrsa -out private_key.pem 512
+> openssl rsa -pubout -in private_key.pem -out public_key.pem
+> Will generate a key pair of size 512-bits, placing the private key in
+> private_key.pem and the public key in public_key.pem.
 
 For more information on these utilities see
 http://www.openssl.org/docs/apps/rsa.html and
