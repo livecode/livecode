@@ -28,12 +28,14 @@ libURLftpUpload myData,"ftp://me:secret@example.net/file.txt"
 
 Parameters:
 value (string):
-
+The data to upload.
 
 uploadURL:
 The uploadURL specifies the server and location to upload to,
-in the form of an FTP URL. callbackMessage: The name of a message to
-send after the URL is uploaded.
+in the form of an FTP URL. 
+
+callbackMessage: 
+The name of a message to send after the URL is uploaded.
 
 Description:
 Use the <libURLftpUpload> <command> to put a <file> on a
@@ -72,10 +74,8 @@ command is part of the <Internet library> and is implemented in a
 particular, do not use constructions like the following, which will sit
 forever without <upload|uploading> the file:
 
-    libURLftpUpload field "Upload Data" ,myURL wait until the URLStatus \
-          of
-
-    myURL is "uploaded" -- DON'T DO THIS
+    libURLftpUpload field "Upload Data" ,myURL wait until the \
+        URLStatus of myURL is "uploaded" -- DON'T DO THIS
 
 
 The <URLStatus> <function(control structure)> returns the status of the
