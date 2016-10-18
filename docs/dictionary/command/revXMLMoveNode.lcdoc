@@ -2,7 +2,7 @@ Name: revXMLMoveNode
 
 Type: command
 
-Syntax: revXMLMoveNode treeID, <sourceNode>, <destinationNode> [, <location>] [, <relationship>]
+Syntax: revXMLMoveNode <treeID>, <sourceNode>, <destinationNode> [, <location>] [, <relationship>]
 
 Summary:
 Moves a node in an XML tree to the specified position
@@ -24,6 +24,10 @@ Example:
 revXMLMoveNode tTreeId, tTargetNode, tDestinationNode, "before", "child"
 
 Parameters:
+treeId:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
+
 sourceNode:
 The path of the node to be moved
 
@@ -43,9 +47,6 @@ sourceNode will be placed alongside the destinationNode. "child" means
 that the sourceNode will be placed below the destinationNode (i.e. as a
 child of it). If no relationship is specified the default is "child"
 
-treeId:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
 
 The result:
 If the <revXMLMoveNode> command encounters an error, the result is set
