@@ -2,7 +2,7 @@ Name: revXMLRPC_GetMethod
 
 Type: command
 
-Syntax: revXMLRPC_GetMethod(<XML-RPC document>)
+Syntax: revXMLRPC_GetMethod(<documentID>)
 
 Summary:
 Returns the name of the method in an XML-RPC document structure.
