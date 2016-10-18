@@ -2,7 +2,7 @@ Name: revXMLRPC_AddParam
 
 Type: command
 
-Syntax: revXMLRPC_AddParam <XML-RPC document>, <dataType>, <dataValue>
+Syntax: revXMLRPC_AddParam <documentID>, <dataType>, <dataValue>
 
 Summary:
 Adds a single parameter to an XML-RPC document structure.
@@ -24,28 +24,37 @@ Example:
 revXMLRPC_AddParam theRequest, "base64", base64Encode(theBinaryData)
 
 Example:
-put "<struct>" & \
-    "<member><name>left</name>" & \
-    "<value><int>10</int></value></member>" & \
-    "<member><name>top</name>" & \
-    "<value><int>50</int></value></member>" & \
-    "<member><name>right</name>" & \
-    "<value><int>390</int></value></member>" & \
-    "<member><name>bottom</name>" & \
-    "<value><int>240</int></value></member>" & \
-    "</struct>" into theStruct
+put "&lt;struct&gt;" & \
+    "&lt;member&gt;&lt;name&gt;left&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;10&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;top&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;50&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;right&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;390&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;bottom&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;240&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;/struct&gt;" into theStruct
 revXMLRPC_AddParam theDocID, "xml", theStruct
 
 Parameters:
-dataType:
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you
+created the XML-RPC request.
+
+dataType(enum):
 The type of data contained in the <dataValue> parameter.
+ - "base64": the value is base64-encoded
+ - "boolean": the value is true or false
+ - "dateTime.iso8601": the value is an Internet date
+ - "double": the value is a floating-point number
+ - "int" or "i4": the value is an integer number
+ - "string": the value is a string of characters
+ - "array": the value is an array of data (see below)
+ - "xml": the value is data in xml-format (see below)
 
 dataValue:
 The content of the data you want to add as a new parameter.
 
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you
-created the XML-RPC request.
 
 The result:
 If the <revXMLRPC_AddParam> <command> encounters an error,
@@ -56,32 +65,19 @@ Description:
 Use the <revXMLRPC_AddParam> <command> to add a single parameter of a 
 given type to an existing <XML-RPC document>.
 
-The <dataType> can be any of the following:
-
- - "base64": the value is base64-encoded
- - "boolean": the value is true or false
- - "dateTime.iso8601": the value is an Internet date
- - "double": the value is a floating-point number
- - "int" or "i4": the value is an integer number
- - "string": the value is a string of characters
- - "array": the value is an array of data (see below)
- - "xml": the value is data in xml-format (see below)
-
-
 To pass an array of data, you have to pass the type as well, in the 
 following format:
 
-    array[:element type]
+    array[:elementType]
 
 
 For example:
 
     local theArray
     repeat with i = 1 to 10
-
-    put random(100) into theArray[i]
-	end repeat
-	revXMLRPC_AddParam theDocID, "array:int", theArray
+        put random(100) into theArray[i]
+    end repeat
+    revXMLRPC_AddParam theDocID, "array:int", theArray
 
 
 If you do not specify an element type, the <revXMLRPC_AddParam> 
