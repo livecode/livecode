@@ -2,7 +2,7 @@ Name: open file
 
 Type: command
 
-Syntax: open file <filePath> [for [ [<encoding>] text | binary] {update | read | write | append}]
+Syntax: open file <filePath> [for [ {[<encoding>] text | binary}] {update | read | write | append}]
 
 Summary:
 Opens a <file> so its contents can be accessed or modified.
@@ -32,7 +32,13 @@ in the defaultFolder. If the file you specify doesn't exist, LiveCode
 creates it.
 
 encoding:
-
+From 7.0, it's possible to specify an encoding for the file being
+opened. By doing so, you can straight read or write to a file without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open file are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
 
 The result:
 Use the for read form to open the file for reading. If the
@@ -125,13 +131,6 @@ settings.
 > include, allowing (read-only) manipulation with all the standard
 > LiveCode file and folder handling syntax.
 
-From 7.0, it's possible to specify an encoding for the file being
-opened. By doing so, you can straight read or write to a file without
-having to call <textEncode> or <textDecode>; the encoding supported by
-open file are the same as these text encoding functions. If no encoding
-is provided, then <open file> tries to read a Byte Order Mark exists at
-the beginning of the file. In success, the encoding is adapted and the
-BOM is ignored.
 
 References: write to file (command), open file (command), put (command),
 constant (command), read from file (command), get (command),
