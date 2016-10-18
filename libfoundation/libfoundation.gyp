@@ -79,6 +79,7 @@
 				'src/foundation-error.cpp',
 				'src/foundation-filters.cpp',
 				'src/foundation-foreign.cpp',
+				'src/foundation-java.cpp',
 				'src/foundation-handler.cpp',
 				'src/foundation-list.cpp',
 				'src/foundation-locale.cpp',
@@ -136,6 +137,16 @@
 						],
 					},
 				],
+				[
+					'OS == "linux" or OS == "mac"',
+					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/linux',
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':
@@ -188,6 +199,7 @@
 										[
 											'-framework', 'CoreFoundation',
 											'-framework', 'Foundation',
+											'-framework', 'JavaVM',
 										],
 									},
 								],

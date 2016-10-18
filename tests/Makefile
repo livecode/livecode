@@ -49,13 +49,23 @@ LCC_LOG = _compiler_test_suite.log
 LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
 LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
+########## Java FFI DSL test parameters
+
+JAVA_DSL_PARSER ?= $(bin_dir)/java-dsl-parse
+
+JAVA_DSL_PARSER_TESTRUNNER ?= $(top_srcdir)/tests/_javadslparsertestrunner.livecodescript
+
+JAVA_DSL_PARSER_CMD = $(LCS_ENGINE) -ui $(JAVA_DSL_PARSER_TESTRUNNER) run
+
+JAVA_DSL_PARSER_LOG = _java_dsl_parser_test_suite.log
+
 ################################################################
 # Top-level targets
 ################################################################
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check
+check: lcs-check lcb-check compiler-check java-ffi-dsl-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -68,7 +78,8 @@ clean:
 
 LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
 LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
-LCM_TEST_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
+
+LCM_TEST_SOURCES ?= $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
 
 LCM_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_SOURCES))
 LCM_TEST_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_TEST_SOURCES))
@@ -162,7 +173,25 @@ lcb-check: lcm_compile
 	for lcbfile in $(LCM_TEST_SOURCES); do \
 	    lcmfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:lcb$$:lcm:'`" ; \
 	    logfile="$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:log:'`" ; \
+	    parent="`echo $$lcbfile | sed -e 's:.*/\([^/]*\)/tests.*$$:\1:'`"; \
+	    loadfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:tests/.*\.lcb$$::'`$$parent.lcm"; \
 	    mkdir -p `dirname $$logfile`; \
-	    $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    if [ -e $$loadfile ] ; then \
+	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) --load $$loadfile $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    else \
+	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    fi; \
 	done; \
 	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
+
+################################################################
+# Java FFI DSL parser tests
+################################################################
+
+java-ffi-dsl-check: $(JAVA_DSL_PARSE)
+	@rm -f $(JAVA_DSL_PARSER_LOG)
+	@export JAVA_DSL_PARSER="$(JAVA_DSL_PARSER)"; \
+	export JAVA_DSL_PARSE_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
+	cmd="$(JAVA_DSL_PARSER_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd

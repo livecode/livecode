@@ -14,11 +14,13 @@
 			[
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
+				'../toolchain/java-dsl-parse/java-dsl-parse.gyp:java-dsl-generate-module',
 			],
 
 			'sources':
 			[
 				'modules/widget-utils/widget-utils.lcb',
+				'modules/java-support/java-support.lcb',
 
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',

@@ -13,6 +13,7 @@
 			'dependencies':
 			[
 				'lc-compile/lc-compile.gyp:lc-compile',
+				'java-dsl-parse/java-dsl-parse.gyp:java-dsl-parse',
 			],
 			
 			'conditions':
