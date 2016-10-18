@@ -2,7 +2,7 @@ Name: open process
 
 Type: command
 
-Syntax: open [elevated] process <appName> [for [[<encoding>] text | binary] {read | write | update | neither}]
+Syntax: open [elevated] process <appName> [for [[{<encoding>] text | binary}] {read | write | update | neither}]
 
 Summary:
 Starts a program.
@@ -34,6 +34,13 @@ one instantiation of a given program at one time. The appName can be any
 program on the system.
 
 encoding:
+From 7.0, it's possible to specify an encoding for the process being
+opened. By doing so, you can straight read a process without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open process are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
 
 
 Description:
@@ -103,8 +110,7 @@ in order to support this, in version 4.5 a new form of the open process
 command was introduced that can launch a slave process with elevated
 permissions: 
 
-open elevated process process [ for [ text | binary ] ( read | write |
-update | neither ) ]
+    open elevated process processName [ for [{ text | binary }] ({ read | write | update | neither }) ]
 
 This form operates identically to the normal version, except that engine
 will ask the system to launch the given process with admin/root
