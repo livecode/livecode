@@ -2,7 +2,7 @@ Name: revXMLRPC_SetSocket
 
 Type: command
 
-Syntax: revXMLRPC_SetSocket <XML-RPC document>, <socket>
+Syntax: revXMLRPC_SetSocket <documentID>, <socket>
 
 Summary:
 Sets the socket of an XML-RPC document.
@@ -21,12 +21,12 @@ Example:
 revXMLRPC_SetSocket theRequest,myOpenSocket
 
 Parameters:
-socket:
-
-
 documentID:
 The number returned by the revXMLRPC_CreateRequest when you created the
 XML-RPC request.
+
+socket:
+The number of the opened socket to set and use.
 
 Description:
 Use the <revXMLRPC_SetSocket> <function> to set the network socket used
