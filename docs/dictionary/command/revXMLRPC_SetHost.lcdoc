@@ -2,7 +2,7 @@ Name: revXMLRPC_SetHost
 
 Type: command
 
-Syntax: revXMLRPC_SetHost <XML-RPC document>, <host> [, <port>]
+Syntax: revXMLRPC_SetHost <documentID>, <host> [, <port>]
 
 Summary:
 Sets the host and optionally the port of an XML-RPC document structure.
@@ -24,6 +24,10 @@ Example:
 revXMLRPC_SetHost myRequest,"example.com",10000
 
 Parameters:
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you created the
+XML-RPC request.
+
 host:
 The IP address or domain name of the host you want to connect to.
 
@@ -32,9 +36,6 @@ The port number you want to connect to. If you don't specify a port,
 port 80 is used. (On most systems, port 80 is used for HTTP
 connections.) 
 
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
 
 The result:
 If the <revXMLRPC_SetHost> <command> encounters an error, the <result>
