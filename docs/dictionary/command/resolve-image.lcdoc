@@ -18,6 +18,13 @@ Platforms: desktop, server, mobile
 Example:
 resolve image id 1007 relative to button "Cancel"
 
+Parameters:
+id or name:
+The short id or name of an image.
+
+object reference:
+The relative object to the image.
+
 It:
 The <resolve image> command places the the long ID of the resolved image
 in the it variable. If the command fails to resolve the image, the it
