@@ -2,7 +2,7 @@ Name: replace in field
 
 Type: command
 
-Syntax: replace <oldString> with <newString> in <fieldContainer> (preserving | replacing) styles
+Syntax: replace <oldString> with <newString> in <fieldContainer> {preserving | replacing} styles
 
 Summary:
 Replaces text in a field container with other text with control over
