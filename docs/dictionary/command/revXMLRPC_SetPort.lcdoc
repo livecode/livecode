@@ -2,7 +2,7 @@ Name: revXMLRPC_SetPort
 
 Type: command
 
-Syntax: revXMLRPC_SetPort <XML-RPC document>, <port>
+Syntax: revXMLRPC_SetPort <documentID>, <port>
 
 Summary:
 Sets the port of an XML-RPC document structure.
@@ -18,14 +18,15 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Parameters:
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you created the
+XML-RPC request.
+
 port:
 The port number you want to connect to. If you don't specify a port,
 port 80 is used. (On most systems, port 80 is used for HTTP
 connections.) 
 
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
 
 The result:
 If the <revXMLRPC_SetPort> <command> encounters an error, the <result>
