@@ -2,7 +2,7 @@ Name: open driver
 
 Type: command
 
-Syntax: open driver <driverName> [for [[<encoding>] text | binary] {update | read | write}]
+Syntax: open driver <driverName> [for [{text | binary}] {update | read | write}]
 
 Summary:
 Establishes a connection to a <peripheral device|device> so you can send
@@ -29,8 +29,6 @@ Parameters:
 driverName:
 The driverName specifies the name of a device driver that's installed on
 the system.
-
-encoding:
 
 
 The result:
