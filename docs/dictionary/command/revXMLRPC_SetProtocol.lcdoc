@@ -2,7 +2,7 @@ Name: revXMLRPC_SetProtocol
 
 Type: command
 
-Syntax: revXMLRPC_SetProtocol <XML-RPC document>, <protocol>
+Syntax: revXMLRPC_SetProtocol <documentID>, <protocol>
 
 Summary:
 Sets the protocol of an XML-RPC document structure.
@@ -18,14 +18,15 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Parameters:
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you created the
+XML-RPC request.
+
 protocol:
 The protocol determines the type of connection that is established with
 the host. By default, XML-RPC uses HTTP connections, but for added
 security you can use HTTPS connections, if the host supports it.
 
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
 
 The result:
 If the <revXMLRPC_SetProtocol> <command> encounters an error, the
