@@ -516,6 +516,11 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
             return IO_NORMAL;
 		}
 	}
+	
+    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
+    
+	return IO_NORMAL;
 }
 
 IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)

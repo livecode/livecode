@@ -158,8 +158,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalNumberPlusNumber(MCNumberRef p_
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
     MCArithmeticExecAddNumberToNumber(p_left, t_number);
     
+    //if no error
     r_output = t_number;
     return;
+    
+    //else
+    MCValueRelease(t_number);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalIntegerMinusInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
@@ -184,8 +188,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalNumberMinusNumber(MCNumberRef p
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
     MCArithmeticExecSubtractNumberFromNumber(p_right, t_number);
     
+    //if no error
     r_output = t_number;
     return;
+    
+    //else
+    MCValueRelease(t_number);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalIntegerTimesInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
@@ -210,8 +218,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalNumberTimesNumber(MCNumberRef p
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
     MCArithmeticExecMultiplyNumberByNumber(t_number, p_left);
     
+    //if no error
     r_output = t_number;
     return;
+    
+    //else
+    MCValueRelease(t_number);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalIntegerOverInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
@@ -236,8 +248,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalNumberOverNumber(MCNumberRef p_
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
     MCArithmeticExecDivideNumberByNumber(t_number, p_right);
     
+    //if no error
     r_output = t_number;
     return;
+    
+    //else
+    MCValueRelease(t_number);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalIntegerModInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
