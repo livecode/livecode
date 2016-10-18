@@ -258,7 +258,10 @@ function revDocsParseDictionaryToLibraryArray pRootDir
          get files(tRoot & slash & tLine)
          filter it with "*.lcdoc"
          repeat for each line tFile in it
-            wait 0 with messages
+            if the environment is "development" and \
+                not revTestEnvironment() then
+               wait 0 with messages
+            end if
             local tFullPath
             put tRoot & slash & tLine & slash & tFile into tFullPath
             put revDocsUtf8FileContents(tFullPath) into tText
