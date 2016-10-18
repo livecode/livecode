@@ -2,7 +2,7 @@ Name: revXMLRPC_SetPath
 
 Type: command
 
-Syntax: revXMLRPC_SetPath <XML-RPC document>, <path>
+Syntax: revXMLRPC_SetPath <documentID>, <path>
 
 Summary:
 Sets the path in an XML-RPC document structure.
@@ -21,13 +21,14 @@ Example:
 revXMLRPC_SetMethod theRequest,"sample.elizabethanInsult"
 
 Parameters:
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you created the
+XML-RPC request.
+
 path:
 Usually a file path, which allows the host to determine which resource
 handles your request.
 
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
 
 The result:
 If the <revXMLRPC_SetPath> <command> encounters an error, the <result>
