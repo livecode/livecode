@@ -2,7 +2,7 @@ Name: revZipAddUncompressedItemWithFile
 
 Type: command
 
-Syntax: revZipAddUncompressedItemWithFile <archiveName>, <itemName>, <variableName>
+Syntax: revZipAddUncompressedItemWithFile <archivePath>, <itemName>, <filePath>
 
 Summary:
 Adds a file to an open zip archive without compressing the data.
@@ -22,18 +22,12 @@ Example:
 revZipAddUncompressedItemWithFile the cArchive of me, tFile, (tFolder & slash & tFile)
 
 Parameters:
-archiveName:
-
+archivePath:
+The absolute path to the zip archive to add the file to.
 
 itemName:
 The unique name of the file in the zip archive. This could for example
 just be the file name.
-
-variableName:
-
-
-archivePath:
-The absolute path to the zip archive to add the file to
 
 filePath:
 The absolute path to the file to add to the archive. If the
