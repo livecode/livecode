@@ -1,0 +1,1 @@
+# Don't change the defaultFolder on startup
