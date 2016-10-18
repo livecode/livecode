@@ -100,6 +100,8 @@ public:
 	virtual void OnAttach();
 	virtual void OnDetach();
     
+	virtual void OnViewTransformChanged();
+	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of card.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);

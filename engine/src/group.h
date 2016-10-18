@@ -136,6 +136,8 @@ public:
 	virtual void OnAttach();
 	virtual void OnDetach();
 
+	virtual void OnViewTransformChanged();
+	
 	virtual void geometrychanged(const MCRectangle &p_rect);
 
 	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
