@@ -380,7 +380,7 @@ void MCB_clearbreaks(MCObject *p_for_object)
 {
 	for(size_t n = 0; n < MCnbreakpoints; ++n)
     {
-		if (p_for_object == nil || MCbreakpoints[n].object == p_for_object)
+		if (p_for_object == nil || !MCbreakpoints[n].object || MCbreakpoints[n].object == p_for_object)
 		{
 			MCbreakpoints[n].Clear();
 		}
