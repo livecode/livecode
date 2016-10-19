@@ -540,8 +540,11 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		
 #ifdef _MOBILE
 	case kMCEventTypeTouch:
-		handle_touch(t_event -> touch . stack, t_event -> touch . phase, t_event -> touch . id, t_event -> touch . taps, t_event -> touch . x, t_event -> touch . y);
+	{
+		MCStackHandle t_stack(t_event->touch.stack);
+		handle_touch(t_stack, t_event->touch.phase, t_event->touch.id, t_event->touch.taps, t_event->touch.x, t_event->touch.y);
 		break;
+	}
 		
 	case kMCEventTypeMotion:
 		{
@@ -1264,21 +1267,36 @@ static void clear_touches(void)
 
 bool MCEventQueuePostTouch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t p_x, int32_t p_y)
 {
-	MCEvent *t_event;
-	t_event = nil;
-	if (p_phase == kMCEventTouchPhaseMoved)
-		for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
-			if (t_new_event -> type == kMCEventTypeTouch &&
-				t_new_event -> touch . stack == p_stack &&
-				t_new_event -> touch . id == p_id &&
-				t_new_event -> touch . phase == p_phase)
-				t_event = t_new_event;
+	MCEvent *t_event = nil;
 	
+	// If there is an existing unhandled touch move event in the queue, this new
+	// one can be coalesced with it.
+	bool t_existing = false;
+	if (p_phase == kMCEventTouchPhaseMoved)
+	{
+		for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event->next)
+		{
+			if (t_new_event -> type == kMCEventTypeTouch &&
+				MCStackHandle(t_new_event->touch.stack) == p_stack &&
+				t_new_event->touch.id == p_id &&
+				t_new_event->touch.phase == p_phase)
+			{
+				t_event = t_new_event;
+				t_existing = true;
+			}
+		}
+	}
+	
+	// If there was no existing event, create and add a new one
 	if (t_event == nil &&
 		!MCEventQueuePost(kMCEventTypeTouch, t_event))
 		return false;
 	
-	t_event -> touch . stack = p_stack;
+	// Store a reference to the stack if this is a newly-created event
+	if (!t_existing)
+		t_event->touch.stack = p_stack->GetHandle().ExternalRetain();
+	
+	// Set the touch event parameters
 	t_event -> touch . phase = p_phase;
 	t_event -> touch . id = p_id;
 	t_event -> touch . taps = p_taps;
@@ -1294,7 +1312,7 @@ bool MCEventQueuePostMotion(MCStack *p_stack, MCEventMotionType p_type, uint32_t
 	if (!MCEventQueuePost(kMCEventTypeMotion, t_event))
 		return false;
 	
-	t_event -> motion . stack = p_stack;
+	t_event -> motion . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> motion . type = p_type;
 	
 	return true;	
