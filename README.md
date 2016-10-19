@@ -77,7 +77,7 @@ Please see the following table, which shows which target platforms are supported
 
 | Target platform                                            | Host platforms    |
 | ---------------------------------------------------------- | ----------------- |
-| [mac, ios](docs/development/build--mac.md)                 | mac               |
+| [mac, ios](docs/development/build-mac.md)                  | mac               |
 | [win](docs/development/build-win.md)                       | win, linux (Wine) |
 | [linux](docs/development/build-linux.md)                   | linux             |
 | [android](docs/development/build-android.md)               | mac, linux        |
