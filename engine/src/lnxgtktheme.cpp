@@ -238,7 +238,7 @@ static gboolean reload_theme(void)
 		// We have changed themes, so remove the image cache and replace with new one
 		if ( MCimagecache != NULL)
 			delete MCimagecache ;
-		MCimagecache = new MCXImageCache ;
+		MCimagecache = new (nothrow) MCXImageCache ;
 
 		MCcurtheme->unload();
 		MCcurtheme->load();

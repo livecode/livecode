@@ -134,7 +134,7 @@ void Path2Native(char *dptr)
 
 static OSErr path2FSSpec(const char *fname, FSSpec *fspec)
 {
-	char *nativepath = new char[strlen(fname)+1];
+	char *nativepath = new (nothrow) char[strlen(fname)+1];
 	strcpy(nativepath, fname);
 	Path2Native(nativepath);
 	OSErr err = noErr;

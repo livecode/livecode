@@ -1518,7 +1518,7 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 MCWin32DSPlayer *MCWin32DSPlayerCreate()
 {
 	MCWin32DSPlayer *t_player;
-	t_player = new MCWin32DSPlayer();
+	t_player = new (nothrow) MCWin32DSPlayer();
 
 	if (t_player == nil)
 		return nil;

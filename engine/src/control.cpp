@@ -492,6 +492,11 @@ Boolean MCControl::del(bool p_check_flag)
 	default:
 		break;
 	}
+
+	// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
+	if (getselected())
+		getcard()->dirtyselection(rect);
+
 	uint2 num = 0;
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
@@ -1264,7 +1269,7 @@ void MCControl::start(Boolean canclone)
 			}
 			else
 			{
-				Ustruct *us = new Ustruct;
+				Ustruct *us = new (nothrow) Ustruct;
 				us->type = UT_SIZE;
 				us->ud.rect = rect;
 				MCundos->freestate();
@@ -1572,7 +1577,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_HSCROLLBAR)
 			{
-				hsb = new MCScrollbar(*MCtemplatescrollbar);
+				hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				hsb->setparent(this);
 				hsb->setflag(False, F_TRAVERSAL_ON);
 				hsb->setflag(flags & F_3D, F_3D);
@@ -1618,7 +1623,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_VSCROLLBAR)
 			{
-				vsb = new MCScrollbar(*MCtemplatescrollbar);
+				vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				vsb->setparent(this);
 				vsb->setflag(False, F_TRAVERSAL_ON);
 				vsb->setflag(flags & F_3D, F_3D);

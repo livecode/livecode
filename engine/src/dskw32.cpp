@@ -502,7 +502,7 @@ static DWORD readThread(Streamnode *process)
 {
 	DWORD nread;
 	uint32_t t_bufsize = READ_PIPE_SIZE;
-	char* t_buffer = new char[t_bufsize];
+	char* t_buffer = new (nothrow) char[t_bufsize];
 
 	while (process -> ihandle != NULL)
 	{
@@ -1629,7 +1629,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return true;
 		}
         
-        char *buffer = new char[MAXHOSTNAMELEN + 1];
+        char *buffer = new (nothrow) char[MAXHOSTNAMELEN + 1];
         gethostname(buffer, MAXHOSTNAMELEN);
 		buffer[MAXHOSTNAMELEN] = '\0';
         return MCStringFormat(r_address, "%s:%@", buffer, MCcmd);
@@ -2240,12 +2240,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
-					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+					t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                     t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
-					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					t_handle = new (nothrow) MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
                     // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
                     //  file handler open in case the memory mapped file could
                     //  not be allocated. We always close the normal file handle
@@ -2258,13 +2258,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// (for empty files for instance).
 			else
             {
-				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+				t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                 t_close_file_handler = t_handle == NULL;
             }
 		}
 		else
         {
-			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
             t_close_file_handler = t_handle == NULL;
         }
 
@@ -2289,7 +2289,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return nil;
 
 		// Since we can only have an STD fd, we know we have a pipe.
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
+		t_stdio_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -2465,7 +2465,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path)
 	{
-		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+		WCHAR* wcFileNameBuf = new (nothrow) WCHAR[MAX_PATH+1];
 		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
 		
 		MCAutoStringRef t_path;
@@ -2805,8 +2805,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+        MCprocesses[index].ohandle = new (nothrow) MCMemoryFileHandle;
+		MCprocesses[index].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -3098,12 +3098,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
+				MCprocesses[MCnprocesses].ohandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+				MCprocesses[MCnprocesses].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }

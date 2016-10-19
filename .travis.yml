@@ -11,6 +11,10 @@ os:
   - linux
   - osx
 
+# Use a Travis image containing an Xcode we support
+# This prevents surprise upgrades!
+osx_image: xcode7.3
+
 language: c++
 
 # Skip vulcan CI branches
@@ -33,7 +37,11 @@ jdk:
 
 # Install any required tools
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then sudo gem install xcpretty ; fi
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+      rvm --default use 2.2.1
+      gem install xcpretty
+    fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
 install: 
@@ -42,19 +50,20 @@ install:
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
-script: >
+script: |
   case "${TRAVIS_OS_NAME}" in
     linux)
-      BUILD_PLATFORM=linux ;
-      CHECK_COMMAND=xvfb-run ;
-      LICENSE_DIR="${HOME}/.runrev/licenses" ;
+      BUILD_PLATFORM=linux
+      CHECK_COMMAND=xvfb-run
+      LICENSE_DIR="${HOME}/.runrev/licenses"
       ;;
     osx)
-      BUILD_PLATFORM=mac ;
-      CHECK_COMMAND= ;
-      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses" ;
-      export XCODEBUILD="set -o pipefail && xcodebuild" ;
-      export XCODEBUILD_FILTER="| xcpretty" ;
+      BUILD_PLATFORM=mac
+      CHECK_COMMAND=
+      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses"
+      export XCODE_TARGET_SDK=macosx10.11
+      export XCODEBUILD="set -o pipefail && xcodebuild"
+      export XCODEBUILD_FILTER="| xcpretty"
       ;;
   esac
 

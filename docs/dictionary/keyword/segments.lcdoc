@@ -7,8 +7,8 @@ Type: keyword
 Syntax: segments
 
 Summary:
-Used with the n <umber> <function to count the number of segment chunks
-in a container.>
+Used with the <number> <function> to count the number of <segment> chunks
+in a container.
 
 Introduced: 7.0
 
@@ -17,12 +17,28 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local tText
 put "one two three" into tText
 put the number of segments in tText -- returns 3
 
-References: ,
-function to count the number of segment chunks in a container. (control structure),
-umber (function)segment (keyword)
+Description:
+Use the <segments> keyword together with the <number> <function> to 
+refer to one or more <words> or group of <char|characters> in a container.
+
+A <segment> is <delimit|delimited> by one or more <space|spaces>, 
+<tab|tabs>, or <return(constant)|returns>, or enclosed by 
+<double quote|double quotes>. A single <segment> can contain 
+multiple <char|characters> and multiple <item|items> or <word|words>, but 
+not multiple <line|lines>.
+
+>*Note:*  <segment|Segments> are delimited by <double quote|double quotes> ("), 
+> but not by curved quotes (“ or ”). LiveCode does not treat curved 
+> quotes as <quote|quotes>.
+
+References: number (function), segment (keyword), words (keyword),
+items (keyword), chars (keyword), lines (keyword),
+delimit (glossary), double quote (glossary), 
+space (constant), tab (constant), quote (constant), return (constant)
 
 Tags: database
 

@@ -17,21 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of card field ID 8 to srcOrReverse
 
-The result:
-
-2. For each of the three components, the resulting number is converted
-   to its binary equivalent, a string of ones and zeroes. The same is
-   done for each component of the object color. 3. LiveCode performs a
-   bitOr <operation> on each component of the object color with the
-   corresponding component of the inverse color under the
-   <object(glossary)>. (A <bit> is 1 if one or both of the corresponding
-   <bit|bits> of the <object(glossary)> color and the color underneath
-   is 1. If both corresponding bits are zero, the resulting <bit> is 0.
-   ). 4. For each component, the resulting binary number is turned back
-   into a decimal number, which is one of the three components--red,
-   green, or blue--of the final color. If the <srcOrReverse> <transfer
-   mode> is used, the resulting <binary> components are.
-
 
 Description:
 Use the <srcOrReverse> <keyword> to invert the color underneath the
@@ -49,6 +34,17 @@ compute the color of each pixel:
    inverse. (If the color is expressed as three integers between zero
    and 255--one for each of red, green, and blue--then the inverse of
    each component is equal to 255 minus the component's value.)
+2. For each of the three components, the resulting number is converted
+   to its binary equivalent, a string of ones and zeroes. The same is
+   done for each component of the object color. 
+3. LiveCode performs a bitOr <operation> on each component of the object 
+   color with the corresponding component of the inverse color under the
+   <object(glossary)>.
+   (A <bit> is 1 if one or both of the corresponding <bit|bits> of
+   the <object(glossary)> color and the color underneath is 1. If both
+   corresponding bits are zero, the resulting <bit> is 0). 
+4. For each component, the resulting binary number is turned back
+   into a decimal number producing a color value.
 
 
 The effect is that the darker an object is, the more transparent it is
@@ -56,19 +52,22 @@ to the inverted color beneath. Black parts of an object completely
 invert the color underneath them, and white parts are completely opaque.
 
 For example, suppose an object's color is 45,0,255, and the color of the
-pixels under the object is 20,45,100. The binary equivalent of the
-object's color is 00101101, 00000000, 11111111 and the binary equivalent
-of the inverse of the color underneath is 11101011, 11010010, 10011011
+pixels under the object is 20,45,100. The <binary(glossary)> equivalent is:
 
+	00101101, 00000000, 11111111
+	11101011, 11010010, 10011011 Logic OR
+	========  ========  ========
     11101111, 11010010, 11111111
 
-and the object's displayed color is 239,210,255 (the decimal
-equivalent). 
+and the object's displayed color is 239,210,255 (the decimal equivalent). 
 
 The <srcOrReverse> mode can be used only on <Unix> and <Windows|Windows
 systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink>
 <property> is set to this mode appear as though their <ink> were set to
 <srcCopy>. 
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), operation (glossary),
 Windows (glossary), bit (glossary), transfer mode (glossary),

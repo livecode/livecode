@@ -217,7 +217,13 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     // have unnamed typeinfos which we need to compare with potentially named
     // handler type typeinfos).
     MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
-    
+	
+	// If the two types are the same, they conform.
+	if (source == target)
+	{
+		return true;
+	}
+	
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
     if (!MCTypeInfoResolve(source, t_resolved_source))
@@ -257,6 +263,14 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     // the source type, or one of the source's supertypes.
     if (MCTypeInfoIsForeign(source . type))
     {
+        // If both sides are foreign, do they have a bridge type in common?
+        if (MCTypeInfoIsForeign(target.type))
+        {
+            if (source.type->foreign.descriptor.bridgetype != kMCNullTypeInfo &&
+                source.type->foreign.descriptor.bridgetype == target.type->foreign.descriptor.bridgetype)
+                return true;
+        }
+        
         // Check to see if the target is the source's bridge type.
         if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
             target . named_type == source . type -> foreign . descriptor . bridgetype)
@@ -973,7 +987,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
-        if (t_return_type != kMCNullTypeInfo)
+        if (t_resolved_return_type.named_type != kMCNullTypeInfo)
         {
             if (MCTypeInfoIsForeign(t_resolved_return_type . type))
                 t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);

@@ -162,7 +162,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 		if (MCNameIsEqualTo(p_family, t_font -> family) && p_size == t_font -> size && p_style == t_font -> style)
 			return t_font;
 
-	t_font = new MCNewFontStruct;
+	t_font = new (nothrow) MCNewFontStruct;
 	t_font -> family = MCValueRetain(p_family);
 	t_font -> size = p_size;
 	t_font -> style = p_style;
@@ -550,7 +550,7 @@ public:
 MCFontlist *MCFontlistCreateNew(void)
 {
 	MCNewFontlist *t_fontlist;
-	t_fontlist = new MCNewFontlist;
+	t_fontlist = new (nothrow) MCNewFontlist;
 	if (!t_fontlist -> create())
 	{
 		delete t_fontlist;

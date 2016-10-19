@@ -26,9 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptVariableUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
@@ -39,6 +37,7 @@ extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
@@ -424,9 +423,21 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
 
 MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScriptDefinition *definition);
-MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
+MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+
+MCTypeInfoRef MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
+MCTypeInfoRef MCScriptGetTypeOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCTypeInfoRef MCScriptGetTypeOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfReturnValueInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+
+MCNameRef MCScriptGetNameOfPropertyTypeInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
+MCNameRef MCScriptGetNameOfLocalVariableTypeInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfReturnValueTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableTypeInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -450,21 +461,137 @@ struct MCScriptInstance: public MCScriptObject
     uindex_t handler_count;
 };
 
-void MCScriptDestroyInstance(MCScriptInstanceRef instance);
+void
+MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
-bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptHandlerDefinition *handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_result);
+bool
+MCScriptCallHandlerInInstanceInternal(MCScriptInstanceRef instance,
+									  MCScriptHandlerDefinition *handler,
+									  MCValueRef *arguments,
+									  uindex_t argument_count,
+									  MCValueRef& r_result);
 
-// Evaluate the value of the given handler definition. This will create an
-// appropriate MCHandlerRef which can then be called. The instance retains the
-// handler ref and releases when the instance goes away. This implicitly means
-// that any C function ptrs generated from MCHandlerRefs have lifetime equivalent
-// to that of the instance.
-//
-// If the definition is a foreign function and it cannot be bound, then nil is
-// returned for the handler (i.e. it is not an error).
-//
-// The function returns false if there is a memory error.
-bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptCommonHandlerDefinition *definition, MCHandlerRef& r_handler);
+bool
+MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef instance,
+										  MCScriptCommonHandlerDefinition *handler,
+										  MCHandlerRef& r_handler);
+
+bool
+MCScriptTryToBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
+												  MCScriptForeignHandlerDefinition *handler,
+												  bool& r_bound);
+
+bool
+MCScriptBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
+											 MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptHandlerIsInternal(MCHandlerRef handler);
+
+void
+MCScriptInternalHandlerQuery(MCHandlerRef handler,
+							 MCScriptInstanceRef& r_instance,
+							 MCScriptCommonHandlerDefinition*& r_definition);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCScriptThrowPropertyNotFoundError(MCScriptInstanceRef instance,
+								   MCNameRef property);
+bool
+MCScriptThrowHandlerNotFoundError(MCScriptInstanceRef instance,
+								  MCNameRef handler);
+bool
+MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef instance,
+											 MCScriptPropertyDefinition *property_def);
+bool
+MCScriptThrowInvalidValueForPropertyError(MCScriptInstanceRef instance,
+										  MCScriptPropertyDefinition *property_def,
+										  MCValueRef provided_value);
+
+bool
+MCScriptThrowWrongNumberOfArgumentsError(MCScriptInstanceRef instance,
+										 MCScriptCommonHandlerDefinition *handler_def,
+										 uindex_t provided_argument_count);
+
+bool
+MCScriptThrowInvalidValueForArgumentError(MCScriptInstanceRef instance,
+										  MCScriptCommonHandlerDefinition *handler_def,
+										  uindex_t argument_index,
+										  MCValueRef provided_value);
+
+bool
+MCScriptThrowInvalidValueForReturnValueError(MCScriptInstanceRef instance,
+											 MCScriptCommonHandlerDefinition *handler_def,
+											 MCValueRef provided_value);
+
+bool
+MCScriptThrowNotAHandlerValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowNotAStringValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowNotABooleanOrBoolValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowGlobalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
+												   MCScriptVariableDefinition *variable_def);
+
+bool
+MCScriptThrowInvalidValueForGlobalVariableError(MCScriptInstanceRef instance,
+												MCScriptVariableDefinition *variable_def,
+												MCValueRef provided_value);
+
+bool
+MCScriptThrowLocalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
+												  MCScriptHandlerDefinition *handler,
+												  uindex_t index);
+
+bool
+MCScriptThrowInvalidValueForLocalVariableError(MCScriptInstanceRef instance,
+											   MCScriptHandlerDefinition *handler,
+											   uindex_t index,
+											   MCValueRef provided_value);
+
+bool
+MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef instance,
+											 MCScriptDefinitionGroupDefinition *group,
+											 MCProperListRef argument_values);
+
+bool
+MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef instance,
+												MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptThrowUnknownForeignCallingConventionError(void);
+
+bool
+MCScriptThrowMissingFunctionInForeignBindingError(void);
+
+bool
+MCScriptThrowClassNotAllowedInCBindingError(void);
+
+bool
+MCScriptThrowUnableToLoadForiegnLibraryError(void);
+
+bool
+MCScriptThrowCXXBindingNotImplemented(void);
+
+bool
+MCScriptThrowObjCBindingNotImplemented(void);
+
+bool
+MCScriptThrowJavaBindingNotImplemented(void);
+
+bool
+MCScriptThrowJavaBindingNotSupported(void);
+
+bool
+MCScriptThrowObjCBindingNotSupported(void);
+
+bool
+MCScriptCreateErrorExpectedError(MCErrorRef& r_error);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -495,11 +622,13 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCS
 
 enum MCScriptBytecodeOp
 {
+	kMCScriptBytecodeOp__First,
+	
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
     //
-	kMCScriptBytecodeOpJump,
+	kMCScriptBytecodeOpJump = kMCScriptBytecodeOp__First,
 	
 	// Conditional jumps:
 	//  X: jump* <register>, <Y - X>
@@ -600,9 +729,100 @@ enum MCScriptBytecodeOp
     // Initializes the given slots to default values, if the type of the slot
     // has a default, otherwise makes the slot unassigned.
     kMCScriptBytecodeOpReset,
+	
+	kMCScriptBytecodeOp__Last = kMCScriptBytecodeOpReset
 };
 
-bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
+inline void
+MCScriptBytecodeDecodeOp(const byte_t*& x_bytecode_ptr,
+						 MCScriptBytecodeOp& r_op,
+						 uindex_t& r_arity)
+{
+	byte_t t_op_byte;
+	t_op_byte = *x_bytecode_ptr++;
+	
+	// The lower nibble is the bytecode operation.
+	MCScriptBytecodeOp t_op;
+	t_op = (MCScriptBytecodeOp)(t_op_byte & 0xf);
+	
+	// The upper nibble is the arity.
+	uindex_t t_arity;
+	t_arity = (t_op_byte >> 4);
+	
+	// If the arity is 15, then overflow to a subsequent byte.
+	if (t_arity == 15)
+		t_arity += *x_bytecode_ptr++;
+	
+	r_op = t_op;
+	r_arity = t_arity;
+}
+
+// TODO: Make this better for negative numbers.
+inline uindex_t
+MCScriptBytecodeDecodeArgument(const byte_t*& x_bytecode_ptr)
+{
+	uindex_t t_value;
+	t_value = 0;
+	int t_shift;
+	t_shift = 0;
+	for(;;)
+	{
+		byte_t t_next;
+		t_next = *x_bytecode_ptr++;
+		t_value |= (t_next & 0x7f) << t_shift;
+		if ((t_next & 0x80) == 0)
+			break;
+		t_shift += 7;
+	}
+	return t_value;
+}
+
+inline bool
+MCScriptBytecodeIterate(const byte_t*& x_bytecode,
+						const byte_t *p_bytecode_limit,
+						MCScriptBytecodeOp& r_op,
+						uindex_t& r_arity,
+						uindex_t *r_arguments)
+{
+	MCScriptBytecodeDecodeOp(x_bytecode, r_op, r_arity);
+	if (x_bytecode > p_bytecode_limit)
+		return false;
+	
+	for(uindex_t i = 0; i < r_arity; i++)
+	{
+		r_arguments[i] = MCScriptBytecodeDecodeArgument(x_bytecode);
+		if (x_bytecode > p_bytecode_limit)
+			return false;
+	}
+	
+	return true;
+}
+
+inline void
+MCScriptBytecodeDecode(const byte_t*& x_bytecode_ptr,
+					   MCScriptBytecodeOp& r_operation,
+					   uindex_t* r_arguments,
+					   uindex_t& r_argument_count)
+{
+	MCScriptBytecodeDecodeOp(x_bytecode_ptr,
+							 r_operation,
+							 r_argument_count);
+	for(uindex_t i = 0; i < r_argument_count; i++)
+	{
+		r_arguments[i] = MCScriptBytecodeDecodeArgument(x_bytecode_ptr);
+	}
+}
+
+inline index_t
+MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
+{
+	index_t t_value;
+	if ((p_original_value & 1) == 0)
+		t_value = (signed)(p_original_value >> 1);
+	else
+		t_value = -(signed)(p_original_value >> 1);
+	return t_value;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

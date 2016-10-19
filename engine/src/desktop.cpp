@@ -619,7 +619,7 @@ void MCKeyMessageClear(MCKeyMessage *&p_message_queue)
 void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, bool p_needs_mapping = true)
 {
     MCKeyMessage *t_new;
-    t_new = new MCKeyMessage;
+    t_new = new (nothrow) MCKeyMessage;
     
     t_new -> key_code = p_key_code;
     t_new -> mapped_codepoint = p_mapped_codepoint;

@@ -949,8 +949,8 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- Start with an empty redirects list
    put empty into rRedirects
    
-   local tFiles
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFiles
+   local tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
@@ -958,26 +958,15 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    --
    local tManifest
    set the itemDelimiter to slash
-   repeat for each line tFile in tFiles
-      local tIsAbsolute, tName
-      put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
-      if the last item of tFile is "*" then
-         delete the last item of tFile
-      end if
-      if tFile begins with pBaseFolder then
-         put item (the number of items of pBaseFolder + 1) to -1 of tFile  into tName
-      else
-         put item -1 of tFile into tName
-      end if
-      
-      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tName
+   repeat for each element tFile in tFileData
+      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tFile["name"]
       
       -- MW-2010-12-16: [[ Bug 9238 ]] Check for 'resources' folder
-      if item 1 of tName is "Resources" then
+      if item 1 of tFile["name"] is "Resources" then
          throw "iOS apps that contain a top-level folder called 'Resources' will fail to run"
       end if
       
-      addToManifest tFile, tName, pAppBundle, tManifest, rRedirects
+      addToManifest tFile["resolved"], tFile["name"], pAppBundle, tManifest, rRedirects
    end repeat
    
    -- Remove trailing delimiter
@@ -1181,12 +1170,12 @@ end revCopyMobileStackFiles
 
 private function revGetMinimumOSByArch pMinimumOS 
    local tMinimumOSByArch  
-   -- MM-2013-09-23: We only support iOS 4.3 and later
    -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
-   --  same for all archs, and we only support version >= 5.1.1
+   --  same for all archs
+   -- We only support version >= 6.0
    --
-   if pMinimumOS is empty or pMinimumOS <= "5.1" then
-      put "5.1.1" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS < "6.0" then
+      put "6.0" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS after tMinimumOSByArch["i386"]
    end if

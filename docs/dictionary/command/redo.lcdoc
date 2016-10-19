@@ -11,5 +11,7 @@ Introduced: 1.0
 
 Platforms: desktop, server
 
-References: undo (command), command (glossary), reserved word (glossary)
+Description:
+The <redo> <command> is not implemented and is <reserved word|reserved> for possible future implementation
 
+References: undo (command), command (glossary), reserved word (glossary)

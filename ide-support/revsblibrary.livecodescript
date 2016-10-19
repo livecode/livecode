@@ -300,7 +300,7 @@ end __revSBCopyFolder
 # Marcus van Houdt
 private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
    -- Stat the source file
-   local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
+   local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
    
    if tResult is empty then
@@ -317,15 +317,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       get the detailed files
       filter it with (the urlEncode of item -1 of pSourceFile) & "*"
       set the itemDelimiter to ","
-      put item 2 of it into tDataForkSize
-      put item 3 of it into tRsrcForkSize
+      put item 2 of it into tSize
       put item 8 of it into tUser
       put item 9 of it into tGroup
       put item 10 of it into tPermissions
       put item 11 of it into tFileType
-      
-      local tTotalSize
-      put tDataForkSize + tRsrcForkSize into tTotalSize
       
       if there is a file pTargetFile then
          delete file pTargetFile
@@ -362,7 +358,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    local tAmountCopied
    if tResult is empty then
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-         send pCallback && 0, tTotalSize to pCallbackTarget
+         send pCallback && 0, tSize to pCallbackTarget
       end if
       repeat forever
          read from file pSourceFile for 1048576
@@ -380,7 +376,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
          end if
          add the number of chars of it to tAmountCopied
          if pCallbackTarget is not empty and there is a pCallbackTarget then
-            send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+            send pCallback && tAmountCopied, tSize to pCallbackTarget
          end if
       end repeat
    end if
@@ -390,19 +386,6 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    if pSourceFile is among the lines of the openFiles then
       close file pSourceFile
-   end if
-   
-   if tResult is empty then
-      if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
-         set the itemDelimiter to ","
-         repeat for each line tRsrcDetails in getResources(pSourceFile)
-            get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
-            add item 4 of tRsrcDetails to tAmountCopied
-            if pCallbackTarget is not empty and there is a pCallbackTarget then
-               send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-            end if
-         end repeat
-      end if
    end if
    
    # OK-2007-11-30 : Modified to work for Linux too
@@ -1005,9 +988,9 @@ function utilityChooseIconFile pTargetPlatform
   
   # Roughly preserves old behavior, just using answer file with type instead of filter.
   local tIconFile
-  if pTargetPlatform is "Mac OS X" and ((the platform is "MacOS" and char 1 of the systemVersion is "1") or (the platform is "Win32") or (the platform is "Linux")) then
+  if pTargetPlatform is "Mac OS X" then
     put "Icon Resource Files|icns|ICNS" after tTypes
-  else if pTargetPlatform is "Windows" and (the platform is "Win32" or the platform is "Linux" or (the platform is "MacOS" and char 1 of the systemVersion is "1")) then
+  else if pTargetPlatform is "Windows" then
     put "Icon Files|ico|ICO" after tTypes
   end if
   
@@ -1913,7 +1896,10 @@ function revSBIncludedExternalPath pTarget, pName
    return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
-private command __ResolveIncludedExternal pTarget, @xFiles
+private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
+   local tHasResources
+   put false into tHasResources
+   
    -- Added to support Ext inclusion
    if xFiles begins with "!" then
       
@@ -1940,36 +1926,49 @@ private command __ResolveIncludedExternal pTarget, @xFiles
             
             if tContents is not empty then
                appendToStringList tContents, xFiles
+               put true into tHasResources
             end if
          end if
          
       end if
    end if
+   put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
-   local tManifest
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      local tResolvedFile
-      __ResolveIncludedExternal pTarget, tFile
+      local tResolvedFile, tHasResources
+      __ResolveIncludedExternal pTarget, tFile, tHasResources
+      
       -- tFile may now list multiple files if it was an external with a resources directory
       repeat for each line tResolvedFile in tFile
+         local tDataA, tFlattenStructure
+         
          if tResolvedFile ends with "/" then
             delete char -1 of tResolvedFile
          end if
          
          if the last item of tResolvedFile is "*" then
-            delete the last item of tFile
+            delete the last item of tResolvedFile
          end if
          
          local tIsAbsolute, tName
          put tResolvedFile begins with "/" or char 2 to 3 of tResolvedFile is ":/" into tIsAbsolute
+         
+         # Flatten structure of external resources
+         if tIsAbsolute or tHasResources then
+            put item -1 of tResolvedFile into tDataA["name"]
+         else
+            put tResolvedFile into tDataA["name"]
+         end if
+         
          if not tIsAbsolute then
             put pBaseFolder & slash before tResolvedFile
          end if
+         put tResolvedFile into tDataA["resolved"]
          
-         appendToStringList tResolvedFile, rFiles
+         addToList tDataA, rFileData
       end repeat
    end repeat
 end revSBResolveCopyFilesList

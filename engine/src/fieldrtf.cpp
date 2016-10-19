@@ -784,7 +784,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			// A temporary buffer to store any native converted text in.
 			uint8_t *t_native_text;
-			t_native_text = new uint8_t[t_char_count];
+			t_native_text = new (nothrow) uint8_t[t_char_count];
 
 			// Loop until we are done.
 			while(t_char_count > 0)

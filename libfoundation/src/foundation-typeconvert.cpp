@@ -164,7 +164,8 @@ static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,
         r_done = done;
         return i;
     }
-    l = MCMin(R8L - 1U, strlen(sptr));
+    sptr = r_str;
+    l = MCMin(R8L - 1U, strnlen(sptr, r_len));
     MCU_skip_spaces(sptr, l);
     // bugs in MSL means we need to check these things
     // MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most

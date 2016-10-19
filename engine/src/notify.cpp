@@ -121,7 +121,7 @@ static MCNotifySyncEvent *MCNotifySyncEventCreate(void)
 		return MCListPopFront(s_sync_events);
 
 	MCNotifySyncEvent *t_event;
-	t_event = new MCNotifySyncEvent;
+	t_event = new (nothrow) MCNotifySyncEvent;
 	t_event -> next = NULL;
 
 #if defined(USE_WINTHREADS)
@@ -377,7 +377,7 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	MCNotification *t_notification;
 	t_notification = NULL;
 	if (t_success)
-		t_notification = new MCNotification;
+		t_notification = new (nothrow) MCNotification;
 
 	// Fill it in.
 	if (t_success)

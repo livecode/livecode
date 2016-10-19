@@ -76,11 +76,11 @@ TEST(new, new)
 	VeryBig* pointers[1000];
 	int i = 0;
 
-	VeryBig* p = new VeryBig;
+	VeryBig* p = new (nothrow) VeryBig;
 
 	for (; p != NULL && i < 1000; i++) {
 		pointers[i] = p;
-		p = new VeryBig;
+		p = new (nothrow) VeryBig;
 	}
 
 	ASSERT_NE(1000, i) << "All alocations succeed!";
@@ -103,11 +103,11 @@ TEST(new, array)
 	VeryBig* pointers[1000];
 	int i = 0;
 
-	VeryBig* p = new VeryBig[1];
+	VeryBig* p = new (nothrow) VeryBig[1];
 
 	for (; p != NULL && i < 1000; i++) {
 		pointers[i] = p;
-		p = new VeryBig[1];
+		p = new (nothrow) VeryBig[1];
 	}
 
 	ASSERT_NE(1000, i) << "All alocations succeed!";

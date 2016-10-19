@@ -15,7 +15,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put the ID of last card into stoppingPoint
+put the ID of last card into tStoppingPoint
 
 Example:
 put the last line of it after field "Answers"

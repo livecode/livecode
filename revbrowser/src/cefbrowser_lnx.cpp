@@ -88,7 +88,7 @@ bool MCCefLinuxBrowser::GetXWindow(Window &r_window)
 	Window t_window;
 	t_window = t_browser->GetHost()->GetWindowHandle();
 
-	if (t_window == nil)
+	if (t_window == None)
 		return false;
 
 	r_window = t_window;
@@ -210,7 +210,7 @@ void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefLinuxBrowser *t_browser;
-	t_browser = new MCCefLinuxBrowser((Window)p_window_id);
+	t_browser = new (nothrow) MCCefLinuxBrowser((Window)p_window_id);
 	
 	if (t_browser == nil)
 		return false;

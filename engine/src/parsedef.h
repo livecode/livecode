@@ -33,8 +33,10 @@ constant;
 #define ELEMENTS(table) (sizeof(table) / sizeof(table[0]))
 
 enum Accept_constants {
-    AC_UNDEFINED,
-    AC_DATAGRAM,
+    AC_CONNECTIONS,
+	AC_ON,
+	AC_PORT,
+	AC_DATAGRAM,
     AC_SECURE
 };
 

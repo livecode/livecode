@@ -1714,7 +1714,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;
-	t_chunk = new MCChunk(False);
+	t_chunk = new (nothrow) MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
 	// the end of the string - if there is, its an error. Note the errorlock
@@ -3171,7 +3171,13 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
     {
         // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
         if (gettype() >= CT_GROUP)
+		{
             static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+
+			// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object shown / hidden
+			if (getselected())
+				getcard()->dirtyselection(rect);
+		}
     }
     
 	if (dirty)

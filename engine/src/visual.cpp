@@ -184,7 +184,7 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
         if (t_key != NULL && sp . parseexp(True, False, &t_value) == PS_NORMAL)
 		{
 			KeyValue *t_kv;
-			t_kv = new KeyValue;
+			t_kv = new (nothrow) KeyValue;
             t_kv -> next = parameters;
             t_kv -> key = t_key;
 			t_kv -> value = t_value;

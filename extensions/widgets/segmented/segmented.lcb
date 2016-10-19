@@ -559,8 +559,15 @@ private handler drawSegments() returns nothing
 	variable tWidth as Real
 	variable tIsIn as Boolean
 	variable tLeft as Real
+	variable tBorderOffset as Real
 	put 0 into tLeft
 	set the font of this canvas to my font
+	
+	if mShowFrameBorder then
+		put 0.5 into tBorderOffset // border is hard coded at 1 pixel
+	else
+		put 0 into tBorderOffset
+	end if
 	
 	repeat with tX from 1 up to mNumSegments
 		put fetchWidth(tX) into tWidth
@@ -573,7 +580,12 @@ private handler drawSegments() returns nothing
 		end if	
 		
 		variable tSegmentRect as List
-		put [tLeft, 0, tLeft+tWidth, my height] into tSegmentRect
+		put [tLeft, tBorderOffset, tLeft+tWidth, my height-tBorderOffset] into tSegmentRect
+		if tX is 1 then
+			put tBorderOffset into element 1 of tSegmentRect
+		else if tX is mNumSegments then
+			subtract tBorderOffset from element 3 of tSegmentRect
+		end if
 		
 		save state of this canvas
 		clip to rectangle tSegmentRect on this canvas	
@@ -643,6 +655,13 @@ private handler updateLines() returns nothing
 	variable tX as Integer
 	variable tWidth as Real
 	variable tLeft as Real
+	variable tBorderOffset as Real
+	
+	if mShowFrameBorder then
+		put 0.5 into tBorderOffset // border is hard coded at 1 pixel
+	else
+		put 0 into tBorderOffset
+	end if
 	
 	put the empty list into mLines
 	
@@ -653,7 +672,7 @@ private handler updateLines() returns nothing
 		put fetchWidth(tX) into tWidth
 		add tWidth to tLeft
 		if tX < mNumSegments then
-			push line path from point [tLeft, 0] to point [tLeft, my height] onto back of mLines
+			push line path from point [tLeft, tBorderOffset] to point [tLeft, my height-tBorderOffset] onto back of mLines
 		end if
 		
 	end repeat

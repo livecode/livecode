@@ -45,12 +45,7 @@ else
 endif
 
 # Prettifying output for CI builds
-ifeq ($(TRAVIS),true)
-  XCODEBUILD := set -o pipefail && $(XCODEBUILD)
-  XCODEBUILD_FILTER := | xcpretty
-else
-  XCODEBUILD_FILTER :=
-endif 
+XCODEBUILD_FILTER ?= 
 
 include Makefile.common
 

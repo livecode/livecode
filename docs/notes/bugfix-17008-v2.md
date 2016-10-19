@@ -1,0 +1,1 @@
+# Fix selection handles remaining after selected object deleted

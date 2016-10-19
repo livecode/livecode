@@ -303,12 +303,13 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         
         if (!p_parameters->eval_argument(ctxt, &t_value))
             return ES_ERROR;
-        MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		if (!ctxt . ConvertToString(*t_value, &t_string))
+			return ES_ERROR;
         
-        if (!ctxt . ConvertToString(*t_value, &t_string))
-            return ES_ERROR;
-        
-        // If we want UTF8 use a different conversion method.
+		MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		// If we want UTF8 use a different conversion method.
         if (t_wants_utf8)
             MCStringConvertToUTF8String(*t_string, args[nargs++]);
         else
@@ -320,7 +321,7 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     
     // Handling of memory allocation for C-strings
     MCExternalAllocPool *t_old_pool = MCexternalallocpool;
-    MCexternalallocpool = new MCExternalAllocPool;
+    MCexternalallocpool = new (nothrow) MCExternalAllocPool;
     
     (t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
     
@@ -716,7 +717,7 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithCString(arg1, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;
@@ -1255,7 +1256,7 @@ static char *show_image_by_id_utf8(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg1, strlen(arg1), kMCStringEncodingUTF8, false, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;

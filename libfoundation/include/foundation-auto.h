@@ -50,7 +50,13 @@ public:
 	{
 	}
     
-    inline explicit MCAutoValueRefBase(T p_value)
+    inline MCAutoValueRefBase(const MCAutoValueRefBase& other) :
+      m_value(nil)
+    {
+        Reset(other.m_value);
+    }
+    
+    inline MCAutoValueRefBase(T p_value)
 		: m_value(nil)
 	{
         if (p_value)
@@ -82,6 +88,9 @@ public:
     
     void Reset(T value = nil)
     {
+        if (value == m_value)
+                return;
+        
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
@@ -399,7 +408,12 @@ typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsLPCWSTR;
 class MCAutoStringRefAsLPWSTR
 {
 public:
-	MCAutoStringRefAsLPWSTR() {}
+	MCAutoStringRefAsLPWSTR() :
+	  m_buffer(nil),
+	  m_size(0)
+	{
+	}
+
 	~MCAutoStringRefAsLPWSTR()
 	{
 		Unlock();
@@ -716,7 +730,7 @@ public:
  * manage a value created with the "new" operator.  For example:
  *
  *     MCAutoPointer<int> number;
- *     number = new int;
+ *     number = new (nothrow) int;
  */
 template<typename T> class MCAutoPointer
 {
@@ -774,7 +788,7 @@ private:
  * manage a value created with the "new[]" operator.  For example:
  *
  *     MCAutoPointer<int[]> numbers;
- *     numbers = new int[25];
+ *     numbers = new (nothrow) int[25];
  */
 template<typename T> class MCAutoPointer<T[]>
 {

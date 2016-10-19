@@ -666,6 +666,31 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
         }
         return true;
             
+        case kMCValueTypeCodeForeignValue:
+        {
+            // Get the type info for the foreign value so we can find its bridge
+            // type
+            MCTypeInfoRef t_foreign_type = MCValueGetTypeInfo(x_value);
+            const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_foreign_type);
+            if (t_desc->bridgetype == nil)
+                break;
+
+            // Import the type
+            MCValueRef t_imported;
+            if (!t_desc->doimport(MCForeignValueGetContentsPtr(x_value), false, t_imported))
+                return false;
+
+            // Recursively convert to a script type
+            if (!MCExtensionConvertToScriptType(ctxt, t_imported))
+            {
+                MCValueRelease(t_imported);
+                return false;
+            }
+
+            MCValueAssign(x_value, t_imported);
+        }
+        return true;
+
         // The rest have no conversion
         default:
             break;

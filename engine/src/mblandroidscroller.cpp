@@ -498,7 +498,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
         {
             t_scroller->SetCanPostScrollEvent(false);
             MCCustomEvent *t_event;
-            t_event = new MCNativeScrollerScrollEvent(t_scroller);
+            t_event = new (nothrow) MCNativeScrollerScrollEvent(t_scroller);
             MCEventQueuePostCustom(t_event);
         }
     }
@@ -547,7 +547,7 @@ void MCAndroidScrollerControl::DeleteView(jobject p_view)
 
 bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidScrollerControl();
+    r_control = new (nothrow) MCAndroidScrollerControl();
     return true;
 }
 

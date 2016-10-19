@@ -697,7 +697,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCScrollbar *newscrollbar = new MCScrollbar(*this);
+	MCScrollbar *newscrollbar = new (nothrow) MCScrollbar(*this);
 	if (attach)
 		newscrollbar->attach(p, invisible);
 	return newscrollbar;
