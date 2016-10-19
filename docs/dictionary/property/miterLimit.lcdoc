@@ -21,25 +21,27 @@ set the miterLimit of graphic "polygon 1" of this card to 5
 
 Parameters:
 number (integer):
-An integer that is a multiple of the current lineSize of the graphic.
+An integer that is a multiple of the current lineSize of the <graphic>.
 
 Value (integer):
 The <miterLimit> property returns an integer that is a multiple of the
-current lineSize of the graphic.
+current <lineSize> of the <graphic>.
 
 Description:
-Set the <miterLimit> property to specify how far miter joins can extend
-from the meeting point of two edges before a bevel join is used.
+Set the <miterLimit> property to specify how far miter <joinStyle|joins>
+can extend from the meeting point of two edges before a bevel 
+<joinStyle|joins> is used.
 
-The <miterLimit> is used to calculate the maximum size of a miter join
-before it is rendered as a bevel. The size of a miter join is the length
-in pixels from the corner to the intersection point of its outer two
-edges. The <miterLimit> is specified as a multiple of the current
-<lineSize> of the graphic.
+The <miterLimit> is used to calculate the maximum size of a miter 
+<joinStyle|joins> before it is rendered as a bevel. The size of a 
+miter <joinStyle|joins> is the length in pixels from the corner to the 
+intersection point of its outer two edges. The <miterLimit> is 
+specified as a multiple of the current<lineSize> of the graphic.
 
->*Note:* This only affects polygon, freehand curve and line graphics
-> which have their antialiased set to true.
+>*Note:* This only affects <polygon>, freehand <curve> and <line> 
+> <graphic|graphics> which have their <antialiased> set to true.
 
-References: roundEnds (property), lineSize (property),
-antialiased (property)
+References: antialiased (property), curve (keyword), graphic (object), 
+joinStyle (property), line (keyword), lineSize (property), 
+polygon (keyword), roundEnds (property)
 
