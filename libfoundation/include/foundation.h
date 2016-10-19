@@ -415,6 +415,40 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  C++ COMPATIBILITY
+//
+
+#ifndef __has_feature
+#  define __has_feature(x)	0
+#endif
+#ifndef __has_extension
+#  define __has_extension(x) __has_feature(x)
+#endif
+
+// Ensure we have alignof(...) available
+#if defined(__cplusplus) && !__has_feature(cxx_alignof)
+// Testing __cplusplus isn't sufficient as some compilers changed the value before being fully-conforming
+#  if defined(__clang__)
+     // No need for a version check; Clang supports __has_feature as a built-in
+     // so if we get here, it isn't supported
+#    define alignof(x)      __alignof__(x)
+#  elif defined(__GNUC__)
+     // GCC added C++11 alignof(x) in GCC 4.8
+#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR < 8)
+#      define alignof(x)    __alignof__(x)
+#    endif
+#  elif defined(_MSC_VER)
+     // MSVC added C++11 alignof(x) in Visual Studio 2012 (compiler version 11.0, _MSC_VER 1700)
+#    if (_MSC_VER < 1700)
+#      define alignof(x)    __alignof(x)
+#    endif
+#  else
+#    error Don't know how to get alignof(x) on this compiler
+#  endif
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  FIXED WIDTH INTEGER TYPES
 //
 
@@ -2811,9 +2845,23 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUnboundTypeErrorTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCUnimplementedErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+MC_DLLEXPORT bool MCErrorCreateS(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 ...);
+MC_DLLEXPORT bool MCErrorCreateV(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 va_list args);
 
 MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
-
+MC_DLLEXPORT bool MCErrorCreateWithMessageS(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											...);
+MC_DLLEXPORT bool MCErrorCreateWithMessageV(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											va_list args);
+	
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
