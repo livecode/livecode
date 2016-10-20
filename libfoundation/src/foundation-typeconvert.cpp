@@ -29,73 +29,80 @@ inline void MCU_skip_spaces(const char *&sptr, uinteger_t &l)
 	}
 }
 
-static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
-                       bool reals, bool octals)
+inline void MCU_skip_spaces(MCSpan<const char>& x_span)
+{
+	while (!x_span.empty() && isspace(uint8_t(x_span[0])))
+	{
+		++x_span;
+	}
+}
+
+static integer_t MCU_strtol(MCSpan<const char> p_chars,
+                            char c,
+                            bool reals,
+                            bool octals,
+                            bool& done,
+                            MCSpan<const char> r_remainder)
 {
 	done = false;
-	MCU_skip_spaces(sptr, l);
-	if (!l)
+	MCU_skip_spaces(p_chars);
+	if (p_chars.empty())
 		return 0;
 	bool negative = false;
 	integer_t value = 0;
-	if (*sptr == '-' || *sptr == '+')
+	if (*p_chars == '-' || *p_chars == '+')
 	{
-		negative = *sptr == '-';
-		sptr++;
-		l--;
+		negative = *p_chars == '-';
+		++p_chars;
 	}
-	if (!l)
+	if (p_chars.empty())
 		return 0;
-	uinteger_t startlength = l;
+	uinteger_t startlength = p_chars.size();
 	uint16_t base = 10;
-	if (l && *sptr == '0')
+	if (!p_chars.empty() && *p_chars == '0')
     {
-		if (l > 2 && MCNativeCharFold(*(sptr + 1)) == 'x')
+	    if (p_chars.size() > 2 && MCNativeCharFold(*(p_chars + 1)) == 'x')
 		{
 			base = 16;
-			sptr += 2;
-			l -= 2;
+			p_chars += 2;
 		}
 		else
         {
 			if (octals)
 			{
 				base = 8;
-				sptr++;
-				l--;
+				p_chars += 1;
 			}
         }
     }
-	while (l)
+	while (!p_chars.empty())
 	{
-		if (isdigit((uint8_t)*sptr))
+		if (isdigit((uint8_t)*p_chars))
 		{
-			integer_t v = *sptr - '0';
+			integer_t v = *p_chars - '0';
 			if (base < 16 && value > INTEGER_MAX / base - v)  // prevent overflow
 				return 0;
 			value *= base;
 			value += v;
 		}
 		else
-			if (isspace((uint8_t)*sptr))
+			if (isspace((uint8_t)*p_chars))
 			{
-				MCU_skip_spaces(sptr, l);
-				if (l && *sptr == c)
+				MCU_skip_spaces(p_chars);
+				if (!p_chars.empty() && *p_chars == c)
 				{
-					sptr++;
-					l--;
+					++p_chars;
 				}
 				break;
 			}
 			else
-				if (l && c && *sptr == c)
+				if (!p_chars.empty() && c && *p_chars == c)
 				{
-					sptr++;
-					l--;
+					++p_chars;
 					break;
 				}
 				else
-					if (*sptr == '.')
+					if (*p_chars == '.')
 					{
 						if (startlength > 1)
 						{
@@ -103,30 +110,27 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 							{
 								// MDW-2013-06-09: [[ Bug 10964 ]] Round integral values to nearest
 								//   (consistent with getuint4() and round()).
-								if (*(sptr+1) > '4')
+								if (*(p_chars+1) > '4')
 								{
 									value++;
 								}
 								do
 								{
-									sptr++;
-									l--;
+									++p_chars;
 								}
-								while (l && isdigit((uint8_t)*sptr));
+								while (!p_chars.empty() && isdigit((uint8_t)*p_chars));
 							}
 							else
 								do
 								{
-									sptr++;
-									l--;
+									++p_chars;
 								}
-                            while (l && *sptr == '0');
-							if (l == 0)
+								while (!p_chars.empty() && *p_chars == '0');
+							if (p_chars.empty())
 								break;
-							if (*sptr == c || isspace((uint8_t)*sptr))
+							if (*p_chars == c || isspace((uint8_t)*p_chars))
 							{
-								sptr++;
-								l--;
+								++p_chars;
 								break;
 							}
 						}
@@ -134,7 +138,7 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 					}
 					else
 					{
-						char t_char = MCNativeCharFold(*sptr);
+						char t_char = MCNativeCharFold(*p_chars);
 						if (base == 16 && t_char >= 'a' && t_char <= 'f')
 						{
 							value *= base;
@@ -143,14 +147,24 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 						else
 							return 0;
 					}
-		sptr++;
-		l--;
+		++p_chars;
 	}
 	if (negative)
 		value = -value;
-	MCU_skip_spaces(sptr, l);
+	MCU_skip_spaces(p_chars);
 	done = true;
+	r_remainder = p_chars;
 	return value;
+}
+
+static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
+                            bool reals, bool octals)
+{
+	MCSpan<const char> t_remainder;
+	integer_t t_result = MCU_strtol(MCMakeSpan(sptr, l), c, reals, octals,
+	                                done, t_remainder);
+	l = t_remainder.size();
+	return t_result;
 }
 
 static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,  bool &r_done, bool convertoctals)
