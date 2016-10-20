@@ -15,7 +15,8 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, mobile
 
 Example:
-export widget 1 to array myArray
+local tMyArray
+export widget 1 to array tMyArray
 
 Parameters:
 widget:
