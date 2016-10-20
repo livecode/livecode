@@ -235,12 +235,22 @@ bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_convert
         return false;
     
     MCAutoStringRefAsCString t_cstring;
-    t_cstring . Lock(p_string);
-    
-    bool t_done;
-    uindex_t t_length = strlen(*t_cstring);
-    r_converted = MCU_strtol(*t_cstring, t_length, '\0', t_done, false, false);
-	return t_done;
+	if (!t_cstring . Lock(p_string))
+		return false;
+
+	bool t_done = false;
+	MCSpan<const char> t_remainder;
+	integer_t t_converted = MCU_strtol(t_cstring.Span(), '\0', false, false,
+	                                   t_done, t_remainder);
+	if (t_done && t_remainder.empty())
+	{
+		r_converted = t_converted;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 MC_DLLEXPORT_DEF
