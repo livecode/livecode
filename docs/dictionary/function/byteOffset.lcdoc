@@ -2,11 +2,11 @@ Name: byteOffset
 
 Type: function
 
-Syntax: byteOffset(<bytesToFind>,<binaryStringToSearch> [,bytesToSkip])
+Syntax: byteOffset(<bytesToFind>,<binaryStringToSearch> [,<bytesToSkip>])
 
 Summary:
-<return|Returns> the number of <bytes> between the first <byte> of a <value> 
-and an occurrence of a specified binaryString.
+<return|Returns> the <byte> position of the first occourence of the
+specified string of <binary data> within container of <binary data>.
 
 Introduced: 7.0
 
@@ -27,23 +27,23 @@ Example:
 byteOffset(null & numberToByte(255),"End" & null & numberToByte(255)) -- returns 4
 
 Parameters:
-bytesToFind (string): a string of binary values to find
+bytesToFind (data): a string of <binary data> to find
 
 
-binaryStringToSearch (string): a container with binary values
+binaryStringToSearch (data): a container with <binary data>
 
 
 bytesToSkip:
-A non-negative integer. If you don't specify how many bytesToSkip, the
-byteOffset function does not skip any bytes and starts at the beginning of
-the binaryStringToSearch.
+A non-negative integer. If you don't specify how many <bytesToSkip>, the
+<byteOffset> <function> does not skip any bytes and starts at the beginning of
+the <binaryStringToSearch>.
 
 Returns:
 The <byteOffset> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
-Use the <byteOffset> <function> to find where a <binaryString> occurs in another
-<binaryString>. 
+Use the <byteOffset> <function> to find where a string of <binary data> 
+occurs within a container of <binary data>.
 
 The value returned by the <byteOffset> <function> is the number of the
 <bytes> where <bytesToFind> appears in <binaryStringToSearch>. If the
@@ -62,8 +62,8 @@ beginning of the <binaryStringToSearch>.
 References: find (command), sort container (command),
 function (control structure), offset (function), wordOffset (function),
 itemOffset (function), lineOffset (function), length (function),
-value (function), return (glossary), non-negative (glossary),
-character (keyword), characters (keyword), integer (keyword),
-string (keyword), point (keyword), begins with (operator)
+value (function), binary data (glossary), return (glossary),
+non-negative (glossary), character (keyword), characters (keyword),
+integer (keyword), string (keyword), point (keyword), begins with (operator)
 
 Tags: data processing
