@@ -45,12 +45,12 @@ has come from one of the holders of the private key, use the form:
 
     encrypt <message> with private key <key> 
 
-> **Generating key pairs - **
-> Public-private key pairs can be generated using the OpenSSL suite of
-> command-line tools. For example: openssl genrsa -out private_key.pem 512
-> openssl rsa -pubout -in private_key.pem -out public_key.pem
-> Will generate a key pair of size 512-bits, placing the private key in
-> private_key.pem and the public key in public_key.pem.
+#### Generating key pairs
+Public-private key pairs can be generated using the OpenSSL suite of
+command-line tools. For example: openssl genrsa -out private_key.pem 512
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+Will generate a key pair of size 512-bits, placing the private key in
+private_key.pem and the public key in public_key.pem.
 
 For more information on these utilities see
 http://www.openssl.org/docs/apps/rsa.html and
