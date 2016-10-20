@@ -20,15 +20,6 @@
 
 #define R8L 384
 
-inline void MCU_skip_spaces(const char *&sptr, uinteger_t &l)
-{
-	while (l && isspace((uint8_t)*sptr))
-	{
-		sptr++;
-		l--;
-	}
-}
-
 inline void MCU_skip_spaces(MCSpan<const char>& x_span)
 {
 	while (!x_span.empty() && isspace(uint8_t(x_span[0])))
@@ -157,16 +148,6 @@ static integer_t MCU_strtol(MCSpan<const char> p_chars,
 	return value;
 }
 
-static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
-                            bool reals, bool octals)
-{
-	MCSpan<const char> t_remainder;
-	integer_t t_result = MCU_strtol(MCMakeSpan(sptr, l), c, reals, octals,
-	                                done, t_remainder);
-	l = t_remainder.size();
-	return t_result;
-}
-
 static real64_t MCU_strtor8(MCSpan<const char> p_chars,
                             bool convertoctals,
                             bool & r_done)
@@ -221,11 +202,6 @@ static real64_t MCU_strtor8(MCSpan<const char> p_chars,
 
 	r_done = true;
 	return t_value;
-}
-
-static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,  bool &r_done, bool convertoctals)
-{
-	return MCU_strtor8(MCMakeSpan(r_str, r_len), convertoctals, r_done);
 }
 
 MC_DLLEXPORT_DEF
