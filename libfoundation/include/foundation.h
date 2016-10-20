@@ -443,7 +443,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #      define alignof(x)    __alignof(x)
 #    endif
 #  else
-#    error Don't know how to get alignof(x) on this compiler
+#    error Do not know how to get alignof(x) on this compiler
 #  endif
 #endif
 
