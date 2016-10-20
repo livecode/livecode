@@ -42,7 +42,7 @@ static integer_t MCU_strtol(MCSpan<const char> p_chars,
                             bool reals,
                             bool octals,
                             bool& done,
-                            MCSpan<const char> r_remainder)
+                            MCSpan<const char>& r_remainder)
 {
 	done = false;
 	MCU_skip_spaces(p_chars);
