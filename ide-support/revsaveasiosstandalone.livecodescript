@@ -1338,7 +1338,9 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in pPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
+   		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
+   		
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
