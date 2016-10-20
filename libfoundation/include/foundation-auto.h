@@ -711,6 +711,10 @@ public:
 		(void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
 		return t_length;
 	}
+	MCSpan<const char_t> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
+	}
 private:
 	MCAutoStringRef m_string;
 };
@@ -723,6 +727,10 @@ public:
 	const char * operator* () const
 	{
 		return reinterpret_cast<const char *>(MCAutoStringRefAsNativeChars::operator*());
+	}
+	MCSpan<const char> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
 	}
 };
 
