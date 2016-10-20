@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation.h"
 #endif
 
+#include "foundation-span.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> class MCAutoValueRefBase;
