@@ -4,7 +4,7 @@ Synonyms: revxmlrpc_free
 
 Type: command
 
-Syntax: revXMLRPC_DeleteDocument <XML-RPC document>
+Syntax: revXMLRPC_DeleteDocument <documentID>
 
 Summary:
 Deletes an XML-RPC document structure, freeing up the memory of its

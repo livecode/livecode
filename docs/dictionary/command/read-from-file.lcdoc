@@ -63,10 +63,6 @@ time:
 The time to wait for the read to be completed, in milliseconds, seconds,
 or ticks.
 
-portname:
-If you specify any of EOF, end, or empty, the read continues reading
-until it reaches the end of the file. (If you're reading from a serial
-port, you must use the form read from file portname until empty.)
 
 It:
 The data is placed in the <it> variable after reading. If you specified

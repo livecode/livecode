@@ -26,8 +26,8 @@ A string consisting of one or more email addresses separated by commas.
 These addresses will appear in the CC: header of the email message.
 
 mailSubject:
-A unicode string consisting of a single line. This will appear in the
-Subject: header of the email message.
+A unicode string consisting of a single line. This will 
+appear in the Subject: header of the email message.
 
 messageBody:
 A unicode string. This text will appear in the body of the email
