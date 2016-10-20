@@ -61,7 +61,7 @@ public:
 	/* ---------- Constructors */
 	MCSpan()
 		: m_data(nullptr), m_length(0) {}
-	MCSpan(std::nullptr_t)
+	MCSpan(decltype(nullptr))
 		: m_data(nullptr), m_length(0) {}
 	MCSpan(ElementPtr p_ptr, IndexType p_count)
 		: m_data(p_ptr), m_length(p_count) {}
