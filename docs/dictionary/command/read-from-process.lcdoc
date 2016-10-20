@@ -40,7 +40,7 @@ start (string):
 The <start> specifies the <character> or <byte> position in the
 <process> output where you want to begin reading.
 
-chunkType (enum):
+chunkType:
 The <chunkType> is one of chars, characters, words, items, lines, int1,
 uInt1, int2, uint2, int4, or uint4. The <read from process> <command>
 reads <amount> of the specified <chunkType>. If you don't specify a
@@ -68,7 +68,7 @@ for the numerical value of each chunk that was read. Otherwise, the data
 is placed in the <it> <variable> as it appears in the output.
 
 The result:
-The process to read from must be opened first with the open process
+The process to read from must be opened first with the <open process>
 <command>, and the mode the <process> was opened in must be read or
 update. If the process is not running or is write-only, the <result>
 <function> is set to "Process is not open for read.". If the <read from
@@ -86,7 +86,7 @@ encountered.
 The until end and until eof forms read data until the
 process specifies it is finished. 
 When until empty is used the data is read in at specified time intervals.
-If, when checked, the data is empty, the <openProcesses function> is used 
+If, when checked, the data is empty, the <openProcesses> <function> is used 
 to check whether the process has finished. 
 
 Changes:
@@ -94,14 +94,13 @@ Support for using the read from process command on OS X systems was
 added in version 2.0.
 
 References: open process (command), close process (command),
-write to process (command), read from driver (command),
-open processcommand (command), EOF (constant),
-function (control structure), ticks (function), result (function),
-openProcesses function (function), milliseconds (function),
-openProcesses (function), platform (glossary), binary file (glossary),
-variable (glossary), byte (glossary), case-sensitive (glossary),
-expression (glossary), it variable (glossary), evaluate (glossary),
-command (glossary), process (glossary), uInt2 (keyword), string (keyword),
-int1 (keyword), characters (keyword), int4 (keyword), integer (keyword),
-int2 (keyword), real4 (keyword), uInt4 (keyword), stdin (keyword),
-it (keyword), uInt1 (keyword), character (keyword), real8 (keyword)
+write to process (command), read from driver (command), EOF (constant),
+function (control structure), openProcesses (function), ticks (function),
+result (function), milliseconds (function), platform (glossary),
+binary file (glossary), variable (glossary), byte (glossary), 
+case-sensitive (glossary), expression (glossary), it variable (glossary),
+evaluate (glossary), command (glossary), process (glossary), uInt2 (keyword),
+string (keyword), int1 (keyword), characters (keyword), int4 (keyword),
+integer (keyword), int2 (keyword), real4 (keyword), uInt4 (keyword),
+stdin (keyword), it (keyword), uInt1 (keyword), character (keyword),
+real8 (keyword)
