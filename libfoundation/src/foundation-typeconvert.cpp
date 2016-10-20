@@ -260,13 +260,11 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
         return false;
     
     MCAutoStringRefAsCString t_cstring;
-    t_cstring . Lock(p_string);
-    
-    const char *t_sptr = *t_cstring;
-    uindex_t t_length = strlen(t_sptr);
-    bool t_done;
-    
-    real64_t t_value = MCU_strtor8(t_sptr, t_length, '\0', t_done, p_convert_octals);
+	if (!t_cstring . Lock(p_string))
+		return false;
+
+	bool t_done = false;
+	real64_t t_value = MCU_strtor8(t_cstring.Span(), p_convert_octals, t_done);
     
     if (t_done)
         r_converted = t_value;
