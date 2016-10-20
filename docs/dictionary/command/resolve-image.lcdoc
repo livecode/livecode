@@ -2,7 +2,7 @@ Name: resolve image
 
 Type: command
 
-Syntax: resolve image [id] <id or name> relative to <object reference>
+Syntax: resolve image [id] <id or name> relative to <objectReference>
 
 Summary:
 Resolves a short id or name of an image relative to an object to find
@@ -22,7 +22,7 @@ Parameters:
 id or name:
 The short id or name of an image.
 
-object reference:
+objectReference:
 The relative object to the image.
 
 It:
