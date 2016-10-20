@@ -349,9 +349,20 @@ bool MCUIWebViewBrowser::SetJavaScriptHandlers(const char *p_handlers)
 		m_js_handlers = nil;
 	}
 	
+	if (m_js_handler_list != nil)
+	{
+		[ m_js_handler_list release];
+		m_js_handler_list = nil;
+	}
+	
 	m_js_handlers = t_handlers;
 	t_handlers = nil;
 	
+	return AttachJSHandlers();
+}
+
+bool MCUIWebViewBrowser::AttachJSHandlers()
+{
 /* JSCore not supported on iOS version < 7.0 */
 #ifdef __IPHONE_7_0
 	
@@ -359,11 +370,8 @@ bool MCUIWebViewBrowser::SetJavaScriptHandlers(const char *p_handlers)
 	{
 		if (m_js_handlers != nil)
 		{
-			if (m_js_handler_list != nil)
-				[m_js_handler_list release];
-			m_js_handler_list = nil;
-			
-			m_js_handler_list = [[[NSString stringWithCString: m_js_handlers encoding:NSUTF8StringEncoding] componentsSeparatedByString: @"\n"] retain];
+			if (m_js_handler_list == nil)
+				m_js_handler_list = [[[NSString stringWithCString: m_js_handlers encoding:NSUTF8StringEncoding] componentsSeparatedByString: @"\n"] retain];
 		}
 		
 		MCBrowserRunBlockOnMainFiber(^{
@@ -847,6 +855,9 @@ bool MCUIWebViewBrowser::Init(void)
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
+	if (!m_frame_request)
+		m_instance->AttachJSHandlers();
+	
 	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
