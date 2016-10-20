@@ -53,10 +53,10 @@ template <typename ElementType>
 class MCSpan
 {
 public:
-	using IndexType = std::ptrdiff_t;
-	using ElementPtr = ElementType*;
-	using ElementRef = ElementType&;
-	using ElementRRef = ElementType&&;
+	typedef std::ptrdiff_t IndexType;
+	typedef ElementType* ElementPtr;
+	typedef ElementType& ElementRef;
+	typedef ElementType&& ElementRRef;
 
 	/* ---------- Constructors */
 	MCSpan()
