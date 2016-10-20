@@ -2,7 +2,7 @@ Name: print link
 
 Type: command
 
-Syntax: print link to [ url | anchor ] <link> with rect <rectangle>
+Syntax: print link to [{ url | anchor }] <linkName> with rect <rectArea>
 
 Summary:
 Defines a hyperlink within a pdf print loop.
@@ -20,10 +20,10 @@ Example:
 print link to anchor "section 1.1" with rect 100,100,200,200
 
 Parameters:
-link:
+linkName:
 A URL or internal anchor name.
 
-rectangle:
+rectArea:
 A valid rectangle describing the link area in the pdf.
 
 Description:
