@@ -22,36 +22,46 @@ The name of the ad to create. This is used to reference the ad
 throughout its lifetime.
 
 type (enum):
-The type of the ad. The possible ad types are:
+The ad type.
 
-- 'text'
-- 'full screen'
-- 'banner' - This is the default.
+- "text":
+- "full screen":
+- "banner": This is the default.
 
 
 topLeft:
 The location of the top left corner of the ad (coordinates are
 in left,top - x,y order) in pixels. The default is: 0,0
 
-metaData (enum):
+metaData:
 An array of values that are used to target the ad. The keys 
 are as follows: 
 
--   "phone number": The user's mobile number (MSISDN format with international prefix).
--   "keywords": Keywords relevant to the user's specific session. This is comma separated without spaces.
--   "gender": The expected gender of the target user. The allowed values are M, m, Male, F, f, Female.
--   "distribution id": The distribution Channel ID (559 for banner ads and full screen ads, 600 for text ads).
--   "refresh": A value in seconds that defines how often the ad should refresh. Values are between 30 and 300 seconds. The default is 120 seconds. 
+-   "phone number": The user's mobile number (MSISDN format with 
+international prefix).
+-   "keywords": Keywords relevant to the user's specific session. This 
+is comma separated without spaces.
+-   "gender": The expected gender of the target user. The allowed values 
+are M, m, Male, F, f, Female.
+-   "distribution id": The distribution Channel ID (559 for banner ads 
+and full screen ads, 600 for text ads).
+-   "refresh": A value in seconds that defines how often the ad should 
+refresh. Values are between 30 and 300 seconds. The default is 120 seconds. 
 -   "age": An integer defining the expected age of the target user.
--   "coordinates": GPS ISO code location data in latitude, longitude format. - (iOS only)
--   "location": A comma delimited list of country, state/province, city. - (iOS only)
+-   "coordinates": GPS ISO code location data in latitude, longitude 
+format. - (iOS only)
+-   "location": A comma delimited list of country, state/province, 
+city. - (iOS only)
 
 
 The result:
--   'empty': If successful.
--   'not registered with service': if you did not register your app id using <mobileAdRegister> before calling <mobileAdCreate>. 
--   'ad already exists': if an ad of the given name already exists.
--   'could not create ad': if the ad could not be created. This is the case, if the app does not have Internet permissions or the registered app key is not valid.
+-   empty: If successful.
+-   "not registered with service": if you did not register your app id 
+using <mobileAdRegister> before calling <mobileAdCreate>. 
+-   "ad already exists": if an ad of the given name already exists.
+-   "could not create ad": if the ad could not be created. This is the 
+case, if the app does not have Internet permissions or the registered 
+app key is not valid.
 
 Description:
 Use the <mobileAdCreate> to place an add of a given type.
