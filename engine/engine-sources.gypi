@@ -987,6 +987,7 @@
 		[
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
+			'test/test_rgb.cpp',
 		],
 	},
 	
