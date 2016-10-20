@@ -167,54 +167,65 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 	return t_result;
 }
 
+static real64_t MCU_strtor8(MCSpan<const char> p_chars,
+                            bool convertoctals,
+                            bool & r_done)
+{
+	/* Attempt to convert as an integer */
+	{
+		MCSpan<const char> t_remainder;
+		bool t_done = false;
+		integer_t t_int_val = MCU_strtol(p_chars, '\0', false, convertoctals,
+		                                 t_done, t_remainder);
+		if (t_done)
+		{
+			r_done = t_remainder.empty();
+			return t_int_val;
+		}
+	}
+
+	r_done = false;
+
+	MCU_skip_spaces(p_chars);
+	if (p_chars.empty())
+		return 0;
+
+	if (p_chars.size() > 1)
+	{
+		if ((MCNativeCharFold(p_chars[1]) == 'x' &&
+		     (p_chars.size() == 2 || !isxdigit(p_chars[2]))) ||
+		    (p_chars[1] == '+' || p_chars[1] == '-'))
+		{
+			return 0;
+		}
+	}
+
+	/* We need a null-terminated buffer to pass to strtod().  Assume
+	 * that all 64-bit real numbers can be represented unambiguously
+	 * using at most R8L characters. */
+	char t_buff[R8L + 1];
+	if (p_chars.size() > R8L)
+		return 0;
+	memcpy(t_buff, p_chars.data(), p_chars.size());
+	t_buff[p_chars.size()] = '\0';
+
+	char *t_end = nil;
+	real64_t t_value = strtod(t_buff, &t_end);
+	if (t_end == t_buff)
+		return 0;
+
+	p_chars += (t_end - t_buff);
+	MCU_skip_spaces(p_chars);
+	if (!p_chars.empty())
+		return 0;
+
+	r_done = true;
+	return t_value;
+}
+
 static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,  bool &r_done, bool convertoctals)
 {
-    const char *sptr = r_str;
-    uindex_t l = r_len;
-    bool done;
-    integer_t i = MCU_strtol(sptr, l, p_delim, done, false, convertoctals);
-    if (done)
-    {
-        r_done = done;
-        return i;
-    }
-    sptr = r_str;
-    l = MCMin(R8L - 1U, strnlen(sptr, r_len));
-    MCU_skip_spaces(sptr, l);
-    // bugs in MSL means we need to check these things
-    // MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
-    //   of these tests.
-    if (l == 0 || (l > 1 && (((MCNativeCharFold((uint8_t)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint8_t)sptr[2])))
-                              || (sptr[1] == '+' || sptr[1] == '-')))))
-    {
-        r_done = false;
-        return 0;
-    }
-
-    char buff[R8L];
-    memcpy(buff, sptr, l);
-    buff[l] = '\0';
-    const char *newptr;
-    
-    real64_t t_value;
-    t_value = strtod((char *)buff, (char **)&newptr);
-    if (newptr == buff)
-    {
-        r_done = false;
-        return 0;
-    }
-    
-    l = buff + l - newptr;
-    MCU_skip_spaces(newptr, l);
-    if (l != 0)
-    {
-        r_done = false;
-        return 0;
-    }
-    
-    r_done = true;
-    return t_value;
-    
+	return MCU_strtor8(MCMakeSpan(r_str, r_len), convertoctals, r_done);
 }
 
 MC_DLLEXPORT_DEF
