@@ -194,4 +194,13 @@ MCSpan<ElementType> MCMakeSpan(ElementType *p_ptr,
 	return MCSpan<ElementType>(p_ptr, p_count);
 }
 
+template <typename ElementType = byte_t>
+MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
+{
+	MCAssert(MCDataGetLength(p_data) % sizeof(ElementType) == 0);
+	auto t_ptr = reinterpret_cast<ElementType*>(MCDataGetBytePtr(p_data));
+	size_t t_length = MCDataGetLength(p_data) / sizeof(ElementType);
+	return MCMakeSpan(t_ptr, t_length);
+}
+
 #endif /* !__MC_FOUNDATION_SPAN_H__ */
