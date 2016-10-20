@@ -276,10 +276,9 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
 MC_DLLEXPORT_DEF
 bool MCTypeConvertDataToReal(MCDataRef p_data, real64_t& r_converted, bool p_convert_octals)
 {
-    const char *t_sptr = (const char *)MCDataGetBytePtr(p_data);
-	uindex_t t_length = MCDataGetLength(p_data);
-	bool t_done;
-    real64_t t_value = MCU_strtor8(t_sptr, t_length, '\0', t_done, p_convert_octals);
+    bool t_done = false;
+    real64_t t_value = MCU_strtor8(MCDataGetSpan<const char>(p_data),
+                                   p_convert_octals, t_done);
     
     if (t_done)
         r_converted = t_value;
