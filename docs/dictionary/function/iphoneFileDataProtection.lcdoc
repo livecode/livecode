@@ -24,11 +24,11 @@ A string containing the path to the file.
 
 Returns (enum):
 
--   empty: The file was not accessible or argument not specified.
--   none: No protection.
--   complete: The file is not accessible, for read or write, while the device is locked.
--   complete unless open: The file is fully protected when the device is locked, unless it was already open.
--   complete until first user authentication: The file is fully protected until the user unlocks the device for this first time.
+- "empty": The file was not accessible or argument not specified.
+- "none": No protection.
+- "complete": The file is not accessible, for read or write, while the device is locked.
+- "complete unless open": The file is fully protected when the device is locked, unless it was already open.
+- "complete until first user authentication": The file is fully protected until the user unlocks the device for this first time.
 
 
 Description:
