@@ -47,6 +47,7 @@
 				'widgets/colorswatch/colorswatch.lcb',
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 				'widgets/tile/tile.lcb',
+				'widgets/spinner/spinner.lcb',
 			],
 
 			'all_dependent_settings':
