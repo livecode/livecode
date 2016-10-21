@@ -918,13 +918,11 @@ static bool MCD_decompose_convert_format(MCExecContext &ctxt, int p_form, const 
 		r_format = MCValueRetain(MCtwelvetime ? r_locale -> time_formats[0] : r_locale -> time24_formats[0]);
 		return true;
 		//r_is_date = false;
-	break;
 
 	case CF_LONG_TIME:
 		r_format = MCValueRetain(MCtwelvetime ? r_locale -> time_formats[1] : r_locale -> time24_formats[1]);
 		return true;
 		//r_is_date = false;
-	break;
 
 	case CF_DATE:
 	case CF_SHORT_DATE:

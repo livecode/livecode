@@ -833,7 +833,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		default:
             ctxt . Throw();
             return;
-		break;
 	}
 
 	MCAutoPointer<MCContainer> t_container;

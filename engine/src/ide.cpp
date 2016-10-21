@@ -706,7 +706,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				}
 				else
 					return false;
-				break;
 			}
 
 			case ST_COM:
@@ -715,7 +714,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 					;
 				
 				return true;
-				break;
 
 			case ST_OP:
 			{
@@ -766,7 +764,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				}
 				else
 					return false;
-				break;
 			}
 			default:
 				return false;
@@ -1063,7 +1060,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 				}
 				else
 					return false;
-				break;
 			}
                 
 			case ST_COM:
@@ -1072,7 +1068,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
                     ;
 				
 				return true;
-				break;
                 
 			case ST_OP:
 			{
@@ -1123,7 +1118,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 				}
 				else
 					return false;
-				break;
 			}
 			default:
 				return false;
