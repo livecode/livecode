@@ -114,7 +114,7 @@ private command _TestWriteOutput pMessage
    end if
 end _TestWriteOutput
 
-private function _TestGetBuiltExtensionsFolder
+private function _TestGetBuildFolder
    local tPath, tRepoPath
    put specialfolderpath("engine") into tPath
    put TestGetEngineRepositoryPath() into tRepoPath
@@ -123,10 +123,14 @@ private function _TestGetBuiltExtensionsFolder
    set the itemdelimiter to slash
    repeat while tPath is not tRepoPath and tPath is not empty
       if there is a folder (tPath & slash & "packaged_extensions") then
-         return (tPath & slash & "packaged_extensions")
+         return tPath
       end if
       delete item -1 of tPath
    end repeat	
+end _TestGetBuildFolder
+
+private function _TestGetBuiltExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
 end _TestGetBuiltExtensionsFolder
 
 private command _TestLoadExtension pFolder, pPath
@@ -204,6 +208,10 @@ function TestGetIDERepositoryPath
   set the itemdelimiter to "/"
   return item 1 to -3 of the filename of me & slash & "ide"
 end TestGetIDERepositoryPath
+
+function TestGetExtractedDocsFolder
+   return _TestGetBuildFolder() & slash & "extracted_docs"
+end TestGetExtractedDocsFolder
 
 on TestLoadExtension pName	
    set the itemdelimiter to "."
