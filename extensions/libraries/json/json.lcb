@@ -103,7 +103,7 @@ of the file:
 
 Tags: JSON
 */
-public handler JsonImport(in pJson as String) returns any
+public handler JsonImport(in pJson as String) returns optional any
 
   -- These variables track the cursor position
   variable tLine as Number
