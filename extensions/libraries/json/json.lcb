@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This library provides support for generating and parsing JavaScript Object
-Notation (JSON) data.  See also <http://json.org>.
+
+This library provides support for generating and parsing JavaScript
+Object Notation (JSON) data.  See also <http://json.org> and
+<https://tools.ietf.org/html/rfc7159>.
 
 Tags: JSON, Library
 */
