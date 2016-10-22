@@ -402,6 +402,11 @@ function builderPackagedExtensionsFolder
    return the result & slash & "packaged_extensions"
 end builderPackagedExtensionsFolder
 
+function builderExtractedDocsFolder
+   builderFetchEngine "", "macosx"
+   return the result & slash & "extracted_docs"
+end builderExtractedDocsFolder
+
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform
    local tEngineFolder
