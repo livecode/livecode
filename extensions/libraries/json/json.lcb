@@ -68,6 +68,7 @@ constant kScanInNumber is 30
 -- Parser states
 constant kParseTop is 0
 constant kParseEndValue is 1
+constant kParseDone is 2
 constant kParseArrayStart is 10
 constant kParseArrayValue is 11
 constant kParseArrayNext is 12
@@ -150,6 +151,12 @@ public handler JsonImport(in pJson as String) returns any
       -- Consume whitespace
       if tChar is in " \t\r\n" then
         next repeat
+      end if
+
+      -- Reject non-whitespace characters after first top-level datum
+      if tParseState is kParseDone then
+         return JsonSyntaxError(tLine, tColumn, \
+               "Unexpected character '" & tChar & "' after JSON data")
       end if
 
       if tChar is in "{}[]:," then
@@ -397,7 +404,7 @@ public handler JsonImport(in pJson as String) returns any
 
       -- Top level
       else if tParseState is kParseTop then
-        return tValue
+        put kParseDone into tParseState
 
       else
         return JsonSyntaxError(tLine, tColumn, "bad parse state" && FormatInt(tParseState) && "at token '" & tToken & "'")
@@ -405,7 +412,11 @@ public handler JsonImport(in pJson as String) returns any
     end repeat
   end repeat
 
-  return JsonSyntaxError(tLine, tColumn, "unexpected end of input")
+  if tParseState is kParseDone then
+     return tValue
+  else
+     return JsonSyntaxError(tLine, tColumn, "unexpected end of input")
+  end if
 end handler
 
 --================================================================
