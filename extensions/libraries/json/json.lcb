@@ -169,7 +169,8 @@ public handler JsonImport(in pJson as String) returns optional any
       -- Reject non-whitespace characters after first top-level datum
       if tParseState is kParseDone then
          return JsonSyntaxError(tLine, tColumn, \
-               "Unexpected character '" & tChar & "' after JSON data")
+               "Unexpected character '" & FormatChar(tChar) & \
+               "' after JSON data")
       end if
 
       if tChar is in "{}[]:," then
@@ -190,7 +191,7 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanInNumber into tScanState
       else
         return JsonSyntaxError(tLine, tColumn, \
-                               "Unexpected character '" & tChar & "'")
+              "Unexpected character '" & FormatChar(tChar) & "'")
       end if
 
         -- String support is complicated
@@ -233,14 +234,15 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanInString into tScanState
       else
         return JsonSyntaxError(tLine, tColumn, \
-                               "illegal escape sequence '\\" & tChar & "'")
+              "illegal escape sequence '\\" & FormatChar(tChar) & "'")
       end if
     else if tScanState is kScanInStringUnicode then
-      put tChar after tStringUniHex
       if not (tChar is in "0123456789abcdefABCDEF") then
         return JsonSyntaxError(tLine, tColumn, \
-                        "illegal escape sequence '\\u" & tStringUniHex & "'")
+              "illegal escape sequence '\\u" & tStringUniHex & \
+              FormatChar(tChar) & "'")
       end if
+      put tChar after tStringUniHex
       if the number of chars in tStringUniHex >= 4 then
         put the char with code (tStringUniHex converted from base 16) after tTokenValue
         put kScanInString into tScanState
@@ -281,7 +283,8 @@ public handler JsonImport(in pJson as String) returns optional any
         if tChar is in "]}," then
           put tChar into tExtraToken
         else if not (tChar is in " \t\r\n") then
-          return JsonSyntaxError(tLine, tColumn, "bad number terminal '" & tChar & "'")
+          return JsonSyntaxError(tLine, tColumn, \
+                "bad number terminal '" & FormatChar(tChar) & "'")
         end if
       end if
 
