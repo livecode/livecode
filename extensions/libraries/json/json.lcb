@@ -47,6 +47,17 @@ private handler FormatInt(in pNumber as Number) returns String
 	return tNumberString
 end handler
 
+-- Format a character for inclusion in error messages.  Control
+-- characters are shown in "\uXXXX" format, and other characters are
+-- shown literally.
+private handler FormatChar(in pChar as String) returns String
+   if the code of pChar > 0x1f then
+      return pChar
+   else
+      return "\\u" & (the code of pChar converted to base 16)
+   end if
+end handler
+
 private handler JsonSyntaxError(in pLine as Number, in pColumn as Number, \
                         in pMessage as String) returns nothing
   throw "syntax error:" && FormatInt(pLine) & ":" & FormatInt(pColumn) && pMessage
@@ -186,6 +197,13 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanEndToken into tScanState
       else if tChar is "\\" then
         put kScanInStringEscape into tScanState
+      else if the code of tChar <= 0x1f then
+        -- RFC 7159 requires control characters inside string literals
+        -- to be escaped.  Control characters are those within the
+        -- range U+0000 to U+001F inclusive
+        return JsonSyntaxError(tLine, tColumn, \
+              "Unescaped control character '" & FormatChar(tChar) & \
+              "' in string")
       else
         put tChar after tTokenValue
       end if
