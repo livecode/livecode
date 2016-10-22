@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,7 +26,7 @@ Tags: JSON, Library
 
 library com.livecode.library.json
 
-metadata version is "1.0.0"
+metadata version is "2.0.0"
 metadata author is "LiveCode"
 metadata title is "JSON Library"
 
