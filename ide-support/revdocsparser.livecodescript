@@ -532,6 +532,10 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                put true into tEntryData["need_docs"]
                break
             case "on"
+               put "command" into tEntryData["type"]
+               put word 2 of tLine into tEntryData["name"]
+               put false into tEntryData["need_docs"]
+               break
             case "command"
             case "function"
                if tFirstWord is "function" then

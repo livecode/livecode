@@ -241,11 +241,11 @@ command OAuth2Set pProperty, pValue
    return empty for error
 end OAuth2Set
 
-command __NewConnection pSocketID
+on __NewConnection pSocketID
    read from socket pSocketID until crlf & crlf with message "__HandleRequest"
 end __NewConnection
  
-command __HandleRequest pSocketID, pData
+on __HandleRequest pSocketID, pData
    close socket pSocketID
    
    local tRequest
