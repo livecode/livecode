@@ -33,14 +33,21 @@ The location and name of the program you want to open. You can run only
 one instantiation of a given program at one time. The appName can be any
 program on the system.
 
-encoding:
-From 7.0, it's possible to specify an encoding for the process being
-opened. By doing so, you can straight read a process without
-having to call <textEncode> or <textDecode>; the encoding supported by
-open process are the same as these text encoding functions. If no encoding
-is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
-at the beginning of the file. In success, the encoding is adapted and the
-BOM is ignored.
+encoding (enum):
+the encoding to be used
+
+- "ASCII"
+- "UTF-16"
+- "UTF-16BE"
+- "UTF-16LE"
+- "UTF-32"
+- "UTF-32BE"
+- "UTF-32LE"
+- "UTF-8"
+- "CP1252"
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
 
 
 Description:
@@ -122,6 +129,15 @@ a GUI front-end that interacts with the user, and a command-line
 back-end that is run with elevated permissions. These two parts can then
 talk to each other using a standard master-slave approach, or some other
 form of IPC such as sockets
+
+Changes:
+From 7.0, it's possible to specify an encoding for the file being
+opened. By doing so, you can straight read or write to a file without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open file are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
 
 References: kill (command), close process (command),
 read from process (command), write to process (command),
