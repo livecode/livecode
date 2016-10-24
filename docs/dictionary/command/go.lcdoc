@@ -176,9 +176,9 @@ did not support sheet dialogs.
 References: unlock recent (command), show (command), command (glossary),
 show cards (command), drawer (command), modeless (command),
 push (command), previous (keyword), recent (keyword), as (keyword),
-card (keyword), stack (object), lockRecent property (property),
-lockScreen (property), lockScreen property (property),
-HCImportStat (property), visible property (property),
+card (keyword), stack (object), lockRecent (property),
+lockScreen (property), property (glossary),
+HCImportStat (property), visible (property),
 defaultStack (property), defaultFolder (property)
 
 Tags: navigation
