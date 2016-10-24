@@ -2141,7 +2141,11 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     uint32_t t_part_id;
     t_object = nil;
 
-    t_success = m_target -> getobj(ctxt, t_object, t_part_id, True);
+	if (!m_target -> getobj(ctxt, t_object, t_part_id, True))
+	{
+		ctxt.SetTheResultToValue(MCSTR("invalid object"));
+		return;
+	}
 
     // Evaluate the script.
     MCAutoStringRef t_script;
