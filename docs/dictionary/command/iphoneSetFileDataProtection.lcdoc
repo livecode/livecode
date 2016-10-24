@@ -27,12 +27,9 @@ dataProtection (enum):
 The level of protection to apply to the file
 
 -   "none": No protection
--   "complete": The file is not accessible, for read or write, while the 
-device is locked.
--   "complete unless open": The file is fully protected when the device 
-is locked, unless it was already open
--   "complete until first user authentication": The file is fully 
-protected until the user unlocks the device for this first time.
+-   "complete": The file is not accessible, for read or write, while the device is locked.
+-   "complete unless open": The file is fully protected when the device is locked, unless it was already open
+-   "complete until first user authentication": The file is fully protected until the user unlocks the device for this first time.
 
 
 Description:
