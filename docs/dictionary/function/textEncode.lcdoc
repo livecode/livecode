@@ -36,11 +36,9 @@ the encoding to be used
 - "UTF-32LE"
 - "UTF-8"
 - "CP1252"
-
-
--   "ISO-8859-1": Linux only
--   "MacRoman": OS X only
--   "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
 
 
 Returns:
