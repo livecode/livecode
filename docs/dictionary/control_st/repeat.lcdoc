@@ -228,7 +228,7 @@ in the <statementList>.
 Use one of these forms if you want to perform an action on each member
 of a set, and you need to refer to the member by number within the
 <statementList>. The following example loops through all the controls on
-the current card. The counter <variable> *x* is 1 during the first
+the current card. The *counterVariable* *x* is 1 during the first
 <iteration>, 2 during the second, and so on:
 
     repeat with x = 1 to the number of controls
@@ -237,7 +237,7 @@ the current card. The counter <variable> *x* is 1 during the first
 
 
 The following example loops backwards through a set of lines. The
-counter <variable> *myLine* is 20 during the first <iteration>, 18
+*counterVariable* *myLine* is 20 during the first <iteration>, 18
 during the second, and so on:
 
     repeat with myLine = 20 down to 1 step -2
