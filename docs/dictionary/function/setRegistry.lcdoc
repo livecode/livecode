@@ -50,7 +50,7 @@ successfully changed, false otherwise.
 
 The result:
 If Windows sends an error message to the application, the result
-<function> <return|returns> the <error message>.
+<function> <return|returns> the <error> <message>.
 
 Description:
 Use the <setRegistry> <function> to change the <behavior> of <Windows>.

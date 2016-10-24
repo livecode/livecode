@@ -48,7 +48,7 @@ The result:
 If successful this will be an integer browser instance id, if
 unsuccessful, the result will be empty. The browser library functions
 will throw an execution error if they encounter a problem. These can be
-caught by handling the <errorDialog message> or by using a <try / catch
+caught by handling the <errorDialog> <message> or by using a <try / catch
 block>. In general there is no need to check the <result>, as nearly all
 the commands and functions put empty into it.
 
@@ -122,5 +122,5 @@ XBrowser_Focus (command), revBrowserClose (command),
 try / catch block (control structure), result (function),
 browserOver (message), browserNewInstance (message),
 browserNewUrlWindow (message), browserDownloadRequest (message),
-errorDialog message (message), browserNavigateCompleteFrame (message)
+errorDialog (message), message (glossary), browserNavigateCompleteFrame (message)
 

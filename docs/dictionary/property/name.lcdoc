@@ -133,9 +133,9 @@ reported, regardless of what form of the <name> <property> you request.
 > to be inappropriately disabled, or other problems. You can use the
 > <characters> "rev" anywhere in a <stack> <name> except the beginning.
 > If you want a name beginning with "rev" to appear in a stack's title
-> bar, set the stacks' <label property> instead.
+> bar, set the stacks' <label> <property> instead.
 
->*Note:* If a stack's <HCAddressing property> is set to true, the <long>
+>*Note:* If a stack's <HCAddressing> <property> is set to true, the <long>
 > or <abbreviated> <name> of a <control(keyword)> in that <stack> begins
 > with the word "background" if the <control(keyword)> is part of a
 > <group>, and with the word "card" if not.
@@ -153,9 +153,9 @@ background (glossary), card control (glossary), object (glossary),
 file (keyword), characters (keyword), long (keyword), button (keyword),
 string (keyword), abbreviated (keyword), card (keyword),
 control (keyword), nameChanged (message), player (object), stack (object),
-control (object), HCAddressing property (property), name (property),
+control (object), HCAddressing (property), name (property),
 owner (property), ID (property), hilitedButtonName (property),
-label (property), label property (property), titleWidth (property)
+label (property), titleWidth (property)
 
 Tags: objects
 

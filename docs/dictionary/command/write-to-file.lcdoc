@@ -72,7 +72,7 @@ specify a start, the write begins:
 
 
 The result:
-The file to write to must be opened first with the <open file command>,
+The file to write to must be opened first with the <open file> <command>,
 and the mode the <file> was opened in must be write, append, or update.
 If the file is not open or is open read-only, the <result> function is
 set to "File is not open for write.".
@@ -103,11 +103,11 @@ without first opening it.
 
 >*Tip:* As an alternative to the <open file> and <write to file>
 > <command|commands>, you can also use the <URLkeyword> with the
-> <putcommand> to change the contents of a <file>.
+> <put> <command> to change the contents of a <file>.
 
 References: open file (command), close file (command),
-write to driver (command), open file command (command),
-putcommand (command), close filecommand (command), result (function),
+write to driver (command),
+put (command), result (function),
 command (glossary), execute (glossary), file (keyword),
 characters (keyword), stdout (keyword), URLkeyword (keyword)
 

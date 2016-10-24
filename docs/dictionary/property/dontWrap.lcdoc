@@ -45,7 +45,7 @@ just can't be seen.) To edit long lines in a <field(keyword)> whose
 horizontal scrollbar.
 
 >*Note:* The <dontWrap> property is always true for any field with the
-> <listBehavior property> set to true, setting the dontWrap to false on
+> <listBehavior> <property> set to true, setting the dontWrap to false on
 > such a field has no affect.
 
 References: property (glossary), field (keyword), field (object),
@@ -55,7 +55,7 @@ textAlign (property), spaceBelow (property), rightIndent (property),
 firstIndent (property), formattedText (property), borderWidth (property),
 hgrid (property), spaceAbove (property), vgrid (property),
 hidden (property), backgroundColor (property),
-listBehavior property (property), listStyle (property)
+listStyle (property)
 
 Tags: ui
 

@@ -35,8 +35,8 @@ specified by the <instanceId>. Redrawing the page does not require the
 page to be refreshed.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserNavigate (command), result (function),
-revBrowserOpen function (function)
+revBrowserOpen (function), function (glossary)
 

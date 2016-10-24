@@ -40,8 +40,8 @@ being displayed in the specified browser object.
 
 The <variableName> should be the name of a declared variable. This means
 that before calling <revBrowserSnapshot> a variable to place the image
-data into should be declared using the <local command>.
+data into should be declared using the <local> <command>.
 
-References: local command (command), revBrowserPrint (command),
+References: local (command), command (glossary), revBrowserPrint (command),
 revBrowserClose (command), revBrowserSet (command), result (function)
 

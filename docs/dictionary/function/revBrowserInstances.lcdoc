@@ -33,8 +33,8 @@ Use the <revBrowserInstances> function to obtain a list of the ids of
 all the open browser objects.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserClose (command), revBrowserSet (command),
-revBrowserOpen function (function)
+revBrowserOpen (function), function (glossary)
 

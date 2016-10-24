@@ -41,9 +41,9 @@ containing a browser object when the browser object has opened a url in
 a new window.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserSet (command), revBrowserOpen (function),
-revBrowserOpen function (function), browserNewInstance (message),
+function (glossary), browserNewInstance (message),
 browserBeforeNavigate (message)
 
