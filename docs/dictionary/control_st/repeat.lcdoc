@@ -8,7 +8,7 @@ repeat <loopForm>
 end repeat
     
 Syntax:     
-repeat {forever | while <condition> | until <condition>} 
+repeat [{forever | while <condition> | until <condition>}] 
     <statementList>
 end repeat
 
