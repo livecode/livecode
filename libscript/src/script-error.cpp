@@ -58,6 +58,7 @@ MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef p_instance,
 bool
 MCScriptThrowInvalidValueForPropertyError(MCScriptInstanceRef p_instance,
 										  MCScriptPropertyDefinition *p_property_def,
+                                          MCTypeInfoRef p_property_type,
 										  MCValueRef p_provided_value)
 {
 	return MCErrorCreateAndThrow(kMCScriptInvalidPropertyValueErrorTypeInfo,
@@ -67,8 +68,7 @@ MCScriptThrowInvalidValueForPropertyError(MCScriptInstanceRef p_instance,
 								 MCScriptGetNameOfDefinitionInModule(p_instance->module,
 																	 p_property_def),
 								 "type",
-								 MCScriptGetTypeOfPropertyInModule(p_instance->module,
-																   p_property_def),
+	                             p_property_type,
 								 "value",
 								 p_provided_value,
 								 nil);

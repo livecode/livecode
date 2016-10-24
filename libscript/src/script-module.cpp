@@ -1096,40 +1096,6 @@ MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef self,
     return kMCEmptyName;
 }
 
-MCTypeInfoRef
-MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef self,
-								  MCScriptPropertyDefinition *p_property_def)
-{
-	MCScriptDefinition *t_getter =
-			p_property_def->getter != 0 ? self->definitions[p_property_def->getter - 1] : nil;
-	
-	switch(t_getter->kind)
-	{
-		case kMCScriptDefinitionKindVariable:
-		{
-			return __MCScriptGetTypeWithIndexInModule(self,
-													  static_cast<MCScriptVariableDefinition*>(t_getter)->type);
-		}
-		break;
-			
-		case kMCScriptDefinitionKindHandler:
-		{
-			return MCScriptGetTypeOfReturnValueInModule(self,
-														static_cast<MCScriptCommonHandlerDefinition*>(t_getter));
-		}
-		break;
-		
-		default:
-		{
-			/* LOAD CHECK */
-			__MCScriptUnreachable__("property getter is not a variable or handler");
-		}
-		break;
-	}
-	
-	return kMCNullTypeInfo;
-}
-
 MCNameRef
 MCScriptGetNameOfParameterInModule(MCScriptModuleRef self,
 								   MCScriptCommonHandlerDefinition *p_handler_def,

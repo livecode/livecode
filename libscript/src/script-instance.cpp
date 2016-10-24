@@ -415,6 +415,7 @@ MCScriptSetPropertyInInstance(MCScriptInstanceRef self,
 	{
 		return MCScriptThrowInvalidValueForPropertyError(self,
 														 t_property_def,
+		                                                 t_property_type,
 														 p_value);
 	}
 	
