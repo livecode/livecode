@@ -40,35 +40,32 @@ statement.
 
 Description:
 Use the <if> <control structure> to <execute> a <statementList|statement> 
-(or list of <statementList|statements>) only under certain circumstances. Form:The <if>
-<control structure> always begins with the <word> if. There are four
-forms of the <if> <control structure>:
+(or list of <statementList|statements>) only under certain circumstances. 
+#####Form: 
+The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
 
-```
-if condition then statementList [else elseStatementList]
-```
-(This form may have a line break before the words then or else or both.)
+    if condition then statementList [else elseStatementList]
 
-```
-if condition then
-   statementList 
-[else
-   elseStatementList]
-end if
-```
-```
-if condition 
-then statement 
-[else
-   elseStatementList]
-end if
-```
-```
-if condition then
-   statementList 
-else elseStatement
-end if
-```
+This form may have a line break before the words `then` or `else` or both.
+
+    if condition then
+       statementList 
+    [else
+       elseStatementList]
+    end if
+    
+    -- OR
+    if condition 
+    then statement 
+    [else
+       elseStatementList]
+    end if
+
+    -- OR
+    if condition then
+       statementList 
+    else elseStatement
+    end if
 
 If the <condition> <evaluate|evaluates> to true, the statement or
 <statementList> is <execute|executed>; if the <condition>
