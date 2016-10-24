@@ -155,6 +155,24 @@ struct MCScriptHandlerTypeParameter
 {
     MCScriptHandlerTypeParameterMode mode;
     uindex_t type;
+
+	/* Translate the mode of this parameter from a
+	 * MCScriptHandlerTypeParameterMode to an
+	 * MCHandlerTypeFieldMode. */
+	inline MCHandlerTypeFieldMode GetFieldMode() const
+	{
+		switch (mode)
+		{
+		case kMCScriptHandlerTypeParameterModeIn:
+			return kMCHandlerTypeFieldModeIn;
+		case kMCScriptHandlerTypeParameterModeOut:
+			return kMCHandlerTypeFieldModeOut;
+		case kMCScriptHandlerTypeParameterModeInOut:
+			return kMCHandlerTypeFieldModeInOut;
+		default:
+			MCUnreachableReturn(kMCHandlerTypeFieldModeIn);
+		}
+	}
 };
 
 struct MCScriptHandlerType: public MCScriptType

@@ -728,7 +728,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 for(uindex_t j = 0; j < t_type -> parameter_count; j++)
                 {
                     MCHandlerTypeFieldInfo t_parameter;
-                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[j] . mode;
+                    t_parameter . mode = t_type -> parameters[j] . GetFieldMode();
                     t_parameter . type = self -> types[t_type -> parameters[j] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
 						goto error_cleanup;
