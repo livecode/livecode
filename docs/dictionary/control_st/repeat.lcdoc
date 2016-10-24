@@ -3,27 +3,26 @@ Name: repeat
 Type: control structure
 
 Syntax:
--- Repeats until a condition is met:
 repeat [{forever | while <condition> | until <condition>}]
     <statementList>
 end repeat
 
--- Repeats a set number of times:
+Syntax:
 repeat [for] <number> [times]
     <statementList>
 end repeat
 
--- Repeats from one number to another as a variable: 
+Syntax: 
 repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
     <statementList>
 end repeat
 
--- Repeats in the listed order for all chunks of the string or sequence as a variable:
+Syntax:
 repeat for each <chunkType> <labelVariable> in <container>
     <statementList>
 end repeat
 
--- Repeats for each element or key of an array as a variable:
+Syntax:
 repeat for each {element | key} <labelVariable> in <array>
     <statementList>
 end repeat
