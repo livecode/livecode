@@ -247,7 +247,7 @@ enum MCSOutputTextEncoding
 };
 
 #if defined(__MACROMAN__)
-static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman;
 #elif defined(__WINDOWS_1252__)
 static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252;
 #elif defined(__ISO_8859_1__)
