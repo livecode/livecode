@@ -244,17 +244,17 @@ enum MCSOutputTextEncoding
 	kMCSOutputTextEncodingMacRoman,
 	kMCSOutputTextEncodingISO8859_1,
 	kMCSOutputTextEncodingUTF8,
-	
-#if defined(__MACROMAN__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman,
-#elif defined(__WINDOWS_1252__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252,
-#elif defined(__ISO_8859_1__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1,
-#else
-#error Unknown native text encoding
-#endif
 };
+
+#if defined(__MACROMAN__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman
+#elif defined(__WINDOWS_1252__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252;
+#elif defined(__ISO_8859_1__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1;
+#else
+#   error Unknown native text encoding
+#endif
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding);
 MCSOutputTextEncoding MCS_get_outputtextencoding(void);
