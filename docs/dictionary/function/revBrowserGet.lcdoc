@@ -107,9 +107,9 @@ the browser properties.
 > are always sent.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserSet (command), revBrowserOpen function (function),
+References: revBrowserSet (command), revBrowserOpen (function), function (glossary),
 revBrowserOver (message), revBrowserOut (message),
 revBrowserClick (message)
 

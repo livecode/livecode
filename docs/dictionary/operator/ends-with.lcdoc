@@ -32,8 +32,8 @@ For the expression to evaluate to true <suffix> must match the end of
 <string>. For example, if <suffix> contains three characters these must
 match the the last three characters of string (in order).
 
-This takes into consideration the value of the <caseSensitive property>.
+This takes into consideration the value of the <caseSensitive> <property>.
 
 References: offset (function), length (function), begins with (operator),
-contains (operator), caseSensitive property (property)
+contains (operator), caseSensitive (property), property (glossary)
 

@@ -42,7 +42,7 @@ This means that launch document will have the same result as double
 clicking the file in Windows Explorer and Mac OS X Finder.
 
 If you want to launch a document with a specific application, use the
-<launch command> instead, which allows an optional documentName
+<launch> <command> instead, which allows an optional documentName
 parameter for this purpose.
 
 "can't open file" - the file was not found or is not accessible
@@ -56,5 +56,5 @@ application but it was unable to fulfill the request
 fulfill the request
 
 References: launch (command), launch url (command),
-launch command (command)
+command (glossary)
 

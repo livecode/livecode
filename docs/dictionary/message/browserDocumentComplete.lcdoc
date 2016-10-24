@@ -42,13 +42,13 @@ loading a url and all its dependent resources.
 
 If the target is the main frame of the browser (e.g. the html page with
 the "FRAMESET" declaration), then the <browserDocumentComplete> message
-is sent. Otherwise the <browserDocumentCompleteFrame message> is sent
+is sent. Otherwise the <browserDocumentCompleteFrame> <message> is sent
 instead. 
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function),
+References: revBrowserOpen (function), function (glossary),
 browserDownloadRequest (message),
-browserDocumentCompleteFrame message (message)
+browserDocumentCompleteFrame (message), message (glossary)
 

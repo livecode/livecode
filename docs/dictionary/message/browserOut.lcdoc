@@ -67,8 +67,8 @@ mouse is over does not have an id, then the <elementId> parameter will
 be empty.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserSet (command), revBrowserOpen function (function),
+References: revBrowserSet (command), revBrowserOpen (function), function (glossary),
 browserOver (message)
 

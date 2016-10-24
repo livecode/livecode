@@ -45,15 +45,15 @@ navigate to a new url in a frame. i.e. a change in the url in the target
 browser has been requested but not yet actioned.
 
 If the target is the main frame of the browser then the
-<browserBeforeNavigate message> is sent instead.
+<browserBeforeNavigate> <message> is sent instead.
 
 To prevent the navigation occuring, set the global variable
 <browserCancel> to true
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function), browserCancel (glossary),
-browserBeforeNavigate message (message), browserBeforeNavigate (message),
+References: revBrowserOpen (function), function (glossary), browserCancel (glossary),
+message (glossary), browserBeforeNavigate (message),
 browserDownloadRequest (message), browserNavigateCompleteFrame (message)
 

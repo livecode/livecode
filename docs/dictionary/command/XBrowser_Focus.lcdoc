@@ -30,8 +30,8 @@ The <XBrowser_Focus> command has no effect and is included for backwards
 compatibility with older applications.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: XBrowser_Unfocus (command), revBrowserOpen (function),
-revBrowserOpen function (function), result (function)
+function (glossary), result (function)
 

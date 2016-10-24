@@ -50,9 +50,9 @@ On OS X, the callback is a notification only and downloading should be
 performed by the host application.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen (function), revBrowserOpen function (function),
+References: revBrowserOpen (function), function (glossary),
 browserCancel (glossary), browserDocumentCompleteFrame (message),
 queryRecordChanged (message), browserBeforeNavigate (message),
 browserBeforeNavigateFrame (message), browserDocumentComplete (message)

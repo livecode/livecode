@@ -38,9 +38,9 @@ operating system print dialog will appear, allowing the user to choose
 printer options and confirm that the page should be printed.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserSnapshot (command), print (command),
 open printing (command), revBrowserOpen (function),
-revBrowserOpen function (function), result (function)
+function (glossary), result (function)
 

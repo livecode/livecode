@@ -31,7 +31,7 @@ altBrowser 2.x and 1.x. The command is no longer needed and calling it
 has no affect.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen (function), revBrowserOpen function (function)
+References: revBrowserOpen (function), function (glossary)
 
