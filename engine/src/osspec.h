@@ -240,8 +240,6 @@ MCSErrorMode MCS_get_errormode(void);
 
 enum MCSOutputTextEncoding
 {
-	kMCSOutputTextEncodingUndefined,
-	
 	kMCSOutputTextEncodingWindows1252,
 	kMCSOutputTextEncodingMacRoman,
 	kMCSOutputTextEncodingISO8859_1,
