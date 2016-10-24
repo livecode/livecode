@@ -3,31 +3,27 @@ Name: repeat
 Type: control structure
 
 Syntax:
-repeat <loopForm>
-    <statementList>
-end repeat
-    
-Syntax:     
-repeat [{forever | while <condition> | until <condition>}] 
+-- Repeats until a condition is met:
+repeat [{forever | while <condition> | until <condition>}]
     <statementList>
 end repeat
 
-Syntax:     
+-- Repeats a set number of times:
 repeat [for] <number> [times]
     <statementList>
 end repeat
-      
-Syntax:     
+
+-- Repeats from one number to another as a variable: 
 repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
     <statementList>
 end repeat
 
-Syntax:     
+-- Repeats in the listed order for all chunks of the string or sequence as a variable:
 repeat for each <chunkType> <labelVariable> in <container>
     <statementList>
 end repeat
-      
-Syntax:     
+
+-- Repeats for each element or key of an array as a variable:
 repeat for each {element | key} <labelVariable> in <array>
     <statementList>
 end repeat
@@ -69,20 +65,6 @@ repeat tCount times
 end repeat
 
 Parameters:
-loopForm:
-The <loopForm> is one of the following forms:
-
-  - `forever`
-  - `until `*`condition`*
-  - `while `*`condition`*
-  - `[for] `*`number`*` [times]`
-  - `with `*`counterVariable`*` = `*`startValue`*` {to | down to}
-    `*`endValue`*` [step `*`increment`*`]`
-  - `for each `*`chunkType`* *`labelVariable`*` in `*`container`*
-  - `for each element `*`labelVariable`*` in `*`array`*
-  - `for each key `*`labelVariable`*` in `*`array`*
-
-
 statementList:
 One or more LiveCode statements, and can also include `if`, `switch`,
 `try`, or `repeat` <control structure|control structures>.
@@ -127,13 +109,23 @@ actions for each member of a set: for example, for each <card> in a
 <stack>, or each <line> in a <variable>.
 
 ####Loop Form:
-The <repeat> <control structure> always begins with the `repeat`
-<keyword>.
-The last line of a <repeat> <control structure> is always the `end
-repeat` <keyword>.
+The loop form is one of the following forms:
+
+  - `forever`
+  - `until `*`condition`*
+  - `while `*`condition`*
+  - `[for] `*`number`*` [times]`
+  - `with `*`counterVariable`*` = `*`startValue`*` {to | down to}
+    `*`endValue`*` [step `*`increment`*`]`
+  - `for each `*`chunkType`* *`labelVariable`*` in `*`container`*
+  - `for each element `*`labelVariable`*` in `*`array`*
+  - `for each key `*`labelVariable`*` in `*`array`*
+
+The <repeat> <control structure> always begins with the `repeat` <keyword>.
+The last line of a <repeat> <control structure> is always the `end repeat` <keyword>.
 
 How many times the <statementList> is <execute|executed> depends on the
-<loopForm> you use. Here are the possible forms:
+loop form you use. Here are details of the possible forms:
 
 #####<forever|Forever> 
 The `forever` form continues repeating the statements in the
