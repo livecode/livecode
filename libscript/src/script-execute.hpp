@@ -287,6 +287,8 @@ MCScriptExecuteContext::MCScriptExecuteContext(void)
 	  m_bytecode_ptr(nil),
 	  m_next_bytecode_ptr(nil),
 	  m_operation_ready(false),
+	  m_operation(kMCScriptBytecodeOp__First),
+	  m_argument_count(0),
 	  m_root_arguments(nil),
       m_root_result(nil)
 {
