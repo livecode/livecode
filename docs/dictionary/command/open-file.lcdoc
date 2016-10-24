@@ -31,14 +31,21 @@ If you specify a name but not a location, LiveCode assumes the file is
 in the defaultFolder. If the file you specify doesn't exist, LiveCode
 creates it.
 
-encoding:
-From 7.0, it's possible to specify an encoding for the file being
-opened. By doing so, you can straight read or write to a file without
-having to call <textEncode> or <textDecode>; the encoding supported by
-open file are the same as these text encoding functions. If no encoding
-is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
-at the beginning of the file. In success, the encoding is adapted and the
-BOM is ignored.
+encoding (enum):
+The encoding to be used.
+
+- "ASCII"
+- "UTF-16"
+- "UTF-16BE"
+- "UTF-16LE"
+- "UTF-32"
+- "UTF-32BE"
+- "UTF-32LE"
+- "UTF-8"
+- "CP1252"
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
 
 The result:
 Use the for read form to open the file for reading. If the
@@ -130,6 +137,15 @@ settings.
 > manage this the engine essentially 'virtualizes' the asset files you
 > include, allowing (read-only) manipulation with all the standard
 > LiveCode file and folder handling syntax.
+
+Changes:
+From 7.0, it's possible to specify an encoding for the file being
+opened. By doing so, you can straight read or write to a file without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open file are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
 
 
 References: write to file (command), open file (command), put (command),
