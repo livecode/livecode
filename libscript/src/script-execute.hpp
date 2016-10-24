@@ -271,6 +271,7 @@ private:
 	Frame *m_frame;
     const byte_t *m_bytecode_ptr;
 	const byte_t *m_next_bytecode_ptr;
+	bool m_operation_ready;
 	MCScriptBytecodeOp m_operation;
 	uindex_t m_arguments[256];
 	uindex_t m_argument_count;
@@ -285,6 +286,7 @@ MCScriptExecuteContext::MCScriptExecuteContext(void)
 	  m_frame(nil),
 	  m_bytecode_ptr(nil),
 	  m_next_bytecode_ptr(nil),
+	  m_operation_ready(false),
 	  m_root_arguments(nil),
       m_root_result(nil)
 {
@@ -307,6 +309,7 @@ MCScriptExecuteContext::~MCScriptExecuteContext(void)
 inline MCScriptBytecodeOp
 MCScriptExecuteContext::GetOperation(void) const
 {
+	MCAssert(m_operation_ready);
 	return m_operation;
 }
 
@@ -325,18 +328,21 @@ MCScriptExecuteContext::GetNextAddress(void) const
 inline uindex_t
 MCScriptExecuteContext::GetArgumentCount(void) const
 {
+	MCAssert(m_operation_ready);
 	return m_argument_count;
 }
 
 inline uindex_t
 MCScriptExecuteContext::GetArgument(uindex_t p_index) const
 {
+	MCAssert(m_operation_ready);
 	return m_arguments[p_index];
 }
 
 inline const uindex_t *
 MCScriptExecuteContext::GetArgumentList(void) const
 {
+	MCAssert(m_operation_ready);
 	return m_arguments;
 }
 
@@ -1165,8 +1171,9 @@ MCScriptExecuteContext::Step(void)
 						   m_operation,
 						   m_arguments,
 						   m_argument_count);
-	
-	return !m_error;
+
+	m_operation_ready = !m_error;
+	return m_operation_ready;
 }
 
 inline bool
