@@ -16,7 +16,8 @@ OS: mac, windows, linux
 Platforms: desktop, server
 
 Example:
-put shell("ls -l *.txt") into myList -- returns a listing of the current dir on Unix
+local tMyList
+put shell("ls -l *.txt") into tMyList -- returns a listing of the current dir on Unix
 
 Example:
 get shell(field "Command") -- runs the shell command entered into the field labelled "Command"
