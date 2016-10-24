@@ -34,8 +34,8 @@ characters these must match the first three characters of <string> (in
 order). 
 
 This operator takes into consideration the current value of the
-<caseSensitive property>.
+<caseSensitive> <property>.
 
 References: offset (function), length (function), ends with (operator),
-contains (operator), caseSensitive property (property)
+contains (operator), caseSensitive (property), property (glossary)
 

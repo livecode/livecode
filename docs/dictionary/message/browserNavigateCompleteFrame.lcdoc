@@ -41,14 +41,14 @@ stack containing a browser object when the browser object has finished
 navigating to a new url in a frame and starting loading the url.
 
 If the target is the main frame of the browser then the
-<browserNavigateComplete message> is sent instead.
+<browserNavigateComplete> <message> is sent instead.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserNavigate (command), revBrowserOpen (function),
-revBrowserOpen function (function),
+function (glossary),
 browserDocumentCompleteFrame (message),
-browserNavigateComplete message (message),
+browserNavigateComplete (message), message (glossary),
 browserBeforeNavigateFrame (message)
 

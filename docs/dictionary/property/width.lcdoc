@@ -40,9 +40,9 @@ outside the <stack window>. These <object|objects> are not shown;
 however, they are still there, and will be displayed if you make the
 window wide enough.
 
-If the object's <lockLocation property> is false, when you change its
+If the object's <lockLocation> <property> is false, when you change its
 width, it shrinks or grows from the center: the <object|object's> left
-and right edges both shift, while the object's <location property> stays
+and right edges both shift, while the object's <location> <property> stays
 the same. If the <object|object's> <lockLocation> <property> is true, it
 shrinks or grows from the top left corner: the <object|object's> left
 edge stays in the same place, and the right edge moves.
@@ -62,9 +62,9 @@ References: revChangeWindowSize (command), object (glossary),
 property (glossary), bit depth (glossary), Mac OS (glossary),
 stack window (glossary), OS X (glossary), card (keyword), image (keyword),
 stack (object), card (object), backSize (property), left (property),
-titleWidth (property), lockLocation property (property),
+titleWidth (property),
 orientation (property), tabStops (property), pixels (property),
-lockLocation (property), location property (property),
+lockLocation (property), location (property),
 hScrollbar (property), maxWidth (property)
 
 Tags: ui

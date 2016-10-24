@@ -38,11 +38,11 @@ font.
 Description:
 The <revFontLoad> command loads a font from a font file into memory.
 
->*Note:* After loading a font, the <fontNames function> will return the
+>*Note:* After loading a font, the <fontNames> <function> will return the
 > name of the new font as well as all the previously loaded fonts. To
 > determine the name of the newly loaded font, compare the value of the
 > <fontNames> before and after loading the font.
 
-References: revFontUnload (command), fontNames function (function),
+References: revFontUnload (command), function (glossary),
 result (function), fontNames (function)
 

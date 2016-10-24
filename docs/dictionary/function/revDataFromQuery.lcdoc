@@ -73,9 +73,9 @@ be used if any of the data being retrieved is binary, doing so will
 probably produce unexpected results. If you wish to use this function to
 return things like image data, the data should be encoded before being
 stored in the database, this could for example be done with the
-<base64Encode function>. Also remember to specify a columDelim and
+<base64Encode> <function>. Also remember to specify a columDelim and
 <rowDelim> that will not appear in the data. Alternatively, both these
-problems can be avoided by using the <revQueryDatabase function> to
+problems can be avoided by using the <revQueryDatabase> <function> to
 generate a record set, then using <revDatabaseColumnNamed> to retrieve
 each field individually.
 
@@ -139,8 +139,8 @@ Changes:
 The ability to specify array elements in the varsList was added in 2.9.
 
 References: revCloseCursor (command), revExecuteSQL (command),
-function (control structure), base64Encode function (function),
-revQueryDatabase function (function), revDatabaseColumnNamed (function),
+function (control structure), base64Encode (function), function (glossary),
+revQueryDatabase (function), revDatabaseColumnNamed (function),
 LiveCode custom library (glossary), return (glossary),
 variable (glossary), database (glossary),
 record set (database cursor) (glossary), record (glossary),

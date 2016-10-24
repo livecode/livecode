@@ -30,7 +30,7 @@ The <hostName> <function> does a reverse <DNS> lookup on the
 <hostAddress> in order to find the <domain name>. This means that the
 computer must be connected to the Internet in order to use this
 <function>. If a connection to the Internet is not available, the
-<hostName> <function> <return|returns> an <error message>.
+<hostName> <function> <return|returns> an <error> <message>.
 
 References: accept (command), function (control structure),
 hostAddress (function), DNSServers (function), domain name (glossary),

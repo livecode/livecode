@@ -31,7 +31,7 @@ disabled and LiveCode will draw at a 1:1 scale, allowing the operating
 system to perform any default scaling. For example, by default, iOS will
 upscale stacks running on retina devices.
 
-When the <usePixelScaling> property is false, the <pixelScale property>
+When the <usePixelScaling> property is false, the <pixelScale> <property>
 is set to 1 and is not modifiable.
 
 Due to limitations of the platform, applications on Windows will not be
@@ -54,14 +54,14 @@ scale values when multiple displays are available:
 
 * The <screenPixelScale property (property)>returns the pixel scale of
   the main screen
-* The <screenPixelScales property> a return-delimited list of the pixel
+* The <screenPixelScales> <property> a return-delimited list of the pixel
   scale of each connected display
 
 
 References: iphoneUseDeviceResolution (command), pixelScale (property),
 systemPixelScale (property), usePixelScaling (property),
-pixelScale property (property), screenPixelScales (property),
-screenPixelScale (property), screenPixelScales property (property),
+property (glossary), screenPixelScales (property),
+screenPixelScale (property),
 screenPixelScale property (property)
 
 Tags: windowing
