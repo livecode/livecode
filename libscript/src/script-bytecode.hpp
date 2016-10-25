@@ -276,15 +276,12 @@ struct MCScriptBytecodeOp_Invoke
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		const uindex_t *t_argument_regs;
-		uindex_t t_argument_count;
-		t_argument_regs = ctxt.GetArgumentList() + 2;
-		t_argument_count = ctxt.GetArgumentCount() - 2;
+		MCSpan<const uindex_t> t_arguments(ctxt.GetArguments().subspan(2));
 
 #ifdef DEBUG_EXECUTION
 		MCLog("Select handler into register %u", t_result_reg);
-		for(uindex_t i = 0; i < t_argument_count; i++)
-			MCLog("  argument register %u", t_argument_regs[i]);
+		for (MCSpan<const uindex_t> t_rest = t_arguments; !t_rest.empty(); ++t_rest)
+			MCLog("  argument register %u", *t_rest);
 #endif
 		
 		// If the definition kind is a group, then we must select which handler
@@ -296,7 +293,7 @@ struct MCScriptBytecodeOp_Invoke
 			SelectDefinitionFromGroup(ctxt,
 									  t_instance,
 									  static_cast<MCScriptDefinitionGroupDefinition *>(t_definition),
-			                          MCMakeSpan(t_argument_regs, t_argument_count),
+			                          t_arguments,
 									  t_resolved_instance,
 									  t_resolved_definition);
 		}
@@ -321,7 +318,7 @@ struct MCScriptBytecodeOp_Invoke
 				ctxt.PushFrame(t_resolved_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_resolved_definition),
 							   t_result_reg,
-				               MCMakeSpan(t_argument_regs, t_argument_count));
+				               t_arguments);
 			}
 			break;
 				
@@ -330,7 +327,7 @@ struct MCScriptBytecodeOp_Invoke
 				ctxt.InvokeForeign(t_resolved_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_resolved_definition),
 								   t_result_reg,
-				                   MCMakeSpan(t_argument_regs, t_argument_count));
+				                   t_arguments);
 			}
 			break;
 				
