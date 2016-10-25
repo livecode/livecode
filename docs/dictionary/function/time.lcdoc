@@ -35,7 +35,7 @@ The short time form returns the same value as the time form.
 
 The abbreviated time form returns the same value as the time form.
 
-The long time form returns the hour, minute, and second separated by
+The <long> time form returns the hour, minute, and second separated by
 colons, a space, and "AM" or "PM".
 
 Description:
@@ -53,7 +53,7 @@ systems>), or the LANG environment variable (on <Unix|Unix systems>).
 >*Note:* Linux systems don't have a short system time, so the engine
 > modifies the system time format string to remove the seconds. This
 > works in most locales, but not all and our advice is to stick to using
-> the long system time on Linux systems.
+> the <long> <system> <time> on Linux systems.
 
 Changes:
 The ability to use the time format preferred by the user was introduced
