@@ -50,6 +50,9 @@ public:
 	
 	// Return the list of arguments to the current opcode
 	const uindex_t *GetArgumentList(void) const;
+
+	// Return the list of arguments to the current opcode
+	MCSpan<const uindex_t> GetArguments() const;
 	
 	// Fetch the type of the given register. The type of the register might
 	// be nil, if it has no assigned type.
@@ -346,6 +349,13 @@ MCScriptExecuteContext::GetArgumentList(void) const
 {
 	MCAssert(m_operation_ready);
 	return m_arguments;
+}
+
+inline MCSpan<const uindex_t>
+MCScriptExecuteContext::GetArguments() const
+{
+	MCAssert(m_operation_ready);
+	return MCMakeSpan(GetArgumentList(), GetArgumentCount());
 }
 
 inline index_t
