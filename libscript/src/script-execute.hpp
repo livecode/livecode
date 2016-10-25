@@ -133,8 +133,7 @@ public:
 	void PushFrame(MCScriptInstanceRef instance,
 				   MCScriptHandlerDefinition *handler,
 				   uindex_t result_reg,
-				   const uindex_t *argument_regs,
-				   uindex_t argument_count);
+	               MCSpan<const uindex_t> argument_regs);
 	
 	// Pop the current activation frame and set the return value to the contents
 	// of the given register. If result_reg is UINDEX_MAX, then it means there is
@@ -687,8 +686,7 @@ inline void
 MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
                                   MCScriptHandlerDefinition *p_handler_def,
                                   uindex_t p_result_reg,
-                                  const uindex_t *p_argument_regs,
-                                  uindex_t p_argument_count)
+                                  MCSpan<const uindex_t> p_argument_regs)
 {
     if (m_error)
 	{
@@ -726,11 +724,11 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
                               p_handler_def);
     
     // Check the parameter count.
-    if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+    if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_regs.size())
     {
         ThrowWrongNumberOfArguments(p_instance,
                                     p_handler_def,
-                                    p_argument_count);
+                                    p_argument_regs.size());
         return;
     }
     
@@ -802,7 +800,7 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
     // caller registers that were passed so we can copy back at the end.
     if (t_needs_mapping)
     {
-        if (!MCMemoryNewArray(p_argument_count,
+	    if (!MCMemoryNewArray(p_argument_regs.size(),
                               t_new_frame->mapping))
         {
             Rethrow();
@@ -810,8 +808,8 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
         }
         
         MCMemoryCopy(t_new_frame->mapping,
-                     p_argument_regs,
-                     p_argument_count * sizeof(p_argument_regs[0]));
+                     p_argument_regs.data(),
+                     p_argument_regs.sizeBytes());
     }
     
     // Finally, make the new frame the current frame and set the
