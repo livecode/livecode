@@ -202,8 +202,7 @@ public:
 	
 	// Raise an 'unable to resolve multi-invoke' error.
 	void ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *group,
-										 const uindex_t *arguments,
-										 uindex_t argument_count);
+	                                     MCSpan<const uindex_t> arguments);
 	
 	// Raise a 'value is not a handler' error.
 	void ThrowNotAHandlerValue(MCValueRef actual_value);
@@ -1237,14 +1236,13 @@ MCScriptExecuteContext::Rethrow(bool /*ignored*/)
 
 inline void
 MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *p_group,
-														const uindex_t *p_arguments,
-														uindex_t p_argument_count)
+                                                        MCSpan<const uindex_t> p_arguments)
 {
 	MCAutoProperListRef t_args;
 	if (!MCProperListCreateMutable(&t_args))
 		return;
 	
-	for(uindex_t i = 0; i < p_argument_count; i++)
+	for(uindex_t i = 0; i < p_arguments.size(); i++)
 	{
 		MCValueRef t_value;
 		t_value = FetchRegister(p_arguments[i]);
