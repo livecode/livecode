@@ -497,8 +497,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 			InternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-						   t_argument_regs,
-						   t_argument_count);
+			               MCMakeSpan(t_argument_regs, t_argument_count));
 		}
 		else
 		{
@@ -514,8 +513,7 @@ private:
 	static void InternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   const uindex_t *p_argument_regs,
-							   uindex_t p_argument_count)
+	                           MCSpan<const uindex_t> p_argument_regs)
 	{
 		// An 'internal' handler-ref is nothing more than an instance/definition
 		// pair, so we can execute directly inside this execution context. This
@@ -535,7 +533,7 @@ private:
 				ctxt.PushFrame(t_handler_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_handler_def),
 							   p_result_reg,
-				               MCMakeSpan(p_argument_regs, p_argument_count));
+				               p_argument_regs);
 			}
 			break;
 				
@@ -544,7 +542,7 @@ private:
 				ctxt.InvokeForeign(t_handler_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_handler_def),
 								   p_result_reg,
-				                   MCMakeSpan(p_argument_regs, p_argument_count));
+				                   p_argument_regs);
 			}
 			break;
 				
