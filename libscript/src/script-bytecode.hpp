@@ -504,8 +504,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 			ExternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-						   t_argument_regs,
-						   t_argument_count);
+			               MCMakeSpan(t_argument_regs, t_argument_count));
 		}
 	}
 	
@@ -557,22 +556,22 @@ private:
 	static void ExternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   const uindex_t *p_argument_regs,
-							   uindex_t p_argument_count)
+	                           MCSpan<const uindex_t> p_argument_regs)
 	{
 		// An 'external' handler-ref could be from anywhere and so we must use
 		// the handler-ref API. Unfortunately, this does mean we have to pack
 		// up the values into a list of valuerefs, then unpack them again after-
 		// wards.
 		
-		MCAutoValueRefArray t_linear_args;
-		if (!t_linear_args.Resize(p_argument_count))
+		MCAutoValueRefArray t_linear_args_array;
+		if (!t_linear_args_array.Resize(p_argument_regs.size()))
 		{
 			ctxt.Rethrow();
 			return;
 		}
+		MCSpan<MCValueRef> t_linear_args(t_linear_args_array.Span());
 		
-		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_count; t_arg_index++)
+		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_regs.size(); t_arg_index++)
 		{
 			t_linear_args[t_arg_index] = ctxt.CheckedFetchRegister(p_argument_regs[t_arg_index]);
 			if (t_linear_args[t_arg_index] == nil)
@@ -581,8 +580,8 @@ private:
 		
 		MCAutoValueRef t_result;
 		if (!MCHandlerInvoke(p_handler,
-							 t_linear_args.Ptr(),
-							 p_argument_count,
+		                     t_linear_args.data(),
+		                     t_linear_args.size(),
 							 &t_result))
 		{
 			ctxt.Rethrow();
@@ -592,7 +591,7 @@ private:
 		MCTypeInfoRef t_signature;
 		t_signature = MCValueGetTypeInfo(p_handler);
 		
-		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_count; t_arg_index++)
+		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_regs.size(); t_arg_index++)
 		{
 			if (MCHandlerTypeInfoGetParameterMode(t_signature,
 												 t_arg_index) == kMCHandlerTypeFieldModeIn)
