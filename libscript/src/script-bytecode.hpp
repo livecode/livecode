@@ -296,8 +296,7 @@ struct MCScriptBytecodeOp_Invoke
 			SelectDefinitionFromGroup(ctxt,
 									  t_instance,
 									  static_cast<MCScriptDefinitionGroupDefinition *>(t_definition),
-									  t_argument_regs,
-									  t_argument_count,
+			                          MCMakeSpan(t_argument_regs, t_argument_count),
 									  t_resolved_instance,
 									  t_resolved_definition);
 		}
@@ -347,8 +346,7 @@ private:
 	static void SelectDefinitionFromGroup(MCScriptExecuteContext& ctxt,
 										  MCScriptInstanceRef p_instance,
 										  MCScriptDefinitionGroupDefinition *p_group,
-										  const uindex_t *p_arguments,
-										  uindex_t p_argument_count,
+	                                      MCSpan<const uindex_t> p_arguments,
 										  MCScriptInstanceRef& r_selected_instance,
 										  MCScriptDefinition*& r_selected_definition)
 	{
@@ -378,11 +376,11 @@ private:
 			MCTypeInfoRef t_current_signature;
 			t_current_signature = t_current_instance -> module -> types[t_current_handler -> type] -> typeinfo;
 			
-			if (MCHandlerTypeInfoGetParameterCount(t_current_signature) != p_argument_count)
+			if (MCHandlerTypeInfoGetParameterCount(t_current_signature) != p_arguments.size())
 				continue;
 			
 			uindex_t t_current_score = 0;
-			for(uindex_t t_arg_idx = 0; t_arg_idx < p_argument_count; t_arg_idx++)
+			for(uindex_t t_arg_idx = 0; t_arg_idx < p_arguments.size(); t_arg_idx++)
 			{
 				// We can't compare types of out arguments as they have no value
 				// (yet).
@@ -436,8 +434,7 @@ private:
 		}
 		if (t_min_score_ambiguous || t_min_score_definition == NULL)
 		{
-			ctxt.ThrowUnableToResolveMultiInvoke(p_group,
-			                                     MCMakeSpan(p_arguments, p_argument_count));
+			ctxt.ThrowUnableToResolveMultiInvoke(p_group, p_arguments);
 			return;
 		}
 		
