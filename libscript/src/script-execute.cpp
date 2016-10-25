@@ -220,8 +220,7 @@ void
 MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 									  MCScriptForeignHandlerDefinition *p_handler_def,
 									  uindex_t p_result_reg,
-									  const uindex_t *p_argument_regs,
-									  uindex_t p_argument_count)
+                                      MCSpan<const uindex_t> p_argument_regs)
 {
 	if (m_error)
 	{
@@ -244,11 +243,11 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 								  p_handler_def);
 	
 	// Check the parameter count.
-	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_regs.size())
 	{
 		ThrowWrongNumberOfArguments(p_instance,
 									p_handler_def,
-									p_argument_count);
+		                            p_argument_regs.size());
 		return;
 	}
 	

@@ -145,8 +145,7 @@ public:
 	void InvokeForeign(MCScriptInstanceRef instance,
 					   MCScriptForeignHandlerDefinition *handler,
 					   uindex_t result_reg,
-					   const uindex_t *argument_regs,
-					   uindex_t argument_count);
+	                   MCSpan<const uindex_t> argument_regs);
 	
 	// Enter the LCB VM to execute the specified handler in the given instance.
 	void Enter(MCScriptInstanceRef instance,

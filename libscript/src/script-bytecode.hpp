@@ -331,8 +331,7 @@ struct MCScriptBytecodeOp_Invoke
 				ctxt.InvokeForeign(t_resolved_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_resolved_definition),
 								   t_result_reg,
-								   t_argument_regs,
-								   t_argument_count);
+				                   MCMakeSpan(t_argument_regs, t_argument_count));
 			}
 			break;
 				
@@ -552,8 +551,7 @@ private:
 				ctxt.InvokeForeign(t_handler_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_handler_def),
 								   p_result_reg,
-								   p_argument_regs,
-								   p_argument_count);
+				                   MCMakeSpan(p_argument_regs, p_argument_count));
 			}
 			break;
 				
