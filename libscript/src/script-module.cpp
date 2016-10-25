@@ -728,7 +728,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 for(uindex_t j = 0; j < t_type -> parameter_count; j++)
                 {
                     MCHandlerTypeFieldInfo t_parameter;
-                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[j] . mode;
+                    t_parameter . mode = t_type -> parameters[j] . GetFieldMode();
                     t_parameter . type = self -> types[t_type -> parameters[j] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
 						goto error_cleanup;
@@ -1094,40 +1094,6 @@ MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef self,
         self->definition_name_count > 0)
         return self->definition_names[t_index];
     return kMCEmptyName;
-}
-
-MCTypeInfoRef
-MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef self,
-								  MCScriptPropertyDefinition *p_property_def)
-{
-	MCScriptDefinition *t_getter =
-			p_property_def->getter != 0 ? self->definitions[p_property_def->getter - 1] : nil;
-	
-	switch(t_getter->kind)
-	{
-		case kMCScriptDefinitionKindVariable:
-		{
-			return __MCScriptGetTypeWithIndexInModule(self,
-													  static_cast<MCScriptVariableDefinition*>(t_getter)->type);
-		}
-		break;
-			
-		case kMCScriptDefinitionKindHandler:
-		{
-			return MCScriptGetTypeOfReturnValueInModule(self,
-														static_cast<MCScriptCommonHandlerDefinition*>(t_getter));
-		}
-		break;
-		
-		default:
-		{
-			/* LOAD CHECK */
-			__MCScriptUnreachable__("property getter is not a variable or handler");
-		}
-		break;
-	}
-	
-	return kMCNullTypeInfo;
 }
 
 MCNameRef
