@@ -41,7 +41,7 @@ statement.
 Description:
 Use the <if> <control structure> to <execute> a <statementList|statement> 
 (or list of <statementList|statements>) only under certain circumstances. 
-#####Form: 
+
 The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
 
     if condition then statementList [else elseStatementList]
