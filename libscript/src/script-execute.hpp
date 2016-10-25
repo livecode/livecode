@@ -150,8 +150,7 @@ public:
 	// Enter the LCB VM to execute the specified handler in the given instance.
 	void Enter(MCScriptInstanceRef instance,
 			   MCScriptHandlerDefinition *handler,
-			   MCValueRef *arguments,
-			   uindex_t argument_count,
+	           MCSpan<MCValueRef> arguments,
 			   MCValueRef *r_result);
 	
 	// Decode the next bytecode to execute. If there is more execution to do,
@@ -276,8 +275,9 @@ private:
 	MCScriptBytecodeOp m_operation;
 	uindex_t m_arguments[256];
 	uindex_t m_argument_count;
-	
-	MCValueRef *m_root_arguments;
+
+	// Owned by parent context
+	MCSpan<MCValueRef> m_root_arguments;
 	MCValueRef *m_root_result;
 };
 
@@ -944,7 +944,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 		if (m_root_result != nil)
 			*m_root_result = MCValueRetain(t_return_value);
 		
-		if (m_root_arguments != nil)
+		if (!m_root_arguments.empty())
 		{
 			for(uindex_t i = 0; i < t_parameter_count; i++)
 			{
@@ -970,8 +970,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 inline void
 MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 							  MCScriptHandlerDefinition *p_handler_def,
-							  MCValueRef *p_arguments,
-							  uindex_t p_argument_count,
+                              MCSpan<MCValueRef> p_arguments,
 							  MCValueRef *r_value)
 {
 	if (m_error)
@@ -1006,11 +1005,11 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 								  p_handler_def);
 	
 	// Check the parameter count.
-	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arguments.size())
 	{
 		ThrowWrongNumberOfArguments(p_instance,
 									p_handler_def,
-									p_argument_count);
+		                            p_arguments.size());
 		return;
 	}
 
@@ -1058,6 +1057,7 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	t_new_frame.Take(m_frame);
 	m_bytecode_ptr = nil;
 	m_next_bytecode_ptr = p_instance->module->bytecode + p_handler_def->start_address;
+
 	m_root_arguments = p_arguments;
 	m_root_result = r_value;
 	
