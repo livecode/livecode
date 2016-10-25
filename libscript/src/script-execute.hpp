@@ -330,29 +330,20 @@ MCScriptExecuteContext::GetNextAddress(void) const
 inline uindex_t
 MCScriptExecuteContext::GetArgumentCount(void) const
 {
-	MCAssert(m_operation_ready);
-	return m_argument_count;
+	return GetArguments().size();
 }
 
 inline uindex_t
 MCScriptExecuteContext::GetArgument(uindex_t p_index) const
 {
-	MCAssert(m_operation_ready);
-	return m_arguments[p_index];
-}
-
-inline const uindex_t *
-MCScriptExecuteContext::GetArgumentList(void) const
-{
-	MCAssert(m_operation_ready);
-	return m_arguments;
+	return GetArguments()[p_index];
 }
 
 inline MCSpan<const uindex_t>
 MCScriptExecuteContext::GetArguments() const
 {
 	MCAssert(m_operation_ready);
-	return MCMakeSpan(GetArgumentList(), GetArgumentCount());
+	return MCMakeSpan(m_arguments, m_argument_count);
 }
 
 inline index_t
