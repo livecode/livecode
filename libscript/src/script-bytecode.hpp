@@ -466,10 +466,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		const uindex_t *t_argument_regs;
-		uindex_t t_argument_count;
-		t_argument_regs = ctxt.GetArgumentList() + 2;
-		t_argument_count = ctxt.GetArgumentCount() - 2;
+		MCSpan<const uindex_t> t_argument_regs(ctxt.GetArguments().subspan(2));
 		
 		MCValueRef t_handler;
 		t_handler = ctxt.CheckedFetchRegister(ctxt.GetArgument(0));
@@ -484,8 +481,8 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		
 #ifdef DEBUG_EXECUTION
 		MCLog("Invoke handler value %p from register %u into %u", t_handler, t_result_reg);
-		for(uindex_t i = 0; i < t_argument_count; i++)
-			MCLog("  argument register %u", t_argument_regs[i]);
+		for(MCSpan<const uindex_t> t_rest = t_argument_regs; !t_rest.empty(); ++t_rest)
+			MCLog("  argument register %u", *t_rest);
 #endif
 
 		// If the handler-ref is of 'internal' kind (i.e. a instance/definition
@@ -497,14 +494,14 @@ struct MCScriptBytecodeOp_InvokeIndirect
 			InternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-			               MCMakeSpan(t_argument_regs, t_argument_count));
+			               t_argument_regs);
 		}
 		else
 		{
 			ExternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-			               MCMakeSpan(t_argument_regs, t_argument_count));
+			               t_argument_regs);
 		}
 	}
 	
