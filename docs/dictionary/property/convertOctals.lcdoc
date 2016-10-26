@@ -31,7 +31,7 @@ with a zero are treated as <octal> (base 8) numbers, instead of
 (except <hexadecimal> numbers, which start with 0x) are treated as
 <decimal>. 
 
-Since the <convertOctals> is a <local> <property>, its value is <reset> to
+Since the <convertOctals> is a <local property>, its value is <reset> to
 false when the current <handler> finishes <execute|executing>. It
 retains its value only for the current <handler>, and setting it in one
 <handler> does not affect its value in other <handler|handlers> it

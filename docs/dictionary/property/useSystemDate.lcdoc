@@ -39,7 +39,7 @@ The system format is set by the Date & Time control panel (on Mac OS
 systems), the Date control panel (on <Windows|Windows systems>), or the
 LANG <environment variable> (on <Unix|Unix systems>).
 
-Since the <useSystemDate> is a <local> <property>, its <value> is <reset>
+Since the <useSystemDate> is a <local property>, its <value> is <reset>
 to false when the current <handler> finishes <execute|executing>. It
 retains its <value> only for the current <handler>, and setting it in
 one <handler> does not affect its value in other <handler|handlers> it

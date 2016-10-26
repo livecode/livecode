@@ -32,7 +32,7 @@ the previous century.
 For example, if the <centuryCutoff> is set to 50, and the current year
 is 2000, then the date 4/12/51 is interpreted as being in the year 1951,
 while the date 4/12/50 is interpreted as being in 2050. Since the
-<centuryCutoff> is a <local> <property>, its value is <reset> to 35 when
+<centuryCutoff> is a <local property>, its value is <reset> to 35 when
 the current <handler> finishes <execute|executing>. It retains its value
 only for the current <handler>, and setting it in one <handler> does not
 affect its value in other <handler|handlers> it <call|calls>.
