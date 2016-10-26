@@ -101,7 +101,7 @@ struct MCEvent
             // This shouldn't really be a raw MCObjectProxy* but we can't embed
             // the MCObjectHandle RAII class here as it cannot be placed inside
             // a union.
-            MCObjectProxy* target;
+            MCObjectProxy<>* target;
 			union 
 			{
 				struct

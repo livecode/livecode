@@ -535,7 +535,7 @@ struct MCMainMenuInfo
 };
 
 static MCPlatformMenuRef s_menubar = nil;
-static MCObjectHandle *s_menubar_targets = nil;
+static MCButtonHandle *s_menubar_targets = nil;
 static uindex_t s_menubar_target_count = 0;
 static uindex_t s_menubar_lock_count = 0;
 
@@ -596,7 +596,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	t_menu_index = 0;
 	
 	// We construct the new menubar as we go along.
-	MCObjectHandle *t_new_menubar_targets;
+	MCButtonHandle *t_new_menubar_targets;
 	uindex_t t_new_menubar_target_count;
 	t_new_menubar_targets = nil;
 	t_new_menubar_target_count = 0;
@@ -940,7 +940,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// menu button still exists!
 	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index].IsValid())
 	{
-		MCButton *t_button = s_menubar_targets[t_parent_menu_index].GetAs<MCButton>();
+		MCButton *t_button = s_menubar_targets[t_parent_menu_index];
 		
 		MCPlatformRemoveAllMenuItems(p_menu);
 		MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
@@ -994,8 +994,8 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	{
 		if (s_menubar_targets[t_current_menu_index].IsValid())
 		{
-			s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->setmenuhistoryprop(t_last_menu_index + 1);
-            s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->handlemenupick(*t_result, nil);
+			s_menubar_targets[t_current_menu_index]->setmenuhistoryprop(t_last_menu_index + 1);
+            s_menubar_targets[t_current_menu_index]->handlemenupick(*t_result, nil);
 		}
 	}
 	else

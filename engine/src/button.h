@@ -103,11 +103,14 @@ public:
 
 class ButtonMenuCallback;
 
-class MCButton : public MCControl
+typedef MCObjectProxy<MCButton>::Handle MCButtonHandle;
+
+class MCButton : public MCControl, public MCMixinObjectHandle<MCButton>
 {
 public:
     
     enum { kObjectType = CT_BUTTON };
+    using MCMixinObjectHandle<MCButton>::GetHandle;
     
 private:
     

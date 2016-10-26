@@ -1267,7 +1267,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
-            t_handle = MCdefaultstackptr -> GetHandle();
+            t_handle = MCdefaultstackptr -> GetHandleAs<MCObject>();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
             
@@ -1280,7 +1280,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
-            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandle();
+            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandleAs<MCObject>();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
             
