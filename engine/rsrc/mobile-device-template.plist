@@ -118,6 +118,8 @@
 	<string>This application requires access to the device's microphone</string>
 	<key>NSMotionUsageDescription</key>
 	<string>This application requires access to the device's accelerometer</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>This application requires access to your Reminders</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This application requires access to Photo Library</string>
 </dict>
