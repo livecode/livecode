@@ -114,7 +114,7 @@
 	<string>This application requires access to the device's camera</string>
 	<key>NSContactsUsageDescription</key>
 	<string>This application requires access to your Contacts</string>
-	<key>NSMicrophoneUsageDescription </key>
+	<key>NSMicrophoneUsageDescription</key>
 	<string>This application requires access to the device's microphone</string>
 	<key>NSMotionUsageDescription</key>
 	<string>This application requires access to the device's accelerometer</string>
