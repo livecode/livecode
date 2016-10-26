@@ -1839,7 +1839,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	MCundos->freestate();
 	if (MCcurtool != T_POINTER)
 		MCselected->clear(True);
-	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
+	if (MCactiveimage && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
 	MCeditingimage = NULL;
 	if (MCactivefield

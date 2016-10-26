@@ -638,6 +638,7 @@ void MCStack::kfocusset(MCControl *target)
 					MCactivefield->getstack()->kunfocus();
 				else
 					MCactivefield->unselect(True, True);
+        }
 	}
 	if (MCactivefield && target != NULL)
 	{

@@ -2344,7 +2344,7 @@ void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
     {
         r_object . object = MCactiveimage;
         r_object . part_id = 0;

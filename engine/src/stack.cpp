@@ -916,14 +916,16 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
-			if (MCactiveimage != NULL)
+        {
+			if (MCactiveimage)
 			{
 				MCactiveimage->cutimage();
 				return True;
 			}
 			else
 				return MCselected->cut();
-		if (MCactiveimage != NULL)
+        }
+		if (MCactiveimage)
 		{
 			MCactiveimage->delimage();
 			return True;
@@ -932,7 +934,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 	case XK_BackSpace:
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->delimage();
 			return True;
@@ -941,7 +943,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 	case XK_osfUndo:
 		return MCundos->undo();
 	case XK_osfCut:
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->cutimage();
 			return True;
@@ -949,7 +951,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		else
 			return MCselected->cut();
 	case XK_osfCopy:
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->copyimage();
 			return True;
@@ -966,7 +968,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			return MCdispatcher -> dopaste(optr);
 		}
 		if (MCmodifierstate & MS_CONTROL)
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->copyimage();
 				return True;
@@ -1025,7 +1027,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		{
 		case XK_C:
 		case XK_c:
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->copyimage();
 				return True;
@@ -1039,7 +1041,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 
 		case XK_x:
 
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->cutimage();
 				return True;
