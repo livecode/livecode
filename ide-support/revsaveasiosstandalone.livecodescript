@@ -1635,7 +1635,12 @@ function mapFilePath pPath
    else
       put "/Release" after tBuild
    end if
-   put the editionType into tSuffix
+   
+   if the editionType is "community" then
+      put "community" into tSuffix
+   else
+      put "commercial" into tSuffix
+   end if
    
    local tPath
    switch the last item of pPath
