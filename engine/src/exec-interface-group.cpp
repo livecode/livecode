@@ -492,7 +492,7 @@ void MCGroup::SetBackgroundBehavior(MCExecContext& ctxt, bool setting)
 void MCGroup::GetSharedBehavior(MCExecContext& ctxt, bool& r_setting)
 {
 	// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-	r_setting = isshared() && (parent == nil || parent -> gettype() == CT_CARD);
+	r_setting = isshared() && (!parent || parent -> gettype() == CT_CARD);
 }
 
 void MCGroup::SetSharedBehavior(MCExecContext& ctxt, bool setting)

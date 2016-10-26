@@ -1307,7 +1307,7 @@ bool MCStack::isdeletable(bool p_check_flag)
 {
     // MW-2012-10-26: [[ Bug 9918 ]] If 'cantDelete' is set, then don't delete the stack. Also
     //   make sure we throw an error.
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
         MCdispatcher->gethome() == this || this -> isediting() ||
         MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
@@ -1403,11 +1403,11 @@ Boolean MCStack::del(bool p_check_flag)
 	}
 	else
 	{
-		remove(((MCStack *)parent)->substacks);
+		remove(parent.GetAs<MCStack>()->substacks);
 		// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
 		//   undo the extraopen.
-		if (((MCStack *)parent) -> substacks == NULL)
-			((MCStack *)parent) -> extraclose(true);
+		if (parent.GetAs<MCStack>()->substacks == nil)
+			parent.GetAs<MCStack>()->extraclose(true);
 	}
 
     if (MCtopstackptr == this)
@@ -1481,9 +1481,9 @@ void MCStack::paste(void)
 	open();
 }
 
-MCStack *MCStack::getstack()
+MCStackHandle MCStack::getstack()
 {
-	return this;
+	return GetHandle();
 }
 
 Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *params, MCObject *passing_object)
@@ -1530,7 +1530,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 
 	// MW-2011-06-30: Cleanup of message path - this clause handles the transition
 	//   through the home stack to dispatcher.
-	if (passing_object != nil && (stat == ES_PASS || stat == ES_NOT_HANDLED) && parent != NULL)
+	if (passing_object != nil && (stat == ES_PASS || stat == ES_NOT_HANDLED) && parent)
 	{
 		Exec_stat oldstat = stat;
 		if (MCModeHasHomeStack() || parent != MCdispatcher -> gethome() || !MCdispatcher->ismainstack(this))

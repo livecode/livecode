@@ -1987,7 +1987,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 				// MH-2007-03-20: [[ Bug 2581 ]] If a radio button is hilited using the keyboard, others in the group are not unhilited (when radioBehavior is set).
 				if (parent->gettype() == CT_GROUP)
 				{
-					MCGroup *gptr = (MCGroup *)parent;
+					MCGroup *gptr = parent.GetAs<MCGroup>();
 					gptr->radio(0, this);
 				}
 				reseticon();

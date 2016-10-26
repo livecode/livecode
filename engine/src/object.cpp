@@ -103,7 +103,7 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
 
 MCObject::MCObject()
 {
-	parent = NULL;
+	parent = nil;
 	obj_id = 0;
 	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
@@ -175,7 +175,7 @@ MCObject::MCObject()
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 {
-	if (oref.parent == NULL)
+	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
@@ -375,7 +375,7 @@ void MCObject::open()
 	if (opened++ != 0)
 		return;
 
-	if (obj_id == 0 && parent != nil)
+	if (obj_id == 0 && parent)
 		obj_id = getstack()->newid();
 
 	// MW-2012-02-14: [[ FontRefs ]] Map the object's font.
@@ -858,7 +858,7 @@ void MCObject::deselect()
 
 bool MCObject::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
+    if (!parent || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -910,10 +910,10 @@ void MCObject::undo(Ustruct *us)
 void MCObject::freeundo(Ustruct *us)
 {}
 
-MCStack *MCObject::getstack()
+MCStackHandle MCObject::getstack()
 {
-	if (parent == NULL)
-		return MCdefaultstackptr;
+	if (!parent)
+		return MCStackHandle(MCdefaultstackptr);
 	return parent->getstack();
 }
 
@@ -1154,7 +1154,7 @@ Exec_stat MCObject::handle(Handler_type htype, MCNameRef mess, MCParameter *para
 	Exec_stat stat;
 	stat = handleself(htype, mess, params);
 
-	if (pass_from != nil && parent != NULL)
+	if (pass_from != nil && parent)
 	{
 		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
 		{
@@ -1391,7 +1391,7 @@ bool MCObject::isvisible(bool p_effective)
 	if (!getflag(F_VISIBLE))
 		return false;
 	
-	if (p_effective && parent != nil && parent->gettype() == CT_GROUP)
+	if (p_effective && parent && parent->gettype() == CT_GROUP)
 		return parent->isvisible(true);
 	
 	return true;
@@ -1399,10 +1399,9 @@ bool MCObject::isvisible(bool p_effective)
 
 bool MCObject::showinvisible()
 {
-	MCStack *t_stack;
-	t_stack = getstack();
+	MCStackHandle t_stack = getstack();
 	
-	if (t_stack == nil)
+	if (!t_stack)
 		return false;
 	
 	return t_stack->geteffectiveshowinvisibleobjects();
@@ -1410,9 +1409,9 @@ bool MCObject::showinvisible()
 
 Boolean MCObject::resizeparent()
 {
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
-		MCGroup *gptr = (MCGroup *)parent;
+		MCGroup *gptr = parent.GetAs<MCGroup>();
         
 		// MERG-2013-06-02: [[ GrpLckUpdates ]] Only recalculate the group if not locked.
         if (!gptr -> islocked())
@@ -1897,7 +1896,7 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 	uint2 t_index;
 	if (!getcindex(di, t_index))
 	{
-		if (parent != nil && parent != MCdispatcher)
+		if (parent && parent != MCdispatcher)
 			return parent -> getcoloraspixel(di);
 		switch(di)
 		{
@@ -1933,7 +1932,7 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	{
 		if (this != MCdispatcher)
 		{
-			if (parent == nil)
+			if (!parent)
 				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 			else
 				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
@@ -2098,7 +2097,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean changedefault, Boolean send, Boolean p_is_debug_message)
 {
 	MCStack *mystack = getstack();
-	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || parent == NULL || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
+	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
     // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
@@ -2331,7 +2330,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     
     const char *itypestring = gettypestring();
     MCAutoPointer<char[]> tmptypestring;
-    if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
+    if (parent && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
         tmptypestring = new char[strlen(itypestring) + 7];
         if (parent->gettype() == CT_GROUP)
@@ -2387,7 +2386,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
             t_which_requested = which;
             if (which == P_LONG_NAME && isunnamed())
                 which = P_LONG_ID;
-            if (parent != NULL)
+            if (parent)
             {
                 MCObject *t_parent_object;
 //                if (parent -> gettype() == CT_CARD)
@@ -2453,7 +2452,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 {
 	if (!force && hashandlers & HH_DEAD_SCRIPT)
 		return False;
-	if (MCStringIsEmpty(_script) || parent == NULL)
+	if (MCStringIsEmpty(_script) || !parent)
 		hashandlers = 0;
 	else
 		if (force || hlist == NULL)
@@ -2473,7 +2472,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			if (t_stat != PS_NORMAL)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;
-				if (report && parent != NULL)
+				if (report && parent)
                 {
                     MCExecContext ctxt(this, nil, nil);
                     MCAutoStringRef t_id;
@@ -3083,7 +3082,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	MCObject *t_opened_control = nil;
 	if (opened == 0)
     {
-        if (parent == nil)
+        if (!parent)
         {
             setparent(MCdefaultstackptr -> getcard());
             t_parent_added = true;
@@ -3232,7 +3231,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			delete fontname;
 		}
 	}
-	else if (parent != nil && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
+	else if (parent && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE_TAG;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -4666,7 +4665,7 @@ bool MCObject::mapfont(bool recursive)
     {
         if (!inheritfont())
             return true;
-        if (parent == nil)
+        if (!parent)
             return false;
         return parent->mapfont(true);
     }
@@ -4688,11 +4687,11 @@ bool MCObject::mapfont(bool recursive)
 	//   stacks with substacks have their fonts unmapped incorrectly.
 	bool t_mapped_parent;
 	t_mapped_parent = false;
-	if (parent != nil && parent -> m_font == nil)
+	if (parent && parent -> m_font == nil)
 	{
 		t_mapped_parent = true;
 	}
-    if (parent != nil)
+    if (parent)
         t_explicit_font = parent -> mapfont(true);
 	
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
@@ -4718,7 +4717,7 @@ bool MCObject::mapfont(bool recursive)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-		if ((parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
+		if ((parent && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
 		    (gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout()))
 			t_font_style |= kMCFontStylePrinterMetrics;
 
@@ -4739,7 +4738,7 @@ bool MCObject::mapfont(bool recursive)
             /* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
         }
 	}
-	else if (parent != nil && t_explicit_font)
+	else if (parent && t_explicit_font)
 	{
 		if (parent -> m_font == nil)
 		{
@@ -5007,7 +5006,7 @@ bool MCObject::inheritfont() const
 //   is different from ours.
 bool MCObject::needtosavefontrecord(void) const
 {
-	return hasfontattrs() || hasunicode() || fontheight != 0 || (parent != nil && parent -> hasunicode() != hasunicode());
+	return hasfontattrs() || hasunicode() || fontheight != 0 || (parent && parent -> hasunicode() != hasunicode());
 }
 
 // MW-2012-06-08: [[ Relayer ]] No-op - only implemented for containers.

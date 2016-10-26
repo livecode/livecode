@@ -504,7 +504,7 @@ void MCControl::layer_scrolled(void)
 		// If we are a scrolling layer and not visible, there is nothing to
 		// do.
 		if (t_is_visible)
-			static_cast<MCCard *>(parent) -> layer_dirtyrect(geteffectiverect());
+			parent.GetAs<MCCard>()->layer_dirtyrect(geteffectiverect());
 	}
 }
 
@@ -537,7 +537,7 @@ void MCControl::layer_dirtycontentrect(const MCRectangle& p_updated_rect, bool p
 	// Add the rect to the update region - but only if instructed (update_card will be
 	// false if the object was invisible).
 	if (p_update_card)
-		static_cast<MCCard *>(parent) -> layer_dirtyrect(MCU_intersect_rect(p_updated_rect, geteffectiverect()));
+		parent.GetAs<MCCard>()->layer_dirtyrect(MCU_intersect_rect(p_updated_rect, geteffectiverect()));
 }
 
 void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bool p_update_card)
@@ -553,7 +553,7 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	while(t_control -> parent -> gettype() == CT_GROUP)
 	{
 		MCControl *t_parent_control;
-		t_parent_control = static_cast<MCControl *>(t_control -> parent);
+		t_parent_control = t_control->parent.GetAs<MCControl>();
 		
 		// If the parent control is scrolling, we are done - defer to content
 		// dirtying.
@@ -622,7 +622,7 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	// Add the rect to the update region - but only if instructed (update_card will be
 	// false if the object was invisible).
 	if (p_update_card)
-		static_cast<MCCard *>(t_control -> parent) -> layer_dirtyrect(t_dirty_rect);
+		t_control->parent.GetAs<MCCard>()->layer_dirtyrect(t_dirty_rect);
 }
 
 void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rect, bool p_force_update, bool p_update_card)
@@ -674,8 +674,8 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 	// false if the object was invisible).
 	if (p_update_card)
 	{
-		static_cast<MCCard *>(parent) -> layer_dirtyrect(p_old_effective_rect);
-		static_cast<MCCard *>(parent) -> layer_dirtyrect(t_new_effective_rect);
+		parent.GetAs<MCCard>()->layer_dirtyrect(p_old_effective_rect);
+		parent.GetAs<MCCard>()->layer_dirtyrect(t_new_effective_rect);
 	}
 	
 	// We must be in tile-cache mode with a top-level control, but if the layer

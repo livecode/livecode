@@ -515,7 +515,7 @@ class MCObject :
 {
 protected:
 	uint4 obj_id;
-	MCObject *parent;
+	MCObjectHandle parent;
 	MCNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
@@ -667,7 +667,7 @@ public:
 	virtual void paste(void);
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
-	virtual MCStack *getstack();
+	virtual typename MCObjectProxy<MCStack>::Handle getstack();
 
 	// MW-2011-02-27: [[ Bug 9412 ]] If pass_from is non-nil it means the message is passing from that
     //   object and should continue to be passed if not handled. If it is nil, then the message should

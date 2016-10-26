@@ -1092,7 +1092,7 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 
 bool MCCard::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
        (p_check_flag && getflag(F_C_CANT_DELETE)) ||
        getstack() -> isediting())
     {
@@ -1280,7 +1280,7 @@ Exec_stat MCCard::handle(Handler_type htype, MCNameRef mess, MCParameter *params
 				stat = ES_PASS;
 		}
 
-		if (parent != NULL && (stat == ES_PASS || stat == ES_NOT_HANDLED))
+		if (parent && (stat == ES_PASS || stat == ES_NOT_HANDLED))
 		{
 			Exec_stat oldstat = stat;
 			stat = parent->handle(htype, mess, params, this);
