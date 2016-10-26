@@ -39,7 +39,7 @@ From LiveCode 7.0, <itemDelimiter> can be a string of one or several
 <character|characters>. <chunk expression|Chunk expressions> use the
 <itemDelimiter> to determine where one <item> ends and the next begins.
 
-Since the <itemDelimiter> is a <local> <property>, its value is <reset> to
+Since the <itemDelimiter> is a <local property>, its value is <reset> to
 comma when the current <handler> finishes <execute|executing>. It
 retains its <value> only for the current <handler>, and setting it in
 one <handler> does not affect its <value> in other <handler|handlers> it
