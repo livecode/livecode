@@ -626,10 +626,11 @@ void MCStack::kfocusset(MCControl *target)
 {
 	if (!opened)
 		return;
-	if (MCactivefield != NULL && target != NULL && MCactivefield != target)
+	if (MCactivefield && target != NULL && MCactivefield != target)
 	{
 		MCactivefield->unselect(False, True);
-		if (MCactivefield != NULL)
+		if (MCactivefield)
+        {
 			if (MCactivefield->getstack() == this)
 				curcard->kunfocus();
 			else
@@ -638,7 +639,7 @@ void MCStack::kfocusset(MCControl *target)
 				else
 					MCactivefield->unselect(True, True);
 	}
-	if (MCactivefield != NULL && target != NULL)
+	if (MCactivefield && target != NULL)
 	{
 		curcard->kfocus();
 		MCstacks -> ensureinputfocus(window);

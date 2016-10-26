@@ -908,11 +908,11 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 {
 	if (!opened || !(flags & F_TRAVERSAL_ON))
 		return ES_NORMAL;
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
 		if (MCactivefield != this && focus && !(state & CS_KFOCUSED))
 			MCactivefield->kunfocus();
-		if (MCactivefield != NULL)
+		if (MCactivefield)
 			MCactivefield->unselect(True, True);
 		if (focusedparagraph != NULL)
 			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);

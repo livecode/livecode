@@ -2070,7 +2070,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
     // We haven't created a new object as the result of this paste (yet...)
     r_objptr = NULL;
 
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
         // There is an active field so paste the clipboard into it.
         MCParagraph *t_paragraphs;

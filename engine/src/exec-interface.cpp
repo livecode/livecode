@@ -935,7 +935,7 @@ void MCInterfaceEvalFoundLoc(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalSelectedChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -984,7 +984,7 @@ void MCInterfaceEvalSelectedChunkOf(MCExecContext& ctxt, MCObjectPtr p_target, M
 
 void MCInterfaceEvalSelectedLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1026,7 +1026,7 @@ void MCInterfaceEvalSelectedLineOf(MCExecContext& ctxt, MCObjectPtr p_target, MC
 
 void MCInterfaceEvalSelectedText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1068,7 +1068,7 @@ void MCInterfaceEvalSelectedTextOf(MCExecContext& ctxt, MCObjectPtr p_target, MC
 
 void MCInterfaceEvalSelectedLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1109,7 +1109,7 @@ void MCInterfaceEvalSelectedLocOf(MCExecContext& ctxt, MCObjectPtr p_target, MCS
 
 void MCInterfaceEvalSelectedField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -2282,7 +2282,7 @@ void MCInterfaceExecCutObjectsToContainer(MCExecContext& ctxt, MCObjectPtr *p_ta
 
 void MCInterfaceExecDelete(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield->deleteselection(False);
 	else if (MCactiveimage != NULL)
 		MCactiveimage->delimage();	
@@ -2429,10 +2429,10 @@ void MCInterfaceExecUnhiliteChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt)
 {
 	MCselected->clear(True);
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
 		MCactivefield->unselect(False, True);
-		if (MCactivefield != NULL)
+		if (MCactivefield)
 			MCactivefield->getcard()->kunfocus();
 	}
 }
