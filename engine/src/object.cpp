@@ -2306,8 +2306,8 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	};
 	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
     
-	MCAssert(htype <= max_htype);
-	MCStaticAssert(max_htype == HT_MAX);
+	MCAssert(htype <= Handler_type(max_htype));
+	MCStaticAssert(Handler_type(max_htype) == HT_MAX);
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
