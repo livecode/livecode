@@ -522,7 +522,7 @@ void MCLegacySetStackFiles(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCLegacyGetMenuBar(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCmenubar == nil)
+	if (!MCmenubar)
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 	else
 		MCmenubar -> getstringprop(ctxt, 0, P_LONG_NAME, False, r_value);

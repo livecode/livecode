@@ -275,11 +275,11 @@ MCObjectHandle MCerrorptr;
 MCObjectHandle MCerrorlockptr;
 MCObjectPtr MCtargetptr;
 MCGroup *MCsavegroupptr;
-MCGroup *MCmenubar;
 MCPlayer *MCplayers;
 MCAudioClip *MCacptr;
 MCObjectHandle MCmenuobjectptr;
 MCGroupHandle MCdefaultmenubar;
+MCGroupHandle MCmenubar;
 
 MCStack *MCtemplatestack;
 MCAudioClip *MCtemplateaudio;

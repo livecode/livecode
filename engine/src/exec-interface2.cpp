@@ -3041,7 +3041,7 @@ void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group,
 
 void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
 {
-    if (MCmenubar != nil)
+    if (MCmenubar)
     {
         r_menubar . object = MCmenubar;
         r_menubar . part_id = 0;
