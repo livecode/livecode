@@ -1257,8 +1257,13 @@ function mapFilePath pPath
    end if
    
    put the last item of pPath into tComponent
-   put the editionType into tSuffix
-   put toUpper(char 1 of tSuffix) into char 1 of tSuffix
+   
+   if the editionType is "community" then
+      put "Community" into tSuffix
+   else
+      put "Commercial" into tSuffix
+   end if
+   
    switch tComponent
       case "notify_icon.png"
          put merge("[[tBinariesFolder]]/notify_icon.png") into tPath
