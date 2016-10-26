@@ -49,7 +49,7 @@ MCStackHandle MCtracestackptr;
 Window MCtracewindow;
 Boolean MCtrace;
 Boolean MCtraceabort;
-MCObject *MCtracedobject;
+MCObjectHandle MCtracedobject;
 Boolean MCtracereturn = True;
 uint4 MCtraceuntil = MAXUINT2;
 uint2 MCtracedelay = 500;
@@ -205,8 +205,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 			MCU_resetprops(True);
 			MCscreen->wait(REFRESH_INTERVAL, True, True);
 		}
-		//  depth--;
-		if (MCtracedobject == NULL)
+		
+        if (!MCtracedobject)
 			MCtracedobject = ctxt.GetObject();
 		if (MCtraceabort)
 		{
