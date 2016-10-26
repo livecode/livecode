@@ -34,7 +34,7 @@ can extend from the meeting point of two edges before a bevel
 
 The <miterLimit> is used to calculate the maximum size of a miter 
 <joinStyle|join> before it is rendered as a bevel. The size of a 
-miter <joinStyle|joins> is the length in pixels from the corner to the 
+miter <joinStyle|join> is the length in pixels from the corner to the 
 intersection point of its outer two edges. The <miterLimit> is 
 specified as a multiple of the current<lineSize> of the graphic.
 
