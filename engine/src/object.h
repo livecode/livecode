@@ -352,7 +352,7 @@ public:
     // Pointer-like access
     T* Get() const
     {
-        MCAssert(IsValid());
+        MCAssert(!IsBound() || IsValid());
         
         if (!IsBound())
             return nullptr;
