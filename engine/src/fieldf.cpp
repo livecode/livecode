@@ -884,6 +884,11 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
+	
+	// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+	uint32_t t_width, t_height;
+	if (!MCPatternGetGeometry(t_current_pixmap, t_width, t_height))
+		return;
 
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
@@ -892,9 +897,6 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
     // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
     // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
 
-    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-    uint32_t t_width, t_height;
-    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 	
 	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
 	//   pixmap tile in this case to ensure the offset falls within 32767.
