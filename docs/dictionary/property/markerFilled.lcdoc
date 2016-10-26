@@ -6,7 +6,7 @@ Syntax: set the markerFilled of <graphic> to {true | false}
 
 Summary:
 Specifies whether the markers drawn at each <vertex> of a <polygon>
-<graphic> are filled or hollow.
+<graphic(object)> are filled or hollow.
 
 Associations: graphic
 
@@ -28,7 +28,7 @@ Description:
 Use the <markerFilled> <property> to change the <appearance> of the
 small shapes at each <vertex> of a <graphic(object)>.
 
-Irregular polygon graphics can be drawn with a marker at each vertex,
+Irregular polygon <graphic(object)|graphics> can be drawn with a marker at each vertex,
 whose shape is defined by the markerPoints <property>. If the
 <markerFilled> <property> is true, the marker shapes are filled with the
 <borderPattern> or <borderColor>. If it is false, the marker shapes are
