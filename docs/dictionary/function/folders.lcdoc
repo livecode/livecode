@@ -24,9 +24,14 @@ filter lines of field "Available Folders" without ".."
 sort lines of field "Available Folders" international
 
 Example:
+local tDiskContents
 put the files & return & the folders into \
-      diskContents[the defaultFolder]
-filter diskContents[the defaultFolder] without ".."
+      tDiskContents["the defaultFolder"]
+filter tDiskContents["the defaultFolder"] without ".."
+
+Parameters:
+targetFolder (String):
+The folder path to search.
 
 Returns (String):
 A list of folder names or folder information, with
@@ -37,7 +42,7 @@ Description:
 <targetFolder>, with one file per line.  If no <targetFolder> is
 specified, list the files in the <current folder>.
 
-The list only includes folders at the top level of the target folder.
+The list only includes folders at the top level of the <target folder>.
 The <folders> <function> does not recursively enter and examine
 folders deeper in the filesystem.  To examine the contents of a
 <subfolder|subfolders>, either pass its path as the <targetFolder>, or
