@@ -90,9 +90,8 @@ private variable mBigMarkerSize as Number
 constant kUpdate is 0.3
 
 public handler onSave(out rProperties as Array)
-	put the empty array into rProperties
-	put mScaleMarkers into rProperties["scaleMarkers"]
-	put mMarkerCount into rProperties["markerCount"]
+	put { "scaleMarkers": mScaleMarkers, \
+         "markerCount" : mMarkerCount } into rProperties
 end handler
 
 public handler onLoad(in pProperties as Array)
