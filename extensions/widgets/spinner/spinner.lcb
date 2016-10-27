@@ -82,10 +82,7 @@ metadata markerCount.min is "5"
 metadata markerCount.label is "Marker count"
 private variable mMarkerCount as Integer
 
-private variable mRadius as Number
-private variable mCentre as List
 private variable mBigMarkerOffset as Integer
-private variable mBigMarkerSize as Number
 
 constant kUpdate is 0.3
 
@@ -112,14 +109,16 @@ end handler
 
 -- called whenever LiveCode needs to redraw the widget
 public handler onPaint()
-	put (the minimum of my width and my height) / 2 into mRadius
-  	put [my width / 2, my height / 2] into mCentre
-  	put mRadius / mMarkerCount * 2 into mBigMarkerSize
-	 
+	variable tRadius as Number
+	put (the minimum of my width and my height) / 2 into tRadius
+  	
+	variable tBigMarkerSize as Number
+	put tRadius / mMarkerCount * 2 into tBigMarkerSize
+	
 	variable tPaint as Paint
 	put my foreground paint into tPaint
 
-	translate this canvas by mCentre
+	translate this canvas by [my width / 2, my height / 2] 
 
    variable tMarker as Integer
 
@@ -130,17 +129,17 @@ public handler onPaint()
 
 		put ((mBigMarkerOffset + tMarker)/mMarkerCount * 360) * pi / 180 into tAngle
 		
-		put -cos(tAngle) * (mRadius - mBigMarkerSize) into tY
-		put sin(tAngle) * (mRadius - mBigMarkerSize) into tX
+		put -cos(tAngle) * (tRadius - tBigMarkerSize) into tY
+		put sin(tAngle) * (tRadius - tBigMarkerSize) into tX
 		
 		variable tScale as Number
 		put 0.3 + 0.7 * tMarker/mMarkerCount into tScale
 		
 		variable tSize as Number
 		if mScaleMarkers then
-			put mBigMarkerSize * tScale into tSize
+			put tBigMarkerSize * tScale into tSize
 		else
-			put mBigMarkerSize * 0.8 into tSize
+			put tBigMarkerSize * 0.8 into tSize
 		end if
 		
 		set the opacity of this canvas to tScale
