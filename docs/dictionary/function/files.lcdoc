@@ -30,9 +30,14 @@ answer merge("The files in the current folder use" && \
       "[[tTotalSize]] bytes")
 
 Example:
+local tDiskContents
 put the files & return & the folders into \
-      diskContents[the defaultFolder]
-filter diskContents[the defaultFolder] without ".."
+      tDiskContents["the defaultFolder"]
+filter tDiskContents["the defaultFolder"] without ".."
+
+Parameters:
+targetFolder (String):
+The folder path to search.
 
 Returns (String):
 A list of file names or file information, with one
