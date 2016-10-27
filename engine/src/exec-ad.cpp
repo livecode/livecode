@@ -263,19 +263,16 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
-    bool t_success;
-    t_success = false;
-    
     MCAutoListRef t_ads;
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_ads);
+    bool t_success = MCListCreateMutable('\n', &t_ads);
+	
 	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {
 		t_success = MCListAppend(*t_ads, t_ad->GetName());
     }
     
-    if (t_success)
-    {
-        /* UNCHECKED */ MCListCopyAsString(*t_ads, r_ads);
+    if (t_success && MCListCopyAsString(*t_ads, r_ads))
+	{
         return;
     }
 
