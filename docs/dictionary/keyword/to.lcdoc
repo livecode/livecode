@@ -15,10 +15,10 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-drag button 5 from myFirstPoint to mySecondPoint with shiftKey
+drag button 5 from tFirstPoint to tSecondPoint with shiftKey
 
 Example:
-copy myButton to this card
+copy tMyButton to this card
 
 Example:
 seek to 102 in file "/usr/bin/supfiles/man"
