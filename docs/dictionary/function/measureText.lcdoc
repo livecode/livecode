@@ -2,7 +2,7 @@ Name: measureText
 
 Type: function
 
-Syntax: measureText(<text>,<object reference>,[<mode>])
+Syntax: measureText(<text>,<objectReference>,[<mode>])
 
 Summary:
 <return|Returns> the width, size or bounds of the text drawn with the
@@ -15,25 +15,33 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put measureText(theText,me) into theTextWidth
+put measureText(tText,me) into tTextWidth
 
 Example:
-put measureText(theText,me,"size") into theTextSize
+put measureText(tText,me,"size") into tTextSize
 
 Example:
-put measureText(theText,me,"bounds") into theTextBounds
+put measureText(tText,me,"bounds") into tTextBounds
 
 Parameters:
-text:
+text(string):
 Any native string. For unicode strings use measureUnicodeText.
 
-mode:
-One of: 	 width - (default if not specified) - returns the width of the
-text size - returns the width,height of the text bounds - returns a
-rectangle identifying the bounds of the text in the form
-0,-ascent,width,descent where ascent and descent are relative to a 0
-baseline the text is drawn on. object reference: An expression that
-evaluates to an object reference.
+objectReference(string):
+An expression that evaluates to an object reference.
+
+mode(enum):
+-   width: (default if not specified)
+-   size:
+-   bounds:
+
+returns:
+-   width(number): the width of the text
+-   size(int,int): the width,height of the text
+-   bounds(rect): a rectangle identifying the bounds of the text in the
+form `0,-ascent,width,descent` where ascent and descent are relative to
+a 0 baseline the text is drawn on.
+
 
 Description:
 Use the <measureText> <function> to find the dimensions of text drawn
@@ -43,4 +51,3 @@ References: function (control structure), measureUnicodeText (function),
 return (glossary), formattedWidth (property), formattedHeight (property)
 
 Tags: ui
-
