@@ -4290,12 +4290,9 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	                             kMCStringOptionCompareExact))
 		return false;
 
+	extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+	
     MCAutoStringRefArray t_chunks;
-    MCStringRef *t_sorted;
-    uindex_t t_sorted_count;
-    
-    extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
-    
     if (!MCStringsSplit(p_data, t_delimiter, t_chunks . PtrRef(), t_chunks . CountRef()))
         return false;
     
@@ -4308,25 +4305,34 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
         t_trailing_delim = true;
         t_item_count--;
 	}
-    
-	// Sort the array
-	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form, *t_chunks, t_item_count, p_by, t_sorted, t_sorted_count);
-
+	
+	// MCStringsExecSort allocates memory for the sorted string array,
+	// but does not retain the string pointers passed to it. Hence we
+	// use an MCAutoArray of MCStringRefs so that only the array is
+	// deallocated in the destructor of t_sorted. The strings themselves
+	// need to be released in the destructor of t_chunks, hence its use
+ 	// of an MCAutoStringRefArray.
+	MCAutoArray<MCStringRef> t_sorted;
+	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form,
+	                  *t_chunks, t_item_count, p_by,
+	                  t_sorted . PtrRef(), t_sorted . SizeRef());
+	
 	// Build the output string
 	MCAutoListRef t_list;
-    MCListCreateMutable(t_delimiter, &t_list);
+	if (!MCListCreateMutable(t_delimiter, &t_list))
+		return false;
 
     uindex_t i;
-    for (i = 0; i < t_sorted_count; i++)
-        MCListAppend(*t_list, t_sorted[i]);
+    for (i = 0; i < t_sorted . Size(); i++)
+	{
+        if (!MCListAppend(*t_list, t_sorted[i]))
+			return false;
+	}
 
     MCAutoStringRef t_list_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
-
-    // SN-2014-07-09: [[ MemoryLeak ]] Delete the array generated.
-    //  The strings stored in t_sorted are only pointers though, not new strings
-    MCMemoryDeleteArray(t_sorted);
-    
+	if (!MCListCopyAsString(*t_list, &t_list_string))
+		return false;
+	
     if (t_trailing_delim)
     {
         return MCStringCreateWithStrings(r_output, *t_list_string, t_delimiter);
