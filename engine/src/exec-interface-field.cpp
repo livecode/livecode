@@ -755,8 +755,13 @@ void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_te
 void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text)
 {
 	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_string);
-	SetText(ctxt, part, *t_string);
+	if (MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_string))
+	{
+		SetText(ctxt, part, *t_string);
+		return;
+	}
+	
+	ctxt . Throw();
 }
 
 void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
