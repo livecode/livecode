@@ -148,9 +148,40 @@ public handler JsonImport(in pJson as String) returns optional any
   variable tStateStack as List
   put [] into tStateStack
 
-  -- Loop over all the charaters in the JSON input in a single pass
+  -- Loop over all the characters in the JSON input in a single pass.
+  --
+  -- The single "repeat" loop is needed because LCB strings are
+  -- grapheme-based, and a single grapheme may be composed of multiple
+  -- codepoints.  LiveCode has to run a grapheme break iterator from
+  -- the start of "pJson" for every "char N of pJson", which requires
+  -- O(N) time.  Looping over all the graphemes using offsets
+  -- therefore requires O(N^2) time.  However, using a "repeat for
+  -- each char" loop only runs the grapheme iterator once, and so
+  -- needs only O(N) time to run over the JSON, and this turns out to
+  -- be a massive saving.
+  --
+  -- The structure of the parser is a dual finite state machine,
+  -- composed of a scanner and a parser, with a stack on the heap for
+  -- dealing with nested structures.
+  --
+  -- Numbers are a big source of complexity for the parser, because
+  -- the only values in JSON that are _not_ self-delimiting.  It is
+  -- necessary to read one character beyond the end of a number
+  -- literal to know whether the number has ended.  This extra
+  -- character is often a whole additional token (e.g. "["), which in
+  -- turn requires the scanner to be able to hand two tokens off to
+  -- the parser at once.  Despite not using the current offset into
+  -- the input data to implement the loop, the offset still has to be
+  -- tracked so that the scanner doesn't try to scan one char beyond
+  -- the end of the input JSON for valid "lonely integer" JSON inputs
+  -- such as "1234".
+  variable tJsonLength as Number
+  put the number of chars in pJson into tJsonLength
+  variable tCharCount as Number
+
   variable tChar as String
   repeat for each char tChar in pJson
+    add 1 to tCharCount
 
     -- Update cursor position
     if tChar is in "\r\n" then
@@ -272,17 +303,23 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanEndToken into tScanState
       end if
 
-    -- Numbers are a massive pain.  Because you can't tell from examining a
-    -- single character whether it ends the number, you have to wait until the
-    -- character after the *end* of the number -- which might be the start of
-    -- another token.
     else if tScanState is kScanInNumber then
       if tChar is in ".+-eE0123456789" then
+        -- The only case in which we're guaranteed to have got to the
+        -- end of a number after reading a number constituent char is
+        -- when we've reached the end of input.  Otherwise, we need to
+        -- read one char further.
         put tChar after tTokenValue
-        next repeat
+        if tCharCount < tJsonLength then
+           next repeat
+        else
+           put kScanEndToken into tScanState
+        end if
       else
         put kScanEndToken into tScanState
         if tChar is in "]}," then
+           -- It's possible for the character that terminates a number
+           -- literal to be a whole token in its own right.
           put tChar into tExtraToken
         else if not (tChar is in " \t\r\n") then
           return JsonSyntaxError(tLine, tColumn, \
