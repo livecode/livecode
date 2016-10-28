@@ -1400,8 +1400,11 @@ void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::SetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef r_value)
 {
     MCAutoStringRef t_string;
-    /* UNCHECKED */ MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string);
-    /* UNCHECKED */ settextindex(p_part_id, p_start, p_finish, *t_string, false);
+	if (MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string) &&
+		settextindex(p_part_id, p_start, p_finish, *t_string, false))
+		return;
+	
+	ctxt . Throw();
 }
 
 void MCField::GetPlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
