@@ -281,7 +281,7 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
     t_success = MCPurchaseFindById(p_id, t_purchase);
     
     if (t_success)
-        t_success = (!(t_purchase->state == kMCPurchaseStatePaymentReceived || t_purchase->state == kMCPurchaseStateRefunded || t_purchase->state == kMCPurchaseStateRestored));
+        t_success = (t_purchase->state == kMCPurchaseStatePaymentReceived || t_purchase->state == kMCPurchaseStateRefunded || t_purchase->state == kMCPurchaseStateRestored);
 	
 	if (t_success)
 		t_success = MCPurchaseConfirmDelivery(t_purchase);

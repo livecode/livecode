@@ -1881,6 +1881,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
                 t_bytes = va_arg(p_args, const LCBytes *);
                 t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF8CData, &t_bytes);
             }
+				break;
                 
             case 'v': // utf16 bytes
             {
@@ -1888,7 +1889,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
                 t_bytes = va_arg(p_args, const LCBytes *);
                 t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF16CData, &t_bytes);
             }
-				
+				break;
 #ifdef __OBJC__
 			case 'N': // NSNumber*
 			{

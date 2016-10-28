@@ -163,6 +163,8 @@ void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
+	m_pattern_x = 0;
+	m_pattern_y = 0;
 	m_background = getblack();
 	m_fill_style = FillSolid;
 	
