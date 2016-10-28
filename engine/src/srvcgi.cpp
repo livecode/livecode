@@ -723,19 +723,27 @@ static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, MCDataRef
 {
     MCStringEncoding t_encoding;
 
-    if (p_encoding == kMCSOutputTextEncodingUTF8)
-        t_encoding = kMCStringEncodingUTF8;
-    else if (p_encoding == kMCSOutputTextEncodingWindows1252)
-        t_encoding = kMCStringEncodingWindows1252;
-    else if (p_encoding == kMCSOutputTextEncodingMacRoman)
-        t_encoding = kMCStringEncodingMacRoman;
-    else if (p_encoding == kMCSOutputTextEncodingISO8859_1)
-        t_encoding = kMCStringEncodingISO8859_1;
-    else if (p_encoding == kMCSOutputTextEncodingNative)
-        t_encoding = kMCStringEncodingNative;
-    else // kMCSOutputTextEncodingUndefined
-        return false;
-
+	if (kMCSOutputTextEncodingNative == p_encoding)
+		t_encoding = kMCStringEncodingNative;
+	else
+	{
+		switch(p_encoding)
+		{
+			case kMCSOutputTextEncodingUTF8:
+				t_encoding = kMCStringEncodingUTF8;
+				break;
+			case kMCSOutputTextEncodingWindows1252:
+				t_encoding = kMCStringEncodingWindows1252;
+				break;
+			case kMCSOutputTextEncodingISO8859_1:
+				t_encoding = kMCStringEncodingISO8859_1;
+				break;
+			case kMCSOutputTextEncodingMacRoman:
+				t_encoding = kMCStringEncodingMacRoman;
+				break;
+		}
+	}
+	
     if (MCStringDecode(p_text, t_encoding, false, r_native_text))
     {
         MCStringNativize(r_native_text);
