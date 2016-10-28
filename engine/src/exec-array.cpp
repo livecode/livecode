@@ -906,14 +906,16 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 
 bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_count, bool& r_all_integers)
 {
-	r_indexes = nil;
-	r_count = 0;
-
 	MCStringRef t_string = MCNameGetString(p_key);
 	uindex_t t_string_len = MCStringGetLength(t_string);
 	if (t_string_len == 0)
+	{
+		r_indexes = nil;
+		r_count = 0;
 		return true;
-
+	}
+	
+	MCAutoArray<integer_t> t_indexes;
 	r_all_integers = true;
     
     uindex_t t_start, t_finish;    
@@ -924,29 +926,31 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
 	{
         if (!MCStringFirstIndexOfChar(t_string, ',', t_start, kMCCompareExact, t_finish))
             t_finish = t_string_len;
-        		
-		if (!MCMemoryResizeArray(r_count + 1, r_indexes, r_count))
-			return false;
-        
+		
         MCAutoStringRef t_substring;
+        if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring))
+			return false;
+		
         MCAutoNumberRef t_number;
-        MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring);
-        
         if (!MCNumberParse(*t_substring, &t_number))
         {
-            r_indexes[r_count - 1] = 0;
+            if (!t_indexes . Push(0))
+				return false;
+			
             r_all_integers = false;
             break;
         }
-        else
-            r_indexes[r_count - 1] = MCNumberFetchAsInteger(*t_number);
 
+        if (!t_indexes . Push(MCNumberFetchAsInteger(*t_number)))
+			return false;
+			
 		if (t_finish >= t_string_len)
 			break;
 
 		t_start = t_finish + 1;
 	}
-
+	
+	t_indexes . Take(r_indexes, r_count);
 	return true;
 }
 
