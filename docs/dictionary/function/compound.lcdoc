@@ -44,7 +44,7 @@ The formula for the value of an compound-interest-bearing account is
 The <compound> <function> calculates this value.
 
 The <numberOfPeriods> and the <interestRate> must use the same unit of
-time. For example, if the periods are months, the <interest rate> is the
+time. For example, if the periods are months, the <interestRate> is the
 interest per month.
 
 References: function (control structure), annuity (function),
