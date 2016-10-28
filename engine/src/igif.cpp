@@ -240,8 +240,8 @@ MCGIFImageLoader::~MCGIFImageLoader()
 {
 	if (m_gif != nil)
 	{
-		if (GIF_OK != DGifCloseFile(m_gif))
-			MCMemoryDeallocate(m_gif);
+		int t_error_code;
+		DGifCloseFile(m_gif, &t_error_code);
 		m_gif = nil;
 	}
 }
@@ -541,11 +541,9 @@ bool MCImageEncodeGIF(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	for (uindex_t y = 0; t_success && y < p_indexed->height; y++)
 		t_success = GIF_OK == EGifPutLine(t_gif, (uint8_t*)p_indexed->data + y * p_indexed->stride, p_indexed->width);
 
-	if (GIF_ERROR == EGifCloseFile(t_gif))
-	{
+	int t_error_code;
+	if (GIF_ERROR == EGifCloseFile(t_gif, &t_error_code))
 		t_success = false;
-		MCMemoryDeallocate(t_gif);
-	}
 
 	GifFreeMapObject(t_colormap);
 
