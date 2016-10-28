@@ -59,17 +59,20 @@ struct MCPlayerCallback
     MCPlayerDuration time;
 };
 
+typedef MCObjectProxy<MCPlayer>::Handle MCPlayerHandle;
+
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
 //  since we use &MCControl::kPropertyTable
-class MCPlayer : public MCControl, public MCPlayerInterface
+class MCPlayer : public MCControl, public MCMixinObjectHandle<MCPlayer>, public MCPlayerInterface
 {
 public:
     
     enum { kObjectType = CT_PLAYER };
-
+    using MCMixinObjectHandle<MCPlayer>::GetHandle;
+    
 private:
     
-    MCPlayer *nextplayer;
+    MCPlayerHandle nextplayer;
     
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;

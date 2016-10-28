@@ -41,12 +41,15 @@ enum
 	kMCFillRuleEvenOdd
 };
 
-class MCGraphic : public MCControl
+typedef MCObjectProxy<MCGraphic>::Handle MCGraphicHandle;
+
+class MCGraphic : public MCControl, public MCMixinObjectHandle<MCGraphic>
 {
 public:
     
     enum { kObjectType = CT_GRAPHIC };
-    
+    using MCMixinObjectHandle<MCGraphic>::GetHandle;
+   
 private:
     
 	uint2 linesize;

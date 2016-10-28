@@ -1397,7 +1397,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	removecursor();
 	extendwords = words;
 	extendlines = MCscreen->istripleclick();
-	if (MCactivefield != NULL && MCactivefield != this)
+	if (MCactivefield && MCactivefield != this)
 		MCactivefield->unselect(True, True);
 	if (MCmodifierstate & MS_SHIFT
 	        && (!(flags & F_LIST_BEHAVIOR) || flags & F_MULTIPLE_HILITES))
@@ -1584,7 +1584,7 @@ void MCField::unselect(Boolean clear, Boolean internal)
             MCselection->Clear();
     }
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
-		MCactivefield = NULL;
+		MCactivefield = nil;
 	if (!opened || focusedparagraph == NULL)
 		return;
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
@@ -1732,7 +1732,7 @@ void MCField::clearfound()
 	{
 		foundoffset = 0;
 		foundlength = 0;
-		MCfoundfield = NULL;
+		MCfoundfield = nil;
 		if (opened)
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.

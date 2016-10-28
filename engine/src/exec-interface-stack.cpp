@@ -494,10 +494,10 @@ void MCStack::GetNumber(MCExecContext& ctxt, uinteger_t& r_number)
 {
 	uint2 num;
 
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> count(CT_STACK, CT_UNDEFINED, this, num);
 	}
 	else
@@ -533,7 +533,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 	if (!MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> GetEffectiveFileName(ctxt, r_file_name);
 		return;
 	}
@@ -1005,7 +1005,7 @@ void MCStack::SetIcon(MCExecContext& ctxt, uinteger_t p_id)
 
 void MCStack::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 		parent -> GetLongId(ctxt, 0, r_owner);
 }
 
@@ -1013,8 +1013,8 @@ void MCStack::GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack)
 {
 	MCStack *sptr = this;
 
-	if (parent != nil && !MCdispatcher->ismainstack(sptr))
-		sptr = (MCStack *)parent;
+	if (parent && !MCdispatcher->ismainstack(sptr))
+		sptr = parent.GetAs<MCStack>();
 
 	r_main_stack = MCValueRetain(MCNameGetString(sptr->getname()));
 }
@@ -1037,7 +1037,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 		return;
 	}
 	
-	if (parent != nil && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
+	if (parent && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
 	{
 		bool t_this_is_mainstack;
 		t_this_is_mainstack = MCdispatcher -> ismainstack(this) == True;
@@ -1057,7 +1057,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 			MCdispatcher -> removestack(this);
 		else
 		{
-			MCStack *pstack = (MCStack *)parent;
+			MCStack *pstack = parent.GetAs<MCStack>();
 			remove(pstack -> substacks);
 			// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks, then 
 			//   make sure we undo the extraopen.

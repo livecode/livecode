@@ -330,10 +330,10 @@ void X_main_loop_iteration()
 	// MW-2011-08-19: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-	if (MCtracedobject != NULL)
+	if (MCtracedobject)
 	{
 		MCtracedobject->message(MCM_trace_done);
-		MCtracedobject = NULL;
+		MCtracedobject = nil;
 	}
     if (!MCtodestroy -> isempty())
     {

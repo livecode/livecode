@@ -152,7 +152,7 @@ MCAudioClip::~MCAudioClip()
 	if (MCacptr == this)
 	{
 		stop(True);
-		MCacptr = NULL;
+		MCacptr = nil;
 	}
 	delete[] samples; /* Allocated with new[] */
 	delete osamples;
@@ -187,7 +187,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
     }
 	else
 	{
-		MCacptr = NULL;
+		MCacptr = nil;
 		if (mstack != NULL)
 		{
 			if (mstack->getopened())

@@ -673,7 +673,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 			}
 			if (parent->gettype() != CT_CARD)
 			{
-				MCControl *cptr = (MCControl *)parent;
+				MCControl *cptr = parent.GetAs<MCControl>();
 				cptr->readscrollbars();
 			}
 		}
@@ -1056,7 +1056,7 @@ void MCScrollbar::redrawall(void)
 		return;
 	}
 	
-	((MCControl *)parent) -> layer_redrawrect(getrect());
+	parent.GetAs<MCControl>()->layer_redrawrect(getrect());
 }
 
 // MW-2012-09-20: [[ Bug 10395 ]] This method marks the control as embedded

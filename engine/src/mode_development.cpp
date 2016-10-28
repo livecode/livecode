@@ -252,7 +252,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	MCretcode = 0;
 	MCquit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
     
@@ -391,7 +391,7 @@ IO_stat MCDispatch::startup(void)
             //	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
             destroystack(sptr, True);
-            MCtopstackptr = NULL;
+            MCtopstackptr = nil;
             MCquit = False;
             MCenvironmentactive = False;
             
@@ -678,7 +678,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 		t_msg_box = MCmessageboxredirect;
 	else
 	{
-		if (MCmbstackptr == nil)
+		if (!MCmbstackptr)
 			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 		t_msg_box = MCmbstackptr;
 	}
@@ -807,7 +807,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

@@ -221,12 +221,12 @@ MCGroup::~MCGroup()
 	}
 	if (this == MCmenubar)
 	{
-		MCmenubar = NULL;
+		MCmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	if (this == MCdefaultmenubar)
 	{
-		MCdefaultmenubar = NULL;
+		MCdefaultmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	delete vscrollbar;
@@ -1033,7 +1033,7 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 
 bool MCGroup::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
         (p_check_flag && getflag(F_G_CANT_DELETE)))
     {
         MCAutoValueRef t_long_name;
@@ -1868,9 +1868,9 @@ void MCGroup::clearfocus(MCControl *cptr)
 		kfocused = NULL;
         state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
-			static_cast<MCCard *>(parent) -> erasefocus(this);
+			parent.GetAs<MCCard>()->erasefocus(this);
 		else
-			static_cast<MCGroup *>(parent) -> clearfocus(this);
+			parent.GetAs<MCGroup>()->clearfocus(this);
 	}
 }
 

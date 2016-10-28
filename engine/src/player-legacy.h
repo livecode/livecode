@@ -32,14 +32,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCPlayerOffscreenBuffer;
 #endif
 
+typedef MCObjectProxy<MCPlayer>::Handle MCPlayerHandle;
+
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
 //  since we use &MCControl::kPropertyTable
-class MCPlayer : public MCControl, public MCPlayerInterface
+class MCPlayer : public MCControl, public MCMixinObjectHandle<MCPlayer>, public MCPlayerInterface
 {
 public:
     
     enum { kObjectType = CT_PLAYER };
-    
+    using MCMixinObjectHandle<MCPlayer>::GetHandle;
+  
 private:
     
 #ifdef FEATURE_MPLAYER
@@ -85,7 +88,7 @@ private:
 #endif
 
 #endif
-	MCPlayer *nextplayer;
+	MCPlayerHandle nextplayer;
     
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;

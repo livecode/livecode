@@ -190,7 +190,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
             case ES_ERROR:
             case ES_PASS:
                 MCeerror->add(is_function ? EE_FUNCTION_BADFUNCTION : EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
-                if (MCerrorptr == NULL)
+                if (!MCerrorptr)
                     MCerrorptr = p;
                 stat = ES_ERROR;
                 break;
@@ -207,7 +207,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	{
 		stat = MCU_dofrontscripts(is_function ? HT_FUNCTION : HT_MESSAGE, name, params);
 		Boolean olddynamic = MCdynamicpath;
-		MCdynamicpath = MCdynamiccard != NULL;
+		MCdynamicpath = MCdynamiccard.IsValid();
 		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
         {
             if (is_function)

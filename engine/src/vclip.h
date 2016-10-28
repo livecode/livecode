@@ -22,12 +22,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCVideoClip : public MCObject
+typedef MCObjectProxy<MCVideoClip>::Handle MCVideoClipHandle;
+
+class MCVideoClip : public MCObject, public MCMixinObjectHandle<MCVideoClip>
 {
 public:
     
     enum { kObjectType = CT_VIDEO_CLIP };
-    
+    using MCMixinObjectHandle<MCVideoClip>::GetHandle;
+
 private:
     
 	real8 scale;
