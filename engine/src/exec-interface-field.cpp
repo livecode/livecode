@@ -172,8 +172,11 @@ static void MCInterfaceFieldRangesFormat(MCExecContext& ctxt, const MCInterfaceF
 	{
         if (t_success && i != 0)
 			t_success = MCStringAppendNativeChar(*t_list, '\n');
-        
-		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_input . ranges[i] . start, p_input . ranges[i] . end);
+		
+		if (t_success)
+			t_success = MCStringAppendFormat(*t_list, "%d,%d",
+			                                 p_input . ranges[i] . start,
+			                                 p_input . ranges[i] . end);
 	}
 	
 	if (t_success)
