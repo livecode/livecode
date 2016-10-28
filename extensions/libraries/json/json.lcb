@@ -91,6 +91,8 @@ constant kParseObjectColon is 22
 constant kParseObjectValue is 23
 constant kParseObjectNext is 24
 
+-- Maximum nesting depth
+constant kMaxRecursion is 500
 
 /**
 Summary: Parse JSON text into a LiveCode value.
@@ -343,6 +345,12 @@ public handler JsonImport(in pJson as String) returns optional any
       else if tToken is "[" then
         if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
                               kParseObjectColon, kParseObjectNext] then
+
+          if the number of elements in tValueStack > kMaxRecursion then
+             return JsonSyntaxError(tLine, tColumn, \
+                   "too many nested values")
+          end if
+
           push [] onto tValueStack
           push tParseState onto tStateStack
           put kParseArrayStart into tParseState
@@ -362,6 +370,11 @@ public handler JsonImport(in pJson as String) returns optional any
       else if tToken is "{" then
         if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
                               kParseObjectColon, kParseObjectNext] then
+          if the number of elements in tValueStack > kMaxRecursion then
+             return JsonSyntaxError(tLine, tColumn, \
+                   "too many nested values")
+          end if
+
           push the empty array onto tValueStack
           push tParseState onto tStateStack
           put kParseObjectStart into tParseState
