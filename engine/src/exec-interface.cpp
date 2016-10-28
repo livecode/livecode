@@ -1737,7 +1737,6 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
     
 	MCdefaultstackptr->kfocus();
 	uint2 i;
-	MCStringRef t_string = nil;
 	real8 nexttime = MCS_time();
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
@@ -1757,23 +1756,30 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			if (keysym == 0x0A)
 				keysym = 0x0D;
 			keysym |= 0xFF00;
-			t_string = kMCEmptyString;
 		}
 		else if (keysym > 0x7F)
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
-			t_string = *t_char;
+            if (!MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char))
+			{
+				ctxt . Throw();
+				break;
+			}
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
-        t_string = (*t_char != nil ? *t_char : kMCEmptyString);
-		MCdefaultstackptr->kdown(t_string, keysym);
-		MCdefaultstackptr->kup(t_string, keysym);
+		if (*t_char == nil)
+			t_char = kMCEmptyString;
+		
+		MCdefaultstackptr->kdown(*t_char, keysym);
+		MCdefaultstackptr->kup(*t_char, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
+		{
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
+			break;
+		}
 		
 		// If the codepoint was in SMP, then make sure we bump two codeunit
 		// indicies.
@@ -1783,7 +1789,6 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
     // AL-2014-01-07 return lock mods to false
     MCscreen -> setlockmods(False);
 	MCmodifierstate = oldstate;
-	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
