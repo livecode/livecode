@@ -612,23 +612,27 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
     MCAutoRefcounted<const MCRawClipboardItem> t_item = p_clipboard->GetRawClipboard()->GetItemAtIndex(0);
     if (t_item == NULL)
     {
-        r_string = kMCEmptyString;
-        MCValueRetain(kMCEmptyString);
+        r_string = MCValueRetain(kMCEmptyString);
+		return;
     }
-    else
-    {
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
-        
-        uindex_t t_type_count = t_item->GetRepresentationCount();
-        for (uindex_t i = 0; i < t_type_count; i++)
-        {
-            MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
-            /* UNCHECKED */ MCListAppend(*t_list, *t_type);
-        }
-        
-        /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
-    }
+	
+	MCAutoListRef t_list;
+	bool t_success = MCListCreateMutable('\n', &t_list);
+	
+	uindex_t t_type_count = t_item->GetRepresentationCount();
+	for (uindex_t i = 0; t_success && i < t_type_count; i++)
+	{
+		MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+		t_success = MCListAppend(*t_list, *t_type);
+	}
+	
+	if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_string);
+	
+	if (t_success)
+		return;
+	
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
