@@ -2,7 +2,11 @@ Name: xsltApplyStylesheetFromFile
 
 Type: function
 
-Syntax: xsltApplyStylesheetFromFile xmlDocID, pathToXSLTFile
+Syntax: xsltApplyStylesheetFromFile (<xmlDocID>,<pathToXSLTFile>)
+
+Summary:
+Returns the data set resulting from applying the xslt document in the specified 
+file against the specified xml document.
 
 Introduced: 6.5
 
@@ -14,7 +18,14 @@ Example:
 put xsltApplyStylesheetFromFile(tDocID, "getData.xml" ) into tProcessedData
 put xsltApplyStylesheetFromFile(tDocID, tFilePath) into tProcessedData
 
-The result:
+Parameters:
+xmlDocID(string):
+The ID of the xml document to use.
+
+pathToXSLTFile(string):
+The file path to the xslt document that will be applied to the xml document.
+
+The result(string):
 &lt;!-- order the result by revenue --&gt;.
 
 Description:
@@ -160,4 +171,3 @@ revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
 xsltApplyStylesheetFromFile (function)
 
 Tags: xml
-
