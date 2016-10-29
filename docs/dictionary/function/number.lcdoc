@@ -4,15 +4,15 @@ Synonyms: num
 
 Type: function
 
-Syntax: the number of [{card | background}] {<objectType> | controls}
+Syntax: the number of [{card|cd|background|bkgnd|bg}] {<objectType> | parts | controls}
 
-Syntax: the number of {<objectType> | controls} [of <group>]
+Syntax: the number of {<objectType> | parts | controls} [{in | of} <groupRef>]
 
-Syntax: the number of {backgrounds | groups} [ [of <card>] of <stack>]
+Syntax: the number of {backgrounds | groups} [ [{in | of} <cardRef>] {in | of} <stackRef>]
 
-Syntax: the number of [marked] cards [of <stack>]
+Syntax: the number of [marked] cards [{in | of} <stackRef>]
 
-Syntax: the number of {characters | items | words | lines} of <string>
+Syntax: the number of {char[acters] | items | words | lines} {in | of} <textString>
 
 Summary:
 <return|Returns> the number of <object|objects> of a certain kind, or
@@ -31,47 +31,64 @@ Example:
 if the number of card buttons &gt; 0 then doTheButtons
 
 Parameters:
-objectType:
-One of buttons, fields, images, graphics, players, scrollbars, EPSs,
-audioClips, videoClips, widgets, groups, backgrounds, or cards.
+objectType(enum):
+- buttons (or btns):
+- fields (or flds):
+- images:
+- graphics (or grcs):
+- players:
+- scrollbars:
+- EPSs:
+- audioClips:
+- videoClips:
+- groups:
+- backgrounds:
+- cards:
 
-group:
+groupRef:
 A reference to any group in the current stack.
 
-card:
+cardRef:
+A reference to any card in the current stack.
 
-
-stack:
+stackRef:
 Any stack reference.
 
-string (string):
+textString (string):
 Any string or expression that evaluates to a string.
 
-Returns:
+Returns(integer):
 The <number> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
 Use the <number> <function> to find out how many of a thing there are.
 
-If you use the form the number of card controls, the <number> <function>
+If you use the form `the number of card controls`, the <number> <function>
 returns the number of <control|controls> on the <current card> that are
-not members of a <group(command)>. The form the number of background
-controls returns the number of grouped controls that are in a
+not members of a <group(command)>. The form `the number of background
+controls` returns the number of grouped controls that are in a
 <group(command)> whose <backgroundBehavior> <property> is set to true.
 
-The expression
+The <expression>
 
-    the number of chars in <string> 
+    the number of chars in &lt;textString&gt;
 
-is equivalent to
+is equivalent to:
 
-    the length of <string> 
+    the length of &lt;textString&gt;
 
+The <expression>
 
-The expression the number of backgrounds of <stack> <return|returns> the
-number of <group(glossary)|groups> in the <stack>. The <expression> the
-number of groups of <stack> returns the number of groups on the <current
-card> of the <stack>. <group(glossary)|groups> that are <nest|nested>
+    the number of backgrounds of &lt;stackRef&gt;
+
+<return|returns> the number of <group(glossary)|groups> in the <stack>.
+
+The <expression>
+
+    the number of groups of &lt;stackRef&gt;
+
+returns the number of <group(glossary)|groups> on the <current card> of
+the <stack>. <group(glossary)|Groups> that are <nest|nested>
 inside another <group(command)> are not counted.
 
 >*Note:* The <number> is implemented as a <read-only> <global>
@@ -86,4 +103,3 @@ string (keyword), control (keyword), integer (keyword), control (object),
 backgroundBehavior (property), layer (property)
 
 Tags: text processing
-
