@@ -4288,9 +4288,6 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	
 	if (p_shape . type == kMCObjectShapeMask)
 	{
-		MCImageBitmap *t_mask;
-		t_mask = p_shape . mask . bits;
-		
 		// IM-2013-10-17: [[ ResIndependence ]] Apply image scale factor when computing rect
 		MCGFloat t_scale;
 		t_scale = p_shape . mask . scale == 0.0 ? 1.0 : p_shape . mask . scale;

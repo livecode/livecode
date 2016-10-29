@@ -2230,9 +2230,6 @@ void MCStack::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
 
 void MCStack::GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles)
 {
-	MCStackObjectVisibility t_visibility;
-	t_visibility = gethiddenobjectvisibility();
-	
 	switch (gethiddenobjectvisibility())
 	{
 		case kMCStackObjectVisibilityDefault:

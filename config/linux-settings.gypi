@@ -69,6 +69,7 @@
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
+					'-Werror=unused-but-set-variable',
 					'-Werror=uninitialized',
 					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',

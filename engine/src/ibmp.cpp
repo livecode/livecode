@@ -1044,9 +1044,6 @@ bool MCBitmapStructImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r
 		}
 	}
 
-	uint32_t t_stride = 0;
-	t_stride = MCBMPStride(m_header.width, m_header.bits_per_pixel);
-
 	if (t_success)
 		t_success = MCMemoryNew(t_frame);
 
@@ -2330,7 +2327,7 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 	bool t_success = true;
 
 	uindex_t t_width = 0, t_height = 0;
-	uindex_t t_format = 1, t_chars_per_pixel = 1;
+	uindex_t t_chars_per_pixel = 1;
 	uint32_t *t_colors = nil;
 	uint32_t *t_color_chars = nil;
 	uindex_t t_color_count = 0;
@@ -2378,7 +2375,6 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 					//	break;
 
 					case kMCDefineFormat:
-						t_format = t_value;
 						break;
 
 					case kMCDefineNColors:
@@ -2687,8 +2683,6 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 	IO_handle stream;
 	stream = GetStream();
 	
-	uint32_t t_width, t_height;
-	
 	uint2 i;
 	uint4 *fourptr = (uint4 *)&m_fh;
 	for (i = 0 ; i < (uint2)(sizeof(m_fh) >> 2) ; i++)
@@ -2698,8 +2692,6 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 	if (m_fh.file_version != 7 || m_fh.ncolors > 256 || namesize > 256)
 		return false;
 
-	t_width = m_fh.pixmap_width;
-	t_height = m_fh.pixmap_height;
 	char *newname = nil;
 
 	if (t_success)

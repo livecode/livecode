@@ -417,12 +417,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			/* UNCHECKED */ MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, &lines);
 			uindex_t nlines = MCArrayGetCount(*lines);
 			
-            coord_t fascent, fdescent, fleading, fxheight;
+            coord_t fascent, fdescent, fleading;
             fascent = MCFontGetAscent(m_font);
             fdescent = MCFontGetDescent(m_font);
             fleading = MCFontGetLeading(m_font);
-            fxheight = MCFontGetXHeight(m_font);
-
+			
 			coord_t fheight;
             fheight = fascent + fdescent + fleading;
 

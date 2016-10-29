@@ -1775,8 +1775,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font, bool p_force)
 		MCFontRef t_printer_parent_font;
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_fontstyle, t_textsize, t_printer_parent_font);
 
-		bool t_changed;
-		t_changed = MCObject::recomputefonts(t_printer_parent_font, p_force);
+		MCObject::recomputefonts(t_printer_parent_font, p_force);
 
 		MCFontRelease(t_printer_parent_font);
 	}

@@ -89,8 +89,6 @@ extern "C" void stream_read(png_structp png_ptr, png_bytep data, png_size_t leng
 {
 	IO_handle t_stream = (IO_handle)png_get_io_ptr(png_ptr);
 
-	uint4 t_length;
-	t_length = length;
 	if (IO_read(data, length, t_stream) != IO_NORMAL)
 		png_error(png_ptr, (char *)"pnglib read error");
 }

@@ -1593,9 +1593,6 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
 
 bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_text, Chunk_term p_chunk_type)
 {
-    MCChunkType t_type;
-    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
-    
     MCTextChunkIterator *tci;
     tci = MCStringsTextChunkIteratorCreate(ctxt, p_text, p_chunk_type);
 
@@ -1742,9 +1739,6 @@ __MCStringsEvalChunkOffset(MCExecContext& ctxt,
                            uindex_t p_start_offset,
                            Chunk_term p_chunk_type)
 {
-    MCChunkType t_type;
-    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
-    
     MCTextChunkIterator *tci;
     tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
     

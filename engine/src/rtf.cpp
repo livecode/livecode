@@ -1264,9 +1264,6 @@ RTFStatus RTFReader::ParseLegacyList(RTFToken p_token, int4 p_value)
 	RTFToken t_token;
 	t_token = p_token & kRTFTokenMask;
 
-	bool t_has_parameter;
-	t_has_parameter = (p_token & kRTFTokenHasParameter) != 0;
-
 	switch(t_token)
 	{
 	case kRTFTokenLegacyListLevel:
@@ -1361,9 +1358,6 @@ RTFStatus RTFReader::ParseListTable(RTFToken p_token, int4 p_value)
 {
 	RTFStatus t_status;
 	t_status = kRTFStatusSuccess;
-	
-	bool t_has_parameter;
-	t_has_parameter = (p_token & kRTFTokenHasParameter) != 0;
 	
 	switch(p_token & kRTFTokenMask)
 	{
@@ -1463,9 +1457,6 @@ RTFStatus RTFReader::ParseListOverrideTable(RTFToken p_token, int4 p_value)
 	RTFStatus t_status;
 	t_status = kRTFStatusSuccess;
 	
-	bool t_has_parameter;
-	t_has_parameter = (p_token & kRTFTokenHasParameter) != 0;
-	
 	switch(p_token & kRTFTokenMask)
 	{
 	case kRTFTokenListOverride:
@@ -1489,9 +1480,6 @@ RTFStatus RTFReader::ParseListText(RTFToken p_token, int4 p_value)
 
 	bool t_has_parameter;
 	t_has_parameter = (p_token & kRTFTokenHasParameter) != 0;
-
-	uint16_t t_bullet_char;
-	t_bullet_char = 0;
 
 	switch(p_token & kRTFTokenMask)
 	{

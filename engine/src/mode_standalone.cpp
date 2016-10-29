@@ -396,9 +396,6 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             return false;
         }
 
-        bool t_success;
-        t_success = true;
-        
         // The edition encoding is engine version / IDE engine version
         // specific - for now its just a byte with value 0-3.
         if (t_edition_byte == 1)

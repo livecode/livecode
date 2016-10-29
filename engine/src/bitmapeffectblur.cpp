@@ -795,9 +795,6 @@ void MCBitmapEffectBoxBlur::Process(uint8_t *mask)
 			t_top = MCU_max(-t_pass->radius, t_pass->top - y); // min offset from kernel midpoint
 			t_bottom = MCU_min(t_pass->bottom - y - 1, t_pass->radius); // max offset from kernel midpoint
 
-			int32_t t_vcount;
-			t_vcount = t_bottom - t_top + 1;
-
 			t_pass->buffer_needrow = t_bottom + y ;
 
 			CalculateRows(t_pass_index);
