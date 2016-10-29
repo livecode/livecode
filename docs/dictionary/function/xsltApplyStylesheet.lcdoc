@@ -2,7 +2,11 @@ Name: xsltApplyStylesheet
 
 Type: function
 
-Syntax: xsltApplyStylesheet xmlDocID, xsltStylesheetID
+Syntax: xsltApplyStylesheet (<xmlDocID>,<xsltStylesheetID>)
+
+Summary:
+Returns the data set resulting from applying the xslt document against the 
+specified xml document.
 
 Introduced: 6.5
 
@@ -13,7 +17,14 @@ Platforms: desktop, server, mobile
 Example:
 put xsltApplyStylesheet(tDocID, tStylesheetID) into tProcessedData
 
-The result:
+Parameters:
+xmlDocID(string):
+The ID of the xml document to use.
+
+xsltStylesheetID(string):
+The xslt stylesheet document to apply to the xml document.
+
+The result(string):
 &lt;!-- order the result by revenue --&gt;&#13;.
 
 Description:
@@ -159,4 +170,3 @@ revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
 xsltApplyStylesheetFromFile (function)
 
 Tags: xml
-
