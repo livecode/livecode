@@ -527,7 +527,7 @@ GdkWindow* MCLinuxRawClipboard::GetClipboardWindow() const
     // Attributes for the window
     GdkWindowAttr t_attributes;
     memset(&t_attributes, 0, sizeof(t_attributes));
-    t_attributes.title = "LiveCode Clipboard Helper";
+    t_attributes.title = const_cast<char *>("LiveCode Clipboard Helper");
     t_attributes.event_mask = GDK_ALL_EVENTS_MASK;
     t_attributes.wclass = GDK_INPUT_ONLY;
     t_attributes.window_type = GDK_WINDOW_TOPLEVEL;

@@ -68,6 +68,7 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Werror=write-strings',
 					'-Werror=return-type',
 					'-Werror=uninitialized',
 					'-Wno-error=maybe-uninitialized',

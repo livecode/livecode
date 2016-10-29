@@ -5918,7 +5918,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 		{
 			char *t_arguments[] =
 			{
-				"-elevated-slave",
+				const_cast<char *>("-elevated-slave"),
 				nil
 			};
             
