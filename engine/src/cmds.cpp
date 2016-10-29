@@ -1317,9 +1317,8 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
     else if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
     {
         kind = kReturnWithUrlResult;
-		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) == PS_NORMAL)
-            ;
-        if (sp.parseexp(False, True, &extra_source) != PS_NORMAL)
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) != PS_NORMAL ||
+			sp.parseexp(False, True, &extra_source) != PS_NORMAL)
         {
             MCperror->add(PE_RETURN_BADEXP, sp);
             return PS_ERROR;

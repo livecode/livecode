@@ -72,6 +72,7 @@
 					'-Werror=uninitialized',
 					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',
+					'-Werror=empty-body',
 				],
 
 				'cflags_cc':
