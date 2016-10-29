@@ -2,7 +2,7 @@ Name: controlAtLoc
 
 Type: function
 
-Syntax: controlAtLoc(coordinates)
+Syntax: controlAtLoc(<coordinates>)
 
 Summary:
 Returns the control at the specified location.
