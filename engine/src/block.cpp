@@ -1032,10 +1032,9 @@ void MCBlock::split(findex_t p_index)
 void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
-	coord_t t_ascent, t_descent, t_leading, t_xheight;
+	coord_t t_ascent, t_descent, t_xheight;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
-    t_leading = MCFontGetLeading(m_font);
     t_xheight = MCFontGetXHeight(m_font);
     
     // Width for strike-through/underline lines. Factor is arbitrary...

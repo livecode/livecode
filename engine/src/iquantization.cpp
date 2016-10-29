@@ -199,13 +199,11 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 		}
 		else
 		{
-			bool reverse = false;
 			int32_t t_direction = 1;
 			if (y & 1)
 			{
 				t_src_row += width - 1;
 				t_dst_row += width - 1;
-				reverse = true;
 				t_direction = -1;
 				t_error_index = (width - 1) * 3;
 			}
@@ -282,14 +280,12 @@ bool MCImageDitherAlphaInPlace(MCImageBitmap *p_bitmap)
 		uint32_t width = p_bitmap->width;
 		uint32_t t_error_index = 0;
 
-		bool reverse = false;
 		int32_t t_direction = 1;
 
 		if (y & 1)
 		{
 			t_src_row += width - 1;
 
-			reverse = true;
 			t_direction = -1;
 
 			t_error_index = (width - 1);

@@ -1336,20 +1336,18 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		int2 centerx = trect.x + leftmargin + ((trect.width - leftmargin - rightmargin) >> 1);
 		int2 centery = trect.y + topmargin + ((trect.height - topmargin - bottommargin) >> 1);
 
-        coord_t sx, sy, theight;
+        coord_t sx, sy;
         if (nlines == 1)
         {
             // Centre things on the middle of the ascent
             sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
             sy = roundf(centery + (fascent-fdescent)/2);
-            theight = fascent;
         }
         else
         {
             // Centre things by centring the bounding box of the text
             sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
             sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
-            theight = nlines * fheight;
         }
         
 		uint2 i;

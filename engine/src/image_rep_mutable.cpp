@@ -530,7 +530,6 @@ void MCMutableImageRep::startdraw()
 void MCMutableImageRep::continuedraw()
 {
 	MCRectangle brect;
-	Boolean all = False;
 	brect.width = brect.height = 0;
 
 	switch(m_owner->getstack()->gettool(m_owner))
@@ -579,7 +578,6 @@ void MCMutableImageRep::continuedraw()
 		brect = drawbrush(T_ERASER);
 		startx = mx;
 		starty = my;
-		all = True;
 		break;
 	case T_LASSO:
 		break;
@@ -622,7 +620,6 @@ void MCMutableImageRep::continuedraw()
 			brect.y += rect.y;
 			startx = mx + (selrect.x - oldx);
 			starty = my + (selrect.y - oldy);
-			all = True;
 		}
 		else
 		{

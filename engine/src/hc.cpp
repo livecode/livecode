@@ -1333,10 +1333,9 @@ MCControl *MCHcbmap::build()
 	iptr->flags |= MCscreen->getpad() >> 3;
 	iptr->flags |= F_RLE;
 
-	uint32_t t_bytes, t_stride;
+	uint32_t t_stride;
 	t_stride = MCHCBitmapStride(rect.width);
-	t_bytes = t_stride * rect.height;
-
+	
 	MCImageBitmap *t_bitmap = nil;
 	MCImageCompressedBitmap *t_compressed = nil;
 	/* UNCHECKED */ MCImageBitmapCreate(rect.width, rect.height, t_bitmap);

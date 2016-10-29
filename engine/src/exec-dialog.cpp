@@ -167,7 +167,8 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
         if (p_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        MCA_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result);
+		if (MCA_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result) != 0)
+			ctxt . Throw();
 	}
 	else
 	{
@@ -230,8 +231,8 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
         if (p_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        int error;
-        error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
+		if (MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result) != 0)
+			ctxt .Throw();
 	}
 	else
 	{
@@ -301,8 +302,8 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
         if (p_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        int t_error;
-        t_error = MCA_folder(p_title, p_prompt, p_initial, t_options, &t_value, &t_result);
+        if (MCA_folder(p_title, p_prompt, p_initial, t_options, &t_value, &t_result) != 0)
+			ctxt . Throw();
 	}
 	else
 	{
@@ -585,9 +586,9 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
         if (p_as_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        int t_error;
-        t_error = MCA_ask_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result);
-
+        if (MCA_ask_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result) != 0)
+			ctxt . Throw();
+		
         t_cancelled = *t_value == nil;
     }
 	else
@@ -653,10 +654,11 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
         if (p_as_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        int t_error;
-		// t_value contains the filename, t_result the chosen type
-        t_error = MCA_ask_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
-
+        // t_value contains the filename, t_result the chosen type
+		if (MCA_ask_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result) != 0)
+			ctxt . Throw();
+		
+		
 		t_cancelled = *t_value == nil;
 	}
 	else

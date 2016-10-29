@@ -731,8 +731,8 @@ MCCursorRef MCImage::createcursor()
 	}
 
 	// IM-2013-11-11: [[ RefactorGraphics ]] Check if image has alpha before dithering
-	bool t_has_mask, t_has_alpha;
-	t_has_mask = MCImageBitmapHasTransparency(t_cursor_bitmap, t_has_alpha);
+	bool t_has_alpha;
+	MCImageBitmapHasTransparency(t_cursor_bitmap, t_has_alpha);
 
 	// If the alpha mask is present, and cursors cannot have alpha then dither
 	// the mask down.

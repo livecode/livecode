@@ -119,15 +119,13 @@ void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_d
 
 void MCNotificationExecCancelLocalNotification(MCExecContext& ctxt, int32_t p_id)
 {
-    bool t_success;
-    t_success = MCSystemCancelLocalNotification (p_id);
+    MCSystemCancelLocalNotification (p_id);
     ctxt.SetTheResultToEmpty();
 }
 
 void MCNotificationExecCancelAllLocalNotifications(MCExecContext& ctxt)
 {
-    bool t_success;
-    t_success = MCSystemCancelAllLocalNotifications ();
+    MCSystemCancelAllLocalNotifications ();
     ctxt.SetTheResultToEmpty();
 }
 
@@ -144,7 +142,6 @@ void MCNotificationGetNotificationBadgeValue(MCExecContext& ctxt)
 
 void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_badge_value)
 {
-    bool t_success;
-    t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
+    MCSystemSetNotificationBadgeValue (p_badge_value);
     ctxt.SetTheResultToEmpty();
 }

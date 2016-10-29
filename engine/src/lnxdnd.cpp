@@ -120,11 +120,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     //fprintf(stderr, "DND: dodragdrop\n");
     // Ensure that the DnD mechanisms are ready for use
     MCLinuxDragAndDropInitialize(dpy);
-    
-    // The source window for the drag and drop operation
-    GdkWindow *t_source;
-    t_source = last_window;
-    
+	
     // Preserve the modifier state
     uint16_t t_old_modstate = MCmodifierstate;
     
@@ -174,6 +170,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     GdkGrabStatus t_grab = gdk_pointer_grab(w, FALSE,
                                             GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
                                             NULL, NULL, MCeventtime);
+	
+	if (t_grab != GDK_GRAB_SUCCESS)
+		return DRAG_ACTION_NONE;
     
     // We need to know what action was selected so we know whether to delete
     // the data afterwards (as done for move actions)

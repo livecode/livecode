@@ -1902,9 +1902,6 @@ void MCStack::setwindowname()
 	if (!opened || isunnamed() || window == NULL)
 		return;
 
-	char *t_utf8_name;
-	t_utf8_name = NULL;
-
 	MCStringRef tptr;
 	if (MCStringIsEmpty(title))
 		tptr = MCNameGetString(getname());

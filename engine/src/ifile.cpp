@@ -62,9 +62,9 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 {
 	bool t_success = true;
 
-	bool t_mask, t_alpha;
+	bool t_alpha;
 
-	t_mask = MCImageBitmapHasTransparency(p_bitmap, t_alpha);
+	MCImageBitmapHasTransparency(p_bitmap, t_alpha);
 
 	if (!t_alpha && MCpaintcompression == EX_PBM)
 	{
@@ -173,9 +173,6 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 
 void MCImage::prepareimage()
 {
-	MCStack *t_stack;
-	t_stack = getstack();
-	
 	MCImagePrepareRepForDisplayAtDensity(m_rep, getdevicescale());
 }
 
