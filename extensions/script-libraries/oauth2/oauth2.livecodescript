@@ -218,6 +218,94 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
 end OAuth2
 
 
+/**
+
+Obtain a new authorization token using a refresh token
+
+Description:
+Access tokens have limited lifetimes. If your application needs access to
+an API beyond the lifetime of a single access token, it can obtain a refresh 
+token. A refresh token allows your application to obtain new access tokens.
+
+> *Note*: Save refresh tokens in secure long-term storage and continue to
+> use them as long as they remain valid. Limits apply to the number of
+> refresh tokens that are issued per client-user combination, and per
+> user across all clients, and these limits are different. If your application
+> requests enough refresh tokens to go over one of the limits, older refresh
+> tokens stop working.
+
+Example:
+constant kTokenURL = "https://www.googleapis.com/oauth2/v4/token"
+constant kClientID = "XXXXXXXXXXXXXXXXXXXXXXX"
+constant kClientSecret = "XXXXXXXXXXXXXXXXXXXXXXX"
+
+local sAuth
+
+private command __RefreshAuth
+   if sAuth is not an array then
+      return "No authorization info available" for error
+   end if
+   
+   OAuth2Refresh kTokenURL, kClientID, kClientSecret, sAuth["refresh_token"], 59004
+   if the result is empty then
+      put it into sAuth
+   else
+      return "Not authorized" for error
+   end if
+   
+   set the httpHeaders to "Authorization: Bearer "& sAuth["access_token"]
+   return empty for error
+end __RefreshAuth
+
+Parameters:
+pTokenURL (string): The URL to obtain the authorization token from once an authorization code is
+sent to the redirect uri. This can be obtained from the API documentation of the service being
+authorized.
+
+pClientID (string): The application client ID obtained when setting up your application with
+the web service.
+
+pClientSecret (string): The application client secret obtained when setting up your application with
+the web service.
+
+pPort (optional integer): The port to use for the redirect uri. Default value is 49152.
+
+The result:
+An error string if an error occured during authorization
+
+It:
+An array containing the parsed JSON data returned by the token url
+
+*/
+
+command OAuth2Refresh pTokenURL, pClientID, pClientSecret, pRefreshToken, pPort
+   local tPort = 49152
+   
+   if pPort is an integer then
+      put pPort into tPort
+   end if
+   
+   local tParams
+   put "grant_type=refresh_token" into tParams
+   put "&client_id=" & urlEncode(pClientID) after tParams
+   put "&client_secret=" & urlEncode(pClientSecret) after tParams
+   put "&refresh_token=" & urlEncode(pRefreshToken) after tParams
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tParams
+   
+   local tResponse
+   set the httpHeaders to "Accept: application/json"
+   
+   post tParams to pTokenURL
+   put JSONToArray(it) into tResponse
+   
+   -- reset the refresh token so the user doen't accidentally lose it
+   if tResponse["refresh_token"] is empty then
+      put pRefreshToken into tResponse["refresh_token"]
+   end if
+   
+   return tResponse for value
+end OAuth2Refresh
+
 on __NewConnection pSocketID
    read from socket pSocketID until crlf & crlf with message "__HandleRequest"
 end __NewConnection
