@@ -3458,13 +3458,16 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
         
         if (p_marked)
             t_stack -> setmark();
-        r_card . object = t_stack -> getchildbyname(p_name);
+        t_card = t_stack -> getchildbyname(p_name);
         t_stack -> clearmark();
         t_stack -> clearbackground();
     }
 
     r_card . object = t_card;
-    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+	if (t_card != nil)
+		r_card . part_id = t_card -> getid();
+	else
+		r_card . part_id = p_stack . part_id;
 }
 
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark)

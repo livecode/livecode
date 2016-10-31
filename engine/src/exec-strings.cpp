@@ -914,8 +914,6 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
-	MCStringRef t_substring;
-	t_substring = nil;
     
     while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
     {
@@ -937,13 +935,6 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         
         // Begin searching again after the end of the match
         t_source_offset += t_end;
-
-		if (t_substring != nil)
-		{
-			MCValueRelease(t_substring);
-			t_substring = nil;
-		}
-
         
         if (MCStringGetCharAtIndex(p_pattern, 0) == '^')
             break;

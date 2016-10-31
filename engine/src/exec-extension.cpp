@@ -709,7 +709,8 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_type, MCValueRef& x_value, bool& r_converted)
 {
     MCResolvedTypeInfo t_resolved_type;
-    MCTypeInfoResolve(p_as_type, t_resolved_type);
+    if (!MCTypeInfoResolve(p_as_type, t_resolved_type))
+		return false;
     
     if (t_resolved_type . named_type == kMCAnyTypeInfo)
     {

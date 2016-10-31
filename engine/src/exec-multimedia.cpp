@@ -437,7 +437,7 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlayer* MCMultimediaExecGetClip(MCStringRef p_clip, int p_chunk_type)
+static MCPlayer* MCMultimediaExecGetClip(MCExecContext& ctxt, MCStringRef p_clip, int p_chunk_type)
 {
 	IO_cleanprocesses();
 	MCPlayer *tptr;
@@ -464,7 +464,11 @@ MCPlayer* MCMultimediaExecGetClip(MCStringRef p_clip, int p_chunk_type)
 	{
 		tptr = MCplayers;
 		uint4 t_id;
-		MCU_stoui4(p_clip, t_id);
+		if (!MCU_stoui4(p_clip, t_id))
+		{
+			ctxt . LegacyThrow(EE_PLAY_BADCLIP);
+			return nil;
+		}
 		while (tptr != NULL)
 		{
 			if (tptr -> getaltid() == t_id)
@@ -704,7 +708,11 @@ void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	return;
 #endif
 
-	MCPlayer *tptr = MCMultimediaExecGetClip(p_clip, p_chunk_type);
+	MCPlayer *tptr = MCMultimediaExecGetClip(ctxt, p_clip, p_chunk_type);
+	
+	if (ctxt . HasError())
+		return;
+	
 	if (tptr != nil)
 		MCMultimediaExecPlayOperation(ctxt, tptr, PP_UNDEFINED);
 	else
@@ -727,7 +735,11 @@ void MCMultimediaExecPlayVideoOperation(MCExecContext& ctxt, MCStack *p_target, 
 			MCresult->sets("no video support");
 		return;
 #endif
-	MCPlayer *tptr = MCMultimediaExecGetClip(p_clip, p_chunk_type);
+	MCPlayer *tptr = MCMultimediaExecGetClip(ctxt, p_clip, p_chunk_type);
+	
+	if (ctxt . HasError())
+		return;
+	
 	MCMultimediaExecPlayOperation(ctxt, tptr, p_operation);
 }
 
