@@ -2,10 +2,10 @@ Name: revXMLRPC_DeleteParam
 
 Type: command
 
-Syntax: revXMLRPC_DeleteParam <documentID>,<paramNumber>
+Syntax: revXMLRPC_DeleteParam <XMLRPCdocumentID>,<paramNumber>
 
 Summary:
-Deletes a single parameter from an XML-RPC document structure.
+Deletes a single parameter from an <XML-RPC document> structure.
 
 Associations: xml-rpc library
 
@@ -21,15 +21,22 @@ Example:
 revXMLRPC_DeleteParam theRequest,3
 
 Parameters:
-documentID:
+XMLRPCdocumentID (integer):
 The number returned by the <revXMLRPC_CreateRequest> when you
-created the XML-RPC request.
+created the <XML-RPC> request.
 
-paramNumber:
+paramNumber (integer):
 The number given to the parameter to be removed from the
-XML-RPC document structure.
+<XML-RPC document> structure.
 
 
 Description:
-Used to delete a single parameter from an XML-RPC 
+Use <revXMLRPC_DeleteParam> to delete a single parameter from an XML-RPC
 documents structure.
+
+References: revXMLRPC_DeleteAllDocuments (command), result (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary), XML-RPC (glossary),
+XML-RPC document (glossary), XML-RPC library (library),
+revXMLRPC_CreateRequest (function), revXMLRPC_Execute (function)

@@ -2,7 +2,7 @@ Name: revXMLRPC_SetSocket
 
 Type: command
 
-Syntax: revXMLRPC_SetSocket <documentID>, <socket>
+Syntax: revXMLRPC_SetSocket <XMLRPCdocumentID>, <RPCsocket>
 
 Summary:
 Sets the socket of an XML-RPC document.
@@ -18,40 +18,40 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Example:
-revXMLRPC_SetSocket theRequest,myOpenSocket
+revXMLRPC_SetSocket tRequest,tOpenSocket
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request.
 
-socket:
-The number of the opened socket to set and use.
+RPCsocket (string):
+The number of the opened <socket> to set and use.
 
-Description:
-Use the <revXMLRPC_SetSocket> <function> to set the network socket used
-in the execution of an <XML-RPC request>. By default, XML-RPC uses the
-<post> <command> to execute an <XML-RPC request>, but this has the
-overhead of opening and closing a new socket every time. You can avoid
-this by re-using an already opened <socket>.
-
+The result (string):
 If the <revXMLRPC_SetSocket> <command> encounters an error, it
 <return|returns> an error message starting with "xmlrpcerr" ..
 
->*Important:*  The <revXMLRPC_SetSocket> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+Description:
+Use the <revXMLRPC_SetSocket> <function> to set the network socket used
+in the execution of an <XML-RPC> request. By default, XML-RPC uses the
+<post> <command> to execute an <XML-RPC> request, but this has the
+overhead of opening and closing a new socket every time. You can avoid
+this by re-using an already opened <socket>.
+
+>*Important:*  The <revXMLRPC_SetSocket> <command> is part of the
+> <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: post (command), revXMLRPC_GetSocket (function),
 revXMLRPC_CreateRequest (function), return (glossary),
-XML-RPC request (glossary), Standalone Application Settings (glossary),
+XML-RPC (glossary), Standalone Application Settings (glossary),
 socket (glossary), standalone application (glossary), function (glossary),
 command (glossary), LiveCode custom library (glossary),
 XML-RPC library (library)
 
 Tags: networking
-

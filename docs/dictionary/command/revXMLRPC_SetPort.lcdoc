@@ -2,10 +2,10 @@ Name: revXMLRPC_SetPort
 
 Type: command
 
-Syntax: revXMLRPC_SetPort <documentID>, <port>
+Syntax: revXMLRPC_SetPort <XMLRPCdocumentID>, <RPCport>
 
 Summary:
-Sets the port of an XML-RPC document structure.
+Sets the port of an <XML-RPC document> structure.
 
 Associations: xml-rpc library
 
@@ -18,38 +18,36 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request.
 
-port:
+RPCport (string):
 The port number you want to connect to. If you don't specify a port,
 port 80 is used. (On most systems, port 80 is used for HTTP
-connections.) 
+connections.)
 
-
-The result:
+The result (string):
 If the <revXMLRPC_SetPort> <command> encounters an error, the <result>
 is set to an error message beginning with "xmlrpcerr".
 
 Description:
 Use the <revXMLRPC_SetPort> <command> to set the port that is the target
-of the execution of an <XML-RPC request>.
+of the execution of an <XML-RPC> request.
 
->*Important:*  The <revXMLRPC_SetPort> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_SetPort> <command> is part of the
+> <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_SetHost (command), revXMLRPC_GetPort (function),
 result (function), revXMLRPC_CreateRequest (function),
-LiveCode custom library (glossary),
+LiveCode custom library (glossary), XML-RPC document(glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
-XML-RPC request (glossary), XML-RPC library (library)
+XML-RPC (glossary), XML-RPC library (library)
 
 Tags: networking
-

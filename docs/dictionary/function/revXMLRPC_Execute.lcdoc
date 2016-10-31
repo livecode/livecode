@@ -2,10 +2,10 @@ Name: revXMLRPC_Execute
 
 Type: function
 
-Syntax: revXMLRPC_Execute(<XML-RPC document>)
+Syntax: revXMLRPC_Execute(<XMLRPCdocumentID>)
 
 Summary:
-Executes an XML-RPC request and returns the result as an XML-RPC
+Executes an <XML-RPC> request and returns the result as an <XML-RPC>
 document structure.
 
 Associations: xml-rpc library
@@ -19,8 +19,20 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Example:
-put revXMLRPC_Execute(theRequest) into theResponse
+local tResponse
+put revXMLRPC_Execute(tRequest) into tResponse
+
+Parameters:
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request, or the successful <revXMLRPC_Execute> function when you
+executed an <XML-RPC> request.
+
+The result (string): An <XML-RPC> document.
+
+Description:
+Use <revXMLRPC_Execute> to execute an <XML-RPC> request.
 
 References: revXMLRPC_DeleteAllDocuments (command),
-revXMLRPC_GetResponse (function)
-
+revXMLRPC_CreateRequest (function), revXMLRPC_Execute (function),
+revXMLRPC_GetResponse (function), XML-RPC (glossary)
