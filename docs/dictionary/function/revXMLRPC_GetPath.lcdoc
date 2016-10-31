@@ -24,7 +24,7 @@ put revXMLRPC_GetPath(tRequest) into tPath
 Parameters:
 XMLRPCdocumentID (integer):
 The number returned by the <revXMLRPC_CreateRequest> when you created the
-<XML-RPC> request, or the successful <revXMLRPC_Execute< <function> when you
+<XML-RPC> request, or the successful <revXMLRPC_Execute> <function> when you
 executed an <XML-RPC> request.
 
 Returns (string):
