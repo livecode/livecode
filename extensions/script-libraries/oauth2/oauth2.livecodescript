@@ -48,7 +48,6 @@ Requires mergJSON
 */
 
 constant kRedirectURL = "http://localhost"
-local sPort = 49152
 
 local sUniqueRefs
 
@@ -76,7 +75,7 @@ constant kClientID = "XXXXXXXXX.XXXXXXXX"
 constant kClientSecret = "XXXXXXXXXXXXXXXXXXXXX"
 constant kScopes = "incoming-webhook"
 
-OAuth2 kAuthURL, kTokenURL, kClientID, kClientSecret, kScopes
+OAuth2 kAuthURL, kTokenURL, kClientID, kClientSecret, kScopes, 54303
 if the result is not empty then
    answer error "Not authorized!" 
 else
@@ -113,7 +112,9 @@ the web service.
 pScopes (string): A comma delimited list of authorization scopes. Valid scopes will be found 
 in the API documentation of the service being authorized.
 
-pParams (array): An array of additional key -> value pairs of extra parameters to be sent to
+pPort (optional integer): The port to use for the redirect uri. Default value is 49152.
+
+pParams (optional array): An array of additional key -> value pairs of extra parameters to be sent to
 the authorization url. Some services implement additional options that require extra parameters.
 
 The result:
@@ -124,7 +125,13 @@ An array containing the parsed JSON data returned by the token url
 
 */
 
-command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
+command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pParams
+   local tPort = 49152
+   
+   if pPort is an integer then
+      put pPort into tPort
+   end if
+   
    local tURL
    put pAuthURL & "?response_type=code" into tURL
    
@@ -143,7 +150,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
       put "&" & tKey & "=" & urlEncode(pParams[tKey]) after tURL
    end repeat
    
-   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & sPort & "/") after tURL
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tURL
    
    local tBrowserRect
    if the environment is not "mobile" then
@@ -169,10 +176,10 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
    local tOldInterface
    put the defaultNetworkInterface into tOldInterface
    set the defaultNetworkInterface to "127.0.0.1"
-   accept connections on port sPort with message "__NewConnection"
+   accept connections on port tPort with message "__NewConnection"
    set the defaultNetworkInterface to tOldInterface
    
-   put sPort into sUniqueRefs[tUniqueRef]
+   put tPort into sUniqueRefs[tUniqueRef]
    
    if the environment is not "mobile" then
       close stack tUniqueRef
@@ -196,7 +203,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
       put "&client_id=" & urlEncode(pClientID) after tParams
       put "&client_secret=" & urlEncode(pClientSecret) after tParams
       put "&code=" & urlEncode(tResult["code"]) after tParams
-      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & sPort & "/") after tParams
+      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tParams
       
       local tResponse
       set the httpHeaders to "Accept: application/json"
@@ -210,36 +217,6 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
    end if
 end OAuth2
 
-/**
-
-Set the value of a property
-
-Example:
-OAuth2Set "port", 65535
-
-Parameters:
-pProperty (enum): The property to set
-
-- "port": The port to use for the redirect uri. Default value is 49152
-
-pValue: The property value
-
-*/
-
-command OAuth2Set pProperty, pValue
-   switch pProperty
-      case "port"
-         if pValue is not an integer or \
-               pValue > 65535 or pValue < 1 then
-            return "invalid port" for error
-         end if
-         
-         put pValue into sPort
-         break
-   end switch
-   
-   return empty for error
-end OAuth2Set
 
 on __NewConnection pSocketID
    read from socket pSocketID until crlf & crlf with message "__HandleRequest"
