@@ -2,10 +2,10 @@ Name: revXMLRPC_SetPath
 
 Type: command
 
-Syntax: revXMLRPC_SetPath <documentID>, <path>
+Syntax: revXMLRPC_SetPath <XMLRPCdocumentID>, <filePath>
 
 Summary:
-Sets the path in an XML-RPC document structure.
+Sets the path in an <XML-RPC document> structure.
 
 Associations: xml-rpc library
 
@@ -21,16 +21,16 @@ Example:
 revXMLRPC_SetMethod theRequest,"sample.elizabethanInsult"
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request.
 
-path:
+filePath (string):
 Usually a file path, which allows the host to determine which resource
 handles your request.
 
 
-The result:
+The result (string):
 If the <revXMLRPC_SetPath> <command> encounters an error, the <result>
 is set to an error message beginning with "xmlerr" or "xmlrpcerr".
 
@@ -42,12 +42,12 @@ Where the <path> of the <XML-RPC document> tells the server which
 resource will handle the request, the method name tells that resource
 which method is being called specifically within that resource.
 
->*Important:*  The <revXMLRPC_SetPath> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_SetPath> <command> is part of the
+> <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function),
@@ -56,4 +56,3 @@ LiveCode custom library (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
 XML-RPC document (glossary), XML-RPC library (library)
-

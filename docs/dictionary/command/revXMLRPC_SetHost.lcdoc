@@ -2,10 +2,10 @@ Name: revXMLRPC_SetHost
 
 Type: command
 
-Syntax: revXMLRPC_SetHost <documentID>, <host> [, <port>]
+Syntax: revXMLRPC_SetHost <XMLRPCdocumentID>, <RPChost> [, <RPCport>]
 
 Summary:
-Sets the host and optionally the port of an XML-RPC document structure.
+Sets the host and optionally the port of an <XML-RPC document> structure.
 
 Associations: xml-rpc library
 
@@ -24,40 +24,40 @@ Example:
 revXMLRPC_SetHost myRequest,"example.com",10000
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request.
 
-host:
+RPChost (string):
 The IP address or domain name of the host you want to connect to.
 
-port:
+RPCport (string):
 The port number you want to connect to. If you don't specify a port,
 port 80 is used. (On most systems, port 80 is used for HTTP
-connections.) 
+connections.)
 
 
-The result:
+The result (string):
 If the <revXMLRPC_SetHost> <command> encounters an error, the <result>
 is set to an error message beginning with "xmlrpcerr".
 
 Description:
 Use the <revXMLRPC_SetHost> <command> to set the host and optionally the
-port that is the target of the execution of an <XML-RPC request>.
+port that is the target of the execution of an <XML-RPC> request.
 
->*Important:*  The <revXMLRPC_SetHost> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_SetHost> <command> is part of the
+> <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_SetPort (command), result (function),
 revXMLRPC_GetHost (function), LiveCode custom library (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
-XML-RPC request (glossary), XML-RPC library (library)
+XML-RPC (glossary), XML-RPC library (library),
+XML-RPC document(glossary), revXMLRPC_CreateRequest (function)
 
 Tags: networking
-

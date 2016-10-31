@@ -2,11 +2,11 @@ Name: revXMLRPC_GetParamType
 
 Type: function
 
-Syntax: revXMLRPC_GetParamType(<XML-RPC document>,<param number>)
+Syntax: revXMLRPC_GetParamType(<XMLRPCdocumentID>,<paramNumber>)
 
 Summary:
-Returns the type of a single parameter from an XML-RPC document
-structure. 
+Returns the type of a single parameter from an <XML-RPC> document
+structure.
 
 Associations: xml-rpc library
 
@@ -19,7 +19,32 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Example:
-put revXMLRPC_GetParamType(theResponse,1) into theResultType
+local tResultType
+put revXMLRPC_GetParamType(tResponse,1) into tResultType
 
-References: revXMLRPC_AddParam (command)
+Parameters:
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request, or the successful <revXMLRPC_Execute> function when you
+executed an <XML-RPC> request.
 
+paramNumber (integer):
+The number given to the parameter within the <XML-RPC> document structure.
+
+Returns (enum):
+The type of data contained in the parameters data.
+ - "base64": the value is base64-encoded
+ - "boolean": the value is true or false
+ - "dateTime.iso8601": the value is an Internet date
+ - "double": the value is a floating-point number
+ - "int" or "i4": the value is an integer number
+ - "string": the value is a string of characters
+ - "array": the value is an array of data (see below)
+ - "xml": the value is data in xml-format (see below)
+
+Description:
+Use <revXMLRPC_GetParamType> to get the data type of a single parameter
+from within an <XML-RPC> document structure.
+
+References: revXMLRPC_AddParam (command), revXMLRPC_CreateRequest (function),
+revXMLRPC_Execute (function), XML-RPC (glossary)

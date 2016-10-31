@@ -2,7 +2,7 @@ Name: revXMLRPC_GetParamCount
 
 Type: function
 
-Syntax: revXMLRPC_GetParamCount(<XML-RPC document>)
+Syntax: revXMLRPC_GetParamCount(<XMLRPCdocumentID>)
 
 Summary:
 Returns the number of parameters from an XML-RPC document structure.
@@ -18,7 +18,21 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Example:
-put revXMLRPC_GetParamCount(theResponse) into theParamCount
+local tParamCount
+put revXMLRPC_GetParamCount(tResponse) into tParamCount
 
-References: revXMLRPC_AddParam (command)
+Parameters:
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request, or the successful <revXMLRPC_Execute> function when you
+executed an <XML-RPC> request.
 
+Returns (integer): The number of parameters contained in an <XML-RPC>
+document structure.
+
+Description:
+Use <revXMLRPC_GetParamCount> to get the number of parameters contained in
+the structure of an <XML-RPC> document.
+
+References: revXMLRPC_AddParam (command), revXMLRPC_Execute (function)
+revXMLRPC_CreateRequest (function), XML-RPC (glossary)
