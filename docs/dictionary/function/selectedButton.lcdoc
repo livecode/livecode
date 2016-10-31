@@ -2,7 +2,7 @@ Name: selectedButton
 
 Type: function
 
-Syntax: the selectedButton of [card | background] family <familyNumber>
+Syntax: the selectedButton of [{card | background}] family <familyNumber>
 
 Summary:
 <return|Returns> the name of the currently <highlight|highlighted>
@@ -21,17 +21,17 @@ Example:
 put the selectedButton of family myFamily into thisButton
 
 Parameters:
-familyNumber:
+familyNumber (integer):
 A positive integer.
 
-Returns:
+Returns (string):
 The <selectedButton> <function> <return|returns> a <string> of the
-formdomain button buttonNumber, wheredomainis either card or background.
+form '*domain* button *buttonNumber*', where *domain* is either card or background.
 
 Description:
 Use the <selectedButton> function to find out the current setting of a
 <radio button|radio-button cluster> controlled by the <family>
-<property>. 
+<property>.
 
 This function exists for compatibility with imported HyperCard stacks.
 You can use the <radioBehavior> <property> to cause a <group> consisting
@@ -45,4 +45,3 @@ return (glossary), string (keyword), button (keyword), button (object),
 family (property), hilitedButton (property), radioBehavior (property)
 
 Tags: ui
-
