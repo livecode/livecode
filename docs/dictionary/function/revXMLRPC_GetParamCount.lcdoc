@@ -35,4 +35,5 @@ Use <revXMLRPC_GetParamCount> to get the number of parameters contained in
 the structure of an <XML-RPC> document.
 
 References: revXMLRPC_AddParam (command), revXMLRPC_Execute (function)
-revXMLRPC_CreateRequest (function), XML-RPC (glossary)
+revXMLRPC_CreateRequest (function), XML-RPC (glossary),
+XML-RPC library (library)

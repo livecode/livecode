@@ -47,4 +47,4 @@ Use <revXMLRPC_GetParamType> to get the data type of a single parameter
 from within an <XML-RPC> document structure.
 
 References: revXMLRPC_AddParam (command), revXMLRPC_CreateRequest (function),
-revXMLRPC_Execute (function), XML-RPC (glossary)
+revXMLRPC_Execute (function), XML-RPC (glossary), XML-RPC library (library)

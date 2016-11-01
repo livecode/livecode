@@ -37,5 +37,6 @@ Use the <revXMLRPC_GetParamNode> function to recall the node of a single
 parameter.
 
 References: command (glossary), function (glossary),
-XML library (library), XML-RPC document (glossary)
+XML library (library), XML-RPC library (library),
+XML-RPC document (glossary)
 revXMLRPC_CreateRequest (function), revXMLRPC_Execute (function)

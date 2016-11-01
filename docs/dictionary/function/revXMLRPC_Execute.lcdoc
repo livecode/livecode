@@ -35,4 +35,5 @@ Use <revXMLRPC_Execute> to execute an <XML-RPC> request.
 
 References: revXMLRPC_DeleteAllDocuments (command),
 revXMLRPC_CreateRequest (function), revXMLRPC_Execute (function),
-revXMLRPC_GetResponse (function), XML-RPC (glossary)
+revXMLRPC_GetResponse (function), XML-RPC (glossary),
+XML-RPC library (library)

@@ -5,7 +5,7 @@ Type: command
 Syntax: revXMLRPC_SetSocket <XMLRPCdocumentID>, <RPCsocket>
 
 Summary:
-Sets the socket of an XML-RPC document.
+Sets the socket of an <XML-RPC document>.
 
 Associations: xml-rpc library
 
@@ -52,6 +52,6 @@ revXMLRPC_CreateRequest (function), return (glossary),
 XML-RPC (glossary), Standalone Application Settings (glossary),
 socket (glossary), standalone application (glossary), function (glossary),
 command (glossary), LiveCode custom library (glossary),
-XML-RPC library (library)
+XML-RPC library (library), XML-RPC document (library)
 
 Tags: networking

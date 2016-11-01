@@ -42,13 +42,6 @@ Where the <path> of the <XML-RPC document> tells the server which
 resource will handle the request, the method name tells that resource
 which method is being called specifically within that resource.
 
->*Important:*  The <revXMLRPC_SetPath> <command> is part of the
-> <XML-RPC library>. To ensure that the <command> works in a
-> <standalone application>, you must include this
-> <LiveCode custom library|custom library> when you create your
-> <standalone application|standalone>. In the Inclusions pane of the
-> <Standalone Application Settings> window, make sure the "XML-RPC"
-> library checkbox is checked.
 
 References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function),
 result (function), revXMLRPC_CreateRequest (function),
