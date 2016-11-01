@@ -722,7 +722,7 @@ void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode 
     
     // SN-2014-09-15: [[ Bug 13423 ]] Clear the key sequence if needed, then append
     // the new key typed.
-    if (!MCactivefield -> getcompositionrange(si, ei))
+    if (MCactivefield && !MCactivefield -> getcompositionrange(si, ei))
         MCKeyMessageClear(s_pending_key_down);
     
     MCKeyMessageAppend(s_pending_key_down, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
