@@ -144,7 +144,7 @@ static bool ParserReport(ParserRef self, Position p_where, ParserError p_error, 
 		}
 		break;
 	case kParserErrorNone:
-		abort();
+		MCUnreachableReturn(false);
 		break;
 	}
 	
