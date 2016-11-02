@@ -47,7 +47,7 @@ Requires mergJSON
 
 */
 
-constant kRedirectURL = "http://localhost"
+constant kRedirectURL = "http://127.0.0.1"
 
 local sUniqueRefs
 
@@ -58,7 +58,7 @@ Present an authorization dialog for any web service that supports OAuth2 Authori
 Description:
 In order to handle the redirect the library accepts socket connections on localhost on a
 configurable port. The redirect uri configured when setting up your application with the
-web service should be `http://localhost:port` where `port` is the port that can be
+web service should be `http://127.0.0.1:port` where `port` is the port that can be
 configured with the port parameter. It is recommended to use the range 49152-65535.
 
 > **Warning:** The client secret should be kept securely when distributing an application in
