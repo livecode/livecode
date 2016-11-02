@@ -75,13 +75,13 @@ The abbreviated ID of an object is the object's type, followed by "id",
 followed by the object's short ID. For example, if a button's short ID
 is "27", its abbreviated ID is "button id 27".
 
-The long id of an object includes information about its owner (and about
+The <long> id of an object includes information about its owner (and about
 the <owner> of that <object(glossary)>, and so forth). For example,
 suppose a <stack> named "My Stack" contains a <card> whose ID is 11.
 This <card> has a <group> whose ID is 28, which in turn contains a
 <button> whose ID is 34. The <card> also has a <card control|card field>
 whose ID is 46. If "My Stack" is a <main stack> and it's in a <file>
-whose <file path|path> is "/Drive/Folder/Stack. rev", the long IDs of
+whose <file path|path> is "/Drive/Folder/Stack. rev", the <long> IDs of
 these <object|objects> look like this:
 
 * The stack: stack "/Drive/Folder/Stack. rev"
@@ -92,17 +92,17 @@ these <object|objects> look like this:
   "/Drive/Folder/Stack. rev" 
 * The card field: field id 46 of card id 11 of stack
   "/Drive/Folder/Stack. rev" If the stack is a substack, its <ID> is
-  included in the long <name> of each of its <object|objects>, before
+  included in the <long> <name> of each of its <object|objects>, before
   the <file path|path> of the <main stack>.
 
 
-The long ID of a group includes the <ID> of the <current card>. If the
+The <long> ID of a group includes the <ID> of the <current card>. If the
 <group> does not appear on the <current card>, requesting its <ID>
 causes an <execution error>. If you need to get the <ID> of a <group>,
 use the "<background>" terminology instead.
 
-The long ID of a background includes the <ID> of the <current card>, if
-the <background> appears on the <current card>. If not, the long <ID> of
+The <long> ID of a background includes the <ID> of the <current card>, if
+the <background> appears on the <current card>. If not, the <long> <ID> of
 the <background> includes the ID of the first <card> the <background>
 appears on.
 

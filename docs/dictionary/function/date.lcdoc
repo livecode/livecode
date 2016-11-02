@@ -44,7 +44,7 @@ The abbreviated date form returns the first three letters of the day of
 the week, a comma, the first three letters of the month, a space, the
 day of the month, a comma, and the year.
 
-The long date form returns the day of the week, a comma, the name of the
+The <long> date form returns the day of the week, a comma, the name of the
 month, a space, the day of the month, a comma, and the year.
 
 The internet date form returns the following parts, separated by spaces:

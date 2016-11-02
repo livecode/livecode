@@ -24,9 +24,14 @@ filter lines of field "Available Folders" without ".."
 sort lines of field "Available Folders" international
 
 Example:
+local tDiskContents
 put the files & return & the folders into \
-      diskContents[the defaultFolder]
-filter diskContents[the defaultFolder] without ".."
+      tDiskContents["the defaultFolder"]
+filter tDiskContents["the defaultFolder"] without ".."
+
+Parameters:
+targetFolder (String):
+The folder path to search.
 
 Returns (String):
 A list of folder names or folder information, with
@@ -37,7 +42,7 @@ Description:
 <targetFolder>, with one file per line.  If no <targetFolder> is
 specified, list the files in the <current folder>.
 
-The list only includes folders at the top level of the target folder.
+The list only includes folders at the top level of the <target folder>.
 The <folders> <function> does not recursively enter and examine
 folders deeper in the filesystem.  To examine the contents of a
 <subfolder|subfolders>, either pass its path as the <targetFolder>, or
@@ -62,8 +67,8 @@ included in the list only if they refer to a <folder>.
 
 ### Short form
 
-When the <folders> is called as a <function>, or without the `long` or
-`detailed` modifiers, it <return(glossary)|returns> only the <folder>
+When the <folders> is called as a <function>, or without the `<long>` or
+`<long|detailed>` modifiers, it <return(glossary)|returns> only the <folder>
 names as a string with one file name per line.
 
 > *Note:* On some <platform|platforms>, folder names are permitted to
@@ -73,8 +78,8 @@ names as a string with one file name per line.
 
 ### Long form
 
-`the long folders` and `the detailed folders` are synonyms.  When the
-<folders> <function> is called in this form, the <return(glossary)>
+`the <long> folders` and `the <long|detailed> folders` are synonyms.  When 
+the <folders> <function> is called in this form, the <return(glossary)>
 value is a list of folders with detailed file attributes.  Several of
 the attributes are provided only for compatibility with the <files>
 <function> and do not have any meaning for a <folder>.
@@ -107,7 +112,7 @@ used for the <umask> property.
 The creator and file type are always "????????".
 
 Changes:
-The long form was introduced in version 1.1.
+The <long> form was introduced in version 1.1.
 The optional <targetFolder> argument for the function call form was
 introduced in version 8.1.
 
@@ -116,7 +121,7 @@ specialFolderPath (function), alias (glossary), current folder (glossary),
 data fork (glossary), folder (glossary), function (glossary),
 platform (glossary), return (glossary), resource fork (glossary),
 shortcut (glossary), subfolder (glossary), symbolic link (glossary),
-defaultFolder (property), umask (property)
+defaultFolder (property), umask (property), long (keyword)
 
 Tags: file system
 
