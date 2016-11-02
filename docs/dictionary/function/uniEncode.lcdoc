@@ -108,6 +108,7 @@ added in version 2.0. In previous versions, the <uniEncode>
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
+Deprecated:
 uniEncode, uniDecode and unicodeText are all deprecated from version 7.0
 
 References: null (constant), function (control structure),
