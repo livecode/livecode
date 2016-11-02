@@ -204,8 +204,7 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 	MCScriptExecuteContext t_execute_ctxt;
 	t_execute_ctxt.Enter(self,
 						 p_handler_def,
-						 p_arguments,
-						 p_argument_count,
+	                     MCMakeSpan(p_arguments, p_argument_count),
 						 r_value);
 	
 	while(t_execute_ctxt.Step())

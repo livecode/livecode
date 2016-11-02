@@ -348,6 +348,11 @@ public:
         MCAssert(m_values != nil);
         return m_values[p_index];
     }
+
+	MCSpan<T> Span() const
+	{
+		return MCMakeSpan(m_values, m_value_count);
+	}
     
 private:
 	T* m_values;
