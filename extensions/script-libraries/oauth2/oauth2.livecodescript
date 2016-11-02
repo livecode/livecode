@@ -59,8 +59,7 @@ Description:
 In order to handle the redirect the library accepts socket connections on localhost on a
 configurable port. The redirect uri configured when setting up your application with the
 web service should be `http://localhost:port` where `port` is the port that can be
-configured with `OAuth2Set "port", port`. The default port is 49152 and it is recommended
-to use the range 49152-65535.
+configured with the port parameter. It is recommended to use the range 49152-65535.
 
 > **Warning:** The client secret should be kept securely when distributing an application in
 > order to protect your application from malicious use. The recommended way to do this is to
@@ -112,7 +111,7 @@ the web service.
 pScopes (string): A comma delimited list of authorization scopes. Valid scopes will be found 
 in the API documentation of the service being authorized.
 
-pPort (optional integer): The port to use for the redirect uri. Default value is 49152.
+pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
 pParams (optional array): An array of additional key -> value pairs of extra parameters to be sent to
 the authorization url. Some services implement additional options that require extra parameters.
@@ -126,12 +125,6 @@ An array containing the parsed JSON data returned by the token url
 */
 
 command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pParams
-   local tPort = 49152
-   
-   if pPort is an integer then
-      put pPort into tPort
-   end if
-   
    local tURL
    put pAuthURL & "?response_type=code" into tURL
    
@@ -150,7 +143,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       put "&" & tKey & "=" & urlEncode(pParams[tKey]) after tURL
    end repeat
    
-   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tURL
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tURL
    
    local tBrowserRect
    if the environment is not "mobile" then
@@ -176,10 +169,10 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    local tOldInterface
    put the defaultNetworkInterface into tOldInterface
    set the defaultNetworkInterface to "127.0.0.1"
-   accept connections on port tPort with message "__NewConnection"
+   accept connections on port pPort with message "__NewConnection"
    set the defaultNetworkInterface to tOldInterface
    
-   put tPort into sUniqueRefs[tUniqueRef]
+   put pPort into sUniqueRefs[tUniqueRef]
    
    if the environment is not "mobile" then
       close stack tUniqueRef
@@ -203,7 +196,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       put "&client_id=" & urlEncode(pClientID) after tParams
       put "&client_secret=" & urlEncode(pClientSecret) after tParams
       put "&code=" & urlEncode(tResult["code"]) after tParams
-      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tParams
+      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tParams
       
       local tResponse
       set the httpHeaders to "Accept: application/json"
@@ -268,7 +261,7 @@ the web service.
 pClientSecret (string): The application client secret obtained when setting up your application with
 the web service.
 
-pPort (optional integer): The port to use for the redirect uri. Default value is 49152.
+pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
 The result:
 An error string if an error occured during authorization
@@ -279,18 +272,12 @@ An array containing the parsed JSON data returned by the token url
 */
 
 command OAuth2Refresh pTokenURL, pClientID, pClientSecret, pRefreshToken, pPort
-   local tPort = 49152
-   
-   if pPort is an integer then
-      put pPort into tPort
-   end if
-   
    local tParams
    put "grant_type=refresh_token" into tParams
    put "&client_id=" & urlEncode(pClientID) after tParams
    put "&client_secret=" & urlEncode(pClientSecret) after tParams
    put "&refresh_token=" & urlEncode(pRefreshToken) after tParams
-   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & tPort & "/") after tParams
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tParams
    
    local tResponse
    set the httpHeaders to "Accept: application/json"
