@@ -842,6 +842,9 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			}
 		}
 		break;
+			
+		case kMCPlatformMenuItemPropertyUnknown:
+			MCUnreachable();
 	}
 }
 

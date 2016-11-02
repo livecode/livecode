@@ -363,6 +363,8 @@ Boolean MCScrollbar::mdown(uint2 which)
 				case WTHEME_PART_TRACK_INC:
 					mode = SM_PAGEINC;
 					break;
+				default:
+					break;
 				}
 			}
 			else

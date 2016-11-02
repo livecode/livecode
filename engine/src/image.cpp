@@ -415,6 +415,8 @@ Boolean MCImage::mdown(uint2 which)
 
 							return True;
 						}
+					default:
+						break;
 					}
 
 					if (isediting() &&

@@ -365,10 +365,12 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 	case MARK_TYPE_LINK:
 		// We can always render links natively - even if this is a no-op.
 		return true;
+	case MARK_TYPE_END:
+		// Unknown mark so return false.
+		return false;
 	}
 
-	// Unknown mark so return false.
-	return false;
+	MCUnreachableReturn(false);
 }
 
 void MCCustomMetaContext::domark(MCMark *p_mark)
@@ -2057,6 +2059,8 @@ private:
 			case kMCCustomPrinterPathClose:
 				Print("close");
 				break;
+			case kMCCustomPrinterPathEnd:
+				MCUnreachable();
 			}
 		}
 	}

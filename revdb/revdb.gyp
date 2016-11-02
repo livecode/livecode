@@ -484,6 +484,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},
@@ -565,6 +566,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},
