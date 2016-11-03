@@ -25,11 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define UINDEX_MAX UINT32_MAX
-#define UINDEX_MIN UINT32_MIN
-#define UINTPTR_MAX UINT32_MAX
-#define UINTPTR_MIN UINT32_MIN
-
 class MCStackIdCache
 {
 public:
@@ -117,7 +112,7 @@ MCStackIdCache::~MCStackIdCache(void)
         if (t_bucket == UINTPTR_MIN || t_bucket == UINTPTR_MAX)
             continue;
         
-        MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<MCObject>*>(m_buckets[i]);
+        MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[i]);
         t_handle.ExternalRelease();
     }
     
@@ -170,8 +165,8 @@ void MCStackIdCache::UncacheObject(MCObjectHandle p_object)
 	
 	if (t_target_slot != UINDEX_MAX)
 	{
-        p_object.ExternalRelease();
         p_object -> setinidcache(false);
+		MCObjectHandle(reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot])).ExternalRelease();
 		m_buckets[t_target_slot] = UINTPTR_MAX;
 		m_count -= 1;
 	}
@@ -186,7 +181,7 @@ MCObjectHandle MCStackIdCache::FindObject(uint32_t p_id)
 	t_target_slot = FindBucketIfExists(p_id, t_hash);
 	
 	if (t_target_slot != UINDEX_MAX)
-		return reinterpret_cast<MCObjectProxy<MCObject>*>(m_buckets[t_target_slot]);
+		return MCObjectHandle(reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot]));
 	
 	return nil;
 }
@@ -224,7 +219,7 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash, bool p_only_if
 
 		if (t_bucket != UINTPTR_MAX)
         {
-            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<MCObject>*>(t_bucket);
+            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(t_bucket);
             
             if (t_handle)
             {
@@ -336,7 +331,7 @@ bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 	{
 		if (t_old_buckets[i] != UINTPTR_MIN && t_old_buckets[i] != UINTPTR_MAX)
 		{
-            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<MCObject>*>(t_old_buckets[i]);
+            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(t_old_buckets[i]);
             
             // If the object is dead, don't transfer it to the new table
             if (!t_handle)
