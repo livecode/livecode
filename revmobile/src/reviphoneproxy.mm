@@ -119,7 +119,7 @@ static id s_SimRuntime_class = nil;
     {
         NSError* t_error;
         t_error = nil;
-        id t_dev_set
+        id t_dev_set;
         t_dev_set = [s_SimRuntime_class defaultDeviceSetWithError: &t_error];
         if (t_error == nil && t_dev_set != nil)
             return [t_dev_set availableDevices];
