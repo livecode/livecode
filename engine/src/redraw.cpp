@@ -547,10 +547,10 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	MCRectangle t_dirty_rect;
 	t_dirty_rect = p_effective_rect;
 
-	// Expand the effective rect by that of all parent groups.
+	// Expand the effective rect by that of all parent groups or controls
 	MCControl *t_control;
 	t_control = this;
-	while(t_control -> parent -> gettype() == CT_GROUP)
+	while (t_control -> parent -> gettype() != CT_CARD)
 	{
 		MCControl *t_parent_control;
 		t_parent_control = t_control->parent.GetAs<MCControl>();
