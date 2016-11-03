@@ -47,8 +47,7 @@ Requires mergJSON
 
 */
 
-constant kRedirectURL = "http://localhost"
-local sPort = 49152
+constant kRedirectURL = "http://127.0.0.1"
 
 local sUniqueRefs
 
@@ -59,9 +58,8 @@ Present an authorization dialog for any web service that supports OAuth2 Authori
 Description:
 In order to handle the redirect the library accepts socket connections on localhost on a
 configurable port. The redirect uri configured when setting up your application with the
-web service should be `http://localhost:port` where `port` is the port that can be
-configured with `OAuth2Set "port", port`. The default port is 49152 and it is recommended
-to use the range 49152-65535.
+web service should be `http://127.0.0.1:port` where `port` is the port that can be
+configured with the port parameter. It is recommended to use the range 49152-65535.
 
 > **Warning:** The client secret should be kept securely when distributing an application in
 > order to protect your application from malicious use. The recommended way to do this is to
@@ -76,7 +74,7 @@ constant kClientID = "XXXXXXXXX.XXXXXXXX"
 constant kClientSecret = "XXXXXXXXXXXXXXXXXXXXX"
 constant kScopes = "incoming-webhook"
 
-OAuth2 kAuthURL, kTokenURL, kClientID, kClientSecret, kScopes
+OAuth2 kAuthURL, kTokenURL, kClientID, kClientSecret, kScopes, 54303
 if the result is not empty then
    answer error "Not authorized!" 
 else
@@ -113,7 +111,9 @@ the web service.
 pScopes (string): A comma delimited list of authorization scopes. Valid scopes will be found 
 in the API documentation of the service being authorized.
 
-pParams (array): An array of additional key -> value pairs of extra parameters to be sent to
+pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
+
+pParams (optional array): An array of additional key -> value pairs of extra parameters to be sent to
 the authorization url. Some services implement additional options that require extra parameters.
 
 The result:
@@ -124,7 +124,7 @@ An array containing the parsed JSON data returned by the token url
 
 */
 
-command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
+command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pParams
    local tURL
    put pAuthURL & "?response_type=code" into tURL
    
@@ -143,7 +143,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
       put "&" & tKey & "=" & urlEncode(pParams[tKey]) after tURL
    end repeat
    
-   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & sPort & "/") after tURL
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tURL
    
    local tBrowserRect
    if the environment is not "mobile" then
@@ -169,10 +169,10 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
    local tOldInterface
    put the defaultNetworkInterface into tOldInterface
    set the defaultNetworkInterface to "127.0.0.1"
-   accept connections on port sPort with message "__NewConnection"
+   accept connections on port pPort with message "__NewConnection"
    set the defaultNetworkInterface to tOldInterface
    
-   put sPort into sUniqueRefs[tUniqueRef]
+   put pPort into sUniqueRefs[tUniqueRef]
    
    if the environment is not "mobile" then
       close stack tUniqueRef
@@ -196,7 +196,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
       put "&client_id=" & urlEncode(pClientID) after tParams
       put "&client_secret=" & urlEncode(pClientSecret) after tParams
       put "&code=" & urlEncode(tResult["code"]) after tParams
-      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & sPort & "/") after tParams
+      put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tParams
       
       local tResponse
       set the httpHeaders to "Accept: application/json"
@@ -210,36 +210,88 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pParams
    end if
 end OAuth2
 
+
 /**
 
-Set the value of a property
+Obtain a new authorization token using a refresh token
+
+Description:
+Access tokens have limited lifetimes. If your application needs access to
+an API beyond the lifetime of a single access token, it can obtain a refresh 
+token. A refresh token allows your application to obtain new access tokens.
+
+> *Note*: Save refresh tokens in secure long-term storage and continue to
+> use them as long as they remain valid. Limits apply to the number of
+> refresh tokens that are issued per client-user combination, and per
+> user across all clients, and these limits are different. If your application
+> requests enough refresh tokens to go over one of the limits, older refresh
+> tokens stop working.
 
 Example:
-OAuth2Set "port", 65535
+constant kTokenURL = "https://www.googleapis.com/oauth2/v4/token"
+constant kClientID = "XXXXXXXXXXXXXXXXXXXXXXX"
+constant kClientSecret = "XXXXXXXXXXXXXXXXXXXXXXX"
+
+local sAuth
+
+private command __RefreshAuth
+   if sAuth is not an array then
+      return "No authorization info available" for error
+   end if
+   
+   OAuth2Refresh kTokenURL, kClientID, kClientSecret, sAuth["refresh_token"], 59004
+   if the result is empty then
+      put it into sAuth
+   else
+      return "Not authorized" for error
+   end if
+   
+   set the httpHeaders to "Authorization: Bearer "& sAuth["access_token"]
+   return empty for error
+end __RefreshAuth
 
 Parameters:
-pProperty (enum): The property to set
+pTokenURL (string): The URL to obtain the authorization token from once an authorization code is
+sent to the redirect uri. This can be obtained from the API documentation of the service being
+authorized.
 
-- "port": The port to use for the redirect uri. Default value is 49152
+pClientID (string): The application client ID obtained when setting up your application with
+the web service.
 
-pValue: The property value
+pClientSecret (string): The application client secret obtained when setting up your application with
+the web service.
+
+pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
+
+The result:
+An error string if an error occured during authorization
+
+It:
+An array containing the parsed JSON data returned by the token url
 
 */
 
-command OAuth2Set pProperty, pValue
-   switch pProperty
-      case "port"
-         if pValue is not an integer or \
-               pValue > 65535 or pValue < 1 then
-            return "invalid port" for error
-         end if
-         
-         put pValue into sPort
-         break
-   end switch
+command OAuth2Refresh pTokenURL, pClientID, pClientSecret, pRefreshToken, pPort
+   local tParams
+   put "grant_type=refresh_token" into tParams
+   put "&client_id=" & urlEncode(pClientID) after tParams
+   put "&client_secret=" & urlEncode(pClientSecret) after tParams
+   put "&refresh_token=" & urlEncode(pRefreshToken) after tParams
+   put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tParams
    
-   return empty for error
-end OAuth2Set
+   local tResponse
+   set the httpHeaders to "Accept: application/json"
+   
+   post tParams to pTokenURL
+   put JSONToArray(it) into tResponse
+   
+   -- reset the refresh token so the user doen't accidentally lose it
+   if tResponse["refresh_token"] is empty then
+      put pRefreshToken into tResponse["refresh_token"]
+   end if
+   
+   return tResponse for value
+end OAuth2Refresh
 
 on __NewConnection pSocketID
    read from socket pSocketID until crlf & crlf with message "__HandleRequest"
