@@ -834,5 +834,6 @@ component Toolset
 		file ide-support:revliburl.livecodescript
 		file repo:extensions/script-libraries/oauth2/oauth2.livecodescript
 		file repo:extensions/script-libraries/getopt/getopt.livecodescript
+		file repo:extensions/script-libraries/mime/mime.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
