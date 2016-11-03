@@ -286,10 +286,6 @@ MCObject::~MCObject()
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
 	clearfontattrs();
 
-	// This object is going away; invalidate the proxy
-	if (m_weak_proxy != NULL)
-        m_weak_proxy->Clear();
-
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
 		parent_script -> Release();
@@ -332,6 +328,10 @@ MCObject::~MCObject()
 		MCParentScript::FlushObject(this);
 	
 	delete m_native_layer;
+    
+    // This object is going away; invalidate the proxy
+    if (m_weak_proxy != NULL)
+        m_weak_proxy->Clear();
     
     // Detach ourselves from the object pool.
     MCDeletedObjectsOnObjectDestroyed(this);
