@@ -601,16 +601,16 @@ MCStack::~MCStack()
 		else
 			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
-	if (MCmbstackptr == this)
+	if (MCmbstackptr.IsBoundTo(this))
 		MCmbstackptr = nil;
-    if (MCtopstackptr == this)
+    if (MCtopstackptr.IsBoundTo(this))
     {
         MCtopstackptr = nil;
         MCstacks->top(nil);
     }
-    if (MCstaticdefaultstackptr == this)
+    if (MCstaticdefaultstackptr.IsBoundTo(this))
 		MCstaticdefaultstackptr = MCtopstackptr;
-	if (MCdefaultstackptr == this)
+	if (MCdefaultstackptr.IsBoundTo(this))
 		MCdefaultstackptr = MCstaticdefaultstackptr;
 	if (stackfiles != NULL)
 	{

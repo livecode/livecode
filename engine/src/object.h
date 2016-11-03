@@ -376,6 +376,11 @@ public:
         return nullptr;
     }
     
+    bool IsBoundTo(const T* ptr) const
+    {
+        return IsBound() && m_proxy->m_object == ptr;
+    }
+    
     // Checked fetch as the given type
     template <typename U>
     U* GetAs() const
