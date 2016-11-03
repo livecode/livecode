@@ -6,12 +6,14 @@ Syntax: ftpProxy
 
 Summary:
 The ftpProxy <property> is not implemented and is <reserved
-word|reserved>. 
+word|reserved>.
 
 Introduced: 1.0
 
 Platforms: desktop, server
 
+Description:
+<reserved word|Reserved> for internal use.
+
 References: property (glossary), reserved word (glossary),
 HTTPProxy (property)
-
