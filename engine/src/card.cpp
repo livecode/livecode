@@ -2819,7 +2819,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 	if (!cptr -> isselectable()
 	        && (!MCselectgrouped || cptr->gettype() != CT_GROUP))
 		return;
-	MCGroup *gptr = (MCGroup *)cptr;
+	MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
 	
 	// MW-2008-12-04: [[ Bug ]] Make sure we honour group-local selectGrouped for
 	//   select-tool drags
