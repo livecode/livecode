@@ -772,6 +772,7 @@
 			'src/em-surface.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
+			'src/em-system.js',
 			'src/em-theme.cpp',
 			'src/em-url.cpp',
 			'src/em-url.js',
