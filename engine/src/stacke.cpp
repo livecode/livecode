@@ -375,7 +375,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				MCacptr = acptr;
 				MCU_play();
 #ifndef FEATURE_PLATFORM_AUDIO
-				if (MCacptr != NULL)
+				if (MCacptr)
 					MCscreen->addtimer(MCacptr, MCM_internal, PLAY_RATE);
 #endif
 			}

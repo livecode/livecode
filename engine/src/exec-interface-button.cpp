@@ -49,10 +49,10 @@ void MCButton::UpdateIconAndMenus(void)
 	reseticon();
 	freemenu(False);
 	findmenu(true);
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
 		parent->setstate(True, CS_NEED_UPDATE);
-		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
+		if ((parent.GetAs<MCGroup>() == MCmenubar || parent.GetAs<MCGroup>() == MCdefaultmenubar) && !MClockmenus)
 			MCscreen->updatemenubar(True);
 	}
 	Redraw();
@@ -808,7 +808,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 	if (opened)
 	{
 		if (findmenu(true) && menu.IsValid())
-			menu.GetAs<MCStack>()->installaccels(getstack());
+			menu->installaccels(getstack());
 	}
 }
 
@@ -1131,10 +1131,10 @@ void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
     
     bool t_dirty = (resetlabel() || menumode == WM_TOP_LEVEL);
     
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
 		parent->setstate(True, CS_NEED_UPDATE);
-		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
+		if ((parent.GetAs<MCGroup>() == MCmenubar || parent.GetAs<MCGroup>() == MCdefaultmenubar) && !MClockmenus)
 			MCscreen->updatemenubar(True);
 	}
 	if (t_dirty)
@@ -1212,7 +1212,7 @@ void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterface
             // MH-2007-03-20: [[ Bug 4035 ]] If the hilite of a radio button is set programmatically, other radio buttons were not unhilited if the radiobehavior of the group is set.
             if (getstyleint(flags) == F_RADIO && parent -> gettype() == CT_GROUP)
             {
-                MCGroup *gptr = (MCGroup *)parent;
+                MCGroup *gptr = parent.GetAs<MCGroup>();
                 gptr->radio(p_part, this);
             }
             radio();

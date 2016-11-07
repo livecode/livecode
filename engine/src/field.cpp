@@ -472,7 +472,7 @@ void MCField::open()
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 	}
 	else
@@ -533,14 +533,14 @@ void MCField::close()
 		if ((state & CS_IBEAM) != 0)
 			getstack() -> clearibeam();
 		if (MCclickfield == this)
-			MCclickfield = NULL;
+			MCclickfield = nil;
 		if (MCactivefield == this)
-			MCactivefield = NULL;
+			MCactivefield = nil;
 		if (MCfoundfield == this)
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 		if (paragraphs != NULL)
 		{
@@ -572,7 +572,7 @@ void MCField::kfocus()
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
         
-        if (MCactivefield != NULL && MCactivefield != this)
+        if (MCactivefield && MCactivefield != this)
             MCactivefield->unselect(True, True);
         MCactivefield = this;
         clearfound();
@@ -662,7 +662,7 @@ void MCField::kunfocus()
 			if (!(state & CS_KFOCUSED) && MCactivefield == this
 			        && !focusedparagraph->isselection()
 			        && firstparagraph == lastparagraph)
-				MCactivefield = NULL;
+				MCactivefield = nil;
 		}
 	}
     
@@ -2130,7 +2130,7 @@ void MCField::do_recompute(bool p_force_layout)
 	while (pgptr != paragraphs);
 	resetscrollbars(False);
 	if (MCclickfield == this)
-		MCclickfield = NULL;
+		MCclickfield = nil;
 
 	// MW-2006-03-21: Bug 3344/3377 - Fix the focus border lingering
 	if (cursorfield == this)

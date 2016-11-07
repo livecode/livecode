@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "resolution.h"
 #include "graphics_util.h"
+#include "globals.h"
 
 /* ================================================================
  * Stack initialisation

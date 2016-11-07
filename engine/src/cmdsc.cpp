@@ -1258,7 +1258,7 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
         MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
     }
 
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
         MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
 }
 

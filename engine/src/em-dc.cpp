@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 #include "redraw.h"
 #include "dispatch.h"
+#include "globals.h"
 
 /* ================================================================
  * Construction/Destruction

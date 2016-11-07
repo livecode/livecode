@@ -376,7 +376,7 @@ void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCmousestackptr;
 	r_loc = MCPointMake(MCmousex, MCmousey);
 
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
 }
 
@@ -398,7 +398,7 @@ void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCclickstackptr;
 	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
 
-	if (MCclickstackptr != nil)
+	if (MCclickstackptr)
 		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
 }
 
@@ -1034,11 +1034,11 @@ void MCUIDC::configureIME(int32_t x, int32_t y)
 
 void MCUIDC::updatemenubar(Boolean force)
 {
-	if (MCdefaultmenubar == NULL)
+	if (!MCdefaultmenubar)
 		MCdefaultmenubar = MCmenubar;
 
 	MCGroup *newMenuGroup;
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		newMenuGroup = MCmenubar;
 	else
 		newMenuGroup = MCdefaultmenubar;

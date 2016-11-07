@@ -18,6 +18,7 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "globals.h"
 
 #include "graphics.h"
 #include "stack.h"

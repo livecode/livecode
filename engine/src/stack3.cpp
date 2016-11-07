@@ -1103,7 +1103,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	Boolean oldlock = MClockmessages;
 	if (card != oldcard)
 	{
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		
 		if (MCmousestackptr == this)
@@ -2082,7 +2082,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 	uindex_t nstrings;
 	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
-	Boolean firstcard = MCfoundfield != NULL;
+	Boolean firstcard = MCfoundfield.IsValid();
 	MCField *oldfound = MCfoundfield;
 	do
 	{
@@ -2097,7 +2097,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 			{
 				MCCard *newcard = curcard;
 				curcard = ocard;
-				MCfoundfield = NULL;
+				MCfoundfield = nil;
 				setcard(newcard, True, False);
 				MCfoundfield = newfound;
 			}
@@ -2107,7 +2107,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 			return;
 		}
 		firstcard = False;
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		if (oldfound != NULL)
 		{
@@ -2129,7 +2129,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
-	if (MCfoundfield != NULL)
+	if (MCfoundfield)
 		MCfoundfield->clearfound();
 	MCStringRef *strings = NULL;
 	uindex_t nstrings;
@@ -2148,7 +2148,7 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
     for (uint4 i = 0 ; i < nstrings ; i++)
         MCValueRelease(strings[i]);
 	delete strings;
-	if (MCfoundfield != NULL)
+	if (MCfoundfield)
 		MCfoundfield->clearfound();
 }
 
