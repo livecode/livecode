@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <wincrypt.h>

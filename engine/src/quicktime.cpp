@@ -35,7 +35,6 @@
 #include "util.h"
 
 #ifdef _WINDOWS_DESKTOP
-#include "w32prefix.h"
 #include "w32dc.h"
 
 #include "digitalv.h"

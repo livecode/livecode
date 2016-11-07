@@ -64,7 +64,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "group.h"
 
 #if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
 #include "w32dc.h"
 #include "w32compat.h"
 

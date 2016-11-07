@@ -57,7 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 
 #if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32compat.h"
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"

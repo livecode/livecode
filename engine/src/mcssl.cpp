@@ -42,6 +42,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/x509v3.h>
 #endif
 
+#ifdef _WIN32
+#  include <WinCrypt.h>
+#endif
+
 #ifdef _MACOSX
 #include "osxprefix.h"
 #endif
