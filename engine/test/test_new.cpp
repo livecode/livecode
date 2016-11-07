@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 enum {
-	SIZE =
+	kSize =
 #if defined(__32_BIT__)
 	1 << 15
 #else
@@ -56,11 +56,11 @@ public:
 		m_big[0] = 0;
 	}
 
-	char m_big[SIZE];
+	char m_big[kSize];
 };
 
 struct VeryBig {
-	Big m_bigger[SIZE];
+	Big m_bigger[kSize];
 };
 
 
