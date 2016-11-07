@@ -578,8 +578,13 @@ protected:
 	// MW-2008-10-20: Pointer to the parent script's weak object reference.
 	MCParentScriptUse *parent_script;
 
-	// MW-2009-08-25: Pointer to the object's weak reference (if any).
+	// Pointer to the object's weak reference (if any).
+	// [[ C++11 ]] The various compilers we support disagree about what this friend declaration should look like
+#if defined(__clang__) || defined(_MSC_VER)
+	template <class T> friend class MCMixinObjectHandle;
+#else
 	template <class T> friend typename MCObjectProxy<T>::Handle MCMixinObjectHandle<T>::GetHandle() const;
+#endif
 	mutable MCObjectProxyBase* m_weak_proxy;
 
 	// MW-2011-07-21: For now, make this a uint4 as imageSrc references can make
@@ -672,7 +677,13 @@ public:
 	virtual void paste(void);
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
+
+	// [[ C++11 ]] MSVC doesn't support typename here while other compilers require it
+#ifdef _MSC_VER
+	virtual MCObjectProxy<MCStack>::Handle getstack();
+#else
 	virtual typename MCObjectProxy<MCStack>::Handle getstack();
+#endif
 
 	// MW-2011-02-27: [[ Bug 9412 ]] If pass_from is non-nil it means the message is passing from that
     //   object and should continue to be passed if not handled. If it is nil, then the message should
