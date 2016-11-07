@@ -239,7 +239,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
-      revSetEdited the short name of stack pStack
+      revIDESetEdited pStack
       setSettings pStack, tSettings
    end if
    
