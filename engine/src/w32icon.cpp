@@ -535,7 +535,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 		if (!s_got_dblclick)
 		{
-			if (MCdefaultstackptr != nil)
+			if (MCdefaultstackptr)
 				MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_click, t_button);
 		}
 		else
@@ -556,7 +556,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			t_button = 3;
 
 		s_got_dblclick = true;
-		if (MCdefaultstackptr != nil)
+		if (MCdefaultstackptr)
 			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_double_click, t_button);
 	}
 	break;

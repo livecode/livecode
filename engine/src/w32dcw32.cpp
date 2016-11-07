@@ -1360,7 +1360,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			        && !MCU_point_in_rect(rect, x, y))
 			{
 				MCmousestackptr->munfocus();
-				MCmousestackptr = NULL;
+				MCmousestackptr = nil;
 			}
 		}
 		break;
