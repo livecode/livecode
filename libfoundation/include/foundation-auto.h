@@ -821,53 +821,67 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
+template <typename T, void (Deleter)(T*)>
+class MCAutoCustomPointer
 {
-	
 public:
-	MCAutoCustomPointer(void)
+ 
+    typedef T* pointer;
+    
+	MCAutoCustomPointer() :
+      m_ptr(nil)
 	{
-		m_ptr = nil;
+	}
+    
+    MCAutoCustomPointer(T*&& take) :
+      m_ptr(take)
+    {
+    }
+    
+	~MCAutoCustomPointer()
+	{
+		Deleter(m_ptr);
 	}
 	
-	~MCAutoCustomPointer(void)
+	MCAutoCustomPointer& operator= (T*&& value)
 	{
-		FREE(m_ptr);
-	}
-	
-	T *operator = (T *value)
-	{
-		FREE(m_ptr);
+		Deleter(m_ptr);
 		m_ptr = value;
-		return value;
+		return *this;
 	}
 	
-	T*& operator & (void)
+	T*& operator& ()
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T *operator * (void) const
+	T* operator* () const
 	{
 		return m_ptr;
 	}
+    
+    operator bool () const
+    {
+        return m_ptr != nil;
+    }
 	
-	void Take(T*&r_ptr)
+	void ReleaseTo(T*& r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
-	T *Take()
+	T* Release()
 	{
-		T *t_ptr = m_ptr;
+		T* t_ptr = m_ptr;
 		m_ptr = nil;
 		return t_ptr;
 	}
 	
 private:
-	T *m_ptr;
+    
+	T* m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
