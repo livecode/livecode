@@ -41,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "platform.h"
 static MCPlatformSoundRef s_current_sound = nil;
 #elif defined _WINDOWS_DESKTOP
-#include "w32prefix.h"
 // SN-2014-06-26 [[ PlatformPlayer ]]
 // These 2 definitions must be accessible from exec-interface-aclip
 HWAVEOUT hwaveout;  //handle to audio device opened
@@ -152,7 +151,7 @@ MCAudioClip::~MCAudioClip()
 	if (MCacptr == this)
 	{
 		stop(True);
-		MCacptr = NULL;
+		MCacptr = nil;
 	}
 	delete[] samples; /* Allocated with new[] */
 	delete osamples;
@@ -187,7 +186,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
     }
 	else
 	{
-		MCacptr = NULL;
+		MCacptr = nil;
 		if (mstack != NULL)
 		{
 			if (mstack->getopened())

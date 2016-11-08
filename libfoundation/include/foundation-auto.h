@@ -88,6 +88,11 @@ public:
 		return m_value;
 	}
     
+	bool IsSet() const
+	{
+		return m_value != nil;
+	}
+
     void Reset(T value = nil)
     {
         if (value == m_value)
@@ -96,11 +101,6 @@ public:
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
-    }
-    
-    inline T& operator ! (void)
-    {
-		return m_value;
     }
     
     // The give method places the given value into the container without

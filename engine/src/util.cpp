@@ -16,10 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
-#endif
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -60,7 +56,7 @@ static MCPoint qa_points[QA_NPOINTS + 1];
 static void MCU_play_message()
 {
 	MCAudioClip *acptr = MCacptr;
-	MCacptr = NULL;
+	MCacptr = nil;
     // PM-2014-12-22: [[ Bug 14269 ]] Nil checks to prevent a crash
 	MCStack *sptr = (acptr != NULL ? acptr->getmessagestack() : NULL);
 	if (sptr != NULL)
@@ -74,13 +70,13 @@ static void MCU_play_message()
 
 void MCU_play()
 {
-	if (MCacptr != NULL && !MCacptr->play())
+	if (MCacptr && !MCacptr->play())
 		MCU_play_message();
 }
 
 void MCU_play_stop()
 {
-	if (MCacptr != NULL)
+	if (MCacptr)
 	{
 		MCacptr->stop(True);
 		MCU_play_message();
@@ -124,7 +120,7 @@ void MCU_watchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = True;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr->resetcursor(force);
 	}
 }
@@ -135,7 +131,7 @@ void MCU_unwatchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = False;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr -> resetcursor(force);
 	}
 }
@@ -149,7 +145,7 @@ void MCU_resetprops(Boolean update)
 			if (!MClockcursor)
 				MCcursor = None;
 			MCwatchcursor = False;
-			if (MCmousestackptr != NULL)
+			if (MCmousestackptr)
 				MCmousestackptr->resetcursor(True);
 			else
 				MCdefaultstackptr->resetcursor(True);
@@ -172,10 +168,10 @@ void MCU_resetprops(Boolean update)
 	MCerrorlock.Reset();
 	MClockerrors = MClockmessages = MClockrecent = False;
 	MCscreen->setlockmoves(False);
-	MCerrorlockptr = NULL;
+	MCerrorlockptr = nil;
 	MCinterrupt = False;
 	MCdragspeed = 0;
-	MCdynamiccard = NULL;
+	MCdynamiccard = nil;
 	MCdynamicpath = False;
 	MCexitall = False;
     
@@ -1838,7 +1834,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	if (t_new_tool == MCcurtool)
 		return;
 
-	if (MCeditingimage != NULL)
+	if (MCeditingimage)
 		MCeditingimage -> canceldraw();
 
 	MCcurtool = t_new_tool;
@@ -1846,16 +1842,16 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	MCundos->freestate();
 	if (MCcurtool != T_POINTER)
 		MCselected->clear(True);
-	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
+	if (MCactiveimage && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
-	MCeditingimage = NULL;
-	if (MCactivefield != NULL
+	MCeditingimage = nil;
+	if (MCactivefield
 	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
 		MCactivefield->getstack()->kunfocus();
 	ctxt . GetObject()->getstack()->resetcursor(True);
 	if (MCcurtool == T_BROWSE)
 		MCstacks->restartidle();
-	if (MCtopstackptr != NULL)
+	if (MCtopstackptr)
 		MCtopstackptr->updatemenubar();
     
     MCStacknode *t_node, *t_first_node;
@@ -1892,7 +1888,7 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 			{
 				// MW-2011-01-05: Make sure dynamicpath global is sensible.
 				Boolean olddynamic = MCdynamicpath;
-				MCdynamicpath = MCdynamiccard != NULL;
+				MCdynamicpath = MCdynamiccard.IsValid();
 
 				// PASS STATE FIX
 				Exec_stat oldstat = stat;

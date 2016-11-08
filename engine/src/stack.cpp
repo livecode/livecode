@@ -601,16 +601,16 @@ MCStack::~MCStack()
 		else
 			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
-	if (MCmbstackptr == this)
-		MCmbstackptr = NULL;
-    if (MCtopstackptr == this)
+	if (MCmbstackptr.IsBoundTo(this))
+		MCmbstackptr = nil;
+    if (MCtopstackptr.IsBoundTo(this))
     {
         MCtopstackptr = nil;
         MCstacks->top(nil);
     }
-    if (MCstaticdefaultstackptr == this)
+    if (MCstaticdefaultstackptr.IsBoundTo(this))
 		MCstaticdefaultstackptr = MCtopstackptr;
-	if (MCdefaultstackptr == this)
+	if (MCdefaultstackptr.IsBoundTo(this))
 		MCdefaultstackptr = MCstaticdefaultstackptr;
 	if (stackfiles != NULL)
 	{
@@ -759,7 +759,7 @@ void MCStack::close()
 	// MW-2011-09-12: [[ MacScroll ]] Clear the current scroll setting from the stack.
 	clearscroll();
 	
-	if (MCacptr != NULL && MCacptr->getmessagestack() == this)
+	if (MCacptr && MCacptr->getmessagestack() == this)
 		MCacptr->setmessagestack(NULL);
 	if (state & CS_ICONIC)
 	{
@@ -767,7 +767,7 @@ void MCStack::close()
 	}
 	if (MCmousestackptr == this)
 	{
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 		int2 x, y;
 		MCscreen->querymouse(x, y);
 		if (MCU_point_in_rect(curcard->getrect(), x, y))
@@ -776,9 +776,9 @@ void MCStack::close()
 		}
 	}
 	if (MCclickstackptr == this)
-		MCclickstackptr = NULL;
+		MCclickstackptr = nil;
 	if (MCfocusedstackptr == this)
-		MCfocusedstackptr = NULL;
+		MCfocusedstackptr = nil;
 	if (!(state & CS_ICONIC))
 		MCstacks->remove(this);
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
@@ -888,7 +888,7 @@ void MCStack::kunfocus()
 	if (!(state & CS_KFOCUSED))
 		return;
 	if (MCfocusedstackptr == this)
-		MCfocusedstackptr = NULL;
+		MCfocusedstackptr = nil;
 	state &= ~CS_KFOCUSED;
 	if (!opened)
 		return;
@@ -917,7 +917,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
         {
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->cutimage();
 				return True;
@@ -925,7 +925,8 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			else
 				return MCselected->cut();
         }
-		if (MCactiveimage != NULL)
+
+		if (MCactiveimage)
 		{
 			MCactiveimage->delimage();
 			return True;
@@ -934,7 +935,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 	case XK_BackSpace:
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->delimage();
 			return True;
@@ -943,7 +944,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 	case XK_osfUndo:
 		return MCundos->undo();
 	case XK_osfCut:
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->cutimage();
 			return True;
@@ -951,7 +952,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		else
 			return MCselected->cut();
 	case XK_osfCopy:
-		if (MCactiveimage != NULL)
+		if (MCactiveimage)
 		{
 			MCactiveimage->copyimage();
 			return True;
@@ -968,7 +969,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			return MCdispatcher -> dopaste(optr);
 		}
 		if (MCmodifierstate & MS_CONTROL)
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->copyimage();
 				return True;
@@ -1027,7 +1028,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		{
 		case XK_C:
 		case XK_c:
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->copyimage();
 				return True;
@@ -1041,7 +1042,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 
 		case XK_x:
 
-			if (MCactiveimage != NULL)
+			if (MCactiveimage)
 			{
 				MCactiveimage->cutimage();
 				return True;
@@ -1145,7 +1146,7 @@ void MCStack::mfocustake(MCControl *target)
 void MCStack::munfocus(void)
 {
 	if (MCmousestackptr == this)
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 	if (curcard != 0)
 	{
 		if (gettool(this) != T_SELECT)
@@ -1309,7 +1310,7 @@ bool MCStack::isdeletable(bool p_check_flag)
 {
     // MW-2012-10-26: [[ Bug 9918 ]] If 'cantDelete' is set, then don't delete the stack. Also
     //   make sure we throw an error.
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
         MCdispatcher->gethome() == this || this -> isediting() ||
         MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
@@ -1405,11 +1406,11 @@ Boolean MCStack::del(bool p_check_flag)
 	}
 	else
 	{
-		remove(((MCStack *)parent)->substacks);
+		remove(parent.GetAs<MCStack>()->substacks);
 		// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
 		//   undo the extraopen.
-		if (((MCStack *)parent) -> substacks == NULL)
-			((MCStack *)parent) -> extraclose(true);
+		if (parent.GetAs<MCStack>()->substacks == nil)
+			parent.GetAs<MCStack>()->extraclose(true);
 	}
 
     if (MCtopstackptr == this)
@@ -1483,9 +1484,9 @@ void MCStack::paste(void)
 	open();
 }
 
-MCStack *MCStack::getstack()
+MCStackHandle MCStack::getstack()
 {
-	return this;
+	return GetHandle();
 }
 
 Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *params, MCObject *passing_object)
@@ -1532,7 +1533,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 
 	// MW-2011-06-30: Cleanup of message path - this clause handles the transition
 	//   through the home stack to dispatcher.
-	if (passing_object != nil && (stat == ES_PASS || stat == ES_NOT_HANDLED) && parent != NULL)
+	if (passing_object != nil && (stat == ES_PASS || stat == ES_NOT_HANDLED) && parent)
 	{
 		Exec_stat oldstat = stat;
 		if (MCModeHasHomeStack() || parent != MCdispatcher -> gethome() || !MCdispatcher->ismainstack(this))
@@ -1556,7 +1557,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 			stat = ES_PASS;
 	}
 
-	if (stat == ES_ERROR && MCerrorptr == NULL)
+	if (stat == ES_ERROR && !MCerrorptr)
 		MCerrorptr = this;
 
 	return stat;

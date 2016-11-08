@@ -382,7 +382,7 @@ void MCImage::startmag(int2 x, int2 y)
 	MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 	if (sptr == NULL)
 		return;
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		MCmagimage->endmag(False);
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
@@ -422,7 +422,7 @@ void MCImage::endmag(Boolean close)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	MCmagimage = NULL;
+	MCmagimage = nil;
 	if (close)
 	{
 		MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
@@ -464,7 +464,7 @@ void MCImage::magredrawdest(const MCRectangle &brect)
 
 void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 {
-	if (MCmagnifier == NULL)
+	if (!MCmagnifier)
 		endmag(False);
 
 	MCRectangle t_mr;

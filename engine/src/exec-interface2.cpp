@@ -1521,7 +1521,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 	{
 		MCcursor = t_cursor;
         MCcursorid = t_cursor_id;
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 			MCmousestackptr->resetcursor(True);
 		else
 			MCdefaultstackptr->resetcursor(True);
@@ -1541,7 +1541,7 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
     // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
     MCdefaultcursor = t_cursor;
     MCdefaultcursorid = p_value;
-    if (MCmousestackptr != NULL)
+    if (MCmousestackptr)
         MCmousestackptr->resetcursor(True);
     else
         MCdefaultstackptr->resetcursor(True);
@@ -1575,7 +1575,7 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
-	if (MCdefaultmenubar == nil)
+	if (!MCdefaultmenubar)
 	{
 		r_value = MCValueRetain(kMCEmptyName);
 		return;
@@ -2284,7 +2284,7 @@ void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_o
 
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtopstackptr != nil)
+    if (MCtopstackptr)
     {
         r_object . object = MCtopstackptr;
         r_object . part_id = 0;
@@ -2296,7 +2296,7 @@ void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickstackptr != nil)
+    if (MCclickstackptr)
     {
         r_object . object = MCclickstackptr;
         r_object . part_id = 0;
@@ -2308,7 +2308,7 @@ void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr;
         r_object . part_id = 0;
@@ -2320,7 +2320,7 @@ void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickfield != nil)
+    if (MCclickfield)
     {
         r_object . object = MCclickfield;
         r_object . part_id = 0;
@@ -2332,7 +2332,7 @@ void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactivefield != nil)
+    if (MCactivefield)
     {
         r_object . object = MCactivefield;
         r_object . part_id = 0;
@@ -2343,7 +2343,7 @@ void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
     {
         r_object . object = MCactiveimage;
         r_object . part_id = 0;
@@ -2354,7 +2354,7 @@ void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCfoundfield != nil)
+    if (MCfoundfield)
     {
         r_object . object = MCfoundfield;
         r_object . part_id = 0;
@@ -2367,7 +2367,7 @@ void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     // OK-2009-01-19: Refactored to ensure behaviour is the same as the mouseControl.
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr->getcard()->getmousecontrol();
         r_object . part_id = 0;
@@ -2438,7 +2438,7 @@ void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data,
 
 void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdefaultstackptr != nil)
+    if (MCdefaultstackptr)
     {
         r_object . object = MCdefaultstackptr;
         r_object . part_id = 0;
@@ -2586,7 +2586,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
-        (MCacptr != NULL && MCacptr -> hasname(p_name)))
+        (MCacptr && MCacptr -> hasname(p_name)))
             t_clip = MCacptr;
     
     if (t_clip != nil)
@@ -3040,14 +3040,14 @@ void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group,
 
 void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
 {
-    if (MCmenubar != nil)
+    if (MCmenubar)
     {
         r_menubar . object = MCmenubar;
         r_menubar . part_id = 0;
         return;
     }
     
-    if (MCdefaultmenubar != nil)
+    if (MCdefaultmenubar)
     {
         r_menubar . object = MCdefaultmenubar;
         r_menubar . part_id = 0;
@@ -3774,8 +3774,8 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
 		t_source_handle = p_source . object -> GetHandle();
 		t_new_owner_handle = t_new_owner -> GetHandle();
-		t_new_target_handle = t_new_target != nil ? t_new_target -> GetHandle() : nil;
-        
+		t_new_target_handle = t_new_target != nil ? t_new_target : nil;
+
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
 		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;

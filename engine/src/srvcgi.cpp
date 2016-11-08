@@ -1641,7 +1641,11 @@ bool cgi_initialize()
 				if (t_success)
 					t_success = MCNameCreate(*t_key, &t_key_name);
 				if (t_success)
-					t_success = s_cgi_server->setvalueref(&!t_key_name, 1, false, *t_value);
+				{
+					// Because MCVariable::setvalueref takes an MCNameRef*...
+					MCNameRef t_key_name_temp = *t_key_name;
+					t_success = s_cgi_server->setvalueref(&t_key_name_temp, 1, false, *t_value);
+				}
 			}
 		}
 	}

@@ -76,7 +76,7 @@ extern void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCu
 MCPlayer::MCPlayer()
 {	
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
 	rect.width = rect.height = 128;
 	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
@@ -100,7 +100,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-	nextplayer = NULL;
+	nextplayer = nil;
 	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
@@ -655,20 +655,20 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
-	if (MCplayers != NULL)
+	if (!MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
 		else
 		{
 			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+			while (tptr->nextplayer && tptr->nextplayer != this)
 				tptr = tptr->nextplayer;
 			if (tptr->nextplayer == this)
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = nil;
     
 	if (disposable)
 	{

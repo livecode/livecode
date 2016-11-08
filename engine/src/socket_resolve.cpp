@@ -40,7 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2010-08-24: Make sure we include 'wspiapi' making it think we are
 //   targetting Win2K to ensure that it 'makes' getaddrinfo.
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #include <ws2tcpip.h>
 #include <wspiapi.h>
 #include <process.h>

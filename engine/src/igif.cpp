@@ -70,7 +70,7 @@ void MCImage::setframe(int32_t p_newframe)
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	// MW-2011-11-15: [[ Bug 9863 ]] Only invalidate the whole object if it has an
 	//   owner!
-	if (parent != nil)
+	if (parent)
 		layer_redrawall();
 	}
 

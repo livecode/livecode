@@ -45,8 +45,14 @@ enum MCLayerModeHint
 struct MCInterfaceMargins;
 union MCBitmapEffect;
 
-class MCControl : public MCObject
+typedef MCObjectProxy<MCControl>::Handle MCControlHandle;
+
+class MCControl : public MCObject, public MCMixinObjectHandle<MCControl>
 {
+public:
+    
+    using MCMixinObjectHandle<MCControl>::GetHandle;
+    
 protected:
 	int2 mx;
 	int2 my;

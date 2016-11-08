@@ -37,11 +37,14 @@ enum Audio_format {
 #define LOOP_RATE 250
 #endif
 
-class MCAudioClip : public MCObject
+typedef MCObjectProxy<MCAudioClip>::Handle MCAudioClipHandle;
+
+class MCAudioClip : public MCObject, public MCMixinObjectHandle<MCAudioClip>
 {
 public:
     
     enum { kObjectType = CT_AUDIO_CLIP };
+    using MCMixinObjectHandle<MCAudioClip>::GetHandle;
     
 private:
     

@@ -454,7 +454,7 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 	{
 		MCStack *t_parent_stack = nil;
 
-		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+		if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;
@@ -737,7 +737,7 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	{
 		MCStack *t_parent_stack = nil;
 		
-		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+		if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;

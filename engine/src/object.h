@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OBJECT_H
 
 #include "dllst.h"
-#include "globals.h"
 #include "imagebitmap.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -29,6 +28,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 
 #include "native-layer.h"
+
+// Disabled until C++11 support is available on all platforms
+#if 0
+#include <type_traits>
+#endif
 
 enum {
     MAC_SHADOW,
@@ -191,26 +195,23 @@ inline T* MCObjectCast(MCObject*);
 
 
 // Proxy allowing for weak references to MCObjects
-class MCObjectProxy
+class MCObjectProxyBase
 {
 public:
     
-    // RAII handle class
-    class Handle;
-    
     // Create a proxy for the given object
-    MCObjectProxy(const MCObject* p_proxy_form);
+    MCObjectProxyBase(MCObject* p_proxy_form);
     
     // Inform the proxy that the bound object no longer exists
     void Clear();
     
-private:
+protected:
     
     uint32_t    m_refcount;
     MCObject*   m_object;
     
     // The proxy can only be deleted by itself
-    ~MCObjectProxy();
+    ~MCObjectProxyBase();
     
     void Retain();
     void Release();
@@ -220,13 +221,60 @@ private:
     bool ObjectExists() const;
 };
 
+
+template <class T = MCObject>
+class MCObjectProxy : public MCObjectProxyBase
+{
+public:
+    
+    // RAII handle class
+    class Handle;
+    
+private:
+    
+    T* Get()
+    {
+        return static_cast<T*>(MCObjectProxyBase::Get());
+    }
+};
+
+
+// Mixin class for adding MC<...>Handle support to classes
+template <class T>
+class MCMixinObjectHandle
+{
+public:
+
+    // Returns a handle of the appropriate type
+    typename MCObjectProxy<T>::Handle GetHandle() const
+    {
+        // Note: m_weak_proxy is in MCObject therefore always refers to MCObject
+        // and casting is required when returning a non-nil handle.
+        //
+        // The casting here looks evil but is actually well-defined and safe.
+        MCObjectProxyBase*& m_weak_proxy = static_cast<const T*>(this)->MCObject::m_weak_proxy;
+        if (m_weak_proxy == NULL)
+        {
+            m_weak_proxy = new MCObjectProxyBase(const_cast<T*>(static_cast<const T*>(this)));
+            if (!m_weak_proxy)
+                return typename MCObjectProxy<T>::Handle(nil);
+        }
+        
+        return typename MCObjectProxy<T>::Handle(static_cast<MCObjectProxy<T>*>(m_weak_proxy));
+    }
+};
+
+// Slightly more readable name for handles to MCObjects
+typedef MCObjectProxy<MCObject>::Handle MCObjectHandle;
+
 // Automatic (RAII) class for storage of object handles
-class MCObjectProxy::Handle
+template <class T>
+class MCObjectProxy<T>::Handle
 {
 public:
     
     Handle() :
-    m_proxy(nullptr)
+      m_proxy(nullptr)
     {
     }
     
@@ -236,7 +284,7 @@ public:
         Set(p_proxy);
     }
     
-    Handle(const MCObject* p_object) :
+    explicit Handle(const T* p_object) :
       m_proxy(nullptr)
     {
         Set(p_object);
@@ -259,7 +307,7 @@ public:
         return *this;
     }
     
-    Handle& operator= (MCObject* p_object)
+    Handle& operator= (T* p_object)
     {
         Set(p_object);
         return *this;
@@ -301,16 +349,21 @@ public:
     }
     
     // Pointer-like access
-    MCObject* Get() const
+    T* Get() const
+    {
+        MCAssert(!IsBound() || IsValid());
+        
+        if (!IsBound())
+            return nullptr;
+        
+        return m_proxy->Get();
+    }
+    T* operator-> () const
     {
         MCAssert(IsValid());
-        return m_proxy->m_object;
+        return m_proxy->Get();
     }
-    MCObject* operator-> () const
-    {
-        return Get();
-    }
-    operator MCObject* () const
+    operator T* () const
     {
         return Get();
     }
@@ -323,11 +376,16 @@ public:
         return nullptr;
     }
     
-    // Checked fetch as the given type
-    template <typename T>
-    T* GetAs() const
+    bool IsBoundTo(const T* ptr) const
     {
-        return MCObjectCast<T> (Get());
+        return IsBound() && m_proxy->m_object == ptr;
+    }
+    
+    // Checked fetch as the given type
+    template <typename U>
+    U* GetAs() const
+    {
+        return MCObjectCast<U> (Get());
     }
     
     // Two Handles are the same if they use the same proxy
@@ -340,15 +398,15 @@ public:
         return !(operator==(other));
     }
     
-    template <class T>
-    bool operator==(const T* other) const
+    template <class U>
+    bool operator==(const typename MCObjectProxy<U>::Handle& other) const
     {
-        return operator==(Handle(other));
+        return m_proxy == other.m_proxy;
     }
-    template <class T>
-    bool operator!=(const T* other) const
+    template <class U>
+    bool operator!=(const typename MCObjectProxy<U>::Handle& other) const
     {
-        return !operator==(other);
+        return !(operator==(other));
     }
     
     // Performs a retain on the underlying proxy without an RAII wrapper. This
@@ -371,6 +429,16 @@ public:
         MCAssert(IsBound());
         m_proxy->Release();
     }
+    
+    // Conversion to handles to compatible types
+    // [[ C++11 ]] Currently disabled due to lack of required C++11 support on all platforms
+#if 0 && __cplusplus >= 201103L
+    template <class U, class = typename std::enable_if<std::is_convertible<T*, U*>::value, void>::type>
+    operator typename MCObjectProxy<U>::Handle () const
+    {
+        return MCObjectProxy<U>::Handle(static_cast<MCObjectProxy<U>*>(m_proxy));
+    }
+#endif
     
     
 private:
@@ -396,16 +464,12 @@ private:
     }
     
     // For MCObject and derivatives
-    template <class T>
-    void Set(T* p_object)
+    template <class U>
+    void Set(const U* p_object)
     {
         Set(p_object != nullptr ? (p_object->GetHandle().m_proxy) : nullptr);
     }
 };
-
-
-// Slightly more readable name
-typedef MCObjectProxy::Handle MCObjectHandle;
 
 
 // MW-2012-02-17: [[ LogFonts ]] The font attrs struct for the object.
@@ -450,12 +514,13 @@ struct MCPatternInfo
 	MCPatternRef pattern;
 };
 
-class MCObject :
-  public MCDLlist
+class MCObject : 
+  public MCDLlist, 
+  public MCMixinObjectHandle<MCObject>
 {
 protected:
 	uint4 obj_id;
-	MCObject *parent;
+	MCObjectHandle parent;
 	MCNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
@@ -513,8 +578,14 @@ protected:
 	// MW-2008-10-20: Pointer to the parent script's weak object reference.
 	MCParentScriptUse *parent_script;
 
-	// MW-2009-08-25: Pointer to the object's weak reference (if any).
-	mutable MCObjectProxy* m_weak_proxy;
+	// Pointer to the object's weak reference (if any).
+	// [[ C++11 ]] The various compilers we support disagree about what this friend declaration should look like
+#if defined(__clang__) || defined(_MSC_VER)
+	template <class T> friend class MCMixinObjectHandle;
+#else
+	template <class T> friend typename MCObjectProxy<T>::Handle MCMixinObjectHandle<T>::GetHandle() const;
+#endif
+	mutable MCObjectProxyBase* m_weak_proxy;
 
 	// MW-2011-07-21: For now, make this a uint4 as imageSrc references can make
 	//   it exceed 255 and wrap causing much much badness for the likes of rTree.
@@ -607,7 +678,13 @@ public:
 	virtual void paste(void);
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
-	virtual MCStack *getstack();
+
+	// [[ C++11 ]] MSVC doesn't support typename here while other compilers require it
+#ifdef _MSC_VER
+	virtual MCObjectProxy<MCStack>::Handle getstack();
+#else
+	virtual typename MCObjectProxy<MCStack>::Handle getstack();
+#endif
 
 	// MW-2011-02-27: [[ Bug 9412 ]] If pass_from is non-nil it means the message is passing from that
     //   object and should continue to be passed if not handled. If it is nil, then the message should
@@ -995,9 +1072,6 @@ public:
 	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
 	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
-    // Returns a weak reference (handle) to this object
-    MCObjectHandle GetHandle() const;
-
 	// MW-2011-09-20: [[ Collision ]] Check to see if the two objects touch (exactly).
 	bool intersects(MCObject *other, uint32_t threshold);
 	
@@ -1059,24 +1133,10 @@ public:
 		m_properties_changed = kMCPropertyChangedMessageTypeNone;
 	}
 	
-	inline void signallisteners(Properties which)
-	{
-		if (m_listening && which != P_CUSTOM_PROPERTY_SET)
-		{
-			m_properties_changed |= kMCPropertyChangedMessageTypePropertyChanged;
-			MCobjectpropertieschanged = True;
-		}
-	}
+	void signallisteners(Properties which);
 	
-	inline void signallistenerswithmessage(uint8_t p_message)
-	{
-		if (m_listening)
-		{
-			m_properties_changed |= p_message;
-			MCobjectpropertieschanged = True;
-		}
-	}	
-	
+	void signallistenerswithmessage(uint8_t p_message);
+    
 	uint8_t propertieschanged(void)
 	{
 		if (m_properties_changed != kMCPropertyChangedMessageTypeNone)
@@ -1462,6 +1522,17 @@ public:
 	bool getdeletionissuspended(void) const { return m_deletion_is_suspended; }
 	void setdeletionissuspended(bool value) { m_deletion_is_suspended = value; }
 
+    // Because C++11 support is not universal amongst our supported platforms,
+    // auto-conversion between MC???Handle types is not possible so there needs
+    // to be an easy mechanism to get an object handle as a specific type.
+    template <class T>
+    typename MCObjectProxy<T>::Handle GetHandleAs()
+    {
+        // Checked cast to the requested type
+        T* t_object = MCObjectCast<T> (this);
+        return t_object->MCMixinObjectHandle<T>::GetHandle();
+    }
+
 protected:
     IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);
@@ -1540,7 +1611,7 @@ private:
 	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 
-	friend class MCObjectProxy;
+	friend class MCObjectProxyBase;
 	friend class MCEncryptedStack;
 };
 
@@ -1593,7 +1664,7 @@ public:
 // Utility function for safe(-ish) casting from an MCObject to a derived class
 // without using RTTI.
 template <typename T>
-T* MCObjectCast(MCObject* p_object)
+inline T* MCObjectCast(MCObject* p_object)
 {
     // Check that the object's type matches the (static) type of the desired
     // type. This will break horribly if the desired type has derived types...
@@ -1607,6 +1678,5 @@ inline MCObject* MCObjectCast<MCObject>(MCObject* p_object)
 {
     return p_object;
 }
-
 
 #endif

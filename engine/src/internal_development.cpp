@@ -80,9 +80,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "ide.h"
 #include "bsdiff.h"
 
-#ifdef _WINDOWS
-#include "w32prefix.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

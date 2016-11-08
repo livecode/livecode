@@ -785,7 +785,7 @@ static MCPlayerRatePopup *s_rate_popup = nil;
 MCPlayer::MCPlayer()
 {
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
     rect.width = rect.height = 128;
     filename = MCValueRetain(kMCEmptyString);
     resolved_filename = MCValueRetain(kMCEmptyString);
@@ -826,7 +826,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-    nextplayer = NULL;
+    nextplayer = nil;
     filename = MCValueRetain(sref.filename);
     resolved_filename = MCValueRetain(sref.resolved_filename);
 	istmpfile = False;
@@ -874,20 +874,20 @@ MCPlayer::~MCPlayer()
 	playstop();
     
     // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
-	if (MCplayers != NULL)
+	if (MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
 		else
 		{
 			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+			while (tptr->nextplayer && tptr->nextplayer != this)
 				tptr = tptr->nextplayer;
 			if (tptr->nextplayer == this)
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = nil;
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);

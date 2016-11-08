@@ -482,7 +482,7 @@ void MCButton::open()
 			default:
 				findmenu(true);
 				if (!MCNameIsEmpty(menuname) && menu.IsValid())
-					menu.GetAs<MCStack>()->installaccels(getstack());
+					menu->installaccels(getstack());
 				break;
 			}
 		}
@@ -699,15 +699,15 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 		case XK_WheelUp:
 		case XK_WheelLeft:
 		case XK_WheelRight:
-			if (menu.GetAs<MCStack>() -> getcontrols() -> gettype() == CT_FIELD)
-				if (menu.GetAs<MCStack>() -> getcontrols() -> kdown(p_string, key))
+			if (menu->getcontrols()->gettype() == CT_FIELD)
+				if (menu->getcontrols()->kdown(p_string, key))
 					return True;
 			break;
 		case XK_space:
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			menu.GetAs<MCStack>()->menukdown(p_string, key, &t_pick, menuhistory);
+			menu->menukdown(p_string, key, &t_pick, menuhistory);
 
 			// This check must be for null (not empty) because an empty pick
 			// indicates that the function succeeded while a null pick means
@@ -738,10 +738,10 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				message_with_args(MCM_mouse_release, menubutton);
 			state &= ~CS_IGNORE_MENU;
 			if (MCmenuobjectptr == this)
-				MCmenuobjectptr = NULL;
+				MCmenuobjectptr = nil;
 			return True;
 		default:	
-			MCButton *mbptr = menu.GetAs<MCStack>()->findmnemonic(t_char);
+			MCButton *mbptr = menu->findmnemonic(t_char);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
@@ -755,13 +755,13 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 					else
 						t_label = mbptr->getlabeltext();
 	
-					menu.GetAs<MCStack>()->menukdown(p_string, key, &t_pick, menuhistory);
+					menu->menukdown(p_string, key, &t_pick, menuhistory);
 					Exec_stat es = handlemenupick(t_label, nil);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
 				}
 				if (MCmenuobjectptr == this)
-					MCmenuobjectptr = NULL;
+					MCmenuobjectptr = nil;
 				return True;
 			}
 			else
@@ -843,7 +843,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
         if (!(menu.IsValid()))
             return False;
         
-		sptr->translatecoords(menu.GetAs<MCStack>(), tx, ty);
+		sptr->translatecoords(menu, tx, ty);
 		MCRectangle trect = sptr->getrect();
 		Boolean handled = menu->mfocus(tx, ty);
 		tx = x + trect.x;
@@ -923,7 +923,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 				{
 					uint2 fheight;
 					fheight = gettextheight();
-					MCField *fptr = (MCField *)menu.GetAs<MCStack>()->getcontrols();
+					MCField *fptr = (MCField *)menu->getcontrols();
 					fptr->vscroll(my < rect.y + rect.height ? -fheight : fheight, True);
 					fptr->resetscrollbars(True);
 				}
@@ -1337,7 +1337,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		// MW-2008-03-27; [[ Bug 6225 ]] Make sure we send a mouseUp in this case
 		//   by setting the menupoppedup global.
 		MCmenupoppedup = true;
-		menu.GetAs<MCStack>()->menumup(which, &t_pick, menuhistory);
+		menu->menumup(which, &t_pick, menuhistory);
 		MCmenupoppedup = false;
 		if (state & CS_IGNORE_MENU)
             closemenu(True, True);
@@ -1399,7 +1399,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		}
 		state &= ~CS_IGNORE_MENU;
 		if (MCmenuobjectptr == this)
-			MCmenuobjectptr = NULL;
+			MCmenuobjectptr = nil;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 		if (!opened)
@@ -1742,12 +1742,12 @@ void MCButton::closemenu(Boolean kfocus, Boolean disarm)
                 menu->kunfocus();
             }
         
-            MCButton *focused = (MCButton *)menu.GetAs<MCStack>()->getcurcard()->getmfocused();
+            MCButton *focused = (MCButton *)menu->getcurcard()->getmfocused();
             if (focused != NULL && focused->gettype() == CT_BUTTON
                     && focused->getmenumode() == WM_CASCADE)
                 focused->closemenu(kfocus, disarm);
 
-            menu.GetAs<MCStack>() -> mode_closeasmenu();
+            menu->mode_closeasmenu();
             menu->close();
         }
 		state &= ~(CS_SUBMENU | CS_MOUSE_UP_MENU);
@@ -1940,7 +1940,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 		MCAutoStringRef t_pick;
 		
 		if (menu.IsValid())
-			menu.GetAs<MCStack>()->findaccel(p_key, &t_pick, t_disabled);
+			menu->findaccel(p_key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
 		else if (m_system_menu != nil)
 			getmacmenuitemtextfromaccelerator(m_system_menu, p_key, MCmodifierstate, &t_pick, false);
@@ -1970,7 +1970,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 				// MH-2007-03-20: [[ Bug 2581 ]] If a radio button is hilited using the keyboard, others in the group are not unhilited (when radioBehavior is set).
 				if (parent->gettype() == CT_GROUP)
 				{
-					MCGroup *gptr = (MCGroup *)parent;
+					MCGroup *gptr = parent.GetAs<MCGroup>();
 					gptr->radio(0, this);
 				}
 				reseticon();
@@ -2687,7 +2687,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 
 void MCButton::openmenu(Boolean grab)
 {
-	if (!opened || MCmousestackptr == NULL)
+	if (!opened || !MCmousestackptr)
 		return;
 	if (!MCNameIsEmpty(menuname) && !MCModeMakeLocalWindows())
 		return;
@@ -2757,7 +2757,7 @@ void MCButton::openmenu(Boolean grab)
 	{
 		state |= CS_SUBMENU | CS_ARMED;
 		reseticon();
-		if (MCmenuobjectptr == NULL)
+		if (!MCmenuobjectptr)
 			MCmenuobjectptr = this;
 		mymenudepth = ++menudepth;
 		MCStack *sptr = menumode == WM_POPUP ? MCmousestackptr : getstack();
@@ -2793,17 +2793,17 @@ void MCButton::openmenu(Boolean grab)
 			}
 			rel.x += labelwidth;
 			rel.width -= labelwidth;
-			menu.GetAs<MCStack>()->menuset(menuhistory, rect.height >> 1);
+			menu->menuset(menuhistory, rect.height >> 1);
 		}
 
-		menu.GetAs<MCStack>()->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
-		menu.GetAs<MCStack>() -> mode_openasmenu(t_did_grab ? sptr : NULL);
+		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
+		menu->mode_openasmenu(t_did_grab ? sptr : NULL);
 		
 		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
 		if (menumode == WM_OPTION && MCNameIsEmpty(menuname))
 		{
 			MCField *t_field = NULL;
-			MCObjptr *t_obj = menu.GetAs<MCStack>()->getcurcard()->getrefs();
+			MCObjptr *t_obj = menu->getcurcard()->getrefs();
 			MCObjptr *t_iter = t_obj;
 			do
 			{
@@ -2824,9 +2824,9 @@ void MCButton::openmenu(Boolean grab)
 		}
 		int2 tx = mx;
 		int2 ty = my;
-		sptr->translatecoords(menu.GetAs<MCStack>(), tx, ty);
+		sptr->translatecoords(menu, tx, ty);
 		menu->mfocus(tx, ty);
-		menu.GetAs<MCStack>()->resetcursor(True);
+		menu->resetcursor(True);
 		if (!(state & CS_MFOCUSED))
 			menu->kfocusnext(True);
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -2845,8 +2845,8 @@ void MCButton::freemenu(Boolean force)
 	{
 		if (!MCNameIsEmpty(menuname))
 		{
-			menu.GetAs<MCStack>()->removeaccels(getstack());
-			menu.GetAs<MCStack>()->removeneed(this);
+			menu->removeaccels(getstack());
+			menu->removeneed(this);
 			menu = nil;
 		}
 		else
@@ -2854,9 +2854,9 @@ void MCButton::freemenu(Boolean force)
 			if (!MCStringIsEmpty(menustring) || force)
 			{
 				closemenu(False, True);
-				MCdispatcher->removepanel(menu.GetAs<MCStack>());
+				MCdispatcher->removepanel(menu);
 				MCstacks->deleteaccelerator(this, NULL);
-				menu.GetAs<MCStack>()->removeneed(this);
+				menu->removeneed(this);
 				menu = nil;
 			}
 		}
@@ -3872,7 +3872,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 
 MCStack * MCButton::getmenu()
 {
-    return menu.GetAs<MCStack>();
+    return menu;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

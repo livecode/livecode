@@ -20,7 +20,7 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "globals.h"
 #include "osspec.h"
 #include "variable.h"
 
@@ -35,7 +35,6 @@
 #include "util.h"
 
 #ifdef _WINDOWS_DESKTOP
-#include "w32prefix.h"
 #include "w32dc.h"
 
 #include "digitalv.h"

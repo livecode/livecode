@@ -1086,21 +1086,21 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 		uint2 i;
 		for (i = 0 ; i < MCnwatchedvars ; i++)
 		{
-			if ((MCwatchedvars[i].object == NULL || MCwatchedvars[i].object == ctxt . GetObject()) &&
-				(MCwatchedvars[i].handlername == NULL || ctxt . GetHandler() -> hasname(MCwatchedvars[i].handlername)) &&
-				hasname(MCwatchedvars[i].varname))
+			if ((!MCwatchedvars[i].object.IsBound() || MCwatchedvars[i].object == ctxt.GetObject()) &&
+				(!MCwatchedvars[i].handlername.IsSet() || ctxt.GetHandler()->hasname(*MCwatchedvars[i].handlername)) &&
+				hasname(*MCwatchedvars[i].varname))
 			{
 				// If this is a global watch (object == handlername == nil) then
 				// check that this var is a global - if not carry on the search.
-				if (MCwatchedvars[i] . object == NULL &&
-					MCwatchedvars[i] . handlername == NULL &&
+				if (!MCwatchedvars[i].object.IsBound() &&
+					!MCwatchedvars[i].handlername.IsSet() &&
 					!is_global)
 					continue;
 
-				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
+				if (MCwatchedvars[i].expression.IsSet() && !MCStringIsEmpty(*MCwatchedvars[i].expression))
 				{
                     MCAutoValueRef t_val;
-                    ctxt.eval(ctxt, MCwatchedvars[i].expression, &t_val);
+                    ctxt.eval(ctxt, *MCwatchedvars[i].expression, &t_val);
                     
 					MCAutoBooleanRef t_bool;
 					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)

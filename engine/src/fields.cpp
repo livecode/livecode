@@ -205,7 +205,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								toffset = t_where.offset;
@@ -234,7 +234,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								foundlength = MCStringGetLength(tofind);
@@ -248,7 +248,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 					case FM_STRING:
 						if (first)
 						{
-							if (MCfoundfield != NULL && MCfoundfield != this)
+							if (MCfoundfield && MCfoundfield != this)
 								MCfoundfield->clearfound();
 							foundoffset = toffset + t_where.offset;
 							foundlength = MCStringGetLength(tofind);
@@ -908,11 +908,11 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 {
 	if (!opened || !(flags & F_TRAVERSAL_ON))
 		return ES_NORMAL;
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
 		if (MCactivefield != this && focus && !(state & CS_KFOCUSED))
 			MCactivefield->kunfocus();
-		if (MCactivefield != NULL)
+		if (MCactivefield)
 			MCactivefield->unselect(True, True);
 		if (focusedparagraph != NULL)
 			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
