@@ -19,7 +19,7 @@
 			{
 				'include_dirs':
 				[
-					'../thirdparty/libopenssl/include',
+					'include',
 				],
 			},
 
