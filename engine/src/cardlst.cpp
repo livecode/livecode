@@ -52,7 +52,10 @@ MCCardlist::~MCCardlist()
 
 void MCCardlist::trim()
 {
-	while (interval > MIN_FILL)
+    // Check for and remove any dead cards from the list
+    deletecard(nil);
+    
+    while (interval > MIN_FILL)
 	{
 		cards = cards->prev();
 		MCCardnode *cptr = cards->remove
@@ -107,10 +110,17 @@ bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which
 
 void MCCardlist::addcard(MCCard *card)
 {
-	if ((cards != NULL && cards->card == card) || MClockrecent)
+    // Prune all dead cards from the recent list
+    trim();
+    
+    // If the recent list is not to be updated or this card is already at the
+    // head of the list, do nothing.
+    if ((cards != NULL && cards->card == card) || MClockrecent)
 		return;
+
 	MCCardnode *nptr = new (nothrow) MCCardnode;
 	nptr->card = card;
+	
 	if (cards == NULL)
 		first = nptr;
 	nptr->insertto(cards);
@@ -126,7 +136,7 @@ void MCCardlist::deletecard(MCCard *card)
 		do
 		{
 			restart = False;
-			if (tmp->card == card)
+			if (!tmp->card.IsValid() || tmp->card == card)
 			{
 				if (tmp == first)
 					first = tmp->next();
@@ -164,7 +174,7 @@ void MCCardlist::deletestack(MCStack *stack)
 		do
 		{
 			restart = False;
-			if (tmp->card->getstack() == stack)
+			if (!tmp->card.IsValid() || tmp->card->getstack() == stack)
 			{
 				if (tmp == first)
 					first = tmp->next();

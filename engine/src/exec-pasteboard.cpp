@@ -639,7 +639,7 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
 
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdropfield == nil)
+	if (!MCdropfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -653,7 +653,7 @@ void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragdest == nil)
+	if (!MCdragdest)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -664,7 +664,7 @@ void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragsource == nil)
+	if (!MCdragsource)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1054,9 +1054,9 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> copytext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
 	else
 		MCselected -> copy();
@@ -1074,9 +1074,9 @@ void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_
 
 void MCPasteboardExecCut(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> cuttext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
 	else
 		MCselected -> cut();
@@ -1874,7 +1874,7 @@ void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragsource != nil)
+    if (MCdragsource)
     {
         r_object . object = MCdragsource;
         r_object . part_id = 0;
@@ -1886,7 +1886,7 @@ void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_obje
 
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdragdest;
         r_object . part_id = 0;
@@ -1898,7 +1898,7 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 
 void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdropfield;
         r_object . part_id = 0;

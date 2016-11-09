@@ -17,6 +17,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_DEBUG_H__
 #define __MC_DEBUG_H__
 
+#include "object.h"
+#include "stack.h"
+
 //
 // script debugger functions
 //
@@ -24,19 +27,49 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2009-11-03: Add an 'info' field to the breakpoints
 struct Breakpoint
 {
-	MCObject *object;
+	Breakpoint(MCObjectHandle p_object, uint32_t p_line, MCStringRef p_info) :
+      object(p_object),
+      line(p_line),
+      info(p_info)
+    {
+    }
+    
+    void Clear()
+    {
+        object = nil;
+        line = 0;
+        info.Reset();
+    }
+    
+    MCObjectHandle object;
 	uint4 line;
-	MCStringRef info;
+	MCAutoStringRef info;
 };
 
 // set the breakpoints to "button 1, 3"
 
 struct Watchvar
 {
-	MCObject *object;
-	MCNameRef handlername;
-	MCNameRef varname;
-	MCStringRef expression;
+	Watchvar(MCObjectHandle p_object, MCNameRef p_handlername, MCNameRef p_varname, MCStringRef p_expression) :
+      object(p_object),
+      handlername(p_handlername),
+      varname(p_varname),
+      expression(p_expression)
+    {
+    }
+    
+    void Clear()
+    {
+        object = nil;
+        handlername.Reset();
+        varname.Reset();
+        expression.Reset();
+    }
+    
+    MCObjectHandle object;
+	MCNewAutoNameRef handlername;
+	MCNewAutoNameRef varname;
+	MCAutoStringRef expression;
 };
 
 // set the watchedvariables to "button 1, somehandler, somevar, someexp"
@@ -44,12 +77,12 @@ struct Watchvar
 #define MAX_CONTEXTS 100
 
 extern MCExecContext *MCECptr;
-extern MCStack *MCtracestackptr;
+extern MCStackHandle MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;
 extern Boolean MCtraceabort;
 extern Boolean MCtracereturn;
-extern MCObject *MCtracedobject;
+extern MCObjectHandle MCtracedobject;
 extern uint2 MCtracedelay;
 extern uint4 MCtraceuntil;
 

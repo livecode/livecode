@@ -19,7 +19,7 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "globals.h"
 #include "dispatch.h"
 
 #include "uidc.h"

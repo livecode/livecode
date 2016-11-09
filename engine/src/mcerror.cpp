@@ -125,7 +125,7 @@ void MCError::clear()
     MCStringCreateMutable(0, buffer);
 	thrown = False;
 	if (this == MCeerror)
-		MCerrorptr = NULL;
+		MCerrorptr = nil;
 }
 
 void MCError::geterrorloc(uint2 &line, uint2 &pos)

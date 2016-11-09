@@ -2375,7 +2375,7 @@ bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index,
     MCObjectChunkPtr t_obj_chunk;
     // SN-2015-05-05: [[ Bug 13314 Reopen ]] We force the chunk delimiter
     //  existence when setting a string value.
-    if (evalobjectchunk(ctxt, false, !p_is_get_operation, t_obj_chunk) != ES_NORMAL)
+    if (!evalobjectchunk(ctxt, false, !p_is_get_operation, t_obj_chunk))
         return false;
     
     MCPropertyInfo *t_info;

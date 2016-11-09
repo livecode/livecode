@@ -981,7 +981,7 @@ void MCWidget::SendError(void)
 {
     MCExecContext ctxt(this, nil, nil);
     MCExtensionCatchError(ctxt);
-    if (MCerrorptr == NULL)
+    if (!MCerrorptr)
         MCerrorptr = this;
     senderror();
 }

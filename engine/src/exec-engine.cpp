@@ -909,7 +909,7 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 {
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
-    if (MCdefaultstackptr != nil && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
+    if (MCdefaultstackptr && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
     {
         switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
         {
@@ -929,7 +929,7 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 	MCquit = True;
 	MCquitisexplicit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
 }
@@ -1191,7 +1191,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
-	MCObjectHandle t_old_stack(MCdefaultstackptr->GetHandle());
+	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -1225,7 +1225,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	// Dispatch the message
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
 	Boolean olddynamic = MCdynamicpath;
-	MCdynamicpath = MCdynamiccard != NULL;
+	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
 		{
@@ -1265,7 +1265,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
 	if (t_old_stack.IsValid() &&
 		MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack.GetAs<MCStack>();
+		MCdefaultstackptr = t_old_stack;
 
 	// Reset target pointer
 	MCtargetptr = t_old_target;
@@ -1915,7 +1915,7 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmenuobjectptr != nil)
+    if (MCmenuobjectptr)
     {
         r_object . object = MCmenuobjectptr;
         r_object . part_id = 0;
@@ -1938,7 +1938,7 @@ void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCerrorptr != nil)
+    if (MCerrorptr)
     {
         r_object . object = MCerrorptr;
         r_object . part_id = 0;

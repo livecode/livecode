@@ -43,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FIELD_OFFSET(type, field)    ((LONG)(intptr_t)&(((type *)0)->field))
 #endif
 
+#if !defined(_WIN32)
+
 typedef char CHAR;
 typedef unsigned short WCHAR;
 
@@ -440,6 +442,8 @@ typedef struct tagVS_FIXEDFILEINFO
     DWORD   dwFileDateMS;           /* e.g. 0 */
     DWORD   dwFileDateLS;           /* e.g. 0 */
 } VS_FIXEDFILEINFO;
+
+#endif // if !defined(_WIN32)
 
 // The following structures are for those used in ICO files and in ICON and
 // GROUP_ICON resources. These (for some reason) do not appear in any of the

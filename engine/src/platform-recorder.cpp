@@ -18,7 +18,7 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "globals.h"
 
 #include "player.h"
 #include "util.h"

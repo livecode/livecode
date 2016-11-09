@@ -118,7 +118,7 @@ void MCStack::checkdestroy()
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
 	{
-		MCStack *sptr = (MCStack *)parent;
+		MCStack *sptr = parent.GetAs<MCStack>();
 		sptr->checkdestroy();
 	}
 }
@@ -496,7 +496,7 @@ MCStack *MCStack::getparentstack()
 		return nil;
 	}
 	
-	return m_parent_stack.GetAs<MCStack>();
+	return m_parent_stack;
 }
 
 static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
@@ -626,10 +626,10 @@ void MCStack::kfocusset(MCControl *target)
 {
 	if (!opened)
 		return;
-	if (MCactivefield != NULL && target != NULL && MCactivefield != target)
+	if (MCactivefield && target != NULL && MCactivefield != target)
 	{
 		MCactivefield->unselect(False, True);
-		if (MCactivefield != NULL)
+		if (MCactivefield)
         {
 			if (MCactivefield->getstack() == this)
 				curcard->kunfocus();
@@ -640,9 +640,10 @@ void MCStack::kfocusset(MCControl *target)
 				else
 					MCactivefield->unselect(True, True);
             }
+
         }
 	}
-	if (MCactivefield != NULL && target != NULL)
+	if (MCactivefield && target != NULL)
 	{
 		curcard->kfocus();
 		MCstacks -> ensureinputfocus(window);
@@ -730,7 +731,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname, uint32_t p_version)
 	{
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
-			sptr = (MCStack *)sptr->parent;
+			sptr = sptr->parent.GetAs<MCStack>();
 		return MCdispatcher->savestack(sptr, p_fname, p_version);
 	}
 	return IO_NORMAL;
@@ -931,11 +932,16 @@ void MCStack::updatemenubar()
 	if (opened && state & CS_KFOCUSED && !MClockmenus)
 	{
         if (!hasmenubar() || (state & CS_EDIT_MENUS
-                              && mode < WM_PULLDOWN && mode != WM_PALETTE)
-		        || (gettool(this) != T_BROWSE && MCdefaultmenubar != NULL))
-			MCmenubar = NULL;
+            && mode < WM_PULLDOWN && mode != WM_PALETTE)
+            || (gettool(this) != T_BROWSE && MCdefaultmenubar))
+        {
+			MCmenubar = nil;
+        }
+        
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, (getmenubar()));
+        {
+			MCmenubar = MCObjectCast<MCGroup>(getobjname(CT_GROUP, (getmenubar())));
+        }
 		MCscreen->updatemenubar(False);
 	}
 }
@@ -2205,7 +2211,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
         }
         else
         {
-            if (MCmousestackptr == NULL)
+            if (!MCmousestackptr)
                 MCscreen->querymouse(trect.x, trect.y);
             else
             {
@@ -2949,9 +2955,11 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	t_tilecache = view_gettilecache();
 	
     // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == this)
-            t_player -> syncbuffering(nil);
+    for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
+	{
+        	if (t_player -> getstack() == this)
+            	t_player -> syncbuffering(nil);
+	}
     
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{

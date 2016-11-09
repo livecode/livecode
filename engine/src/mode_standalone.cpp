@@ -57,7 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 
 #if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32compat.h"
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -885,7 +885,7 @@ IO_stat MCDispatch::startup(void)
 			MCscreen -> wait(t_end_time - MCS_time(), True, False);
 		
 		destroystack(t_banner_stack, True);
-		MCtopstackptr = NULL;
+		MCtopstackptr = nil;
 		
 		MCMemoryDeallocate((void *)t_info . banner_stackfile . getstring());
 	}
@@ -1141,7 +1141,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
