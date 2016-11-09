@@ -343,7 +343,7 @@ TestAssert "Do command", the cDidThis of this stack is 100
 end TestDo
 
 on TestDoAs
-    if "javascript" is among the lines of the alternateLanguages then
+    if the platform is "HTML5" then
 		do "1 + '4';" as "javascript"
 		TestAssert "Do as JavaScript", the result is "14"
     end if
