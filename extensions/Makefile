@@ -3,12 +3,14 @@
 # running extension tests.  Rather than duplicating it, it can
 # just be included with a few tweaks to its configuration.
 
+LCM_EXT_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
+LCM_TEST_SOURCES ?= $(shell for f in $(LCM_EXT_SOURCES); do echo $$f | grep 'tests/.*\.lcb' | grep -v '_[^/]*.lcb$$'; done)
+
 # Only do livecodescript-based checks
-extensions-check: lcs-check
+extensions-check: lcb-check lcs-check
 .DEFAULT: extensions-check
 
 top_srcdir ?= ..
-LCM_SOURCES ?=
 
 # Things have now been setup enough that the engine's test Makefile
 # can perform the tests without any further configuration.
