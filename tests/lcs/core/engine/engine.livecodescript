@@ -342,6 +342,18 @@ do "set the cDidThis of this stack to 100"
 TestAssert "Do command", the cDidThis of this stack is 100
 end TestDo
 
+on TestDoAs
+    if "javascript" is among the lines of the alternateLanguages then
+		do "1 + '4';" as "javascript"
+		TestAssert "Do as JavaScript", the result is "14"
+    end if
+end TestDoAs
+
+on TestAlternateLanguages
+	if the platform is "HTML5" then
+		TestAssert "JavaScript in HTML5 alternateLanguages", "javascript" is among the lines of the alternateLanguages
+	end if
+end TestAlternateLanguages
 
 on TestFrontScriptBackScriptCall
 create button
