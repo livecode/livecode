@@ -476,14 +476,19 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
         MCLog("Error state indicated with no error having been thrown");
         return ES_ERROR;
     }
-    
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
-    if (MCErrorGetDepth(*t_error) > 0)
-    {
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, 0));
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, 0));
-    }
+
+	uindex_t t_num_frames = MCErrorGetDepth(*t_error);
+	for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+	{
+		if (t_depth == 0)
+		{
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
+		}
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_COLUMN, MCErrorGetColumnAtLevel(*t_error, t_depth));
+	}
     
     return ES_ERROR;
 }
