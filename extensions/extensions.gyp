@@ -19,6 +19,7 @@
 			'sources':
 			[
 				'modules/widget-utils/widget-utils.lcb',
+				'modules/scriptitems/scriptitems.lcb',
 
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
