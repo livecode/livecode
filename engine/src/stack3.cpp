@@ -1704,9 +1704,9 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
         }
 	}
 
-
-	updatecardsize();
 	cards->setparent(this);
+	updatecardsize();
+	
 	MCControl *cptr = nc;
 	do
 	{
