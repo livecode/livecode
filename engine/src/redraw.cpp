@@ -552,7 +552,13 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	t_control = this;
 	while (t_control -> parent -> gettype() != CT_CARD)
 	{
-		MCControl *t_parent_control;
+                // If we have reached a stack before finding a card, this control is
+                // not on an open card (it might be an image being used as a button icon
+                // for example). In this case, there is nothing that needs to be done
+                if (t_control->parent->gettype() == CT_STACK)
+                        return;
+        
+                MCControl *t_parent_control;
 		t_parent_control = t_control->parent.GetAs<MCControl>();
 		
 		// If the parent control is scrolling, we are done - defer to content
