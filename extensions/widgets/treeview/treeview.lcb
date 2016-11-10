@@ -406,6 +406,8 @@ private variable mSeparatorDragging as Boolean
 
 private variable mOldTooltip as optional String
 
+constant kRowBuffer is 1000
+
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 constant kStrokeWidth is 1
@@ -505,6 +507,10 @@ public handler OnLoad(in pProperties as Array)
 	setArrayData(pProperties["array"])
 end handler
 
+private handler elementIsProxyForMoreData(in pElement as Array) returns Boolean
+	return "more_data" is among the keys of pElement
+end handler
+
 public handler OnPaint() returns nothing
 	set the font of this canvas to my font
 	if mUpdateDataList then
@@ -531,12 +537,21 @@ public handler OnPaint() returns nothing
 	subtract tTopOffset from tTop	
 	
 	// Iterate from the first data item drawing each row until 
-	// we can't display any more items
-	repeat with tX from mFirstDataItem up to the number of elements in mDataList
+	// we can't display any more items	
+	repeat with tX from mFirstDataItem up to mDataCount	
 		if tX is 1 then
 			paintFirstRow(tTop)
 		else
-			paintDataItem(element tX of mDataList, tTop, tX)		
+			variable tElement as Array
+			put element tX of mDataList into tElement
+			if elementIsProxyForMoreData(tElement) then
+				addToListBuffer(tX, tElement, mDataList)
+				updateParameters()
+				updateSeparator()
+				put mDataList[tX] into tElement
+			end if
+			
+			paintDataItem(tElement, tTop, tX)		
 		end if
 		if tTop > mViewHeight then
 			exit repeat
@@ -1051,7 +1066,6 @@ end handler
 -- If mRecalculateFit is true, all values are recalculated - this should 
 -- only happen when the separator is moved.
 private handler updateSeparator() returns nothing
-	variable tElement as Number
 	variable tValueSpace as Real
 	if mShowSeparator then
 		put valueRight() - valueLeft(keyRight()) into tValueSpace
@@ -1062,27 +1076,34 @@ private handler updateSeparator() returns nothing
 	
 	variable tKeySpace as Real
 	variable tTrimmed as Boolean
-	repeat with tElement from 2 up to mDataCount
+	variable tCount as Integer
+	variable tElement as Array
+	repeat with tCount from 2 up to mDataCount
+		put mDataList[tCount] into tElement
+		if elementIsProxyForMoreData(tElement) then
+			-- We're beyond the calculated data
+			next repeat
+		end if
 		variable tKeyLeft as Real
-		put keyLeft(mDataList[tElement]) into tKeyLeft
+		put keyLeft(tElement) into tKeyLeft
 		put keyRight() - tKeyLeft into tKeySpace
 
-		if mRecalculateFit or "key_too_large" is not among the keys of mDataList[tElement] then
+		if mRecalculateFit or "key_too_large" is not among the keys of tElement then
 			variable tKeyDisplay as String
-			put mDataList[tElement]["key"] into tKeyDisplay
+			put tElement["key"] into tKeyDisplay
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
 			end if
-			put displayWidth(tKeyDisplay, tKeySpace, mDataList[tElement]["display_key"], tTrimmed) into tWidth
-			put tTrimmed into mDataList[tElement]["key_too_large"]
+			put displayWidth(tKeyDisplay, tKeySpace, tElement["display_key"], tTrimmed) into tWidth
+			put tTrimmed into tElement["key_too_large"]
 		else
-			put mDataList[tElement]["key_too_large"] into tTrimmed
+			put tElement["key_too_large"] into tTrimmed
 		end if
 		
 		if not mShowSeparator then
 			if tTrimmed then
-				put true into mDataList[tElement]["value_too_large"]
-				put "" into mDataList[tElement]["display_value"]
+				put true into tElement["value_too_large"]
+				put "" into tElement["display_value"]
 				put 0 into tValueSpace
 			else
 				put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
@@ -1090,13 +1111,14 @@ private handler updateSeparator() returns nothing
 		end if
 
 		// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
-		if mDataList[tElement]["leaf"] then
+		if tElement["leaf"] then
 			// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
-			if mRecalculateFit or "value_too_large" is not among the keys of mDataList[tElement] then
-					put displayWidth(mDataList[tElement]["string_value"], tValueSpace, mDataList[tElement]["display_value"], tTrimmed) into tWidth
-					put tTrimmed into mDataList[tElement]["value_too_large"]
+			if mRecalculateFit or "value_too_large" is not among the keys of tElement then
+					put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
+					put tTrimmed into tElement["value_too_large"]
 			end if	
 		end if
+		put tElement into mDataList[tCount]
 	end repeat
 
 	put false into mRecalculateFit
@@ -1225,6 +1247,17 @@ private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray 
 	end if
 end handler
 
+private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
+	if the number of elements in pPath is 1 then
+		return pArray[element 1 of pPath]
+	else
+		if (element 1 of pPath) is not among the keys of pArray then
+			return the empty array
+		end if
+		return getValueOnPath(element 2 to -1 of pPath, pArray[element 1 of pPath])
+	end if
+end handler
+
 // Return the whole stored array
 private handler getArrayData() returns Array
 	return mData
@@ -1286,49 +1319,58 @@ private handler ConvertToString(in pData as Data, out rString as optional String
     end unsafe
 end handler
 
--- Convert an array to a list, as used by this widget. Ignoring the
--- 'folded' and selected parameters, mDataList should always be the 
--- result of calling this on mData
-private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
+private handler addToListBuffer(in pAt as Integer, in pElement as Array, inout xList as List)	
+	variable tSorted as List
+	put pElement["more_data"] into tSorted
+	
+	variable tPath as List
+	put element 1 to -2 of pElement["path"] into tPath
+	
+	variable tArray as Array
+	put getValueOnPath(tPath, mData) into tArray
+	
+	variable tLevel as Integer
+	put pElement["indent"] into tLevel
+	
+	delete element pAt of xList
+	splice calculateMoreElements(kRowBuffer, tLevel, tPath, tSorted, tArray) after element pAt - 1 of xList
+end handler
 
-	if pArray is empty then
-		return the empty list
-	end if
-
-	variable tList as List
-	put the empty list into tList
-	
-	variable tKeys as List
-	put the keys of pArray into tKeys
-	
-	if mSortNumeric then
-		sort tKeys using handler CompareKeysNumeric
-	else
-		if mSortAscending then
-			sort tKeys in ascending order
-		else
-			sort tKeys in descending order
-		end if
-	end if
-	
+private handler calculateMoreElements(in pLimit as Integer, in pLevel as Integer, in pPath as List, in pSortedKeys as List, in pArray as Array) returns List
 	variable tKey as String
 	variable tElement as Array
+	variable tCount as Integer
+	variable tKeyCount as Integer
+	put the number of elements in pSortedKeys into tKeyCount
 	
-	repeat for each element tKey in tKeys
-		put the empty array into tElement
-		put tKey into tElement["key"]
-		put pLevel into tElement["indent"]
-		put false into tElement["selected"]
+	put the minimum of tKeyCount and pLimit into pLimit
+	
+	variable tList as List
+	repeat with tCount from 1 up to pLimit
+		variable tKey as String
+		put pSortedKeys[tCount] into tKey
 		
+		variable tElement as Array
+		put the empty array into tElement
+		put pLevel into tElement["indent"]
+	
 		variable tPath as List
 		put pPath into tPath
 		push tKey onto tPath
-		
-		put tPath into tElement["path"]	
+		put tPath into tElement["path"]
+		if tCount is pLimit and pLimit < tKeyCount then
+			-- If we've calculated the max in one go, store the data
+			put element tCount to tKeyCount of pSortedKeys into tElement["more_data"]
+			push tElement onto tList
+			return tList
+		end if
+	
+		put tKey into tElement["key"]
+		put false into tElement["selected"]
+	
 		if pArray[tKey] is an array then
 			put false into tElement["leaf"]
 			put true into tElement["folded"]
-			push tElement onto tList
 		else
 			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
@@ -1350,11 +1392,36 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 				put "Can't display value" into tString
 			end if	
 			put tString into tElement["string_value"]
-			push tElement onto tList
-		end if	
+		end if
+		push tElement onto tList
 	end repeat
-	
 	return tList
+end handler
+
+-- Convert an array to a list, as used by this widget. Ignoring the
+-- 'folded' and selected parameters, mDataList should always be the 
+-- result of calling this on mData
+private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
+
+	if pArray is empty then
+		return the empty list
+	end if
+	
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	
+	if mSortNumeric then
+		sort tKeys using handler CompareKeysNumeric
+	else
+		if mSortAscending then
+			sort tKeys in ascending order
+		else
+			sort tKeys in descending order
+		end if
+	end if
+	variable tViewCount as Integer
+	put the ceiling of (mViewHeight / mRowHeight) into tViewCount
+	return calculateMoreElements(kRowBuffer + tViewCount, pLevel, pPath, tKeys, pArray)
 end handler
 
 // A handler type for passing into 'applyToNode'
@@ -1520,8 +1587,7 @@ end handler
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
 // If the specified path doesn't exist, this returns false
-private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean
-	
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean	
 	if pStart >= the number of elements in xList then
 		return false
 	end if	
@@ -1533,6 +1599,10 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 	variable tElement as Array
 	repeat with tCount from pStart + 1 up to the number of elements in xList
 		put xList[tCount] into tElement
+		if elementIsProxyForMoreData(tElement) then
+			next repeat
+		end if
+		
 		if tElement["key"] is tKey and pLevel is tElement["indent"] then
 			if the number of elements in pPathToNode is pLevel + 1 then
 				pHandler(tCount, pPathToNode, pLevel, xList, xArray)
@@ -1577,6 +1647,11 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 	// Find the key
 	repeat with tCount from pStart + 1 up to the number of elements in xList
 		put xList[tCount] into tElement
+		
+		if elementIsProxyForMoreData(tElement) then
+			next repeat
+		end if
+		
 		if tElement["key"] is pKey and pLevel is tElement["indent"] then
 			// Either splice in the below elements
 			if pFoldState["folded"] is false then
@@ -1797,7 +1872,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 	repeat for each char tChar in pText
 		// Just return where we are so far if we encounter a new line character
 		if tChar is newline then
-			put tCurrentString & "\u{2026}" into rText			
+			put tCurrentString & "\u{2026}" into rText		
 			measure rText on this canvas
 			put the width of the result into tWidth
 			put true into rTrimmed
@@ -1823,7 +1898,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 		
 		add 1 to tCount
 	end repeat
-	
+
 	put pText into rText
 	put false into rTrimmed
 	return tWidth
