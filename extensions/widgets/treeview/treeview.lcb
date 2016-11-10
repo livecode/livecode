@@ -1618,80 +1618,9 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 
 end handler
 
-// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
-// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
-private handler setDataOnPath(in pPath as List) returns nothing
-	
-	// pPath having 1 element is an error, as that means mData is just a string rather than an array
-	if the number of elements in pPath is 1 then
-		return
-	end if
-	
-	// The last element of pPath is the actual value, the rest of it is the keys.
-	variable tActualPath as List
-	put element 1 to -2 of pPath into tActualPath
-	
-	variable tValue as String
-	put element -1 of pPath into tValue
-	
-	// Simultaneously adjust the backing list and array to reflect the added value.
-	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
-
-end handler
-
 private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
 	put pShowAlternateBackgrounds into mAlternateRowBackgrounds
 	redraw all
-end handler
-
-// Recursive implementation of setting data on a given path. 
-// Acts on a list (in the format used by this widget) and an array simultaneously.
-private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
-
-	variable tElement as Array
-	variable tCount as Integer
-	variable tNewElement as Array
-	put the empty array into tNewElement
-	
-	repeat with tCount from 1 up to the number of elements in xList
-		put element tCount of xList into tElement
-		
-		// The easy case - just insert the new element
-		if tElement["key"] > element pLevel + 1 of pPath then
-		
-			// update the backing array
-			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-			
-			// update the list
-			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
-			return
-			
-		// We already have a key for the start of this path
-		else if tElement["key"] is element pLevel + 1 of pPath then
-			// The new element replaces the old one if the new one is just a string...
-			if the number of elements in pPath is pLevel + 1 then
-				put pValue into xArray[element pLevel + 1 of pPath]
-				put pValue into tElement["value"]
-				
-			// ...or if the old one was just as string.
-			else if tElement["leaf"] then
-				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
-				put tNewElement into xArray[element pLevel + 1 of pPath]
-				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
-
-			// Otherwise, go one step further into the path and set
-			else
-				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
-			end if
-			return
-		end if
-	end repeat
-	
-	// If we reached the end of the list then append this to the end
-	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
 end handler
 
 --------------------------------------------------------------------------------
