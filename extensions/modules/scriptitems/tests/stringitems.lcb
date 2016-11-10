@@ -1,0 +1,54 @@
+module com.livecode.library.scriptitems.test.stringitems
+use com.livecode.library.scriptitems
+
+handler expectList(in pString, in pLength, in pDefault, in pValue)
+	variable tList
+	put parseItemsAsStringList(pString, pLength, pDefault) into tList
+	test diagnostic tList
+	return tList is pValue
+end handler
+
+public handler testParseItemsAsStringList()
+	test "basic, no trailing" when \
+			expectList("aaa,bbb", nothing, nothing, ["aaa", "bbb"])
+	test "basic, trailing" when \
+			expectList("aaa,bbb,", nothing, nothing, ["aaa", "bbb"])
+
+	test "basic, empty" when \
+			expectList("", nothing, nothing, [])
+	test "basic, empty item" when \
+			expectList(",", nothing, nothing, [""])
+
+	test "too short, no default" when \
+			expectList("aaa,bbb", 3, nothing, ["aaa", "bbb", nothing])
+	test "too short, default" when \
+			expectList("aaa,bbb", 3, "ccc", ["aaa", "bbb", "ccc"])
+
+	test "too long" when \
+			expectList("aaa,bbb", 1, nothing, ["aaa"])
+
+	test "trailing empty" when \
+			expectList("aaa,bbb,,", nothing, nothing, ["aaa", "bbb", ""])
+end handler
+
+handler expectString(in pList, in pValue)
+	variable tString
+	put formatStringListAsItems(pList) into tString
+	test diagnostic tString
+	return tString is pValue
+end handler
+
+public handler testFormatStringListAsItems()
+	test "basic" when \
+			expectString(["aaa", "bbb"], "aaa,bbb")
+
+	test "basic, empty" when \
+			expectString([], "")
+	test "basic, empty item" when \
+			expectString([""], ",")
+
+	test "trailing empty" when \
+			expectString(["aaa", "bbb", ""], "aaa,bbb,,")
+end handler
+
+end module
