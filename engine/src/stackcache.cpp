@@ -238,7 +238,7 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash, bool p_only_if
         {
             // The entry could be placed here but we keep searching in case a
             // later entry already holds the same object.
-            if (t_candidate_slot != UINDEX_MAX)
+            if (t_candidate_slot == UINDEX_MAX)
                 t_candidate_slot = t_probe;
         }
 
