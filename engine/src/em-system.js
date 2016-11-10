@@ -29,7 +29,17 @@ mergeInto(LibraryManager.library, {
 			  var result;
 			  try
 			  {
-				  result = String(eval(script));
+				  result = eval(script);
+				
+				  // Return empty string for Undefined
+				  if (typeof result === "undefined")
+					  result = "";
+				  // Fail if return value isn't supported
+				  if (["boolean", "number", "string"] . indexOf(typeof result) < 0)
+				      success = false;
+				      
+				  // Convert to string for return
+				  result = String(result);
 			  }
 			  catch (e)
 			  {
