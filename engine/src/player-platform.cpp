@@ -799,8 +799,6 @@ MCPlayer::MCPlayer()
 	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
-    dontuseqt = MCdontuseQT;
-    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -839,9 +837,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-    
-    dontuseqt = sref.dontuseqt;
-    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -1263,15 +1258,6 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_should_buffer);
 }
 
-// MW-2007-08-14: [[ Bug 1949 ]] On Windows ensure we load and unload QT if not
-//   currently in use.
-bool MCPlayer::getversion(MCStringRef& r_string)
-{
-    extern void MCQTGetVersion(MCStringRef &r_version);
-    MCQTGetVersion(r_string);
-    return true;
-}
-
 void MCPlayer::freetmp()
 {
 	if (istmpfile)
@@ -1378,11 +1364,6 @@ void MCPlayer::setlooping(Boolean loop)
 		t_loop = loop;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
 	}
-}
-
-void MCPlayer::setdontuseqt(bool noqt)
-{
-	dontuseqt = noqt;
 }
 
 real8 MCPlayer::getplayrate()
@@ -1507,7 +1488,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
+	if (m_platform_player == nil || m_should_recreate)
     {
         if (m_platform_player != nil)
 		{
@@ -1515,7 +1496,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
 			SetNativeView(nil);
             MCPlatformPlayerRelease(m_platform_player);
 		}
-        MCPlatformCreatePlayer(dontuseqt, m_platform_player);
+        MCPlatformCreatePlayer(m_platform_player);
 		// IM-2016-05-27: [[ Bug 17697 ]] reset m_should_recreate after player has been created
 		m_should_recreate = false;
     }

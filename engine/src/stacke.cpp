@@ -68,10 +68,6 @@ static Boolean venetianeffect_step(const MCRectangle &drect, MCStackSurface *p_t
 static Boolean wipeeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 static Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 
-extern bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area);
-extern bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration);
-extern void MCQTEffectEnd(void);
-
 extern bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCGFloat p_surface_height, MCEffectArgument *p_arguments);
 extern bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time);
 extern void MCCoreImageEffectEnd(void);
@@ -161,12 +157,6 @@ bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p
 #ifdef _MAC_DESKTOP
 		case VE_CIEFFECT:
 			t_drawn = MCCoreImageEffectStep(p_target, (float)context->delta / context->duration);
-			break;
-#endif
-			
-#ifdef FEATURE_QUICKTIME_EFFECTS
-		case VE_QTEFFECT:
-			t_drawn = MCQTEffectStep(context->effect_area, p_target, context->delta, context->duration);
 			break;
 #endif
 			
@@ -398,13 +388,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
-#ifdef FEATURE_QUICKTIME_EFFECTS
-				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
-				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, *t_name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
-					t_effects -> type = VE_QTEFFECT;
-#else
 				;
-#endif
 		}
 		
 		// Run effect
@@ -476,10 +460,6 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> type == VE_CIEFFECT)
 			MCCoreImageEffectEnd();
 		else
-#endif
-#ifdef FEATURE_QUICKTIME_EFFECTS
-			if (t_effects -> type == VE_QTEFFECT)
-				MCQTEffectEnd();
 #endif
 		
 		// Free initial surface.

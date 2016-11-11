@@ -767,10 +767,11 @@ void MCPlayer::SetMirrored(MCExecContext &ctxt, bool p_mirrored)
 
 void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)
 {
-    setdontuseqt(p_dont_use_qt);
+    if (p_dont_use_qt == false)
+	    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 void MCPlayer::GetDontUseQT(MCExecContext &ctxt, bool &r_dont_use_qt)
 {
-    getdontuseqt(r_dont_use_qt);
+    r_dont_use_qt = true;
 }

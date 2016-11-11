@@ -27,11 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player-interface.h"
 #include "exec-interface.h"
 
-#ifdef FEATURE_QUICKTIME
-// Forward declaration
-struct MCPlayerOffscreenBuffer;
-#endif
-
 typedef MCObjectProxy<MCPlayer>::Handle MCPlayerHandle;
 
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
@@ -51,43 +46,6 @@ private:
 	MPlayer *m_player ;
 #endif
 	
-#ifdef FEATURE_QUICKTIME
-	static QTstate qtstate;
-	static long qtversion;
-	static void *sgSoundComp;
-	static const char  *recordtempfile;
-	static char  *recordexportfile;
-	static long sgSndDriver;
-	static MCPlayer *s_ephemeral_player;
-
-	void *theMovie;
-	void *theMC;
-	QTVRstate qtvrstate;
-	void *qtvrinstance;
-	Boolean isinteractive;
-
-	/* QT only, the last time the user receives the movie's current
-	* time. this variable * is changed in prepareQT(),
-	* setmoviecurtime(), getcurtime() and mfocus() routines */
-
-	/* QT movie call back proc reference */
-	void *stopMovieCB; //callback ptr for movie when it goes to the end(a stop)
-	void *interestingTimeCB;
-	void *bufferGW; //GWorld for the buffering draw for QT movie, in WIN & MAC
-
-	MCPlayerOffscreenBuffer *m_offscreen;
-
-#ifdef _MAC_DESKTOP
-	void *movie_view;
-#elif defined _WINDOWS_DESKTOP
-	uint32_t deviceID;  //device id for opened AVI device.
-	uint32_t mciPlayFrom, mciPlayTo;
-	uint32_t mciPlayFlag;
-	MCSysWindowHandle hwndMovie; //a movie window is created for avi movie
-	bool m_has_port_association;
-#endif
-
-#endif
 	MCPlayerHandle nextplayer;
     
 	static MCPropertyInfo kProperties[];
@@ -151,7 +109,6 @@ public:
 #endif
     
     // virtual function from MCPlayerInterface
-	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
 	virtual MCPlayerDuration getduration();    //get movie duration/length
 	virtual MCPlayerDuration gettimescale();  //get movie time scale
@@ -223,149 +180,10 @@ public:
     
     // End of virtual functions from MCPlayerInterface
     
-	//////////////////////////////
-	// QT ACCESSORS
-
-	void getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange);
-	uint2 getnodecount();
-	virtual bool getnode(uindex_t index, uint2 &id, MCMultimediaQTVRNodeType &type);
-	virtual uint2 gethotspotcount();
-	virtual bool gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType &type);
-    
-    
-#if !defined(FEATURE_QUICKTIME)
 	virtual Boolean isbuffering()
 	{
 		return False;
 	}
-#else
-	void initqt();
-	void initqtvr();
-    
-	MCRectangle resize(MCRectangle rect);
-	void checktimes();
-    
-	// MW-2005-05-15: Augment call with extra title field for consistency
-	void handlerecord();
-	void reloadcallbacks(Boolean reloadstopmovie, long p_from_time);
-    
-	void *getmovie()
-	{
-		return theMovie;
-	}
-	void *getinterestCB()
-	{
-		return interestingTimeCB;
-	}
-	void *getMovieController()
-	{
-		return theMC;
-	}
-	static Boolean isQTinitted()
-	{
-		return (qtstate == QT_INITTED);
-	}
-	Boolean isInteractive()
-	{
-		return isinteractive;
-	}
-	void deleteUserCallbacks();
-	Boolean installUserCallbacks();
-	void setMCposition(const MCRectangle &newrect); //re-position the controller
-	Boolean prepareQT();
-	void bufferDraw(bool p_resize); //direct movie controller to draw to Offscreen buffer
-	void unbufferDraw(); //direct movie controller to draw to Screen/Window
-    
-	virtual Boolean isbuffering()
-	{
-		return (m_offscreen != NULL);
-	}
-	
-	Boolean usingQT()
-	{
-		return usingqt;
-	}
-
-#ifdef _WINDOWS_DESKTOP
-	void changewindow(MCSysWindowHandle p_old_window);
-    
-	Boolean prepareAVI();
-	uint32_t getDeviceID()
-	{
-		return deviceID;
-	} //AVI stuff
-	void setAVIplayselection(Boolean selection);
-	uint4 getAVIlength(); //get the length(duration) of the movie
-	Boolean AVIseek(uint4 to); //seek to position in a AVI movie
-	MCSysWindowHandle getplayerwindow()
-	{
-		return hwndMovie;
-	}
-#endif    
-#endif
-	
-#ifdef FEATURE_QUICKTIME
-	Boolean qt_prepare(void);
-	Boolean qt_playpause(Boolean on);
-	void qt_playstepforward(void);
-	void qt_playstepback(void);
-	Boolean qt_playstop(void);
-	void qt_setrect(const MCRectangle& nrect);
-	uint4 qt_getduration(void);
-	uint4 qt_gettimescale(void);
-	uint4 qt_getmoviecurtime(void);
-	void qt_setcurtime(uint4 newtime);
-	void qt_setselection(void);
-	void qt_setlooping(Boolean loop);
-	void qt_setplayrate(void);
-	void qt_showbadge(Boolean show);
-	void qt_editmovie(Boolean edit);
-	void qt_playselection(Boolean play);
-	Boolean qt_ispaused(void);
-	void qt_showcontroller(Boolean show);
-	MCRectangle qt_getpreferredrect(void);
-	uint2 qt_getloudness(void);
-	void qt_setloudness(uint2 loudn);
-    void qt_gettracks(MCStringRef &r_tracks);
-    void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
-    void qt_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
-	void qt_draw(MCDC *dc, const MCRectangle& dirty);
-	void qt_move(int2 x, int2 y);
-	void qt_click(bool p_state, uint4 p_button);
-	void qt_key(bool p_state, uint4 p_key);
-	void qt_enablekeys(Boolean enable);
-	void qt_setcontrollervisible();
-
-#ifdef _WINDOWS_DESKTOP
-	Boolean avi_prepare(void);
-	Boolean avi_playpause(Boolean on);
-	void avi_playstepforward(void);
-	void avi_playstepback(void);
-	Boolean avi_playstop(void);
-	void avi_setrect(const MCRectangle& nrect);
-	uint4 avi_getduration(void);
-	uint4 avi_gettimescale(void);
-	uint4 avi_getmoviecurtime(void);
-	void avi_setcurtime(uint4 newtime);
-	void avi_setselection(void);
-	void avi_setlooping(Boolean loop);
-	void avi_setplayrate(void);
-	void avi_showbadge(Boolean show);
-	void avi_editmovie(Boolean edit);
-	void avi_playselection(Boolean play);
-	Boolean avi_ispaused(void);
-	void avi_showcontroller(Boolean show);
-	MCRectangle avi_getpreferredrect(void);
-	uint2 avi_getloudness(void);
-	void avi_setloudness(uint2 loudn);
-    void avi_gettracks(MCStringRef &r_tracks);
-    void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
-    void avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
-	void avi_draw(MCDC *dc, const MCRectangle& dirty);
-
-	bool mode_avi_closewindowonplaystop();
-#endif
-#endif
 
 #if defined(_LINUX_DESKTOP)
 	Boolean x11_prepare(void) ;

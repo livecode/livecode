@@ -58,8 +58,6 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
-				'engine-common.gyp:quicktime_stubs',
-				
 				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			

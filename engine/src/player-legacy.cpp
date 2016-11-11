@@ -88,8 +88,6 @@ MCPlayer::MCPlayer()
 	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
-	dontuseqt = False;
-	usingqt = False;
 	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
@@ -112,8 +110,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-	dontuseqt = False;
-	usingqt = False;
 	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
@@ -434,18 +430,6 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
     
     // MW-2014-04-24: [[ Bug 12249 ]] If we are not in browse mode for this object, then it should be buffered.
     t_should_buffer = t_should_buffer || getstack() -> gettool(this) != T_BROWSE;
-}
-
-// MW-2007-08-14: [[ Bug 1949 ]] On Windows ensure we load and unload QT if not
-//   currently in use.
-bool MCPlayer::getversion(MCStringRef& r_string)
-{
-#if defined(X11)
-	return MCStringCreateWithNativeChars((const char_t*)"2.0", 3, r_string);
-#else
-	r_string = MCValueRetain(kMCEmptyString);
-    return true;
-#endif
 }
 
 void MCPlayer::freetmp()
@@ -941,36 +925,6 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     
 	if (!p_isolated)
 		dc -> end();
-}
-
-    
-////////////////////////////////////////////////////////////////////
-// QUICKTIME ACCESSORS
-
-void MCPlayer::getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange)
-{
-}
-
-uint2 MCPlayer::getnodecount()
-{
-    uint2 numnodes = 0;
-    return numnodes;
-}
-
-bool MCPlayer::getnode(uindex_t index, uint2 &id, MCMultimediaQTVRNodeType &type)
-{
-    return false;
-}
-
-uint2 MCPlayer::gethotspotcount()
-{
-    uint2 numspots = 0;
-    return numspots;
-}
-
-bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType &type)
-{
-    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////

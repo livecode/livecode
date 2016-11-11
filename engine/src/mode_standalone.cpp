@@ -968,11 +968,6 @@ MCSysWindowHandle MCStack::getrealwindow(void)
 {
 	return window->handle.window;
 }
-
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window->handle.window;
-}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

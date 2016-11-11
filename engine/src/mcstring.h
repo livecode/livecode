@@ -427,7 +427,6 @@ extern MCNameRef MCM_preopen_stack;
 extern MCNameRef MCM_property_changed;
 
 extern MCNameRef MCM_put_url;
-extern MCNameRef MCM_qtdebugstr;
 extern MCNameRef MCM_raw_key_down;
 extern MCNameRef MCM_raw_key_up;
 #ifdef FEATURE_RELAUNCH_SUPPORT

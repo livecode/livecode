@@ -113,15 +113,13 @@ MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo = &_kMCMultimediaRecordFor
 
 void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string)
 {
-    if (!MCtemplateplayer->getversion(r_string))
-        ctxt.Throw();
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 {
-    extern void MCQTEffectsList(MCStringRef &r_string);
-    MCQTEffectsList(r_result);
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,8 +166,7 @@ void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_
 		// PM-2015-10-28: [[ Bug 16292 ]] Prevent crash and return empty if QT is not used
 		r_string = MCValueRetain(kMCEmptyString);
 #else
-    extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
-    MCQTGetRecordCompressionList(r_string);
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -188,8 +185,7 @@ void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness)
     r_loudness = floor(t_loudness);
     
 #else
-	extern void MCQTGetRecordLoudness(integer_t &r_loudness);
-    MCQTGetRecordLoudness(r_loudness);
+	ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -333,8 +329,7 @@ void MCMultimediaExecStopRecording(MCExecContext& ctxt)
     if (MCrecorder != nil)
         MCPlatformSoundRecorderStop(MCrecorder);
 #else
-    extern void MCQTStopRecording(void);
-    MCQTStopRecording();
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -358,8 +353,7 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
     if (MCrecorder != nil)
         MCPlatformSoundRecorderStart(MCrecorder, *soundfile);
 #else
-	extern void MCQTRecordSound(MCStringRef soundfile);
-	MCQTRecordSound(*soundfile);
+	ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -370,8 +364,7 @@ void MCMultimediaExecRecordPause(MCExecContext& ctxt)
     if (MCrecorder != nil)
         MCPlatformSoundRecorderPause(MCrecorder);
 #else
-    extern void MCQTRecordPause(void);
-    MCQTRecordPause();
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -382,8 +375,7 @@ void MCMultimediaExecRecordResume(MCExecContext& ctxt)
     if (MCrecorder != nil)
         MCPlatformSoundRecorderResume(MCrecorder);
 #else
-    extern void MCQTRecordResume(void);
-    MCQTRecordResume();
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -392,12 +384,7 @@ void MCMultimediaExecRecordResume(MCExecContext& ctxt)
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
 {
-    MCresult -> clear(False);
-    extern Boolean MCQTEffectsDialog(MCStringRef &r_data);
-    
-    MCAutoStringRef t_value;    
-    if (MCQTEffectsDialog(&t_value))
-        ctxt . SetItToValue(*t_value);
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
@@ -430,8 +417,7 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
             MCresult->sets(MCcancelstring);
     }
 #else
-    extern void MCQTRecordDialog();
-    MCQTRecordDialog();
+    ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
 }
 
@@ -899,39 +885,46 @@ void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
 
 void MCMultimediaGetQtIdleRate(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCqtidlerate;
+	ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 void MCMultimediaSetQtIdleRate(MCExecContext& ctxt, uinteger_t p_value)
 {
-	MCqtidlerate = MCU_max(p_value, (uint4)1);
+	ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 void MCMultimediaGetDontUseQt(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MCdontuseQT == True;
+	r_value = true;
 }
 
 void MCMultimediaSetDontUseQt(MCExecContext& ctxt, bool p_value)
 {
-	MCdontuseQT = p_value ? True : False;
+	if (p_value == false)
+		ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 void MCMultimediaGetDontUseQtEffects(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MCdontuseQTeffects == True;
+	r_value = true;
 }
 
 void MCMultimediaSetDontUseQtEffects(MCExecContext& ctxt, bool p_value)
 {
-	MCdontuseQTeffects = p_value ? True : False;
+	if (p_value == false)
+		ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCMultimediaGetRecording(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MCrecording == True;
+#ifdef FEATURE_PLATFORM_RECORDER
+	extern MCPlatformSoundRecorderRef MCrecorder;
+	r_value = MCrecorder != nil && MCPlatformSoundRecorderIsRecording(MCrecorder);
+#else
+	r_value = false;
+#endif
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
@@ -940,12 +933,11 @@ void MCMultimediaSetRecording(MCExecContext& ctxt, bool p_value)
 	if (!p_value)
     {
 #ifdef FEATURE_PLATFORM_RECORDER
-        extern MCPlatformSoundRecorderRef MCrecorder;
+	extern MCPlatformSoundRecorderRef MCrecorder;
         if (MCrecorder != nil)
             MCPlatformSoundRecorderStop(MCrecorder);
 #else
-        extern void MCQTStopRecording(void);
-        MCQTStopRecording();
+        ctxt.LegacyThrow(EE_QT_NO_LONGER_SUPPORTED);
 #endif
     }
 }

@@ -2731,6 +2731,9 @@ enum Exec_errors
 
 	// {EE-0894} extension: error occured with column
 	EE_EXTENSION_ERROR_COLUMN,
+	
+	// {EE-0895} QuickTime is no longer supported
+	EE_QT_NO_LONGER_SUPPORTED,
 };
 
 extern const char *MCexecutionerrors;

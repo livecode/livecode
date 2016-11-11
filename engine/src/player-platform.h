@@ -149,7 +149,6 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
-	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
 	virtual MCPlayerDuration getduration();    //get movie duration/length
 	virtual MCPlayerDuration gettimescale();  //get movie time scale
@@ -163,8 +162,7 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
     virtual Boolean ispaused();
-    virtual void setdontuseqt(bool noqt); // platform player-specific
-    
+
     virtual void gettracks(MCStringRef& r_tracks);
 	
     virtual MCRectangle getpreferredrect();
