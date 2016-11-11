@@ -252,7 +252,7 @@ if test -z "$TARGET_ARCH"; then
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
-        macosx*)         		TARGET_ARCH="i386" ;;
+        macosx*)         		TARGET_ARCH="x86_64" ;;
         iphoneos5* | \
         iphoneos6* | \
         iphoneos7*)		 		TARGET_ARCH="armv7" ;;
