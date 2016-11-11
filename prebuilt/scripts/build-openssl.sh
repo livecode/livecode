@@ -75,7 +75,7 @@ function buildOpenSSL {
 		fi
 		
 		OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-		OPENSSL_ARCH_CONFIG="no-idea no-rc5 no-hw shared --prefix=${INSTALL_DIR}/${NAME} ${SPEC}"
+		OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared --prefix=${INSTALL_DIR}/${NAME} ${SPEC}"
 		OPENSSL_ARCH_LOG="${OPENSSL_ARCH_SRC}.log"
 	
 		# Copy the source to a target-specific directory
@@ -136,6 +136,8 @@ function buildOpenSSL {
 			cp "${INSTALL_DIR}/${NAME}/lib/libcrypto.a" "${OUTPUT_DIR}/lib/${NAME}/libcustomcrypto.a"
 			cp "${INSTALL_DIR}/${NAME}/lib/libssl.a" "${OUTPUT_DIR}/lib/${NAME}/libcustomssl.a"
 		fi
+
+		cp -R "${INSTALL_DIR}/${NAME}/include/openssl" "${OUTPUT_DIR}/include/openssl"
 	done
 
 	# Create the universal libraries
