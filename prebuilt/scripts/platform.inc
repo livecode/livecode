@@ -29,8 +29,8 @@ case "${PLATFORM}" in
 		;;
 	linux)
 		export ARCHS="i386 x86_64"
-		export CC_BASE="clang"
-		export CXX_BASE="clang++"
+		export CC_BASE="gcc"
+		export CXX_BASE="g++"
 		;;
 	emscripten)
 		export ARCHS="js"
@@ -79,12 +79,18 @@ function setCCForArch {
 			export CXX="${CXX_BASE} -arch $1"
 			;;
 		linux)
+			# When building with newer binutils (>= 2.26), new types of
+			# relocations are added that older binutils don't understand.
+			# To suppress this, pass '-Wa,-mrelax-relocations=no' to the
+			# compiler.
+			CC_FLAGS_X86_NORELAX="-Wa,-mrelax-relocations=no"
+
 			if [ "$1" == "x86_64" ] ; then
-				export CC="${CC_BASE} -m64"
-				export CXX="${CXX_BASE} -m64"
+				export CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
+				export CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
 			else
-				export CC="${CC_BASE} -m32"
-				export CXX="${CXX_BASE} -m32"
+				export CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
+				export CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
 			fi
 			;;
 		android)
