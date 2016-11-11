@@ -88,16 +88,6 @@
 					},
 				],
 				[
-					'OS == "mac" or OS == "win"',
-					{
-						'dependencies':
-						[
-							# Externals
-							'revfont/revfont.gyp:external-revfont',
-						],
-					},
-				],
-				[
 					# Server builds use special externals on OSX and Linux
 					'OS == "mac" or OS == "linux"',
 					{
