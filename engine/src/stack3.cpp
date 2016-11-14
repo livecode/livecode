@@ -2034,6 +2034,13 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCerrorlock++;
 		if (field->getobj(ctxt, optr, parid, True))
 		{
+			// IM-2016-11-14: [[ Bug 18666 ]] If the resolved object is not on the current card then don't search it.
+			if (parid != 0 && parid != curcard->getid())
+			{
+				MCerrorlock--;
+				return False;
+			}
+			
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
