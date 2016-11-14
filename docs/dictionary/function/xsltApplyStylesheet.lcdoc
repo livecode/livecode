@@ -24,8 +24,6 @@ The ID of the xml document to use.
 xsltStylesheetID(string):
 The xslt stylesheet document to apply to the xml document.
 
-The result(string):
-&lt;!-- order the result by revenue --&gt;.
 
 Description:
 The xsltApplyStylesheet function returns the data set resulting from
@@ -79,6 +77,7 @@ and an xslt document of
         &lt;/tr&gt;
         &lt;xsl:for-each select="sales/division"&gt;
 
+        &lt;!-- order the result by revenue --&gt;
         &lt;xsl:sort select="revenue"
 
         data-type="number"
