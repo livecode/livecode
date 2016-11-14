@@ -25,8 +25,6 @@ The ID of the xml document to use.
 pathToXSLTFile(string):
 The file path to the xslt document that will be applied to the xml document.
 
-The result(string):
-&lt;!-- order the result by revenue --&gt;.
 
 Description:
 The xsltApplyStylesheetFromFile function returns the data set resulting
@@ -80,6 +78,7 @@ and a file containing xslt data of
         &lt;/tr&gt;
         &lt;xsl:for-each select="sales/division"&gt;
 
+        &lt;!-- order the result by revenue --&gt;
         &lt;xsl:sort select="revenue"
             data-type="number"
             order="descending"/&gt;
