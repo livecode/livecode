@@ -1146,10 +1146,10 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// The various ASN.1 structures we are going to use require a number of ObjectIDs.
 	// We register them all here, to save having to check the return value of OBJ_txt2obj.
 	if (t_success)
-		if (!OBJ_create(SPC_INDIRECT_DATA_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_PE_IMAGE_DATA_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_STATEMENT_TYPE_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_SP_OPUS_INFO_OBJID, NULL, NULL))
+		if (!OBJ_create(SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID) ||
+			!OBJ_create(SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID) ||
+			!OBJ_create(SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID) ||
+			!OBJ_create(SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadSignature);
 
 	// Authenticode signatures require a single SignerInfo structure to be present.
@@ -1582,7 +1582,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	if (t_success)
 	{
         t_rsa_e = BN_new();
-		if (!t_rsa_e || !BN_set_word(&t_rsa_e, t_rsa_header.exponent))
+		if (!t_rsa_e || !BN_set_word(*t_rsa_e, t_rsa_header.exponent))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoMemory);
 	}
 	
