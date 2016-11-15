@@ -2037,7 +2037,9 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		if (field->getobj(ctxt, optr, parid, True))
+		// IM-2016-11-15: [[ Bug 14080 ]] Create new execcontext so errors in getobj don't affect subsequent evaluations
+		MCExecContext t_context(ctxt);
+		if (field->getobj(t_context, optr, parid, True))
 		{
 			// IM-2016-11-14: [[ Bug 18666 ]] If the resolved object is not on the current card then don't search it.
 			if (parid != 0 && parid != curcard->getid())
@@ -2050,8 +2052,7 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ctxt, curcard->getid(), fmode,
-					                       strings[i], firstword))
+					if (!searchfield->find(t_context, curcard->getid(), fmode, strings[i], firstword))
 					{
 						MCerrorlock--;
 						return False;
