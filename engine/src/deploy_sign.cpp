@@ -1582,7 +1582,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	if (t_success)
 	{
         t_rsa_e = BN_new();
-		if (!t_rsa_e || !BN_set_word(&t_rsa_e, t_rsa_header.exponent))
+		if (!t_rsa_e || !BN_set_word(*t_rsa_e, t_rsa_header.exponent))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoMemory);
 	}
 	
