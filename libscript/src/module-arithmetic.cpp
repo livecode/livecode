@@ -445,10 +445,12 @@ extern "C" MC_DLLEXPORT_DEF MCStringRef MCArithmeticExecFormatNumberAsString(MCN
 	}
 	else
 	{
-		if (!MCStringFormat(&t_output, "%g", MCNumberFetchAsReal(p_operand)))
+		double t_real = MCNumberFetchAsReal(p_operand);
+		if (!MCStringFormat(&t_output, "%g", t_real))
 		{
 			return nil;
 		}
+		MCStringSetNumericValue(*t_output, t_real);
 	}
 
     return MCValueRetain(*t_output);
@@ -457,9 +459,11 @@ extern "C" MC_DLLEXPORT_DEF MCStringRef MCArithmeticExecFormatNumberAsString(MCN
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCArithmeticExecParseStringAsNumber(MCStringRef p_operand)
 {
     double t_converted;
-    if (!MCTypeConvertStringToReal(p_operand, t_converted))
+
+    if (!(MCStringGetNumericValue(p_operand, t_converted) ||
+          MCTypeConvertStringToReal(p_operand, t_converted)))
         return MCValueRetain(kMCNull);
-    
+
     MCAutoNumberRef t_number;
     if (!MCNumberCreateWithReal(t_converted, &t_number))
         return MCValueRetain(kMCNull);
