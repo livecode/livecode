@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/rsa.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 #endif
@@ -103,8 +104,8 @@ Boolean InitSSLCrypt()
 			return False;
 
 #ifdef MCSSL
-		ERR_load_crypto_strings();
-		OpenSSL_add_all_ciphers();
+        OPENSSL_init_ssl(0, NULL);
+        
 		RAND_seed(&MCrandomseed,I4L);
 		cryptinited = True;
 		
@@ -454,17 +455,18 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	int4 res = 0;
 
 	//set up cipher context
-	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
+    MCAutoCustomPointer<EVP_CIPHER_CTX, EVP_CIPHER_CTX_free> ctx = EVP_CIPHER_CTX_new();
+	EVP_CIPHER_CTX_reset(*ctx);
+	
 	//init context with cipher and specify operation
-	if (EVP_CipherInit(&ctx, cipher,NULL, NULL, operation) == 0)
+	if (EVP_CipherInit(*ctx, cipher,NULL, NULL, operation) == 0)
 		return NULL;
 
 	//try setting keylength if specified. This will fail for some ciphers.
-	if (keylen && EVP_CIPHER_CTX_set_key_length(&ctx, keylen/8) == 0)
+	if (keylen && EVP_CIPHER_CTX_set_key_length(*ctx, keylen/8) == 0)
 		return NULL;
 	//get new keylength in bytes
-	int4 curkeylength = EVP_CIPHER_CTX_key_length(&ctx);
+	int4 curkeylength = EVP_CIPHER_CTX_key_length(*ctx);
 	//zero key and iv
 	memset(key,0,EVP_MAX_KEY_LENGTH);
 	memset(iv,0,EVP_MAX_IV_LENGTH);
@@ -516,14 +518,20 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 		memcpy(iv,ivstr,MCU_min(ivlen,EVP_MAX_IV_LENGTH));
 	}
 
-	if (EVP_CipherInit(&ctx, NULL, key, iv, operation) == 0)
+	
+	// Re-initialise the cipher
+	EVP_CIPHER_CTX_reset(*ctx);
+	if (EVP_CipherInit(*ctx, cipher, key, iv, operation) == 0)
 		return NULL;
+	if (keylen && EVP_CIPHER_CTX_set_key_length(*ctx, keylen/8) == 0)
+		return NULL;
+	
 	int4 tmp, ol;
 	ol = 0;
 
 	//allocate memory to hold encrypted/decrypted data + an extra block + null terminator for block ciphers.
 	unsigned char *outdata = nil;
-	if (!MCMemoryAllocate(inlen + EVP_CIPHER_CTX_block_size(&ctx) + 1 + sizeof(magic) + sizeof(saltbuf), outdata))
+	if (!MCMemoryAllocate(inlen + EVP_CIPHER_CTX_block_size(*ctx) + 1 + sizeof(magic) + sizeof(saltbuf), outdata))
 	{
 		outlen = 791;
 		return NULL;
@@ -543,7 +551,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	// MW-2007-02-13: [[Bug 4258]] - SSL now fails an assertion if datalen == 0
 	if (tend - data > 0)
 	{
-		if (EVP_CipherUpdate(&ctx,&outdata[ol],&tmp,(unsigned char *)data,tend-data) == 0)
+		if (EVP_CipherUpdate(*ctx, &outdata[ol], &tmp, (unsigned char *)data, tend-data) == 0)
 		{
 			MCMemoryDeallocate(outdata);
 			return NULL;
@@ -552,7 +560,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	}
 
 	//for padding
-	if (EVP_CipherFinal(&ctx,&outdata[ol],&tmp) == 0)
+	if (EVP_CipherFinal(*ctx, &outdata[ol], &tmp) == 0)
 	{
 		MCMemoryDeallocate(outdata);
 		return NULL;
@@ -560,7 +568,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	outlen = ol + tmp;
 
 	//cleam up context and return data
-	EVP_CIPHER_CTX_cleanup(&ctx);
+	EVP_CIPHER_CTX_reset(*ctx);
 	outdata[outlen] = 0; //null terminate data
 
 	return (char *)outdata;
@@ -653,9 +661,6 @@ void ShutdownSSL()
 #ifdef MCSSL
 	if (cryptinited)
 	{
-		
-		EVP_cleanup();
-		ERR_free_strings();
 #if !defined(_SERVER)
 		finalise_weak_link_crypto();
 		finalise_weak_link_ssl();
@@ -910,7 +915,6 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 #ifdef TARGET_PLATFORM_MACOS_X
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 	bool t_success = true;
 	
 	CFArrayRef t_anchors = NULL;
@@ -951,9 +955,6 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		free_x509_stack(t_stack);
 
 	return t_success;
-#else
-    return false;
-#endif
 }
 
 bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)

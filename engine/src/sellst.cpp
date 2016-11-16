@@ -501,11 +501,16 @@ bool MCSellist::clipboard(bool p_is_cut)
 					//   object if the stack is protected.
 					if (tptr -> m_ref -> getstack() -> iskeyed())
 					{
-						if (tptr -> m_ref -> del(true))
+                        // Because we need to manipulate the object after it has
+                        // been 'deleted', take a strong reference to the object
+                        // here
+                        MCObject* t_obj = tptr->m_ref;
+                        
+                        if (t_obj->del(true))
                         {
-                            if (tptr -> m_ref -> gettype() == CT_STACK)
-                                MCtodestroy -> remove(tptr->m_ref.GetAs<MCStack>());
-							tptr -> m_ref -> scheduledelete();
+                            if (t_obj->gettype() == CT_STACK)
+                                MCtodestroy -> remove(MCObjectCast<MCStack>(t_obj));
+							t_obj->scheduledelete();
                         }
 					}
 

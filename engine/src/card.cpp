@@ -2819,35 +2819,37 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 	if (!cptr -> isselectable()
 	        && (!MCselectgrouped || cptr->gettype() != CT_GROUP))
 		return;
-	MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
 	
 	// MW-2008-12-04: [[ Bug ]] Make sure we honour group-local selectGrouped for
 	//   select-tool drags
-	if (MCselectgrouped && cptr->gettype() == CT_GROUP
-	        && gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
+	if (MCselectgrouped && cptr->gettype() == CT_GROUP)
 	{
-		cptr = gptr->getcontrols();
+	        MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
+		if (gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
+		{
+			cptr = gptr->getcontrols();
         
-        MCRectangle t_group_rect;
-        t_group_rect = gptr -> getrect();
-        
-        MCRectangle t_group_oldrect;
-        t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
-        
-        MCRectangle t_group_selrect;
-        t_group_selrect = MCU_intersect_rect(selrect, t_group_rect);
-        
-        do
-        {
-            MCRectangle t_rect;
-            t_rect = cptr -> getrect();
-            if (MCU_line_intersect_rect(t_group_rect, t_rect))
-                updateselection(cptr, t_group_oldrect, t_group_selrect, drect);
-            
-            cptr = cptr->next();
-        }
-        while (cptr != gptr->getcontrols());
-   }
+			MCRectangle t_group_rect;
+			t_group_rect = gptr -> getrect();
+			
+			MCRectangle t_group_oldrect;
+			t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
+			
+			MCRectangle t_group_selrect;
+			t_group_selrect = MCU_intersect_rect(selrect, t_group_rect);
+			
+			do
+			{
+			    MCRectangle t_rect;
+			    t_rect = cptr -> getrect();
+			    if (MCU_line_intersect_rect(t_group_rect, t_rect))
+				updateselection(cptr, t_group_oldrect, t_group_selrect, drect);
+			    
+			    cptr = cptr->next();
+			}
+			while (cptr != gptr->getcontrols());
+		}
+	}
 	else
 	{
 		Boolean was, is;
