@@ -30,7 +30,7 @@ after an HTTP request.
 All HTTP requests cause data to be sent to the server and data to be
 returned from the server. The <urlResponse> property allows you to
 access any data returned by the HTTP server in the last URL operation,
-the urlResonse property returns empty if the operation failed.
+the <urlResponse> property returns empty if the operation failed.
 
 The HTTP requests which cause data to be returned by the <urlResponse>
 property are <get>, <put>, <delete> and <post>.
