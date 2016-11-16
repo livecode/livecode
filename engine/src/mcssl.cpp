@@ -457,6 +457,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	//set up cipher context
     MCAutoCustomPointer<EVP_CIPHER_CTX, EVP_CIPHER_CTX_free> ctx = EVP_CIPHER_CTX_new();
 	EVP_CIPHER_CTX_reset(*ctx);
+	
 	//init context with cipher and specify operation
 	if (EVP_CipherInit(*ctx, cipher,NULL, NULL, operation) == 0)
 		return NULL;
@@ -517,8 +518,14 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 		memcpy(iv,ivstr,MCU_min(ivlen,EVP_MAX_IV_LENGTH));
 	}
 
-	if (EVP_CipherInit(*ctx, NULL, key, iv, operation) == 0)
+	
+	// Re-initialise the cipher
+	EVP_CIPHER_CTX_reset(*ctx);
+	if (EVP_CipherInit(*ctx, cipher, key, iv, operation) == 0)
 		return NULL;
+	if (keylen && EVP_CIPHER_CTX_set_key_length(*ctx, keylen/8) == 0)
+		return NULL;
+	
 	int4 tmp, ol;
 	ol = 0;
 
