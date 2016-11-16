@@ -1948,7 +1948,17 @@ void MCDispatch::removemenu()
 void MCDispatch::closemenus()
 {
 	if (menu != NULL)
+	{
+		MCObject *t_menu = menu;
 		menu->closemenu(True, True);
+		
+		// Ensure the menuobjectptr is set to nil. We can't do this in
+		// closemenu itself, as elsewhere menuPick is sent *after*
+		// calling closemenu and there is likely to be code that relies
+		// on 'the menuButton' during handling of menuPick
+		if (MCmenuobjectptr == t_menu)
+			MCmenuobjectptr = nil;
+	}
 }
 
 void MCDispatch::appendpanel(MCStack *sptr)
