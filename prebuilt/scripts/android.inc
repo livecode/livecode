@@ -1,6 +1,6 @@
 # Android options
 ANDROID_NDK=${ANDROID_NDK:-"$HOME/Workspace/livecode/sdks/android-ndk"}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
+ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-10}
 
 # Has a full, custom toolchain been specified?
 #  AR, CC, CXX, LINK, OBJCOPY, RANLIB, STRIP
