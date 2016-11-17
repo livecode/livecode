@@ -106,6 +106,9 @@ public:
     bool AddPNG(MCDataRef p_png);
     bool AddGIF(MCDataRef p_gif);
     bool AddJPEG(MCDataRef p_jpeg);
+	bool AddBMP(MCDataRef p_bmp);
+	bool AddWinMetafile(MCDataRef p_wmf);
+	bool AddWinEnhMetafile(MCDataRef p_emf);
     
     // Utility method for adding images - given the binary data for a PNG, GIF
     // or JPEG-encoded image, the image is added to the clipboard tagged with
@@ -122,7 +125,10 @@ public:
     bool HasPNG() const;
     bool HasGIF() const;
     bool HasJPEG() const;
-    bool HasImage() const;  // Any of PNG, GIF or JPEG
+	bool HasBMP() const;
+	bool HasWinMetafile() const;
+	bool HasWinEnhMetafile() const;
+    bool HasImage() const;  // Any of PNG, GIF, JPEG or BMP
     
     // Utility methods that indicate whether the clipboard contains data of that
     // type or something that can be auto-converted to that type.
@@ -143,9 +149,12 @@ public:
     bool CopyAsPNG(MCDataRef& r_png_data) const;
     bool CopyAsGIF(MCDataRef& r_gif_data) const;
     bool CopyAsJPEG(MCDataRef& r_jpeg_data) const;
+	bool CopyAsBMP(MCDataRef& r_bmp_data) const;
+	bool CopyAsWinMetafile(MCDataRef& r_wmf_data) const;
+	bool CopyAsWinEnhMetafile(MCDataRef& r_emf_data) const;
     
     // Utility method for copying images - it tries to copy as any image format
-    // that is supported by LiveCode (PNG, JPEG or GIF, in that order).
+    // that is supported by LiveCode (PNG, JPEG, GIF or BMP, in that order).
     bool CopyAsImage(MCDataRef& r_image_data) const;
     
     // Utility method for pasting into fields -- converts the clipboard contents
