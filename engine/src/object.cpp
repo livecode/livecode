@@ -137,8 +137,8 @@ MCObject::MCObject()
 	// MW-2008-10-25: Initialize the parent script link to NULL
 	parent_script = NULL;
 
-	// No proxy initially
-	m_weak_proxy = nil;
+	// Generate a weak proxy object
+	m_weak_proxy = new MCObjectProxyBase(this);
 
 	// MW-2012-02-14: [[ Fonts ]] Initialize the font to nil.
 	m_font = nil;
@@ -243,8 +243,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	else
 		parent_script = NULL;
 
-	// No proxy initially
-	m_weak_proxy = nil;
+	// Generate a weak proxy object
+	m_weak_proxy = new MCObjectProxyBase(this);
 
 	// MW-2012-02-14: [[ FontRefs ]] As objects start off closed, the font is not
 	//   copied and starts nil.
@@ -330,8 +330,11 @@ MCObject::~MCObject()
 	delete m_native_layer;
     
     // This object is going away; invalidate the proxy
-    if (m_weak_proxy != NULL)
+    if (m_weak_proxy)
+    {
         m_weak_proxy->Clear();
+	m_weak_proxy = nil;
+    }
     
     // Detach ourselves from the object pool.
     MCDeletedObjectsOnObjectDestroyed(this);
@@ -885,15 +888,16 @@ Boolean MCObject::del(bool p_check_flag)
     //  saved state, we will now be left with a list of listened-to objects with
     //  no dangling pointers.
     
-    // This object is in the process of being deleted; invalidate any weak refs
-    if (m_weak_proxy != nil)
-        m_weak_proxy->Clear();
-    
     // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
     //   (if it is in it!).
     if (m_in_id_cache)
         getstack() -> uncacheobjectbyid(this);
-    
+	
+	// This object is in the process of being deleted; invalidate any weak refs
+	// and prevent any new ones from being created.
+	m_weak_proxy->Clear();
+	m_weak_proxy = nil;
+	
 	return True;
 }
 
@@ -5357,7 +5361,7 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 MCObjectProxyBase::MCObjectProxyBase(MCObject *p_object) :
   m_object(p_object),
-  m_refcount(0)
+  m_refcount(1)		// The pointed-to object holds a reference
 {
 }
 
@@ -5377,8 +5381,11 @@ void MCObjectProxyBase::Clear()
 {
     if (m_object)
     {
-        m_object->m_weak_proxy = nil;
-        m_object = nil;
+	// The object is being deleted so it can no longer be reached
+	m_object = nil;
+	
+	// Release the reference the object holds to this proxy
+	Release();
     }
 }
 
@@ -5395,10 +5402,6 @@ void MCObjectProxyBase::Release()
     
     if (--m_refcount <= 0)
     {
-        // The object in question no longer has a proxy object as we are being
-        // deleted
-        Clear();
-        
         delete this;
     }
 }
