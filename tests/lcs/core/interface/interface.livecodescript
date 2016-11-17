@@ -609,6 +609,28 @@ on TestFind
    TestAssert "find changes to the card having the searched text", the long id of the current card is tId
 end TestFind
 
+on TestFindInNamedField
+   create stack "Test"
+   set the defaultstack to "Test"
+   
+   local tId
+   
+   put the long id of the current card into tId
+   
+   create field "TestField1"
+   
+   put "foo" into field "TestField1"
+   
+   create card
+   create field "TestField2"
+   
+   put "bar" into field "TestField2"
+   
+   find "foo" in field "TestField1"
+   
+   TestAssert "find changes to the card having the named text field", the long id of the current card is tId
+end TestFindInNamedField
+
 on TestHilite
    create button
    
