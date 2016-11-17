@@ -1404,7 +1404,11 @@ Boolean MCStack::del(bool p_check_flag)
 	{
 		MCdispatcher->removestack(this);
 	}
-	else
+        else if (MCdispatcher->is_transient_stack(this))
+        {
+                MCdispatcher->remove_transient_stack(this);
+        }
+	else if (parent->gettype() == CT_STACK)
 	{
 		remove(parent.GetAs<MCStack>()->substacks);
 		// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
@@ -1412,6 +1416,11 @@ Boolean MCStack::del(bool p_check_flag)
 		if (parent.GetAs<MCStack>()->substacks == nil)
 			parent.GetAs<MCStack>()->extraclose(true);
 	}
+        else
+        {
+                // One of the above conditions should always be true
+                MCUnreachable();
+        }
 
     if (MCtopstackptr == this)
     {
