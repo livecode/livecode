@@ -59,8 +59,8 @@ the <matchExpression> to make the match case-insensitive.)
 > meanings and need to be escaped with back slashes For example period
 > (".") matches any character, so in order to replace period characters
 > with a <regular expression> use "\." . For more information on regular
-> expressions see the Perl documentation here:
-> <http://perldoc.perl.org/perlre.html> 
+> expressions see the Perl documentation at 
+> http://perldoc.perl.org/perlre.html .
 
 References: replace (command), filter (command), command (glossary),
 regular expression (glossary), property (glossary), string (keyword),
