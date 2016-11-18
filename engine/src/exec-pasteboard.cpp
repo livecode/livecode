@@ -178,6 +178,9 @@ enum MCTransferType
     TRANSFER_TYPE_PNG,
     TRANSFER_TYPE_GIF,
     TRANSFER_TYPE_JPEG,
+	TRANSFER_TYPE_BMP,
+	TRANSFER_TYPE_WIN_METAFILE,
+	TRANSFER_TYPE_WIN_ENH_METAFILE,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -432,6 +435,15 @@ MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy =
     if (MCNameIsEqualTo(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
 
+	if (MCNameIsEqualTo(p_key, MCN_win_bitmap))
+		return TRANSFER_TYPE_BMP;
+
+	if (MCNameIsEqualTo(p_key, MCN_win_metafile))
+		return TRANSFER_TYPE_WIN_METAFILE;
+
+	if (MCNameIsEqualTo(p_key, MCN_win_enh_metafile))
+		return TRANSFER_TYPE_WIN_ENH_METAFILE;
+
 	return TRANSFER_TYPE_NULL;
 }
 
@@ -463,6 +475,12 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
         return MCN_gif;
     case TRANSFER_TYPE_JPEG:
         return MCN_jpeg;
+	case TRANSFER_TYPE_BMP:
+		return MCN_win_bitmap;
+	case TRANSFER_TYPE_WIN_METAFILE:
+		return MCN_win_metafile;
+	case TRANSFER_TYPE_WIN_ENH_METAFILE:
+		return MCN_win_enh_metafile;
 	case TRANSFER_TYPE_FILES:
 		return MCN_files;
 	case TRANSFER_TYPE_PRIVATE:
@@ -808,6 +826,12 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
         t_success = MCListAppend(*t_list, MCN_gif);
     if (t_success && p_clipboard->HasJPEG())
         t_success = MCListAppend(*t_list, MCN_jpeg);
+	if (t_success && p_clipboard->HasBMP())
+		t_success = MCListAppend(*t_list, MCN_win_bitmap);
+	if (t_success && p_clipboard->HasWinMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_metafile);
+	if (t_success && p_clipboard->HasWinEnhMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_enh_metafile);
     
     // Check for specific styled text formats. These are the "true" formats and
     // aren't round-tripped via a LiveCode field.
@@ -911,6 +935,18 @@ void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& c
         case TRANSFER_TYPE_JPEG:
             r_result = p_clipboard->HasJPEG();
             break;
+
+		case TRANSFER_TYPE_BMP:
+			r_result = p_clipboard->HasBMP();
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			r_result = p_clipboard->HasWinMetafile();
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			r_result = p_clipboard->HasWinEnhMetafile();
+			break;
             
         case TRANSFER_TYPE_FILES:
             r_result = p_clipboard->HasFileList();
@@ -1589,6 +1625,18 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
         case TRANSFER_TYPE_JPEG:
             p_clipboard->CopyAsJPEG((MCDataRef&)&t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			p_clipboard->CopyAsBMP((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			p_clipboard->CopyAsWinMetafile((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			p_clipboard->CopyAsWinEnhMetafile((MCDataRef&)&t_data);
+			break;
             
         case TRANSFER_TYPE_OBJECTS:
             p_clipboard->CopyAsLiveCodeObjects((MCDataRef&)&t_data);
@@ -1692,6 +1740,21 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             if (ctxt.ConvertToData(p_value, &t_data))
                 t_success = p_clipboard->AddJPEG(*t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddBMP(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinMetafile(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinEnhMetafile(*t_data);
+			break;
             
         case TRANSFER_TYPE_FILES:
             if (ctxt.ConvertToString(p_value, &t_string))
