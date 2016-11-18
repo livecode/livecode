@@ -24,11 +24,10 @@ set the lineSize to 3 -- 3-pixels lines will be used in paint tools
 Example:
 set the lineSize of graphic "Rectangular Border" to 9
 
-Value:
-The <lineSize> of a <graphic(keyword)> is an <integer> between zero and
-
-32767. By default, the <lineSize> of newly created
-       <graphic(object)|graphics> is set to 1.
+Value (number):
+The <lineSize> of a <graphic(keyword)> is an <integer> between
+zero and 32767. By default, the <lineSize> of newly created
+<graphic(object)|graphics> is set to 1.
 
 
 Description:
