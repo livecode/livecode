@@ -21,7 +21,7 @@ set the joinstyle of graphic 1 of card "myCard" to "bevel"
 Example:
 set the joinstyle of the selectedobject to "round"
 
-Value (enum): The <joinStyle> of a <graphic> is one of the following:
+Value: The <joinStyle> of a <graphic> is one of the following:
 
 - "round" - A circular arc is drawn between the outer edges of the
 adjoining lines. This is the default.
