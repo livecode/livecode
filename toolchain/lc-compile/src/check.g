@@ -188,7 +188,7 @@
         QueryKindOfSymbolId(Id -> type)
         
     'rule' CheckBindingIsTypeId(Id):
-        Id'Name -> Name
+		GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAType(Position, Name)
         -- Mark this id as being in error.
@@ -204,7 +204,7 @@
         QueryKindOfSymbolId(Id -> handler)
         
     'rule' CheckBindingIsHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAHandler(Position, Name)
         -- Mark this id as being in error.
@@ -229,7 +229,7 @@
         QueryKindOfSymbolId(Id -> context)
 
     'rule' CheckBindingIsVariableId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
         -- Mark this id as being in error.
@@ -257,7 +257,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -288,7 +288,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -335,14 +335,14 @@
             where(Signature -> signature(nil, ReturnType))
             (|
                 where(ReturnType -> undefined(_))
-                Id'Name -> Name
+                GetQualifiedName(Id -> Name)
                 Id'Position -> Position
                 Error_HandlerNotSuitableForPropertyGetter(Position, Name)
             ||
                 -- all non-void return values are fine
             |)
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertyGetter(Position, Name)
         |)
@@ -359,7 +359,7 @@
         (|
             where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertySetter(Position, Name)
         |)
@@ -1019,7 +1019,7 @@
             where(Type -> boolean(_))
         ||
             where(Type -> named(_, Id))
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             IsNameEqualToString(Name, "CBool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
@@ -1532,11 +1532,11 @@
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
         (|
             QueryKindOfSymbolId(Id -> handler)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToHandlerId(Position, Name)
         ||
             QueryKindOfSymbolId(Id -> constant)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToConstantId(Position, Name)
         ||
         |)
@@ -2053,7 +2053,7 @@
                 (|
                     where(Safety -> unsafe)
                 ||
-                    Handler'Name -> Name
+                    GetQualifiedName(Handler -> Name)
                     Error_UnsafeHandlerCallNotAllowedInSafeContext(Position, Name)
                 |)
             |)
@@ -2125,6 +2125,7 @@
         Id'Meaning -> Meaning
         
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
+'action' GetQualifiedName(ID -> NAME)
 
 --------------------------------------------------------------------------------
 
