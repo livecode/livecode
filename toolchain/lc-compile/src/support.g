@@ -50,6 +50,10 @@
     IsNameSuitableForDefinition
     IsStringSuitableForKeyword
 
+	ConcatenateNameParts
+	ContainsNamespaceOperator
+	SplitNamespace
+	
     InitializeScopes
     FinalizeScopes
     DumpScopes
@@ -272,6 +276,7 @@
     Error_MalformedToken
     Error_MalformedSyntax
     Error_MalformedEscapedString
+	Error_IllegalNamespaceOperator
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -399,6 +404,10 @@
 
 'condition' IsNameSuitableForDefinition(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
+
+'action' ConcatenateNameParts(NAME, NAME -> NAME)
+'action' SplitNamespace(NAME -> NAME, NAME)
+'condition' ContainsNamespaceOperator(NAME)
 
 --------------------------------------------------------------------------------
 
@@ -677,6 +686,7 @@
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
 'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
+'action' Error_IllegalNamespaceOperator(Position: POS)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)

@@ -601,6 +601,65 @@ void NegateReal(long p_real, long *r_real)
     *r_real = (long)t_value;
 }
 
+void ConcatenateNameParts(NameRef p_left, NameRef p_right, NameRef *r_output)
+{
+    const char* t_left;
+    GetStringOfNameLiteral(p_left, &t_left);
+    
+    const char* t_right;
+    GetStringOfNameLiteral(p_right, &t_right);
+    
+    char *t_output;
+    t_output = malloc(strlen(t_left) + strlen(t_right) + 2);
+    if (t_output == NULL)
+        Fatal_OutOfMemory();
+    
+    if (sprintf(t_output, "%s.%s", t_left, t_right) < 0)
+       Fatal_OutOfMemory();
+	
+    MakeNameLiteral(t_output, r_output);
+}
+
+void SplitNamespace(NameRef p_source, NameRef *r_left, NameRef *r_right)
+{
+    const char* t_source;
+    GetStringOfNameLiteral(p_source, &t_source);
+    
+	const char* t_last_dot;
+	t_last_dot = strrchr(t_source, '.');
+	
+	char* t_left;
+	t_left = malloc(t_last_dot - t_source + 1);
+    if (t_left == NULL)
+        Fatal_OutOfMemory();
+
+	if (strncpy(t_left, t_source, t_last_dot - t_source) == NULL)
+		Fatal_OutOfMemory();
+	
+	t_left[t_last_dot - t_source] = '\0';
+	
+	t_last_dot++;
+	
+	char* t_right;
+	t_right = malloc(strlen(t_last_dot) + 1);
+    if (t_right == NULL)
+        Fatal_OutOfMemory();
+    
+    if (strcpy(t_right, t_last_dot) == NULL)
+    	Fatal_OutOfMemory();
+    
+    MakeNameLiteral(t_left, r_left);
+    MakeNameLiteral(t_right, r_right);
+}
+
+int ContainsNamespaceOperator(NameRef p_name)
+{
+	const char* t_name;
+	GetStringOfNameLiteral(p_name, &t_name);
+    return strchr(t_name, '.') != NULL;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void FreeScope(ScopeRef p_scope)
