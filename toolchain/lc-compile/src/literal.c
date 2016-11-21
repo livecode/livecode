@@ -42,6 +42,7 @@ struct Binding
 {
     BindingRef next;
     NameRef name;
+	NameRef namespace;
     unsigned int has_meaning : 1;
     long meaning;
 };
@@ -676,16 +677,22 @@ static void FreeScope(ScopeRef p_scope)
     free(p_scope);
 }
 
-static int FindNameInScope(ScopeRef p_scope, NameRef p_name, BindingRef *r_binding)
+static int FindNameInScope(ScopeRef p_scope, NameRef p_name, NameRef p_namespace, BindingRef *r_binding)
 {
     BindingRef t_binding;
 
 	for (t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
+	{
         if (IsNameEqualToName(t_binding -> name, p_name))
         {
+			if (p_namespace == NULL ||
+				(t_binding -> namespace != NULL &&
+			     IsNameEqualToName(p_namespace, t_binding -> namespace)))
+
             *r_binding = t_binding;
             return 1;
         }
+	}
     return 0;
 }
 
@@ -723,14 +730,19 @@ void LeaveScope(void)
     FreeScope(t_scope);
 }
 
-void DefineMeaning(NameRef p_name, long p_meaning)
+void DefineUnqualifiedMeaning(NameRef p_name, long p_meaning)
+{
+	DefineMeaning(p_name, NULL, p_meaning);
+}
+
+void DefineMeaning(NameRef p_name, NameRef p_namespace, long p_meaning)
 {
     BindingRef t_binding;
 	
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
-    
-    if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 0)
+	
+    if (FindNameInScope(s_scopes, (NameRef)p_name, (NameRef)p_namespace, &t_binding) == 0)
     {
         t_binding = (BindingRef)malloc(sizeof(struct Binding));
         if (t_binding == NULL)
@@ -738,6 +750,7 @@ void DefineMeaning(NameRef p_name, long p_meaning)
         
         t_binding -> next = s_scopes -> bindings;
         t_binding -> name = (NameRef)p_name;
+		t_binding -> namespace = (NameRef)p_namespace;
         
         s_scopes -> bindings = t_binding;
     }
@@ -746,14 +759,14 @@ void DefineMeaning(NameRef p_name, long p_meaning)
     t_binding -> has_meaning = 1;
 }
 
-void UndefineMeaning(NameRef p_name)
+void UndefineMeaning(NameRef p_name, NameRef p_namespace)
 {
     BindingRef t_binding;
 	
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
     
-    if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 1)
+    if (FindNameInScope(s_scopes, (NameRef)p_name, (NameRef)p_namespace, &t_binding) == 1)
     {
         t_binding -> meaning = 0;
         t_binding -> has_meaning = 0;
@@ -767,7 +780,7 @@ int HasLocalMeaning(NameRef p_name, long *r_meaning)
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
 
-    if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 1 &&
+    if (FindNameInScope(s_scopes, (NameRef)p_name, NULL, &t_binding) == 1 &&
         t_binding -> has_meaning == 1)
     {
         *r_meaning = t_binding -> meaning;
@@ -777,7 +790,12 @@ int HasLocalMeaning(NameRef p_name, long *r_meaning)
     return 0;
 }
 
-int HasMeaning(NameRef p_name, long *r_meaning)
+int HasUnqualifiedMeaning(NameRef p_name, long *r_meaning)
+{
+	return HasMeaning(p_name, NULL, r_meaning);
+}
+
+int HasMeaning(NameRef p_name, NameRef p_namespace, long *r_meaning)
 {
     ScopeRef t_scope;
 	
@@ -787,7 +805,7 @@ int HasMeaning(NameRef p_name, long *r_meaning)
     for(t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
     {
         BindingRef t_binding;
-        if (FindNameInScope(t_scope, (NameRef)p_name, &t_binding) == 1 &&
+        if (FindNameInScope(t_scope, (NameRef)p_name, (NameRef)p_namespace, &t_binding) == 1 &&
             t_binding -> has_meaning == 1)
         {
             *r_meaning = t_binding -> meaning;
@@ -810,7 +828,12 @@ void DumpScopes(void)
 
 		for (t_binding = t_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
             if (t_binding -> has_meaning)
-                fprintf(stderr, "[%d] %s = %ld\n", t_depth, t_binding -> name -> token, t_binding -> meaning);
+			{
+				if (t_binding -> namespace != NULL)
+	                fprintf(stderr, "[%d] %s.%s = %ld\n", t_depth, t_binding -> namespace -> token, t_binding -> name -> token, t_binding -> meaning);
+				else
+					fprintf(stderr, "[%d] %s = %ld\n", t_depth, t_binding -> name -> token, t_binding -> meaning);
+			}
         t_depth += 1;
     }
 }

@@ -43,10 +43,12 @@ void FinalizeScopes(void);
 void EnterScope(void);
 void LeaveScope(void);
 
-void DefineMeaning(NameRef name, long meaning);
-void UndefineMeaning(NameRef name);
+void DefineMeaning(NameRef name, NameRef p_namespace, long meaning);
+void DefineUnqualifiedMeaning(NameRef name, long meaning);
+void UndefineMeaning(NameRef name, NameRef p_namespace);
 int HasLocalMeaning(NameRef name, long *r_meaning);
-int HasMeaning(NameRef name, long *r_meaning);
+int HasMeaning(NameRef name, NameRef p_namespace, long *r_meaning);
+int HasUnqualifiedMeaning(NameRef name, long *r_meaning);
 
 #ifdef __cplusplus
 }

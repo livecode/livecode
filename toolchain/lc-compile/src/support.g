@@ -60,9 +60,11 @@
     EnterScope
     LeaveScope
     DefineMeaning
+	DefineUnqualifiedMeaning
     UndefineMeaning
     HasLocalMeaning
     HasMeaning
+	HasUnqualifiedMeaning
 
     PushEmptySet
     DuplicateSet
@@ -433,10 +435,12 @@
 'action' EnterScope()
 'action' LeaveScope()
 
-'action' DefineMeaning(Name: NAME, Meaning: MEANING)
-'action' UndefineMeaning(Name: NAME)
+'action' DefineMeaning(Name: NAME, Namespace: NAME, Meaning: MEANING)
+'action' DefineUnqualifiedMeaning(Name: NAME, Meaning: MEANING)
+'action' UndefineMeaning(Name: NAME, Namespace: NAME)
 'condition' HasLocalMeaning(Name: NAME -> Meaning: MEANING)
-'condition' HasMeaning(Name: NAME -> Meaning: MEANING)
+'condition' HasMeaning(Name: NAME, Namespace: NAME -> Meaning: MEANING)
+'condition' HasUnqualifiedMeaning(Name: NAME -> Meaning: MEANING)
 
 --------------------------------------------------------------------------------
 
