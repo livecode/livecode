@@ -6,6 +6,8 @@ use com.livecode.foreign
 -- **EXPERIMENTAL** Helper functions for testing error states
 ----------------------------------------------------------------
 
+public constant ThisModule is "com.livecode.__INTERNAL._testlib"
+
 public handler type Thunk() returns optional any
 
 public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) returns nothing
