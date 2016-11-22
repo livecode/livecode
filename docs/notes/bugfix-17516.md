@@ -1,0 +1,1 @@
+# Prevent crash when popping up widget in no ui mode
