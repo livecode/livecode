@@ -39,7 +39,7 @@ floor(5.1) <return(glossary)|returns> 5, but floor(4.99)
 not always <return(constant)> the <integer> closest to the <number>.
 
 References: return (constant), function (control structure),
-ceil (function), round (function), abs (function), trunc (function),
+ceiling (function), round (function), abs (function), trunc (function),
 return (glossary), integer (keyword)
 
 Tags: math
