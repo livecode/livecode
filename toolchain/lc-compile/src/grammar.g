@@ -76,7 +76,7 @@
         Depend_GenerateDependenciesForModule(ModuleName, Right)
 
     'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
-        Name'Name -> DependencyName
+        GetQualifiedName(Name -> DependencyName)
         DependDefineDependency(ModuleName, DependencyName)
 
     'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
