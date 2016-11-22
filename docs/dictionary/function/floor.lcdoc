@@ -34,7 +34,7 @@ equal to a number.
 
 The <floor> <function> is different from <round> in that floor
 completely ignores the fractional part of the number. For example,
-floor(5.1) <return(glossary)|returns> 5, but floor(4.99)
+`floor(5.1)` <return(glossary)|returns> 5, but `floor(4.99)`
 <return(glossary)|returns> 4. This means that the <floor> function does
 not always <return(constant)> the <integer> closest to the <number>.
 
