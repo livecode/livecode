@@ -9,7 +9,7 @@ Syntax: ceil(<number>)
 Summary:
 <return|Returns> the smallest integer greater than or equal to number.
 
-Introduced: 6.7
+Introduced: 7.1
 
 OS: mac, windows, linux, ios, android
 
