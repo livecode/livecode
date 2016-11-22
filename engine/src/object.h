@@ -1665,6 +1665,9 @@ public:
 template <typename T>
 inline T* MCObjectCast(MCObject* p_object)
 {
+    if (p_object == nil)
+        return nil;
+    
     // Check that the object's type matches the (static) type of the desired
     // type. This will break horribly if the desired type has derived types...
     MCAssert(p_object->gettype() == T::kObjectType);
