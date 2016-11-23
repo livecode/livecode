@@ -242,18 +242,14 @@ on TestLoadExtension pName
    
 end TestLoadExtension
 
-on TestLoadAllExtensions
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
+on TestLoadAllExtensions   
    local tExtFolder
    put _TestGetBuiltExtensionsFolder() into tExtFolder
-   set the defaultFolder to tExtFolder
-   
+
    local tExtensions
-   put the folders into tExtensions
+   put folders(tExtFolder) into tExtensions
    
-   local tFiles, tAllExtensionsA
+   local tFiles, tExtensionsA
    local tHasCompiled, tSource
 
    # Collect all the valid (and compiled) extension files
@@ -264,8 +260,7 @@ on TestLoadAllExtensions
       put false into tHasCompiled
       put empty into tSource
       put tExtFolder & slash before tFolder
-      set the defaultFolder to tFolder
-      put the files into tFiles
+      put files(tFolder) into tFiles
       repeat for each line tFile in tFiles
          if tFile ends with ".lcb" then
             put tFile into tSource
@@ -273,18 +268,17 @@ on TestLoadAllExtensions
             put true into tHasCompiled
          end if
          if tHasCompiled and tSource is not empty then
-            put tFolder into tAllExtensionsA[tFolder & slash & tSource]
+         	local tPath
+         	put tFolder & slash & tSource into tPath
+            put tFolder into tExtensionsA[tPath]
             exit repeat
          end if
       end repeat
    end repeat
    
-
-   set the defaultFolder to tDefaultFolder
-   
    # Use the lc-compile --deps option to sort by dependency
    local tLCCompile, tLCBFiles
-   put the keys of tAllExtensionsA into tLCBFiles
+   put the keys of tExtensionsA into tLCBFiles
    replace return with " " in tLCBFiles
    set the itemdelimiter to slash
    put item 1 to -2 of tExtFolder & slash & "lc-compile" into tLCCompile
@@ -296,7 +290,7 @@ on TestLoadAllExtensions
    
    # Load the extensions in order
    repeat for each line tExtFile in tLCBFiles
-      _TestLoadExtension tAllExtensionsA[tExtFile], tExtFile
+      _TestLoadExtension tExtensionsA[tExtFile], tExtensionsA[tExtFile] & slash & "module.lcm"
    end repeat
 end TestLoadAllExtensions
 
