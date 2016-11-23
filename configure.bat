@@ -22,6 +22,13 @@ IF %TARGET_ARCH%==x86_64 (
   SET MSVC_ARCH=%TARGET_ARCH%
 )
 
+REM The LiveCode name for x86_64 is x86_64
+IF %MSVC_ARCH%==x64 (
+    SET LC_ARCH=x86_64
+) ELSE (
+    SET LC_ARCH=x86
+)
+
 REM Note: to test whether a directory exists in batch script, you need to check
 REM whether a file within that directory exists. Easiest way to do this is to
 REM add the "*" wildcard after the directory
@@ -54,7 +61,7 @@ REM Pause so any warnings can be seen
 IF %warnings% NEQ 0 PAUSE
 
 REM Run the configure step
-%python% config.py --platform win-x86 -Dtarget_arch=%MSVC_ARCH% %extra_options% %gypfile%
+%python% config.py --platform win-%LC_ARCH% -Dtarget_arch=%MSVC_ARCH% %extra_options% %gypfile%
 PAUSE
 
 REM Pause if there was an error so that the user gets a chance to see it

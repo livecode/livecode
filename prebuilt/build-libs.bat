@@ -92,8 +92,15 @@ IF %MODE%==debug (
 	SET CRT=static_release
 )
 
+REM If the TOOL version is 15, then the CRT version 141
+IF %TOOL%==15 (
+	SET TOOL_CRT=141
+) ELSE (
+	SET TOOL_CRT=%TOOL%0
+)
+
 REM Set the suffix that should be used by all libraries
-SET BUILDTRIPLE=%ARCH%-win32-v%TOOL%0_%CRT%
+SET BUILDTRIPLE=%ARCH%-win32-v%TOOL_CRT%_%CRT%
 
 REM Compute path to VS version
 IF %ARCH%==x86 (

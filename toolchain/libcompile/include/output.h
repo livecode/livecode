@@ -18,7 +18,7 @@
 #define __OUTPUT__
 
 #include <stdio.h>
-
+#include <stdint.h>
 #include <literal.h>
 
 #ifdef __cplusplus
@@ -30,8 +30,8 @@ void OutputEnd(void);
 void OutputWrite(const char *msg);
 void OutputWriteI(const char *left, NameRef name, const char *right);
 void OutputWriteS(const char *left, const char *string, const char *right);
-void OutputWriteD(const char *left, double number, const char *right);
-void OutputWriteN(const char *left, int number, const char *right);
+void OutputWriteD(const char *left, double *number, const char *right);
+void OutputWriteN(const char *left, intptr_t number, const char *right);
 void OutputWriteXmlS(const char *p_left, const char *p_string, const char *p_right);
 
 bool OutputIsValid(void);
