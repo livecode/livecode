@@ -746,7 +746,7 @@ end revSaveAsMobileDeployer
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
    revStandaloneProgress "Copying icons..."    
    repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & \
-         "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152" & return & "iPad Pro 12.9,-167")
+         "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152" & return & "iPad Pro 12.9 icon,-167")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
