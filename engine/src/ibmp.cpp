@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 #include "util.h"
+#include "globals.h"
 
 #include "image.h"
 
@@ -1101,7 +1102,7 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	MCBitmapStructImageLoader *t_loader;
     t_loader = NULL;
 	if (t_success)
-		t_success = nil != (t_loader = new MCBitmapStructImageLoader(p_stream));
+		t_success = nil != (t_loader = new (nothrow) MCBitmapStructImageLoader(p_stream));
 
 	MCBitmapFrame *t_frames;
 	t_frames = nil;
@@ -1168,7 +1169,7 @@ bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 bool MCImageLoaderCreateForBMPStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCBitmapImageLoader *t_loader;
-	t_loader = new MCBitmapImageLoader(p_stream);
+	t_loader = new (nothrow) MCBitmapImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -1496,7 +1497,7 @@ bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 	uindex_t t_token_size;
 
 	if (t_success)
-		t_success = nil != (m_reader = new MCNetPBMTokenReader(GetStream()));
+		t_success = nil != (m_reader = new (nothrow) MCNetPBMTokenReader(GetStream()));
 
 	if (t_success)
 		t_success = m_reader->GetToken(t_token, t_token_size);
@@ -1671,7 +1672,7 @@ bool MCNetPBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count
 bool MCImageLoaderCreateForNetPBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCNetPBMImageLoader *t_loader;
-	t_loader = new MCNetPBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCNetPBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -1902,6 +1903,8 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 						case kMCDefineYHot:
 							t_yhot = t_value;
 							break;
+						default:
+							MCUnreachable();
 						}
 					}
 				}
@@ -2039,7 +2042,7 @@ bool MCXBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXBMImageLoader *t_loader;
-	t_loader = new MCXBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2369,13 +2372,13 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 						//t_hotspot.y = t_height / 2;
 						break;
 
-					//case kMCDefineXHot:
+					case kMCDefineXHot:
 					//	t_hotspot.x = t_value;
-					//	break;
+						break;
 
-					//case kMCDefineYHot:
+					case kMCDefineYHot:
 					//	t_hotspot.y = t_value;
-					//	break;
+						break;
 
 					case kMCDefineFormat:
 						t_format = t_value;
@@ -2387,6 +2390,10 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 
 					case kMCDefineCharsPerPixel:
 						t_chars_per_pixel = t_value;
+						break;
+							
+					case kMCDefineUnknown:
+						MCUnreachable();
 						break;
 					}
 				}
@@ -2613,7 +2620,7 @@ bool MCXPMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXPMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXPMImageLoader *t_loader;
-	t_loader = new MCXPMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXPMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2734,7 +2741,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	stream = GetStream();
 	
 	MCColor *colors = nil;
-	colors = new MCColor[m_fh.ncolors];
+	colors = new (nothrow) MCColor[m_fh.ncolors];
 	t_success = colors != nil;
 
 	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
@@ -2760,7 +2767,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 		uint4 bytes = m_fh.bytes_per_line * m_fh.pixmap_height;
 		if (m_fh.bits_per_pixel == 1)
 			bytes *= m_fh.pixmap_depth;
-		t_newimage_data = new char[bytes];
+		t_newimage_data = new (nothrow) char[bytes];
 		t_success = t_newimage_data != nil &&
 			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
 	}
@@ -2862,7 +2869,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXWDStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXWDImageLoader *t_loader;
-	t_loader = new MCXWDImageLoader(p_stream);
+	t_loader = new (nothrow) MCXWDImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2902,6 +2909,8 @@ bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Expo
 		case EX_RAW_ABGR:
 			MCBitmapConvertRow<EX_RAW_ABGR>(t_row_buffer, (uint32_t*)t_src_ptr, p_bitmap->width);
 			break;
+		default:
+			MCUnreachable();
 		}
 		t_success = IO_NORMAL == IO_write(t_row_buffer, sizeof(uint8_t), t_stride, p_stream);
 		t_byte_count += t_stride;

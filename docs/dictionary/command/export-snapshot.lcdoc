@@ -2,9 +2,9 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot [from rect[angle] <rectangle>] [of <object(glossary)>] [(with | without) effects] ... | [from <object>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot [from rect[angle] <rectangle>] [of <object(glossary)>] [(with | without) effects] <suffix> | [from <object>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
-Syntax: export snapshot [from rect[angle] <rectangle>] of <object(glossary)> [(with | without) effects] ... | [from <object>] [at size width, height] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot [from rect[angle] <rectangle>] of <object(glossary)> [(with | without) effects] <suffix> | [from <object>] [at size width, height] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
@@ -66,10 +66,8 @@ maskFile:
 Specifies the name and location of a file to export as an image mask.
 You can use a maskFile only when exporting in PBM format (paint).
 
-effect:
-Specifies whether graphic effects and a blendLevel should be applied to
-the object before rendering export. ...: Denotes the usual possible
-suffixes for the export snapshot command.
+suffix:
+The usual possible suffixes for the export snapshot command.
 
 Description:
 Use the <export snapshot> <command> to export a screenshot to a <file>
@@ -82,6 +80,9 @@ can specify a location for the mask file.) The <export snapshot> ... as
 JPEG form exports as a JPEG file, and the <export snapshot> ... as PNG
 form exports as a PNG file. If you do not specify a <format>, the file
 is exported as <PBM>, PGM, or <PPM>.
+
+Using 'with' or 'without effects' specifies whether graphic effects and a 
+blendLevel should be applied to the object before rendering export.
 
 iOS supports both the object and screen snapshot variants of the export
 snapshot command. In the screen snapshot case, coordinates are given
@@ -121,10 +122,12 @@ Where 'chunk' is any chunk expression resolving to a control, or any
 expression evaluating to a control reference.
 
 To export a snapshot of an object in iOS use the form:
-<export snapshot> from [rectangle rect of] <object(glossary)> 
+
+    <export snapshot> from [rectangle rect of] <object(glossary)> 
 
 To export a snapshot of the screen in iOS use the form:
-<export snapshot> from rectangle rect
+
+    <export snapshot> from rectangle rect
 
 >*Note:*  There is no way to render the status bar without using private
 > features of the iOS API. Therefore, if your snapshot rectangle

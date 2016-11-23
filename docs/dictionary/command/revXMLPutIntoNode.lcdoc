@@ -2,7 +2,7 @@ Name: revXMLPutIntoNode
 
 Type: command
 
-Syntax: revXMLPutIntoNode <treeID>, <node>, <newContents> [, <replaceTextOnly>]
+Syntax: revXMLPutIntoNode <treeID>, <nodePath>, <newContents> [, <replaceTextOnly>]
 
 Summary:
 Sets the contents of a <node> in an <XML tree>.
@@ -28,8 +28,8 @@ treeID:
 The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
 function when you created the XML tree.
 
-node:
-
+nodePath:
+The path to the node whose contents you want to set.
 
 newContents:
 The text that the node will contain.
@@ -41,8 +41,6 @@ with newContents, but all child nodes are preserved. Otherwise all child
 nodes are removed. The replaceTextOnly parameter is optional, and if not
 given, defaults to false.
 
-nodePath:
-The path to the node whose contents you want to set.
 
 The result:
 If the <revXMLPutIntoNode> <command> encounters an error, the <result>

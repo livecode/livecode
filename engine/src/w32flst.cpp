@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -196,7 +196,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	reqsize = size;
 	reqstyle = style;
 	reqprinter = printer;
-	font = new MCFontStruct;
+	font = new (nothrow) MCFontStruct;
 	if (MCnoui)
 	{
 		memset(font, 0, sizeof(MCFontStruct));
@@ -348,7 +348,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 			tmp = tmp->next();
 		}
 		while (tmp != fonts);
-	tmp = new MCFontnode(fname, size, style, printer);
+	tmp = new (nothrow) MCFontnode(fname, size, style, printer);
 	tmp->appendto(fonts);
 	return tmp->getfont(fname, size, style, printer);
 }

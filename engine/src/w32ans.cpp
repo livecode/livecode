@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "parsedef.h"
@@ -284,7 +284,7 @@ static void measure_filter(MCStringRef p_filter, uint4& r_length, uint4& r_count
 
 static void filter_to_spec(const wchar_t *p_filter, uint4 p_filter_count, COMDLG_FILTERSPEC*& r_types)
 {
-	r_types = new COMDLG_FILTERSPEC[p_filter_count];
+	r_types = new (nothrow) COMDLG_FILTERSPEC[p_filter_count];
 	memset(r_types, 0, sizeof(COMDLG_FILTERSPEC) * p_filter_count);
 
 	uint4 t_count;

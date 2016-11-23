@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include <objbase.h>
 #include <oaidl.h>
@@ -58,7 +58,7 @@ LPOLESTR ConvertUTF8ToOLESTR(const char *p_string)
 	t_length = UTF8ToUnicode(p_string, strlen(p_string), NULL, 0);
 
 	LPOLESTR t_result;
-	t_result = new OLECHAR[t_length / 2 + 1];
+	t_result = new (nothrow) OLECHAR[t_length / 2 + 1];
 	if (t_result != NULL)
 		UTF8ToUnicode(p_string, strlen(p_string) + 1, (unsigned short *)t_result, t_length + 2);
 
@@ -71,7 +71,7 @@ char *ConvertBSTRToUTF8(BSTR p_string)
 	t_length = UnicodeToUTF8((unsigned short*)p_string, SysStringLen(p_string) * 2, NULL, 0);
 
 	char *t_result;
-	t_result = new char[t_length + 1];
+	t_result = new (nothrow) char[t_length + 1];
 	if (t_result != NULL)
 	{
 		UnicodeToUTF8((unsigned short*)p_string, SysStringLen(p_string) * 2, t_result, t_length);
@@ -233,7 +233,7 @@ HRESULT ActiveScriptDispatch::Invoke(DISPID p_member, REFIID p_interface, LCID p
 	t_result = S_OK;
 
 	char **t_str_parameters;
-	t_str_parameters = new char *[p_parameters -> cArgs];
+	t_str_parameters = new (nothrow) char *[p_parameters -> cArgs];
 	memset(t_str_parameters, 0, sizeof(char *) * p_parameters -> cArgs);
 	for(unsigned int i = 0; i < p_parameters -> cArgs; ++i)
 	{
@@ -512,7 +512,7 @@ bool MCWindowsActiveScriptEnvironment::Initialize(OLECHAR *p_language)
 	t_dispatch = NULL;
 	if (t_result == S_OK)
 	{
-		t_dispatch = new ActiveScriptDispatch;
+		t_dispatch = new (nothrow) ActiveScriptDispatch;
 		if (t_dispatch != NULL)
 			t_dispatch -> AddRef();
 		else
@@ -523,7 +523,7 @@ bool MCWindowsActiveScriptEnvironment::Initialize(OLECHAR *p_language)
 	t_site = NULL;
 	if (t_result == S_OK)
 	{
-		t_site = new ActiveScriptSite(t_dispatch);
+		t_site = new (nothrow) ActiveScriptSite(t_dispatch);
 		if (t_site != NULL)
 			t_site -> AddRef();
 		else
@@ -708,7 +708,7 @@ char *MCWindowsActiveScriptEnvironment::Call(const char *p_method, const char **
 	t_ole_arguments = NULL;
 	if (t_result == S_OK)
 	{
-		t_ole_arguments = new VARIANTARG[p_argument_count];
+		t_ole_arguments = new (nothrow) VARIANTARG[p_argument_count];
 		if (t_ole_arguments != NULL)
 			memset(t_ole_arguments, 0, sizeof(VARIANTARG) * p_argument_count);
 		else
@@ -779,7 +779,7 @@ MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 	t_ole_language = ConvertUTF8ToOLESTR(*t_language);
 
 	MCWindowsActiveScriptEnvironment *t_environment;
-	t_environment = new MCWindowsActiveScriptEnvironment;
+	t_environment = new (nothrow) MCWindowsActiveScriptEnvironment;
 
 	if (t_environment -> Initialize(t_ole_language))
 		t_environment -> Retain();

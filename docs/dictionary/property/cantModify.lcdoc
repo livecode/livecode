@@ -42,7 +42,7 @@ actions performed by a <handler>. To prevent either user action or a
 
 >*Important:*  If a modifiable <stack> is open in an <editable window>,
 > the modifiable <stack> takes precedence over any non-modifiable
-> stacks, because its <modeproperty> is lower. This means that menu
+> stacks, because its <mode> <property> is lower. This means that menu
 > items (such as Object → Stack Properties) that act on the current
 > stack may not be able to operate correctly with a stack whose
 > cantModify is set to true as long as another, modifiable stack is
@@ -52,7 +52,7 @@ References: topLevel (command), group (command), tool (function),
 stacks (function), object (glossary), property (glossary),
 Browse tool (glossary), title bar (glossary), handler (glossary),
 editable window (glossary), card (keyword), stack (object),
-modeproperty (property), cantDelete (property), userLevel (property),
+cantDelete (property), userLevel (property),
 lockText (property), label (property), userModify (property),
 mode (property)
 

@@ -576,7 +576,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_r
 	if (MCPlatformSurfaceLockGraphics(p_surface, t_bounds, t_context, t_raster))
 	{
 		MCGraphicsContext *t_gfxcontext;
-		/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+		/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 		t_gfxcontext -> setforeground(backdrop_colour);
 		if (backdrop_pattern != NULL)
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
@@ -917,7 +917,7 @@ void MCScreenDC::flushevents(uint2 e)
 
 void MCScreenDC::clearIME(Window w)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	MCPlatformResetTextInputInWindow(MCactivefield -> getstack() -> getwindow());
@@ -929,7 +929,7 @@ void MCScreenDC::openIME()
 
 void MCScreenDC::activateIME(Boolean activate)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	MCPlatformConfigureTextInputInWindow(MCactivefield -> getstack() -> getwindow(), activate);

@@ -428,7 +428,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
         MCLog("Type not found");
 		uint4 parid;
 		MCObject *objptr;
-		MCChunk *tchunk = new MCChunk(False);
+		MCChunk *tchunk = new (nothrow) MCChunk(False);
         MCerrorlock++;
 		MCScriptPoint sp(p_data_or_id);
 		Parse_stat stat = tchunk->parse(sp, False);

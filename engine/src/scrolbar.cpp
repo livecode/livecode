@@ -363,6 +363,8 @@ Boolean MCScrollbar::mdown(uint2 which)
 				case WTHEME_PART_TRACK_INC:
 					mode = SM_PAGEINC;
 					break;
+				default:
+					break;
 				}
 			}
 			else
@@ -673,7 +675,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 			}
 			if (parent->gettype() != CT_CARD)
 			{
-				MCControl *cptr = (MCControl *)parent;
+				MCControl *cptr = parent.GetAs<MCControl>();
 				cptr->readscrollbars();
 			}
 		}
@@ -697,7 +699,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCScrollbar *newscrollbar = new MCScrollbar(*this);
+	MCScrollbar *newscrollbar = new (nothrow) MCScrollbar(*this);
 	if (attach)
 		newscrollbar->attach(p, invisible);
 	return newscrollbar;
@@ -1056,7 +1058,7 @@ void MCScrollbar::redrawall(void)
 		return;
 	}
 	
-	((MCControl *)parent) -> layer_redrawrect(getrect());
+	parent.GetAs<MCControl>()->layer_redrawrect(getrect());
 }
 
 // MW-2012-09-20: [[ Bug 10395 ]] This method marks the control as embedded

@@ -478,7 +478,7 @@ MCProperty::~MCProperty()
 MCObject *MCProperty::getobj(MCExecContext &ctxt)
 {
 	MCObject *objptr = NULL;
-	MCChunk *tchunk = new MCChunk(False);
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
 	MCerrorlock++;
 	MCScriptPoint sp(ctxt);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
@@ -1110,7 +1110,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 				{
 					if (tocount < CT_LINE)
 					{
-						target = new MCChunk(False);
+						target = new (nothrow) MCChunk(False);
 						break;
 					}
 					else
@@ -1126,7 +1126,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 					if (tocount < CT_LINE)
 					{
 						sp.backup();
-						target = new MCChunk(False);
+						target = new (nothrow) MCChunk(False);
 						break;
 					}
 					else
@@ -1142,7 +1142,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 		else
 			sp.backup();
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, doingthe) != PS_NORMAL)
 		{
 			MCperror->add

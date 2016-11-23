@@ -240,7 +240,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyCaseFolding:
         {
             // Case-fold the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.foldCase();
@@ -256,7 +256,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyLowercaseMapping:
         {
             // Lowercase the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.toLower();
@@ -267,8 +267,8 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyName:
         {
             // We assume that this is sufficient for a character name
-            s_pointer = new unichar_t[256];
-            char *t_temp = new char[256];
+            s_pointer = new (nothrow) unichar_t[256];
+            char *t_temp = new (nothrow) char[256];
             uindex_t t_length;
             
             t_length = u_charName(p_codepoint, U_UNICODE_CHAR_NAME, t_temp, 255, &t_error);
@@ -295,8 +295,8 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyUnicode1Name:
         {
             // We assume that this is sufficient for a character name
-            s_pointer = new unichar_t[256];
-            char *t_temp = new char[256];
+            s_pointer = new (nothrow) unichar_t[256];
+            char *t_temp = new (nothrow) char[256];
             uindex_t t_length;
             
             t_length = u_charName(p_codepoint, U_UNICODE_10_CHAR_NAME, t_temp, 255, &t_error);
@@ -315,7 +315,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyUppercaseMapping:
         {
             // Uppercase the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.toUpper();
@@ -2234,7 +2234,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
     
     codepoint_t t_source_cp, t_pattern_cp;
     
-    while (t_source_filter -> HasData())
+    while (t_source_filter -> HasData() && t_pattern_filter -> HasData())
     {
         t_source_cp = t_source_filter -> GetNextCodepoint();
         t_pattern_cp = t_pattern_filter -> GetNextCodepoint();

@@ -22,15 +22,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
-class MCTooltip : public MCStack
+typedef MCObjectProxy<MCTooltip>::Handle MCTooltipHandle;
+
+class MCTooltip : public MCStack, public MCMixinObjectHandle<MCTooltip>
 {
+public:
+    
+    enum { kMCObjectType = CT_TOOLTIP };
+    using MCMixinObjectHandle<MCTooltip>::GetHandle;
+    
+private:
+    
 	MCStringRef tip;
 	int2 mx;
 	int2 my;
 	MCCard *card;
 
 	MCFontRef m_font;
+    
 public:
+    
 	MCTooltip();
 	virtual ~MCTooltip();
 	virtual void close(void);

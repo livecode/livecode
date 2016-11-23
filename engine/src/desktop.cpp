@@ -89,7 +89,7 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 			MCdefaultstackptr->getcard()->message(MCM_shut_down);
 			MCquit = True;
 			MCexitall = True;
-			MCtracestackptr = NULL;
+			MCtracestackptr = nil;
 			MCtraceabort = True;
 			MCtracereturn = True;
 			r_terminate = true;
@@ -407,7 +407,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCeventtime = MCPlatformGetEventTime();
     
         // PM-2015-03-30: [[ Bug 15091 ]] When we "go to card X" on mouseDown, MCclickstackptr becomes nil because of MCStack::close().  
-        if (MCclickstackptr == nil)
+        if (!MCclickstackptr)
             MCclickstackptr = MCmousestackptr;
         
 		MCObject *t_target;
@@ -619,7 +619,7 @@ void MCKeyMessageClear(MCKeyMessage *&p_message_queue)
 void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, bool p_needs_mapping = true)
 {
     MCKeyMessage *t_new;
-    t_new = new MCKeyMessage;
+    t_new = new (nothrow) MCKeyMessage;
     
     t_new -> key_code = p_key_code;
     t_new -> mapped_codepoint = p_mapped_codepoint;
@@ -722,7 +722,7 @@ void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode 
     
     // SN-2014-09-15: [[ Bug 13423 ]] Clear the key sequence if needed, then append
     // the new key typed.
-    if (!MCactivefield -> getcompositionrange(si, ei))
+    if (MCactivefield && !MCactivefield -> getcompositionrange(si, ei))
         MCKeyMessageClear(s_pending_key_down);
     
     MCKeyMessageAppend(s_pending_key_down, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
@@ -767,7 +767,7 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 
 void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
 		r_selected_range = MCRangeMake(UINDEX_MAX, 0);
@@ -789,7 +789,7 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 
 void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_index = 0;
 		return;
@@ -809,7 +809,7 @@ void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoi
 
 void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_first_line_rect = MCRectangleMake(0, 0, 0, 0);
 		r_actual_range = MCRangeMake(UINDEX_MAX, 0);
@@ -836,7 +836,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
 {
-    if (MCactivefield == nil)
+    if (!MCactivefield)
     {
         r_chars = nil;
         r_char_count = 0;
@@ -860,7 +860,7 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
     // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
@@ -1077,7 +1077,7 @@ static void synthesize_move_with_shift(MCField *p_field, Field_translations p_ac
 // and dispatch them rather than go through actions.
 void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	switch(p_action)
@@ -1408,13 +1408,13 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
-    if (MCacptr != nil)
+    if (MCacptr)
     {
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
         // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
         MCacptr->stop(True);
         // PM-2014-12-22: [[ Bug 14269 ]] Nullify MCacptr to prevent looping when play audioclip is followed by wait until the sound is done
-        MCacptr = NULL;
+        MCacptr = nil;
     }
 }
 

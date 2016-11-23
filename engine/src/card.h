@@ -19,12 +19,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
-class MCCard : public MCObject
+typedef MCObjectProxy<MCCard>::Handle MCCardHandle;
+
+class MCCard : public MCObject, public MCMixinObjectHandle<MCCard>
 {
-	friend class MCHccard;
 public:
     
     enum { kObjectType = CT_CARD };
+    using MCMixinObjectHandle<MCCard>::GetHandle;
 	
 protected:
     
@@ -288,7 +290,6 @@ public:
 	{
 		return (MCCard *)MCDLlist::remove((MCDLlist *&)list);
 	}
-
 
 	////////// PROPERTY SUPPORT METHODS
 

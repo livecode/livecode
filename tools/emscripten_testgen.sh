@@ -32,7 +32,8 @@ mkdir -p ${em_test_build_dir}
 # ------
 
 # Copy the engine into place
-cp -a ${em_bin_dir}/standalone-community-${short_ver}.{js,html.mem} ${em_test_build_dir}
+cp -a ${em_bin_dir}/standalone-community-${short_ver}.js ${em_test_build_dir}
+cp -a ${em_bin_dir}/standalone-community-${short_ver}.html.mem ${em_test_build_dir}
 cp -a ${em_bin_dir}/standalone-community-${short_ver}.html ${em_test_build_dir}/tests.html
 
 # Standalone

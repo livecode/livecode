@@ -76,13 +76,13 @@ static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillP
 
 void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 {
-	r_gradient = new MCGradientFill;
+	r_gradient = new (nothrow) MCGradientFill;
 	r_gradient->kind = kMCGradientKindLinear;
 	r_gradient->quality = kMCGradientQualityNormal;
 	r_gradient->mirror = false;
 	r_gradient->wrap = false;
 	r_gradient->repeat = 1;
-	r_gradient->ramp = new MCGradientFillStop[2];
+	r_gradient->ramp = new (nothrow) MCGradientFillStop[2];
 	r_gradient->ramp[0].offset = 0;
 	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 0, 0, 0, 255); // black
 	r_gradient->ramp[0].hw_color = MCGPixelPackNative(0, 0, 0, 255);
@@ -112,11 +112,11 @@ MCGradientFill *MCGradientFillCopy(const MCGradientFill *p_gradient)
 	if (p_gradient == NULL)
 		return NULL;
 
-	MCGradientFill *t_gradient = new MCGradientFill;
+	MCGradientFill *t_gradient = new (nothrow) MCGradientFill;
 	t_gradient->kind = p_gradient->kind;
 	
 	t_gradient->ramp_length = p_gradient->ramp_length;
-	t_gradient->ramp = new MCGradientFillStop[t_gradient->ramp_length];
+	t_gradient->ramp = new (nothrow) MCGradientFillStop[t_gradient->ramp_length];
 
 	memcpy(t_gradient->ramp, p_gradient->ramp, sizeof(MCGradientFillStop)*t_gradient->ramp_length);
 
@@ -709,7 +709,7 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 	{
 		if (p_gradient != NULL)
 			delete[] p_gradient -> ramp; /* Allocated with new[] */
-		p_gradient -> ramp = new MCGradientFillStop[p_gradient -> ramp_length];
+		p_gradient -> ramp = new (nothrow) MCGradientFillStop[p_gradient -> ramp_length];
 		for(int i = 0; i < p_gradient -> ramp_length && t_stat == IO_NORMAL; ++i)
 		{
 			uint16_t t_offset;
@@ -805,7 +805,7 @@ void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 
 
 	if (p_gradient->ramp != NULL)
 		delete p_gradient->ramp;
-	p_gradient->ramp = new MCGradientFillStop[p_gradient->ramp_length];
+	p_gradient->ramp = new (nothrow) MCGradientFillStop[p_gradient->ramp_length];
 
 	for (uint4 i = 0; i < p_gradient->ramp_length; i++)
 	{

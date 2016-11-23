@@ -62,10 +62,10 @@ public foreign handler type MCBrowserBreakWaitFunction() returns nothing
 
 public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibrarySetBreakWaitFunction(in pBreakWait as MCBrowserBreakWaitFunction) returns nothing binds to "<builtin>"
-public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as optional Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as optional Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) returns MCBrowserRef binds to "<builtin>"
 public foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
@@ -453,7 +453,7 @@ public handler libbrowserInit() returns nothing
 		MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
 
 		variable tCallback as MCRunloopActionCallback
-		variable tContext as Pointer
+		variable tContext as optional Pointer
 		if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
 			MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
 		end if

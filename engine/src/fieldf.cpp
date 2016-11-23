@@ -379,7 +379,7 @@ MCCdata *MCField::getcarddata(MCCdata *&list, uint4 parid, Boolean create)
 	}
 	if (foundptr == NULL && create)
 	{
-		foundptr = new MCCdata(parid);
+		foundptr = new (nothrow) MCCdata(parid);
 		foundptr->appendto(list);
 	}
 	return foundptr;
@@ -884,6 +884,11 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
+	
+	// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+	uint32_t t_width, t_height;
+	if (!MCPatternGetGeometry(t_current_pixmap, t_width, t_height))
+		return;
 
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
@@ -892,9 +897,6 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
     // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
     // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
 
-    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-    uint32_t t_width, t_height;
-    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 	
 	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
 	//   pixmap tile in this case to ensure the offset falls within 32767.
@@ -1397,7 +1399,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	removecursor();
 	extendwords = words;
 	extendlines = MCscreen->istripleclick();
-	if (MCactivefield != NULL && MCactivefield != this)
+	if (MCactivefield && MCactivefield != this)
 		MCactivefield->unselect(True, True);
 	if (MCmodifierstate & MS_SHIFT
 	        && (!(flags & F_LIST_BEHAVIOR) || flags & F_MULTIPLE_HILITES))
@@ -1584,7 +1586,7 @@ void MCField::unselect(Boolean clear, Boolean internal)
             MCselection->Clear();
     }
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
-		MCactivefield = NULL;
+		MCactivefield = nil;
 	if (!opened || focusedparagraph == NULL)
 		return;
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
@@ -1652,7 +1654,7 @@ Boolean MCField::deleteselection(Boolean force)
 
 		findex_t si, ei;
 		selectedmark(False, si, ei, False);
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_DELETE_TEXT;
 		us->ud.text.index = si;
 		us->ud.text.data = cloneselection();
@@ -1732,7 +1734,7 @@ void MCField::clearfound()
 	{
 		foundoffset = 0;
 		foundlength = 0;
-		MCfoundfield = NULL;
+		MCfoundfield = nil;
 		if (opened)
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -1877,7 +1879,7 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		else
 		{
 			MCundos->freestate();
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->type = UT_TYPE_TEXT;
 			
 			// MW-UNDO-FIX: Store the index this record starts at
@@ -1930,7 +1932,7 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				focusedy -= focusedparagraph->getheight(fixedheight);
 				joinparagraphs();
 				firstparagraph = lastparagraph = NULL;
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.newline = True;
 				us->ud.text.data = NULL;
 			}
@@ -1949,14 +1951,14 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				{
 					joinparagraphs();
 					firstparagraph = lastparagraph = NULL;
-					us = new Ustruct;
+					us = new (nothrow) Ustruct;
 					us->ud.text.newline = True;
 					us->ud.text.data = NULL;
 				}
 			}
 			else
 			{
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.data = undopgptr;
 				us->ud.text.newline = False;
 				updateparagraph(True, False);
@@ -2017,7 +2019,7 @@ void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym
 		joinparagraphs();
 		if (focusedparagraph->gettextsize())
 			state &= ~CS_PARTIAL;
-		cutptr = new MCParagraph;
+		cutptr = new (nothrow) MCParagraph;
 		cutptr->setparent(this);
 	}
 	else

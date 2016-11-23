@@ -119,6 +119,10 @@
 						[ 
 							'-Wall', 
 							'-Wextra', 
+
+							'-Wno-conversion',
+							'-Wno-shorten-64-to-32',
+
 							'-Werror=declaration-after-statement',
 							'-Werror=delete-non-virtual-dtor',
 							'-Werror=overloaded-virtual',
@@ -138,6 +142,8 @@
 							'-Werror=objc-literal-compare',
 							'-Werror=shadow',
 							'-Werror=unreachable-code',
+							'-Werror=enum-compare',
+							'-Werror=switch',
 						],
 					},
 				},

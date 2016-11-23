@@ -77,7 +77,6 @@
 			'src/scriptpt.h',
 			'src/statemnt.h',
 			'src/variable.h',
-			'src/variable_impl.h',
 			'src/visual.h',
 			'src/answer.cpp',
 			'src/ask.cpp',
@@ -773,6 +772,7 @@
 			'src/em-surface.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
+			'src/em-system.js',
 			'src/em-theme.cpp',
 			'src/em-url.cpp',
 			'src/em-url.js',
@@ -987,6 +987,7 @@
 		[
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
+			'test/test_rgb.cpp',
 		],
 	},
 	

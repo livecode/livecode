@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -413,7 +413,7 @@ void MCStack::realize()
 		LONG height = wrect.bottom - wrect.top;
 		if (flags & F_WM_PLACE && !(state & CS_BEEN_MOVED))
 			x = CW_USEDEFAULT;
-		window = new _Drawable;
+		window = new (nothrow) _Drawable;
 		window->type = DC_WINDOW;
 		window->handle.window = 0; // protect against creation callbacks
 
@@ -629,7 +629,7 @@ void MCStack::start_externals()
 
 	if (!MCnoui && window != DNULL)
 	{
-		droptarget = new CDropTarget;
+		droptarget = new (nothrow) CDropTarget;
 		droptarget->setstack(this);
 		CoLockObjectExternal(droptarget, TRUE, TRUE);
 		RegisterDragDrop((HWND)window->handle.window, droptarget);

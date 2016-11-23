@@ -53,7 +53,7 @@ bool MCGPathCreateMutable(MCGPathRef& r_path)
 	
 	if (t_success)
 	{
-		t_path -> path = new SkPath();
+		t_path -> path = new (nothrow) SkPath();
 		t_success = t_path -> path != NULL;
 	}
 	

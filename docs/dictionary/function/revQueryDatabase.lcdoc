@@ -99,7 +99,7 @@ value.
 
 >*Tip:*  To execute a <SQL query> that does not return a <record set
 > (database cursor)(glossary)> (such as INSERT or DELETE), use the
-> <revExecuteSQLcommand> instead. Since <revExecuteSQL> does not
+> <revExecuteSQL> <command> instead. Since <revExecuteSQL> does not
 > allocate storage for returned data, it is more efficient than
 > <revQueryDatabase> for <SQL query|SQL queries> where no data is
 > returned. 
@@ -121,7 +121,7 @@ you can check whether the query was successful by checking whether the
 Changes:
 The revQueryDatabase synonym was added in version 2.0.
 
-References: revExecuteSQLcommand (command), revCloseCursor (command),
+References: command (glossary), revCloseCursor (command),
 revExecuteSQL (command), function (control structure),
 revQueryIsAtStart (function), LiveCode custom library (glossary),
 variable (glossary), element (glossary),

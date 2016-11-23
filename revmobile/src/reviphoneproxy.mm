@@ -113,17 +113,31 @@ static id s_SimRuntime_class = nil;
     // As of Xcode 8, the default device set is not necessarily the device set used by the current simulator.
     // This can happen if multiple versions of Xcode is installed.
     // So for Xcode 8 and later, make sure we fetch the device set used by the current service context.
-    id t_default_set;
-    t_default_set = [s_SimDeviceSet_class defaultSet];
-    id t_current_dev_set;
-    t_current_dev_set = nil;
-    if (t_default_set != nil && [s_SimDeviceSet_class respondsToSelector: @selector(setForSetPath: serviceContext:)])
-        t_current_dev_set = [s_SimDeviceSet_class setForSetPath: [t_default_set setPath] serviceContext: s_SimRuntime_class];
+    // As of Xcode 8.1, the defaultSet property of the DeviceSet class has been removed,
+    // so use the new defaultDeviceSetWithError method of the SimRuntime class instead.
+    if ([s_SimRuntime_class respondsToSelector: @selector(defaultDeviceSetWithError:)])
+    {
+        NSError* t_error;
+        t_error = nil;
+        id t_dev_set;
+        t_dev_set = [s_SimRuntime_class defaultDeviceSetWithError: &t_error];
+        if (t_error == nil && t_dev_set != nil)
+            return [t_dev_set availableDevices];
+    }
+    else
+    {
+        id t_default_set;
+        t_default_set = [s_SimDeviceSet_class defaultSet];
+        id t_current_dev_set;
+        t_current_dev_set = nil;
+        if (t_default_set != nil && [s_SimDeviceSet_class respondsToSelector: @selector(setForSetPath: serviceContext:)])
+            t_current_dev_set = [s_SimDeviceSet_class setForSetPath: [t_default_set setPath] serviceContext: s_SimRuntime_class];
 
-    if (t_current_dev_set == nil)
-        t_current_dev_set = t_default_set;
-    if (t_current_dev_set != nil)
-        return [t_current_dev_set availableDevices];
+        if (t_current_dev_set == nil)
+            t_current_dev_set = t_default_set;
+        if (t_current_dev_set != nil)
+            return [t_current_dev_set availableDevices];
+    }
     
     return nil;
 }

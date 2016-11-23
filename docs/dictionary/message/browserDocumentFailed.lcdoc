@@ -43,13 +43,13 @@ resources.
 
 If the target is the main frame of the browser (e.g. the html page with
 the "FRAMESET" declaration), then the <browserDocumentFailed> message is
-sent. Otherwise the <browserDocumentFailedFrame message> is sent
+sent. Otherwise the <browserDocumentFailedFrame> <message> is sent
 instead. 
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserOpenCef (function),
-revBrowserOpen function (function), browserDownloadRequest (message),
-browserDocumentFailedFrame message (message)
+revBrowserOpen (function), function (glossary), browserDownloadRequest (message),
+browserDocumentFailedFrame (message), message (glossary)
 

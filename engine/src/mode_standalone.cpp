@@ -57,7 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 
 #if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32compat.h"
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -225,7 +225,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeRedirect:
 	{
 		char *t_redirect;
-		t_redirect = new char[p_length];
+		t_redirect = new (nothrow) char[p_length];
 		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
@@ -243,7 +243,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeFontmap:
     {
         char *t_fontmap;
-        t_fontmap = new char[p_length];
+        t_fontmap = new (nothrow) char[p_length];
         if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read fontmap");
@@ -885,7 +885,7 @@ IO_stat MCDispatch::startup(void)
 			MCscreen -> wait(t_end_time - MCS_time(), True, False);
 		
 		destroystack(t_banner_stack, True);
-		MCtopstackptr = NULL;
+		MCtopstackptr = nil;
 		
 		MCMemoryDeallocate((void *)t_info . banner_stackfile . getstring());
 	}
@@ -1141,7 +1141,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

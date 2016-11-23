@@ -303,12 +303,13 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         
         if (!p_parameters->eval_argument(ctxt, &t_value))
             return ES_ERROR;
-        MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		if (!ctxt . ConvertToString(*t_value, &t_string))
+			return ES_ERROR;
         
-        if (!ctxt . ConvertToString(*t_value, &t_string))
-            return ES_ERROR;
-        
-        // If we want UTF8 use a different conversion method.
+		MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		// If we want UTF8 use a different conversion method.
         if (t_wants_utf8)
             MCStringConvertToUTF8String(*t_string, args[nargs++]);
         else
@@ -320,7 +321,7 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     
     // Handling of memory allocation for C-strings
     MCExternalAllocPool *t_old_pool = MCexternalallocpool;
-    MCexternalallocpool = new MCExternalAllocPool;
+    MCexternalallocpool = new (nothrow) MCExternalAllocPool;
     
     (t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
     
@@ -716,7 +717,7 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithCString(arg1, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;
@@ -932,42 +933,6 @@ static char *get_array(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element, &t_ctxt);
 
 	return NULL;
-
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-
-		MCVariableValue& t_var_value = var -> getvalue();
-
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *set_array(const char *arg1, const char *arg2,
@@ -1255,7 +1220,7 @@ static char *show_image_by_id_utf8(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg1, strlen(arg1), kMCStringEncodingUTF8, false, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;
@@ -1511,42 +1476,6 @@ static char *get_array_utf8(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element_utf8, &t_ctxt);
     
 	return NULL;
-    
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-        
-		MCVariableValue& t_var_value = var -> getvalue();
-        
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-            
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *get_array_utf8_text(const char *arg1, const char *arg2,

@@ -39,14 +39,52 @@ on TestDocsValidateDictionary
    put TestGetEngineRepositoryPath() & "/docs" into tDocsPath
    put revDocsParseDictionaryToLibraryArray(tDocsPath) into tDocsArray
    
+   __TestDocsLibraryArray tDocsArray
+end TestDocsValidateDictionary
+
+on TestDocsValidateExtractedLibraries
+   local tExtractedDocsFolder
+   put TestGetExtractedDocsFolder() into tExtractedDocsFolder
+   
+   TestAssert "extracted docs folder exists", there is a folder tExtractedDocsFolder
+   
+   local tFiles
+   put files(tExtractedDocsFolder) into tFiles
+   
+   TestAssert "some files are in the extracted docs folder", tFiles is not empty
+   
+   filter tFiles with "*.lcdoc"
+   
+   TestAssert "some lcdoc files are in the extracted docs folder", tFiles is not empty
+   
+   set the itemDelimiter to "."
+   
+   local tFile
+   repeat for each line tFile in tFiles
+      local tDocsPath, tDocsArray
+      put tExtractedDocsFolder & slash & tFile into tDocsPath
+      
+      put revDocsParseDocFileToLibraryArray(tDocsPath, item -2 of tFile, "LiveCode") into tDocsArray
+      
+      TestAssert "type of" && tFile && "is library", tDocsArray["type"] is "library"
+      TestAssert "name of" && tFile && "is not empty", tDocsArray["name"] is not empty
+      TestAssert "display name of" && tFile && "is not empty", tDocsArray["display name"] is not empty
+      TestAssert "author name of" && tFile && "is not empty", tDocsArray["author"] is not empty
+      TestAssert "description of" && tFile && "is not empty", tDocsArray["description"] is not empty
+      
+      __TestDocsLibraryArray tDocsArray["doc"]
+   end repeat
+end TestDocsValidateExtractedLibraries
+
+command __TestDocsLibraryArray pLibrary
    local tElement
    
    local tReferences
-   repeat for each element tElement in tDocsArray
+   repeat for each element tElement in pLibrary
       put true into tReferences[tElement["type"]][tElement["display name"]]
    end repeat
    
-   repeat for each element tElement in tDocsArray
+   repeat for each element tElement in pLibrary
       local tValue
       local tIndex
       
@@ -240,7 +278,7 @@ on TestDocsValidateDictionary
       -- * test for ambiguous links
       
    end repeat
-end TestDocsValidateDictionary
+end __TestDocsLibraryArray
 
 command SplitParam @pParam
    -- find type

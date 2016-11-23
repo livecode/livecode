@@ -174,7 +174,7 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_parent_view, MCCefBrowserBase *&r_browser)
 {
 	MCCefWin32Browser *t_browser;
-	t_browser = new MCCefWin32Browser((HWND)p_parent_view);
+	t_browser = new (nothrow) MCCefWin32Browser((HWND)p_parent_view);
 
 	if (t_browser == nil)
 		return false;
@@ -495,7 +495,7 @@ bool MCCefWin32Browser::PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserR
 	if (!MCCefBrowserRequestEventCreate(p_type, p_state, p_frame, p_url, p_error, t_event))
 		return false;
 
-	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, nil))
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, 0))
 	{
 		MCCefBrowserRequestEventDestroy(t_event);
 		return false;
@@ -511,7 +511,7 @@ bool MCCefWin32Browser::PostJavaScriptCall(const char *p_handler, MCBrowserListR
 	if (!MCCefBrowserJavaScriptCallEventCreate(p_handler, p_params, t_event))
 		return false;
 
-	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL, (WPARAM)t_event, nil))
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL, (WPARAM)t_event, 0))
 	{
 		MCCefBrowserJavaScriptCallEventDestroy(t_event);
 		return false;

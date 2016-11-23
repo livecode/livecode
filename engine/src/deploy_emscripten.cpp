@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dispatch.h"
 #include "stacksecurity.h"
-
+#include "globals.h"
 #include "deploy.h"
 
 Exec_stat

@@ -147,7 +147,7 @@ void MCImage::addneed(MCObject *p_object)
 	}
 
 	// not found - create new need & add to list
-	/* UNCHECKED */ t_need = new MCImageNeed(p_object);
+	/* UNCHECKED */ t_need = new (nothrow) MCImageNeed(p_object);
 	t_need->Add(m_needs);
 }
 
@@ -1100,7 +1100,7 @@ void MCImage::resetimage()
 		// MW-2011-09-12: [[ Redraw ]] If the rect has changed then notify the layer.
 		//   (note we have to check 'parent' as at the moment MCImage is used for
 		//    the rb* icons which are unowned!).
-		if (parent != nil && !MCU_equal_rect(t_old_rect, rect))
+		if (parent && !MCU_equal_rect(t_old_rect, rect))
 			layer_rectchanged(t_old_rect, false);
 
 		if (m_rep->GetFrameCount() > 1)
@@ -1112,7 +1112,7 @@ void MCImage::resetimage()
 		}
 	}
 
-	if (parent != nil)
+	if (parent)
 		layer_redrawall();
 }
 

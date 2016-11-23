@@ -2,7 +2,7 @@ Name: revXMLRPC_GetRequest
 
 Type: function
 
-Syntax: revXMLRPC_GetRequest(<XML-RPC document>)
+Syntax: revXMLRPC_GetRequest(<XMLRPCdocumentID>)
 
 Summary:
 This function returns the request document that was executed and
@@ -19,40 +19,38 @@ Platforms: desktop, server, mobile
 Security: disk, process
 
 Example:
-put revXMLRPC_GetRequest(theResponse) into theRequest
+local tRequest
+put revXMLRPC_GetRequest(tResponse) into tRequest
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_Execute function if it was executed
-successfully. If the revXMLRPC_GetRequest function encounters an error,
-it returns an error message starting with "xmlrpcerr" .. If an error was
-encountered during the execution of the XML-RPC request, you can
-retrieve the error by calling the revXMLRPC_Error function.>*Important:*
-The revXMLRPC_GetResponse function is part of the XML-RPC library. To
-ensure that the function works in a standalone application, you must
-include this custom library when you create your standalone. In the
-Inclusions section on the General screen of the Standalone Application
-Settings window, make sure "XML-RPC Library" is selected in the list of
-script libraries.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_Execute> function if it was executed
+successfully. If the <revXMLRPC_GetRequest> function encounters an error,
+it returns an error message starting with "xmlrpcerr" ..
+
+Returns (string):
+The request document that was executed and resulted in the response document.
+If an error was encountered during the execution of the <XML-RPC> request,
+you can retrieve the error by calling the <revXMLRPC_Error> function.
 
 Description:
 Use the <revXMLRPC_GetRequest> <function> to retrieve the original
-<XML-RPC request> whose execution resulted in the XML-RPC response
-document. 
+<XML-RPC> request whose execution resulted in the XML-RPC response
+document.
 
->*Important:*  The <revXMLRPC_GetResponse> <function> is part of the 
-> <XML-RPC library>. To ensure that the <function> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_GetResponse> <function> is part of the
+> <XML-RPC library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_GetResponse (function),
-LiveCode custom library (glossary),
+LiveCode custom library (glossary), revXMLRPC_Error (function)
 Standalone Application Settings (glossary),
 standalone application (glossary), function (glossary),
-XML-RPC request (glossary), XML-RPC library (library)
+XML-RPC (glossary), XML-RPC library (library),
+revXMLRPC_CreateRequest (function), revXMLRPC_Execute (function)
 
 Tags: networking
-

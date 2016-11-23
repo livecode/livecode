@@ -4,7 +4,7 @@ Type: command
 
 Syntax: play [<clipType>] {<filePath> | <clip>} [looping] [at <point>] [options <xOptions>]
 
-Syntax: play {stop | pause | resume | step {forward | back}]} [<clipType>] [<clip>]
+Syntax: play {stop | pause | resume | step {forward | back}} [<clipType>] [<clip>]
 
 Summary:
 Plays a movie or sound.
@@ -97,9 +97,10 @@ by using the put <command> :
 
     put newPath into $PATH
 
->*Note:* The type of audio and video clip formats supported by the 
-<play> command is limited. See the entries for <audioClip> and <videoClip> 
-for details. To play a wider variety of formats, use a <player> object.
+> *Note:* The type of audio and video clip formats supported  
+> by the <play> command is limited. See the entries for <audioClip> 
+> and <videoClip> for details. To play a wider variety of formats, 
+> use a <player> object.
 
 References: audioClip (object), beep (command), callbacks (property), 
 command (glossary), current card (glossary), currentTime (property), 

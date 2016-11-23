@@ -112,7 +112,7 @@ void MCLinuxWindowSetTransientFor(GdkWindow* p_window, GdkWindow* p_transient_fo
 //		t_converter = iconv_open("UTF-16", p_encoding);
 //
 //		ConverterRecord *t_record;
-//		t_record = new ConverterRecord;
+//		t_record = new (nothrow) ConverterRecord;
 //		t_record -> next = s_records;
 //		t_record -> encoding = p_encoding;
 //		t_record -> converter = t_converter;

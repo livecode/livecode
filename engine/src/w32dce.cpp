@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -525,10 +525,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next pending message time.
 		real8 t_pending_eventtime;
-		if (nmessages == 0)
+		if (m_messages.GetCount() == 0)
 			t_pending_eventtime = exittime;
 		else
-			t_pending_eventtime = messages[0] . time;
+			t_pending_eventtime = m_messages[0].m_time;
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next system event time.
 		real8 t_system_eventtime;
@@ -682,7 +682,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 
 	HDC hdc = f_src_dc;
-	char *fontname = new char[LF_FACESIZE];
+	char *fontname = new (nothrow) char[LF_FACESIZE];
 	LOGFONTA logfont;
 	memset(&logfont, 0, sizeof(LOGFONTA));
 	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, strlen(oldfontname));

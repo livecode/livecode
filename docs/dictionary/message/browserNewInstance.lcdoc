@@ -37,9 +37,9 @@ The <browserNewInstance> message is sent to the current card of the
 stack when a new browser object is created in the stack's window.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserClose (command), revBrowserSet (command),
-revBrowserOpen (function), revBrowserOpen function (function),
+revBrowserOpen (function), function (glossary),
 browserNewUrlWindow (message)
 

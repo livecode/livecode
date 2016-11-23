@@ -47,15 +47,15 @@ than one line, each line must be terminated with a semi-colon (;).
 put revBrowserExecuteScript(sBrowserId, "result = 1 + 1;")
 
 If there is an existing JavaScript function you wish to call, its better
-to use the <revBrowserCallScript function> instead. This will be faster
+to use the <revBrowserCallScript> <function> instead. This will be faster
 than executing arbitrary code and also allows parameters to be passed.
 
 If the <script> fails to execute, an "error in script" exception will be
 thrown. 
 
 >*Note:* For general information on using the browser library, please
-> see the notes in the <revBrowserOpen function> reference.
+> see the notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function),
-revBrowserCallScript (function), revBrowserCallScript function (function)
+References: revBrowserOpen (function),
+revBrowserCallScript (function), function (glossary)
 

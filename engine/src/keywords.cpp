@@ -318,9 +318,9 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 				if (needstatement)
 				{
 					if (type == ST_ID)
-						newstatement = new MCComref(sp.gettoken_nameref());
+						newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 					else if (type == ST_DATA)
-						newstatement = new MCEcho;
+						newstatement = new (nothrow) MCEcho;
 					else
 					{
 						MCperror->add(PE_IF_NOTCOMMAND, sp);
@@ -739,11 +739,11 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1019,11 +1019,11 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1177,11 +1177,11 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1212,12 +1212,10 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					continue;
-					break;
 				case TT_FINALLY:
 					state = TS_FINALLY;
 					curstatement = NULL;
 					continue;
-					break;
 				case TT_END:
 					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
 					{

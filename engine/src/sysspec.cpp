@@ -237,11 +237,11 @@ void MCS_common_init(void)
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
 #if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
-	MCuppercasingtable = new uint1[256];
+	MCuppercasingtable = new (nothrow) uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
 	
-	MClowercasingtable = new uint1[256];
+	MClowercasingtable = new (nothrow) uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif
@@ -1149,14 +1149,14 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size)
 {
 	MCMemoryFileHandle *t_handle;
-    t_handle = new MCMemoryFileHandle(p_data, p_size);
+    t_handle = new (nothrow) MCMemoryFileHandle(p_data, p_size);
 	return t_handle;
 }
 
 IO_handle MCS_fakeopenwrite(void)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle();
+	t_handle = new (nothrow) MCMemoryFileHandle();
 	return t_handle;
 }
 
@@ -1224,7 +1224,7 @@ bool MCS_tmpnam(MCStringRef& r_path)
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
 	MCSystemFileHandle *t_handle;
-	t_handle = new MCCustomFileHandle(p_callbacks, p_state);
+	t_handle = new (nothrow) MCCustomFileHandle(p_callbacks, p_state);
 	return t_handle;
 }
 

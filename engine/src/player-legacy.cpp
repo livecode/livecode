@@ -76,7 +76,7 @@ extern void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCu
 MCPlayer::MCPlayer()
 {	
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
 	rect.width = rect.height = 128;
 	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
@@ -100,7 +100,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-	nextplayer = NULL;
+	nextplayer = nil;
 	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
@@ -351,7 +351,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -655,20 +655,20 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
-	if (MCplayers != NULL)
+	if (!MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
 		else
 		{
 			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+			while (tptr->nextplayer && tptr->nextplayer != this)
 				tptr = tptr->nextplayer;
 			if (tptr->nextplayer == this)
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = nil;
     
 	if (disposable)
 	{
@@ -985,7 +985,7 @@ bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType
 Boolean MCPlayer::x11_prepare(void)
 {
     if ( m_player == NULL )
-        m_player = new MPlayer();
+        m_player = new (nothrow) MPlayer();
     
     // OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player.
     // MCPlayer::init appears to duplicate the filename buffer, so freeing it after the call should be ok.

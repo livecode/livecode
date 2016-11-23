@@ -318,7 +318,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// we support for this kind of printing (yet?)
 			return true;
 		}
-		break;
 	case MARK_TYPE_IMAGE:
 		{
 			// Devices have to support unmasked images (otherwise we couldn't
@@ -340,7 +339,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 
 			return m_device -> CanRenderImage(t_image);
 		}
-		break;
 	case MARK_TYPE_METAFILE:
 	case MARK_TYPE_EPS:
 	case MARK_TYPE_THEME:
@@ -364,14 +362,15 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			t_group . opacity = p_mark -> group . opacity / 255.0;
 			return m_device -> CanRenderGroup(t_group);
 		}
-		break;
 	case MARK_TYPE_LINK:
 		// We can always render links natively - even if this is a no-op.
 		return true;
+	case MARK_TYPE_END:
+		// Unknown mark so return false.
+		return false;
 	}
 
-	// Unknown mark so return false.
-	return false;
+	MCUnreachableReturn(false);
 }
 
 void MCCustomMetaContext::domark(MCMark *p_mark)
@@ -772,10 +771,10 @@ void MCCustomMetaContext::dopathmark(MCMark *p_mark, MCPath *p_path)
 void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint32_t p_command_count, int4 *p_ordinates, uint32_t p_ordinate_count, bool p_evenodd)
 {
 	MCCustomPrinterPathCommand *t_out_commands;
-	t_out_commands = new MCCustomPrinterPathCommand[p_command_count];
+	t_out_commands = new (nothrow) MCCustomPrinterPathCommand[p_command_count];
 
 	MCCustomPrinterPoint *t_out_coords;
-	t_out_coords = new MCCustomPrinterPoint[p_ordinate_count];
+	t_out_coords = new (nothrow) MCCustomPrinterPoint[p_ordinate_count];
 
 	if (t_out_commands != nil && t_out_coords != nil)
 	{
@@ -865,7 +864,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 			t_paint . gradient . transform . translate_y = p_mark->fill->gradient->origin.y;
 
 			// Map the paint stops appropriately
-			t_paint_stops = new MCCustomPrinterGradientStop[p_mark -> fill -> gradient -> ramp_length];
+			t_paint_stops = new (nothrow) MCCustomPrinterGradientStop[p_mark -> fill -> gradient -> ramp_length];
 			if (t_paint_stops != nil)
 			{
 				for(uint32_t i = 0; i < p_mark -> fill -> gradient -> ramp_length; i++)
@@ -968,7 +967,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				{
 					t_stroke . dash_count = p_mark -> stroke -> dash . length;
 					t_stroke . dash_offset = p_mark -> stroke -> dash . offset;
-					t_stroke . dashes = new double[p_mark -> stroke -> dash . length];
+					t_stroke . dashes = new (nothrow) double[p_mark -> stroke -> dash . length];
 					if (t_stroke . dashes != nil)
 					{
 						for(uint32_t i = 0; i < p_mark -> stroke -> dash . length; i++)
@@ -1426,7 +1425,7 @@ MCPrinterResult MCCustomPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 
 	// Now create a custom meta context, targeting our device
 	MCCustomMetaContext *t_context;
-	t_context = new MCCustomMetaContext(t_src_rect_hull);
+	t_context = new (nothrow) MCCustomMetaContext(t_src_rect_hull);
 	if (t_context == nil)
 		return PRINTER_RESULT_ERROR;
 
@@ -1662,7 +1661,7 @@ MCPrinterResult MCCustomPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterD
 	t_printer_device = nil;
 	if (t_result == PRINTER_RESULT_SUCCESS)
 	{
-		t_printer_device = new MCCustomPrinterDevice(m_device);
+		t_printer_device = new (nothrow) MCCustomPrinterDevice(m_device);
 		if (t_printer_device == nil)
 			t_result = PRINTER_RESULT_ERROR;
 	}
@@ -2060,6 +2059,8 @@ private:
 			case kMCCustomPrinterPathClose:
 				Print("close");
 				break;
+			case kMCCustomPrinterPathEnd:
+				MCUnreachable();
 			}
 		}
 	}
@@ -2173,12 +2174,12 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 	}
 #ifdef _DEBUG
 	else if (MCStringIsEqualToCString(p_destination, "debug", kMCCompareCaseless))
-		t_device = new MCDebugPrintingDevice;
+		t_device = new (nothrow) MCDebugPrintingDevice;
 #endif
 
 #ifdef _DEBUG
 	if (t_device != nil)
-		t_device = new MCLoggingPrintingDevice(t_device);
+		t_device = new (nothrow) MCLoggingPrintingDevice(t_device);
 #endif
 	
 	if (t_device == nil)
@@ -2192,7 +2193,7 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 		/* UNCHECKED */ MCS_pathtonative(p_filename, &t_native_path);
 
 	MCCustomPrinter *t_printer;
-	t_printer = new MCCustomPrinter(p_destination, t_device);
+	t_printer = new (nothrow) MCCustomPrinter(p_destination, t_device);
 	t_printer -> Initialize();
 	t_printer -> SetDeviceName(p_destination);
 	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, *t_native_path);

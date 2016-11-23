@@ -236,14 +236,16 @@ void MCGraphic::SetEditMode(MCExecContext& ctxt, intenum_t mode)
 		{
 		case kMCEditModeFillGradient:
 			if (m_fill_gradient != NULL)
-				t_new_tool = new MCGradientEditTool(this, m_fill_gradient, t_new_mode);
+				t_new_tool = new (nothrow) MCGradientEditTool(this, m_fill_gradient, t_new_mode);
 			break;
 		case kMCEditModeStrokeGradient:
 			if (m_stroke_gradient != NULL)
-				t_new_tool = new MCGradientEditTool(this, m_stroke_gradient, t_new_mode);
+				t_new_tool = new (nothrow) MCGradientEditTool(this, m_stroke_gradient, t_new_mode);
 			break;
 		case kMCEditModePolygon:
-			t_new_tool = new MCPolygonEditTool(this);
+			t_new_tool = new (nothrow) MCPolygonEditTool(this);
+			break;
+		case kMCEditModeNone:
 			break;
 		}
 		m_edit_tool = t_new_tool;
@@ -904,7 +906,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
         case F_G_RECTANGLE:
         {
             nfakepoints = 4;
-            fakepoints = new MCPoint[nfakepoints];
+            fakepoints = new (nothrow) MCPoint[nfakepoints];
             get_points_for_rect(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
             delete[] fakepoints;
@@ -913,7 +915,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
         case F_REGULAR:
         {
             nfakepoints = nsides;
-            fakepoints = new MCPoint[nsides];
+            fakepoints = new (nothrow) MCPoint[nsides];
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
             delete[] fakepoints;
@@ -960,7 +962,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
         case F_G_RECTANGLE:
         {
             nfakepoints = 4;
-            fakepoints = new MCPoint[nfakepoints];
+            fakepoints = new (nothrow) MCPoint[nfakepoints];
             get_points_for_rect(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
@@ -970,7 +972,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
         case F_REGULAR:
         {
             nfakepoints = nsides;
-            fakepoints = new MCPoint[nsides];
+            fakepoints = new (nothrow) MCPoint[nsides];
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);

@@ -1355,7 +1355,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 	
 	// MW-2011-02-08: Don't allow id change if the parent is nil as this means its a template
 	//   object which doesn't really have an id.
-	if (parent == nil)
+	if (!parent)
 		return;
 	
 	MCStack *t_stack;
@@ -1394,7 +1394,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 		t_stack -> visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
 	}
 	else if (parent -> gettype() == CT_CARD)
-		static_cast<MCCard *>(parent) -> resetid(obj_id, p_new_id);
+		parent.GetAs<MCCard>()->resetid(obj_id, p_new_id);
 
 	// MW-2012-10-10: [[ IdCache ]] If the object is in the cache, then remove
 	//   it since its id is changing.
@@ -1520,7 +1520,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 	// the group being edited in edit group mode.
 	
 	uint2 num = 0;
-	if (parent != nil)
+	if (parent)
 	{
 		MCCard *t_card;
 		t_card = getcard(part);
@@ -1543,7 +1543,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 
 void MCObject::SetLayer(MCExecContext& ctxt, uint32_t part, const MCInterfaceLayer& p_layer)
 {
-	if (parent == NULL || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
+	if (!parent || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_OBJECT_BADRELAYER);
 }
 
@@ -1714,7 +1714,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;
-	t_chunk = new MCChunk(False);
+	t_chunk = new (nothrow) MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
 	// the end of the string - if there is, its an error. Note the errorlock
@@ -2110,7 +2110,7 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
         bool t_found;
         t_found = false;
         
-        if (parent != NULL)
+        if (parent)
             t_found = parent -> GetColor(ctxt, which, effective, r_color, true);
         
         if (!t_found && !recursive)
@@ -2447,7 +2447,7 @@ bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective,
     {
         if (effective)
         {
-            if (parent != NULL)
+            if (parent)
                 return parent->GetPattern(ctxt, which, effective, r_pattern);
             else
             {
@@ -2781,7 +2781,7 @@ bool MCObject::TextPropertyMapFont()
 	//   *not* to attempt to mapfonts on it!
 	// MW-2013-03-28: [[ Bug 10791 ]] Exceptions to every rule - the home stack
 	//   can be open but with no font...
-	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent != nil)
+	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent)
 	{
 		mapfont();
 		return true;
@@ -2895,7 +2895,7 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 		//   to ensure substacks update properly.
 		// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 		//   case we don't want to do any font recomputation.
-		if ((gettype() == CT_STACK && parent != nil) || opened)
+		if ((gettype() == CT_STACK && parent) || opened)
 		{
 			if (recomputefonts(parent -> getfontref()))
 			{
@@ -2960,7 +2960,7 @@ void MCObject::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3015,7 +3015,7 @@ void MCObject::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_s
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3034,7 +3034,7 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 {
 	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
 	{
-		if (parent != nil)
+		if (parent)
 			parent -> GetEffectiveTextStyle(ctxt, r_style);
 		else
 			MCdispatcher -> GetDefaultTextStyle(ctxt, r_style);
@@ -3274,25 +3274,25 @@ void MCObject::SetTraversalOn(MCExecContext& ctxt, bool setting)
 
 void MCObject::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetName(ctxt, r_owner);
 }
 
 void MCObject::GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetShortName(ctxt, r_owner);
 }
 
 void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
 void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
         parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
@@ -3713,7 +3713,7 @@ void MCObject::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
 		if (gettype() < CT_GROUP || !static_cast<MCControl *>(this) -> layer_issprite())
 			Redraw();
 		else
-			static_cast<MCCard *>(parent) -> layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
+			parent.GetAs<MCCard>()->layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
 	}
 }
 

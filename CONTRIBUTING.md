@@ -137,6 +137,11 @@ Function names:
   * numbers to 0
 * Only pass `bool` values to conditions (e.g. `if`, `while`, etc.). Don't assume that `nil`/`null`/`0` are false.
 * Always check the success of memory allocations; if the calling code can't handle memory failure then prefix the line that allocates with `/* UNCHECKED */`
+* When using the C++
+  [`new` operator](http://en.cppreference.com/w/cpp/memory/new/operator_new),
+  always either use non-allocating placement allocation ("placement new"), or
+  specify [`std::nothrow`](http://en.cppreference.com/w/cpp/memory/new/nothrow),
+  e.g. `new (nothrow) int[10]`
 * Avoid using preprocessor macros to abbreviate code; use inline and/or template functions instead
 * Use implicit resource management (e.g. `MCAutoStringRef`) wherever reasonably possible
 * Functions should not modify "out" function parameters until immediately before returning, and only on success

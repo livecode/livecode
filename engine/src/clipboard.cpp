@@ -23,6 +23,7 @@
 #include "object.h"
 #include "stack.h"
 #include "styledtext.h"
+#include "globals.h"
 
 
 class MCClipboard::AutoLock
@@ -1368,7 +1369,7 @@ MCClipboard* MCClipboard::CreateSystemSelectionClipboard()
 MCClipboard* MCClipboard::CreateSystemDragboard()
 {
     // Drag boards are created in a locked state
-    MCClipboard* t_dragboard = new MCClipboard(MCRawClipboard::CreateSystemDragboard());
+    MCClipboard* t_dragboard = new (nothrow) MCClipboard(MCRawClipboard::CreateSystemDragboard());
     t_dragboard->Lock(true);
     t_dragboard->Clear();
     return t_dragboard;

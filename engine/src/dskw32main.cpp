@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -175,7 +175,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // FG-2014-09-23: [[ Bugfix 12444 ]] Re-arrange command line processing to
     // match behaviour in 6.x and below.
-    WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+    WCHAR* wcFileNameBuf = new (nothrow) WCHAR[MAX_PATH+1];
     DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
     
 	// Windows uses slashes the opposite way around to the other platforms and requires conversion

@@ -5,14 +5,22 @@ Synonyms: control, widget
 Type: glossary
 
 Description:
-An <object(glossary)> that can be placed on a <card>. Controls include
-<button|buttons>, <field|fields>, <image|images>, <graphic|graphics>,
-<player|players>, <EPS|EPS objects>, <scrollbar|scrollbars>, and
-<group|groups>. 
+An <object(glossary)> that can be placed on a <card>. Controls include:
+
+-  <button|buttons> 
+-  <field|fields>
+-  <image|images>
+-  <graphic|graphics>
+-  <player|players>
+-  <EPS|EPS objects>
+-  <scrollbar|scrollbars>
+-  <group|groups>
+-  <widget|widgets>
 
 References: graphic (glossary), image (glossary), button (glossary),
 scrollbar (glossary), player (glossary), object (glossary),
-field (glossary), card (glossary), EPS (glossary), group (glossary)
+field (glossary), card (glossary), EPS (glossary), group (glossary),
+widget (object)
 
 Tags: objects
 

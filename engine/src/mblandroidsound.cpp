@@ -110,7 +110,7 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
         t_success = MCS_resolvepath(p_file, &t_resolved);
     
     // Retain a reference to the object on behalf of the Java code
-    MCObjectProxy* t_proxy = p_object.ExternalRetain();
+    MCObjectProxy<>* t_proxy = p_object.ExternalRetain();
     
     MCAutoStringRef t_apk_file;
     if (t_success)
@@ -235,11 +235,11 @@ JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChan
 	/* UNCHECKED */ MCJavaStringToStringRef(env, channel, &t_channel);
 	/* UNCHECKED */ MCJavaStringToStringRef(env, sound, &t_sound);
 	
-    // Convert to an object handle and release the reference that was retained
-    // on behalf of the Java world.
-    MCObjectHandle t_object_handle = reinterpret_cast<MCObjectProxy*> (object_proxy);
-    t_object_handle.ExternalRelease();
-    
+	// Notify the callback object that the sound has finished playing.
+	// Don't release the handle here, as it is released via
+	// doSoundReleaseCallbackHandle when the player is subsequently
+	// reset.
+    MCObjectHandle t_object_handle = reinterpret_cast<MCObjectProxy<>*> (object_proxy);
     MCSoundPostSoundFinishedOnChannelMessage(*t_channel, *t_sound, t_object_handle);
 }
 
@@ -247,7 +247,9 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundRel
 
 JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_proxy)
 {    
-    MCObjectHandle t_object = reinterpret_cast<MCObjectProxy*> (object_proxy);
+	// Convert to an object handle and release the reference that was retained
+	// on behalf of the Java world.
+	MCObjectHandle t_object = reinterpret_cast<MCObjectProxy<>*> (object_proxy);
     t_object.ExternalRelease();
 }
 

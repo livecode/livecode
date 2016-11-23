@@ -58,9 +58,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bsdiff.h"
 #include "osspec.h"
 
-#if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
-#elif defined(_MAC_DESKTOP)
+#if defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #include <sys/stat.h>
 #include <unistd.h>
@@ -1218,7 +1216,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
-        t_script = new char[p_length];
+        t_script = new (nothrow) char[p_length];
         if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read startup script");
@@ -1618,7 +1616,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

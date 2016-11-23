@@ -55,7 +55,7 @@ extern "C"
 
 extern "C" MCExternalError MCValueFromObjcValue(id src, MCValueRef &var)
 {
-    if ([src isKindOfClass: [NSNull class]])
+    if (src == nil || [src isKindOfClass: [NSNull class]])
     {
         var = MCValueRetain(kMCEmptyString);
     }

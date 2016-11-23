@@ -276,7 +276,7 @@ void MCLegacyEvalTextHeightSum(MCExecContext& ctxt, MCObjectPtr p_object, intege
 
 void MCLegacyEvalMenuObject(MCExecContext& ctxt, MCStringRef& r_object)
 {
-	if (MCmenuobjectptr == nil)
+	if (!MCmenuobjectptr)
 	{
 		r_object = (MCStringRef)MCValueRetain(kMCEmptyString);
 		return;
@@ -446,7 +446,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	}
 	else
 	{
-		MCEPS *eptr = new MCEPS;
+		MCEPS *eptr = new (nothrow) MCEPS;
 		if (!eptr->import(p_filename, t_stream))
 		{
             delete eptr;
@@ -522,7 +522,7 @@ void MCLegacySetStackFiles(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCLegacyGetMenuBar(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCmenubar == nil)
+	if (!MCmenubar)
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 	else
 		MCmenubar -> getstringprop(ctxt, 0, P_LONG_NAME, False, r_value);

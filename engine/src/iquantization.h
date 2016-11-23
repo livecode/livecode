@@ -71,9 +71,9 @@ public:
 		}
 
 		if (t_prev == NULL)
-			head = new MCPQNode(p_item, t_current);
+			head = new (nothrow) MCPQNode(p_item, t_current);
 		else
-			t_prev->next = new MCPQNode(p_item, t_current);
+			t_prev->next = new (nothrow) MCPQNode(p_item, t_current);
 
 		item_count++;
 	}

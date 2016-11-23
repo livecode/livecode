@@ -69,21 +69,36 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 		secure = True;
 	else if (sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_DATAGRAM) == PS_NORMAL)
 		datagram = True;
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // connections
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // on
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // port
-	if (sp.parseexp(False, True, &port) != PS_NORMAL)
+	
+	Parse_stat t_stat = PS_NORMAL;
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_CONNECTIONS);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_ON);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_PORT);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &port);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &message);
+		
+	if (PS_NORMAL != t_stat)
 	{
 		MCperror->add(PE_ACCEPT_BADEXP, sp);
 		return PS_ERROR;
 	}
-	sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH); // with
-	sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED); // message
-	if (sp.parseexp(False, True, &message) != PS_NORMAL)
-	{
-		MCperror->add(PE_ACCEPT_BADEXP, sp);
-		return PS_ERROR;
-	}
+	
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
 	        && sp.skip_token(SP_SSL, TT_STATEMENT, SSL_VERIFICATION) != PS_NORMAL)
 	{
@@ -103,17 +118,23 @@ void MCAccept::exec_ctxt(MCExecContext &ctxt)
     uinteger_t t_port;
     if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
         return;
-    
+	
+	if (t_port > UINT16_MAX)
+	{
+		ctxt . LegacyThrow(EE_ACCEPT_BADEXP);
+		return;
+	}
+	
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
         return;
     
     if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
+		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
+		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, uint16_t(t_port), *t_message, secureverify == True);
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
+		MCNetworkExecAcceptConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
@@ -407,7 +428,7 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 		object = NULL;
 	else
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_FOCUS_BADOBJECT, sp);
@@ -471,7 +492,7 @@ Parse_stat MCInsert::parse(MCScriptPoint &sp)
 		MCperror->add(PE_INSERT_NOSCRIPT, sp);
 		return PS_ERROR;
 	}
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_INSERT_BADOBJECT, sp);
@@ -554,7 +575,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 	// MW-2008-12-04: Added 'to <target>' form to the syntax
 	if (sp.skip_token(SP_FACTOR, TT_TO) == PS_NORMAL)
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_DISPATCH_BADTARGET, sp);
@@ -687,7 +708,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 	}
 	else
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SEND_BADTARGET, sp);
@@ -815,7 +836,7 @@ MCMove::~MCMove()
 Parse_stat MCMove::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_MOVE_BADOBJECT, sp);
@@ -972,7 +993,7 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 		}
 		
 		sp.backup();
-		stack = new MCChunk(False);
+		stack = new (nothrow) MCChunk(False);
 		if (stack->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PLAY_BADSTACK, sp);
@@ -1040,7 +1061,7 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 	MCerrorlock--;
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		stack = new MCChunk(False);
+		stack = new (nothrow) MCChunk(False);
 		if (stack->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PLAY_BADSTACK, sp);
@@ -1538,7 +1559,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
 			sp.backup();
-			target = new MCChunk(False);
+			target = new (nothrow) MCChunk(False);
 			if (target->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
@@ -1579,7 +1600,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 	{
 		if (mode == SC_PLAYER)
 			sp.backup();
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_START_BADCHUNK, sp);
@@ -1741,7 +1762,7 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
 			sp.backup();
-			target = new MCChunk(False);
+			target = new (nothrow) MCChunk(False);
 			if (target->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
@@ -1774,7 +1795,7 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 	{
 		if (mode == SC_PLAYER)
 			sp.backup();
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		MCScriptPoint oldsp(sp);
 		MCerrorlock++;
 		if (target->parse(sp, False) != PS_NORMAL)

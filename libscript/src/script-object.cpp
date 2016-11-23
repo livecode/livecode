@@ -21,9 +21,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
-MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
-MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+MCTypeInfoRef kMCScriptVariableUsedBeforeAssignedErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
@@ -35,6 +33,7 @@ MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+MCTypeInfoRef kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
@@ -243,11 +242,7 @@ bool MCScriptInitialize(void)
     
     // This block creates all the default errors
     {
-        if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.InParameterNotDefinedError"), MCNAME("runtime"), MCSTR("In parameters must be assigned before calling - parameter %{parameter} of %{module}.%{handler}"), kMCScriptInParameterNotDefinedErrorTypeInfo))
-			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCNAME("runtime"), MCSTR("Out parameters must be assigned before returning - parameter %{parameter} of %{module}.%{handler}"), kMCScriptOutParameterNotDefinedErrorTypeInfo))
-			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCNAME("runtime"), MCSTR("Variables must be assigned before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo))
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableUsedBeforeAssignedError"), MCNAME("runtime"), MCSTR("Variables must be assigned before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeAssignedErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ReturnValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for return - expected type %{type} when returning from %{module}.%{handler}"), kMCScriptInvalidReturnValueErrorTypeInfo))
 			return false;
@@ -268,6 +263,8 @@ bool MCScriptInitialize(void)
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NoMatchingHandlerError"), MCNAME("runtime"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCNAME("runtime"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyUsedBeforeAssignedError"), MCNAME("runtime"), MCSTR("Properties must be set before begin used - property %{module}.%{property}"), kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo))
 			return false;

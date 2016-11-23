@@ -2,7 +2,7 @@ Name: if
 
 Type: control structure
 
-Syntax: if <condition> then <statement> [else <elseStatement>]
+Syntax: if <condition> then <statementList> [else <elseStatementList>]
 
 Summary:
 <execute|Executes> a list of <statement|statements> if a condition is
@@ -29,50 +29,51 @@ Parameters:
 condition (bool):
 
 
-statement:
-
-
-elseStatement:
+elseStatementList:
 
 
 statementList:
-The statementList or elseStatementList consists of one or more LiveCode
+The <statementList> or <elseStatementList> consists of one or more LiveCode
 statements, and can also include if, switch, try, or repeat control
 structures. The statement or elseStatement consists of a single LiveCode
 statement. 
 
 Description:
-Use the <if> <control structure> to <execute> a <statement> (or list of
-<statement|statements>) only under certain circumstances. Form:The <if>
-<control structure> always begins with the <word> if. There are four
-forms of the <if> <control structure>:
+Use the <if> <control structure> to <execute> a <statementList|statement> 
+(or list of <statementList|statements>) only under certain circumstances. 
 
-if <condition> then <statement> [else <elseStatement>]
-(This form may have a line break before the words then or else or both.)
+The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
 
-if <condition> then
-<statementList> 
-[else
-elseStatementList]
-end if
+    if condition then statementList [else elseStatementList]
 
-if <condition> 
-then <statement> 
-[else
-elseStatementList]
-end if
+This form may have a line break before the words `then` or `else` or both.
 
-if <condition> then
-<statementList> 
-else <elseStatement> 
+    if condition then
+       statementList 
+    [else
+       elseStatementList]
+    end if
+    
+    -- OR
+    if condition 
+    then statement 
+    [else
+       elseStatementList]
+    end if
 
-If the <condition> <evaluate|evaluates> to true, the <statement> or
+    -- OR
+    if condition then
+       statementList 
+    else elseStatement
+    end if
+
+If the <condition> <evaluate|evaluates> to true, the statement or
 <statementList> is <execute|executed>; if the <condition>
-<evaluate|evaluates> to false, the <statement> or <statementList> is
+<evaluate|evaluates> to false, the statement or <statementList> is
 skipped. 
 
 If the <if> <control structure> contains an <else> clause, the
-<elseStatement> or elseStatementList is <execute|executed> if the
+elseStatement or <elseStatementList> is <execute|executed> if the
 <condition> is false.
 
 If one <if> <control structure> is nested inside another, use of the
@@ -82,8 +83,8 @@ cause ambiguities in interpreting which <else> clause belongs with which
 
 The <if> <control structure> is most suitable when you want to check a
 single <condition>. If you need to check for multiple possibilities,
-doing something different for each one, use a <switch> <control
-structure> instead.
+doing something different for each one, use 
+a <switch> <control structure> instead.
 
 >*Note:* The <if> <control structure> is implemented internally as a
 > <command> and appears in the <commandNames>.

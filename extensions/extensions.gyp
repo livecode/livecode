@@ -19,6 +19,7 @@
 			'sources':
 			[
 				'modules/widget-utils/widget-utils.lcb',
+				'modules/scriptitems/scriptitems.lcb',
 
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
@@ -47,6 +48,7 @@
 				'widgets/colorswatch/colorswatch.lcb',
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 				'widgets/tile/tile.lcb',
+				'widgets/spinner/spinner.lcb',
 			],
 
 			'all_dependent_settings':

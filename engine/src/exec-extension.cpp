@@ -476,14 +476,19 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
         MCLog("Error state indicated with no error having been thrown");
         return ES_ERROR;
     }
-    
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
-    if (MCErrorGetDepth(*t_error) > 0)
-    {
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, 0));
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, 0));
-    }
+
+	uindex_t t_num_frames = MCErrorGetDepth(*t_error);
+	for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+	{
+		if (t_depth == 0)
+		{
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
+		}
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_COLUMN, MCErrorGetColumnAtLevel(*t_error, t_depth));
+	}
     
     return ES_ERROR;
 }
@@ -666,6 +671,31 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
         }
         return true;
             
+        case kMCValueTypeCodeForeignValue:
+        {
+            // Get the type info for the foreign value so we can find its bridge
+            // type
+            MCTypeInfoRef t_foreign_type = MCValueGetTypeInfo(x_value);
+            const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_foreign_type);
+            if (t_desc->bridgetype == nil)
+                break;
+
+            // Import the type
+            MCValueRef t_imported;
+            if (!t_desc->doimport(MCForeignValueGetContentsPtr(x_value), false, t_imported))
+                return false;
+
+            // Recursively convert to a script type
+            if (!MCExtensionConvertToScriptType(ctxt, t_imported))
+            {
+                MCValueRelease(t_imported);
+                return false;
+            }
+
+            MCValueAssign(x_value, t_imported);
+        }
+        return true;
+
         // The rest have no conversion
         default:
             break;
@@ -684,7 +714,8 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_type, MCValueRef& x_value, bool& r_converted)
 {
     MCResolvedTypeInfo t_resolved_type;
-    MCTypeInfoResolve(p_as_type, t_resolved_type);
+    if (!MCTypeInfoResolve(p_as_type, t_resolved_type))
+		return false;
     
     if (t_resolved_type . named_type == kMCAnyTypeInfo)
     {

@@ -30,7 +30,7 @@ Use the <wideMargins> <property> to set all the margins of a <field> to
 The <wideMargins> <property> sets the blank space at the edges of a
 <field> to 20 <pixels>.
 
-You can use the <margins property> instead to set all four <field>
+You can use the <margins> <property> instead to set all four <field>
 margins to any value. The <wideMargins> <property> is included in
 <LiveCode> for compatibility with imported <HyperCard> stacks.
 
@@ -40,7 +40,7 @@ the <wideMargins> to true sets the <margins> to 20.
 
 References: property (glossary), LiveCode (glossary),
 HyperCard (glossary), field (keyword), field (object),
-margins property (property), pixels (property), margins (property),
+pixels (property), margins (property),
 firstIndent (property)
 
 Tags: ui

@@ -76,7 +76,7 @@ MCStacklist::~MCStacklist()
 
 void MCStacklist::add(MCStack *sptr)
 {
-	MCStacknode *tptr = new MCStacknode(sptr);
+	MCStacknode *tptr = new (nothrow) MCStacknode(sptr);
 	tptr->appendto(stacks);
 	if (this == MCstacks) // should be done with subclass
 		top(sptr);
@@ -206,7 +206,7 @@ void MCStacklist::top(MCStack *sptr)
 	}
 
 	uint2 pass = WM_TOP_LEVEL;
-	MCtopstackptr = NULL;
+	MCtopstackptr = nil;
 	do
 	{
 		tptr = stacks;
@@ -329,7 +329,7 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 	// We fix these issues here...
 
 	MCGroup *t_menubar;
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		t_menubar = MCmenubar;
 	else
 		t_menubar = MCdefaultmenubar;

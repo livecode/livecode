@@ -2,18 +2,14 @@ Name: do
 
 Type: command
 
-Syntax: do <statementList>
-
-Syntax: do <statementList> in <caller>
-
-Syntax: do <statementList> as a <lternateLanguageName>
+Syntax: do <statementList> [in caller]
 
 Summary:
 <execute|Executes> a list of <statement|statements>.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -21,49 +17,20 @@ Example:
 do "go next card"
 
 Example:
-do "put"  x  "into tNumberOfRecords" 
--- might become "put 3 into tNumberOfRecords"
+do "put" && tNewValue && "into tNumberOfRecords"
+-- If tNewValue is 3, this would become "put 3 into tNumberOfRecords"
 
 Example:
 do "select" && line 3 of field "Objects"
-
-Example:
-do field "Statements" as AppleScript
 
 Parameters:
 statementList:
 A LiveCode statement, a container with one or more statements, or a
 string that evaluates to a statement.
 
-caller:
-Has the effect of executing the statementList in the context of the
-handler. 
-
-lternateLanguageName:
-
-
-alternateLanguageName:
-On Mac OS and OS X systems, the alternateLanguageName is a script
-language (such as AppleScript) supported under the Open Scripting
-Architecture. On Windows systems, the alternateLanguageName is an
-"active scripting" language (such as VBScript) supported by the Windows
-Scripting Host. The available languages are returned by the
-alternateLanguages function. If you specify an alternateLanguageName,
-the statementList must be written in the specified language.
-
 The result:
-On Mac OS X systems, if you use the do as a <lternateLanguageName> form,
-any result returned by the script language is placed in the <result>. On
-Windows systems, the <result> function will return the value of the
-global variable called "result" in the script that was executed (or
-empty if no such variable was defined). For example the following code
-will produce a dialog box containing "2" :. answer the result. If you
-attempt to specify an <alternateLanguageName> on a <Unix> <system>, the
-<do> <command> is not executed, and the <result> is set to
-"alternate language not found". Any scripts on Windows which contain
-references to WScript will fail to run as WScript objects do not exist
-in the LiveCode Environment. Return values should therefore be placed
-within the global <result> variable instead of using WScript.Echo.
+The <result> is
+affected by the LiveCode commands and functions in the script in the normal way.
 
 Description:
 Use the <do> command to execute statements in a container, or to execute
@@ -74,31 +41,19 @@ Using the <do> <command> is slower than directly <execute|executing> the
 <command|commands>, because each <statement> must be <compile|compiled>
 every time the <do> <command> is executed.
 
-do "result = 1 + 1" as "vbscript"
-
->*Important:* If using the do as <alternateLanguageName> form, any paths
-> used in the <statementList> must be in the native format of the
-> current system. In particular this means that paths must be converted
-> to Windows native format before use on Windows machines. In most cases
-> this can be done by replacing slash with backslash in the path.
+When the `do statementList in caller` form of the <do> command is
+used, the <statementList> is evaluated in the context of the handler
+where the <do> command appears.
 
 To see how to create a numbered set of variables see the dictionary
-entry for the <local command>.
+entry for the <local> <command>.
 
-The ability to specify an <alternateLanguageName> on Windows systems was
-added in LiveCode 2.9.
-
-Changes:
-The <alternateLanguageName> option was introduced in version 1.1. In
-previous versions, it was not possible to include AppleScript or other
-<Open Scripting Architecture (OSA)|OSA> languages in a <LiveCode>
-<handler>. 
+You can use the <do as alternateLanguage> variant of the <do> command
+to evaluate a <statementList> written in a non-LiveCode programming
+language.
 
 References: debugDo (command), breakpoint (command), local (command),
-call (command), local command (command), result (function),
-alternateLanguages (function), system (glossary), LiveCode (glossary),
+call (command), result (function),
 handler (glossary), execute (glossary), statement (glossary),
-Unix (glossary), compile (glossary), command (glossary),
-Open Scripting Architecture (OSA) (glossary), message box (keyword),
-as (keyword)
-
+compile (glossary), command (glossary),
+message box (keyword), do as alternateLanguage (command)

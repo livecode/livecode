@@ -35,7 +35,7 @@ The short time form returns the same value as the time form.
 
 The abbreviated time form returns the same value as the time form.
 
-The long time form returns the hour, minute, and second separated by
+The <long> time form returns the hour, minute, and second separated by
 colons, a space, and "AM" or "PM".
 
 Description:
@@ -46,14 +46,14 @@ If the twelveHourTime <property> is set to false, the value
 <return|returned> by the <time> <function> does not include "AM" or
 "PM". 
 
-The format of the system time forms is set by the Date & Time control
+The <format> of the system time forms is set by the Date & Time control
 panel (on Mac OS systems), the Date control panel (on <Windows|Windows
 systems>), or the LANG environment variable (on <Unix|Unix systems>).
 
 >*Note:* Linux systems don't have a short system time, so the engine
 > modifies the system time format string to remove the seconds. This
 > works in most locales, but not all and our advice is to stick to using
-> the long system time on Linux systems.
+> the <long> <system> <time> on Linux systems.
 
 Changes:
 The ability to use the time format preferred by the user was introduced
@@ -62,7 +62,7 @@ date function, consistently used the standard U.S. format, even if the
 operating system's settings specified another language or time format.
 
 References: convert (command), function (control structure),
-ticks (function), format (function), property (glossary),
+ticks (function), property (glossary),
 Windows (glossary), Unix (glossary), format (glossary), return (glossary),
 system (keyword), english (keyword), abbreviated (keyword),
 useSystemDate (property)
