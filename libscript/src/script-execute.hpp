@@ -686,8 +686,8 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
 	MCLog("Push frame for handler %u", p_handler_def->index);
 #endif
 	
-    MCAutoPointer<Frame> t_new_frame;
-    if (!MCMemoryNew(&t_new_frame) ||
+    MCAutoPointer<Frame> t_new_frame = new (nothrow) Frame;
+    if (*t_new_frame == nil ||
         !MCMemoryNewArray(p_handler_def->slot_count,
                           t_new_frame->slots))
     {
@@ -972,8 +972,8 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	MCLog("Enter frame for handler %u", p_handler_def->index);
 #endif
 	
-	MCAutoPointer<Frame> t_new_frame;
-	if (!MCMemoryNew(&t_new_frame) ||
+	MCAutoPointer<Frame> t_new_frame = new (nothrow) Frame;
+	if (*t_new_frame == nil ||
 		!MCMemoryNewArray(p_handler_def->slot_count,
 						  t_new_frame->slots))
 	{
