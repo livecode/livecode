@@ -218,10 +218,21 @@ public handler JsonImport(in pJson as String) returns optional any
         put tChar into tToken
         put tChar into tTokenValue
         put kScanInLiteral into tScanState
-      else if tChar is in "-0123456789" then
+      else if tChar is "-" then
+         -- If a number begins with a "-" then it *must* be contain at
+         -- least one further character
+         put "0" into tToken
+         put tChar into tTokenValue
+         put kScanInNumber into tScanState
+      else if tChar is in "0123456789" then
+        -- A number is permitted to be a single digit
         put "0" into tToken
         put tChar into tTokenValue
-        put kScanInNumber into tScanState
+        if tCharCount < tJsonLength then
+           put kScanInNumber into tScanState
+        else
+           put kScanEndToken into tScanState
+        end if
       else
         return JsonSyntaxError(tLine, tColumn, \
               "Unexpected character '" & FormatChar(tChar) & "'")
