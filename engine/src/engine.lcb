@@ -55,6 +55,9 @@ public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage a
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptWithArguments(in pScript as String, in pArguments as List) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptInScriptObject(in pScript as String, in pTarget as ScriptObject) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptInScriptObjectWithArguments(in pScript as String, in pTarget as ScriptObject, in pArguments as List) returns any binds to "<builtin>"
 public foreign handler MCEngineExecLog(in pMessage as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) returns nothing binds to "<builtin>"
 
@@ -374,8 +377,10 @@ begin
 end syntax
 
 /**
-Summary: 	Executes some LiveCode script.
-Script: 	The script to execute.
+Summary: Executes some LiveCode script.
+Script:  The script to execute.
+Object:  The object to execute the script in.
+Arguments:  A list of arguments for the script.
 
 Example:
 	public handler SnapshotMe() returns nothing
@@ -387,9 +392,23 @@ Example:
 		execute script "import snapshot from rect (the rect of widget " & tVar & ") of widget " & tVar
 	end handler
 
+Example:
+   public handler SnapshotMeAtSize(in pWidth as Integer, in pHeight as Integer) returns nothing
+		variable tVar as String
+		get property "number" of my script object
+		put the result formatted as string into tVar
+
+		// Create a snapshot from the rect of the widget
+		execute script "import snapshot from me at size at size param(1),param(2)" \
+            with [ pWidth, pHeight ]
+	end handler
+
 Description:
-Executes the given piece of LiveCode script in the context of the current script
-object.
+Executes the given piece of LiveCode script in the context of the target script
+object, or the current script object if none is specified. The list of arguments
+is accessible from the script fragment using the paramCount() and param()
+functions.
+
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
 
@@ -397,9 +416,12 @@ Tags: Script Engine
 */
 
 syntax ExecuteScript is statement
-    "execute" "script" <Script: Expression>
+	"execute" "script" <Script: Expression> [ "in" <Object: Expression> ] [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecExecuteScript(Script)
+	MCEngineExecExecuteScript(Script)
+	MCEngineExecExecuteScriptInScriptObject(Script, Object)
+	MCEngineExecExecuteScriptWithArguments(Script, Arguments)
+	MCEngineExecExecuteScriptInScriptObjectWithArguments(Script, Object, Arguments)
 end syntax
 
 /**

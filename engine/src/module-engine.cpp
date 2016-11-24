@@ -410,21 +410,21 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalChildrenOfScriptObject(MCScriptObje
 	MCProperListCopy(*t_list, r_controls);
 }
 
-static void MCEngineFreeScriptParameters(MCParameter*& x_params)
+static void MCEngineFreeScriptParameters(MCParameter* p_params)
 {
-	while(x_params != nil)
+	while(p_params != nil)
 	{
 		MCParameter *t_param;
-		t_param = x_params;
-		x_params = x_params -> getnext();
+		t_param = p_params;
+		p_params = p_params -> getnext();
 		delete t_param;
 	}
 }
 
 static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params)
 {
-	MCParameter *t_params, *t_last_param;
-	t_params = t_last_param = nil;
+    MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+    MCParameter *t_last_param = nullptr;
 	for(uint32_t i = 0; i < MCProperListGetLength(p_arguments); i++)
 	{
         MCValueRef t_value;
@@ -433,7 +433,7 @@ static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListR
         if (!MCExtensionConvertToScriptType(ctxt, t_value))
         {
             MCValueRelease(t_value);
-            goto error_exit;
+            return false;
         }
         
 		MCParameter *t_param;
@@ -441,19 +441,15 @@ static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListR
 		t_param -> setvalueref_argument(t_value);
         
 		if (t_last_param == nil)
-			t_params = t_param;
+			&t_params = t_param;
 		else
 			t_last_param -> setnext(t_param);
         
 		t_last_param = t_param;
 	}
     
-    r_script_params = t_params;
+    r_script_params = t_params.Release();
     return true;
-    
-error_exit:
-    MCEngineFreeScriptParameters(t_params);
-    return false;
 }
 
 MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
@@ -463,22 +459,22 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         return nil;
     
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-    MCParameter *t_params;
+    MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
     t_params = nil;
     
-    if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
-        goto cleanup;
-
+    if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, &t_params))
+        return nullptr;
+    
 	/* Clear any existing value from the result to enable testing
 	 * whether dispatching generated a result. */
 	MCresult->clear();
 
     Exec_stat t_stat;
-    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
+    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, *t_params);
     if (t_stat == ES_ERROR)
     {
         MCEngineThrowScriptError();
-        goto cleanup;
+        return nullptr;
     }
     
     if (t_stat == ES_NORMAL)
@@ -486,8 +482,6 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     else
         s_last_message_was_handled = false;
 
-cleanup:
-    MCEngineFreeScriptParameters(t_params);
     return MCEngineEvalScriptResult(ctxt);
 }
 
@@ -559,34 +553,76 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCValueRef
+MCEngineDoExecuteScriptInObjectWithArguments(MCStringRef p_script, MCObject *p_object, MCProperListRef p_arguments)
+{
+	if (p_object == nil)
+	{
+		if (!MCdefaultstackptr)
+		{
+			MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
+			return nullptr;
+		}
+		
+		p_object = MCdefaultstackptr->getcurcard();
+	}
+	
+	MCExecContext ctxt(p_object, nil, nil);
+	MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+	
+	if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, &t_params))
+        return nullptr;
+	
+	MCRedrawLockScreen();
+	
+	Exec_stat t_stat;
+	t_stat = p_object -> domess(p_script,
+								*t_params);
+	
+	MCRedrawUnlockScreen();
+	
+	if (t_stat == ES_ERROR)
+	{
+        MCEngineThrowScriptError();
+        return nullptr;
+	}
+	
+	return MCEngineEvalScriptResult(ctxt);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptInScriptObjectWithArguments(MCStringRef p_script, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+{
+	if (!MCEngineScriptObjectAccessIsAllowed())
+		return nil;
+	
+	MCObject *t_object = nil;
+	uint32_t t_part_id = 0;
+	if (p_object != nil)
+	{
+		if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+			return nil;
+	}
+
+	return MCEngineDoExecuteScriptInObjectWithArguments(p_script, t_object, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptInScriptObject(MCStringRef p_script, MCScriptObjectRef p_object)
+{
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script, p_object, kMCEmptyProperList);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptWithArguments(MCStringRef p_script, MCProperListRef p_arguments)
+{
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script,
+																nil,
+																p_arguments);
+}
+
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
-        return nil;
-    
-    MCStack *t_stack;
-    t_stack = MCdefaultstackptr;
-    if (t_stack == nil)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
-        return nil;
-    }
-    
-    MCRedrawLockScreen();
-    
-    Exec_stat t_stat;
-    t_stat = t_stack -> getcurcard() -> domess(p_script);
-    
-    MCRedrawUnlockScreen();
-    
-    if (t_stat == ES_ERROR)
-    {
-        MCEngineThrowScriptError();
-        return nil;
-    }
-
-	MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-	return MCEngineEvalScriptResult(ctxt);
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script,
+																nil,
+																kMCEmptyProperList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
