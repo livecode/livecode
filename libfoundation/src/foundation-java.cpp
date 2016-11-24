@@ -44,11 +44,13 @@ static JavaVM *s_jvm;
 #endif
 
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_MACOS_X)
-static void *s_jvm_handle = nil;
 
+static bool s_weak_link_jvm = false;
+
+extern "C" int initialise_weak_link_jvm_with_path(const char*);
 static bool initialise_weak_link_jvm()
 {
-    if (s_jvm_handle != nil)
+    if (s_weak_link_jvm)
         return true;
     
     const char *t_javahome;
@@ -63,21 +65,18 @@ static bool initialise_weak_link_jvm()
 #else
     t_target = "/jre/lib/jli/libjli.dylib";
 #endif
-
+	
 	char *t_jvm_lib = new (nothrow) char[strlen(t_javahome) + strlen(t_target) + 1];
 
     if (!sprintf(t_jvm_lib, "%s%s", t_javahome, t_target))
         return false;
-    
-    void *t_jvm;
-    t_jvm = dlopen(t_jvm_lib, RTLD_LAZY);
+	
+	if (!initialise_weak_link_jvm_with_path(t_jvm_lib))
+		return false;
     
     delete[] t_jvm_lib;
-    
-    if (t_jvm == nil)
-        return false;
-    
-    s_jvm_handle = t_jvm;
+
+	s_weak_link_jvm = true;
     return true;
 }
 
@@ -86,10 +85,7 @@ static bool initialise_weak_link_jvm()
 static void init_jvm_args(JavaVMInitArgs *x_args)
 {
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_MACOS_X)
-    typedef void (*get_jvm_init_args_ptr)(void *args);
-    get_jvm_init_args_ptr t_get_jvm_init_args = (get_jvm_init_args_ptr)dlsym(s_jvm_handle, "JNI_GetDefaultJavaVMInitArgs");
-    if (t_get_jvm_init_args != nil)
-        t_get_jvm_init_args(x_args);
+	JNI_GetDefaultJavaVMInitArgs(x_args);
 #endif
 }
     
@@ -97,11 +93,7 @@ static bool create_jvm(JavaVMInitArgs *p_args)
 {
     int ret = 0;
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_MACOS_X)
-    typedef int (*create_jvm_ptr)(void **jvm, void **env, void* args);
-    
-    create_jvm_ptr t_create_jvm = (create_jvm_ptr)dlsym(s_jvm_handle, "JNI_CreateJavaVM");
-
-    ret = t_create_jvm((void **)&s_jvm, (void **)&s_env, p_args);
+    ret = JNI_CreateJavaVM(&s_jvm, (void **)&s_env, p_args);
 #endif
     
     return ret == 0;
