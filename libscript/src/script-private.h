@@ -155,6 +155,24 @@ struct MCScriptHandlerTypeParameter
 {
     MCScriptHandlerTypeParameterMode mode;
     uindex_t type;
+
+	/* Translate the mode of this parameter from a
+	 * MCScriptHandlerTypeParameterMode to an
+	 * MCHandlerTypeFieldMode. */
+	inline MCHandlerTypeFieldMode GetFieldMode() const
+	{
+		switch (mode)
+		{
+		case kMCScriptHandlerTypeParameterModeIn:
+			return kMCHandlerTypeFieldModeIn;
+		case kMCScriptHandlerTypeParameterModeOut:
+			return kMCHandlerTypeFieldModeOut;
+		case kMCScriptHandlerTypeParameterModeInOut:
+			return kMCHandlerTypeFieldModeInOut;
+		default:
+			MCUnreachableReturn(kMCHandlerTypeFieldModeIn);
+		}
+	}
 };
 
 struct MCScriptHandlerType: public MCScriptType
@@ -427,7 +445,6 @@ MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScr
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
 MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
 
-MCTypeInfoRef MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
 MCTypeInfoRef MCScriptGetTypeOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
 MCTypeInfoRef MCScriptGetTypeOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
 MCTypeInfoRef MCScriptGetTypeOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
@@ -507,6 +524,7 @@ MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef instance,
 bool
 MCScriptThrowInvalidValueForPropertyError(MCScriptInstanceRef instance,
 										  MCScriptPropertyDefinition *property_def,
+                                          MCTypeInfoRef property_type,
 										  MCValueRef provided_value);
 
 bool

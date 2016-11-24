@@ -280,12 +280,12 @@ public handler OnMouseLeave()
 	redraw all
 end handler
 
-public handler setListArray(in pArray as Array) as undefined
+public handler setListArray(in pArray as Array) returns nothing
 	put pArray into mListArray
 	redraw all
 end handler
 
-public handler getPaint(in pString as String) as Paint
+public handler getPaint(in pString as String) returns Paint
 	if pString is "title" or pString is "hint" then
 		return solid paint with color [96/255, 96/255, 96/255]
 		
@@ -310,7 +310,7 @@ public handler getPaint(in pString as String) as Paint
 	end if
 end handler
 
-private handler getRect(in pString as String, in pInt as Integer) as Rectangle
+private handler getRect(in pString as String, in pInt as Integer) returns Rectangle
 
 	if pString is "title" then
 		return rectangle [kPadding, mTopView+mBottom, my width, mTopView+mBottom+kHeight]
@@ -337,7 +337,7 @@ private handler getRect(in pString as String, in pInt as Integer) as Rectangle
 	
 end handler
 
-private handler getFont(in pString as String) as Font
+private handler getFont(in pString as String) returns Font
 	if pString is "title" then
 		return font "Helvetica Neue" at size 11
 		
@@ -350,7 +350,7 @@ private handler getFont(in pString as String) as Font
 	end if
 end handler
 
-private handler getHLine(in pLeft as Real, in pRight as Real, in pHeight as Real) as Path
+private handler getHLine(in pLeft as Real, in pRight as Real, in pHeight as Real) returns Path
 	return line path from point [pLeft, pHeight] to point [pRight, pHeight]
 end handler
 

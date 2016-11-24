@@ -8,6 +8,7 @@ on revLoadLibrary
    if the target is me then
       insert the script of me into back
       
+      __InitialiseScriptLibraries
       __InitialiseInclusionDependencies
       __InitialiseBuiltInInclusions
    end if
@@ -18,6 +19,8 @@ on revUnloadLibrary
       remove the script of me from back
    end if
 end revUnloadLibrary
+
+local sScriptLibraries
 
 -- Some higher level wrappers..
 
@@ -1062,6 +1065,13 @@ function revSBScriptLibraryNameFromStackName pStack
       case "revPrintLibrary"
          return "Printing"
       default
+         local tLibrary
+         repeat for each element tLibrary in sScriptLibraries
+            if tLibrary["id"] is pStack then
+               return tLibrary["title"]
+            end if
+         end repeat
+         
          if pStack begins with "rev" then
             delete char 1 to 3 of pStack
             if pStack ends with "Library" then
@@ -1083,13 +1093,19 @@ function revSBStackNameFromScriptLibraryName pLib
       case "Printing"
          return "revPrintLibrary"
       default
+         local tLibrary
+         repeat for each element tLibrary in sScriptLibraries
+            if tLibrary["title"] is pLib then
+               return tLibrary["id"]
+            end if
+         end repeat
+         
          return "rev" & pLib & "Library"
    end switch
-   return pLib
 end revSBStackNameFromScriptLibraryName
 
 constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
-private function revSBScriptLibraries
+private function __ScriptLibraries
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
    // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
@@ -1113,7 +1129,7 @@ private function revSBScriptLibraries
    end repeat
    
    return tLibs
-end revSBScriptLibraries
+end __ScriptLibraries
 
 private function revSBPlatformToRuntimeFolderName pPlatform
    -- Ensure folder casing is correct
@@ -1608,9 +1624,9 @@ private function revSBAvailableExtensions pType
    return tInclusions
 end revSBAvailableExtensions
 
-private function revSBAvailableScriptLibraries
-   local tLibraries, tInclusions
-   put revSBScriptLibraries() into tLibraries
+private command __InitialiseScriptLibraries
+   local tLibraries
+   put __ScriptLibraries() into tLibraries
    repeat for each line tLine in tLibraries
       local tLibrary
       put tLine into tLibrary["id"]
@@ -1618,10 +1634,26 @@ private function revSBAvailableScriptLibraries
       put "script library" into tLibrary["type"]
       put revSBAllDesktopPlatforms() & comma & \ 
             revSBAllMobilePlatforms() into tLibrary["platforms"]
-      addToList tLibrary, tInclusions
+      addToList tLibrary, sScriptLibraries
    end repeat
-   return tInclusions
-end revSBAvailableScriptLibraries
+end __InitialiseScriptLibraries
+
+private function __AvailableScriptLibraries
+   if sScriptLibraries is not an array then
+      __InitialiseScriptLibraries
+   end if
+   return sScriptLibraries
+end __AvailableScriptLibraries
+
+command revSBAddAvailableLibrary pID, pTitle
+   local tLibrary
+   put pID into tLibrary["id"]
+   put pTitle into tLibrary["title"]
+   put "script library" into tLibrary["type"]
+   put revSBAllDesktopPlatforms() & comma & \ 
+         revSBAllMobilePlatforms() into tLibrary["platforms"]
+   addToList tLibrary, sScriptLibraries
+end revSBAddAvailableLibrary
 
 constant kResources = "Cursors|cursors,Answer Dialog|answerDialog,Ask Dialog|askDialog,Brushes|brushes,Magnify|magnify,PDF Printer|pdfPrinter,Print Dialogs|revolutionPrintDialogs"
 private function revSBAvailableResources
@@ -1713,7 +1745,7 @@ function revSBAvailableInclusions
       addToList tInclusion, tInclusions
    end repeat
    
-   repeat for each element tInclusion in revSBAvailableScriptLibraries()
+   repeat for each element tInclusion in __AvailableScriptLibraries()
       addToList tInclusion, tInclusions
    end repeat
    
@@ -1996,7 +2028,7 @@ private command prependToStringList pValue, @xList
 end prependToStringList
 
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
-   local tModules, tAuxiliaryStackfiles, tStartupScript
+   local tModules, tAuxiliaryStackfiles, tStartupScript, tGeneratedStartupScript
    
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
@@ -2022,6 +2054,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       if there is a stack tLibraryStack then
          appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
          appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
+         
+         -- allow libraries to generate some additional startup script
+         dispatch "revLibraryStartupScript" to stack tLibraryStack
+         if it is "handled" then
+            appendToStringList the result, tGeneratedStartupScript
+         end if
       end if
    end repeat
    
@@ -2042,10 +2080,18 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
             if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
                appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
                appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
+               
+               -- allow libraries to generate some additional startup script
+               dispatch "revLibraryStartupScript" to stack tLibrary
+               if it is "handled" then
+                  appendToStringList the result, tGeneratedStartupScript
+               end if
             end if
          end repeat
       end if
    end repeat
+   
+   appendToStringList tGeneratedStartupScript, tStartupScript
    
    -- Make sure we include the initialisation library (at the top of the list) if needed
    if tAuxiliaryStackFiles is not empty then
@@ -2109,7 +2155,7 @@ command revSBRemoveInclusions pStack, pPlatform, pConfirm, @xSettings
                put xSettings["overrideInclusions"] into tOverride
                put tInclude into tOverride[tName]
                set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
-               revSetEdited the short name of stack pStack
+               revIDESetEdited pStack
             end if
          end if
          

@@ -749,7 +749,7 @@ Boolean MCCard::mdown(uint2 which)
 	MCtooltip->closetip();
 	MCControl *cptr = NULL;
 
-	MCclickfield = NULL;
+	MCclickfield = nil;
 	mgrabbed = True;
 	if (mfocused != NULL)
 	{
@@ -1092,7 +1092,7 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 
 bool MCCard::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
        (p_check_flag && getflag(F_C_CANT_DELETE)) ||
        getstack() -> isediting())
     {
@@ -1280,7 +1280,7 @@ Exec_stat MCCard::handle(Handler_type htype, MCNameRef mess, MCParameter *params
 				stat = ES_PASS;
 		}
 
-		if (parent != NULL && (stat == ES_PASS || stat == ES_NOT_HANDLED))
+		if (parent && (stat == ES_PASS || stat == ES_NOT_HANDLED))
 		{
 			Exec_stat oldstat = stat;
 			stat = parent->handle(htype, mess, params, this);
@@ -1289,7 +1289,7 @@ Exec_stat MCCard::handle(Handler_type htype, MCNameRef mess, MCParameter *params
 		}
 	}
 
-	if (stat == ES_ERROR && MCerrorptr == NULL)
+	if (stat == ES_ERROR && !MCerrorptr)
 		MCerrorptr = this;
 
 	return stat;
@@ -2819,35 +2819,38 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 	if (!cptr -> isselectable()
 	        && (!MCselectgrouped || cptr->gettype() != CT_GROUP))
 		return;
-	MCGroup *gptr = (MCGroup *)cptr;
 	
 	// MW-2008-12-04: [[ Bug ]] Make sure we honour group-local selectGrouped for
 	//   select-tool drags
-	if (MCselectgrouped && cptr->gettype() == CT_GROUP
-	        && gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
+	if (MCselectgrouped && cptr->gettype() == CT_GROUP)
 	{
-		cptr = gptr->getcontrols();
+        MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
+
+		if (gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
+		{
+			cptr = gptr->getcontrols();
         
-        MCRectangle t_group_rect;
-        t_group_rect = gptr -> getrect();
-        
-        MCRectangle t_group_oldrect;
-        t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
-        
-        MCRectangle t_group_selrect;
-        t_group_selrect = MCU_intersect_rect(p_selrect, t_group_rect);
-        
-        do
-        {
-            MCRectangle t_rect;
-            t_rect = cptr -> getrect();
-            if (MCU_line_intersect_rect(t_group_rect, t_rect))
-                updateselection(cptr, t_group_oldrect, t_group_selrect, drect);
-            
-            cptr = cptr->next();
-        }
-        while (cptr != gptr->getcontrols());
-   }
+			MCRectangle t_group_rect;
+			t_group_rect = gptr -> getrect();
+			
+			MCRectangle t_group_oldrect;
+			t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
+			
+			MCRectangle t_group_selrect;
+			t_group_selrect = MCU_intersect_rect(p_selrect, t_group_rect);
+			
+			do
+			{
+			    MCRectangle t_rect;
+			    t_rect = cptr -> getrect();
+			    if (MCU_line_intersect_rect(t_group_rect, t_rect))
+				updateselection(cptr, t_group_oldrect, t_group_selrect, drect);
+			    
+			    cptr = cptr->next();
+			}
+			while (cptr != gptr->getcontrols());
+		}
+	}
 	else
 	{
 		Boolean was, is;
@@ -3455,8 +3458,8 @@ Exec_stat MCCard::closecontrols(void)
 // is a property of the mouseControl. Will return NULL if no mouseControl exists.
 MCControl *MCCard::getmousecontrol(void)
 {
-	if (MCmousestackptr == NULL)
-		return NULL;
+	if (!MCmousestackptr)
+		return nil;
 
 	MCControl *t_focused;
 	t_focused = MCmousestackptr -> getcard() -> getmfocused();

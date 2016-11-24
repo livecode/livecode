@@ -396,9 +396,10 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 			return kCGBlendModeColor;
 		case kMCGBlendModeLuminosity:
 			return kCGBlendModeLuminosity;
+		default:
+			MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode
 	}
 	
-	MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode
 }
 
 static void MCMacRenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend)

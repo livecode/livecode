@@ -878,6 +878,9 @@ static void MCBitmapEffectsSetUIntProperty(MCBitmapEffect& x_effect, MCBitmapEff
             }
         }
             break;
+		default:
+			MCUnreachableReturn();
+			break;
     }
 }
 

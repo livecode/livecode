@@ -1324,7 +1324,7 @@ static void MCIPhoneDoWillTerminate(void *)
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
 	// Ensure shutdown is called.
-	if (MCdefaultstackptr != nil)
+	if (MCdefaultstackptr)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down, (MCParameter*)NULL, True, True);
 	
 	// Shutdown the engine
@@ -1514,7 +1514,7 @@ void MCIPhoneHandleEndTextInput(void)
 
 void MCIPhoneHandleProcessTextInput(uint32_t p_char_code, uint32_t p_key_code)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 
 	static_cast<MCScreenDC *>(MCscreen) -> handle_key_press(0, p_char_code, p_key_code);

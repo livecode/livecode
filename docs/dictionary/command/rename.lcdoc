@@ -2,7 +2,7 @@ Name: rename
 
 Type: command
 
-Syntax: rename [file | folder |directory] <filePath> to <newPath>
+Syntax: rename [{file | folder | directory}] <filePath> to <newPath>
 
 Summary:
 Gives a <file> or <folder> a new name or moves it to a new location or

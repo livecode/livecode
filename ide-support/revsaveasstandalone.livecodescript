@@ -239,7 +239,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
-      revSetEdited the short name of stack pStack
+      revIDESetEdited pStack
       setSettings pStack, tSettings
    end if
    
@@ -775,6 +775,7 @@ command revSaveAsWindowsStandalone pStack, pFolder
       -- Make sure we use the user's version info data
       put sStandaloneSettingsA["Windows,fileversion1"]&"."&sStandaloneSettingsA["Windows,fileversion2"]&"." & sStandaloneSettingsA["Windows,fileversion3"]&"."&sStandaloneSettingsA["Windows,fileversion4"] into sStandaloneSettingsA["Windows,FileVersion"]
       put sStandaloneSettingsA["Windows,productversion1"]&"."&sStandaloneSettingsA["Windows,productversion2"]&"." & sStandaloneSettingsA["Windows,productversion3"]&"."&sStandaloneSettingsA["Windows,productversion4"] into sStandaloneSettingsA["Windows,ProductVersion"]
+      set the itemDelimiter to comma
       repeat for each item tField in kVersionFlds
          put sStandaloneSettingsA["Windows", tField] into tDeployInfo["version"][tField]
       end repeat

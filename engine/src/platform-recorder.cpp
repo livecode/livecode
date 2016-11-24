@@ -18,7 +18,7 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "globals.h"
 
 #include "player.h"
 #include "util.h"
@@ -98,6 +98,9 @@ void MCPlatformSoundRecorder::SetProperty(MCPlatformSoundRecorderProperty p_prop
 		case kMCPlatformSoundRecorderPropertyCompressionType:
             m_configuration . compression_type = *(unsigned int *)p_value;
 			break;
+		case kMCPlatformSoundRecorderPropertyExtraInfo:
+			MCUnreachable();
+			break;
     }
 }
 
@@ -119,6 +122,9 @@ void MCPlatformSoundRecorder::GetProperty(MCPlatformSoundRecorderProperty p_prop
 			break;
 		case kMCPlatformSoundRecorderPropertyCompressionType:
             *(unsigned int *)r_value = m_configuration . compression_type;
+			break;
+		case kMCPlatformSoundRecorderPropertyExtraInfo:
+			MCUnreachable();
 			break;
     }
 }

@@ -683,7 +683,6 @@ MCExternalError MCExternalVariable::ConvertToString(MCValueRef p_value, MCExtern
         case kMCValueTypeCodeArray:
             // An array is never a string (from the point of view of the externals API).
             return kMCExternalErrorNotAString;
-            break;
         default:
             assert(false);
     }
@@ -1263,11 +1262,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             break;
         case kMCExternalContextQueryDefaultStack:
         {
-            if (MCdefaultstackptr == nil)
+            if (!MCdefaultstackptr)
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
-            t_handle = MCdefaultstackptr -> GetHandle();
+            t_handle = MCdefaultstackptr -> GetHandleAs<MCObject>();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
             
@@ -1276,11 +1275,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             break;
         case kMCExternalContextQueryDefaultCard:
         {
-            if (MCdefaultstackptr == nil)
+            if (!MCdefaultstackptr)
                 return kMCExternalErrorNoDefaultStack;
             
             MCObjectHandle t_handle;
-            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandle();
+            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandleAs<MCObject>();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
             
@@ -1297,7 +1296,6 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             return MCExternalConvertStringToValueType(MCECptr -> GetColumnDelimiter(), p_option, result);
         case kMCExternalContextQueryRowDelimiter:
             return MCExternalConvertStringToValueType(MCECptr -> GetRowDelimiter(), p_option, result);
-			break;
 			
 		case kMCExternalContextQueryHasLicenseCheck:
 			*(bool *)result = true;
@@ -2010,7 +2008,6 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
             else
                 return var -> AppendInteger(p_options, t_integer);
         }
-        break;
     }
     case kMCExternalValueOptionAsNSString:
     {
@@ -2184,13 +2181,10 @@ static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
     {
         case kMCExternalValueOptionDefaultCaseSensitive:
             return MCECptr -> GetCaseSensitive();
-            break;
         case kMCExternalValueOptionCaseSensitive:
             return true;
-            break;
         case kMCExternalValueOptionNotCaseSensitive:
             return false;
-            break;
         default:
             return false;
     }
@@ -2827,7 +2821,6 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
 			
 		default:
 			MCUnreachableReturn(kMCExternalErrorUnlicensed);
-			break;
 	}
 	
 	if (t_current_edition < p_min_edition)

@@ -443,7 +443,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #      define alignof(x)    __alignof(x)
 #    endif
 #  else
-#    error Don't know how to get alignof(x) on this compiler
+#    error Do not know how to get alignof(x) on this compiler
 #  endif
 #endif
 
@@ -1442,9 +1442,9 @@ template<typename T> inline T MCValueRetain(T value)
 // Utility function for assigning to MCValueRef vars.
 template<typename T> inline void MCValueAssign(T& dst, T src)
 {
-    if (src == dst)
-        return;
-    
+	if (src == dst)
+		return;
+
 	MCValueRetain(src);
 	MCValueRelease(dst);
 	dst = src;
@@ -1453,9 +1453,9 @@ template<typename T> inline void MCValueAssign(T& dst, T src)
 // Utility function for assigning to MCValueRef vars.
 template<typename T> inline void MCValueAssignAndRelease(T& dst, T src)
 {
-    if (src == dst)
-        return;
-    
+	if (src == dst)
+		return;
+
 	MCValueRelease(dst);
 	dst = src;
 }

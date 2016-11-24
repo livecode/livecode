@@ -50,6 +50,9 @@ public:
 	
 	// Return the list of arguments to the current opcode
 	const uindex_t *GetArgumentList(void) const;
+
+	// Return the list of arguments to the current opcode
+	MCSpan<const uindex_t> GetArguments() const;
 	
 	// Fetch the type of the given register. The type of the register might
 	// be nil, if it has no assigned type.
@@ -130,8 +133,7 @@ public:
 	void PushFrame(MCScriptInstanceRef instance,
 				   MCScriptHandlerDefinition *handler,
 				   uindex_t result_reg,
-				   const uindex_t *argument_regs,
-				   uindex_t argument_count);
+	               MCSpan<const uindex_t> argument_regs);
 	
 	// Pop the current activation frame and set the return value to the contents
 	// of the given register. If result_reg is UINDEX_MAX, then it means there is
@@ -143,14 +145,12 @@ public:
 	void InvokeForeign(MCScriptInstanceRef instance,
 					   MCScriptForeignHandlerDefinition *handler,
 					   uindex_t result_reg,
-					   const uindex_t *argument_regs,
-					   uindex_t argument_count);
+	                   MCSpan<const uindex_t> argument_regs);
 	
 	// Enter the LCB VM to execute the specified handler in the given instance.
 	void Enter(MCScriptInstanceRef instance,
 			   MCScriptHandlerDefinition *handler,
-			   MCValueRef *arguments,
-			   uindex_t argument_count,
+	           MCSpan<MCValueRef> arguments,
 			   MCValueRef *r_result);
 	
 	// Decode the next bytecode to execute. If there is more execution to do,
@@ -202,8 +202,7 @@ public:
 	
 	// Raise an 'unable to resolve multi-invoke' error.
 	void ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *group,
-										 const uindex_t *arguments,
-										 uindex_t argument_count);
+	                                     MCSpan<const uindex_t> arguments);
 	
 	// Raise a 'value is not a handler' error.
 	void ThrowNotAHandlerValue(MCValueRef actual_value);
@@ -271,11 +270,13 @@ private:
 	Frame *m_frame;
     const byte_t *m_bytecode_ptr;
 	const byte_t *m_next_bytecode_ptr;
+	bool m_operation_ready;
 	MCScriptBytecodeOp m_operation;
 	uindex_t m_arguments[256];
 	uindex_t m_argument_count;
-	
-	MCValueRef *m_root_arguments;
+
+	// Owned by parent context
+	MCSpan<MCValueRef> m_root_arguments;
 	MCValueRef *m_root_result;
 };
 
@@ -285,6 +286,9 @@ MCScriptExecuteContext::MCScriptExecuteContext(void)
 	  m_frame(nil),
 	  m_bytecode_ptr(nil),
 	  m_next_bytecode_ptr(nil),
+	  m_operation_ready(false),
+	  m_operation(kMCScriptBytecodeOp__First),
+	  m_argument_count(0),
 	  m_root_arguments(nil),
       m_root_result(nil)
 {
@@ -307,6 +311,7 @@ MCScriptExecuteContext::~MCScriptExecuteContext(void)
 inline MCScriptBytecodeOp
 MCScriptExecuteContext::GetOperation(void) const
 {
+	MCAssert(m_operation_ready);
 	return m_operation;
 }
 
@@ -325,19 +330,20 @@ MCScriptExecuteContext::GetNextAddress(void) const
 inline uindex_t
 MCScriptExecuteContext::GetArgumentCount(void) const
 {
-	return m_argument_count;
+	return GetArguments().size();
 }
 
 inline uindex_t
 MCScriptExecuteContext::GetArgument(uindex_t p_index) const
 {
-	return m_arguments[p_index];
+	return GetArguments()[p_index];
 }
 
-inline const uindex_t *
-MCScriptExecuteContext::GetArgumentList(void) const
+inline MCSpan<const uindex_t>
+MCScriptExecuteContext::GetArguments() const
 {
-	return m_arguments;
+	MCAssert(m_operation_ready);
+	return MCMakeSpan(m_arguments, m_argument_count);
 }
 
 inline index_t
@@ -669,8 +675,7 @@ inline void
 MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
                                   MCScriptHandlerDefinition *p_handler_def,
                                   uindex_t p_result_reg,
-                                  const uindex_t *p_argument_regs,
-                                  uindex_t p_argument_count)
+                                  MCSpan<const uindex_t> p_argument_regs)
 {
     if (m_error)
 	{
@@ -708,11 +713,11 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
                               p_handler_def);
     
     // Check the parameter count.
-    if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+    if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_regs.size())
     {
         ThrowWrongNumberOfArguments(p_instance,
                                     p_handler_def,
-                                    p_argument_count);
+                                    p_argument_regs.size());
         return;
     }
     
@@ -784,7 +789,7 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
     // caller registers that were passed so we can copy back at the end.
     if (t_needs_mapping)
     {
-        if (!MCMemoryNewArray(p_argument_count,
+	    if (!MCMemoryNewArray(p_argument_regs.size(),
                               t_new_frame->mapping))
         {
             Rethrow();
@@ -792,8 +797,8 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
         }
         
         MCMemoryCopy(t_new_frame->mapping,
-                     p_argument_regs,
-                     p_argument_count * sizeof(p_argument_regs[0]));
+                     p_argument_regs.data(),
+                     p_argument_regs.sizeBytes());
     }
     
     // Finally, make the new frame the current frame and set the
@@ -929,7 +934,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 		if (m_root_result != nil)
 			*m_root_result = MCValueRetain(t_return_value);
 		
-		if (m_root_arguments != nil)
+		if (!m_root_arguments.empty())
 		{
 			for(uindex_t i = 0; i < t_parameter_count; i++)
 			{
@@ -955,8 +960,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 inline void
 MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 							  MCScriptHandlerDefinition *p_handler_def,
-							  MCValueRef *p_arguments,
-							  uindex_t p_argument_count,
+                              MCSpan<MCValueRef> p_arguments,
 							  MCValueRef *r_value)
 {
 	if (m_error)
@@ -991,11 +995,11 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 								  p_handler_def);
 	
 	// Check the parameter count.
-	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arguments.size())
 	{
 		ThrowWrongNumberOfArguments(p_instance,
 									p_handler_def,
-									p_argument_count);
+		                            p_arguments.size());
 		return;
 	}
 
@@ -1043,6 +1047,7 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	t_new_frame.Take(m_frame);
 	m_bytecode_ptr = nil;
 	m_next_bytecode_ptr = p_instance->module->bytecode + p_handler_def->start_address;
+
 	m_root_arguments = p_arguments;
 	m_root_result = r_value;
 	
@@ -1165,8 +1170,9 @@ MCScriptExecuteContext::Step(void)
 						   m_operation,
 						   m_arguments,
 						   m_argument_count);
-	
-	return !m_error;
+
+	m_operation_ready = !m_error;
+	return m_operation_ready;
 }
 
 inline bool
@@ -1221,14 +1227,13 @@ MCScriptExecuteContext::Rethrow(bool /*ignored*/)
 
 inline void
 MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *p_group,
-														const uindex_t *p_arguments,
-														uindex_t p_argument_count)
+                                                        MCSpan<const uindex_t> p_arguments)
 {
 	MCAutoProperListRef t_args;
 	if (!MCProperListCreateMutable(&t_args))
 		return;
 	
-	for(uindex_t i = 0; i < p_argument_count; i++)
+	for(uindex_t i = 0; i < p_arguments.size(); i++)
 	{
 		MCValueRef t_value;
 		t_value = FetchRegister(p_arguments[i]);

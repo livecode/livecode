@@ -887,7 +887,12 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
 		}
-		break;
+			break;
+		case PRINTER_OUTPUT_WORKFLOW:
+		case PRINTER_OUTPUT_SYSTEM:
+			MCUnreachable();
+			break;
+				
 		}
 
 		t_err = PMSessionSetDestination(m_session, m_settings, t_output_type, kPMDocumentFormatPDF, t_output_url);
@@ -1877,6 +1882,9 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				executegroup(p_mark);
 		}
 		break;
+			
+		default:
+			break;
 	}
 	
 	CGContextRestoreGState(m_context);

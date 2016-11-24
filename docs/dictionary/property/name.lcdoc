@@ -41,13 +41,13 @@ example, if a <player|player's> short name is Heaven, its abbreviated
 name is player "Heaven". If you don't specify a modifier for the <name>
 <property>, the abbreviated name is what you get.
 
-The long name of an object includes information about its <owner> (and
+The <long> name of an object includes information about its <owner> (and
 about the <owner> of that <object(object)>, and so forth). For example,
 suppose a <stack> named "My <stack>" contains a <card> named "My Card".
 This <card> has a <group> named "My Group" which contains a <button>
 named "My Button". The <card> also has a <card control|card field> named
 "My Field". If "My Stack" is a <main stack> and it's in a <file> whose
-<file path|path> is "/Drive/Folder/Stack.rev", the long names of these
+<file path|path> is "/Drive/Folder/Stack.rev", the <long> names of these
 <objects(object)> look like this:
 
 * The stack:
@@ -73,26 +73,26 @@ named "My Button". The <card> also has a <card control|card field> named
 > application|standalone applications> are stored as <application
 > bundle|application bundles>. A <application bundle|bundle> behaves
 > like a <file> but is actually a <folder>, and the <main stack> of a
-> <standalone application> is inside this <folder>. The long name of a
+> <standalone application> is inside this <folder>. The <long> name of a
 > stack in an application is the location of the application inside the
 > <application bundle|bundle>, not the <application bundle|bundle's>
 > location. For example, if the <bundle'sfile path> is
-> "/Volumes/Disk/MyApp.app/", the long name of the application's main
+> "/Volumes/Disk/MyApp.app/", the <long> name of the application's main
 > stack might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
-If the stack is a substack, its name is included in the long names of
+If the stack is a substack, its name is included in the <long> names of
 its objects, before the path of the main stack: stack "My Substack" of
 stack "/Drive/Folder/Stack.rev"
 
-The long <name> of a <group> includes the name of the <current card>. If
+The <long> <name> of a <group> includes the name of the <current card>. If
 the <group> does not appear on the <current card>, requesting its <name>
 results in an <execution error>. If you need to get the name of a
 <group> that is not on the <current card>, use the "<background>"
 terminology instead.
 
-The long <name> of a <background> includes the name of the <current
+The <long> <name> of a <background> includes the name of the <current
 card>, if the <background> appears on the <current card>. If not, the
-long name of the <background> includes the name of the first <card> the
+<long> name of the <background> includes the name of the first <card> the
 <background> appears on.
 
 You can use an object's <name> to refer to the <object(object)> in a
@@ -133,9 +133,9 @@ reported, regardless of what form of the <name> <property> you request.
 > to be inappropriately disabled, or other problems. You can use the
 > <characters> "rev" anywhere in a <stack> <name> except the beginning.
 > If you want a name beginning with "rev" to appear in a stack's title
-> bar, set the stacks' <label property> instead.
+> bar, set the stacks' <label> <property> instead.
 
->*Note:* If a stack's <HCAddressing property> is set to true, the <long>
+>*Note:* If a stack's <HCAddressing> <property> is set to true, the <long>
 > or <abbreviated> <name> of a <control(keyword)> in that <stack> begins
 > with the word "background" if the <control(keyword)> is part of a
 > <group>, and with the word "card" if not.
@@ -153,9 +153,9 @@ background (glossary), card control (glossary), object (glossary),
 file (keyword), characters (keyword), long (keyword), button (keyword),
 string (keyword), abbreviated (keyword), card (keyword),
 control (keyword), nameChanged (message), player (object), stack (object),
-control (object), HCAddressing property (property), name (property),
+control (object), HCAddressing (property), name (property),
 owner (property), ID (property), hilitedButtonName (property),
-label (property), label property (property), titleWidth (property)
+label (property), titleWidth (property)
 
 Tags: objects
 

@@ -386,13 +386,11 @@ template<typename T> struct VectorFieldPropType
 
     static bool equal(const stack_type& a, const stack_type& b)
     {
-        if (a . list . count == 0 && a . list . count == 0)
-            return true;
-        else if (a . list . count != b . list . count)
+        if (a . list . count != b . list . count)
             return false;
         else
         {
-            for (unsigned int i = 0; i < a . list . count && i < b . list . count; ++i)
+            for (unsigned int i = 0; i < a . list . count; ++i)
                 if (a . list . elements[i] != b . list . elements[i])
                     return false;
         }
@@ -1402,8 +1400,11 @@ void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::SetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef r_value)
 {
     MCAutoStringRef t_string;
-    /* UNCHECKED */ MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string);
-    /* UNCHECKED */ settextindex(p_part_id, p_start, p_finish, *t_string, false);
+	if (MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string) &&
+		settextindex(p_part_id, p_start, p_finish, *t_string, false))
+		return;
+	
+	ctxt . Throw();
 }
 
 void MCField::GetPlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)

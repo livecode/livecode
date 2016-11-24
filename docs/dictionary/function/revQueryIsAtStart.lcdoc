@@ -30,7 +30,7 @@ was created.
 
 Returns:
 The <revQueryIsAtStart> function returns true if the
-<revMoveToPreviousRecord command> has been called with the cursor
+<revMoveToPreviousRecord> <command> has been called with the cursor
 pointing to the first record.
 
 Description:
@@ -41,7 +41,7 @@ If the operation is not successful, the <revQueryIsAtStart> function
 returns an error message that begins with the <string> "revdberr".
 
 References: revMoveToPreviousRecord (command),
-revMoveToPreviousRecord command (command), revOpenDatabase (function),
+command (glossary), revOpenDatabase (function),
 revCurrentRecord (function), revQueryDatabase (function),
 revCurrentRecordIsFirst (function), revQueryIsAtEnd (function),
 string (keyword)

@@ -142,6 +142,8 @@
 							'-Werror=objc-literal-compare',
 							'-Werror=shadow',
 							'-Werror=unreachable-code',
+							'-Werror=enum-compare',
+							'-Werror=switch',
 						],
 					},
 				},

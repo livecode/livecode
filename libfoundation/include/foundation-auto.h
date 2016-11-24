@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation.h"
 #endif
 
+#include "foundation-span.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> class MCAutoValueRefBase;
@@ -86,6 +88,11 @@ public:
 		return m_value;
 	}
     
+	bool IsSet() const
+	{
+		return m_value != nil;
+	}
+
     void Reset(T value = nil)
     {
         if (value == m_value)
@@ -94,11 +101,6 @@ public:
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
-    }
-    
-    inline T& operator ! (void)
-    {
-		return m_value;
     }
     
     // The give method places the given value into the container without
@@ -346,6 +348,11 @@ public:
         MCAssert(m_values != nil);
         return m_values[p_index];
     }
+
+	MCSpan<T> Span() const
+	{
+		return MCMakeSpan(m_values, m_value_count);
+	}
     
 private:
 	T* m_values;
@@ -709,6 +716,10 @@ public:
 		(void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
 		return t_length;
 	}
+	MCSpan<const char_t> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
+	}
 private:
 	MCAutoStringRef m_string;
 };
@@ -721,6 +732,10 @@ public:
 	const char * operator* () const
 	{
 		return reinterpret_cast<const char *>(MCAutoStringRefAsNativeChars::operator*());
+	}
+	MCSpan<const char> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
 	}
 };
 
@@ -835,53 +850,67 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
+template <typename T, void (Deleter)(T*)>
+class MCAutoCustomPointer
 {
-	
 public:
-	MCAutoCustomPointer(void)
+ 
+    typedef T* pointer;
+    
+	MCAutoCustomPointer() :
+      m_ptr(nil)
 	{
-		m_ptr = nil;
+	}
+    
+    MCAutoCustomPointer(T*&& take) :
+      m_ptr(take)
+    {
+    }
+    
+	~MCAutoCustomPointer()
+	{
+		Deleter(m_ptr);
 	}
 	
-	~MCAutoCustomPointer(void)
+	MCAutoCustomPointer& operator= (T*&& value)
 	{
-		FREE(m_ptr);
-	}
-	
-	T *operator = (T *value)
-	{
-		FREE(m_ptr);
+		Deleter(m_ptr);
 		m_ptr = value;
-		return value;
+		return *this;
 	}
 	
-	T*& operator & (void)
+	T*& operator& ()
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T *operator * (void) const
+	T* operator* () const
 	{
 		return m_ptr;
 	}
+    
+    operator bool () const
+    {
+        return m_ptr != nil;
+    }
 	
-	void Take(T*&r_ptr)
+	void ReleaseTo(T*& r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
-	T *Take()
+	T* Release()
 	{
-		T *t_ptr = m_ptr;
+		T* t_ptr = m_ptr;
 		m_ptr = nil;
 		return t_ptr;
 	}
 	
 private:
-	T *m_ptr;
+    
+	T* m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

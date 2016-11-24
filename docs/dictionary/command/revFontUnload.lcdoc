@@ -34,7 +34,7 @@ Otherwise an error string is put into the result.
 Description:
 The <revFontUnload> command unloads a font file from memory.
 
->*Note:* After unloading a font, the <fontNames function> will return
+>*Note:* After unloading a font, the <fontNames> <function> will return
 > the names of the remaining fonts that are loaded. To determine the
 > name of the unloaded font, compare the value of the <fontNames> before
 > and after unloading.
@@ -43,6 +43,6 @@ The <revFontUnload> command unloads a font file from memory.
 Ensure fonts are not in use before unloading them to avoid unexpected
 behaviour. 
 
-References: revFontLoad (command), fontNames function (function),
+References: revFontLoad (command), function (glossary),
 fontNames (function)
 

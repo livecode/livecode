@@ -41,8 +41,7 @@ class MCScriptForeignInvocation
 public:
 	MCScriptForeignInvocation(void)
 		: m_argument_count(0),
-		  m_storage_frontier(0),
-		  m_storage_limit(sizeof(m_stack_storage))
+		  m_storage_frontier(0)
 	{
 	}
 	
@@ -71,7 +70,7 @@ public:
 		t_align_delta = p_align - (m_storage_frontier % p_align);
 		
 		// If there is not enough space then throw.
-		if (m_storage_limit - m_storage_frontier < p_amount + t_align_delta)
+		if (sizeof(m_stack_storage) - m_storage_frontier < p_amount + t_align_delta)
 		{
 			return MCErrorThrowOutOfMemory();
 		}
@@ -92,7 +91,7 @@ public:
 	bool Argument(void *p_slot_ptr,
 				  __MCScriptValueDrop p_slot_drop)
 	{
-		if (m_argument_count == kMaxArguments)
+		if (m_argument_count >= kMaxArguments)
 		{
 			return MCErrorThrowOutOfMemory();
 		}
@@ -114,7 +113,7 @@ public:
 	bool ReferenceArgument(void *p_slot_ptr,
 						   __MCScriptValueDrop p_slot_drop)
 	{
-		if (m_argument_count == kMaxArguments ||
+		if (m_argument_count >= kMaxArguments ||
 			!Allocate(sizeof(void *),
 					  alignof(void *),
 					  m_argument_values[m_argument_count]))
@@ -192,7 +191,6 @@ private:
 	void *m_argument_slots[kMaxArguments];
 	
 	size_t m_storage_frontier;
-	size_t m_storage_limit;
 	char m_stack_storage[kMaxStorage];
 };
 
@@ -234,8 +232,7 @@ void
 MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 									  MCScriptForeignHandlerDefinition *p_handler_def,
 									  uindex_t p_result_reg,
-									  const uindex_t *p_argument_regs,
-									  uindex_t p_argument_count)
+                                      MCSpan<const uindex_t> p_argument_regs)
 {
 	if (m_error)
 	{
@@ -258,11 +255,11 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 								  p_handler_def);
 	
 	// Check the parameter count.
-	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_regs.size())
 	{
 		ThrowWrongNumberOfArguments(p_instance,
 									p_handler_def,
-									p_argument_count);
+		                            p_argument_regs.size());
 		return;
 	}
 	

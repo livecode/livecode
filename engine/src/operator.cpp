@@ -632,7 +632,9 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 else
                     MCEngineEvalIsNotStrictlyAnArray(ctxt, *t_value, t_result);
                 break;
-        }
+			default:
+				MCUnreachable();
+		}
         
         if (!ctxt . HasError())
             MCExecValueTraits<bool>::set(r_value, t_result);

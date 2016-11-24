@@ -16,20 +16,17 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-the sin of -pi/2 -- returns -1
+put the sin of (-pi/2) -- returns -1
 
 Example:
-sin(the startAngle of graphic "Pointer")
+put sin(the startAngle of graphic "Pointer")
 
 Parameters:
-angleInRadians:
-
-
-angle:
+angleInRadians(number):
 A positive or negative number, or an expression that evaluates to a
-number. 
+number.
 
-Returns:
+Returns(number):
 The <sin> <function> <return|returns> a number between -1 and 1.
 
 Description:
@@ -43,7 +40,7 @@ for any value of x.
 
 The <sin> <function> requires its input to be in <radian|radians>. To
 provide an angle in <degree|degrees>, use the following <custom
-function>: 
+function>:
 
     function sinInDegrees angleInDegrees
     return sin(angleInDegrees * pi / 180)
@@ -56,4 +53,3 @@ radian (glossary), custom function (glossary), return (glossary),
 degree (glossary)
 
 Tags: math
-

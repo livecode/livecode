@@ -63,7 +63,7 @@ WAV, AIFF, or AU format. Video files can be in <QuickTime>, <AVI>, or
 > amount of memory used by the <stack>. If you prefer to keep the data
 > outside the <stack file>, you can display a picture file without
 > importing it by creating an <image> and setting its
-> <filenameproperty>, or by choosing File → New Referenced Control →
+> <filename> <property>, or by choosing File → New Referenced Control →
 > Image File… from the menubar. To allow playing a sound or movie
 > without importing it, create a player and set its filename prop, or
 > choose File → New Referenced Control → Video File… .
@@ -87,7 +87,7 @@ XPM (glossary), PGM (glossary), XWD (glossary), audio clip (glossary),
 PPM (glossary), XBM (glossary), PNG (glossary), stack file (glossary),
 Windows (glossary), AVI (glossary), file (keyword), image (keyword),
 paint (keyword), EPS (object), stack (object), defaultStack (property),
-filename (property), JPEGQuality (property), filenameproperty (property),
+filename (property), JPEGQuality (property),
 paintCompression (property)
 
 Tags: file system

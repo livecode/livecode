@@ -457,27 +457,27 @@ static void handle_signal(int sig)
     case SIGCHLD:
         {
 #if defined(_LINUX_DESKTOP)
-            MCPlayer *tptr = MCplayers;
+            MCPlayerHandle t_player = MCplayers;
             // If we have some players waiting then deal with these first
             waitedpid = -1;
-            if ( tptr != NULL)
+            if (t_player.IsValid())
             {
                 waitedpid = wait(NULL);
                 // Moving these two lines half fixes bug 5966 - however it still isn't quite right
                 // as there will still be some interaction between a player and shell command
-                while(tptr != NULL)
+                while(t_player.IsValid())
                 {
-                    if ( waitedpid == tptr -> getpid())
+                    if (t_player.IsValid() && waitedpid == t_player->getpid())
                     {
-                        if (tptr->isdisposable())
-                            tptr->playstop();
+                        if (t_player->isdisposable())
+                            t_player->playstop();
                         else
-                            MCscreen->delaymessage(tptr, MCM_play_stopped, NULL, NULL);
+                            MCscreen->delaymessage(t_player, MCM_play_stopped, NULL, NULL);
 
-                        tptr->shutdown();
+                        t_player->shutdown();
                         break;
                     }
-                    tptr = tptr -> getnextplayer() ;
+                    t_player = t_player -> getnextplayer() ;
                 }
             }
             else

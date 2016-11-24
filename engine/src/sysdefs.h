@@ -1228,10 +1228,7 @@ class MCVariable;
 class MCExpression;
 class MCContainer;
 struct MCPickleContext;
-/*
-class MCVariableValue;
-class MCVariableArray;
-*/
+
 class MCExternal;
 class MCExternalHandlerList;
 
@@ -1313,6 +1310,7 @@ enum Chunk_term {
     CT_OPTION,
 
     CT_STACK,
+    CT_TOOLTIP,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
     CT_BACKGROUND,

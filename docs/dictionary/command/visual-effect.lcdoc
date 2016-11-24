@@ -2,10 +2,10 @@ Name: visual effect
 
 Type: command
 
-Syntax: visual [effect] <effectName> [<speed>] [to <finalImage>] [with sound <audioClip>] [and param_1 <value_1> and ...]
+Syntax: visual [effect] <effectName> [<speed>] [to <finalImage>] [with sound <audioClip>] [and param_1 value_1 and ...]
 
 Summary:
-Adds a visual effect trasition.
+Adds a visual effect transition.
 
 Introduced: 1.0
 
@@ -76,17 +76,6 @@ audioClip:
 A reference to an audio clip in an open stack, or the file path of a
 sound file. The sound is played during the transition.
 
-value_1:
-
-
-style (enum):
-The style of the iOS status bar.
-
--   "default": The default mode for the device.
--   "translucent": Semi-transparent status bar (in this case the stack
-    appears underneath it).
--   "opaque": A black status bar (in this case the stack appears below
-    it). 
 
 
 Description:
@@ -100,7 +89,7 @@ next time you navigate to another <card> in the same window with the
 like this:
 
     visual effect dissolve -- sets up the effect
-    go to card Index     -- effect is seen during the go
+    go to card Index       -- effect is seen during the go
 
 
 However, it is not necessary to execute the navigation command

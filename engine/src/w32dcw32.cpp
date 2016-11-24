@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32dsk-legacy.h"
 
 #include "globdefs.h"
@@ -1360,7 +1360,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			        && !MCU_point_in_rect(rect, x, y))
 			{
 				MCmousestackptr->munfocus();
-				MCmousestackptr = NULL;
+				MCmousestackptr = nil;
 			}
 		}
 		break;

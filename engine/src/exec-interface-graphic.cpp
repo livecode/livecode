@@ -245,6 +245,8 @@ void MCGraphic::SetEditMode(MCExecContext& ctxt, intenum_t mode)
 		case kMCEditModePolygon:
 			t_new_tool = new (nothrow) MCPolygonEditTool(this);
 			break;
+		case kMCEditModeNone:
+			break;
 		}
 		m_edit_tool = t_new_tool;
 

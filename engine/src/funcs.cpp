@@ -575,8 +575,32 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	case CT_WORD:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordOffsetMethodInfo);
 		break;
+	case CT_TOKEN:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokenOffsetMethodInfo);
+		break;
 	case CT_CHARACTER:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
+		break;
+	case CT_PARAGRAPH:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalParagraphOffsetMethodInfo);
+		break;
+	case CT_SENTENCE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalSentenceOffsetMethodInfo);
+		break;
+	case CT_TRUEWORD:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTrueWordOffsetMethodInfo);
+		break;
+	case CT_CODEPOINT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodepointOffsetMethodInfo);
+		break;
+	case CT_CODEUNIT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodeunitOffsetMethodInfo);
+		break;
+	case CT_BYTE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalByteOffsetMethodInfo);
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
 }

@@ -119,9 +119,20 @@ bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification
         UILocalNotification* t_local_notification = [t_scheduled_local_notifications objectAtIndex:i];
         if (atoi ([[t_local_notification.userInfo objectForKey:@"notificationId"] cStringUsingEncoding:NSMacOSRomanStringEncoding]) == p_id) 
         {
-            MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
-            MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
-            MCStringCreateWithCFString ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
+			if ([t_local_notification alertBody] == nil)
+				r_notification.body = MCValueRetain(kMCEmptyString);
+			else
+				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
+			
+			if ([t_local_notification alertAction] == nil)
+				r_notification.action = MCValueRetain(kMCEmptyString);
+			else
+				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
+			
+			if ([t_local_notification.userInfo objectForKey:@"payload"] == nil)
+				r_notification.user_info = MCValueRetain(kMCEmptyString);
+			else
+				MCStringCreateWithCFString ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
             r_notification.time = [[t_local_notification fireDate] timeIntervalSince1970];
             r_notification.badge_value = t_local_notification.applicationIconBadgeNumber;
             r_notification.play_sound = t_local_notification.soundName != nil ? true : false;

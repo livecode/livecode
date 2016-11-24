@@ -276,15 +276,12 @@ struct MCScriptBytecodeOp_Invoke
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		const uindex_t *t_argument_regs;
-		uindex_t t_argument_count;
-		t_argument_regs = ctxt.GetArgumentList() + 2;
-		t_argument_count = ctxt.GetArgumentCount() - 2;
+		MCSpan<const uindex_t> t_arguments(ctxt.GetArguments().subspan(2));
 
 #ifdef DEBUG_EXECUTION
 		MCLog("Select handler into register %u", t_result_reg);
-		for(uindex_t i = 0; i < t_argument_count; i++)
-			MCLog("  argument register %u", t_argument_regs[i]);
+		for (MCSpan<const uindex_t> t_rest = t_arguments; !t_rest.empty(); ++t_rest)
+			MCLog("  argument register %u", *t_rest);
 #endif
 		
 		// If the definition kind is a group, then we must select which handler
@@ -296,8 +293,7 @@ struct MCScriptBytecodeOp_Invoke
 			SelectDefinitionFromGroup(ctxt,
 									  t_instance,
 									  static_cast<MCScriptDefinitionGroupDefinition *>(t_definition),
-									  t_argument_regs,
-									  t_argument_count,
+			                          t_arguments,
 									  t_resolved_instance,
 									  t_resolved_definition);
 		}
@@ -322,8 +318,7 @@ struct MCScriptBytecodeOp_Invoke
 				ctxt.PushFrame(t_resolved_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_resolved_definition),
 							   t_result_reg,
-							   t_argument_regs,
-							   t_argument_count);
+				               t_arguments);
 			}
 			break;
 				
@@ -332,8 +327,7 @@ struct MCScriptBytecodeOp_Invoke
 				ctxt.InvokeForeign(t_resolved_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_resolved_definition),
 								   t_result_reg,
-								   t_argument_regs,
-								   t_argument_count);
+				                   t_arguments);
 			}
 			break;
 				
@@ -349,8 +343,7 @@ private:
 	static void SelectDefinitionFromGroup(MCScriptExecuteContext& ctxt,
 										  MCScriptInstanceRef p_instance,
 										  MCScriptDefinitionGroupDefinition *p_group,
-										  const uindex_t *p_arguments,
-										  uindex_t p_argument_count,
+	                                      MCSpan<const uindex_t> p_arguments,
 										  MCScriptInstanceRef& r_selected_instance,
 										  MCScriptDefinition*& r_selected_definition)
 	{
@@ -380,11 +373,11 @@ private:
 			MCTypeInfoRef t_current_signature;
 			t_current_signature = t_current_instance -> module -> types[t_current_handler -> type] -> typeinfo;
 			
-			if (MCHandlerTypeInfoGetParameterCount(t_current_signature) != p_argument_count)
+			if (MCHandlerTypeInfoGetParameterCount(t_current_signature) != p_arguments.size())
 				continue;
 			
 			uindex_t t_current_score = 0;
-			for(uindex_t t_arg_idx = 0; t_arg_idx < p_argument_count; t_arg_idx++)
+			for(uindex_t t_arg_idx = 0; t_arg_idx < p_arguments.size(); t_arg_idx++)
 			{
 				// We can't compare types of out arguments as they have no value
 				// (yet).
@@ -438,9 +431,7 @@ private:
 		}
 		if (t_min_score_ambiguous || t_min_score_definition == NULL)
 		{
-			ctxt.ThrowUnableToResolveMultiInvoke(p_group,
-												 p_arguments,
-												 p_argument_count);
+			ctxt.ThrowUnableToResolveMultiInvoke(p_group, p_arguments);
 			return;
 		}
 		
@@ -475,10 +466,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		const uindex_t *t_argument_regs;
-		uindex_t t_argument_count;
-		t_argument_regs = ctxt.GetArgumentList() + 2;
-		t_argument_count = ctxt.GetArgumentCount() - 2;
+		MCSpan<const uindex_t> t_argument_regs(ctxt.GetArguments().subspan(2));
 		
 		MCValueRef t_handler;
 		t_handler = ctxt.CheckedFetchRegister(ctxt.GetArgument(0));
@@ -493,8 +481,8 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		
 #ifdef DEBUG_EXECUTION
 		MCLog("Invoke handler value %p from register %u into %u", t_handler, t_result_reg);
-		for(uindex_t i = 0; i < t_argument_count; i++)
-			MCLog("  argument register %u", t_argument_regs[i]);
+		for(MCSpan<const uindex_t> t_rest = t_argument_regs; !t_rest.empty(); ++t_rest)
+			MCLog("  argument register %u", *t_rest);
 #endif
 
 		// If the handler-ref is of 'internal' kind (i.e. a instance/definition
@@ -506,16 +494,14 @@ struct MCScriptBytecodeOp_InvokeIndirect
 			InternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-						   t_argument_regs,
-						   t_argument_count);
+			               t_argument_regs);
 		}
 		else
 		{
 			ExternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
 						   t_result_reg,
-						   t_argument_regs,
-						   t_argument_count);
+			               t_argument_regs);
 		}
 	}
 	
@@ -523,8 +509,7 @@ private:
 	static void InternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   const uindex_t *p_argument_regs,
-							   uindex_t p_argument_count)
+	                           MCSpan<const uindex_t> p_argument_regs)
 	{
 		// An 'internal' handler-ref is nothing more than an instance/definition
 		// pair, so we can execute directly inside this execution context. This
@@ -544,8 +529,7 @@ private:
 				ctxt.PushFrame(t_handler_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_handler_def),
 							   p_result_reg,
-							   p_argument_regs,
-							   p_argument_count);
+				               p_argument_regs);
 			}
 			break;
 				
@@ -554,8 +538,7 @@ private:
 				ctxt.InvokeForeign(t_handler_instance,
 								   static_cast<MCScriptForeignHandlerDefinition *>(t_handler_def),
 								   p_result_reg,
-								   p_argument_regs,
-								   p_argument_count);
+				                   p_argument_regs);
 			}
 			break;
 				
@@ -570,22 +553,22 @@ private:
 	static void ExternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   const uindex_t *p_argument_regs,
-							   uindex_t p_argument_count)
+	                           MCSpan<const uindex_t> p_argument_regs)
 	{
 		// An 'external' handler-ref could be from anywhere and so we must use
 		// the handler-ref API. Unfortunately, this does mean we have to pack
 		// up the values into a list of valuerefs, then unpack them again after-
 		// wards.
 		
-		MCAutoValueRefArray t_linear_args;
-		if (!t_linear_args.Resize(p_argument_count))
+		MCAutoValueRefArray t_linear_args_array;
+		if (!t_linear_args_array.Resize(p_argument_regs.size()))
 		{
 			ctxt.Rethrow();
 			return;
 		}
+		MCSpan<MCValueRef> t_linear_args(t_linear_args_array.Span());
 		
-		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_count; t_arg_index++)
+		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_regs.size(); t_arg_index++)
 		{
 			t_linear_args[t_arg_index] = ctxt.CheckedFetchRegister(p_argument_regs[t_arg_index]);
 			if (t_linear_args[t_arg_index] == nil)
@@ -594,8 +577,8 @@ private:
 		
 		MCAutoValueRef t_result;
 		if (!MCHandlerInvoke(p_handler,
-							 t_linear_args.Ptr(),
-							 p_argument_count,
+		                     t_linear_args.data(),
+		                     t_linear_args.size(),
 							 &t_result))
 		{
 			ctxt.Rethrow();
@@ -605,7 +588,7 @@ private:
 		MCTypeInfoRef t_signature;
 		t_signature = MCValueGetTypeInfo(p_handler);
 		
-		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_count; t_arg_index++)
+		for(uindex_t t_arg_index = 0; t_arg_index < p_argument_regs.size(); t_arg_index++)
 		{
 			if (MCHandlerTypeInfoGetParameterMode(t_signature,
 												 t_arg_index) == kMCHandlerTypeFieldModeIn)

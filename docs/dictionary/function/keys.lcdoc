@@ -7,7 +7,7 @@ Syntax: the keys of <arrayName>
 Syntax: keys(<arrayName>)
 
 Summary:
-Returns a list of the <element> names in an <array variable>.
+Returns a list of the <element> names in an <array>.
 
 Introduced: 1.0
 
@@ -33,9 +33,14 @@ The name of a <variable>.
 
 Returns:
 The <keys> <function> returns a list of <keys>, one per <line>.
+
+Description:
+Use the <keys> function to manage the elements of an <array>, or to
+perform some action on each <element> in an <array>.
+
 >*Note:*  The order of the <keys> is not alphabetical or chronological;
 > it is based on the internal order. To obtain an alphabetical list of
-> <keys>, use the <sort command>:
+> <keys>, use the <sort> <command>:
 
     put the keys of myArray into myVariable
     sort lines of myVariable
@@ -48,14 +53,10 @@ The <keys> <function> returns a list of <keys>, one per <line>.
 > to use numeric values for array keys, but LiveCode will internally
 > convert these into strings before retrieving the array elements.
 
-Description:
-Use the <keys> function to manage the elements of an <array>, or to
-perform some action on each <element> in an <array>.
-
-References: combine (command), split (command), sort command (command),
-function (control structure), arrayEncode (function),
+References: combine (command), split (command), sort (command),
+command (glossary), function (control structure), arrayEncode (function),
 transpose (function), extents (function), keys (function),
-array variable (glossary), array (glossary), line (keyword),
+variable (glossary), array (glossary), line (keyword),
 element (keyword), is among the keys of (operator), properties (property)
 
 Tags: properties

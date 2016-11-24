@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 #include "util.h"
+#include "globals.h"
 
 #include "image.h"
 
@@ -1902,6 +1903,8 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 						case kMCDefineYHot:
 							t_yhot = t_value;
 							break;
+						default:
+							MCUnreachable();
 						}
 					}
 				}
@@ -2369,13 +2372,13 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 						//t_hotspot.y = t_height / 2;
 						break;
 
-					//case kMCDefineXHot:
+					case kMCDefineXHot:
 					//	t_hotspot.x = t_value;
-					//	break;
+						break;
 
-					//case kMCDefineYHot:
+					case kMCDefineYHot:
 					//	t_hotspot.y = t_value;
-					//	break;
+						break;
 
 					case kMCDefineFormat:
 						t_format = t_value;
@@ -2387,6 +2390,10 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 
 					case kMCDefineCharsPerPixel:
 						t_chars_per_pixel = t_value;
+						break;
+							
+					case kMCDefineUnknown:
+						MCUnreachable();
 						break;
 					}
 				}
@@ -2902,6 +2909,8 @@ bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Expo
 		case EX_RAW_ABGR:
 			MCBitmapConvertRow<EX_RAW_ABGR>(t_row_buffer, (uint32_t*)t_src_ptr, p_bitmap->width);
 			break;
+		default:
+			MCUnreachable();
 		}
 		t_success = IO_NORMAL == IO_write(t_row_buffer, sizeof(uint8_t), t_stride, p_stream);
 		t_byte_count += t_stride;

@@ -2,7 +2,7 @@ Name: libURLMultipartFormAddPart
 
 Type: function
 
-Syntax: libURLMultipartFormAddPart(<form data>,<part name>, <value> [,<MIME type>, <encoding>])
+Syntax: libURLMultipartFormAddPart(<formData>,<partName>, <value> [,<MIMEtype>, <encoding>])
 
 Summary:
 This function lets you add parts to a multipart form one at a time. It
@@ -22,10 +22,11 @@ Security: network
 
 Example:
 command UploadFileToServer pName, pMessage, pFilename
+  local tOrigHeaders, tForm, tError, tFile, tType, tEnc, tURL
   put the httpHeaders into tOrigHeaders
   put empty into tForm
   put libURLMultipartFormData (tForm, "name", pName, "message", pMessage) into tError
-  
+
   if tError is empty then
     set the httpHeaders to line 1 of tForm
     delete line 1 of tForm
@@ -34,14 +35,14 @@ command UploadFileToServer pName, pMessage, pFilename
     put "binary" into tEnc
     put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError
   end if
- 
+
   if tError is empty then
     post tForm to url tURL
     put the result into tError
   end if
-  
+
   set the httpHeaders to tOrigHeaders
-  
+
   if tError is not empty then
     return tError for error
   else
@@ -50,10 +51,15 @@ command UploadFileToServer pName, pMessage, pFilename
 end UploadFileToServer
 
 Parameters:
-value:
+formData(string): A variable, which will be filled with the form data.
 
+partName(string): The name of the new part to add to the <formData>.
 
-encoding:
+value(string): The value to be associated with the <partName> of the <formData>.
+
+MIMEtype(enum): The MIME type to use for the <value>.
+
+encoding(enum): The encoding type to use for the <value>.
 
 
 Description:
@@ -61,13 +67,12 @@ This function is mainly used if you have called the
 <libURLMultipartFormData> with no arguments except the form data. This
 will return an "empty" form which can be added to using this function.
 
->*Important:* The <libURLMultipartFormAddPart> <function> is part of
-> the 
-> <Internet library>. To ensure that the <function> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "Internet" 
+>*Important:* The <libURLMultipartFormAddPart> <function> is part of the
+> <Internet library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "Internet"
 > script library is selected.
 
 References: post (command), libURLMultipartFormData (function),
@@ -78,4 +83,3 @@ group (glossary), standalone application (glossary), keyword (glossary),
 function (glossary), application (glossary), Internet library (library),
 library (library), startup (message), openBackground (message),
 preOpenStack (message), openStack (message), preOpenCard (message)
-

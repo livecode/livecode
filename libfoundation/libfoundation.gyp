@@ -10,6 +10,7 @@
 		[
 			'test/environment.cpp',
 			'test/test_string.cpp',
+			'test/test_typeconvert.cpp',
 		],
 	},
 

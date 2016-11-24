@@ -27,6 +27,8 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
+				'../prebuilt/libopenssl.gyp:libopenssl_headers',
+
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
 				

@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <wincrypt.h>
@@ -2048,11 +2047,7 @@ Boolean MCSocket::sslinit()
 
 		if (!InitSSLCrypt())
 			return False;
-		SSL_library_init();
-		SSL_load_error_strings();
 
-		//consider using SSL_load_error_strings() for SSL error strings;
-		//			ENGINE_load_builtin_engines();
 		sslinited = True;
 	}
 	return sslinited;
@@ -2067,7 +2062,7 @@ Boolean MCSocket::initsslcontext()
 	
 	bool t_success = true;
 	
-	t_success = NULL != (_ssl_context = SSL_CTX_new(SSLv23_method()));
+	t_success = NULL != (_ssl_context = SSL_CTX_new(TLS_method()));
 	
 	if (t_success)
 		t_success = MCSSLContextLoadCertificates(_ssl_context, &sslerror);
@@ -2261,7 +2256,7 @@ static long post_connection_check(SSL *ssl, char *host)
 		for (int32_t i = 0; i < sk_GENERAL_NAME_num(t_alt_names); i++)
 		{
 			GENERAL_NAME *t_name = sk_GENERAL_NAME_value(t_alt_names, i);
-			if (t_name->type == GEN_DNS && ssl_match_identity((char*)ASN1_STRING_data(t_name->d.ia5), host))
+			if (t_name->type == GEN_DNS && ssl_match_identity((char*)ASN1_STRING_get0_data(t_name->d.ia5), host))
 			{
 				ok = 1;
 				break;

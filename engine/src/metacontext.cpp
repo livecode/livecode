@@ -888,6 +888,12 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				t_path -> release();
 			}
 			break;
+				
+			case MARK_TYPE_END:
+			case MARK_TYPE_EPS:
+			case MARK_TYPE_LINK:
+			case MARK_TYPE_GROUP:
+				break;
 		}
 	}
 
