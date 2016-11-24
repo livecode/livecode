@@ -63,7 +63,7 @@ static bool initialise_weak_link_jvm_linux()
     
     const char *t_target = "/jre/lib/amd64/server/libjvm.so";
     
-    char *t_jvm_lib = new char[strlen(t_javahome) + strlen(t_target) + 1];
+    char *t_jvm_lib = new (nothrow) char[strlen(t_javahome) + strlen(t_target) + 1];
     if (!sprintf(t_jvm_lib, "%s%s", t_javahome, t_target))
         return false;
     
@@ -121,7 +121,7 @@ static bool initialise_jvm()
     vm_args.version = JNI_VERSION_1_6;
     init_jvm_args(&vm_args);
     
-    JavaVMOption* options = new JavaVMOption[1];
+    JavaVMOption* options = new (nothrow) JavaVMOption[1];
     options[0].optionString = "-Djava.class.path=/usr/lib/java";
     
     vm_args.nOptions = 1;
