@@ -149,8 +149,11 @@ static bool s_java_initialised = false;
 MC_DLLEXPORT_DEF
 bool MCJavaInitialize()
 {
+	if (s_java_initialised)
+		return true;
+	
     s_java_initialised = initialise_jvm();
-    return true;
+    return s_java_initialised;
 }
 
 MC_DLLEXPORT_DEF

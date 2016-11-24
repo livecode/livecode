@@ -17,12 +17,27 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
+static bool TryToInitializeJava()
+{
+	if (!MCJavaInitialize())
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
+							  MCSTR("could not initialize java"), nil);
+		return false;
+	}
+	
+	return true;
+}
+
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCJavaObjectTypeInfo() { return MCJavaGetObjectTypeInfo(); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF bool MCJavaNewObject(MCStringRef p_class_name, MCListRef p_args, MCJavaObjectRef& r_object)
 {
+	if (!TryToInitializeJava())
+		return false;
+	
     MCNewAutoNameRef t_name;
     MCNameCreate(p_class_name, &t_name);
     return MCJavaCallConstructor(*t_name, p_args, r_object);
@@ -30,11 +45,17 @@ extern "C" MC_DLLEXPORT_DEF bool MCJavaNewObject(MCStringRef p_class_name, MCLis
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaStringFromJString(MCJavaObjectRef p_object, MCStringRef &r_string)
 {
+	if (!TryToInitializeJava())
+		return;
+	
     MCJavaConvertJStringToStringRef(p_object, r_string);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaStringToJString(MCStringRef p_string, MCJavaObjectRef &r_object)
 {
+	if (!TryToInitializeJava())
+		return;
+	
     MCJavaConvertStringRefToJString(p_string, r_object);
 }
 
@@ -42,9 +63,6 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaStringToJString(MCStringRef p_string, MCJ
 
 extern "C" bool com_livecode_java_Initialize(void)
 {
-    if (!MCJavaInitialize())
-        return false;
-    
     if (!MCJavaCreateJavaObjectTypeInfo())
         return false;
     
