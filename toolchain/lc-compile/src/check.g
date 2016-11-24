@@ -1630,6 +1630,14 @@
         |]
         CheckForeignHandlerParameterTypes(Parameters)
         
+    'rule' CheckDeclaredTypes(DEFINITION'bridgedhandler(Position, _, _, signature(Parameters, ReturnType), _)):
+        -- Foreign handlers must be fully typed.
+        [|
+            where(ReturnType -> unspecified)
+            Error_NoReturnTypeSpecifiedForForeignHandler(Position)
+        |]
+        CheckBridgedHandlerParameterTypes(Parameters)
+
     'rule' CheckDeclaredTypes(PARAMETER'parameter(Position, _, _, Type)):
         (|
             IsHighLevelType(Type)
@@ -1656,6 +1664,25 @@
         
     'rule' CheckForeignHandlerParameterTypes(nil):
         -- do nothing
+
+'action' CheckBridgedHandlerParameterTypes(PARAMETERLIST)
+
+    'rule' CheckBridgedHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
+        [|
+            where(Type -> unspecified)
+            Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
+        |]
+        CheckBridgedHandlerParameterTypes(Rest)
+        
+    'rule' CheckBridgedHandlerParameterTypes(nil):
+        -- do nothing
+
+
+'condition' IsTypeSuitableForBridgedHandler(TYPE)
+
+	'rule' IsTypeSuitableForBridgedHandler(_):
+		-- At the moment this does nothing, but should be used to ensure that
+		-- bridged handler parameters conform to the rules required of them.
 
 
 'condition' IsHighLevelType(TYPE)
@@ -1723,6 +1750,10 @@
         CheckIdentifiers(Body)
 
     'rule' CheckIdentifiers(DEFINITION'foreignhandler(_, _, Id, Signature, _)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Signature)
+
+    'rule' CheckIdentifiers(DEFINITION'bridgedhandler(_, _, Id, Signature, _)):
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
 

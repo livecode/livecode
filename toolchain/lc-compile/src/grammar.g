@@ -246,6 +246,9 @@
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
         "foreign" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
+    'rule' ImportDefinition(-> bridgedhandler(Position, public, Id, Signature, "")):
+        "__bridged" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
+
 --------------------------------------------------------------------------------
 -- Metadata Syntax
 --------------------------------------------------------------------------------
@@ -468,6 +471,9 @@
 
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
         Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
+
+    'rule' HandlerDefinition(-> bridgedhandler(Position, Access, Name, Signature, Binding)):
+        Access(-> Access) "__bridged" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)
 

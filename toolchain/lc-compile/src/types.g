@@ -65,6 +65,7 @@
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
+	bridgedhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
     syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Warnings: SYNTAXWARNING, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)

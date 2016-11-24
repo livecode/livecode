@@ -781,6 +781,7 @@ void EmitDefinitionIndex(const char *p_type, long& r_index)
         { "variable", kMCScriptDefinitionKindVariable },
         { "handler", kMCScriptDefinitionKindHandler },
         { "foreignhandler", kMCScriptDefinitionKindForeignHandler },
+        { "bridgedhandler", kMCScriptDefinitionKindForeignHandler },
         { "property", kMCScriptDefinitionKindProperty },
         { "event", kMCScriptDefinitionKindEvent },
         { "syntax", kMCScriptDefinitionKindSyntax },
