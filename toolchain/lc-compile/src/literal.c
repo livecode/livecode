@@ -619,38 +619,35 @@ void ConcatenateNameParts(NameRef p_left, NameRef p_right, NameRef *r_output)
        Fatal_OutOfMemory();
 	
     MakeNameLiteral(t_output, r_output);
+	
+	free(t_output);
 }
 
 void SplitNamespace(NameRef p_source, NameRef *r_left, NameRef *r_right)
 {
     const char* t_source;
     GetStringOfNameLiteral(p_source, &t_source);
-    
-	const char* t_last_dot;
-	t_last_dot = strrchr(t_source, '.');
 	
-	char* t_left;
-	t_left = malloc(t_last_dot - t_source + 1);
-    if (t_left == NULL)
-        Fatal_OutOfMemory();
-
-	if (strncpy(t_left, t_source, t_last_dot - t_source) == NULL)
+	int t_source_length = strlen(t_source);
+	
+	char *t_source_copy;
+	t_source_copy = malloc(t_source_length + 1);
+	
+	if (t_source_copy == NULL)
 		Fatal_OutOfMemory();
 	
-	t_left[t_last_dot - t_source] = '\0';
+	memcpy(t_source_copy, t_source, t_source_length);
+	t_source_copy[t_source_length] = '\0';
 	
-	t_last_dot++;
+	char* t_last_dot;
+	t_last_dot = strrchr(t_source_copy, '.');
+
+	*t_last_dot++ = '\0';
 	
-	char* t_right;
-	t_right = malloc(strlen(t_last_dot) + 1);
-    if (t_right == NULL)
-        Fatal_OutOfMemory();
-    
-    if (strcpy(t_right, t_last_dot) == NULL)
-    	Fatal_OutOfMemory();
-    
-    MakeNameLiteral(t_left, r_left);
-    MakeNameLiteral(t_right, r_right);
+    MakeNameLiteral(t_source_copy, r_left);
+    MakeNameLiteral(t_last_dot, r_right);
+	
+	free(t_source_copy);
 }
 
 int ContainsNamespaceOperator(NameRef p_name)
