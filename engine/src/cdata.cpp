@@ -27,13 +27,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "paragraf.h"
 
-MCCdata::MCCdata()
+MCCdata::MCCdata() :
+  id(0),
+  data(nil)
 {
-	id = 0;
-	data = NULL;
 }
 
-MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
+MCCdata::MCCdata(const MCCdata &cref) :
+  MCDLlist(cref)
+{
+	// Ensure that the paragraphs of the cloned data have their parent field
+	// set to nil - this will catch attempts to use them without properly
+	// setting the parent first.
+	CloneData(cref, nil);
+}
+
+MCCdata::MCCdata(const MCCdata& cref, MCField* p_new_owner) :
+  MCDLlist(cref)
+{
+	CloneData(cref, p_new_owner);
+}
+
+void MCCdata::CloneData(const MCCdata& cref, MCField* p_new_owner)
 {
 	id = cref.id;
 	if (cref.data != NULL && cref.data != (void *)1)
@@ -46,7 +61,10 @@ MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
 			MCParagraph *tptr = (MCParagraph *)cref.data;
 			do
 			{
+				// Clone the paragraph
 				MCParagraph *newparagraph = new (nothrow) MCParagraph(*tptr);
+				newparagraph->setparent(p_new_owner);
+				
 				newparagraph->appendto(paragraphs);
 				tptr = (MCParagraph *)tptr->next();
 			}
