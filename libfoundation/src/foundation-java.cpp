@@ -52,19 +52,25 @@ static bool initialise_weak_link_jvm()
 {
     if (s_weak_link_jvm)
         return true;
-    
+
+	const char *t_target;
+#if defined(TARGET_PLATFORM_LINUX)
+#if defined(__X86_64__)
+	t_target = "/jre/lib/amd64/server/libjvm.so";
+#elif defined(__I386__)
+	t_target = "/jre/lib/i386/server/libjvm.so";
+#else
+	return false;
+#endif
+#else
+	t_target = "/jre/lib/jli/libjli.dylib";
+#endif
+	
     const char *t_javahome;
     t_javahome = getenv("JAVA_HOME");
     
     if (t_javahome == nil)
         return false;
-    
-    const char *t_target;
-#if defined(TARGET_PLATFORM_LINUX)
-    t_target = "/jre/lib/amd64/server/libjvm.so";
-#else
-    t_target = "/jre/lib/jli/libjli.dylib";
-#endif
 	
 	char *t_jvm_lib = new (nothrow) char[strlen(t_javahome) + strlen(t_target) + 1];
 
