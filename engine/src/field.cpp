@@ -317,12 +317,13 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     }
     else
         alignments = NULL;
+	
 	if (fref.fdata != NULL)
 	{
 		MCCdata *fptr = fref.fdata;
 		do
 		{
-			MCCdata *newfdata = new (nothrow) MCCdata(*fptr);
+			MCCdata *newfdata = new (nothrow) MCCdata(*fptr, this);
 			newfdata->appendto(fdata);
 			fptr = fptr->next();
 		}

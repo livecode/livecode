@@ -1933,21 +1933,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
-        //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
-        //{
-		//char *buf;
-		//ep.reserve(PATH_MAX, buf);
-		//if (GetWindowsDirectoryA(buf, PATH_MAX))
-		//{
-		//	wasfound = True;
-		//	ep.commit(strlen(buf));
-		//}
-        //}
-        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
-                 // so the resources folder is the engine folder.
-                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             

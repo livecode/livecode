@@ -112,6 +112,7 @@ void MCImageFreeFrames(MCBitmapFrame *p_frames, uindex_t p_count);
 bool MCImageDataIsJPEG(MCDataRef p_data);
 bool MCImageDataIsPNG(MCDataRef p_data);
 bool MCImageDataIsGIF(MCDataRef p_data);
+bool MCImageDataIsBMP(MCDataRef p_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
