@@ -45,7 +45,7 @@ can request only one format.
 - "abbreviated time":  10:13 PM
 - "long time":  10:13:21 PM
 - "internet date":   Thu, 17 Feb 2000 22:13:21 -0500
-- "seconds":   the number of seconds since the start of the eon
+- "seconds":   the number of seconds since the start of the epoch
 - "dateItems":   2000,2,17,22,13,21,5
 
 
