@@ -116,6 +116,31 @@
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
 			],
+
+			'actions':
+			[
+				{
+					'action_name': 'generate_libfoundationjvm_stubs',
+					'inputs':
+					[
+						'../util/weak_stub_maker.pl',
+						'jvm.stubs',
+					],
+					'outputs':
+					[
+						'<(INTERMEDIATE_DIR)/src/libfoundationjvm.<(OS).stubs.cpp',
+					],
+
+					'action':
+					[
+						'<@(perl)',
+						'../util/weak_stub_maker.pl',
+						'--foundation',
+						'jvm.stubs',
+						'<@(_outputs)',
+					],
+				},
+			],
 			
 			'conditions':
 			[
@@ -154,6 +179,8 @@
 							['exclude', '.*-mac\\.cpp$'],	
 						],
 					},
+				],
+				[
 					'OS == "mac"',
 					{
 						'include_dirs':
@@ -168,6 +195,15 @@
 							['exclude', '.*-lnx\\.cpp$'],	
 						],
 					},	
+				],
+				[
+					'OS == "linux" or OS == "mac"',
+					{
+						'sources':
+						[
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.<(OS).stubs.cpp',
+						],
+					},
 				],
 			],
 			
