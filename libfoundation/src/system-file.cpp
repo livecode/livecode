@@ -218,24 +218,6 @@ MCSFileGetType (MCStringRef p_path,
 	return t_success;
 }
 
-extern "C" MC_DLLEXPORT_DEF
-void *MCSFileLoadModule(const char *p_path)
-{
-	return _MCSFileLoadModule(MCSTR(p_path));
-}
-
-extern "C" MC_DLLEXPORT_DEF
-void MCSFileUnloadModule(void *p_module)
-{
-	_MCSFileUnloadModule(p_module);
-}
-
-extern "C" MC_DLLEXPORT_DEF
-void *MCSFileResolveModuleSymbol(void* p_module, const char *p_symbol)
-{
-	return _MCSFileResolveModuleSymbol(p_module, MCSTR(p_symbol));
-}
-
 /* ================================================================
  * Initialization
  * ================================================================ */

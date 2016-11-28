@@ -150,14 +150,6 @@ bool __MCSFileGetType (MCStringRef p_native_path, bool p_follow_links, MCSFileTy
 
 #endif
 
-#ifdef __MCS_INTERNAL_API__
-
-void *_MCSFileLoadModule(MCStringRef p_path);
-void _MCSFileUnloadModule(void *p_module);
-void *_MCSFileResolveModuleSymbol(void* p_module, MCStringRef p_symbol);
-
-#endif
-
 /* ================================================================
  * File API initialization
  * ================================================================ */

@@ -792,26 +792,3 @@ __MCSFileGetType (MCStringRef p_native_path,
 
 	return true;
 }
-
-void *_MCSFileLoadModule(MCStringRef p_path)
-{
-	MCAutoStringRefAsWString t_path_wstr;
-	if (!t_path_wstr.Lock(p_path))
-		return NULL;
-	
-	// MW-2011-02-28: [[ Bug 9410 ]] Use the Ex form of LoadLibrary and ask it to try
-	//   to resolve dependent DLLs from the folder containing the DLL first.
-	HMODULE t_handle;
-	t_handle = LoadLibraryExW(*t_path_wstr, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-}
-
-void _MCSFileUnloadModule(void *p_module)
-{
-	FreeLibrary((HMODULE)p_module);
-}
-
-void *_MCSFileResolveModuleSymbol(void* p_module, MCStringRef p_symbol)
-{
-	// NOTE: symbol addresses are never Unicode and only an ANSI call exists
-	return (MCSysModuleHandle)GetProcAddress((HMODULE)p_module, MCStringGetCString(p_symbol));
-}
