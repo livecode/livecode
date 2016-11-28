@@ -31,8 +31,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool s_have_primary_screen_height = false;
-static CGFloat s_primary_screen_height = 0.0f;
+static bool s_have_desktop_height = false;
+static CGFloat s_desktop_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
@@ -512,7 +512,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 - (void)applicationDidChangeScreenParameters:(NSNotification *)notification
 {
 	// Make sure we refetch the primary screen height.
-	s_have_primary_screen_height = false;
+	s_have_desktop_height = false;
 	
 	// Dispatch the notification.
 	MCPlatformCallbackSendScreenParametersChanged();
@@ -1163,18 +1163,6 @@ void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
 {
 	NSRect t_viewport;
 	t_viewport = [[[NSScreen screens] objectAtIndex: p_index] frame];
-	if (p_index == 0)
-	{
-		s_have_primary_screen_height = true;
-		s_primary_screen_height = t_viewport . size . height;
-		
-		r_viewport . x = t_viewport . origin . x;
-		r_viewport . y = t_viewport . origin . y;
-		r_viewport . width = t_viewport . size . width;
-		r_viewport . height = t_viewport . size . height;
-		return;
-	}
-	
 	MCMacPlatformMapScreenNSRectToMCRectangle(t_viewport, r_viewport);
 }
 
@@ -1949,49 +1937,44 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+CGFloat get_desktop_height()
 {
-	if (!s_have_primary_screen_height)
+	if (!s_have_desktop_height)
 	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
+		s_desktop_height = 0.0f;
+		
+		for (NSScreen * t_screen in [NSScreen screens])
+		{
+			NSRect t_rect = [t_screen frame];
+			if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
+				s_desktop_height = t_rect.origin.y + t_rect.size.height;
+		}
+		
+		s_have_desktop_height = true;
 	}
 	
-	r_point = NSMakePoint(p . x, s_primary_screen_height - p . y);
+	return s_desktop_height;
+}
+
+void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+{
+	r_point = NSMakePoint(p . x, get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_point . x = p . x;
-	r_point . y = s_primary_screen_height - p . y;
+	r_point . x = int16_t(p . x);
+	r_point . y = int16_t(get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_rect = NSMakeRect(r . x, s_primary_screen_height - (r . y + r . height), r . width, r . height);
+	r_rect = NSMakeRect(CGFloat(r . x), get_desktop_height() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
 }
 
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_rect = MCRectangleMake(r . origin . x, s_primary_screen_height - (r . origin . y + r . size . height), r . size . width, r . size . height);
+	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(get_desktop_height() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2013,7 +1996,7 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 {
 	// COCOA-TODO: Make this is a little more discerning (only need to reset if
 	//   primary geometry changes).
-	s_have_primary_screen_height = false;
+	s_have_desktop_height = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
