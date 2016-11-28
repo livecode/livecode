@@ -76,3 +76,15 @@ end module
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
+
+%TEST NonexistentNamespace
+module compiler_test
+handler DoNothing() returns nothing
+end handler
+handler Qualified()
+	nonexistent_module.DoNothing() %{AFTER_IDENTIFIER}
+end handler
+end module
+%EXPECT PASS
+%ERROR "Identifier 'nonexistent_module.DoNothing' not declared" AT AFTER_IDENTIFIER
+%ENDTEST
