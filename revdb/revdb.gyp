@@ -476,6 +476,16 @@
 					},
 				],
 				[
+					'OS == "linux"',
+					{
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
+					},
+				],
+				[
 					'OS == "mac" or OS == "ios"',
 					{
 						'xcode_settings':
@@ -553,6 +563,12 @@
 						'cflags_cc':
 						[
 							'-fexceptions',
+						],
+	
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
 						],
 					},
 				],
