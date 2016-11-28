@@ -1673,7 +1673,7 @@ public:
 
     virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
-        uint32_t t_used;
+        uint32_t t_used = 0;
         if (p_to_charset == LCH_UNICODE)
         {
             if (p_buffer_length == 0)
