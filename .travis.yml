@@ -8,6 +8,8 @@ dist: trusty
 
 language: c++
 
+compiler: clang
+
 # Skip vulcan CI branches
 branches:
   only:
