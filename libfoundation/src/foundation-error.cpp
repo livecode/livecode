@@ -397,18 +397,17 @@ MCErrorCreateAndThrow (MCTypeInfoRef p_error_type, ...)
 MC_DLLEXPORT_DEF
 bool MCErrorThrowOutOfMemory(void)
 {
-    if (s_out_of_memory_error == nil &&
-        !MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
+    if (s_out_of_memory_error == nil)
     {
-        exit(-1);
-        return false;
+	    /* This function may be being called from within
+	     * MCMemoryNew().  If there is no error structure already
+	     * allocated, calling MCErrorCreate() to obtain one will call
+	     * MCMemoryNew()... which will re-enter this function,
+	     * probably recursively until the stack overflows. */
+	    abort();
     }
     
-    MCErrorThrow(s_out_of_memory_error);
-    MCValueRelease(s_out_of_memory_error);
-    s_out_of_memory_error = nil;
-    
-    return false;
+    return MCErrorThrow(s_out_of_memory_error);
 }
 
 MC_DLLEXPORT_DEF
