@@ -14,9 +14,9 @@ my $unload = '';
 my $resolve = '';
 
 if ($foundation == 1) {
-    $load = "MCSDylibLoadModule";
+    $load = "MCSDylibLoadModuleCString";
     $unload = "MCSDylibUnloadModule";
-    $resolve = "MCSDylibResolveModuleSymbol";
+    $resolve = "MCSDylibResolveModuleSymbolCString";
 } else {
     $load = "MCU_loadmodule";
     $unload = "MCU_unloadmodule";

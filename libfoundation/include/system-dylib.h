@@ -31,13 +31,15 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSDylibSymbolNotFoundErrorTypeInfo;
  * ================================================================ */
 
 /* Load the module at path. */
-MC_DLLEXPORT extern "C" void *MCSDylibLoadModule(const char *p_path);
+MC_DLLEXPORT extern "C" void *MCSDylibLoadModuleCString(const char *p_path);
+MC_DLLEXPORT void *MCSDylibLoadModule(MCStringRef p_path);
 
 /* Unload the module at path. */
 MC_DLLEXPORT extern "C" void MCSDylibUnloadModule(void *p_module);
 
 /* Resolve the symbol with given name in module. */
-MC_DLLEXPORT extern "C" void *MCSDylibResolveModuleSymbol(void* p_module, const char *p_symbol);
+MC_DLLEXPORT extern "C" void *MCSDylibResolveModuleSymbolCString(void* p_module, const char *p_symbol);
+MC_DLLEXPORT void *MCSDylibResolveModuleSymbol(void* p_module, MCStringRef p_symbol);
 
 #ifdef __MCS_INTERNAL_API__
 

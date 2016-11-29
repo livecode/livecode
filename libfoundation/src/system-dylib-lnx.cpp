@@ -22,6 +22,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void *_MCSDylibLoadModule(MCStringRef p_path)
 {
+	// dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
+	// spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
+	//
+	// Because converting to a sys string allocates memory, this alignment will always be satisfied.
+	// (malloc/new always return alignment >= int/pointer alignment)
 	MCAutoStringRefAsSysString t_filename_sys;
 	if (!t_filename_sys.Lock(p_path))
 		return nil;

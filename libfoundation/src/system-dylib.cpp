@@ -20,18 +20,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-auto.h>
 
 extern "C" MC_DLLEXPORT_DEF
-void *MCSDylibLoadModule(const char *p_path)
+void *MCSDylibLoadModuleCString(const char *p_path)
 {
-	void *t_module;
-	t_module = _MCSDylibLoadModule(MCSTR(p_path));
-	
-	if (t_module == nil)
-	{
-		MCErrorCreateAndThrow(kMCSDylibModuleNotFoundErrorTypeInfo,
-		                      "path", p_path, nil);
-	}
-	
-	return t_module;
+	return MCSDylibLoadModule(MCSTR(p_path));
+}
+
+extern "C" MC_DLLEXPORT_DEF
+void *MCSDylibLoadModule(MCStringRef p_path)
+{
+	return _MCSDylibLoadModule(p_path);
 }
 
 extern "C" MC_DLLEXPORT_DEF
@@ -41,18 +38,15 @@ void MCSDylibUnloadModule(void *p_module)
 }
 
 extern "C" MC_DLLEXPORT_DEF
-void *MCSDylibResolveModuleSymbol(void* p_module, const char *p_symbol)
+void *MCSDylibResolveModuleSymbolCString(void* p_module, const char *p_symbol)
 {
-	void *t_symbol;
-	t_symbol = _MCSDylibResolveModuleSymbol(p_module, MCSTR(p_symbol));
-	
-	if (t_symbol == nil)
-	{
-		MCErrorCreateAndThrow(kMCSDylibSymbolNotFoundErrorTypeInfo,
-		                      "name", p_symbol, nil);
-	}
-	
-	return t_symbol;
+	return MCSDylibResolveModuleSymbol(p_module, MCSTR(p_symbol));
+}
+
+MC_DLLEXPORT_DEF
+void *MCSDylibResolveModuleSymbol(void* p_module, MCStringRef p_symbol)
+{
+	return _MCSDylibResolveModuleSymbol(p_module, p_symbol);
 }
 
 /* ================================================================

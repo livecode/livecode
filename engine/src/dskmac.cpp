@@ -4140,71 +4140,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
     {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        MCAutoStringRefAsUTF8String t_utf_path;
-        
-        if (!t_utf_path.Lock(p_filename))
-            return NULL;
-        
-        void *t_result;
-        
-        t_result = dlopen(*t_utf_path, RTLD_LAZY);
-        
-        return (MCSysModuleHandle)t_result;
-#else
-        MCAutoStringRefAsUTF8String t_utf_path;
-        
-        if (!t_utf_path.Lock(p_filename))
-            return NULL;
-        
-        CFURLRef t_url;
-        t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_utf_path, strlen(*t_utf_path), False);
-        
-        if (t_url == NULL)
-            return NULL;
-		
-        MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
-        
-        CFRelease(t_url);
-        
-        return (MCSysModuleHandle)t_result;
-#endif
+		return (MCSysModuleHandle)MCSDylibLoadModule(p_filename);
     }
     
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
     {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
-#else
-        CFStringRef t_cf_symbol;
-       
-        MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
-        if (t_cf_symbol == NULL)
-            return NULL;
-        
-        void *t_symbol_ptr;
-        t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
-        
-        CFRelease(t_cf_symbol);
-        
-        return (MCSysModuleHandle) t_symbol_ptr;
-#endif
+        return (MCSysModuleHandle)MCSDylibResolveModuleSymbol(p_module, p_symbol);
     }
     
 	virtual void UnloadModule(MCSysModuleHandle p_module)
     {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        dlclose(p_module);
-#else
-        CFRelease((CFBundleRef)p_module);
-#endif
+		MCSDylibUnloadModule((void *)p_module);
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
