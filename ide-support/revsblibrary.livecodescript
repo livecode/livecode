@@ -2623,9 +2623,10 @@ function revSBEnginePath pPlatform
 end revSBEnginePath
 
 function revSBLicensedToDeployToTarget pTarget
-   -- In non-development mode we just rely on the license
-   -- parameters check within the deploy command
-   if not the environment begins with "development" then
+   -- We can only check the license parameters in development mode,
+   -- and they are only set in UI mode. So just return true unless
+   -- the mode is development.
+   if the environment is not "development" then
       return true
    end if
    
