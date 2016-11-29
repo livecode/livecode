@@ -14,22 +14,27 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <output.h>
-#include "outputfile.h"
-
-extern "C" void OutputBegin(void);
-extern "C" void OutputLCBBegin(void);
+#include <allocate.h>
+#include <report.h>
 
 //////////
 
-void OutputBegin(void)
+void *Allocate(size_t p_size)
 {
-	OutputFileBegin(OpenOutputFile());
+    void *t_ptr;
+    t_ptr = calloc(1, p_size);
+    if (t_ptr == NULL)
+        Fatal_OutOfMemory();
+    return t_ptr;
 }
 
-void OutputLCBBegin(void)
+void *Reallocate(void *p_ptr, size_t p_new_size)
 {
-    OutputFileBegin(OpenLCBOutputFile());
+    void *t_new_ptr;
+    t_new_ptr = realloc(p_ptr, p_new_size);
+    if (t_new_ptr == NULL)
+        Fatal_OutOfMemory();
+    return t_new_ptr;
 }
 
 //////////

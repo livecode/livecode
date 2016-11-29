@@ -45,12 +45,9 @@
 		'java-dsl-parse_source_files':
 		[
 			'literal.c',
-            'literal.h',
 			'main.c',
-			'position.c',
-            'position.h',
-			'report.c',
-            'report.h',
+			'outputfile.c',
+            'outputfile.h',
 			'output.cpp',
 		],
 	},

@@ -14,22 +14,26 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <output.h>
-#include "outputfile.h"
+#ifndef __OUTPUTFILE__
+#define __OUTPUTFILE__
 
-extern "C" void OutputBegin(void);
-extern "C" void OutputLCBBegin(void);
+#include <stdio.h>
 
-//////////
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void OutputBegin(void)
-{
-	OutputFileBegin(OpenOutputFile());
+void SetOutputFile(const char *filename);
+void GetOutputFile(const char **r_filename);
+    
+void SetOutputLCBFile(const char *filename);
+void GetOutputLCBFile(const char **r_filename);
+    
+FILE *OpenOutputFile(void);
+FILE *OpenLCBOutputFile(void);
+
+#ifdef __cplusplus
 }
+#endif
 
-void OutputLCBBegin(void)
-{
-    OutputFileBegin(OpenLCBOutputFile());
-}
-
-//////////
+#endif

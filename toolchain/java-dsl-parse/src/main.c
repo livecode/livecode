@@ -18,14 +18,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "literal.h"
-#include "position.h"
+#include <position.h>
 #include "literal.h"
 #include "report.h"
 
 extern void ROOT(void);
 extern void yyExtend(void);
 extern void InitializeCustomInvokeLists(void);
+
+int IsDependencyCompile(void)
+{
+    return 0;
+}
 
 /* Print some sort of helpful message if the user doesn't pass sane arguments */
 static void
