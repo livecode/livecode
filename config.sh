@@ -272,6 +272,22 @@ fi
 # Location of Perl when running Windows builds
 WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 
+if test -z "$JAVA_SDK"; then
+	if [ ! -z "$JAVA_HOME" ] ; then
+		JAVA_SDK="${JAVA_HOME}"
+	# Utility used to locate Java on OSX systems
+	elif [ -x /usr/libexec/java_home ] ; then
+		JAVA_SDK="$(/usr/libexec/java_home)"
+	elif [ -d /usr/lib/jvm/default ] ; then
+		JAVA_SDK=/usr/lib/jvm/default
+	elif [ -d /usr/lib/jvm/default-java ] ; then
+		JAVA_SDK=/usr/lib/jvm/default-java
+	else
+		echo >&2 "Error: no Java home found - set \$JAVA_HOME"
+		exit 1
+	fi
+fi
+
 # Android default settings and tools
 if test "${OS}" = "android" ; then
     ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
@@ -329,21 +345,7 @@ if test "${OS}" = "android" ; then
     ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
     ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
 
-    if [ -z "${JAVA_SDK}" ] ; then
-        # Utility used to locate Java on OSX systems
-        if [ -x /usr/libexec/java_home ] ; then
-            ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
-        elif [ -d /usr/lib/jvm/default ] ; then
-            ANDROID_JAVA_SDK=/usr/lib/jvm/default
-        elif [ -d /usr/lib/jvm/default-java ] ; then
-            ANDROID_JAVA_SDK=/usr/lib/jvm/default-java
-        else
-            echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
-            exit 1
-        fi
-    else
-        ANDROID_JAVA_SDK="${JAVA_SDK}"
-    fi
+	ANDROID_JAVA_SDK="${JAVA_SDK}"
 
 fi # End of Android defaults & tools
 
@@ -378,7 +380,8 @@ fi
 
 case ${OS} in
   linux)
-    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" \
+                           "-Djavahome=${JAVA_SDK}" "$@"
     ;;
   emscripten)
     export NODE_JS
@@ -412,7 +415,8 @@ case ${OS} in
     invoke_gyp $basic_args "-DOS=${OS}" \
                            "-Dtarget_sdk=${XCODE_TARGET_SDK}" \
                            "-Dhost_sdk=${XCODE_HOST_SDK}" \
-                           "-Dtarget_arch=${TARGET_ARCH}" "$@" \
+                           "-Dtarget_arch=${TARGET_ARCH}" \
+                           "-Djavahome=${JAVA_SDK}" "$@" \
                            ${DISABLE_REVVIDEOGRABBER}
     ;;
   *)

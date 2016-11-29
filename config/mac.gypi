@@ -5,7 +5,6 @@
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../mac-bin',
-		'javahome': '<!(/usr/libexec/java_home)',
 	},
 
 	'xcode_config_file': '../version',
