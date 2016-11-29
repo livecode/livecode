@@ -112,7 +112,7 @@ void MCStack::checkdestroy()
 					}
 					while (sptr != substacks);
 				}
-                MCtodestroy -> remove(this);
+                MCtodestroy -> remove(this); // prevent duplicates
                 MCtodestroy -> add(this);
 			}
 	}
