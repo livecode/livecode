@@ -842,7 +842,8 @@ MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
 
 #define kMCScriptModuleVersion_8_0_0_DP_1 0
 #define kMCScriptModuleVersion_8_1_0_DP_2 1
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_1_0_DP_2
+#define kMCScriptModuleVersion_9_0_0_DP_4 2
+#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_9_0_0_DP_4
 
 ////////////////////////////////////////////////////////////////////////////////
 
