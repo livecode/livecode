@@ -128,7 +128,7 @@
 					],
 					'outputs':
 					[
-						'<(INTERMEDIATE_DIR)/src/libfoundationjvm.<(OS).stubs.cpp',
+						'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
 					],
 
 					'action':
@@ -201,7 +201,7 @@
 					{
 						'sources':
 						[
-							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.<(OS).stubs.cpp',
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
 						],
 					},
 				],
