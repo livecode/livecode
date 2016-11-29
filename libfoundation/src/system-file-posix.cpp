@@ -26,10 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <dirent.h>
 #include <dlfcn.h>
 
-#ifdef _MACOSX
-#include <mach-o/dyld.h>
-#endif
-
 /* ================================================================
  * POSIX whole-file IO
  * ================================================================ */
