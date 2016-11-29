@@ -13,6 +13,12 @@ my $load = '';
 my $unload = '';
 my $resolve = '';
 
+# MCU_loadmodule and friends have engine dependency - for example when
+# weak linking to the crypto library we rely on revsecurity living next
+# to the executable, which is resolved using MCcmd. We also rely on 
+# mappings from dynamic library names to paths which can be custom-
+# defined as deploy parameters. Hence we need to use special simplified 
+# implementations in libfoundation if we require no engine dependency.
 if ($foundation == 1) {
     $load = "MCSDylibLoadModuleCString";
     $unload = "MCSDylibUnloadModule";
