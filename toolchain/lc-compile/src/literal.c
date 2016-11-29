@@ -604,33 +604,36 @@ void NegateReal(long p_real, long *r_real)
 
 void ConcatenateNameParts(NameRef p_left, NameRef p_right, NameRef *r_output)
 {
-    const char* t_left;
-    GetStringOfNameLiteral(p_left, &t_left);
-    
-    const char* t_right;
-    GetStringOfNameLiteral(p_right, &t_right);
-    
-    char *t_output;
-    t_output = malloc(strlen(t_left) + strlen(t_right) + 2);
-    if (t_output == NULL)
-        Fatal_OutOfMemory();
-    
-    if (sprintf(t_output, "%s.%s", t_left, t_right) < 0)
-       Fatal_OutOfMemory();
+	const char *t_left;
+	const char *t_right;
+	char *t_output;
 	
-    MakeNameLiteral(t_output, r_output);
+	GetStringOfNameLiteral(p_left, &t_left);
+	GetStringOfNameLiteral(p_right, &t_right);
+
+	t_output = malloc(strlen(t_left) + strlen(t_right) + 2);
+	if (t_output == NULL)
+		Fatal_OutOfMemory();
+    
+	if (sprintf(t_output, "%s.%s", t_left, t_right) < 0)
+		Fatal_OutOfMemory();
+	
+	MakeNameLiteral(t_output, r_output);
 	
 	free(t_output);
 }
 
 void SplitNamespace(NameRef p_source, NameRef *r_left, NameRef *r_right)
 {
-    const char* t_source;
-    GetStringOfNameLiteral(p_source, &t_source);
-	
-	int t_source_length = strlen(t_source);
-	
+	const char* t_source;
 	char *t_source_copy;
+ 	char *t_last_dot;
+	int t_source_length;
+	
+	GetStringOfNameLiteral(p_source, &t_source);
+	
+	t_source_length = strlen(t_source);
+	
 	t_source_copy = malloc(t_source_length + 1);
 	
 	if (t_source_copy == NULL)
@@ -639,13 +642,12 @@ void SplitNamespace(NameRef p_source, NameRef *r_left, NameRef *r_right)
 	memcpy(t_source_copy, t_source, t_source_length);
 	t_source_copy[t_source_length] = '\0';
 	
-	char* t_last_dot;
 	t_last_dot = strrchr(t_source_copy, '.');
 
 	*t_last_dot++ = '\0';
 	
-    MakeNameLiteral(t_source_copy, r_left);
-    MakeNameLiteral(t_last_dot, r_right);
+	MakeNameLiteral(t_source_copy, r_left);
+	MakeNameLiteral(t_last_dot, r_right);
 	
 	free(t_source_copy);
 }
