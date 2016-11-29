@@ -833,8 +833,8 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    if xSettingsA["UNIX,printerChooser"] = "" then put true into xSettingsA["UNIX,printerChooser"]
    if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
    if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
-   -- build for every platform we have engines for
    
+   -- build for every platform we have engines for
    repeat for each item tTarget in kInitialTargets
       if xSettingsA[tTarget] = "" then
          put revEngineCheck(tTarget) into xSettingsA[tTarget]
@@ -860,6 +860,20 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
       end if
    end if
 end revSBDefaultStandaloneSettings
+
+function revSBRemoveUnlicensedTargetsFromSettings @xSettingsA
+   -- don't build for any platform we are not licensed for
+   local tRemoved
+   repeat for each item tTarget in kDesktopTargets, kAdditionalTargets
+      if xSettingsA[tTarget] then
+         if not revSBLicensedToDeployToTarget(tTarget) then
+            put false into xSettingsA[tTarget]
+            put true into tRemoved[tTarget]
+         end if
+      end if
+   end repeat
+   return the keys of tRemoved
+end revSBRemoveUnlicensedTargetsFromSettings
 
 command revSBRelativeStackFilesList pStack, @rStackFiles
    local tLine,tChars,tMainStackPath
@@ -2607,3 +2621,43 @@ function revSBEnginePath pPlatform
       end switch
    end if
 end revSBEnginePath
+
+function revSBLicensedToDeployToTarget pTarget
+   -- In non-development mode we just rely on the license
+   -- parameters check within the deploy command
+   if not the environment begins with "development" then
+      return true
+   end if
+   
+   -- In development mode, check the revLicenseInfo
+   local tLicensedTargets
+   put line 5 of revLicenseInfo into tLicensedTargets
+   
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   local tLicensePlatform
+   switch tPlatform
+      case "MacOSX"
+         put "Mac OS X" into tLicensePlatform
+         break
+      case "Emscripten"
+         put "HTML5" into tLicensePlatform
+         break
+      default
+         put tPlatform into tLicensePlatform
+         break
+   end switch
+   
+   return tLicensePlatform is among the items of tLicensedTargets
+end revSBLicensedToDeployToTarget
+
+function revSBNoPlatforms pSettings
+   repeat for each item tTarget in kDesktopTargets, kAdditionalTargets
+      if pSettings[tTarget] then
+         return false
+      end if
+   end repeat
+   
+   return true
+end revSBNoPlatforms
