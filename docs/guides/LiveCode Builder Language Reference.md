@@ -913,3 +913,56 @@ available as **the result**.
 > **Note:** Handlers which return no value (i.e. have nothing as their
 > result type) can still be used in call expressions. In this case the
 > value of the call is **nothing**.
+
+## Namespaces
+
+Identifiers declared in a module are placed in a scope named using the 
+module name. This allows disambiguation between an identifier declared
+in a module and an identical one declared in any of its imports, by 
+using a fully qualified name.
+
+For example:
+
+	module com.livecode.module.importee
+
+	public constant MyName is "Importee"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+
+	public type MyType is Number
+
+	end module
+
+	module com.livecode.module.usesimport
+
+	use com.livecode.module.importee
+
+	public constant MyName is "Uses Import"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+	public type MyType is String
+
+	handler TestImports()
+		variable tVar as String
+		put MyName into tVar 
+		-- tVar contains "Uses Import"
+	
+		put com.livecode.module.importee.MyName into tVar
+		-- tVar contains "Importee"
+	
+		put com.livecode.module.usesimport.MyName into tVar
+		-- tVar contains "Uses Import"
+	
+		put com.livecode.module.importee.GetMyName() into tVar
+		-- tVar contains "Importee"
+	
+		variable tVarMyType as MyType
+		put tVar into tVar1 -- valid
+	
+		variable tVarImportedType as com.livecode.module.importee.MyType
+		put tVar into tVarImportedType -- compile error
+	end handler
+
+	end module

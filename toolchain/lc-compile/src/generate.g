@@ -68,7 +68,7 @@
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
-        Id'Name -> ModuleName
+        GetQualifiedName(Id -> ModuleName)
         (|
             where(Kind -> module)
             EmitBeginModule(ModuleName -> ModuleIndex)
@@ -125,7 +125,7 @@
         ImportContainsCanvas(Right)
         
     'rule' ImportContainsCanvas(import(_, Id)):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
         IsNameEqualToName(Name, CanvasModuleName)
 
@@ -135,7 +135,7 @@
 
     'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
-        Id'Name -> Name
+    	GetQualifiedName(Id -> Name)
         OutputWrite("<package version=\"0.0\">\n")
         OutputWriteI("  <name>", Name, "</name>\n")
         [|
@@ -449,7 +449,7 @@
         
         -- Ensure we have a dependency for the module
         GenerateModuleDependency(ModuleId -> ModuleIndex)
-        ModuleId'Name -> ModuleName
+        GetQualifiedName(ModuleId -> ModuleName)
         AddModuleToDependencyList(ModuleName)
         
         -- Fetch the info about the symbol.
@@ -500,8 +500,8 @@
         [|
             -- If the module has been depended on yet, it will have index -1
             ne(CurrentGenerator, Generator)
-            Id'Name -> ModuleName
-            
+            GetQualifiedName(Id -> ModuleName)
+
             -- Emit a dependency for the module and get its index
             EmitModuleDependency(ModuleName -> NewModuleIndex)
             ModuleInfo'Index <- NewModuleIndex
@@ -2192,7 +2192,6 @@
         -- Ungenerated if generator is not the current generator
         QuerySymbolId(Id -> Info)
         Info'Generator -> Generator
-        Id'Name -> Name
         GeneratingModuleIndex -> CurrentGenerator
         ne(Generator, CurrentGenerator)
 
@@ -2232,6 +2231,7 @@
         
 -- Defined in check.g
 'action' QueryId(ID -> MEANING)
+'action' GetQualifiedName(ID -> NAME)
 'condition' QuerySyntaxId(ID -> SYNTAXINFO)
 'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
 
