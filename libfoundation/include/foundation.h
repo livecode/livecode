@@ -434,7 +434,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #    define alignof(x)      __alignof__(x)
 #  elif defined(__GNUC__)
      // GCC added C++11 alignof(x) in GCC 4.8
-#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR < 8)
+#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
 #      define alignof(x)    __alignof__(x)
 #    endif
 #  elif defined(_MSC_VER)
