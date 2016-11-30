@@ -41,7 +41,7 @@ Description:
 Use the <*> (times) <operator> to multiply two numbers.
 
 > *Note:* When used in complex arithmetic statements, 
-<operator|operators> like </> follows standard rules of <precedence>.
+<operator|operators> like <*> follows standard rules of <precedence>.
 
 To multiply the contents of a container by a number, use the <multiply>
 <command> instead.
