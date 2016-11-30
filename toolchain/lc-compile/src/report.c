@@ -292,6 +292,7 @@ DEFINE_ERROR(InvalidIntegerLiteral, "Malformed integer literal");
 DEFINE_ERROR(InvalidDoubleLiteral, "Malformed real literal");
 DEFINE_ERROR(IntegerLiteralOutOfRange, "Integer literal too big");
 DEFINE_ERROR(DoubleLiteralOutOfRange, "Real literal too big");
+DEFINE_ERROR(IllegalNamespaceOperator, "Namespace operator invalid in declaration context");
 
 DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");
 DEFINE_ERROR_I(IdentifierNotDeclared, "Identifier '%s' not declared");

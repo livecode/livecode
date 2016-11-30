@@ -159,6 +159,9 @@ extern MCNameRef MCN_gif;
 extern MCNameRef MCN_jpeg;
 extern MCNameRef MCN_rtf;
 extern MCNameRef MCN_html;
+extern MCNameRef MCN_win_bitmap;
+extern MCNameRef MCN_win_metafile;
+extern MCNameRef MCN_win_enh_metafile;
 
 extern MCNameRef MCN_browser;
 extern MCNameRef MCN_command_line;

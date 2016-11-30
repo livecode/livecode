@@ -543,6 +543,72 @@ bool MCClipboard::AddJPEG(MCDataRef p_jpeg)
     return t_item->AddRepresentation(t_type_string, p_jpeg);
 }
 
+bool MCClipboard::AddBMP(MCDataRef p_bmp)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIBv5);
+	if (t_type_string == NULL)
+		return false;
+
+	// Encode the BMP for transfer
+	MCAutoDataRef t_bmp(m_clipboard->EncodeBMPForTransfer(p_bmp));
+
+	return t_item->AddRepresentation(t_type_string, *t_bmp);
+}
+
+bool MCClipboard::AddWinMetafile(MCDataRef p_wmf)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinMF);
+	if (t_type_string == NULL)
+		return false;
+
+	return t_item->AddRepresentation(t_type_string, p_wmf);
+}
+
+bool MCClipboard::AddWinEnhMetafile(MCDataRef p_emf)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinEMF);
+	if (t_type_string == NULL)
+		return false;
+
+	return t_item->AddRepresentation(t_type_string, p_emf);
+}
+
 bool MCClipboard::AddImage(MCDataRef p_image_data)
 {
     // Examine the data to see if it matches any of the formats that we handle
@@ -552,6 +618,8 @@ bool MCClipboard::AddImage(MCDataRef p_image_data)
         return AddGIF(p_image_data);
     if (MCImageDataIsJPEG(p_image_data))
         return AddJPEG(p_image_data);
+	if (MCImageDataIsBMP(p_image_data))
+		return AddBMP(p_image_data);
     
     return false;
 }
@@ -705,11 +773,48 @@ bool MCClipboard::HasJPEG() const
     return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG));
 }
 
+bool MCClipboard::HasBMP() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIB))
+		|| t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIBv5));
+}
+
+bool MCClipboard::HasWinMetafile() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinMF));
+}
+
+bool MCClipboard::HasWinEnhMetafile() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinEMF));
+}
+
 bool MCClipboard::HasImage() const
 {
     // Images are any of PNG, GIF or JPEG
     AutoLock t_lock(this);
-    return HasPNG() || HasGIF() || HasJPEG();
+	return HasPNG() || HasGIF() || HasJPEG() || HasBMP();
 }
 
 bool MCClipboard::HasTextOrCompatible() const
@@ -997,11 +1102,36 @@ bool MCClipboard::CopyAsJPEG(MCDataRef& r_jpeg) const
     return CopyAsData(kMCRawClipboardKnownTypeJPEG, r_jpeg);
 }
 
+bool MCClipboard::CopyAsBMP(MCDataRef& r_bmp) const
+{
+	// Copy and decode the BMP file
+	MCAutoDataRef t_bmp;
+	if (!CopyAsData(kMCRawClipboardKnownTypeWinDIBv5, &t_bmp))
+		return false;
+	
+	MCDataRef t_decoded = m_clipboard->DecodeTransferredBMP(*t_bmp);
+	if (t_decoded == nil)
+		return false;
+
+	r_bmp = t_decoded;
+	return true;
+}
+
+bool MCClipboard::CopyAsWinMetafile(MCDataRef& r_wmf) const
+{
+	return CopyAsData(kMCRawClipboardKnownTypeWinMF, r_wmf);
+}
+
+bool MCClipboard::CopyAsWinEnhMetafile(MCDataRef& r_emf) const
+{
+	return CopyAsData(kMCRawClipboardKnownTypeWinEMF, r_emf);
+}
+
 bool MCClipboard::CopyAsImage(MCDataRef& r_image) const
 {
     // The order here is fairly arbitrary
     AutoLock t_lock(this);
-    return CopyAsPNG(r_image) || CopyAsJPEG(r_image) || CopyAsGIF(r_image);
+    return CopyAsPNG(r_image) || CopyAsJPEG(r_image) || CopyAsGIF(r_image) || CopyAsBMP(r_image);
 }
 
 bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const

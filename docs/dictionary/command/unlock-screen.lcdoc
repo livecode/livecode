@@ -2,7 +2,7 @@ Name: unlock screen
 
 Type: command
 
-Syntax: unlock screen [with visual [effect] <effectName> [<speed>] \  [to <finalImag> e] [with sound <audioClip>]]
+Syntax: unlock screen [with visual [effect] <effectName> [<speed>] [to <finalImage>] [with sound <audioClip>]]
 
 Summary:
 Sets the <lockScreen> <property> to false, updating the screen and
@@ -15,33 +15,33 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, mobile
 
 Example:
+lock screen
+hide image 1
 unlock screen
 
 Example:
+lock screen for visual effect
+hide image 1
+show control 1
 unlock screen with visual effect dissolve
 
 Example:
-unlock screen with visual barn door open to white with sound "Yelp"
-
-Example:
 lock screen
-   # Do something
-unlock screen
+show field 1
+unlock screen with visual barn door open to white with sound "Yelp"
 
 Parameters:
 effectName:
-The effectName, speed, finalImage, and audioClip are described in the
-visual effect command. These three parameters operate the same way as
-they do with the visual effect command.
+Works as described in the <visual effect> command.
 
 speed:
+Works as described in the <visual effect> command.
 
-
-finalImag:
-
+finalImage:
+Works as described in the <visual effect> command.
 
 audioClip:
-
+Works as described in the <visual effect> command.
 
 Description:
 Use the <unlock screen> <command> to allow changes to the screen
@@ -60,12 +60,12 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: unlock colorMap (command), unlock cursor (command),
-unlock error dialogs (command), unlock moves (command),
-unlock recent (command), property (glossary), handler (glossary),
-lock (glossary), lockScreen (glossary), command (glossary),
-execute (glossary), dontUseQT (property), dontUseQTEffects (property),
-allowFieldRedraw (property), lockScreen (property)
+References: allowFieldRedraw (property), command (glossary), 
+dontUseQT (property), dontUseQTEffects (property), execute (glossary), 
+handler (glossary), lock (glossary), lock screen (command), 
+lockScreen (property), property (glossary), unlock colorMap (command), 
+unlock cursor (command), unlock error dialogs (command), 
+unlock moves (command), unlock recent (command)
 
 Tags: ui
 

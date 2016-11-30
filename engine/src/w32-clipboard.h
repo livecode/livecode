@@ -130,6 +130,8 @@ public:
 	virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
 	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
 	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
+	virtual MCDataRef EncodeBMPForTransfer(MCDataRef p_bmp) const;
+	virtual MCDataRef DecodeTransferredBMP(MCDataRef p_bmp) const;
 
 	// Sets the clipboard as being dirty
 	void SetDirty();

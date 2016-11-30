@@ -502,6 +502,39 @@ MCDataRef MCWin32RawClipboardCommon::DecodeTransferredHTML(MCDataRef p_data) con
 	return nil;
 }
 
+MCDataRef MCWin32RawClipboardCommon::EncodeBMPForTransfer(MCDataRef p_bmp) const
+{
+	// Strip the BITMAPFILEHEADER structure from the BMP and pass the BMP in its in-memory form
+	MCAutoDataRef t_data;
+	size_t t_offset = sizeof(BITMAPFILEHEADER);
+	if (!MCDataCopyRange(p_bmp, MCRangeMake(t_offset, MCDataGetLength(p_bmp) - t_offset), &t_data))
+		return nil;
+	return *t_data;
+}
+
+MCDataRef MCWin32RawClipboardCommon::DecodeTransferredBMP(MCDataRef p_bmp) const
+{
+	// Add a BITMAPFILEHEADER structure to the front of the in-memory form
+	BITMAPFILEHEADER t_header = { 0 };
+	t_header.bfType = 'MB';
+	t_header.bfSize = sizeof(BITMAPFILEHEADER) + MCDataGetLength(p_bmp);
+	t_header.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+
+	MCAutoDataRef t_bmp;
+	if (!MCDataCreateMutable(0, &t_bmp))
+		return nil;
+
+	// Add the header
+	if (!MCDataAppendBytes(*t_bmp, (const byte_t*)&t_header, sizeof(BITMAPFILEHEADER)))
+		return nil;
+
+	// Add the bitmap data
+	if (!MCDataAppend(*t_bmp, p_bmp))
+		return nil;
+
+	return t_bmp.Take();
+}
+
 void MCWin32RawClipboardCommon::SetDirty()
 {
 	m_dirty = true;
