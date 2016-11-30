@@ -1,0 +1,1 @@
+# Don't fail standalone build completely if unlicensed platforms are selected
