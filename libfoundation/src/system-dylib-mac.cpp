@@ -27,23 +27,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 void *_MCSDylibLoadModule(MCStringRef p_path)
 {
 	MCAutoStringRefAsSysString t_filename_sys;
-	if (t_filename_sys.Lock(p_path))
+	if (!t_filename_sys.Lock(p_path))
 		return nil;
 
 #ifdef _SERVER
-	return dlopen(*t_utf_path, RTLD_LAZY);
+	return dlopen(*t_filename_sys, RTLD_LAZY);
 #else
-	CFURLRef t_url;
-	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_filename_sys, strlen(*t_filename_sys), false);
-	
-	if (t_url == NULL)
-		return NULL;
-	
-	void *t_result = CFBundleCreate(NULL, t_url);
-	
-	CFRelease(t_url);
-
-	return t_result;
+	return (void *)NSAddImage(*t_filename_sys,
+	                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
+	                          NSADDIMAGE_OPTION_WITH_SEARCHING);
 #endif
 }
 
@@ -51,32 +43,26 @@ void _MCSDylibUnloadModule(void *p_module)
 {
 #ifdef _SERVER
 	dlclose(p_module);
-#else
-	CFRelease((CFBundleRef)p_module);
 #endif
+	//  Module unloading is not required after NSAddImage
 }
 
 void *_MCSDylibResolveModuleSymbol(void* p_module, MCStringRef p_symbol)
 {
-#ifdef _SERVER
 	MCAutoStringRefAsSysString t_symbol_sys;
 	if (!t_symbol_sys.Lock(p_symbol))
 		return nil;
-	
+
+#ifdef _SERVER
 	return dlsym(p_module, *t_symbol_sys);
 #else
-	
-	CFStringRef t_cf_symbol;
-	
-	MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
-	if (t_cf_symbol == NULL)
-		return NULL;
-
-	void *t_sym;	
-	t_sym = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
-	
-	CFRelease(t_cf_symbol);
-
-	return t_sym;
+	NSSymbol t_symbol;
+	t_symbol = NSLookupSymbolInImage((mach_header *)p_module,
+									 *t_symbol_sys,
+									 NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+	if (t_symbol != NULL)
+		return NSAddressOfSymbol(t_symbol);
 #endif
+	
+	return nil;
 }

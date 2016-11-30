@@ -4140,12 +4140,48 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
     {
-		return (MCSysModuleHandle)MCSDylibLoadModule(p_filename);
+		MCSysModuleHandle t_handle;
+		t_handle = (MCSysModuleHandle)MCSDylibLoadModule(p_filename);
+		
+		if (t_handle != nil)
+			return t_handle;
+		
+		MCAutoStringRefAsSysString t_filename_sys;
+		if (!t_filename_sys.Lock(p_filename))
+			return nil;
+		
+		CFURLRef t_url;
+		t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_filename_sys, strlen(*t_filename_sys), false);
+		
+		if (t_url == NULL)
+			return NULL;
+		
+		t_handle = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+		
+		CFRelease(t_url);
+		
+		return t_handle;
     }
     
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
     {
-        return (MCSysModuleHandle)MCSDylibResolveModuleSymbol(p_module, p_symbol);
+		MCSysModuleHandle t_symbol;
+        t_symbol = (MCSysModuleHandle)MCSDylibResolveModuleSymbol(p_module, p_symbol);
+		
+		if (t_symbol != nil)
+			return t_symbol;
+
+		CFStringRef t_cf_symbol;
+		
+		MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
+		if (t_cf_symbol == NULL)
+			return NULL;
+		
+		t_symbol = (MCSysModuleHandle)CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
+		
+		CFRelease(t_cf_symbol);
+		
+		return t_symbol;
     }
     
 	virtual void UnloadModule(MCSysModuleHandle p_module)
