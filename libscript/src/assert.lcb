@@ -1,0 +1,144 @@
+/*
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+Sometimes there are restrictions about how some LCB code can be used
+correctly.  It may only be possible to make it work in a sensible way
+if is passed a particular range of values, or if the system is in a
+particular state.  These are known as "preconditions" for the code.
+
+Many preconditions can be expressed via the LCB type system.  For
+example, you can declare that the parameters passed to handler must be
+particular types of value.  For example, when you write `in pName as
+String`, you are saying that the handler can only work when the
+`pName` parameter is a character string.  This is a precondition that
+can be checked automatically by the LCB compiler and virtual machine.
+
+Some preconditions can't yet be automatically checked by LCB.  An
+example would be a requirement that a string contains only ASCII
+characters, or that an array has a particular key.
+
+This module provides syntax to assist with explicit precondition
+checks.
+*/
+
+module com.livecode.assert
+
+/**
+Summary:	Check a precondition
+
+Parameters:
+	Condition: Expression that must be true for code to work
+
+Example:
+	handler BoxValue(in pValue as any) returns Array
+		return { "__VALUE": pValue }
+	end handler
+
+	handler UnBoxValue(in pBox as Array) returns any
+		expect that "__VALUE" is among the elements of pBox
+		return pBox["__VALUE"]
+	end handler
+
+Description:
+Use this statement at the start of a handler to check that necessary
+preconditions for the handler are satisfied.  For example, the handler
+may require that its parameters have a particular structure or fall
+within a particular range, or may need the system to be in a specific
+state.
+
+Note that if the <Condition> is false, this statement will throw an
+error with the slightly-unhelpful message that "assertion failed".
+Usually, it will be more useful to use <ExpectsPreconditionWithReason>
+instead.
+
+Related: ExpectPreconditionWithReason(statement).
+
+Tags: Assertions
+*/
+syntax ExpectPrecondition is statement
+	"expect" ["that"] <Condition: Expression>
+begin
+	MCAssertExpectPrecondition(Condition)
+end syntax
+
+public handler MCAssertExpectPrecondition(in pCondition as Boolean) \
+		returns nothing
+	if pCondition then
+		return
+	end if
+	throw "assertion failed"
+end handler
+
+/**
+Summary: Check a precondition, with a reason
+
+Parameters:
+	Condition: Expression that must be true for code to work
+	Reason:    Description of the precondition
+
+Example:
+	-- Draw a random variate from the Bernoulli distribution with
+	-- parameter pParam.  A Bernoulli variate may be 0 or 1; the
+	-- parameter pParam is the probability that the result is 1.
+	handler BernoulliVariate(in pParam as Number) returns Number
+		expect (pParam >= 0 and pParam <= 1) \
+			 because "Bernoulli parameter must be a probability in [0,1]"
+		if (any number <= pParam) then
+			return 1
+		else
+			return 0
+		end if
+	end handler
+
+Description:
+Use this statement at the start of a handler to check that necessary
+preconditions for the handler are satisfied.  For example, the handler
+may require that its parameters have a particular structure or fall
+within a particular range, or may need the system to be in a specific
+state.
+
+If the <Condition> is false, an error will be thrown including the
+<Reason> for the check.
+
+Related: ExpectPrecondition (statement)
+
+Tags: Assertions
+*/
+syntax ExpectPreconditionWithReason is statement
+	"expect" ["that"] <Condition: Expression> "because" <Reason: Expression>
+begin
+	MCAssertExpectPreconditionWithReason(Condition, Reason)
+end syntax
+
+-- Bind to the single string operation that this module needs here,
+-- rather than messing about with a separate implementation module.
+public foreign handler MCStringExecPutStringBefore(in Source as String, \
+		inout Target as String) returns nothing binds to "<builtin>"
+
+public handler MCAssertExpectPreconditionWithReason \
+		(in pCondition as Boolean, in pReason as String) returns nothing
+	if pCondition then
+		return
+	end if
+	unsafe
+		MCStringExecPutStringBefore("assertion failed: ", pReason)
+	end unsafe
+	throw pReason
+end handler
+
+end module
