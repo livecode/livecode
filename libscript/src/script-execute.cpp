@@ -135,15 +135,27 @@ public:
 	}
 	
 	// Call
-	bool Call(void *p_function_cif,
-			  void *p_function,
+	bool Call(MCScriptForeignHandlerDefinition *p_handler,
+			  MCTypeInfoRef p_handler_signature,
 			  void *p_result_slot_ptr)
 	{
-		
-		ffi_call((ffi_cif *)p_function_cif,
-				 (void(*)())p_function,
-				 p_result_slot_ptr,
-				 m_argument_values);
+		if (p_handler->is_java)
+		{
+			MCJavaCallJNIMethod(p_handler -> java . class_name,
+								p_handler -> java . method_id,
+								p_handler -> java . call_type,
+								p_handler_signature,
+								&p_result_slot_ptr,
+								m_argument_values,
+								m_argument_count);
+		}
+		else
+		{
+			ffi_call((ffi_cif *)p_handler -> native . function_cif,
+					 (void(*)())p_handler -> native . function,
+					 p_result_slot_ptr,
+					 m_argument_values);
+		}
 		
 		return true;
 	}
@@ -227,7 +239,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		return;
 	}
 	
-	if (p_handler_def->function == nil)
+	if (!p_handler_def->is_bound)
 	{
 		if (!MCScriptBindForeignHandlerInInstanceInternal(p_instance,
 														  p_handler_def))
@@ -376,8 +388,8 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	// Call the function - we assume here that if the invocation succeeds
 	// then the result slot will be valid unless an LC error has been
 	// raised.
-	if (!t_invocation.Call(p_handler_def->function_cif,
-						   p_handler_def->function,
+	if (!t_invocation.Call(p_handler_def,
+						   t_signature,
 						   t_return_value_slot_ptr) ||
 		MCErrorIsPending())
 	{

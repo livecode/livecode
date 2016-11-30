@@ -61,6 +61,7 @@
 				'include/foundation-text.h',
 				'include/foundation-unicode.h',
 				'include/system-commandline.h',
+				'include/system-dylib.h',
 				'include/system-file.h',
 				'include/system-init.h',
 				'include/system-random.h',
@@ -80,6 +81,7 @@
 				'src/foundation-error.cpp',
 				'src/foundation-filters.cpp',
 				'src/foundation-foreign.cpp',
+				'src/foundation-java.cpp',
 				'src/foundation-handler.cpp',
 				'src/foundation-list.cpp',
 				'src/foundation-locale.cpp',
@@ -106,9 +108,38 @@
 				'src/system-file.cpp',
 				'src/system-file-posix.cpp',
 				'src/system-file-w32.cpp',
+				'src/system-dylib.cpp',
+				'src/system-dylib-lnx.cpp',
+				'src/system-dylib-mac.cpp',
+				'src/system-dylib-w32.cpp',
 				'src/system-init.cpp',
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
+			],
+
+			'actions':
+			[
+				{
+					'action_name': 'generate_libfoundationjvm_stubs',
+					'inputs':
+					[
+						'../util/weak_stub_maker.pl',
+						'jvm.stubs',
+					],
+					'outputs':
+					[
+						'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
+					],
+
+					'action':
+					[
+						'<@(perl)',
+						'../util/weak_stub_maker.pl',
+						'--foundation',
+						'jvm.stubs',
+						'<@(_outputs)',
+					],
+				},
 			],
 			
 			'conditions':
@@ -128,12 +159,49 @@
 						'sources/':
 						[
 							['exclude', '.*-posix\\.cpp$'],
+							['exclude', '.*-mac\\.cpp$'],
+							['exclude', '.*-lnx\\.cpp$'],
 						],
 					},
+				],
+				[
+					'OS == "linux"', 
 					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/linux',
+						],
+						
 						'sources/':
 						[
 							['exclude', '.*-w32\\.cpp$'],
+							['exclude', '.*-mac\\.cpp$'],	
+						],
+					},
+				],
+				[
+					'OS == "mac"',
+					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/darwin',
+						],
+						
+						'sources/':
+						[
+							['exclude', '.*-w32\\.cpp$'],
+							['exclude', '.*-lnx\\.cpp$'],	
+						],
+					},	
+				],
+				[
+					'OS == "linux" or OS == "mac"',
+					{
+						'sources':
+						[
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
 						],
 					},
 				],

@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include <dlfcn.h>
 
 /* ================================================================
  * POSIX whole-file IO

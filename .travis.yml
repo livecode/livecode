@@ -34,6 +34,9 @@ env:
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "c++11"
 
+jdk:
+  - openjdk6
+
 # Install any required tools
 before_install:
   - |
@@ -55,6 +58,7 @@ script: |
       BUILD_PLATFORM=linux
       CHECK_COMMAND=xvfb-run
       LICENSE_DIR="${HOME}/.runrev/licenses"
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
       ;;
     osx)
       BUILD_PLATFORM=mac
@@ -63,6 +67,7 @@ script: |
       export XCODE_TARGET_SDK=macosx10.11
       export XCODEBUILD="set -o pipefail && xcodebuild"
       export XCODEBUILD_FILTER="| xcpretty"
+      export JAVA_HOME=$(/usr/libexec/java_home)
       ;;
   esac
 
