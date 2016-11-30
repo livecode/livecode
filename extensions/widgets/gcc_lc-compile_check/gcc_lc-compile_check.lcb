@@ -23,7 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 	meaning is imported from another module, where the id is shadowed
 	by a declaration in the current module.
 */
-widget com.livecode.widget._check
+widget com.livecode.widget._gcc_lc_compile_check
+
+metadata "userVisible" is "false"
 
 use com.livecode.library.widgetutils
 
