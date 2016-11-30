@@ -53,34 +53,30 @@ static bool initialise_weak_link_jvm()
     if (s_weak_link_jvm)
         return true;
 
-	const char *t_target;
+	MCAutoStringRef t_path;
 #if defined(TARGET_PLATFORM_LINUX)
-#if defined(__X86_64__)
-	t_target = "/jre/lib/amd64/server/libjvm.so";
-#elif defined(__I386__)
-	t_target = "/jre/lib/i386/server/libjvm.so";
-#else
-	return false;
-#endif
-#else
-	t_target = "/jre/lib/jli/libjli.dylib";
-#endif
-	
-    const char *t_javahome;
-    t_javahome = getenv("JAVA_HOME");
-    
-    if (t_javahome == nil)
-        return false;
-	
-	char *t_jvm_lib = new (nothrow) char[strlen(t_javahome) + strlen(t_target) + 1];
-
-    if (!sprintf(t_jvm_lib, "%s%s", t_javahome, t_target))
-        return false;
-	
-	if (!initialise_weak_link_jvm_with_path(t_jvm_lib))
+	// On linux we require the path to libjvm.so to be in LD_LIBRARY_PATH
+	// so we can just use dlopen directly.
+	if (!MCStringFormat(&t_path, "libjvm.so"))
 		return false;
-    
-    delete[] t_jvm_lib;
+#else
+
+	const char *t_javahome;
+	t_javahome = getenv("JAVA_HOME");
+	
+	if (t_javahome == nil)
+		return false;
+	
+	if (!MCStringFormat(&t_path, "%s/jre/lib/jli/libjli.dylib", t_javahome))
+		return false;
+#endif
+	
+	MCAutoStringRefAsSysString t_jvm_lib;
+	if (!t_jvm_lib . Lock(*t_path))
+		return false;
+	
+	if (!initialise_weak_link_jvm_with_path(*t_jvm_lib))
+		return false;
 
 	s_weak_link_jvm = true;
     return true;

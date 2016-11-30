@@ -56,6 +56,7 @@ script: |
       BUILD_PLATFORM=linux
       CHECK_COMMAND=xvfb-run
       LICENSE_DIR="${HOME}/.runrev/licenses"
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
       ;;
     osx)
       BUILD_PLATFORM=mac
