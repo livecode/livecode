@@ -83,7 +83,6 @@
 				'cflags':
 				[
 					'-w',						# Disable warnings
-					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
 				],
 				
