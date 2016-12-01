@@ -1736,7 +1736,8 @@ void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			if (!t_chunk -> getobj(ctxt, t_object, True) || t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
+			if (!t_chunk -> getobj(ctxt, t_object, True) ||
+			    !MCChunkTermIsControl(t_object . object -> gettype()))
             {
                 ctxt .Throw();
 				return;
