@@ -117,6 +117,7 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
+		'-Wno-deprecated-register',
 	],
 	
 	'configurations':
