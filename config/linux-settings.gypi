@@ -70,7 +70,6 @@
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
 					'-Werror=uninitialized',
-					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',
 				],
 
@@ -83,7 +82,6 @@
 				'cflags':
 				[
 					'-w',						# Disable warnings
-					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
 				],
 				
@@ -117,7 +115,7 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
-		'-fcheck-new',
+		'-Wno-deprecated-register',
 	],
 	
 	'configurations':

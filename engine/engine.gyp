@@ -266,7 +266,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
