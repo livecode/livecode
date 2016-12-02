@@ -434,7 +434,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #    define alignof(x)      __alignof__(x)
 #  elif defined(__GNUC__)
      // GCC added C++11 alignof(x) in GCC 4.8
-#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR < 8)
+#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
 #      define alignof(x)    __alignof__(x)
 #    endif
 #  elif defined(_MSC_VER)
@@ -444,6 +444,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #    endif
 #  else
 #    error Do not know how to get alignof(x) on this compiler
+#  endif
+#endif
+
+// Ensure we have constexpr keyword defined
+#if defined(__cplusplus) && (!defined(__cpp_constexpr) || (__cpp_constexpr < 200704))
+// Testing __cplusplus isn't sufficient as some compilers changed the
+// value before being fully-conforming
+#  if defined(__clang__)
+     // clang defines __cpp_constexpr appropriately
+#    define constexpr /*constexpr*/
+#  elif defined(__GNUC__)
+     // GCC added C++11 constexpr in GCC 4.6
+#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
+#      define constexpr /*constexpr*/
+#    endif
+#  elif defined(_MSC_VER) && (_MCS_VER < 1900)
+     // MSVC added C++11 constexpr in Visual Studio 2015 (compiler
+     // version 14.0, _MSC_VER 1900)
+#    define constexpr /*constexpr*/
+#  else
+#    error Do not know whether this compiler provides C++11 constexpr
 #  endif
 #endif
 
