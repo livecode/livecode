@@ -1698,10 +1698,20 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	bool t_success;
 	t_success = true;
 
+	// If this object's parent script is on the script stack, it's an
+	// execution error
+	if (parent_script != nil &&
+	    parent_script -> GetParent() -> GetObject() != nil &&
+	    parent_script -> GetParent() -> GetObject() -> getscriptdepth() > 0)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+		return;
+	}
+	
 	// MW-2008-11-02: [[ Bug ]] Setting the parentScript of an object to
 	//   empty should unset the parent script property and not throw an
 	//   error.
-	if (new_parent_script == nil || MCStringGetLength(new_parent_script) == 0)
+	if (MCStringIsEmpty(new_parent_script))
 	{
 		if (parent_script != NULL)
 			parent_script -> Release();

@@ -2737,6 +2737,9 @@ enum Exec_errors
     
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
+
+	// {EE-0897} parentScript: can't change parent while parent script is executing
+	EE_PARENTSCRIPT_EXECUTING,
 };
 
 extern const char *MCexecutionerrors;
