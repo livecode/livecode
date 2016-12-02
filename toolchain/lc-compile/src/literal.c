@@ -688,8 +688,11 @@ static int FindNameInScope(ScopeRef p_scope, NameRef p_name, NameRef p_namespace
 				(t_binding -> namespace != NULL &&
 			     IsNameEqualToName(p_namespace, t_binding -> namespace)))
 
-            *r_binding = t_binding;
-            return 1;
+			{
+
+				*r_binding = t_binding;
+				return 1;
+			}
         }
 	}
     return 0;
