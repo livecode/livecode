@@ -1,0 +1,1 @@
+# Throw error when changing behavior from behavior script
