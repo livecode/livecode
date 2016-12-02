@@ -29,7 +29,6 @@
 				#’widgets/chart/chart.lcb',
 				#'widgets/checkbox/checkbox.lcb',
 				'widgets/clock/clock.lcb',
-				'widgets/gcc_lc-compile_check/gcc_lc-compile_check.lcb',
 				'widgets/graph/graph.lcb',
 				'widgets/header/header.lcb',
 				'widgets/iconpicker/iconpicker.lcb',
