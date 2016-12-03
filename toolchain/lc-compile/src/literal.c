@@ -678,7 +678,7 @@ static void FreeScope(ScopeRef p_scope)
 
 static int FindNameInScope(ScopeRef p_scope, NameRef p_name, NameRef p_namespace, BindingRef *r_binding)
 {
-    BindingRef t_binding;
+	BindingRef t_binding = NULL;
 
 	for (t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
 	{
@@ -688,8 +688,11 @@ static int FindNameInScope(ScopeRef p_scope, NameRef p_name, NameRef p_namespace
 				(t_binding -> namespace != NULL &&
 			     IsNameEqualToName(p_namespace, t_binding -> namespace)))
 
-            *r_binding = t_binding;
-            return 1;
+			{
+
+				*r_binding = t_binding;
+				return 1;
+			}
         }
 	}
     return 0;
@@ -736,7 +739,7 @@ void DefineUnqualifiedMeaning(NameRef p_name, long p_meaning)
 
 void DefineMeaning(NameRef p_name, NameRef p_namespace, long p_meaning)
 {
-    BindingRef t_binding;
+	BindingRef t_binding = NULL;
 	
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -760,7 +763,7 @@ void DefineMeaning(NameRef p_name, NameRef p_namespace, long p_meaning)
 
 void UndefineMeaning(NameRef p_name, NameRef p_namespace)
 {
-    BindingRef t_binding;
+    BindingRef t_binding = NULL;
 	
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -774,7 +777,7 @@ void UndefineMeaning(NameRef p_name, NameRef p_namespace)
 
 int HasLocalMeaning(NameRef p_name, long *r_meaning)
 {
-    BindingRef t_binding;
+	BindingRef t_binding = NULL;
 	
 	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -803,7 +806,7 @@ int HasMeaning(NameRef p_name, NameRef p_namespace, long *r_meaning)
     
     for(t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
     {
-        BindingRef t_binding;
+        BindingRef t_binding = NULL;
         if (FindNameInScope(t_scope, (NameRef)p_name, (NameRef)p_namespace, &t_binding) == 1 &&
             t_binding -> has_meaning == 1)
         {

@@ -13,6 +13,13 @@ function extract_name {
 	sed -nEe 's,^([[:space:]]*<name>(.*)</name>[[:space:]]*)$,\2,p' < "$1"
 }
 
+function do_cmd {
+	if [[ ! -z "${V}" ]]; then
+		echo "$@"
+	fi
+	"$@"
+}
+
 function build_widget {
 	local WIDGET_DIR=$1
 	local WIDGET_NAME=$(basename $1)
@@ -21,9 +28,9 @@ function build_widget {
 	local MODULE_DIR=$3
 	local LC_COMPILE=$4
 	
-	echo "LC_COMPILE ${WIDGET_NAME}"
+	echo "  LC_COMPILE ${WIDGET_DIR}/module.lcm"
 
-	"${LC_COMPILE}" \
+	do_cmd "${LC_COMPILE}" \
 		-Werror \
 		--modulepath "${MODULE_DIR}" \
 		--manifest "${WIDGET_DIR}/manifest.xml" \
@@ -36,7 +43,7 @@ function build_widget {
 		return 1
 	fi
 
-	echo "PACKAGE ${TARGET_DIR}"
+	echo "  PACKAGE ${TARGET_DIR}"
 
 	pushd "${WIDGET_DIR}" 1>/dev/null
 	zip -q -r "${TARGET_DIR}.lce" *
@@ -52,6 +59,9 @@ function build_widget {
 	
 	return 0
 }
+
+# Detect verbose mode
+V=${V:-}
 
 # Arguments 4 and above are the list of extensions to compile
 readonly destination_dir=$1
