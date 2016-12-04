@@ -2147,7 +2147,7 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
     
     BOOL t_return_key = [string rangeOfString: @"\n"].location != NSNotFound;
     
-    return t_new_length <= DEFAULT_MAX_LENGTH || t_return_key;
+    return t_new_length <= m_max_text_length || t_return_key;
 }
 
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field
