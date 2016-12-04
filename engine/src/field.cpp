@@ -1494,6 +1494,90 @@ void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_coun
     /* UNCHECKED */ MCListCopyAsString(*t_list, r_result);
 }
 
+bool MCField::parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count)
+{
+    MCAutoProperListRef t_list;
+    if (!MCStringSplitByDelimiter(p_data, MCSTR(","), kMCStringOptionCompareExact, &t_list))
+		return false;
+
+    uindex_t t_count;
+	t_count = MCProperListGetLength(*t_list);
+    
+    MCAutoArray<intenum_t> t_alignments;
+	if (!t_alignments.Extend(t_count))
+		return false;
+    
+    for (uindex_t i = 0; i < t_count; i++)
+    {
+        MCValueRef t_item;
+		t_item = MCProperListFetchElementAtIndex(*t_list, i);
+
+        if (MCStringIsEqualToCString((MCStringRef)t_item, "left", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignLeft;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "right", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignRight;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "center", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignCenter;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    t_alignments . Take(r_alignments, r_alignment_count);
+	return true;
+}
+
+bool MCField::formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result)
+{
+    if (p_alignment_count == 0)
+    {
+        r_result = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(',', &t_list))
+		return false;
+    
+    for (uindex_t i = 0; i < p_alignment_count; i++)
+    {
+        switch (p_alignments[i])
+        {
+            case kMCParagraphTextAlignLeft:
+                if (!MCListAppendCString(*t_list, "left"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                if (!MCListAppendCString(*t_list, "right"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                if (!MCListAppendCString(*t_list, "center"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignJustify:
+                if (!MCListAppendCString(*t_list, "justify"))
+					return false;
+                break;
+                
+            default:
+				MCUnreachableReturn(false);
+        }
+    }
+    
+    return MCListCopyAsString(*t_list, r_result);
+}
+
 void MCField::undo(Ustruct *us)
 {
 	findex_t si, ei;
