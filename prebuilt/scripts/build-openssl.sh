@@ -77,7 +77,7 @@ function buildOpenSSL {
 		CUSTOM_SPEC="${SPEC}-livecode"
 
 		OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-		OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC}"
+		OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC}"
 		OPENSSL_ARCH_LOG="${OPENSSL_ARCH_SRC}.log"
 	
 		# Copy the source to a target-specific directory
