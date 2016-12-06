@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphonecontrol.h"
 #include "mbliphone.h"
 
-#define DEFAULT_MAX_LENGTH 25
+#define DEFAULT_MAX_LENGTH UINT16_MAX
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
@@ -562,9 +562,16 @@ void MCiOSInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
     
     if (t_field)
     {
+        NSUInteger t_max_length;
+        t_max_length =  m_delegate.getMaxTextLength;
+        
         NSString *t_string;
         t_string = [NSString stringWithMCStringRef: p_string];
-        [t_field setText: t_string];
+        
+        if (t_string.length > t_max_length)
+            [t_field setText: [t_string substringToIndex:t_max_length]];
+        else
+            [t_field setText:t_string];
     }
 }
 
@@ -1144,6 +1151,15 @@ void MCiOSInputFieldControl::SetMaximumTextLength(MCExecContext& ctxt, uinteger_
         t_delegate = (com_runrev_livecode_MCiOSInputDelegate*)m_delegate;
         
         [t_delegate setMaxTextLength: p_length];
+        
+        UITextField *t_field;
+        t_field = (UITextField *)GetView();
+        
+        // Truncate the text is it exceeds the maximum length
+        if (t_field && t_field.text.length > p_length)
+        {
+            t_field.text = [t_field.text substringToIndex:p_length];
+        }
     }
 }
 
@@ -2147,7 +2163,15 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
     
     BOOL t_return_key = [string rangeOfString: @"\n"].location != NSNotFound;
     
-    return t_new_length <= m_max_text_length || t_return_key;
+    if (t_new_length > m_max_text_length && !t_return_key)
+    {
+        // Truncate the text if it exceeds maximum allowed length
+        // This also covers the case of pasted text
+        textField.text = [[textField.text stringByReplacingCharactersInRange:range withString:string] substringToIndex:m_max_text_length];
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field
