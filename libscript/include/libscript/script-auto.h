@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_SCRIPT_AUTO__
 
 #include "script.h"
+#include "foundation-span.h"
 
 /* ================================================================ */
 
@@ -123,6 +124,11 @@ public:
 			return false;
 		m_values[m_count - 1] = REF(p_value);
 		return true;
+	}
+
+	MCSpan<T> Span()
+	{
+		return MCMakeSpan(Ptr(), Size());
 	}
 
 	T & operator [] (const int p_index)
