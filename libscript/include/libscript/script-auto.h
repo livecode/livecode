@@ -140,6 +140,22 @@ private:
 typedef MCAutoScriptObjectRefArrayBase<MCScriptModuleRef, MCScriptRetainModule, MCScriptReleaseModule> MCAutoScriptModuleRefArray;
 typedef MCAutoScriptObjectRefArrayBase<MCScriptInstanceRef, MCScriptRetainInstance, MCScriptReleaseInstance> MCAutoScriptInstanceRefArray;
 
-/* ================================================================ */
+/* ================================================================
+ * libscript functions relying on managed-lifetime types
+ * ================================================================
+ *
+ * This header declares some libscript functions in addition to those
+ * declared in "script.h".  These functions rely on the managed
+ * lifetime types declared in this header but not available in
+ * "script.h".
+ */
+
+/* ----------------------------------------------------------------
+ * Module-related functions
+ * ---------------------------------------------------------------- */
+MC_DLLEXPORT bool MCScriptCreateModulesFromStream(MCStreamRef p_stream,
+                                                  MCAutoScriptModuleRefArray& x_modules);
+MC_DLLEXPORT bool MCScriptCreateModulesFromData(MCDataRef p_data,
+                                                MCAutoScriptModuleRefArray& x_modules);
 
 #endif /* !__MC_SCRIPT_AUTO__ */
