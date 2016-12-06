@@ -28,11 +28,11 @@ Use the <scrollbarWidth> <property> to specify how much of a scrolling
 <field|field's> or <group|group's> <width> is taken up by the vertical
 scrollbar. 
 
-Setting a field's or group's vScrollbar or <hScrollbar> <property> to
+Setting a field's or group's <vScrollbar> or <hScrollbar> <property> to
 true changes its <scrollbarWidth> to 16 on <Mac OS|Mac OS systems>, and
 to 20 on <Unix> and <Windows|Windows systems>.
 
-If a field's vScrollbar is false and its <style> is not scrolling, its
+If a field's <vScrollbar> is false and its <style> is not scrolling, its
 <scrollbarWidth> <property> has no effect. If a <group|group's>
 <vScrollbar> is false, its <scrollbarWidth> has no effect.
 
