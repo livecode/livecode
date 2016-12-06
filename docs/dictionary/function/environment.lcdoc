@@ -24,16 +24,13 @@ if the environment is "development" then showDevelopOptions
 Returns (enum):
 The <environment> function returns one of:
 
--   "development": The stack is running under the development
-    environment. 
--   "standalone application": The stack is running as a standalone
-    application. 
--   "helper application": LiveCode is running as a standalone with
-    secureMode set to true.
+-   "development": The stack is running under the development environment.
+-   "standalone application": The stack is running as a standalone application.
+-   "helper application": LiveCode is running as a standalone with the secureMode property set to true.
+-   "server": The stack is running in LiveCode server.
 -   "browser": The stack is running as a LiveCode applet.
 -   "mobile": The stack is running on a mobile device.
--   "command line": The stack was launched from the command line with
-    :ui 
+-   "command line": The stack was launched from the command line with the "-ui" command line option
 
 
 Description:
@@ -41,5 +38,5 @@ Use the <environment> function to change a stack's behavior depending on
 how the stack was opened.
 
 References: version (function), revLicenseType (function),
-buildNumber (function), systemVersion (function)
+buildNumber (function), systemVersion (function), secureMode (property)
 
