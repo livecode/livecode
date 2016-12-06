@@ -17,7 +17,7 @@ OS: mac, windows, linux
 Platforms: desktop, server
 
 Example:
-set the menuName of card button "Popup" to stack "Items"
+set the menuName of button "Popup" to "Items"
 
 Value:
 The <menuName> of a button is a <object reference|stack reference>.
