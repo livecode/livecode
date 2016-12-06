@@ -588,7 +588,6 @@ private:
 	JOCTET *m_icc;
 	uint32_t m_icc_length;
 	uint32_t m_orientation;
-	bool m_invert_cmyk;
 };
 
 MCJPEGImageLoader::MCJPEGImageLoader(IO_handle p_stream) : MCImageLoader(p_stream)
@@ -597,7 +596,6 @@ MCJPEGImageLoader::MCJPEGImageLoader(IO_handle p_stream) : MCImageLoader(p_strea
 	m_icc = nil;
 	m_icc_length = 0;
 	m_orientation = 0;
-	m_invert_cmyk = false;
 	
 	MCMemoryClear(&m_jpeg, sizeof(m_jpeg));
 }
@@ -634,10 +632,6 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 	if (t_success)
 	{
 		m_jpeg.src = (jpeg_source_mgr*)m_src;
-
-		// MW-2009-12-09: [[ Bug 2983 ]] Add support for CMYK jpegs. We need this to
-		//   determine whether to invert the CMYK data.
-		jpeg_save_markers(&m_jpeg, JPEG_APP0 + 14, 256);
 		
 		// MW-2012-09-04: [[ Exif ]] Save any APP1 markers so we can see if there is
 		//   any orientation flags.
@@ -679,15 +673,6 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 		if (m_jpeg.jpeg_color_space == JCS_CMYK ||
 			m_jpeg.jpeg_color_space == JCS_YCCK)
 		{
-			// We need to check to see if the CMYK image was produced by Adobe
-			// software. If it is, then the values need to be inverted.
-			for(jpeg_saved_marker_ptr t_marker = m_jpeg . marker_list; t_marker != nil; t_marker = t_marker -> next)
-				if ((t_marker->marker == (JPEG_APP0 + 14)) && (t_marker->data_length >= 12) && (!strncmp ((const char *)t_marker->data, "Adobe", 5)))
-				{
-					m_invert_cmyk = true;
-					break;
-				}
-
 			m_jpeg.out_color_space = JCS_CMYK;
 		}
 		else
@@ -770,8 +755,10 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 				for (uindex_t x = 0; x < m_jpeg.output_width; x++)
 				{
 					uint32_t t_pixel;
-					t_pixel = (t_src_ptr[3] << 24) | (t_src_ptr[2] << 16) | (t_src_ptr[1] << 8) | t_src_ptr[0];
-					if (m_invert_cmyk)
+
+					t_pixel = (t_src_ptr[3] << 24) | (t_src_ptr[2] << 16) | (t_src_ptr[1] << 8) | (t_src_ptr[0] << 0);
+					
+					if (m_jpeg.saw_Adobe_marker)
 						t_pixel ^= 0xFFFFFFFF;
 
 					*t_dst_ptr++ = t_pixel;
