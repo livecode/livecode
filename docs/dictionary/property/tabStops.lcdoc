@@ -28,27 +28,34 @@ Example:
 set the tabStops of line 2 to -2 of field "list" to 50
 
 Value:
-The <tabStops> of a <field(keyword)> is a list of one or more positive
+The <tabStops> of a <field(object)> is a list of one or more positive
 <integer|integers>, separated by commas. By default, the <tabStops>
 <property> of newly created <field(object)|fields> is set to empty.
 
 Description:
 Use the <tabStops> <property> to let users tab to a horizontal location
-within a <field(keyword)>.
+within a <field(object)>.
 
-If the user presses the Tab key while editing a field, normally the
-insertion point moves to the next control whose traversalOn <property>
-is true. If the <tabStops> <property> is true, the user can enter tab
-characters in the <field(keyword)>. Each time the Tab key is pressed,
-the <insertion point> moves to the next <tab stop> on the current line.
+If the user presses the &lt;Tab&gt; key while editing a field,
+normally the insertion point moves to the next control whose
+traversalOn <property> is true. If the <tabStops> <property> is not
+empty, the user can enter tab characters in the <field(object)>. Each
+time the Tab key is pressed, the <insertion point> moves to the next
+<tab stop> on the current line.
 
 The <tabStops> consists of one or more <integer(glossary)|integers>
-separated by commas. Each <integer(keyword)> is the distance in <pixels>
-from the left margin of the <field(keyword)> to a <tab stop>. If a tab
-stop is less than the previous tab stop, the distance is measured
-relative to the previous tab stop. For example, if the <tabStops> is set
-to "20,100,30", tab stops are placed at 20, 100, and 130 <pixels> from
-the left margin.
+separated by commas. Each <integer(keyword)> is the distance in
+<pixels> from the left margin of the <field(object)> to a <tab stop>,
+after taking into account the <leftIndent> and <firstIndent>
+properties.  For example, if the <leftIndent> is 20 pixels, the
+<firstIndent> is 25 pixels, and the first item of the <tabStops> is 30
+pixels, the first tabstop will be 75 pixels from the left margin of
+the field.
+
+If a tab stop is less than the previous tab stop, the distance is
+measured relative to the previous tab stop. For example, if the
+<tabStops> is set to "20,100,30", tab stops are placed at 20, 100, and
+130 <pixels> from the left margin.
 
 >*Tip:*  If you set the <field's (object)> <vGrid> <property> to true, a
 > vertical line is drawn at each <tab stop>. Temporarily setting this
@@ -56,20 +63,20 @@ the left margin.
 > stop> is.
 
 If the <tabStops> does not define tabs for the entire width of the
-<field(keyword)>, or if the <field(object)|field's> <dontWrap>
+<field(object)>, or if the <field(object)|field's> <dontWrap>
 <property> is true, LiveCode creates implicit <tab stop|tab stops>
-across the entire <field(keyword)>. (For example, if a
-<field(object)|field's> <tabStops> is 10, the <field(keyword)> has a
+across the entire <field(object)>. (For example, if a
+<field(object)|field's> <tabStops> is 10, the <field(object)> has a
 <tab stop> every 10 <pixels>.) If the <tabStops> <property> defines more
 than one <tab stop>, the width of the last tab column repeats for the
-width of the <field(keyword)>. (For example, if a
+width of the <field(object)>. (For example, if a
 <field(object)|field's> <tabStops> is 20,100,130, the width of the last
 tab column is 30, so additional <tab stop|tab stops> are automatically
 created at 160, 190, 220, and so on.)
 
-If the <tabStops> is empty, the <field(keyword)> has no <tab stop|tab
+If the <tabStops> is empty, the <field(object)> has no <tab stop|tab
 stops>, and pressing the Tab key moves the <insertion point> to the next
-<field(keyword)>. 
+<field(object)>.
 
 >*Important:*  Setting the <field's (object)> <textAlign> to center or
 > right may cause unexpected results when using <tab stop|tab stops>.
@@ -77,7 +84,7 @@ stops>, and pressing the Tab key moves the <insertion point> to the next
 >*Note:*  If the <tabGroupBehavior> property of a group containing the
 > field is set to true, you cannot press the Tab key to go to the next
 > tab stop. (The <tabStops> setting still controls the spacing of any
-> tab <characters> that are pasted into the <field(keyword)> or placed
+> tab <characters> that are pasted into the <field(object)> or placed
 > in it by a <handler>.)
 
 References: property (glossary), insertion point (glossary),
