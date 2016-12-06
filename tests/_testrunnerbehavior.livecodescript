@@ -151,31 +151,52 @@ end TestRunnerInvokeLoadLibraries
 -- Execute a test
 command TestRunnerInvokeTestCommand pScriptFile, pCommand
    local tStackName, tResult
-
    -- This should auto-load the test script
    put the name of stack pScriptFile into tStackName
-
+   
    -- Check that the stack script actually compiles
+   lock messages
    set the script of tStackname to the script of tStackname
    put the result into tResult
+   unlock messages
    if tResult is not empty then
       TestDiagnostic tResult
    end if
    TestAssert "script compiles", tResult is empty
-
-   -- Dispatch the test setup command, and check if skipping was requested
-   dispatch "TestSetup" to tStackName
-   put the result into tResult
+   
+   -- Don't run test if script doesn't compile
+   if tResult is not empty then
+      exit TestRunnerInvokeTestCommand
+   end if
+   
+   try
+      dispatch "TestSetup" to tStackName
+      put the result into tResult
+   catch tError
+      TestAssert "setup test", false
+      TestDiagnostic tError   
+   end try   
+   
    if word 1 of tResult is "SKIP" then
       TestSkip pCommand, word 2 to -1 of tResult
-      exit invokeTest
+   else
+      -- Run the actual test itself
+      try
+         dispatch pCommand to tStackName
+      catch tError      
+         TestAssert "execute test", false
+         TestDiagnostic tError   
+         -- don't exit here as test cleanup may still be useful
+      end try
    end if
-
-   -- Run the actual test itself
-   dispatch pCommand to tStackName
-
+   
    -- Do common cleanup tasks
-   dispatch "TestTearDown" to tStackName
+   try
+      dispatch "TestTearDown" to tStackName
+   catch tError
+      TestAssert "tear down test", false
+      TestDiagnostic tError  
+   end try
 end TestRunnerInvokeTestCommand
 
 ----------------------------------------------------------------
