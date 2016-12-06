@@ -383,7 +383,7 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 		MCTextLayoutGlyph *t_glyphs;
 		if (!MCMemoryNewArray(t_run -> glyphs -> num_glyphs, t_glyphs))
 			t_success = false;
-		
+        
 		PangoFcFont *t_font;
 		t_font = PANGO_FC_FONT(t_run -> item -> analysis . font);
 		if (t_success)
@@ -394,17 +394,14 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 				t_glyphs[i] . y = (double)t_run -> glyphs -> glyphs[i] . geometry . y_offset / PANGO_SCALE;
 				t_running_x += (double)t_run -> glyphs -> glyphs[i] . geometry . width / PANGO_SCALE;
 			}
-
+        
         MCAutoStringRef t_utf_string;
-        MCAutoDataRef t_utf16_data;
-
 		if (t_success)
-        {
-            MCStringCreateWithNativeChars((char_t*)pango_layout_get_text(m_layout) + t_run -> item -> offset, t_run -> item -> length, &t_utf_string);
-            MCStringEncode(*t_utf_string, kMCStringEncodingUTF16, false, &t_utf16_data);
-			fprintf(stderr, "\nUTF-8 text: %d/%d - %s\n", t_run -> item -> offset, t_run -> item -> length, pango_layout_get_text(m_layout) + t_run -> item -> offset);
-            fprintf(stderr, "UTF-16 length in bytes = %d\n", MCDataGetLength(*t_utf16_data));
-		}
+            t_success = MCStringCreateWithBytes((char_t*)pango_layout_get_text(m_layout) + t_run -> item -> offset, t_run -> item -> length, kMCStringEncodingUTF8, false, &t_utf_string);
+        
+        MCAutoDataRef t_utf16_data;
+        if (t_success)
+            t_success = MCStringEncode(*t_utf_string, kMCStringEncodingUTF16, false, &t_utf16_data);
 		
 		// We must now compute the cluster information. Pango gives this to us
 		// as an array of byte offsets into the UTF-8 string for each glyph.
@@ -471,20 +468,6 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 				if (t_clusters[i] == 65535)
 					t_clusters[i] = t_clusters[i - 1];
 			
-			fprintf(stderr, "Bytes:     ");
-			for(uint32_t i = 0; i < t_byte_count; i++)
-				fprintf(stderr, "%02x ", t_bytes[i]);
-			fprintf(stderr, "\nMapping:   ");
-			for(uint32_t i = 0; i < t_byte_count; i++)
-				fprintf(stderr, "%04x ", t_char_map[i]);
-			fprintf(stderr, "\nGlyph Map: ");
-			for(uint32_t i = 0; i < t_run -> glyphs -> num_glyphs; i++)
-				fprintf(stderr, "%04x ", t_run -> glyphs -> log_clusters[i]);
-			fprintf(stderr, "\nClusters:  ");
-			for(uint32_t i = 0; i < t_char_count; i++)
-				fprintf(stderr, "%04x ", t_clusters[i]);
-			fprintf(stderr, "\n");
-			
 			// Now emit the span
 			MCTextLayoutSpan t_span;
 			t_span . chars = (const unichar_t *)t_chars;
@@ -500,7 +483,11 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 		MCMemoryDeleteArray(t_clusters);
 		MCMemoryDeleteArray(t_glyphs);
 
-		pango_layout_iter_next_run(t_iter);
+        if (t_success)
+        {
+            if (!pango_layout_iter_next_run(t_iter))
+                break;
+        }
 	}
 	
 	pango_layout_iter_free(t_iter);
