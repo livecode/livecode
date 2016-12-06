@@ -55,6 +55,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCChunkTermIsNestable(Chunk_term p_chunk_term)
+{
+	switch (p_chunk_term)
+	{
+		case CT_STACK:
+		case CT_GROUP:
+		case CT_LAYER:
+		case CT_ELEMENT:
+			return true;
+		default:
+			return false;
+	}
+}
+
+static bool MCChunkTermHasRange(Chunk_term p_chunk_term)
+{
+	return p_chunk_term >= CT_LINE && p_chunk_term < CT_ELEMENT;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef COLLECTING_CHUNKS
 #include "newchunk.h"
 class MCSyntaxCollector
@@ -991,30 +1012,10 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
             return;
         }
-        // SN-2015-01-13: [[ Bug 14376 ]] Remove this if statement added during the refactoring process
-        // (commit 15a49a27e387f3e49e5bcce8f8316348578bf810)
-        //  which leads to a part_id of 0 instead of the card part id.
-//        if (background == nil && card == nil && group == nil && object == nil)
-//        {
-//            r_object . object = t_object . object;
-//            r_object . part_id = t_object . part_id;
-//            return;
-//        }
-        switch (t_object . object -> gettype())
+
+		Chunk_term t_type = t_object . object -> gettype();
+		if (MCChunkTermIsControl(t_type) && t_type != CT_GROUP)
         {
-            case CT_AUDIO_CLIP:
-            case CT_VIDEO_CLIP:
-            case CT_LAYER:
-            case CT_MENU:
-            case CT_BUTTON:
-            case CT_IMAGE:
-            case CT_FIELD:
-            case CT_GRAPHIC:
-            case CT_EPS:
-            case CT_SCROLLBAR:
-            case CT_PLAYER:
-            case CT_MAGNIFY:
-            case CT_COLOR_PALETTE:
                 MCCard *t_card;
                 t_card = t_object . object -> getcard(t_object . part_id);
                 if (t_card == nil)
@@ -1028,9 +1029,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 r_object . object = t_object . object;
                 r_object . part_id = t_object . part_id;
                 return;
-            default:
-                break;
-        }
+		}
     }
     else if (noobjectchunks())
     {
@@ -3452,23 +3451,4 @@ MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term)
         default:
             MCUnreachableReturn(kMCChunkTypeLine);
     }
-}
-
-bool MCChunkTermIsNestable(Chunk_term p_chunk_term)
-{
-    switch (p_chunk_term)
-    {
-        case CT_STACK:
-        case CT_GROUP:
-        case CT_LAYER:
-        case CT_ELEMENT:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool MCChunkTermHasRange(Chunk_term p_chunk_term)
-{
-    return p_chunk_term >= CT_LINE && p_chunk_term < CT_ELEMENT;
 }

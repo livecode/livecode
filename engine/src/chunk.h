@@ -190,7 +190,8 @@ public:
 };
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
-bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
-bool MCChunkTermHasRange(Chunk_term p_chunk_term);
-
+inline bool MCChunkTermIsControl(Chunk_term p_chunk_term)
+{
+	return p_chunk_term >= CT_FIRST_CONTROL && p_chunk_term <= CT_LAST_CONTROL;
+}
 #endif
