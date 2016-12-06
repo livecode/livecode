@@ -38,10 +38,10 @@ within a <field(object)>.
 
 If the user presses the &lt;Tab&gt; key while editing a field,
 normally the insertion point moves to the next control whose
-traversalOn <property> is true. If the <tabStops> <property> is true,
-the user can enter tab characters in the <field(object)>. Each time
-the Tab key is pressed, the <insertion point> moves to the next <tab
-stop> on the current line.
+traversalOn <property> is true. If the <tabStops> <property> is not
+empty, the user can enter tab characters in the <field(object)>. Each
+time the Tab key is pressed, the <insertion point> moves to the next
+<tab stop> on the current line.
 
 The <tabStops> consists of one or more <integer(glossary)|integers>
 separated by commas. Each <integer(keyword)> is the distance in
