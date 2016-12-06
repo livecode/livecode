@@ -52,8 +52,11 @@ not change, but it receives keystroke <message|messages>.
 If the <lookAndFeel> is set to "Windows 95", a dotted outline is drawn
 within <button|buttons> when they receive the <focus>.
 
-If the <object(glossary)> is an <unlock|unlocked> <field(keyword)>, the
-<insertion point> is placed after the text in the <field(keyword)>.
+If the <object(glossary)> is an <unlock|unlocked> <field(object)>, the
+<insertion point> is restored to the location at which it was located
+the last time the <field(object)> was focused.  If the <field(object)>
+was not previously focused, then the <insertion point> is placed at
+the beginning of the text in the <field(object)>.
 
 Use the ``focus on nothing`` command to remove focus from all objects on
 a card.
@@ -62,7 +65,7 @@ References: select (command), focus (command), focusedObject (function),
 mouseStack (function), property (glossary), EPS (glossary),
 error (glossary), insertion point (glossary), message (glossary),
 unlock (glossary), appearance (glossary), active control (glossary),
-command (glossary), field (keyword), control (keyword),
+command (glossary), control (keyword),
 enterKey (message), focusIn (message), keyUp (message), tabKey (message),
 mouseLeave (message), mouseWithin (message), keyDown (message),
 focusOut (message), returnKey (message), field (object), image (object),
