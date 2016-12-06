@@ -1,0 +1,7 @@
+module com.livecode.lcs_tests.core.extension.support
+
+public handler SupportHandler()
+	return "support handler"
+end handler
+
+end module
