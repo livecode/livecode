@@ -2280,10 +2280,10 @@ command revSBUpdateForDependencies @xSettings
          put true into xSettings["android,application permissions"][tPermission]
       end repeat
       repeat for each item tFeature in tFeatures
-         local tRequired, tRequiredMetadata
+         local tIsRequired, tRequiredMetadata
          put "android." & tFeature & ".required" into tRequiredMetadata
-         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tRequired
-         put tRequired into xSettings["android,device capabilities"][tFeature]
+         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
+         put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
    end repeat
 end revSBUpdateForDependencies
