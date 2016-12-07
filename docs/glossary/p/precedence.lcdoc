@@ -14,9 +14,9 @@ The set of rules that determine what order <operator|operators> are
 3. Multiplication and division, from left to right.
 4. Addition and subtraction, from left to right.
 
-For example, the \* <operator> has higher precedence than the + 
+For example, the <*|\*> <operator> has higher precedence than the <+> 
 <operator>, so 2 + 3 \* 4
 is <evaluate|evaluated> as 2 + (3 \* 4), not (2 + 3) \* 4.
 
-References: evaluate (glossary), operator (glossary),
-expression (glossary)
+References: * (operator), + (operator), evaluate (glossary), 
+operator (glossary), expression (glossary)
