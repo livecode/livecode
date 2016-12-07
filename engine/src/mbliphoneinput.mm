@@ -41,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphonecontrol.h"
 #include "mbliphone.h"
 
-#define DEFAULT_MAX_LENGTH UINT16_MAX
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
@@ -2091,7 +2090,7 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 	m_instance = instance;
 	m_didchange_pending = false;
 	m_return_pressed = false;
-    m_max_text_length = DEFAULT_MAX_LENGTH;
+    m_max_text_length = NSUIntegerMax;
 	
 	for(uint32_t i = 0; s_input_notifications[i] . name != nil; i++)
 		[[NSNotificationCenter defaultCenter] addObserver: self
