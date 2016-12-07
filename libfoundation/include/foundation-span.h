@@ -140,7 +140,7 @@ public:
 	{
 		return advance(1);
 	}
-	MCSpan& operator++(int)
+	MCSpan operator++(int)
 	{
 		auto t_ret = *this;
 		++(*this);
