@@ -2270,6 +2270,22 @@ command revSBUpdateForDependencies @xSettings
          end if
       end repeat
    end repeat
+   
+   -- Update the settings with any additional extension dependencies
+   repeat for each line tExtension in xSettings["extensions"]
+      local tPermissions, tFeatures
+      put revIDEExtensionProperty(tExtension, "android.permissions") into tPermissions
+      put revIDEExtensionProperty(tExtension, "android.features") into tFeatures
+      repeat for each item tPermission in tPermissions
+         put true into xSettings["android,application permissions"][tPermission]
+      end repeat
+      repeat for each item tFeature in tFeatures
+         local tRequired, tRequiredMetadata
+         put "android." & tFeature & ".required" into tRequiredMetadata
+         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tRequired
+         put tRequired into xSettings["android,device capabilities"][tFeature]
+      end repeat
+   end repeat
 end revSBUpdateForDependencies
 
 command revSBSanitiseExternalsList pTarget, @xExternals
