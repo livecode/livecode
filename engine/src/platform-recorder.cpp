@@ -173,16 +173,10 @@ void MCPlatformSoundRecorder::SetConfiguration(const MCPlatformSoundRecorderConf
 //  Platform Sound Recorder Procedural Wrappers
 //
 
-class MCQTSoundRecorder;
-extern MCQTSoundRecorder *MCQTSoundRecorderCreate();
-extern bool MCQTInit(void);
 
 void MCPlatformSoundRecorderCreate(MCPlatformSoundRecorderRef& r_recorder)
 {
-    if (!MCQTInit() && MCmajorosversion >= 0x1080)
-        MCresult -> sets("could not initialize quicktime");
-    else
-        r_recorder = (MCPlatformSoundRecorderRef)MCQTSoundRecorderCreate();
+	MCresult -> sets("QuickTime is no longer supported");
 }
 
 void MCPlatformSoundRecorderRetain(MCPlatformSoundRecorderRef p_recorder)

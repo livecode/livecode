@@ -92,8 +92,6 @@ extern Boolean MChidepalettes;
 extern Boolean MCraisepalettes;
 extern Boolean MCproportionalthumbs;
 extern Boolean MCdontuseNS;
-extern Boolean MCdontuseQT;
-extern Boolean MCdontuseQTeffects;
 extern uint4 MCeventtime;
 extern uint2 MCbuttonstate;
 extern uint2 MCmodifierstate;
@@ -300,7 +298,6 @@ extern MCVariable *MCdialogdata;
 extern MCStringRef MChcstat;
 extern Boolean MCexitall;
 extern int4 MCretcode;
-extern Boolean MCrecording;
 
 // MM-2012-09-05: [[ Property Listener ]] True if any listened objects have had any of thier props changed since last message loop.
 //  Saves time parsing through the list of object listeners if no properties have changed.
@@ -375,7 +372,6 @@ extern char *MCdefaultnetworkinterface;
 extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
 extern Boolean MCignorevoiceoversensitivity;
-extern uint4 MCqtidlerate;
 
 extern MCStringRef MCcommandname;
 extern MCArrayRef MCcommandarguments;

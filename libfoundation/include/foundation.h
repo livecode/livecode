@@ -159,25 +159,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MAC__ 1
 
 // Architecture
-#if defined(__i386)
-#define __32_BIT__ 1
-#define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
-#define __LP32__ 1
-#define __SMALL__ 1
-#elif defined(__ppc__)
-#define __32_BIT__ 1 
-#define __BIG_ENDIAN__ 1 
-#define __PPC__ 1
-#define __LP32__ 1
-#define __SMALL__ 1
-#elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
 #define __LP64__ 1
 #define __MEDIUM__ 1
-#endif
 
 // Native char set
 #define __MACROMAN__ 1

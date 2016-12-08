@@ -1,9 +1,6 @@
 {
 	'variables':
 	{
-		# Path to the Windows SDK for Apple QuickTime
-		'quicktime_sdk%': '$(foo)C:/Program Files/QuickTime SDK',
-		
 		# Path to versions 4 and 5 of the Microsoft Speech SDK
 		'ms_speech_sdk4%': '$(foo)C:/Program Files/Microsoft Speech SDK',
 		'ms_speech_sdk5%': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',

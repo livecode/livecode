@@ -30,7 +30,6 @@
 				'../prebuilt/libopenssl.gyp:libopenssl_headers',
 
 				'engine-common.gyp:encode_version',
-				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
 			],

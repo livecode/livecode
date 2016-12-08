@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		'target_sdk%': 'macosx10.8',
+		'target_sdk%': 'macosx',
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../mac-bin',
@@ -24,7 +24,7 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS': 'NO',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'MACOSX_DEPLOYMENT_TARGET': '10.6',
+		'MACOSX_DEPLOYMENT_TARGET': '10.9',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
@@ -196,7 +196,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386 x86_64',
+				'ARCHS': 'x86_64',
 				'ONLY_ACTIVE_ARCH': 'YES',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 			},
@@ -206,7 +206,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386 x86_64',
+				'ARCHS': 'x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '3',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 			},
@@ -216,7 +216,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386 x86_64',
+				'ARCHS': 'x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 			},

@@ -475,7 +475,6 @@ MCNameRef MCM_preopen_control;
 MCNameRef MCM_preopen_stack;
 MCNameRef MCM_property_changed;
 MCNameRef MCM_put_url;
-MCNameRef MCM_qtdebugstr;
 MCNameRef MCM_raw_key_down;
 MCNameRef MCM_raw_key_up;
 MCNameRef MCM_relaunch;
@@ -935,7 +934,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("preOpenStack", MCM_preopen_stack);
 	/* UNCHECKED */ MCNameCreateWithCString("propertyChanged", MCM_property_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("putURL", MCM_put_url);
-	/* UNCHECKED */ MCNameCreateWithCString("QTDebugStr", MCM_qtdebugstr);
 	/* UNCHECKED */ MCNameCreateWithCString("rawKeyDown", MCM_raw_key_down);
 	/* UNCHECKED */ MCNameCreateWithCString("rawKeyUp", MCM_raw_key_up);
 	/* UNCHECKED */ MCNameCreateWithCString("relaunch", MCM_relaunch);
@@ -1398,7 +1396,6 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_preopen_stack);
 	MCNameDelete(MCM_property_changed);
 	MCNameDelete(MCM_put_url);
-	MCNameDelete(MCM_qtdebugstr);
 	MCNameDelete(MCM_raw_key_down);
 	MCNameDelete(MCM_raw_key_up);
 	MCNameDelete(MCM_relaunch);

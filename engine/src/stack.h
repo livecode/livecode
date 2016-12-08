@@ -979,8 +979,6 @@ public:
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	MCSysWindowHandle getrealwindow();
 #ifdef _WINDOWS_DESKTOP
-	MCSysWindowHandle getqtwindow(void);
-
 	// MW-2011-09-14: [[ Redraw ]] The 'onpaint()' method is called when a WM_PAINT
 	//   event is called.
 	void onpaint(void);
