@@ -63,12 +63,12 @@ Description:
 Use the <uniDecode> <function(control structure)> to convert double-byte
 characters to single-byte characters.
 
->*Important:* As of LiveCode 7.0 the <uniEncode> function has been 
+>*Important:* As of LiveCode 7.0 the <uniDecode> function has been 
 > deprecated. It will continue to work as in previous versions but 
 > should not be used in newcode as the existing behaviour is
 > incompatible with the new, transparent Unicode handling (the resulting 
 > value will be treated as binary data rather than text). This function 
-> is only useful in combination with the also-deprecated <uniDecode> 
+> is only useful in combination with the also-deprecated <uniEncode> 
 > function and <unicodeText> field property. Instead, for converting 
 > text between encodings, use the <textEncode> and <textDecode> 
 > functions.
