@@ -545,11 +545,6 @@
 			#'src/text-segment.cpp',
 			#'src/text-simplebreakingengine.cpp',
 			
-			# Group "Desktop"
-			'src/quicktime.cpp',
-			'src/quicktime.stubs',
-			'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
-			
 			# Group "Desktop - Mac"
 			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
@@ -692,8 +687,6 @@
 			'src/mac-menu.mm',
 			'src/mac-pasteboard.mm',
 			'src/mac-printer.mm',
-			'src/mac-qt-player.mm',
-			'src/mac-qt-recorder.mm',
 			'src/mac-scripting.mm',
 			'src/mac-snapshot.mm',
 			'src/mac-sound.mm',

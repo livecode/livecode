@@ -46,35 +46,6 @@
 		},
 
 		{
-			'target_name': 'quicktime_stubs',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'quicktime_stubs',
-					'inputs':
-					[
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-						'<@(_outputs)',
-					],
-				},
-			],
-		},
-
-		{
 			'target_name': 'security-community',
 			'type': 'static_library',
 			

@@ -1041,7 +1041,7 @@ typedef array_t<MCPlatformPlayerDuration> MCPlatformPlayerDurationArray;
 #define kMCPlatformPropertyTypePlayerDurationArray kMCPlatformPropertyTypeUInt64Array
 #define MCPlatformPlayerDurationMax UINT64_MAX
 
-void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
+void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player);
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);

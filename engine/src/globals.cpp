@@ -157,8 +157,6 @@ Boolean MChidepalettes = False;
 #endif
 
 Boolean MCdontuseNS;
-Boolean MCdontuseQT;
-Boolean MCdontuseQTeffects;
 uint4 MCeventtime;
 uint2 MCbuttonstate;
 uint2 MCmodifierstate;
@@ -379,7 +377,6 @@ MCExecResultMode MCresultmode;
 MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
-Boolean MCrecording;
 #ifdef FEATURE_PLATFORM_RECORDER
 MCPlatformSoundRecorderRef MCrecorder;
 #endif
@@ -440,8 +437,6 @@ MCString MCtruemcstring;
 MCString MCfalsemcstring;
 MCString MCnullmcstring;
 Boolean MCinlineinput = True;
-
-uint4 MCqtidlerate = 50;
 
 Boolean MChidebackdrop = False;
 Boolean MCraisewindows = False;
@@ -544,7 +539,6 @@ void X_clear_globals(void)
 	MCraisepalettes = True;
 	MCsystemmodals = True;
     MCactivatepalettes = True;
-    MCdontuseQT = True;
     // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
     // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
 #ifdef _MACOSX
@@ -553,7 +547,6 @@ void X_clear_globals(void)
     MChidepalettes = False;
 #endif
 	MCdontuseNS = False;
-	MCdontuseQTeffects = True;
 	MCeventtime = 0;
 	MCbuttonstate = 0;
 	MCmodifierstate = 0;
@@ -757,7 +750,6 @@ void X_clear_globals(void)
 	MCurlresult = nil;
 	MCexitall = False;
 	MCretcode = 0;
-	MCrecording = False;
 #ifdef FEATURE_PLATFORM_RECORDER
     MCrecorder = nil;
 #endif
@@ -816,7 +808,6 @@ void X_clear_globals(void)
 	MCusermodify = True;
 	MCsoundchannel = 0;
 	MCinlineinput = True;
-	MCqtidlerate = 50;
 	MChidebackdrop = False;
 	MCraisewindows = False;
 	MCcurtheme = nil;
@@ -1072,17 +1063,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     
     ////
     
-#if defined(_MACOSX) && defined(FEATURE_QUICKTIME)
-    // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
-    if (MCmajorosversion < 0x1080)
-    {
-        MCdontuseQT = False;
-        MCdontuseQTeffects = False;
-    }
-#endif
-    
-    ////
-    
 	MCpatternlist = new (nothrow) MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
@@ -1270,12 +1250,6 @@ int X_close(void)
         MCPlatformSoundRecorderStop(MCrecorder);
         MCPlatformSoundRecorderRelease(MCrecorder);
     }
-#else
-	if (MCrecording)
-	{
-		extern void MCQTStopRecording(void);
-		MCQTStopRecording();
-	}
 #endif
 	MClockmessages = True;
 	MCS_killall();

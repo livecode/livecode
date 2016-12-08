@@ -186,26 +186,13 @@ void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, 
 #ifdef TARGET_PLATFORM_MACOS_X
 
 class MCAVFoundationPlayer;
-class MCQTKitPlayer;
 
 extern MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void);
-extern MCQTKitPlayer *MCQTKitPlayerCreate(void);
 extern uint4 MCmajorosversion;
-extern bool MCQTInit(void);
 
-// PM-2015-06-16: [[ Bug 13820 ]] Take into account the *player* property dontuseqt
-void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
+void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player)
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
-	// MW-2014-07-16: [[ QTSupport ]] If we manage to init QT (i.e. dontUseQT is false and
-	//   QT is available) then use QTKit, else use AVFoundation if 10.8 and above.
-	if (!MCQTInit() && MCmajorosversion >= 0x1080 && dontuseqt)
-	{
-		r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
-	}
-	else
-#endif
-		r_player = (MCPlatformPlayerRef)MCQTKitPlayerCreate();
+	r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
 }
 
 #endif
@@ -213,7 +200,7 @@ void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
 #ifdef TARGET_PLATFORM_WINDOWS
 class MCWin32DSPlayer;
 extern MCWin32DSPlayer *MCWin32DSPlayerCreate(void);
-void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef &r_player)
+void MCPlatformCreatePlayer(MCPlatformPlayerRef &r_player)
 {
 	r_player = (MCPlatformPlayerRef)MCWin32DSPlayerCreate();
 }

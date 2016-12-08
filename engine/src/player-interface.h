@@ -36,20 +36,6 @@ enum
 	PLAYER_MEDIA_TYPE_FLASH = 1 << PLAYER_MEDIA_TYPE_FLASH_BIT,
 };
 
-#ifdef FEATURE_QUICKTIME
-enum QTstate {
-    QT_NOT_INITTED,
-    QT_INITTED,
-    QT_FAILED
-};
-
-enum QTVRstate {
-    QTVR_NOT_INITTED,
-    QTVR_INITTED,
-    QTVR_FAILED
-};
-#endif
-
 enum MCInterfacePlayerStatus
 {
     kMCInterfacePlayerStatusNone,
@@ -83,14 +69,11 @@ protected:
 	uint2 formattedheight;
 	uint2 loudness;
     MCPlayerDuration lasttime;
-    Boolean dontuseqt;
-    Boolean usingqt;
     
 public:
     MCPlayerInterface(){};
     ~MCPlayerInterface(){};
     
-	virtual bool getversion(MCStringRef& r_string) = 0;
 	virtual void freetmp() = 0;
 	virtual MCPlayerDuration getduration() = 0;    //get movie duration/length
 	virtual MCPlayerDuration gettimescale() = 0;  //get movie time scale
@@ -120,9 +103,6 @@ public:
 	{
 		scale = s;
 	}
-    
-    virtual void setdontuseqt(bool p_dont_use_qt) { dontuseqt = p_dont_use_qt; }
-    virtual void getdontuseqt(bool &r_dont_use_qt) { r_dont_use_qt = dontuseqt; }
     
 	virtual Boolean prepare(MCStringRef options) = 0;
 	virtual Boolean playstart(MCStringRef options) = 0;
