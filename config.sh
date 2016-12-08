@@ -282,14 +282,17 @@ if test -z "$JAVA_SDK"; then
 		JAVA_SDK=/usr/lib/jvm/default
 	elif [ -d /usr/lib/jvm/default-java ] ; then
 		JAVA_SDK=/usr/lib/jvm/default-java
-	else
-		echo >&2 "Error: no Java home found - set \$JAVA_HOME"
-		exit 1
 	fi
 fi
 
 # Android default settings and tools
 if test "${OS}" = "android" ; then
+    
+	if test -z "$JAVA_SDK"; then
+		echo >&2 "Error: no Java home found - set \$JAVA_HOME"
+		exit 1
+	fi
+
     ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
     ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
 
