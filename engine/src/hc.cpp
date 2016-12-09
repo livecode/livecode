@@ -1125,8 +1125,7 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	{
 		bptr->ncolors = 1;
 		bptr->colors = new (nothrow) MCColor;
-		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue
-		                      = bptr->colors[0].blue = MAXUINT2;
+		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue = MAXUINT2;
 		bptr->colornames = new (nothrow) MCStringRef[1];
 		bptr->colornames[0] = nil;
 		bptr->dflags |= DF_FORE_COLOR;
