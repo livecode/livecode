@@ -261,13 +261,17 @@ local sLogInfo
 -- FIXME this really doesn't work properly if LiveCode's stdout
 -- *isn't* a TTY.
 private command logInit
-   if sLogInfo is false or sLogInfo is an array then
+   -- Don't colour output from dev engine as it's processed by 
+   -- standalone engine
+   if the environment contains "development" then
+      put false into sLogInfo
       exit logInit
    end if
 
    -- We can only do colour on Linux and OS X
    if the platform is not "Linux" and the platform is not "MacOS" then
       put false into sLogInfo
+      exit logInit
    end if
 
    -- Check if colouring is possible
@@ -275,6 +279,7 @@ private command logInit
    put shell("tput colors") into tTput
    if the result is not empty or tTput <= 8 then
       put false into sLogInfo
+      exit logInit
    end if
 
    -- Get colours
