@@ -5,6 +5,6 @@ Type=Application
 Name=[[ProductTitle]]
 Comment=IDE for creating and editing LiveCode applications.
 Icon=runrev-[[ProductTag]]
-Exec="[[TargetFolder]]/[[ProductName]].[[TargetArchitecture]]" %U
+Exec="LC_ALL= LC_NUMERIC=C && [[TargetFolder]]/[[ProductName]].[[TargetArchitecture]]" %U
 Categories=Development;IDE;
 StartupWMClass=[[ProductTag]]
