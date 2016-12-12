@@ -214,10 +214,7 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash, bool p_only_if
 		uintptr_t t_bucket;
 		t_bucket = m_buckets[t_probe];
 
-		if (t_bucket == UINTPTR_MIN)
-			return UINDEX_MAX;
-
-		if (t_bucket != UINTPTR_MAX)
+		if (t_bucket != UINTPTR_MAX && t_bucket != UINTPTR_MIN)
         {
             MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(t_bucket);
             
@@ -240,6 +237,11 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash, bool p_only_if
             // later entry already holds the same object.
             if (t_candidate_slot == UINDEX_MAX)
                 t_candidate_slot = t_probe;
+			
+			// If nothing was ever in this slot, we know we don't have to
+			// continue searching.
+			if (t_bucket == UINTPTR_MIN)
+				break;
         }
 
 		t_probe += 1;
