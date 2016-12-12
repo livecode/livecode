@@ -105,17 +105,18 @@ MCStackIdCache::MCStackIdCache(void)
 
 MCStackIdCache::~MCStackIdCache(void)
 {
-    // Clear all handles from the array
-    for (uindex_t i = 0; i < __kMCValueHashTableSizes[m_capacity_idx]; i++)
-    {
-        uintptr_t t_bucket = m_buckets[i];
-        if (t_bucket == UINTPTR_MIN || t_bucket == UINTPTR_MAX)
-            continue;
-        
-        MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[i]);
-        t_handle.ExternalRelease();
-    }
-    
+	// Clear all handles from the array
+	for (uindex_t i = 0; i < __kMCValueHashTableSizes[m_capacity_idx]; i++)
+	{
+		uintptr_t t_bucket = m_buckets[i];
+		if (t_bucket == UINTPTR_MIN || t_bucket == UINTPTR_MAX)
+			continue;
+		
+		MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[i]);
+		t_handle -> setinidcache(false);
+		t_handle.ExternalRelease();
+	}
+	
     MCMemoryDeleteArray(m_buckets);
 }
 
@@ -165,8 +166,13 @@ void MCStackIdCache::UncacheObject(MCObjectHandle p_object)
 	
 	if (t_target_slot != UINDEX_MAX)
 	{
-        p_object -> setinidcache(false);
-		MCObjectHandle(reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot])).ExternalRelease();
+		MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot]);
+		
+		// Make sure we are removing the intended object
+		MCAssert(t_handle == p_object);
+		
+		t_handle -> setinidcache(false);
+		t_handle.ExternalRelease();
 		m_buckets[t_target_slot] = UINTPTR_MAX;
 		m_count -= 1;
 	}
