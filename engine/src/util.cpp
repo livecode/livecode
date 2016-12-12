@@ -1125,18 +1125,31 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
 // IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
 // so use pointers to the globals rather than their value and dereference later.
+
+// This *must* be updated if any chunk terms are added between CT_STACK
+// and CT_LAST_CONTROL in the Chunk_term enum
 static const char **nametable[] =
 {
-    &MCstackstring, &MCaudiostring,
-    &MCvideostring, &MCbackgroundstring,
-    &MCcardstring, &MCnullstring,
-    &MCgroupstring, &MCnullstring,
-    &MCbuttonstring, &MCnullstring,
-    &MCnullstring, &MCscrollbarstring,
-    &MCimagestring, &MCgraphicstring,
-    &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCwidgetstring,
-    &MCfieldstring
+	&MCstackstring,			/* CT_STACK */
+	&MCnullstring,			/* CT_TOOLTIP */
+	&MCaudiostring,			/* CT_AUDIO_CLIP */
+	&MCvideostring,			/* CT_VIDEO_CLIP */
+	&MCbackgroundstring,	/* CT_BACKGROUND */
+	&MCcardstring,			/* CT_CARD */
+	&MCnullstring,			/* CT_MARKED */
+	&MCgroupstring,			/* CT_GROUP */
+	&MCnullstring,			/* CT_LAYER */
+	&MCbuttonstring,		/* CT_BUTTON */
+	&MCnullstring,			/* CT_MENU */
+	&MCnullstring,			/* CT_SCROLLBAR */
+	&MCscrollbarstring,		/* CT_PLAYER */
+	&MCimagestring,			/* CT_IMAGE */
+	&MCgraphicstring,		/* CT_GRAPHIC */
+	&MCepsstring,			/* CT_EPS */
+	&MCmagnifierstring,		/* CT_MAGNIFY */
+	&MCcolorstring,			/* CT_COLOR_PALETTE */
+	&MCwidgetstring,		/* CT_WIDGET */
+	&MCfieldstring			/* CT_FIELD */
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1147,6 +1160,8 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
 		return true;
 
+	MCAssert(type - CT_STACK < (sizeof(nametable) / sizeof(nametable[0])));
+	
     bool match = false;
 
     MCStringRef t_name, t_test;
