@@ -188,27 +188,17 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    -- Make sure there is actually something to build..
-   # Check if any platforms have actually been selected..
-   local tCanBuild
-   put false into tCanBuild
-   
-   local tMessage, tError
-   put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
-   repeat for each item tPlatform in revSBDesktopTargets()
-      put tCanBuild or tSettings[tPlatform] into tCanBuild
-   end repeat
-   put tCanBuild or tSettings["ios"] into tCanBuild
-   put tCanBuild or tSettings["android"] into tCanBuild
-   put tCanBuild or tSettings["emscripten"] into tCanBuild
-   if not tCanBuild then
+   if revSBNoPlatforms(tSettings) then
+      local tMessage
+      put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
       if revSBSuppressDialogs() then
-         return tError
+         return tMessage
       else
          answer error tMessage
       end if
       exit revSaveAsStandalone
    end if
-   
+
    # OK-2010-03-31: Ensure that the standalone name doesn't contain stuff that is not allowed in folder names,
    # otherwise this could cause problems. In particular a return char at the end of the name causes the cleanup
    # routines to try and delete the parent folder, which can result in data loss. The data loss potential has also
@@ -243,6 +233,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       setSettings pStack, tSettings
    end if
    
+   local tError
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
       revDoSaveAsStandalone pStack, pFolder
@@ -287,6 +278,24 @@ command revDoSaveAsStandalone pStack, pFolder
    
    # Set empty values to defaults
    revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
+   
+   -- Don't build for any platform we are not licensed for
+   local tRemoved
+   put revSBRemoveUnlicensedTargetsFromSettings(sStandaloneSettingsA) into tRemoved
+   replace return with comma in tRemoved
+   
+   if revSBNoPlatforms(sStandaloneSettingsA) then
+      local tMessage
+      put "You are not licensed to build for any selected platforms." into tMessage
+      if not revSBSuppressDialogs() then
+         answer error tMessage
+      end if
+      return tMessage
+   end if
+   
+   if tRemoved is not empty then
+      revStandaloneAddWarning "Not licensed to build for the following selected platforms:" && tRemoved
+   end if
    
    revStandaloneProgress "Preparing to build standalone..."
    
@@ -379,19 +388,16 @@ command revDoSaveAsStandalone pStack, pFolder
    catch tError
       revAbort
       if word 1 of tError = "Standalone:" then 
-         if revSBSuppressDialogs() then
-            return word 2 to -1 of tError
-         else
+         put word 2 to -1 of tError into tError
+         if not revSBSuppressDialogs() then
             answer error word 2 to -1 of tError
          end if
       else  
-         if revSBSuppressDialogs() then
-            return tError
-         else
+         if not revSBSuppressDialogs() then
             answer error "There was an error while saving the standalone application"&cr&tError
          end if
       end if
-      exit to top
+      return tError
    end try
    
    revReset

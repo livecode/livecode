@@ -1311,6 +1311,8 @@ enum Chunk_term {
     CT_POPUP,
     CT_OPTION,
 
+	// The name table used for MCU_matchname *must* be updated if any
+	// chunk terms are added between CT_STACK and CT_LAST_CONTROL here
     CT_STACK,
     CT_TOOLTIP,
     CT_AUDIO_CLIP,
@@ -1333,6 +1335,7 @@ enum Chunk_term {
     CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+	
     CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,

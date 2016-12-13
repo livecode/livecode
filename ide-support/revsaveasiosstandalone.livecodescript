@@ -1402,7 +1402,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
-   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152"
+   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152,-167"
       if there is a file (pAppBundle & slash & "Icon" & tItem & ".png") then
          put "<string>" & "Icon" & tItem & ".png</string>" after it
       end if
