@@ -781,9 +781,29 @@ uint1 *MCGradientFillSerialize(MCGradientFill *p_gradient, uint4 &r_length)
 	return t_data;
 }
 
+template <typename IntType>
+static IntType
+MCGradientFillUnserializeInt(MCSpan<const byte_t>& p_data)
+{
+	IntType t_value;
+	MCAssert(size_t(p_data.size()) >= sizeof(t_value));
+	MCMemoryCopy(&t_value, p_data.data(), sizeof(t_value));
+	p_data += sizeof(t_value);
+	return MCSwapIntHostToNetwork(t_value);
+}
+
+static MCPoint
+MCGradientFillUnserializePoint(MCSpan<const byte_t>& p_data)
+{
+	MCPoint t_point;
+	t_point.x = MCGradientFillUnserializeInt<int16_t>(p_data);
+	t_point.y = MCGradientFillUnserializeInt<int16_t>(p_data);
+	return t_point;
+}
+
 void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 &r_length)
 {
-	uint1 *t_ptr = p_data;
+	MCSpan<const byte_t> t_ptr(p_data, r_length);
 
 	uint1 t_packed = *t_ptr++;
 	p_gradient->kind = t_packed >> 4;
@@ -793,15 +813,9 @@ void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 
 
 	p_gradient->repeat = *t_ptr++;
 	p_gradient->ramp_length = *t_ptr++;
-	MCPoint *t_points = &p_gradient->origin;
-
-	for (int i=0; i < 3; i++)
-	{
-		t_points[i].x = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-		t_points[i].y = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-	}
+	p_gradient->origin = MCGradientFillUnserializePoint(t_ptr);
+	p_gradient->primary = MCGradientFillUnserializePoint(t_ptr);
+	p_gradient->secondary = MCGradientFillUnserializePoint(t_ptr);
 
 	if (p_gradient->ramp != NULL)
 		delete p_gradient->ramp;
@@ -809,15 +823,12 @@ void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 
 
 	for (uint4 i = 0; i < p_gradient->ramp_length; i++)
 	{
-		p_gradient->ramp[i].offset = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-
-		p_gradient->ramp[i].color = MCSwapInt32NetworkToHost(*((uint4*)t_ptr));
-		t_ptr += 4;
+		p_gradient->ramp[i].offset = MCGradientFillUnserializeInt<uint16_t>(t_ptr);
+		p_gradient->ramp[i].color = MCGradientFillUnserializeInt<uint32_t>(t_ptr);
 	}
 	for (uint4 i = 1; i < p_gradient->ramp_length; i++)
 		if (p_gradient->ramp[i].offset != p_gradient->ramp[i - 1].offset)
 			p_gradient->ramp[i - 1].difference = STOP_DIFF_MULT / (p_gradient->ramp[i].offset - p_gradient->ramp[i - 1].offset);
 
-	r_length = t_ptr - p_data;
+	r_length = t_ptr.size();
 }
