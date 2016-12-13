@@ -2462,17 +2462,31 @@ MCRotate::~MCRotate()
 
 Parse_stat MCRotate::parse(MCScriptPoint &sp)
 {
+	// Allow rotating the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "rotate [by] 90"
+	Symbol_type type;
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// Make sure both "rotate 90" and "rotate by 90" are parsed correctly
+	sp.skip_token(SP_FACTOR, TT_PREP, PT_BY);
+	sp.next(type);
+	
+	const char *t_angle = sp.gettoken().getstring();
+	bool t_is_number = isdigit((uint1)*t_angle);
+	sp.backup();
+	// Parse the angle expression only if it is a number
+	if  (t_is_number && sp.parseexp(False, True, &angle) == PS_NORMAL)
+		return PS_NORMAL;
+		
+	// PM-2015-08-06: [[ Bug 7769 ]] Allow use of 'rotate [the] last/first img by angle' form
+	
+	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCRotate::exec
+	image = new MCChunk(False);
+	if (image->parse(sp, False) != PS_NORMAL)
 	{
-		sp.backup();
-		image = new MCChunk(False);
-		if (image->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_ROTATE_BADIMAGE, sp);
-			return PS_ERROR;
-		}
+		MCperror->add
+		(PE_ROTATE_BADIMAGE, sp);
+		return PS_ERROR;
 	}
 	sp.skip_token(SP_FACTOR, TT_PREP, PT_BY);
 	if (sp.parseexp(False, True, &angle) != PS_NORMAL)
