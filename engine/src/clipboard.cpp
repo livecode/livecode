@@ -918,16 +918,18 @@ bool MCClipboard::CopyAsText(MCStringRef& r_text) const
     if (t_item == NULL)
         return false;
     
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF8, kMCStringEncodingUTF8, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF16, kMCStringEncodingUTF16, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeISO8859_1, kMCStringEncodingISO8859_1, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeMacRoman, kMCStringEncodingMacRoman, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text))
-        return true;
+	// IM-2016-11-21: [[ Bug 18652 ]] If we should be able to fetch using a text encoding then return
+	//    false if conversion fails instead of falling through to other encodings.
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF8)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF8, kMCStringEncodingUTF8, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF16, kMCStringEncodingUTF16, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeISO8859_1, kMCStringEncodingISO8859_1, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeMacRoman, kMCStringEncodingMacRoman, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text);
     
     // As a fallback, try to convert a list of file paths into text
     if (CopyAsFileList(r_text))
@@ -1455,6 +1457,10 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     
     // Get the data for this representation and decode it
     MCAutoDataRef t_encoded(t_rep->CopyData());
+
+	// IM-2016-11-21: [[ Bug 18652 ]] Check for null return from CopyData()
+	if (!t_encoded.IsSet())
+		return false;
     
     MCAutoStringRef t_string;
     if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))

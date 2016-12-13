@@ -197,7 +197,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	{
 		CGBitmapInfo t_bm_info;
 		if (CGColorSpaceGetModel(p_transform->colorspace) == kCGColorSpaceModelCMYK)
-			t_bm_info = kCGBitmapByteOrder32Host;
+			t_bm_info = kCGBitmapByteOrder32Big;
 		else
 			t_bm_info = t_dst_bm_info;
 			

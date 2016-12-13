@@ -662,17 +662,12 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
         
 		if (MCStringFirstIndexOfChar(*t_temp, '\n', t_start_index, kMCStringOptionCompareExact, t_text_end_index))
 		{
-			// MW-2012-05-17: [[ Bug ]] Make sure we reduce the remaining text length since
-			//   we are advancing ptr - otherwise we get random chars at the end of paragraph
-			//   sometimes.
 			t_start_index = t_text_end_index + 1;
-			t_text_length -= (t_text_end_index - t_text_initial_start_index);
 			t_add_paragraph = true;
 		}
 		else
 		{
 			t_start_index += t_text_length;
-			t_text_length = 0;
 			t_text_end_index = t_start_index;
 			t_add_paragraph = false;
 		}

@@ -1156,8 +1156,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	MCundos = new (nothrow) MCUndolist;
 	MCselected = new (nothrow) MCSellist;
-	MCstacks = new (nothrow) MCStacklist;
-    MCtodestroy = new (nothrow) MCStacklist;
+	MCstacks = new (nothrow) MCStacklist(true);
+	// IM-2016-11-22: [[ Bug 18852 ]] Changes to MCtodestroy shouldn't affect MCtopstack
+    MCtodestroy = new (nothrow) MCStacklist(false);
 	MCrecent = new (nothrow) MCCardlist;
 	MCcstack = new (nothrow) MCCardlist;
 

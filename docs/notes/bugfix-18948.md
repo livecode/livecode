@@ -1,0 +1,1 @@
+# Make 'obj of me' consistent across all control types
