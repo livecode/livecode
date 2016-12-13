@@ -2540,17 +2540,18 @@ MCCrop::~MCCrop()
 Parse_stat MCCrop::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// PM-2015-08-06: [[ Bug 15560 ]] Allow use of the 'crop [the] last/first img ..' form
+	
+	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCCrop::exec
+	image = new MCChunk(False);
+	if (image->parse(sp, False) != PS_NORMAL)
 	{
-		sp.backup();
-		image = new MCChunk(False);
-		if (image->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_CROP_BADIMAGE, sp);
-			return PS_ERROR;
-		}
+		MCperror->add
+		(PE_CROP_BADIMAGE, sp);
+		return PS_ERROR;
 	}
+	
 	sp.skip_token(SP_FACTOR, TT_TO, PT_TO);
 	if (sp.parseexp(False, True, &newrect) != PS_NORMAL)
 	{
