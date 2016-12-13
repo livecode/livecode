@@ -1776,7 +1776,7 @@ MCGroup *MCHcbkgd::build(MCHcstak *hcsptr, MCStack *sptr)
 
 MCHcstak::MCHcstak(char *inname)
 	: rect(kMCEmptyRectangle),
-	  name(nullptr),
+	  name(inname),
 	  script(nullptr),
 	  fullbuffer(nullptr),
 	  buffer(nullptr),
@@ -1792,6 +1792,7 @@ MCHcstak::MCHcstak(char *inname)
 	  pbuffersizes(nullptr),
 	  pbuffers(nullptr),
 	  hcbkgds(nullptr),
+	  hccards(nullptr),
 	  hcbmaps(nullptr),
 	  icons(nullptr),
 	  cursors(nullptr),
