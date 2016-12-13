@@ -561,6 +561,9 @@ MCStack::~MCStack()
 		destroywindow();
 	}
 
+	// Clear and free the id cache before removing any controls
+	freeobjectidcache();
+	
 	while (controls != NULL)
 	{
 		MCControl *cptr = controls->remove
@@ -642,9 +645,6 @@ MCStack::~MCStack()
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
-	
-	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
-	freeobjectidcache();
 	
 	view_destroy();
 
