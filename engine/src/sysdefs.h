@@ -621,6 +621,8 @@ struct MCRectangle
 	uint2 width, height;
 };
 
+const MCRectangle kMCEmptyRectangle = {0, 0, 0, 0};
+
 struct MCPoint32
 {
 	int32_t x, y;
