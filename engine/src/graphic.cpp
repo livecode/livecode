@@ -296,8 +296,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		}
 		MCRectangle drect = rect;
 		compute_minrect();
-		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
-		layer_rectchanged(drect, true);
+		Redraw(drect);
 		message_with_args(MCM_mouse_move, x, y);
         
         // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
@@ -1469,6 +1468,7 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 				if (resizeparent())
 					return;
 			}
+			Redraw(drect);
 			if (opened)
 			{
 				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.

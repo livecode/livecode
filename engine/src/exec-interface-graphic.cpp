@@ -163,6 +163,12 @@ void MCGraphic::Redraw(MCRectangle drect)
 	if (!opened)
 		return;
 
+	if (getselected())
+	{
+		getcard()->dirtyselection(drect);
+		getcard()->dirtyselection(rect);
+	}
+
 	// MW-2011-08-18: [[ Layers ]] Notify of rect changed and invalidate.
 	layer_rectchanged(drect, true);
 }
