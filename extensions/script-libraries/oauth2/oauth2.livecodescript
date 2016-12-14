@@ -264,6 +264,8 @@ the web service.
 pClientSecret (string): The application client secret obtained when setting up your application with
 the web service.
 
+pRefreshToken (string): The refresh token obtained from a previous OAuth 2 authorization.
+
 pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
 The result:
