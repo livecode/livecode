@@ -109,7 +109,8 @@ pClientSecret (string): The application client secret obtained when setting up y
 the web service.
 
 pScopes (string): A comma delimited list of authorization scopes. Valid scopes will be found 
-in the API documentation of the service being authorized.
+in the API documentation of the service being authorized. If empty the scope parameter will be
+omitted.
 
 pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
@@ -130,8 +131,10 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    
    put "&client_id=" & urlEncode(pClientID) after tURL
    
-   replace space with "%20" in pScopes
-   put "&scope=" & urlEncode(pScopes) after tURL
+   if pScopes is not empty then
+      replace space with "%20" in pScopes
+      put "&scope=" & urlEncode(pScopes) after tURL
+   end if
    
    local tUniqueRef
    put uuid() into tUniqueRef
