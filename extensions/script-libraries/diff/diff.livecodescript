@@ -73,7 +73,7 @@ function DiffCompare pFrom, pTo, pContext
    local tEdits
    put diff_strings(pFrom, pTo) into tEdits
    split pFrom by cr
-   return convert_to_unified(tEdits, pFrom, item 2 of the extents of pFrom, pContext)
+   return convert_to_unified(tEdits, pFrom, the number of elements in pFrom, pContext)
 end DiffCompare
 
 /**
@@ -446,8 +446,8 @@ private function diff_strings pA, pB
    split pB by cr
    
    local tALength, tBLength
-   put item 2 of the extents of pA into tALength
-   put item 2 of the extents of pB into tBLength
+   put the number of elements in pA into tALength
+   put the number of elements in pB into tBLength
    
    local tSwap
    put tALength > tBLength into tSwap
@@ -471,7 +471,7 @@ end diff_strings
 private function patch_string pString, pEdits
    split pString by cr
    local tOutput
-   put patch_arrays(pString, item 2 of the extents of pString, pEdits) into tOutput
+   put patch_arrays(pString, the number of elements in pString, pEdits) into tOutput
    
    return _combine(tOutput, cr)
    
