@@ -158,6 +158,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       put the defaultStack into tOldDefault
       set the defaultStack to tUniqueRef
       
+      set the resizable of stack tUniqueRef to false
       set the width of stack tUniqueRef to 640
       set the height of stack tUniqueRef to 600
       put 0,0,640,600 into tBrowserRect
