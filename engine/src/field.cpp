@@ -771,6 +771,9 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 			finsertnew(function, p_string, key);
 		}
 		break;
+	case FT_SELECTALL:
+		seltext(0, getpgsize(nil), True);
+		break;
 	case FT_DELBCHAR:
     case FT_DELBSUBCHAR:
 	case FT_DELBWORD:
