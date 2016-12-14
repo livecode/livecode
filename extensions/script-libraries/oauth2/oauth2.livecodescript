@@ -186,7 +186,15 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       
       set the defaultStack to tOldDefault
       
-      sheet tUniqueRef
+      if the clickStack is not empty and the visible of the clickStack then
+         -- seems to require `stack` in the syntax rather than an expression
+         sheet tUniqueRef in stack (the short name of the clickStack)
+      else if the visible of the defaultStack then
+         sheet tUniqueRef
+      else
+         set the location of stack tUniqueRef to the screenLoc
+         modal tUniqueRef
+      end if
    else
       wait while exists(widget tUniqueRef) with messages
    end if
