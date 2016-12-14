@@ -380,11 +380,20 @@ int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 {
     int status;
 	int flags = 0;
-    
+	
+	// Make sure we take a copy of the string to ensure it is Unicode.
+	// Otherwise, subsequent uses of 'string' will follow much slower
+	// codepaths causing unexpected degredation in performance.
+	MCAutoStringRef t_uni_string;
+	if (!MCStringUnicodeCopy(string, &t_uni_string))
+	{
+		regerror(REG_ESPACE, NULL, regexperror);
+		return 0;
+	}
+	
     // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
     // AL-2015-02-05: [[ Bug 14504 ]] Now that 'CanBeNative' flag is preserved, we can just use MCStringGetCharPtr here.
-    status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
-
+    status = regexec(&prog->rexp, MCStringGetCharPtr(*t_uni_string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
 	if (status != REG_OKAY)
 	{
 		if (status == REG_NOMATCH)
