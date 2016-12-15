@@ -168,6 +168,7 @@ public:
     bool AddPrivateData(MCDataRef p_private);
     bool HasPrivateData() const;
     bool CopyAsPrivateData(MCDataRef& r_private) const;
+	void ClearPrivateData();
     
     // Utility method for assisting with legacy clipboard support - returns a
     // positive value if an image is found before a text type, negative if a

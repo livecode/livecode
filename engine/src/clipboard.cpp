@@ -104,11 +104,7 @@ bool MCClipboard::IsLocked() const
 void MCClipboard::Clear()
 {
     // Clear the private data
-    if (m_private_data != NULL)
-    {
-        MCValueRelease(m_private_data);
-        m_private_data = NULL;
-    }
+	ClearPrivateData();
     
     // Pass on the request
     Lock();
@@ -126,7 +122,11 @@ void MCClipboard::ReleaseData()
 
 bool MCClipboard::PullUpdates() const
 {
-    // Pass on the request
+    // If ownership has changed, the private clipboard data needs to be cleared
+	if (!m_clipboard->IsOwned())
+		const_cast<MCClipboard*>(this)->ClearPrivateData();
+	
+	// Pass on the request
     return m_clipboard->PullUpdates();
 }
 
@@ -1156,6 +1156,14 @@ bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const
     
     r_data = MCValueRetain(m_private_data);
     return true;
+}
+
+void MCClipboard::ClearPrivateData()
+{
+	if (m_private_data)
+		MCValueRelease(m_private_data);
+
+	m_private_data = nil;
 }
 
 // Wrapper for MCStringIsEqualTo that handles NULL parameters
