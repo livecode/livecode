@@ -1,4 +1,4 @@
-# C++ Coding Guidelines for LiveCode
+# C++ Feature Guidelines for LiveCode
 
 This file documents the usage of C++ language and library features within the
 LiveCode engine and ancillary projects (externals, etc). It covers technical
