@@ -535,10 +535,9 @@ private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
 end compare_diagonal
 
 private function snake @pA, pALength, @pB, pBLength, k, y
-   local x
-   put y - k into x
-   repeat while (x < pALength) and (y < pBLength) and pA[x + 1] is pB[y + 1]
-      add 1 to x
+   local tLimit
+   put min(pALength + k, pBLength) into tLimit
+   repeat while (y < tLimit) and pA[y - k + 1] is pB[y + 1]
       add 1 to y
    end repeat
    
