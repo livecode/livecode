@@ -425,7 +425,7 @@ bool MCClipboard::AddRTFText(MCDataRef p_rtf_data)
     // format.
     //
     // This is a lossy process but preserves legacy behaviour.
-    MCAutoDataRef t_pickled_text(ConvertHTMLToStyledText(p_rtf_data));
+    MCAutoDataRef t_pickled_text(ConvertRTFToStyledText(p_rtf_data));
     if (*t_pickled_text == NULL)
         return false;
     
