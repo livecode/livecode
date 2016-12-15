@@ -2199,9 +2199,6 @@ function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMult
    else
       put pFolder & tFolderName & "/" into tDirectory
    end if
-   if pPlatform contains "MacOSX" then 
-      put pName & ".app/Contents/MacOS/" after tDirectory
-   end if
    return tDirectory
 end revSBStandaloneOutputDirectory
 
