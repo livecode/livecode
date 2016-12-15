@@ -535,6 +535,8 @@ private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
 end compare_diagonal
 
 private function snake @pA, pALength, @pB, pBLength, k, y
+   set the caseSensitive to true
+   set the formSensitive to true
    local tLimit
    put min(pALength + k, pBLength) into tLimit
    repeat while (y < tLimit) and pA[y - k + 1] is pB[y + 1]
