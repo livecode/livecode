@@ -38,7 +38,7 @@ If a field's <vScrollbar> is false and its <style> is not scrolling, its
 
 >*Cross-platform note:* On Mac OS systems with the native theme enabled,
 > scrollbars can only be rendered at certain widths and will be padded
-> to with the background color to achieve the chosen width.
+> with the background color to achieve the chosen width.
 
 References: group (command), object (glossary), property (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary), group (glossary),
