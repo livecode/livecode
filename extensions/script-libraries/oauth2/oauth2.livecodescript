@@ -109,7 +109,8 @@ pClientSecret (string): The application client secret obtained when setting up y
 the web service.
 
 pScopes (string): A comma delimited list of authorization scopes. Valid scopes will be found 
-in the API documentation of the service being authorized.
+in the API documentation of the service being authorized. If empty the scope parameter will be
+omitted.
 
 pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
@@ -130,8 +131,10 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    
    put "&client_id=" & urlEncode(pClientID) after tURL
    
-   replace space with "%20" in pScopes
-   put "&scope=" & urlEncode(pScopes) after tURL
+   if pScopes is not empty then
+      replace space with "%20" in pScopes
+      put "&scope=" & urlEncode(pScopes) after tURL
+   end if
    
    local tUniqueRef
    put uuid() into tUniqueRef
@@ -155,6 +158,7 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       put the defaultStack into tOldDefault
       set the defaultStack to tUniqueRef
       
+      set the resizable of stack tUniqueRef to false
       set the width of stack tUniqueRef to 640
       set the height of stack tUniqueRef to 600
       put 0,0,640,600 into tBrowserRect
@@ -182,7 +186,15 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       
       set the defaultStack to tOldDefault
       
-      sheet tUniqueRef
+      if the clickStack is not empty and the visible of the clickStack then
+         -- seems to require `stack` in the syntax rather than an expression
+         sheet tUniqueRef in stack (the short name of the clickStack)
+      else if the visible of the defaultStack then
+         sheet tUniqueRef
+      else
+         set the location of stack tUniqueRef to the screenLoc
+         modal tUniqueRef
+      end if
    else
       wait while exists(widget tUniqueRef) with messages
    end if
@@ -260,6 +272,8 @@ the web service.
 
 pClientSecret (string): The application client secret obtained when setting up your application with
 the web service.
+
+pRefreshToken (string): The refresh token obtained from a previous OAuth 2 authorization.
 
 pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
