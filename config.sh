@@ -353,13 +353,6 @@ if test "${OS}" = "emscripten" ; then
     NODE_JS=${NODE_JS:-node}
 fi
 
-
-# Building on Travis
-if [ "${TRAVIS}" = "true" ] ; then
-    DISABLE_REVVIDEOGRABBER=-Denable_revvideograbber=0
-fi 
-
-
 ################################################################
 # Invoke gyp
 ################################################################
@@ -412,8 +405,7 @@ case ${OS} in
     invoke_gyp $basic_args "-DOS=${OS}" \
                            "-Dtarget_sdk=${XCODE_TARGET_SDK}" \
                            "-Dhost_sdk=${XCODE_HOST_SDK}" \
-                           "-Dtarget_arch=${TARGET_ARCH}" "$@" \
-                           ${DISABLE_REVVIDEOGRABBER}
+                           "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   *)
     echo "ERROR: Bad configuration for generating project files"

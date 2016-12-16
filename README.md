@@ -40,7 +40,7 @@ This repository contains a number of subprojects, each of which has its own subd
 
   * `revspeech/` — Text-to-speech support
 
-  * `revvideograbber/` — Video capture
+  * `revvideograbber/` — Video capture (Windows only)
 
   * `revxml/` — XML parsing and generation
 

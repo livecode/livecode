@@ -12,7 +12,7 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -58,6 +58,10 @@ left, bottom, and right edges of the <video grabber>, in <absolute
 > <Standalone Application Settings> window, make sure the
 > "Video Grabber" 
 > library checkbox is checked.
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revInitializeVideoGrabber (command), globalLoc (function),
 Standalone Application Settings (glossary),
