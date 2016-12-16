@@ -21,9 +21,9 @@ put measureText(tText,field "myField") into tTextWidth
 
 Example:
 local tText, tTextSize
-put "Hello world" into fld "someField"
-put fld "someField" into tText
-put measureText(tText,fld "someField","size") into tTextSize
+put "Hello world" into field "someField"
+put field "someField" into tText
+put measureText(tText,field "someField","size") into tTextSize
 
 Example:
 # handler in a field
