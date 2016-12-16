@@ -1,4 +1,4 @@
-# C++ Coding Guidelines for LiveCode
+# C++ Feature Guidelines for LiveCode
 
 This file documents the usage of C++ language and library features within the
 LiveCode engine and ancillary projects (externals, etc). It covers technical
@@ -35,24 +35,28 @@ than compiler support.
 Generally speaking, any features of the language or library that require runtime
 support should not be used for reasons of compatibility. More details are given
 in the descriptions of the individual features. (Because most features are
-permitted, only the prohibitions are listed here). Anything that also requires
-a C++ ABI with system libraries should also be avoided.
+permitted, only prohibitions or features that are permitted with caveats are
+listed here). Anything that also requires a C++ ABI with system libraries should
+also be avoided.
 
-#### Exceptions: PROHIBITED
+#### Exceptions: PARTIALLY PROHIBITED
+
+The only exception that should normally be thrown or caught within
+LiveCode source code is `std::bad_alloc` for memory allocation
+failures.
+
+Catch exceptions thrown by third party C++ libraries used by LiveCode
+and translate them to LiveCode's internal error handling mechanisms.
 
 **Rationale:**
+
 > Correctness.
 >
 > The age of the codebase (as well as its C origins) mean that the vast majority
 > of the code in the engine is not exception-safe (i.e it will leak resources
 > and/or fail to clean up properly as the exception propagates). Because writing
-> good exception-safe code is hard enough already, it makes sense to have a
-> blanket prohibition on use of exceptions rather than trying to work out when
-> they are safe to use.
->
-> Previously, on certain platforms, the usage of exceptions used to have code
-> size and execution speed penalties though this should no longer apply for the
-> supported platforms.
+> good exception-safe code is hard enough already, use the engine's existing
+> error handling mechanisms wherever possible.
 
 **Timescale:**
 > Indefinite. Making the engine exception-safe is a huge undertaking and is not
@@ -60,12 +64,18 @@ a C++ ABI with system libraries should also be avoided.
 > to use correctly so any use would need to be carefully discussed and
 > considered before being accepted.
 
-#### `dynamic_cast` and RTTI (`typeid`, `typeinfo`): PROHIBITED
+#### `dynamic_cast` and RTTI (`typeid`, `typeinfo`): PARTIALLY PROHIBITED
+
+Use `dynamic_cast` when casting within a type hierarchy.  This ensures
+early error detection when an instance is cast to an incompatible
+type.
+
+Other uses of RTTI are currently prohibited.
 
 **Rationale:**
 > Correctness, style and ABI dependencies.
 >
-> There are few good uses of these features that wouldn't be better done using
+> There are few good uses of RTTI features that wouldn't be better done using
 > virtual methods or other mechanisms. The performance consequences of using
 > `dynamic_cast` vary between platforms though the penalties are not as large as
 > they have been on some historical systems.
@@ -75,8 +85,10 @@ a C++ ABI with system libraries should also be avoided.
 > and typeinfo structures.
 
 **Timescale:**
-> Permanent. This feature is generally considered undesirable and is unlikely to
-> be accepted in future.
+> Indefinite. Improved C++ implementations are gradually reducing the
+> cost of using RTTI features, and newer C++ standards are introducing
+> library features that make use of RTTI. It may make sense to use
+> RTTI features beyond `dynamic_cast` in the future.
 
 #### C++ standard template library: PROHIBITED
 
@@ -988,15 +1000,12 @@ versions.
 #### Type identification (`<typeinfo>`): PROHIBITED
 
 **Rationale:**
-> Use of `typeid` and RTTI language features is prohibited.
+> Use of RTTI language features other than `dynamic_cast` is prohibited.
 >
 > Without the RTTI language features, use of the `<typeinfo>` header
 > (particularly for the `std::typeinfo` type) is not useful.
 
-#### Exception handling (`<exception>`): PROHIBITED
-
-**Rationale:**
-> Use of exceptions is prohibited.
+#### Exception handling (`<exception>`): PERMITTED
 
 #### Initialiser lists (`<initializer_list>`): PERMITTED
 
@@ -1018,10 +1027,7 @@ versions.
 
 ### Diagnostics library
 
-#### Exception classes (`<cstdexcept>`): PROHIBITED
-
-**Rationale:**
-> Use of exceptions is prohibited.
+#### Exception classes (`<cstdexcept>`): PERMITTED
 
 #### Assertions (`<cassert>`): PERMITTED
 
@@ -1062,7 +1068,7 @@ versions.
 #### Type indexes (`<typeindex>`): PROHIBITED
 
 **Rationale:**
-> Only useful alongside the (prohibited) RTTI language features.
+> Only useful alongside prohibited RTTI language features.
 
 ### Strings library
 
