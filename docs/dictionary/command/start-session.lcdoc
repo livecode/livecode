@@ -52,6 +52,3 @@ delete session (command), $_SESSION (keyword), sessionSavePath (property),
 sessionLifetime (property), sessionName (property),
 sessionId (property),
 property (glossary)
-
-Tags: multimedia
-
