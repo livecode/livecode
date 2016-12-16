@@ -28,13 +28,10 @@ Download and install each of the following versions of Xcode, placing their app 
 | ------------- | --------------------------------------- |
 | 8.0           | /Applications/Xcode-Dev/Xcode_8_0.app   |
 | 7.2.1         | /Applications/Xcode-Dev/Xcode_7_2_1.app |
-| 6.2           | /Applications/Xcode-Dev/Xcode_6_2.app   |
-| 5.1.1 [1]     | /Applications/Xcode-Dev/Xcode_5_1_1.app |
-| 4.3.3 [2]     | /Applications/Xcode-Dev/Xcode_4_3_3.app |
+| 6.2 [1]       | /Applications/Xcode-Dev/Xcode_6_2.app   |
 
 Notes:
-1. Required for OS X build excluding "revvideograbber" extension
-2. Required for "revvideograbber" extension
+1. Required for OS X build
 
 Make sure you run and verify each of the versions of Xcode. Download and install any extra SDKs you need using the "Xcode → Preferences → Downloads" window.
 
