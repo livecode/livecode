@@ -24,7 +24,7 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS': 'NO',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'MACOSX_DEPLOYMENT_TARGET': '10.6',
+		'MACOSX_DEPLOYMENT_TARGET': '10.9',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
@@ -86,6 +86,9 @@
 				{
 					'xcode_settings':
 					{
+						# Always use libc++ standard library
+						'CLANG_CXX_LIBRARY': 'libc++',
+
 						'GCC_WARN_CHECK_SWITCH_STATEMENTS': 'YES',
 						'CLANG_WARN_EMPTY_BODY': 'YES',
 						'GCC_WARN_SHADOW': 'YES',
