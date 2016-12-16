@@ -2399,14 +2399,15 @@ void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 
 MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data)
 {
-    char_t* t_string;
-    uindex_t t_length;
-    if (!MCStringConvertToNative(p_data, t_string, t_length))
-        return nil;
+    MCAutoStringRefAsNativeChars t_native_string;
+    const char_t* t_string = nullptr;
+    uindex_t t_length = 0;
+    if (!t_native_string.Lock(p_data, t_string, t_length))
+        return nullptr;
  
-    MCStack *t_stack = nil;
+    MCStack *t_stack = nullptr;
     IO_handle stream = MCS_fakeopen(t_string, t_length);
-    /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
+    /* UNCHECKED */ MCdispatcher->readfile(nullptr, nullptr, stream, t_stack);
     MCS_close(stream);
     
     return t_stack;
