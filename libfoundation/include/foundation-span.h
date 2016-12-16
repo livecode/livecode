@@ -49,6 +49,12 @@
  * constexpr, and for those compilers constexpr is defined to
  * empty. */
 
+/* TODO[C++14] Some of the constexpr methods in MCSpan use assertions,
+ * and have to do ugly chaining using the comma operator in a return
+ * statement in order to comply with the C++11 restrictions on
+ * constexpr functions.  When LiveCode is built with C++14, these
+ * methods should be refactored. */
+
 #include "foundation.h"
 #include <cstddef>
 
@@ -105,24 +111,25 @@ public:
 	/* ---------- Subspans */
 	constexpr MCSpan first(IndexType p_count) const
 	{
-		MCAssert(p_count >= 0 && p_count <= size());
-		return MCSpan(data(), p_count);
+        return MCAssert(p_count >= 0 && p_count <= size()),
+            MCSpan(data(), p_count);
 	}
 
 	constexpr MCSpan last(IndexType p_count) const
 	{
-		MCAssert(p_count >= 0 && p_count <= size());
-		return MCSpan(data() + (size() - p_count), p_count);
+        return MCAssert(p_count >= 0 && p_count <= size()),
+            MCSpan(data() + (size() - p_count), p_count);
 	}
 
 	constexpr MCSpan subspan(IndexType p_offset,
 	                               IndexType p_count = kMCSpanDynamicExtent) const
 	{
-		MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size()));
-		MCAssert(p_count == kMCSpanDynamicExtent ||
-		         (p_count >= 0 && p_offset + p_count <= size()));
-		return MCSpan(data() + p_offset,
-		              p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
+        return
+            MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size())),
+            MCAssert(p_count == kMCSpanDynamicExtent ||
+                     (p_count >= 0 && p_offset + p_count <= size())),
+            MCSpan(data() + p_offset,
+                   p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
 	}
 
 	constexpr MCSpan operator+(IndexType p_offset) const
@@ -160,8 +167,8 @@ public:
 	/* ---------- Element access */
 	constexpr ElementRef operator[](IndexType p_index) const
 	{
-		MCAssert(p_index >= 0 && p_index < size());
-		return data()[p_index];
+        return MCAssert(p_index >= 0 && p_index < size()),
+            data()[p_index];
 	}
 	constexpr ElementRef operator*() const
 	{
