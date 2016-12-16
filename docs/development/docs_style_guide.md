@@ -428,6 +428,12 @@ Summaries should:
 * not repeat the title or body text
 * be clear and specific
 
+### Synonyms
+
+Avoid using synonyms when referring to LiveCode syntax. Always use the 
+canonical form specified in dictionary entries. For example, use 'field'
+not 'fld', 'backgroundColor' not 'backColor' or 'secondColor'. 
+
 ## T
 
 ### technical terms

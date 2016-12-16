@@ -10,9 +10,10 @@ instructive example? Or can you explain a concept better than it is
 currently explained? Please consider submitting your proposed changes 
 directly to the LiveCode repo on GitHub.
 
-If your changes constitute a substantial rewrite of a dictionary entry, 
-please familiarize yourself with the 
-[documentation format specification](guides/LiveCode Documentation Format Reference.md).
+Please consult the [documentation style guide](development/docs_style_guide.md)
+and the [documentation format specification](guides/LiveCode Documentation Format Reference.md)
+for information on the standards and structure we aim to maintain in our
+documentation.
 
 # Documentation Objectives
 
