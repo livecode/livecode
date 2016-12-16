@@ -447,25 +447,18 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 
 MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr)
 {
-	MCStack *sptr = NULL;
-    uint4 offset;
-    if (MCStringFirstIndexOf(p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset)
-            || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
+    MCStack *sptr = nil;
+    if (MCInterfaceStringCouldBeStack(p_value))
     {
-        char_t* t_cstring_value;
-        uindex_t t_length;
-        /* UNCHECKED */ MCStringConvertToNative(p_value, t_cstring_value, t_length);
-        IO_handle stream = MCS_fakeopen(t_cstring_value, t_length);
-		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
-		{
-			MCS_close(stream);
-			if (MCresult->isclear())
+        sptr = MCInterfaceTryToEvalStackFromString(p_value);
+        if (sptr == nil)
+        {
+            if (MCresult->isclear())
                 ctxt . SetTheResultToCString("can't build stack from string");
-            return nil;
-		}
-		MCS_close(stream);
-		return sptr;
-	}
+        }
+        return sptr;
+    }
+    
 	if (etype == CT_STACK)
         return NULL;
 	else
