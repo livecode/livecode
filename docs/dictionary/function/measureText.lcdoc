@@ -15,39 +15,53 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put measureText(tText,me) into tTextWidth
+local tText, tTextWidth
+put "Hello world" into tText
+put measureText(tText,field "myField") into tTextWidth
 
 Example:
-put measureText(tText,me,"size") into tTextSize
+local tText, tTextSize
+put "Hello world" into fld "someField"
+put fld "someField" into tText
+put measureText(tText,fld "someField","size") into tTextSize
 
 Example:
-put measureText(tText,me,"bounds") into tTextBounds
+# handler in a field
+on textChanged
+  local tTextBounds
+  put measureText("foo",me,"bounds") into tTextBounds
+  put "The text in this field has these bounds: " & tTextBounds
+end textChanged
 
 Parameters:
 text(string):
-Any native string. For unicode strings use measureUnicodeText.
+Any text string, or an <expression> that <evaluate|evaluates> to 
+a string.
 
 objectReference(string):
-An expression that evaluates to an object reference.
+An expression that <evaluate|evaluates> to an object reference.
 
 mode(enum):
--   width: (default if not specified)
--   size:
--   bounds:
+-   "width": (default if not specified)
+-   "size":
+-   "bounds":
 
-returns:
--   width(number): the width of the text
--   size(int,int): the width,height of the text
--   bounds(rect): a rectangle identifying the bounds of the text in the
+Returns:
+-   width (number): the width of the text
+-   size (int,int): the width and height of the text as a 
+comma-separated list; e.g. width,height
+-   bounds (rect): a rectangle identifying the bounds of the text in the
 form `0,-ascent,width,descent` where ascent and descent are relative to
 a 0 baseline the text is drawn on.
 
 
 Description:
-Use the <measureText> <function> to find the dimensions of text drawn
-with the effective font attributes of an object.
+Use the <measureText> <function> to find the dimensions of the given 
+text if drawn using the effective font attributes of the object 
+specified in the <objectReference> parameter.
 
-References: function (control structure), measureUnicodeText (function),
-return (glossary), formattedWidth (property), formattedHeight (property)
+References: function (control structure), return (glossary), 
+formattedWidth (property), formattedHeight (property), 
+textChanged (message), expression (glossary), evaluate (glossary)
 
-Tags: ui
+Tags: ui, text processing
