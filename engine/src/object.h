@@ -515,7 +515,7 @@ class MCObject :
 protected:
 	uint4 obj_id;
 	MCObjectHandle parent;
-	MCNameRef _name;
+	MCNewAutoNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
@@ -807,7 +807,7 @@ public:
 	// Returns the name of the object.
 	MCNameRef getname(void) const
 	{
-		return _name;
+		return *_name;
 	}
 
 	const char *getname_cstring(void) const

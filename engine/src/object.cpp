@@ -102,10 +102,10 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+    : _name(kMCEmptyName)
 {
 	parent = nil;
 	obj_id = 0;
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
 	dflags = 0;
@@ -173,14 +173,14 @@ MCObject::MCObject()
     MCDeletedObjectsOnObjectCreated(this);
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+    : MCDLlist(oref),
+      _name(oref._name)
 {
 	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
-	
-	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
 	rect = oref.rect;
@@ -303,7 +303,6 @@ MCObject::~MCObject()
 	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
-	MCNameDelete(_name);
 	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
@@ -358,8 +357,7 @@ bool MCObject::hasname(MCNameRef p_other_name)
 
 void MCObject::setname(MCNameRef p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameClone(p_new_name, _name);
+	_name.Reset(p_new_name);
 }
 
 void MCObject::setname_cstring(const char *p_new_name)
