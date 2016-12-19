@@ -902,12 +902,14 @@ Boolean MCObject::del(bool p_check_flag)
 
 void MCObject::paste(void)
 {
-	fprintf(stderr, "Object: ERROR tried to paste %s\n", getname_cstring());
+	MCLog("Object: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::undo(Ustruct *us)
 {
-	fprintf(stderr, "Object: ERROR tried to undo %s\n", getname_cstring());
+	MCLog("Object:: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::freeundo(Ustruct *us)

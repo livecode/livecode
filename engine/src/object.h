@@ -810,13 +810,6 @@ public:
 		return *_name;
 	}
 
-	const char *getname_cstring(void) const
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(getname()), t_name);
-		return t_name;
-	}
-
     /*
 	MCString getname_oldstring(void) const
 	{
