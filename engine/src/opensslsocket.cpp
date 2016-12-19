@@ -969,29 +969,29 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
 		setsockopt(s -> fd, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
 	
-        MCAutoPointer<char> temp_d;
-        /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
+        MCAutoStringRefAsCString temp_d;
+        /* UNCHECKED */ temp_d.Lock(d);
+
 		if (s->shared)
 		{
-            char *t_name_copy;
-            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name), t_name_copy);
-            
-			char *portptr = strchr(t_name_copy, ':');
+            MCAutoCustomPointer<char,MCMemoryDeleteArray> t_name_copy;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name),
+                                                     &t_name_copy);
+
+			char *portptr = strchr(*t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
+			if (!inet_aton(*t_name_copy, (in_addr *)&to.sin_addr.s_addr)
 				|| sendto(s->fd, *temp_d, MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-            
-            delete[] t_name_copy;
 		}
 		else if (send(s->fd, *temp_d, MCStringGetLength(d), 0) < 0)
 		{
