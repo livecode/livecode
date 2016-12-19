@@ -209,27 +209,22 @@ public:
 			return;
 		
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
-        MCAutoStringRef t_string;
-		const char *t_filename;
-		t_filename = nil;
-		if (m_filename != nil)
-		{
-            if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
-                return;
-
-            char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-			t_filename = temp;
-		}
 
 		const void *t_payload_data;
 		t_payload_data = nil;
 		uint32_t t_payload_size;
 
 		// MM-2011-03-23: If a file is specified, fetch the payload from the file.
-		if(t_filename != nil)
+		if (m_filename != nullptr)
 		{
-			mmap_payload_from_file(t_filename, t_payload_data, t_payload_size);
+            MCAutoStringRef t_string;
+            if (!ctxt.EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+                return;
+
+            MCAutoStringRefAsCString t_filename;
+            /* UNCHECKED */ t_filename.Lock(*t_string);
+
+			mmap_payload_from_file(*t_filename, t_payload_data, t_payload_size);
 			if (t_payload_data == nil)
 			{
 				ctxt . SetTheResultToCString("could not load paylod from file");
