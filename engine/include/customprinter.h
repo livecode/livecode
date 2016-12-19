@@ -35,6 +35,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 struct MCCustomPrinterDocument
 {
+    MCCustomPrinterDocument()
+    : title(nullptr), filename(nullptr),
+        option_count(0),
+        option_keys(nullptr), option_values(nullptr)
+    {}
+
 	const char *title;
 	const char *filename;
 
