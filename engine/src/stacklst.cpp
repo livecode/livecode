@@ -45,6 +45,7 @@ MCStack *MCStacknode::getstack()
 }
 
 MCStacklist::MCStacklist(bool p_manage_topstack)
+    : restart(False)
 {
 	stacks = NULL;
 	menus = NULL;
