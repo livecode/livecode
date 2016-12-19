@@ -839,7 +839,7 @@ static void *MCExecutableFindSection(const char *p_name)
 		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
 			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
@@ -858,7 +858,7 @@ static void *MCExecutableFindSection(const char *p_name)
 	// Now we can search for our section
 	void *t_address;
 	t_address = NULL;
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 		if (strcmp(p_name, t_strings + t_sections[i] . sh_name) == 0)
 		{
 			t_address = (void *)t_sections[i] . sh_addr;
