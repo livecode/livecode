@@ -59,15 +59,15 @@ template <typename ElementType>
 class MCSpan
 {
 public:
-	typedef std::ptrdiff_t IndexType;
-	typedef ElementType* ElementPtr;
-	typedef ElementType& ElementRef;
-	typedef ElementType&& ElementRRef;
+    typedef ElementType element_type;
+	typedef std::ptrdiff_t index_type;
+	typedef element_type* pointer;
+	typedef element_type& reference;
 
 	/* ---------- Constructors */
 	constexpr MCSpan() = default;
 	constexpr MCSpan(decltype(nullptr)) {}
-	constexpr MCSpan(ElementPtr p_ptr, IndexType p_count)
+	constexpr MCSpan(pointer p_ptr, index_type p_count)
 		: m_data(p_ptr), m_length(p_count) {}
 
 	template <size_t N>
@@ -86,20 +86,20 @@ public:
 	MCSpan& operator=(MCSpan&& other) = default;
 
 	/* ---------- Subspans */
-	constexpr MCSpan first(IndexType p_count) const
+	constexpr MCSpan first(index_type p_count) const
 	{
         return MCAssert(p_count >= 0 && p_count <= size()),
             MCSpan(data(), p_count);
 	}
 
-	constexpr MCSpan last(IndexType p_count) const
+	constexpr MCSpan last(index_type p_count) const
 	{
         return MCAssert(p_count >= 0 && p_count <= size()),
             MCSpan(data() + (size() - p_count), p_count);
 	}
 
-	constexpr MCSpan subspan(IndexType p_offset,
-	                               IndexType p_count = kMCSpanDynamicExtent) const
+	constexpr MCSpan subspan(index_type p_offset,
+	                               index_type p_count = kMCSpanDynamicExtent) const
 	{
         return
             MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size())),
@@ -109,12 +109,12 @@ public:
                    p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
 	}
 
-	constexpr MCSpan operator+(IndexType p_offset) const
+	constexpr MCSpan operator+(index_type p_offset) const
 	{
 		return subspan(p_offset);
 	}
 
-	MCSpan& operator+=(IndexType p_offset)
+	MCSpan& operator+=(index_type p_offset)
 	{
 		return advance(p_offset);
 	}
@@ -132,35 +132,35 @@ public:
 	}
 
 	/* ---------- Observers */
-	constexpr IndexType length() const { return size(); }
-	constexpr IndexType size() const { return m_length; }
-	constexpr IndexType lengthBytes() const { return sizeBytes(); }
-	constexpr IndexType sizeBytes() const
+	constexpr index_type length() const { return size(); }
+	constexpr index_type size() const { return m_length; }
+	constexpr index_type lengthBytes() const { return sizeBytes(); }
+	constexpr index_type sizeBytes() const
 	{
 		return m_length * sizeof(ElementType);
 	}
 	constexpr bool empty() const { return size() == 0; }
 
 	/* ---------- Element access */
-	constexpr ElementRef operator[](IndexType p_index) const
+	constexpr reference operator[](index_type p_index) const
 	{
         return MCAssert(p_index >= 0 && p_index < size()),
             data()[p_index];
 	}
-	constexpr ElementRef operator*() const
+	constexpr reference operator*() const
 	{
 		return (*this)[0];
 	}
-	constexpr ElementPtr operator->() const
+	constexpr pointer operator->() const
 	{
 		return &((*this)[0]);
 	}
 
-	constexpr ElementPtr data() const { return m_data; }
+	constexpr pointer data() const { return m_data; }
 
 protected:
 
-	MCSpan& advance(IndexType p_offset)
+	MCSpan& advance(index_type p_offset)
 	{
 		MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size()));
 		m_data += p_offset;
@@ -168,13 +168,13 @@ protected:
 		return *this;
 	}
 
-	ElementPtr m_data = nullptr;
-	IndexType m_length = 0;
+	pointer m_data = nullptr;
+	index_type m_length = 0;
 };
 
 template <typename ElementType>
 constexpr MCSpan<ElementType>
-operator+(typename MCSpan<ElementType>::IndexType n,
+operator+(typename MCSpan<ElementType>::index_type n,
           const MCSpan<ElementType>& rhs)
 {
 	return rhs + n;
@@ -191,7 +191,7 @@ MCMakeSpan(ElementType (&arr)[N])
 template <typename ElementType>
 constexpr MCSpan<ElementType>
 MCMakeSpan(ElementType *p_ptr,
-           typename MCSpan<ElementType>::IndexType p_count)
+           typename MCSpan<ElementType>::index_type p_count)
 {
 	return MCSpan<ElementType>(p_ptr, p_count);
 }
