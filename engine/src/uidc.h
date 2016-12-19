@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "graphics.h"
 #include "imagebitmap.h"
+#include "object.h"
 
 enum
 {
@@ -176,7 +177,7 @@ typedef void *MCColorTransformRef;
 class MCMovingList : public MCDLlist
 {
 public:
-	MCObject *object;
+	MCObjectHandle object;
 	MCPoint *pts;
 	uint2 lastpt;
 	uint2 curpt;
