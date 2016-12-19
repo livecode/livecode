@@ -1799,23 +1799,24 @@ public:
 
     virtual void CheckProcesses(void)
     {
-        uint2 i;
-        bool cleanPID = false;
-
-        int wstat;
-        for (i = 0 ; i < MCnprocesses ; i++)
+        for (int i = 0; i < MCnprocesses; ++i)
         {
-            cleanPID = (MCprocesses[i].pid != 0 && MCprocesses[i].pid != -1 ) ;
-            if (waitedpid == -1  || (waitedpid != -1 && MCprocesses[i].pid != waitedpid))
-                cleanPID = cleanPID && (waitpid(MCprocesses[i].pid, &wstat, WNOHANG) > 0) ;
+            pid_t t_pid = MCprocesses[i].pid;
+            if (t_pid <= 0)
+                continue; /* No PID in this table slot */
 
-            if (cleanPID)
-            {
-                if (MCprocesses[i].ihandle != NULL)
-                    clearerr((FILE*)MCprocesses[i].ihandle->GetFilePointer());
-                MCprocesses[i].pid = 0;
-                MCprocesses[i].retcode = WEXITSTATUS(wstat);
-            }
+            if (t_pid == waitedpid)
+                continue; /* This PID was already dealt with in signal handler */
+
+            int t_wait_status = 0;
+            pid_t t_wait_pid = waitpid(t_pid, &t_wait_status, WNOHANG);
+            if (t_wait_pid != t_pid)
+                continue; /* Process hasn't exited or is not a child */
+
+            if (MCprocesses[i].ihandle != nullptr)
+                clearerr(static_cast<FILE*>(MCprocesses[i].ihandle->GetFilePointer()));
+            MCprocesses[i].pid = 0;
+            MCprocesses[i].retcode = WEXITSTATUS(t_wait_status);
         }
     }
 
