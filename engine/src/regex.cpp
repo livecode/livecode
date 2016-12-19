@@ -376,7 +376,7 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 		// If we don't have a free slot, evict a randomish one.
 		if (t_last_free == -1)
 		{
-			t_last_free = (uintptr_t(exp) >> 2) % PATTERN_CACHE_SIZE;
+			t_last_free = MCHashPointer(exp) % PATTERN_CACHE_SIZE;
 			MCR_free(MCregexcache[t_last_free]);
 		}
 		
