@@ -2154,7 +2154,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
 
     // First try a (command) call.
     MCAutoStringRef t_call_error;
-    uint2 t_call_pos;
+    uint2 t_call_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
