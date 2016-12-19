@@ -364,8 +364,9 @@ void MCObject::setname(MCNameRef p_new_name)
 
 void MCObject::setname_cstring(const char *p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	setname(*t_name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
@@ -3177,11 +3178,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	MCNewAutoNameRef t_name;
+	if ((stat = IO_read_nameref_new(&t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
-	MCNameDelete(_name);
-	_name = t_name;
+	setname(*t_name);
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
@@ -3501,7 +3501,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(getname(), stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))

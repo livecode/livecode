@@ -801,7 +801,7 @@ public:
 	// Returns true if the object has not been named.
 	bool isunnamed(void) const
 	{
-		return MCNameIsEmpty(_name);
+		return MCNameIsEmpty(getname());
 	}
 
 	// Returns the name of the object.
@@ -813,7 +813,7 @@ public:
 	const char *getname_cstring(void) const
 	{
         char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(getname()), t_name);
 		return t_name;
 	}
 
