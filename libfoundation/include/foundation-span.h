@@ -76,7 +76,7 @@ public:
     typedef typename std::conditional<IsConst,
                                       const element_type_,
                                       element_type_>::type & reference;
-    typedef typename std::add_pointer<reference> pointer;
+    typedef typename std::add_pointer<reference>::type pointer;
 
     /* The const version of this MCSpanIterator type should be a
      * friend so that its fields are accessible.  N.b. the converse is
@@ -320,22 +320,22 @@ public:
                    p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
 	}
 
-	constexpr MCSpan operator+(index_type p_offset) const
+    [[deprecated]] constexpr MCSpan operator+(index_type p_offset) const
 	{
 		return subspan(p_offset);
 	}
 
-	MCSpan& operator+=(index_type p_offset)
+	[[deprecated]] MCSpan& operator+=(index_type p_offset)
 	{
 		return advance(p_offset);
 	}
 
 	/* ---------- Pointer arithmetic */
-	MCSpan& operator++()
+	[[deprecated]] MCSpan& operator++()
 	{
 		return advance(1);
 	}
-	MCSpan operator++(int)
+	[[deprecated]] MCSpan operator++(int)
 	{
 		auto t_ret = *this;
 		++(*this);
@@ -397,7 +397,7 @@ protected:
 };
 
 template <typename ElementType>
-constexpr MCSpan<ElementType>
+[[deprecated]] constexpr MCSpan<ElementType>
 operator+(typename MCSpan<ElementType>::index_type n,
           const MCSpan<ElementType>& rhs)
 {
