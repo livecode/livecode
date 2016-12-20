@@ -320,28 +320,6 @@ public:
                    p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
 	}
 
-    [[deprecated]] constexpr MCSpan operator+(index_type p_offset) const
-	{
-		return subspan(p_offset);
-	}
-
-	[[deprecated]] MCSpan& operator+=(index_type p_offset)
-	{
-		return advance(p_offset);
-	}
-
-	/* ---------- Pointer arithmetic */
-	[[deprecated]] MCSpan& operator++()
-	{
-		return advance(1);
-	}
-	[[deprecated]] MCSpan operator++(int)
-	{
-		auto t_ret = *this;
-		++(*this);
-		return t_ret;
-	}
-
 	/* ---------- Observers */
 	constexpr index_type length() const { return size(); }
 	constexpr index_type size() const { return m_length; }
@@ -395,14 +373,6 @@ protected:
 	pointer m_data = nullptr;
 	index_type m_length = 0;
 };
-
-template <typename ElementType>
-[[deprecated]] constexpr MCSpan<ElementType>
-operator+(typename MCSpan<ElementType>::index_type n,
-          const MCSpan<ElementType>& rhs)
-{
-	return rhs + n;
-}
 
 /* TODO[C++17] Remove when we have class and struct template type inference */
 template<typename ElementType, size_t N>
