@@ -747,17 +747,17 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 
 template <typename IntType>
 static IntType
-MCGradientFillUnserializeInt(MCSpan<const byte_t>& p_data)
+MCGradientFillUnserializeInt(MCSpan<byte_t>::const_iterator& p_data)
 {
 	IntType t_value;
-	MCAssert(size_t(p_data.size()) >= sizeof(t_value));
-	MCMemoryCopy(&t_value, p_data.data(), sizeof(t_value));
-	p_data += sizeof(t_value);
+    const byte_t &t_data = *p_data;
+    p_data += sizeof(t_value);
+	MCMemoryCopy(&t_value, &t_data, sizeof(t_value));
 	return MCSwapIntHostToNetwork(t_value);
 }
 
 static MCPoint
-MCGradientFillUnserializePoint(MCSpan<const byte_t>& p_data)
+MCGradientFillUnserializePoint(MCSpan<byte_t>::const_iterator& p_data)
 {
 	MCPoint t_point;
 	t_point.x = MCGradientFillUnserializeInt<int16_t>(p_data);
@@ -767,7 +767,8 @@ MCGradientFillUnserializePoint(MCSpan<const byte_t>& p_data)
 
 void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 &r_length)
 {
-	MCSpan<const byte_t> t_ptr(p_data, r_length);
+    MCSpan<byte_t> t_span(p_data, r_length);
+    MCSpan<byte_t>::const_iterator t_ptr = t_span.cbegin();
 
 	uint1 t_packed = *t_ptr++;
 	p_gradient->kind = t_packed >> 4;
@@ -794,5 +795,5 @@ void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 
 		if (p_gradient->ramp[i].offset != p_gradient->ramp[i - 1].offset)
 			p_gradient->ramp[i - 1].difference = STOP_DIFF_MULT / (p_gradient->ramp[i].offset - p_gradient->ramp[i - 1].offset);
 
-	r_length = t_ptr.size();
+	r_length = t_span.cend() - t_ptr;
 }
