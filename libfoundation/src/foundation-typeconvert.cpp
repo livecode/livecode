@@ -20,12 +20,22 @@
 
 #define R8L 384
 
-inline void MCU_skip_spaces(MCSpan<const char>& x_span)
+static MCSpan<const char>::const_iterator
+skip_spaces(MCSpan<const char>::const_iterator p_start,
+            MCSpan<const char>::const_iterator p_end)
 {
-	while (!x_span.empty() && isspace(uint8_t(x_span[0])))
-	{
-		++x_span;
-	}
+    auto t_iter = p_start;
+    while (t_iter != p_end && isspace(uint8_t(*t_iter)))
+        ++t_iter;
+    return t_iter;
+}
+
+static MCSpan<const char>
+skip_spaces(MCSpan<const char> p_span)
+{
+    MCSpan<const char>::const_iterator t_iter =
+        skip_spaces(p_span.cbegin(), p_span.cend());
+    return p_span.subspan(t_iter - p_span.cbegin());
 }
 
 static integer_t MCU_strtol(MCSpan<const char> p_chars,
@@ -36,7 +46,7 @@ static integer_t MCU_strtol(MCSpan<const char> p_chars,
                             MCSpan<const char>& r_remainder)
 {
 	done = false;
-	MCU_skip_spaces(p_chars);
+	p_chars = skip_spaces(p_chars);
 	if (p_chars.empty())
 		return 0;
 	bool negative = false;
@@ -79,7 +89,7 @@ static integer_t MCU_strtol(MCSpan<const char> p_chars,
 		else
 			if (isspace((uint8_t)*p_chars))
 			{
-				MCU_skip_spaces(p_chars);
+				p_chars = skip_spaces(p_chars);
 				if (!p_chars.empty() && *p_chars == c)
 				{
 					++p_chars;
@@ -142,7 +152,7 @@ static integer_t MCU_strtol(MCSpan<const char> p_chars,
 	}
 	if (negative)
 		value = -value;
-	MCU_skip_spaces(p_chars);
+	p_chars = skip_spaces(p_chars);
 	done = true;
 	r_remainder = p_chars;
 	return value;
@@ -167,7 +177,7 @@ static real64_t MCU_strtor8(MCSpan<const char> p_chars,
 
 	r_done = false;
 
-	MCU_skip_spaces(p_chars);
+	p_chars = skip_spaces(p_chars);
 	if (p_chars.empty())
 		return 0;
 
@@ -196,7 +206,7 @@ static real64_t MCU_strtor8(MCSpan<const char> p_chars,
 		return 0;
 
 	p_chars += (t_end - t_buff);
-	MCU_skip_spaces(p_chars);
+	p_chars = skip_spaces(p_chars);
 	if (!p_chars.empty())
 		return 0;
 
