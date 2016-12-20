@@ -52,8 +52,214 @@
 
 #include "foundation.h"
 #include <cstddef>
+#include <iterator>
+#include <type_traits>
 
 static const std::ptrdiff_t kMCSpanDynamicExtent = -1;
+
+namespace MC
+{
+namespace Details
+{
+template <typename Span, bool IsConst>
+class MCSpanIterator
+{
+    typedef typename Span::element_type element_type_;
+
+public:
+    /* These type members are required in order to allow
+     * std::iterator_traits to work with this class.  In C++17, this
+     * is a requirement for conformance with the Iterator concept. */
+    typedef typename std::random_access_iterator_tag iterator_category;
+    typedef typename Span::index_type difference_type;
+    typedef typename std::remove_const<element_type_>::type value_type;
+    typedef typename std::conditional<IsConst,
+                                      const element_type_,
+                                      element_type_>::type & reference;
+    typedef typename std::add_pointer<reference> pointer;
+
+    /* The const version of this MCSpanIterator type should be a
+     * friend so that its fields are accessible.  N.b. the converse is
+     * _not_ true. */
+    friend class MCSpanIterator<Span, true>;
+
+    /* ---------- Constructors */
+    constexpr MCSpanIterator() : m_span(nullptr), m_index(0) {}
+
+    constexpr MCSpanIterator(const Span* p_span,
+                             typename Span::index_type p_index)
+        : m_span(p_span),
+          m_index(p_index)
+    {
+        /* TODO[C++14] Some compilers don't allow statements in
+         * constexpr constructors yet */
+#if 0
+        MCAssert(p_span == nullptr ||
+                 (p_index >= 0 && p_index < p_span->length())),
+#endif
+    }
+
+    /* Allow the creation of an iterator over a const span from an
+     * iterator over a non-const span. */
+    constexpr MCSpanIterator(const MCSpanIterator<Span, false>& other)
+        : m_span(other.m_span), m_index(other.m_index) {}
+
+    /* ---------- Assignment ops */
+    /* TODO[C++11] MCSpanIterator& operator=(const MCSpanIterator& other) = default; */
+    MCSpanIterator& operator=(const MCSpanIterator& other)
+    {
+        m_span = other.m_span;
+        m_index = other.m_index;
+        return *this;
+    }
+
+    /* ---------- Element access */
+    constexpr reference operator*() const
+    {
+        return MCAssert(m_span != nullptr), (*m_span)[m_index];
+    }
+
+    constexpr pointer operator->() const
+    {
+        return MCAssert(m_span != nullptr), &((*m_span)[m_index]);
+    }
+
+    /* ---------- Traversal ops */
+    /* TODO[C++14] Make these operators constexpr */
+    MCSpanIterator& operator++()
+    {
+        return
+            MCAssert(m_span != nullptr &&
+                     m_index >= 0 && m_index < m_span->length()),
+            ++m_index,
+            *this;
+    }
+
+    MCSpanIterator operator++(int)
+    {
+        auto t_iter = *this;
+        ++(*this);
+        return t_iter;
+    }
+
+    MCSpanIterator& operator--()
+    {
+        return
+            MCAssert(m_span != nullptr &&
+                     m_index > 0 && m_index <= m_span->length()),
+            --m_index,
+            *this;
+    }
+
+    MCSpanIterator operator--(int)
+    {
+        auto t_iter = *this;
+        --(*this);
+        return t_iter;
+    }
+
+    MCSpanIterator operator+(difference_type p_offset) const
+    {
+        auto t_iter = *this;
+        return t_iter += p_offset;
+    }
+
+    MCSpanIterator& operator+=(difference_type p_offset)
+    {
+        return
+            MCAssert(m_span != nullptr &&
+                     (m_index + p_offset) >= 0 &&
+                     (m_index + p_offset) < m_span->length()),
+            m_index += p_offset,
+            *this;
+    }
+
+    MCSpanIterator operator-(difference_type p_offset) const
+    {
+        auto t_iter = *this;
+        return t_iter -= p_offset;
+    }
+
+    MCSpanIterator& operator-=(difference_type p_offset)
+    {
+        return *this += -p_offset;
+    }
+
+    /* ---------- Iterator comparisons */
+
+    /* Measure the distance between two iterators over the same
+     * span */
+    constexpr difference_type operator-(const MCSpanIterator& p_rhs) const
+    {
+        return MCAssert(m_span == p_rhs.m_span), m_index - p_rhs.m_index;
+    }
+
+    constexpr friend bool operator==(const MCSpanIterator& p_lhs,
+                                     const MCSpanIterator& p_rhs)
+    {
+        return p_lhs.m_span == p_rhs.m_span && p_lhs.m_index == p_rhs.m_index;
+    }
+
+    constexpr friend bool operator!=(const MCSpanIterator& p_lhs,
+                                     const MCSpanIterator& p_rhs)
+    {
+        return !(p_lhs == p_rhs);
+    }
+
+    constexpr friend bool operator<(const MCSpanIterator& p_lhs,
+                                    const MCSpanIterator& p_rhs)
+    {
+        return MCAssert(p_lhs.m_span == p_rhs.m_span),
+            p_lhs.m_index < p_rhs.m_index;
+    }
+
+    constexpr friend bool operator <=(const MCSpanIterator& p_lhs,
+                                      const MCSpanIterator& p_rhs)
+    {
+        return !(p_rhs < p_lhs);
+    }
+
+    constexpr friend bool operator >(const MCSpanIterator& p_lhs,
+                                     const MCSpanIterator& p_rhs)
+    {
+        return p_rhs < p_lhs;
+    }
+
+    constexpr friend bool operator >=(const MCSpanIterator& p_lhs,
+                                      const MCSpanIterator& p_rhs)
+    {
+        return !(p_rhs > p_lhs);
+    }
+
+    void swap(MCSpanIterator& p_other)
+    {
+        std::swap(m_index, p_other.m_index);
+        std::swap(m_span, p_other.m_span);
+    }
+
+protected:
+    const Span* m_span;
+    difference_type m_index;
+};
+
+template <typename Span, bool IsConst>
+constexpr MCSpanIterator<Span, IsConst>
+operator+(typename MCSpanIterator<Span, IsConst>::difference_type n,
+          const MCSpanIterator<Span, IsConst>& p_rhs)
+{
+    return p_rhs + n;
+}
+
+template <typename Span, bool IsConst>
+constexpr MCSpanIterator<Span, IsConst>
+operator-(typename MCSpanIterator<Span, IsConst>::difference_type n,
+          const MCSpanIterator<Span, IsConst>& p_rhs)
+{
+    return p_rhs - n;
+}
+
+} /* namespace Details */
+} /* namespace MC */
 
 template <typename ElementType>
 class MCSpan
@@ -63,6 +269,11 @@ public:
 	typedef std::ptrdiff_t index_type;
 	typedef element_type* pointer;
 	typedef element_type& reference;
+
+    typedef MC::Details::MCSpanIterator<MCSpan<element_type>, false> iterator;
+    typedef MC::Details::MCSpanIterator<MCSpan<element_type>, true> const_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
 	/* ---------- Constructors */
 	constexpr MCSpan() = default;
@@ -157,6 +368,19 @@ public:
 	}
 
 	constexpr pointer data() const { return m_data; }
+
+    /* ---------- Iterator support */
+    iterator begin() const { return iterator(this, 0); }
+    iterator end() const { return iterator(this, length()); }
+
+    const_iterator cbegin() const { return const_iterator(this, 0); }
+    const_iterator cend() const { return const_iterator(this, length()); }
+
+    reverse_iterator rbegin() const { return reverse_iterator(end()); }
+    reverse_iterator rend() const { return reverse_iterator(begin()); }
+
+    const_reverse_iterator crbegin() const { return const_reverse_iterator(cend()); }
+    const_reverse_iterator crend() const { return const_reverse_iterator(cbegin()); }
 
 protected:
 
