@@ -1576,7 +1576,7 @@ void EmitEndArrayConstant(long *idx)
 class __opcode_index
 {
 public:
-    __opcode_index(const char *p_name)
+    __opcode_index(const char *p_name) : m_index(0)
     {
         if (!MCScriptLookupBytecode(p_name, m_index))
         {
