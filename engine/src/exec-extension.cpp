@@ -176,12 +176,11 @@ MCEngineCheckModulesHaveNamePrefix(MCNameRef p_prefix,
           MCStringAppendChar(*t_prefix, '.')))
         return false;
 
-    while (!p_modules.empty())
+    for (MCScriptModuleRef t_iter : p_modules)
     {
-        if (!MCStringBeginsWith(MCNameGetString(MCScriptGetNameOfModule(*p_modules)),
+        if (!MCStringBeginsWith(MCNameGetString(MCScriptGetNameOfModule(t_iter)),
                                 *t_prefix, kMCStringOptionCompareCaseless))
             return false;
-        ++p_modules;
     }
     return true;
 }
