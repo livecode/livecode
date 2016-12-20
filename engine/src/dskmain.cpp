@@ -184,17 +184,16 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			MCsecuremode = MC_SECUREMODE_ALL;
 			continue;
 		}
-		
+
+		/* TODO Remove -g,-geometry flag because it's not used any more */
 		if (MCStringIsEqualToCString(argv[i], "-g", kMCCompareExact)
 			|| MCStringIsEqualToCString(argv[i], "-geometry", kMCCompareExact))
 		{
-			char *geometry = NULL;
 			if (++i >= argc)
 			{
 				fprintf(stderr, "%s: bad geometry\n", *t_mccmd_utf8);
 				return False;
 			}
-            /* UNCHECKED */ MCStringConvertToCString(argv[i], geometry);
 			continue;
 		}
 		
