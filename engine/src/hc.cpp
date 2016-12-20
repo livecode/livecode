@@ -1125,8 +1125,7 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	{
 		bptr->ncolors = 1;
 		bptr->colors = new (nothrow) MCColor;
-		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue
-		                      = bptr->colors[0].blue = MAXUINT2;
+		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue = MAXUINT2;
 		bptr->colornames = new (nothrow) MCStringRef[1];
 		bptr->colornames[0] = nil;
 		bptr->dflags |= DF_FORE_COLOR;
@@ -1776,25 +1775,29 @@ MCGroup *MCHcbkgd::build(MCHcstak *hcsptr, MCStack *sptr)
 }
 
 MCHcstak::MCHcstak(char *inname)
+	: rect(kMCEmptyRectangle),
+	  name(inname),
+	  script(nullptr),
+	  fullbuffer(nullptr),
+	  buffer(nullptr),
+	  pages(nullptr),
+	  marks(nullptr),
+	  npages(0),
+	  fonts(nullptr),
+	  atts(nullptr),
+	  nfonts(0),
+	  natts(0),
+	  pagesize(0),
+	  npbuffers(0),
+	  pbuffersizes(nullptr),
+	  pbuffers(nullptr),
+	  hcbkgds(nullptr),
+	  hccards(nullptr),
+	  hcbmaps(nullptr),
+	  icons(nullptr),
+	  cursors(nullptr),
+	  snds(nullptr)
 {
-	name = inname;
-	script = NULL;
-	fullbuffer = NULL;
-	pages = NULL;
-	marks = NULL;
-	npages = 0;
-	fonts = NULL;
-	atts = NULL;
-	nfonts = natts = 0;
-	npbuffers = 0;
-	pbuffersizes = NULL;
-	pbuffers = NULL;
-	hcbkgds = NULL;
-	hcbmaps = NULL;
-	hccards = NULL;
-	icons = NULL;
-	cursors = NULL;
-	snds = NULL;
 }
 
 MCHcstak::~MCHcstak()

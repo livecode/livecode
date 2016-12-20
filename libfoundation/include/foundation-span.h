@@ -44,6 +44,17 @@
  * order to make sure that there is as much commonality as possible
  * between the behaviour of an MCSpan and an array pointer. */
 
+/* TODO[C++11] Many of the constructors & methods in MCSpan are
+ * declared constexpr.  However, some of our compilers don't support
+ * constexpr, and for those compilers constexpr is defined to
+ * empty. */
+
+/* TODO[C++14] Some of the constexpr methods in MCSpan use assertions,
+ * and have to do ugly chaining using the comma operator in a return
+ * statement in order to comply with the C++11 restrictions on
+ * constexpr functions.  When LiveCode is built with C++14, these
+ * methods should be refactored. */
+
 #include "foundation.h"
 #include <cstddef>
 
@@ -59,23 +70,23 @@ public:
 	typedef ElementType&& ElementRRef;
 
 	/* ---------- Constructors */
-	MCSpan()
+	constexpr MCSpan()
 		: m_data(nullptr), m_length(0) {}
-	MCSpan(decltype(nullptr))
+	constexpr MCSpan(decltype(nullptr))
 		: m_data(nullptr), m_length(0) {}
-	MCSpan(ElementPtr p_ptr, IndexType p_count)
+	constexpr MCSpan(ElementPtr p_ptr, IndexType p_count)
 		: m_data(p_ptr), m_length(p_count) {}
 
 	template <size_t N>
-	MCSpan(ElementType (&arr)[N])
+	constexpr MCSpan(ElementType (&arr)[N])
 		: m_data(&arr[0]), m_length(N) {}
 
 	/* TODO[C++11] MCSpan(MCSpan &other) = default; */
-	MCSpan(MCSpan& other)
+	constexpr MCSpan(MCSpan& other)
 		: m_data(other.m_data), m_length(other.m_length) {}
 
 	/* TODO[C++11] MCSpan(MCSpan &&other) = default; */
-	MCSpan(MCSpan&& other)
+	constexpr MCSpan(MCSpan&& other)
 		: m_data(static_cast<ElementPtr &&>(other.m_data)),
 		  m_length(static_cast<IndexType &&>(other.m_length)) {}
 
@@ -98,29 +109,30 @@ public:
 	}
 
 	/* ---------- Subspans */
-	MCSpan first(IndexType p_count) const
+	constexpr MCSpan first(IndexType p_count) const
 	{
-		MCAssert(p_count >= 0 && p_count <= size());
-		return MCSpan(data(), p_count);
+        return MCAssert(p_count >= 0 && p_count <= size()),
+            MCSpan(data(), p_count);
 	}
 
-	MCSpan last(IndexType p_count) const
+	constexpr MCSpan last(IndexType p_count) const
 	{
-		MCAssert(p_count >= 0 && p_count <= size());
-		return MCSpan(data() + (size() - p_count), p_count);
+        return MCAssert(p_count >= 0 && p_count <= size()),
+            MCSpan(data() + (size() - p_count), p_count);
 	}
 
-	MCSpan subspan(IndexType p_offset,
-	               IndexType p_count = kMCSpanDynamicExtent) const
+	constexpr MCSpan subspan(IndexType p_offset,
+	                               IndexType p_count = kMCSpanDynamicExtent) const
 	{
-		MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size()));
-		MCAssert(p_count == kMCSpanDynamicExtent ||
-		         (p_count >= 0 && p_offset + p_count <= size()));
-		return MCSpan(data() + p_offset,
-		              p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
+        return
+            MCAssert(p_offset == 0 || (p_offset > 0 && p_offset <= size())),
+            MCAssert(p_count == kMCSpanDynamicExtent ||
+                     (p_count >= 0 && p_offset + p_count <= size())),
+            MCSpan(data() + p_offset,
+                   p_count == kMCSpanDynamicExtent ? size() - p_offset : p_count);
 	}
 
-	MCSpan operator+(IndexType p_offset) const
+	constexpr MCSpan operator+(IndexType p_offset) const
 	{
 		return subspan(p_offset);
 	}
@@ -135,7 +147,7 @@ public:
 	{
 		return advance(1);
 	}
-	MCSpan& operator++(int)
+	MCSpan operator++(int)
 	{
 		auto t_ret = *this;
 		++(*this);
@@ -143,28 +155,31 @@ public:
 	}
 
 	/* ---------- Observers */
-	IndexType length() const { return size(); }
-	IndexType size() const { return m_length; }
-	IndexType lengthBytes() const { return sizeBytes(); }
-	IndexType sizeBytes() const { return m_length * sizeof(ElementType); }
-	bool empty() const { return size() == 0; }
+	constexpr IndexType length() const { return size(); }
+	constexpr IndexType size() const { return m_length; }
+	constexpr IndexType lengthBytes() const { return sizeBytes(); }
+	constexpr IndexType sizeBytes() const
+	{
+		return m_length * sizeof(ElementType);
+	}
+	constexpr bool empty() const { return size() == 0; }
 
 	/* ---------- Element access */
-	ElementRef operator[](IndexType p_index) const
+	constexpr ElementRef operator[](IndexType p_index) const
 	{
-		MCAssert(p_index >= 0 && p_index < size());
-		return data()[p_index];
+        return MCAssert(p_index >= 0 && p_index < size()),
+            data()[p_index];
 	}
-	ElementRef operator*() const
+	constexpr ElementRef operator*() const
 	{
 		return (*this)[0];
 	}
-	ElementPtr operator->() const
+	constexpr ElementPtr operator->() const
 	{
 		return &((*this)[0]);
 	}
 
-	ElementPtr data() const { return m_data; }
+	constexpr ElementPtr data() const { return m_data; }
 
 protected:
 
@@ -181,15 +196,17 @@ protected:
 };
 
 template <typename ElementType>
-MCSpan<ElementType> operator+(typename MCSpan<ElementType>::IndexType n,
-                              const MCSpan<ElementType>& rhs)
+constexpr MCSpan<ElementType>
+operator+(typename MCSpan<ElementType>::IndexType n,
+          const MCSpan<ElementType>& rhs)
 {
 	return rhs + n;
 }
 
 template <typename ElementType>
-MCSpan<ElementType> MCMakeSpan(ElementType *p_ptr,
-                               typename MCSpan<ElementType>::IndexType p_count)
+constexpr MCSpan<ElementType>
+MCMakeSpan(ElementType *p_ptr,
+           typename MCSpan<ElementType>::IndexType p_count)
 {
 	return MCSpan<ElementType>(p_ptr, p_count);
 }

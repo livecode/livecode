@@ -208,6 +208,9 @@ MCNameRef MCN_gif;
 MCNameRef MCN_jpeg;
 MCNameRef MCN_rtf;
 MCNameRef MCN_html;
+MCNameRef MCN_win_bitmap;
+MCNameRef MCN_win_metafile;
+MCNameRef MCN_win_enh_metafile;
 
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
@@ -674,6 +677,9 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
     /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
     /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
+	/* UNCHECKED */ MCNameCreateWithCString("windows bitmap", MCN_win_bitmap);
+	/* UNCHECKED */ MCNameCreateWithCString("windows metafile", MCN_win_metafile);
+	/* UNCHECKED */ MCNameCreateWithCString("windows enhanced metafile", MCN_win_enh_metafile);
 	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
 	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
 
@@ -1137,6 +1143,9 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_png);
     MCNameDelete(MCN_gif);
     MCNameDelete(MCN_jpeg);
+	MCNameDelete(MCN_win_bitmap);
+	MCNameDelete(MCN_win_metafile);
+	MCNameDelete(MCN_win_enh_metafile);
 	MCNameDelete(MCN_rtf);
 	MCNameDelete(MCN_html);
 

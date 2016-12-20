@@ -1085,7 +1085,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         }
         
         // Prepare for drawing the selection rectangle
-        MCRectangle t_rect;
+        MCRectangle t_rect(kMCEmptyRectangle);
         GdkColor t_color;
         t_color.pixel = ~0;
         GdkGC *t_gc = gdk_gc_new(t_root);

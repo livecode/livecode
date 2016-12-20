@@ -561,6 +561,9 @@ MCStack::~MCStack()
 		destroywindow();
 	}
 
+	// Clear and free the id cache before removing any controls
+	freeobjectidcache();
+	
 	while (controls != NULL)
 	{
 		MCControl *cptr = controls->remove
@@ -642,9 +645,6 @@ MCStack::~MCStack()
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
-	
-	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
-	freeobjectidcache();
 	
 	view_destroy();
 
@@ -1449,6 +1449,25 @@ Boolean MCStack::del(bool p_check_flag)
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
+}
+
+void MCStack::scheduledelete(bool p_is_child)
+{
+	// Forcibly close all substacks
+	MCStack* t_substack = substacks;
+	if (t_substack)
+	{
+		do
+		{
+			while (t_substack->opened)
+				t_substack->close();
+
+			t_substack = t_substack->next();
+		} while (t_substack != substacks);
+	}
+
+	// Continue with the deletion
+	MCObject::scheduledelete(p_is_child);
 }
 
 void MCStack::paste(void)

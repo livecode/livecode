@@ -50,15 +50,21 @@
     IsNameSuitableForDefinition
     IsStringSuitableForKeyword
 
+	ConcatenateNameParts
+	ContainsNamespaceOperator
+	SplitNamespace
+	
     InitializeScopes
     FinalizeScopes
     DumpScopes
     EnterScope
     LeaveScope
     DefineMeaning
+	DefineUnqualifiedMeaning
     UndefineMeaning
     HasLocalMeaning
     HasMeaning
+	HasUnqualifiedMeaning
 
     PushEmptySet
     DuplicateSet
@@ -272,6 +278,7 @@
     Error_MalformedToken
     Error_MalformedSyntax
     Error_MalformedEscapedString
+	Error_IllegalNamespaceOperator
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -400,6 +407,10 @@
 'condition' IsNameSuitableForDefinition(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
 
+'action' ConcatenateNameParts(NAME, NAME -> NAME)
+'action' SplitNamespace(NAME -> NAME, NAME)
+'condition' ContainsNamespaceOperator(NAME)
+
 --------------------------------------------------------------------------------
 
 'action' ReorderOperatorExpression(Sentinal: INT)
@@ -424,10 +435,12 @@
 'action' EnterScope()
 'action' LeaveScope()
 
-'action' DefineMeaning(Name: NAME, Meaning: MEANING)
-'action' UndefineMeaning(Name: NAME)
+'action' DefineMeaning(Name: NAME, Namespace: NAME, Meaning: MEANING)
+'action' DefineUnqualifiedMeaning(Name: NAME, Meaning: MEANING)
+'action' UndefineMeaning(Name: NAME, Namespace: NAME)
 'condition' HasLocalMeaning(Name: NAME -> Meaning: MEANING)
-'condition' HasMeaning(Name: NAME -> Meaning: MEANING)
+'condition' HasMeaning(Name: NAME, Namespace: NAME -> Meaning: MEANING)
+'condition' HasUnqualifiedMeaning(Name: NAME -> Meaning: MEANING)
 
 --------------------------------------------------------------------------------
 
@@ -677,6 +690,7 @@
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
 'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
+'action' Error_IllegalNamespaceOperator(Position: POS)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)

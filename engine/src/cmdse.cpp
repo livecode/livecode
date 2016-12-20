@@ -446,9 +446,8 @@ void MCFocus::exec_ctxt(MCExecContext &ctxt)
 	{
 		MCObject *optr;
 		uint4 parid;
-        if (!object->getobj(ctxt, optr, parid, True)
-                || optr->gettype() < CT_FIRST_CONTROL
-                || optr->gettype() > CT_LAST_CONTROL)
+        if (!object->getobj(ctxt, optr, parid, True) ||
+            !MCChunkTermIsControl(optr -> gettype()))
 		{
             ctxt . LegacyThrow(EE_FOCUS_BADOBJECT);
             return;

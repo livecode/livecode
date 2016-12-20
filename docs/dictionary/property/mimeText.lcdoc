@@ -6,7 +6,7 @@ Syntax: mimeText
 
 Summary:
 The <mimeText> <property> is not implemented and is <reserved
-word|reserved>. 
+word|reserved>.
 
 Associations: field
 
@@ -14,6 +14,8 @@ Introduced: 1.0
 
 Platforms: desktop, server
 
+Description:
+<reserved word|Reserved> for internal use.
+
 References: property (glossary), reserved word (glossary),
 HTMLText (property)
-

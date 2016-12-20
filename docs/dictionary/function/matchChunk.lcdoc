@@ -75,10 +75,11 @@ matched substrings in the optional <positionVarsList> variables, while
 the <matchText> <function(control structure)> records the substrings
 themselves. 
 
->*Tip:*  LiveCode implements <regular expression|regular expressions>
+>*Tip:* LiveCode implements <regular expression|regular expressions>
 > compatible with the PCRE library. For detailed information about
-> <regular expression> elements you can use with this <function(control
-> structure)>, see the PCRE manual at http://www.pcre.org/man.txt.
+> <regular expression> elements you can use with this
+> <function(control structure)>, see the PCRE pattern documentation at
+> http://www.pcre.org/original/doc/html/pcrepattern.html.
 
 Changes:
 The regular expression format changed in version 2.0 to use PCRE

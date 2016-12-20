@@ -71,3 +71,15 @@ MCRawClipboardItemRep::~MCRawClipboardItemRep()
     ;
 }
 
+MCDataRef MCRawClipboard::EncodeBMPForTransfer(MCDataRef p_bmp) const
+{
+	// Most platforms transfer BMP files without any further transformations
+	return MCValueRetain(p_bmp);
+}
+
+MCDataRef MCRawClipboard::DecodeTransferredBMP(MCDataRef p_bmp) const
+{
+	// Most platforms transfer BMP files without any further transformations
+	return MCValueRetain(p_bmp);
+}
+

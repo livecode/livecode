@@ -1289,7 +1289,8 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 // left of the inner paragraph box. It also returns the width of the paragraph box.
 void MCParagraph::computeboxoffsetandwidth(int32_t& r_offset, int32_t& r_width) const
 {
-	MCRectangle t_outer, t_inner;
+	MCRectangle t_outer(kMCEmptyRectangle);
+	MCRectangle t_inner(kMCEmptyRectangle);
 	computerects(0, 0, parent -> getlayoutwidth(), getwidth(), 0, t_outer, t_inner);
 	r_offset = t_inner . x;
 	r_width = t_inner . width;

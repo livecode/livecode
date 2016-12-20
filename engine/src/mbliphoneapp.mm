@@ -1517,10 +1517,16 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		{
 			default:
 			case UIInterfaceOrientationPortrait:
+            case UIInterfaceOrientationPortraitUpsideDown:
                 if (t_is_retina)
                 {
                     t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 12.9 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadProPortrait@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+
                 }
 				t_image_names[t_img_cnt] = @"Default-Portrait.png";
 				t_image_angles[t_img_cnt++] = 0.0f;
@@ -1528,34 +1534,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 				t_image_angles[t_img_cnt++] = 0.0f;
 				t_image_names[t_img_cnt] = nil;
 				break;
-			case UIInterfaceOrientationPortraitUpsideDown:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                }
-                t_image_names[t_img_cnt] = @"Default-Portrait.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = @"Default.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = nil;
-                break;
-			case UIInterfaceOrientationLandscapeLeft:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                }
-                t_image_names[t_img_cnt] = @"Default-Landscape.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = @"Default.png";
-                t_image_angles[t_img_cnt++] = -90.0f;
-                t_image_names[t_img_cnt] = nil;
-                break;
+            case UIInterfaceOrientationLandscapeLeft:
             case UIInterfaceOrientationLandscapeRight:
                 if (t_is_retina)
                 {
                     t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 12.9 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadProLandscape@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
                 }
                 t_image_names[t_img_cnt] = @"Default-Landscape.png";

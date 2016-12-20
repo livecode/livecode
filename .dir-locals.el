@@ -1,4 +1,4 @@
-((c-mode .  ((indent-tabs-mode . t)
+((c-mode .  ((indent-tabs-mode . nil)
 	      (tab-width . 4)
 	      (c-basic-offset . 4)
 	      (c-file-offsets . ((block-open . 0)
@@ -6,7 +6,7 @@
 				 (substatement-open . 0)
 				 ))))
 
- (c++-mode . ((indent-tabs-mode . t)
+ (c++-mode . ((indent-tabs-mode . nil)
 	      (tab-width . 4)
 	      (c-basic-offset . 4)
 	      (c-file-offsets . ((block-open . 0)

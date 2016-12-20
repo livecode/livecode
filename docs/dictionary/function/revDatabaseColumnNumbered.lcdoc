@@ -4,7 +4,7 @@ Synonyms: revdb_columnbynumber
 
 Type: function
 
-Syntax: revDatabaseColumnNumbered(<recordSetID>, <columnNumber> [, <variable>])
+Syntax: revDatabaseColumnNumbered(<recordSetID>, <columnNumber> [, <holderVariable>])
 
 Summary:
 <return|Returns> data from a specified <database field>.
@@ -32,24 +32,22 @@ Example:
 revDatabaseColumnNumbered(tCursor, 1, "tRetrievedDataArray[id]")
 
 Parameters:
-recordSetID:
+recordSetID(integer):
 The number returned by the revQueryDatabase when the record set was
-created. 
+created.
 
-columnNumber:
+columnNumber(integer):
 The number of a database field.
 
-variable:
-
-
-holderVariable:
+holderVariable(string):
 Any valid variable name or the name of an array element.
 
 Returns:
-The <revDatabaseColumnNumbered> <function> returns or text data from the
-specified field of the current <record>, if no <holderVariable> is
-specified. If a <holderVariable> is specified, then the function returns
-empty. 
+If no <holderVariable> is specified, the <revDatabaseColumnNumbered> <function>
+returns text data from the specified field of the current <record>.
+If a <holderVariable> is specified, then the function returns <empty> and the
+text data from the specified field of the current <record> is placed in
+that <variable>.
 
 Description:
 Use the <revDatabaseColumnNumbered> <function> to obtain the contents of
@@ -67,13 +65,12 @@ If the attempt to get the data is not successful, the
 begins with the <string> "revdberr".
 
 >*Important:*  The <revDatabaseColumnNumbered> <function> is part of
-> the 
-> <Database library>. To ensure that the <function> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure both the 
-> "Database" library checkbox and those of the database drivers you are 
+> the <Database library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure both the
+> "Database" library checkbox and those of the database drivers you are
 > using are checked.
 
 Changes:
@@ -82,6 +79,7 @@ in version 2.9.
 
 References: revMoveToLastRecord (command), revMoveToFirstRecord (command),
 revMoveToNextRecord (command), function (control structure),
+empty (constant),
 revDatabaseColumnCount (function), revCurrentRecord (function),
 revDatabaseColumnNamed (function), revDatabaseColumnLengths (function),
 revDatabaseColumnIsNull (function), LiveCode custom library (glossary),
@@ -92,4 +90,3 @@ standalone application (glossary), database field (glossary),
 string (keyword), Database library (library)
 
 Tags: database
-

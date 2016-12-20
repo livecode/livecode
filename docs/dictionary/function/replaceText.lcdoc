@@ -15,19 +15,23 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-replaceText("malformed","mal","well") -- returns "wellformed"
+put replaceText("malformed","mal","well") -- returns "wellformed"
 
 Example:
-replaceText(field "Stats",return,comma) -- makes comma-delimited
+-- change return-delimited text to comma-delimited
+put replaceText(field "Stats",return,comma) into field "Stats"
+
+Example:
+put replaceText("colour or color","colou?r","culler")
+-- returns "culler or culler"
 
 Parameters:
-stringToChange (string):
-
+stringToChange (string): A container reference or literal value.
 
 matchExpression:
 A regular expression.
 
-replacementString (string):
+replacementString (string): A container reference or literal value.
 
 
 Returns:
@@ -37,20 +41,14 @@ Description:
 Use the <replaceText> function to search for and replace text that
 matches a particular pattern.
 
-&nbsp;
-
 The <replaceText> function replaces all the occurrences of the
 <matchExpression> with the <replacementString>. If more than one
 matching substring is found, the <replaceText> function replaces all of
 them. 
 
-&nbsp;
-
 The <replaceText> function is not as fast as the <replace> <command>,
 but is more flexible because you can search for any text that matches a
 <regular expression>.
-
-&nbsp;
 
 The <stringToChange> and <matchExpression> are always case-sensitive,
 regardless of the setting of the <caseSensitive> <property>. (If you
@@ -60,13 +58,12 @@ the <matchExpression> to make the match case-insensitive.)
 >*Note:* A number of characters in regular expressions have special
 > meanings and need to be escaped with back slashes For example period
 > (".") matches any character, so in order to replace period characters
-> with a regular expression use "\." . For more information on regular
-> expressions see the Perl documentation here:
-> &lt;http://perldoc.perl.org/perlre.html&gt; 
-
-&nbsp;
+> with a <regular expression> use "\." . For more information on regular
+> expressions see the Perl documentation at 
+> http://perldoc.perl.org/perlre.html .
 
 References: replace (command), filter (command), command (glossary),
 regular expression (glossary), property (glossary), string (keyword),
 caseSensitive (property)
 
+Tags: text processing

@@ -2731,6 +2731,9 @@ enum Exec_errors
 
 	// {EE-0894} extension: error occured with column
 	EE_EXTENSION_ERROR_COLUMN,
+	
+	// {EE-0895} parentScript: can't change parent while parent script is executing
+	EE_PARENTSCRIPT_EXECUTING,
 };
 
 extern const char *MCexecutionerrors;

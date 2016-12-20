@@ -457,6 +457,43 @@ MCScriptCreateModuleFromData (MCDataRef data,
 	return true;
 }
 
+MC_DLLEXPORT_DEF bool
+MCScriptCreateModulesFromStream(MCStreamRef p_stream,
+                                MCAutoScriptModuleRefArray& x_modules)
+{
+    size_t t_available = 0;
+    do
+    {
+        MCAutoScriptModuleRef t_module;
+
+        if (!MCScriptCreateModuleFromStream(p_stream, &t_module))
+            return false;
+
+        if (!x_modules.Push(*t_module))
+            return false;
+
+        if (!MCStreamGetAvailableForRead(p_stream, t_available))
+            return false;
+    }
+    while (t_available > 0);
+
+    return true;
+}
+
+MC_DLLEXPORT_DEF bool
+MCScriptCreateModulesFromData(MCDataRef p_data,
+                              MCAutoScriptModuleRefArray& x_modules)
+{
+    MCAutoValueRefBase<MCStreamRef> t_stream;
+
+    if (!MCMemoryInputStreamCreate(MCDataGetBytePtr(p_data),
+                                   MCDataGetLength(p_data),
+                                   &t_stream))
+        return false;
+
+    return MCScriptCreateModulesFromStream(*t_stream, x_modules);
+}
+
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
 {
     for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)

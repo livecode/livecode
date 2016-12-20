@@ -252,15 +252,9 @@ public:
         // and casting is required when returning a non-nil handle.
         //
         // The casting here looks evil but is actually well-defined and safe.
-        MCObjectProxyBase*& m_weak_proxy = static_cast<const T*>(this)->MCObject::m_weak_proxy;
-        if (m_weak_proxy == NULL)
-        {
-            m_weak_proxy = new MCObjectProxyBase(const_cast<T*>(static_cast<const T*>(this)));
-            if (!m_weak_proxy)
-                return typename MCObjectProxy<T>::Handle(nil);
-        }
-        
-        return typename MCObjectProxy<T>::Handle(static_cast<MCObjectProxy<T>*>(m_weak_proxy));
+        MCObjectProxyBase*& t_weak_proxy = static_cast<const T*>(this)->MCObject::m_weak_proxy;
+	MCAssert(t_weak_proxy != nil);
+        return typename MCObjectProxy<T>::Handle(static_cast<MCObjectProxy<T>*>(t_weak_proxy));
     }
 };
 
@@ -1666,6 +1660,9 @@ public:
 template <typename T>
 inline T* MCObjectCast(MCObject* p_object)
 {
+    if (p_object == nil)
+        return nil;
+    
     // Check that the object's type matches the (static) type of the desired
     // type. This will break horribly if the desired type has derived types...
     MCAssert(p_object->gettype() == Chunk_term(T::kObjectType));

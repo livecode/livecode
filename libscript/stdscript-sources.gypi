@@ -6,6 +6,7 @@
 		[
 			'src/arithmetic.lcb',
 			'src/array.lcb',
+			'src/assert.lcb',
 			'src/binary.lcb',
 			'src/bitwise.lcb',
 			'src/byte.lcb',
@@ -43,6 +44,7 @@
 		[
 			'src/module-arithmetic.cpp',
 			'src/module-array.cpp',
+			'src/module-assert.cpp',
 			'src/module-binary.cpp',
 			'src/module-bitwise.cpp',
 			'src/module-byte.cpp',

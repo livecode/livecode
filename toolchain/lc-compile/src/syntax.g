@@ -50,7 +50,7 @@
         Id'Name -> Name
         Id'Meaning -> syntax(Info)
         Info'Parent -> ParentId
-        ParentId'Name -> ModuleName
+        GetQualifiedName(ParentId -> ModuleName)
         (|
             where(Class -> phrase)
             BeginPhraseSyntaxRule(ModuleName, Name)
@@ -189,6 +189,7 @@
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 'condition' IsFirstArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
 'condition' IsLastArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
+'action' GetQualifiedName(ID -> NAME)
 
 'action' GenerateSyntaxMethodArgumentsForBootstrap(PARAMETERLIST, SYNTAXCONSTANTLIST)
 

@@ -167,10 +167,29 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 	return false;
 }
 
+static bool
+MCEngineCheckModulesHaveNamePrefix(MCNameRef p_prefix,
+                                   MCSpan<MCScriptModuleRef> p_modules)
+{
+    MCAutoStringRef t_prefix;
+    if (!(MCStringMutableCopy(MCNameGetString(p_prefix), &t_prefix) &&
+          MCStringAppendChar(*t_prefix, '.')))
+        return false;
+
+    while (!p_modules.empty())
+    {
+        if (!MCStringBeginsWith(MCNameGetString(MCScriptGetNameOfModule(*p_modules)),
+                                *t_prefix, kMCStringOptionCompareCaseless))
+            return false;
+        ++p_modules;
+    }
+    return true;
+}
+
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
-    MCAutoScriptModuleRef t_module;
-    if (!MCScriptCreateModuleFromData(p_extension_data, &t_module))
+    MCAutoScriptModuleRefArray t_modules;
+    if (!MCScriptCreateModulesFromData(p_extension_data, t_modules))
     {
         MCAutoErrorRef t_error;
         if (MCErrorCatch(Out(t_error)))
@@ -179,11 +198,34 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
             ctxt . SetTheResultToStaticCString("failed to load module");
         return;
     }
-    
-    MCEngineAddExtensionFromModule(*t_module);
+
+    MCScriptModuleRef t_main = t_modules[0];
+
+    /* Check that the 2nd to Nth modules have names that have the
+     * appropriate prefix */
+    if (!MCEngineCheckModulesHaveNamePrefix(MCScriptGetNameOfModule(t_main),
+                                            t_modules.Span().subspan(1)))
+    {
+        MCAutoStringRef t_message;
+        /* It's probably okay not to check this; failures will be
+         * dealt with by the following MCErrorCatch(). */
+        /*UNCHECKED*/ MCStringFormat(&t_message,
+                                     "failed to load modules: support modules' names did not begin with '%@'",
+                                     MCScriptGetNameOfModule(t_main));
+
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+            ctxt.SetTheResultToValue(MCErrorGetMessage(*t_error));
+        else
+            ctxt.SetTheResultToValue(*t_message);
+    }
+
+    /* Only the head module is registered as an extension */
+    MCEngineAddExtensionFromModule(t_main);
+
     if (p_resource_path != nil)
-        MCEngineAddResourcePathForModule(*t_module, p_resource_path);
-    
+        MCEngineAddResourcePathForModule(t_main, p_resource_path);
+
     return;
 }
 

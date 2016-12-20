@@ -1485,7 +1485,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the inner and outer rects of the
 	//   paragraph.
-	MCRectangle t_outer_rect, t_inner_rect;
+	MCRectangle t_outer_rect(kMCEmptyRectangle);
+	MCRectangle t_inner_rect(kMCEmptyRectangle);
 	computerects(x, y, textwidth, t_paragraph_width, pgheight, t_outer_rect, t_inner_rect); 
 
 	// MW-2012-02-09: [[ ParaStyles ]] Compute the inner rect excluding padding (for
@@ -1653,7 +1654,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				dc -> fillrect(MCU_make_rect(t_outer_rect . x, t_outer_rect . y, t_outer_rect . width, MCMax(gethgrid() ? 1 : 0, t_inner_border_rect . y - t_outer_rect . y)));
 			else
 			{
-				MCRectangle t_prev_inner, t_prev_outer;
+				MCRectangle t_prev_inner(kMCEmptyRectangle);
+				MCRectangle t_prev_outer(kMCEmptyRectangle);
 				prev() -> computerects(x, y, textwidth, prev() -> getwidth(), pgheight, t_prev_outer, t_prev_inner);
 				
 				// MW-2012-02-10: [[ FixedTable ]] The adjustrects method uses both rects so make
