@@ -213,12 +213,7 @@ public:
     
 	~MCAutoValueRefArrayBase(void)
 	{
-        if (m_values != nil)
-        {
-            for (uindex_t i = 0; i < m_value_count; i++)
-                MCValueRelease(m_values[i]);
-            MCMemoryDeleteArray(m_values);
-        }
+		Reset();
 	}
     
 	//////////
@@ -262,6 +257,18 @@ public:
 
 		r_list = t_list;
 		return true;
+	}
+
+	/* Reset the managed array by releasing all the values in the
+	 * array and the underlying array storage. */
+	void Reset()
+	{
+        if (m_values != nil)
+        {
+            for (uindex_t i = 0; i < m_value_count; i++)
+                MCValueRelease(m_values[i]);
+            MCMemoryDeleteArray(m_values);
+        }
 	}
 
 	//////////
