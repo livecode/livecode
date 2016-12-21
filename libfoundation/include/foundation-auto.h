@@ -780,6 +780,15 @@ public:
         m_ptr = value;
     }
 
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release()
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
 	T* operator = (T* value)
 	{
         Reset(value);
@@ -805,8 +814,7 @@ public:
 
 	void Take(T*&r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
 
 private:
@@ -836,6 +844,15 @@ public:
         m_ptr = value;
     }
 
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release()
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
 	T* operator = (T* value)
 	{
         Reset(value);
@@ -861,8 +878,7 @@ public:
 
 	void Take(T* & r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
     
     T& operator [] (size_t x)
