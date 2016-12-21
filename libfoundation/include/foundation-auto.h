@@ -757,6 +757,8 @@ public:
 template<typename T> class MCAutoPointer
 {
 public:
+    typedef T* pointer;
+
 	MCAutoPointer(void)
 	{
 		m_ptr = nil;
@@ -767,16 +769,21 @@ public:
 	{
 	}
 
-	~MCAutoPointer(void)
-	{
-		delete m_ptr;
-	}
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete m_ptr;
+        m_ptr = value;
+    }
 
 	T* operator = (T* value)
 	{
-		delete m_ptr;
-		m_ptr = value;
-		return value;
+        Reset(value);
+        return m_ptr;
 	}
 
 	T*& operator & (void)
@@ -815,14 +822,24 @@ private:
 template<typename T> class MCAutoPointer<T[]>
 {
 public:
+    typedef T* pointer;
+
 	MCAutoPointer(void) : m_ptr(nil) {}
-	~MCAutoPointer(void) { delete[] m_ptr; }
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete[] m_ptr;
+        m_ptr = value;
+    }
 
 	T* operator = (T* value)
 	{
-		delete[] m_ptr;
-		m_ptr = value;
-		return value;
+        Reset(value);
+        return m_ptr;
 	}
 
 	T*& operator & (void)
