@@ -500,7 +500,7 @@ bool MCModeHandleRelaunch(MCStringRef& r_id)
 	bool t_do_relaunch;
 
 	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
-	r_id = MCNameGetString(getname());
+	r_id = MCValueRetain(MCNameGetString(getname()));
 
 	return t_do_relaunch;
 #else
