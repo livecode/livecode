@@ -2,9 +2,7 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot [from rect[angle] <rectangle>] [of <object(glossary)>] [(with | without) effects] <suffix> | [from <object>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
-
-Syntax: export snapshot [from rect[angle] <rectangle>] of <object(glossary)> [(with | without) effects] <suffix> | [from <object>] [at size width, height] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object(glossary)>] | from <object> } [{with | without} effects] [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
@@ -39,6 +37,8 @@ absolute coordinates.
 
 object:
 
+size:
+The width,height of the snapshot in pixels.
 
 metadata (array):
 The <metadata> is an array of metadata. Currently the only key supported
@@ -134,7 +134,7 @@ To export a snapshot of the screen in iOS use the form:
 > includes part of the screen where the status bar is, it will be
 > clipped out.
 
->*Important:*  The 'at size' variant of the export snaptshot command is
+>*Important:*  The 'at size' variant of the export snapshot command is
 > currently only when creating snapshots of objects.
 
 References: export (command), import snapshot (command), select (command),

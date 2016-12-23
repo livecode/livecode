@@ -2,11 +2,11 @@ Name: open socket
 
 Type: command
 
-Syntax: open [datagram] socket [to] <host> [: <port> [| <ID>]] [with message <callbackMessage>]
+Syntax: open [datagram] socket [to] <socketID> [with message <callbackMessage>]
 
-Syntax: open secure socket [to] <host> [: <port> [| <ID>]] [with message <callbackMessage>] [without verification] [using certificate <certificate> and key <key>]
+Syntax: open secure socket [to] <socketID> [with message <callbackMessage>] [without verification] [using certificate <certificate> and key <key>]
 
-Syntax: open secure socket [to] <host> [: <port> [| <ID>]] [with message <callbackMessage>] [with verification [for host <verificationHostName>]] [using certificate <certificate> and key <key>]
+Syntax: open secure socket [to] <socketID> [with message <callbackMessage>] [with verification [for host <verificationHostName>]] [using certificate <certificate> and key <key>]
 
 Summary:
 Establishes a <TCP> communications <socket> between your system and
@@ -47,18 +47,14 @@ on socketFinishedWriting pSocketID
 end socketFinishedWriting
 
 Parameters:
-host:
-The IP address or domain name of the host you want to connect to.
-
-port:
-The port number you want to connect to. If you don't specify a port,
-port 80 is used. (On most systems, port 80 is used for HTTP
-connections.). 
-
-ID:
-An optional connection name for the socket, and can be any string.
-Specify an ID if you want to create more than one socket to the same
-host and port number, so that you can distinguish between them.
+socketID:
+The identifier (set when you opened the socket) of the socket you want
+to close. The socket identifier starts with the IP address of the host
+the socket is connected to, and may optionally include a port number
+(separated from the IP address by a colon). If there is more than one
+socket connected to that host and port, you can specify which socket by
+appending the connection name or number that was assigned when the
+socket was opened, separated from the port number by a vertical bar (|).
 
 callbackMessage:
 The name of a message to be sent when the connection is made.
