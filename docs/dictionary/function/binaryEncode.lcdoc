@@ -28,14 +28,26 @@ charToNum(binaryEncode("B*","01111111")) -- returns 127
 Parameters:
 formatsList:
 The <formatsList> consists of one or more dataTypes, each followed
-optionally by an amount. A dataType is one of the following single
-letters: x: output amount null characters
+optionally by an amount.
 
-dataStringList (string):
-A comma-separated list of dataStrings. Each dataString is a string, or
-an expression that evaluates to a string.
+A dataType is one of the following letters:
 
-amount (enum):
+-    c: encode amount numbers as signed 1-byte integers
+-    C: encode amount numbers as unsigned 1-byte integers
+-    s: encode amount numbers as signed 2-byte integers in host byte order
+-    S: encode amount numbers as unsigned 2-byte integers in host byte order
+-    i: encode amount numbers as signed 4-byte integers in host byte order
+-    I: encode amount numbers as unsigned 4-byte integers in host byte order
+-    n: encode amount numbers as signed 2-byte integers in network byte order
+-    N: encode amount numbers as signed 4-byte integers in network byte order
+-    m: encode amount numbers as unsigned 2-byte integers in network byte order
+-    M: encode amount numbers as unsigned 4-byte integers in network byte order
+-    f: encode amount numbers as single-precision floating-point numbers
+-    d: encode amount numbers as double-precision floating-point numbers
+-    x: encode amount null characters
+
+The amount is an integer or * and specifies the encoding in the
+following way:
 
 -  If the dataType is a, A, b, B, h, or H, the amount specifies the
    number of characters or groups of the dataString to use; extra
@@ -49,22 +61,9 @@ amount (enum):
 -  If the dataType is x, the amount specifies how many nulls to place in
    the returned value.
 
-One of the following items:
--    c: encode amount numbers as signed 1-byte integers
--    C: encode amount numbers as unsigned 1-byte integers
--    s: encode amount numbers as signed 2-byte integers in host byte order
--    S: encode amount numbers as unsigned 2-byte integers in host byte order
--    i: encode amount numbers as signed 4-byte integers in host byte order
--    I: encode amount numbers as unsigned 4-byte integers in host byte order
--    n: encode amount numbers as signed 2-byte integers in network byte order
--    N: encode amount numbers as signed 4-byte integers in network byte order
--    m: encode amount numbers as unsigned 2-byte integers in network byte order
--    M: encode amount numbers as unsigned 4-byte integers in network byte order
--    f: encode amount numbers as single-precision floating-point numbers
--    d: encode amount numbers as double-precision floating-point numbers
- 
-The amount corresponding to each dataType is an integer or the * character:
-
+dataStringList (string):
+A comma-separated list of dataStrings. Each dataString is a string, or
+an expression that evaluates to a string.
 
 Returns:
 The <binaryEncode> <function> <return|returns> the binary string
