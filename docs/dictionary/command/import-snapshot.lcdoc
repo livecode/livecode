@@ -2,7 +2,7 @@ Name: import snapshot
 
 Type: command
 
-Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [(with | without) effects] [at size <width>, <height>]
+Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [{with | without} effects] [at size <size>]
 
 Summary:
 Creates an <image> of a portion of the screen, portion of a stack or a
@@ -42,10 +42,8 @@ absolute coordinates.
 object:
 
 
-width:
-
-
-height:
+size:
+The width,height of the snapshot in pixels.
 
 
 The result:

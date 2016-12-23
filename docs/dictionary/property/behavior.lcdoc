@@ -4,7 +4,7 @@ Synonyms: parentscript
 
 Type: property
 
-Syntax: set the behavior of <object> to [<button> | <stack>]
+Syntax: set the behavior of <object> to {<button> | <stack>}
 
 Summary:
 Allows an <object(glossary)> to inherit its <script> <handler|handlers>
@@ -59,9 +59,7 @@ Behaviors are resolved by LiveCode immediately after loading a stack
 file.  The engine acts as though it is resolving a control reference
 of the form:
 
-    button id <id> of stack <stack name> \
-
-    [ of stack <mainstack name> ]
+    button id <id> of stack <stack name> [ of stack <mainstack name> ]
 
 
 Thus the <stackFiles> property will be searched and stacks loaded into

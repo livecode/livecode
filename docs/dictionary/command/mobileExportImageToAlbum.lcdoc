@@ -4,7 +4,7 @@ Synonyms: iphoneexportimagetoalbum
 
 Type: command
 
-Syntax: mobileExportImageToAlbum [ <imageData> | <image> ] [<fileName>]
+Syntax: mobileExportImageToAlbum { <imageData> | <image> }, [<fileName>]
 
 Summary:
 Saves an image to the user's photo album.
