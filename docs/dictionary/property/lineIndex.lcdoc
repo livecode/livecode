@@ -5,8 +5,7 @@ Type: property
 Syntax: get the lineIndex of <fieldChunk>
 
 Summary:
-The <lineIndex> of a field chunk returns the line offset in the field of
-the start of the chunk.
+The line offset in the field of the start of the chunk.
 
 Associations: field
 
@@ -28,7 +27,10 @@ Example:
 the lineIndex of word 4 of field 1 -- 2
 -- word 4 is on line 2
 
+Description:
+The <lineIndex> of a field chunk returns the line offset in the field of
+the start of the chunk.
+
 References: charIndex (property)
 
 Tags: text processing
-
