@@ -61,13 +61,9 @@ The desired file format to save.
 -   GIF: Graphics Interchange Format
 -   PNG: Portable Network Graphics
 
-
 maskFile:
 Specifies the name and location of a file to export as an image mask.
 You can use a maskFile only when exporting in PBM format (paint).
-
-suffix:
-The usual possible suffixes for the export snapshot command.
 
 Description:
 Use the <export snapshot> <command> to export a screenshot to a <file>
