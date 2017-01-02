@@ -133,6 +133,12 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     }
 
     @Override
+    public int getAudioSessionId()
+    {
+        return 1;
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         Log.i(TAG, "onMeasure");
         int width = getDefaultSize(mVideoWidth, widthMeasureSpec);
@@ -187,7 +193,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mVideoWidth = 0;
         mVideoHeight = 0;
         getHolder().addCallback(mSHCallback);
-        getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        //getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();

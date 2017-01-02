@@ -4194,6 +4194,31 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
         return ES_ERROR;
 }
 
+Exec_stat MCHandleToastMessage(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    MCAutoStringRef t_toast_msg;
+    int32_t t_duration;
+    int32_t* t_duration_ptr = nil;
+
+    if (t_success && p_parameters)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_toast_msg));
+
+    if (t_success && p_parameters)
+        if (MCParseParameters(p_parameters, "i", &t_duration))
+            t_duration_ptr = &t_duration;
+
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt . SetTheResultToEmpty();
+    
+    MCToastMessage(ctxt, *t_toast_msg, t_duration_ptr);
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;    
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -4517,6 +4542,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
     {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
     {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
+
+    {false, "mobileToastMessage", MCHandleToastMessage, nil},
     
 	{nil, nil, nil}    
 };

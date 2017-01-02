@@ -5452,6 +5452,11 @@ void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
 
 ////////////
 
+extern MCExecMethodInfo* kMCToastMessageMethodInfo;
+void MCToastMessage(MCExecContext& ctxt, MCStringRef p_msg, int32_t* p_duration);
+
+////////////
+
 extern MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo;
 
 extern MCExecMethodInfo* kMCSoundExecPlaySoundOnChannelMethodInfo;

@@ -376,6 +376,7 @@
 			'src/exec-strings-chunk.cpp',
 			'src/exec-text.cpp',
 			'src/exec-textmessaging.cpp',
+			'src/exec-toast.cpp',
 			
 			# Group "Foundation"
 			'src/foundation-legacy.h',
@@ -449,6 +450,7 @@
 			'src/mblandroidtextmessaging.cpp',
 			'src/mblandroidtypeface.cpp',
 			'src/mblandroidurl.cpp',
+			'src/mblandroidtoastmessage.cpp',
 			
 			# Group "Mobile - iOS"
 			'src/mbliphone.h',
@@ -875,6 +877,7 @@
 		# Java sources for Android
 		'engine_java_source_files':
 		[
+			'src/java/com/runrev/android/ToastMessage.java',
 			'src/java/com/runrev/android/AccelerationChangeListener.java',
 			'src/java/com/runrev/android/Alert.java',
 			'src/java/com/runrev/android/AttachmentProvider.java',
