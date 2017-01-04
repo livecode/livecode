@@ -579,7 +579,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Run the installer to generate the raw app bundle
    builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
-   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install -ui -log /dev/stderr -location" && escapeArg(tAppBundle))
    if the result is not zero then
       builderLog "error", "Failed to run macosx installer:" && it
       throw "failure"
