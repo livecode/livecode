@@ -828,8 +828,8 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		uint4 t_class_index;
 		t_class_index = 0;
 
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
 
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
@@ -2154,7 +2154,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
 
     // First try a (command) call.
     MCAutoStringRef t_call_error;
-    uint2 t_call_pos;
+    uint2 t_call_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.

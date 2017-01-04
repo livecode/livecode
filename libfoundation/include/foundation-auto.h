@@ -704,6 +704,10 @@ public:
 	{
 		m_string.Reset();
 	}
+	operator bool () const
+	{
+		return m_string.IsSet();
+	}
 	const char_t * operator*() const
 	{
 		MCAssert(MCStringIsNative(*m_string));

@@ -578,7 +578,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 
 void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    bool t_result;
+    bool t_result = false;
     
     // Implementation of 'is [ not ] strictly'
     if (form == IT_STRICTLY || form == IT_NOT_STRICTLY)

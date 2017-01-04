@@ -209,27 +209,22 @@ public:
 			return;
 		
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
-        MCAutoStringRef t_string;
-		const char *t_filename;
-		t_filename = nil;
-		if (m_filename != nil)
-		{
-            if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
-                return;
-
-            char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-			t_filename = temp;
-		}
 
 		const void *t_payload_data;
 		t_payload_data = nil;
 		uint32_t t_payload_size;
 
 		// MM-2011-03-23: If a file is specified, fetch the payload from the file.
-		if(t_filename != nil)
+		if (m_filename != nullptr)
 		{
-			mmap_payload_from_file(t_filename, t_payload_data, t_payload_size);
+            MCAutoStringRef t_string;
+            if (!ctxt.EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+                return;
+
+            MCAutoStringRefAsCString t_filename;
+            /* UNCHECKED */ t_filename.Lock(*t_string);
+
+			mmap_payload_from_file(*t_filename, t_payload_data, t_payload_size);
 			if (t_payload_data == nil)
 			{
 				ctxt . SetTheResultToCString("could not load paylod from file");
@@ -1901,7 +1896,7 @@ static void *MCExecutableFindSection(const char *p_name)
 		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
 			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
@@ -1920,7 +1915,7 @@ static void *MCExecutableFindSection(const char *p_name)
 	// Now we can search for our section
 	void *t_address;
 	t_address = NULL;
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 		if (strcmp(p_name, t_strings + t_sections[i] . sh_name) == 0)
 		{
 			t_address = (void *)t_sections[i] . sh_addr;

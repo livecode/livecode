@@ -894,10 +894,11 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 
 bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 {
-    char *t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, t_string);
-    const char *sptr = t_string;
-	uint4 l = MCStringGetLength(p_string);
+    MCAutoStringRefAsCString t_string;
+    if (!t_string.Lock(p_string))
+        return false;
+    const char *sptr = *t_string;
+    uint4 l = t_string.Size();
 	Boolean done;
 	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
 	if (!done || l == 0)

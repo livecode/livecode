@@ -1269,7 +1269,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_layout_width = parent -> getlayoutwidth();
 	t_para_width = getwidth();
 
-    int32_t t_offset;
+    int32_t t_offset = 0;
 	if (getdontwrap())
 	{
 		switch(gettextalign())
