@@ -102,10 +102,10 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+    : _name(kMCEmptyName)
 {
 	parent = nil;
 	obj_id = 0;
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
 	dflags = 0;
@@ -173,14 +173,14 @@ MCObject::MCObject()
     MCDeletedObjectsOnObjectCreated(this);
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+    : MCDLlist(oref),
+      _name(oref._name)
 {
 	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
-	
-	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
 	rect = oref.rect;
@@ -303,7 +303,6 @@ MCObject::~MCObject()
 	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
-	MCNameDelete(_name);
 	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
@@ -358,14 +357,14 @@ bool MCObject::hasname(MCNameRef p_other_name)
 
 void MCObject::setname(MCNameRef p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameClone(p_new_name, _name);
+	_name.Reset(p_new_name);
 }
 
 void MCObject::setname_cstring(const char *p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	setname(*t_name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
@@ -903,12 +902,14 @@ Boolean MCObject::del(bool p_check_flag)
 
 void MCObject::paste(void)
 {
-	fprintf(stderr, "Object: ERROR tried to paste %s\n", getname_cstring());
+	MCLog("Object: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::undo(Ustruct *us)
 {
-	fprintf(stderr, "Object: ERROR tried to undo %s\n", getname_cstring());
+	MCLog("Object:: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::freeundo(Ustruct *us)
@@ -3177,11 +3178,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	MCNewAutoNameRef t_name;
+	if ((stat = IO_read_nameref_new(&t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
-	MCNameDelete(_name);
-	_name = t_name;
+	setname(*t_name);
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
@@ -3501,7 +3501,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(getname(), stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))

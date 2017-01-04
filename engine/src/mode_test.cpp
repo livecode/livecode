@@ -226,10 +226,14 @@ public:
         MCAutoStringRef t_label;
         if (!ctxt . EvalOptionalExprAsStringRef(m_label, kMCEmptyString, EE_PARAM_BADSOURCE, &t_label))
             return;
+
+        MCAutoStringRefAsCString t_name;
+        if (!t_name.Lock(MCNameGetString(MCdefaultstackptr->getname())))
+            return;
         
         if (m_abort)
         {
-            MCTestDoAbort(MCStringGetCString(*t_label), MCdefaultstackptr -> getname_cstring(), line, true);
+            MCTestDoAbort(MCStringGetCString(*t_label), *t_name, line, true);
             return;
         }
         
@@ -238,9 +242,9 @@ public:
             return;
         
         if (m_type == TYPE_FALSE)
-            MCTestDoAssertTrue(MCStringGetCString(*t_label), t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+            MCTestDoAssertTrue(MCStringGetCString(*t_label), t_value, *t_name, line, true);
         else
-            MCTestDoAssertFalse(MCStringGetCString(*t_label), t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+            MCTestDoAssertFalse(MCStringGetCString(*t_label), t_value, *t_name, line, true);
     }
     
 private:
@@ -490,15 +494,13 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef& r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	const char *t_id;
 
 	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
-	t_id = MCdefaultstackptr -> getname_cstring();
-	r_id = t_id;
+	r_id = MCValueRetain(MCNameGetString(getname()));
 
 	return t_do_relaunch;
 #else

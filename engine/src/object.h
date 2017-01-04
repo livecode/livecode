@@ -515,7 +515,7 @@ class MCObject :
 protected:
 	uint4 obj_id;
 	MCObjectHandle parent;
-	MCNameRef _name;
+	MCNewAutoNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
@@ -801,20 +801,13 @@ public:
 	// Returns true if the object has not been named.
 	bool isunnamed(void) const
 	{
-		return MCNameIsEmpty(_name);
+		return MCNameIsEmpty(getname());
 	}
 
 	// Returns the name of the object.
 	MCNameRef getname(void) const
 	{
-		return _name;
-	}
-
-	const char *getname_cstring(void) const
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
-		return t_name;
+		return *_name;
 	}
 
     /*

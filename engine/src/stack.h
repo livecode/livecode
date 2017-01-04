@@ -838,7 +838,7 @@ public:
 	{
 		if (!MCStringIsEmpty(title))
 			return title;
-		return MCNameGetString(_name);
+		return MCNameGetString(getname());
 	}
 	MCControl *getcontrols()
 	{
