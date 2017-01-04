@@ -884,8 +884,9 @@ command revSBRelativeStackFilesList pStack, @rStackFiles
    local tRelativeStackFiles
    set the itemDelimiter to slash
    put item 1 to -2 of line 1 of tFullStackFiles & "/" into tMainStackPath
-   put the number of chars of tMainStackPath into tChars
+   
    repeat for each line tLine in tFullStackFiles
+      put utilityMakePathRelative(tLine, tMainStackPath) into tLine
       appendToStringList tLine, tRelativeStackFiles
    end repeat
    
