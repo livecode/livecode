@@ -783,7 +783,7 @@ public:
 
     /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
      * null after Release() is called. */
-    pointer Release()
+    pointer Release() ATTRIBUTE_UNUSED
     {
         pointer t_result = m_ptr;
         m_ptr = nullptr;
@@ -864,7 +864,7 @@ public:
 
     /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
      * null after Release() is called. */
-    pointer Release()
+    pointer Release() ATTRIBUTE_UNUSED
     {
         pointer t_result = m_ptr;
         m_ptr = nullptr;
