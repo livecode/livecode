@@ -486,16 +486,20 @@ end patch_string
 private function compare_arrays pA, pALength, pB, pBLength
    local tFP
    local tPath
-   repeat with i = -(pALength + 1) to (pBLength + 1)
-      put -1 into tFP[i]
-   end repeat
    
    local tDelta
    put pBLength - pALength into tDelta
    
+   repeat with i = -1 to tDelta + 1
+      put -1 into tFP[i]
+   end repeat
+   
    local p = -1
    repeat while tFP[tDelta] < pBLength
       add 1 to p
+      
+      put -1 into tFP[-p - 1]
+      put -1 into tFP[tDelta + p + 1]
       
       local tLeft, tRIght, tNext
       repeat with k = -p to tDelta -1
