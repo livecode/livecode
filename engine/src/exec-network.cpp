@@ -332,8 +332,8 @@ void MCNetworkEvalHTTPProxyForURL(MCExecContext& ctxt, MCStringRef p_url, MCStri
     t_arguments[0] = t_url;
     t_arguments[1] = t_host;
 
-	MCAutoPointer<char> t_proxies;
-	t_proxies = s_pac_engine -> Call("__FindProxyForURL", t_arguments, 2);
+    /* UNCHECKED */ MCAutoPointer<char[]> t_proxies =
+        s_pac_engine -> Call("__FindProxyForURL", t_arguments, 2);
 
 	if (*t_proxies != nil)
 		/* UNCHECKED */ MCStringCreateWithCString(*t_proxies, r_proxy);
