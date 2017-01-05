@@ -2861,7 +2861,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 		r_count = 1;
 	}
 	else
-		MCImageFreeFrames(r_frames, 1);
+		MCImageFreeFrames(t_frame, 1);
 
 	return t_success;
 }
