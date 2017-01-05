@@ -1002,8 +1002,9 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         // We need arity + 1 ffi_type slots, as we use the first slot to store
         // the return type (if any).
-        ffi_type **t_ffi_arg_types;
-        if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
+        MCAutoPointer<ffi_type*[]> t_ffi_arg_types =
+            new (std::nothrow) ffi_type*[t_arity + 1];
+        if (!t_ffi_arg_types)
             return false;
         
         t_ffi_arg_types[0] = t_ffi_return_type;
@@ -1030,7 +1031,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
                 t_ffi_arg_types[i + 1] = &ffi_type_pointer;
         }
         
-        self -> handler . layout_args = (void **)t_ffi_arg_types;
+        self -> handler . layout_args = t_ffi_arg_types.Release();
     }
     
     // Now we must create a new layout object.
@@ -1040,7 +1041,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
 
 	t_layout -> abi = p_abi;
     
-    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
+    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, self -> handler . layout_args[0], self -> handler . layout_args + 1) != FFI_OK)
     {
         MCMemoryDeallocate(t_layout);
         return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
@@ -1257,7 +1258,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         }
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
-        MCMemoryDeleteArray(self -> handler . layout_args);
+        delete[] self -> handler . layout_args;
         while(self -> handler . layouts != nil)
         {
             MCHandlerTypeLayout *t_layout;
