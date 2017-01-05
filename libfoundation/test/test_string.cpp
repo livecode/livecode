@@ -143,14 +143,16 @@ static void check_bidi_of_surrogate_range(int p_lower, int p_upper)
 {
     int t_size = p_upper - p_lower;
 
-    unichar_t t_pua_chars[t_size * 2];
+		MCAutoArray<unichar_t> t_pua_chars;
+		ASSERT_TRUE(t_pua_chars.Resize(t_size * 2));
     for(int i = 0; i < t_size; i++)
     {
-        MCUnicodeCodepointToSurrogates(i + p_lower, t_pua_chars + i * 2);
+        MCUnicodeCodepointToSurrogates(i + p_lower, t_pua_chars.Ptr() + i * 2);
     }
 
-    uint8_t t_props[t_size];
-    MCUnicodeGetProperty(t_pua_chars, t_size, kMCUnicodePropertyBidiClass, kMCUnicodePropertyTypeUint8, t_props);
+		MCAutoArray<uint8_t> t_props;
+		ASSERT_TRUE(t_props.Resize(t_size));
+    MCUnicodeGetProperty(t_pua_chars.Ptr(), t_size, kMCUnicodePropertyBidiClass, kMCUnicodePropertyTypeUint8, t_props.Ptr());
 
     for(int i = 0; i < t_size; i++)
     {
@@ -167,7 +169,7 @@ TEST(string, surrogate_unicode_props)
     const int kSPUA_A_Lower = 0xF0000;
     const int kSPUA_A_Upper = 0xFFFFD + 1; // non-inclusive
     check_bidi_of_surrogate_range(kSPUA_A_Lower, kSPUA_A_Upper);
-    
+
     const int kSPUA_B_Lower = 0x100000;
     const int kSPUA_B_Upper = 0x10FFFD + 1; // non-inclusive
     check_bidi_of_surrogate_range(kSPUA_B_Lower, kSPUA_B_Upper);
