@@ -794,6 +794,12 @@ public:
      * there is no managed pointer. */
     pointer Get() { return m_ptr; }
 
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
+
 	T* operator = (T* value)
 	{
         Reset(value);
@@ -871,6 +877,12 @@ public:
     /* Return the pointer managed by the MCAutoPointer, or nullptr if
      * there is no managed pointer. */
     pointer Get() { return m_ptr; }
+
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
 
 	T* operator = (T* value)
 	{
