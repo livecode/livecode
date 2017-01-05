@@ -803,12 +803,6 @@ public:
         return *this;
     }
 
-	T* operator = (T* value)
-	{
-        Reset(value);
-        return m_ptr;
-	}
-
 	T*& operator & (void)
 	{
 		MCAssert(m_ptr == nil);
@@ -889,12 +883,6 @@ public:
         Reset(other.Release());
         return *this;
     }
-
-	T* operator = (T* value)
-	{
-        Reset(value);
-        return m_ptr;
-	}
 
 	T*& operator & (void)
 	{
