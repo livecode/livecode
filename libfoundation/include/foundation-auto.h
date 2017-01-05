@@ -759,15 +759,16 @@ template<typename T> class MCAutoPointer
 public:
     typedef T* pointer;
 
-	MCAutoPointer(void)
-	{
-		m_ptr = nil;
-	}
-	
-	MCAutoPointer(T* value)
-		: m_ptr(value)
-	{
-	}
+    MCAutoPointer() : m_ptr(nullptr) {}
+
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
 
     ~MCAutoPointer() { Reset(); }
 
@@ -832,7 +833,17 @@ template<typename T> class MCAutoPointer<T[]>
 public:
     typedef T* pointer;
 
-	MCAutoPointer(void) : m_ptr(nil) {}
+    MCAutoPointer() : m_ptr(nullptr) {}
+
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
+
     ~MCAutoPointer() { Reset(); }
 
     /* Destroy the managed pointer, and take ownership of the value
