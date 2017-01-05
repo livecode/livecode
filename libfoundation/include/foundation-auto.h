@@ -790,6 +790,9 @@ public:
         return t_result;
     }
 
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+
     /* Return the pointer managed by the MCAutoPointer, or nullptr if
      * there is no managed pointer. */
     pointer Get() { return m_ptr; }
@@ -873,6 +876,9 @@ public:
         m_ptr = nullptr;
         return t_result;
     }
+
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
 
     /* Return the pointer managed by the MCAutoPointer, or nullptr if
      * there is no managed pointer. */
