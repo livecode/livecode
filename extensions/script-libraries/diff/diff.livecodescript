@@ -512,8 +512,26 @@ private function compare_arrays pA, pALength, pB, pBLength
       
    end repeat
    
-   return tPath[tDelta]
+   return add_content_to_edits(tPath[tDelta], pA, pB)
 end compare_arrays
+
+private function add_content_to_edits pEdits, pA, pB
+   local tEdits
+   repeat for each line tEdit in pEdits
+      local tA, tB, tOperation
+      put item 2 of tEdit into tOperation
+      local tContent
+      if tOperation is kDiffOperationAdd then
+         put item 3 of tEdit into tB
+         put pB[tB] into tContent
+      else
+         put item 1 of tEdit into tA
+         put pA[tA] into tContent
+      end if
+      put tEdit,tContent & return after tEdits
+   end repeat
+   return tEdits
+end add_content_to_edits
 
 private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
    local tLeft, tRight, tNext, tPrevPath, tOperation, tContent
@@ -523,16 +541,14 @@ private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
       put pPath[k - 1] into tPrevPath
       put kDiffOperationAdd into tOperation
       put tLeft into tNext
-      put pB[tNext] into tContent
    else
       put pPath[k + 1] into tPrevPath
       put kDiffOperationDelete into tOperation
       put tRight into tNext
-      put pA[tNext - k] into tContent
    end if
    
    if k > 0 or tNext > 0 then
-      put tPrevPath & format_edit(tNext - k, tNext, tOperation, tContent) & return into pPath[k]
+      put tPrevPath & tNext-k,tOperation,tNext & cr into pPath[k]
    end if
    local tP
    put snake(pA, pALength, pB, pBLength, k, tNext) into pFP[k]
