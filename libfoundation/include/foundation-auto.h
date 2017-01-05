@@ -790,6 +790,10 @@ public:
         return t_result;
     }
 
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+
 	T* operator = (T* value)
 	{
         Reset(value);
@@ -863,6 +867,10 @@ public:
         m_ptr = nullptr;
         return t_result;
     }
+
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
 
 	T* operator = (T* value)
 	{
