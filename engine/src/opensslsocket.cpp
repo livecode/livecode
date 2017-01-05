@@ -1128,8 +1128,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
     
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
-    MCAutoPointer<char_t[]> t_port_chars;
-    t_port_chars = new (nothrow) char_t[U2L];
+    /* UNCHECKED */ MCAutoPointer<char_t[]> t_port_chars = new (nothrow) char_t[U2L];
     t_length = sprintf((char *)(*t_port_chars), "%d", port);
 
 	MCNewAutoNameRef t_portname;

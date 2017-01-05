@@ -2226,11 +2226,11 @@ bool MCUnicodeCanBreakWordBetween(uinteger_t xc, uinteger_t x, uinteger_t y, uin
 bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bool p_source_native, const void *pattern_chars, uindex_t pattern_length, bool p_pattern_native, MCUnicodeCompareOption p_option)
 {
     // Set up the filter chains for the strings
-	MCAutoPointer<MCTextFilter> t_source_filter;
-	t_source_filter = MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_source_filter =
+        MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
 	
-	MCAutoPointer<MCTextFilter> t_pattern_filter;
-	t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_pattern_filter =
+        MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
     
     codepoint_t t_source_cp, t_pattern_cp;
     
