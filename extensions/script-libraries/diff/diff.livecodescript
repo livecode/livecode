@@ -551,7 +551,18 @@ private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
       put tPrevPath & tNext-k,tOperation,tNext & cr into pPath[k]
    end if
    local tP
-   put snake(pA, pALength, pB, pBLength, k, tNext) into pFP[k]
+   --put snake(pA, pALength, pB, pBLength, k, tNext) into pFP[k]
+   
+   -- inline snake function
+   set the caseSensitive to true
+   set the formSensitive to true
+   local tLimit
+   put min(pALength + k, pBLength) into tLimit
+   repeat while (tNext < tLimit) and pA[tNext - k + 1] is pB[tNext + 1]
+      add 1 to tNext
+   end repeat
+   
+   put tNext into pFP[k]
 end compare_diagonal
 
 private function snake @pA, pALength, @pB, pBLength, k, y
