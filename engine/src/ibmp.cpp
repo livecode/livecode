@@ -885,22 +885,28 @@ static void bmp_convert_bitfield_row(uint32_t *p_dst, const uint8_t *p_src, uint
 
 bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uindex_t p_depth, uint32_t p_a_mask, uint32_t p_r_mask, uint32_t p_g_mask, uint32_t p_b_mask, bool p_top_down)
 {
-	bool t_success = true;
-
 	uindex_t t_src_stride = MCBMPStride(p_bitmap->width, p_depth);
-	uint8_t *t_src_buffer = nil;
 	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
 
 	if (!p_top_down)
 		t_dst_ptr += (p_bitmap->height - 1) * p_bitmap->stride;
 
-	t_success = MCMemoryNewArray(t_src_stride, t_src_buffer);
+    MCAutoPointer<uint8_t[]> t_src_buffer = new (std::nothrow) uint8_t[t_src_stride];
+    if (!t_src_buffer)
+    {
+        return false;
+    }
 
-	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
+	for (uindex_t y = 0; y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
-		if (t_success)
-			bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer, p_bitmap->width, p_depth, p_a_mask, p_r_mask, p_g_mask, p_b_mask);
+        if (IO_NORMAL != MCS_readfixed(t_src_buffer.Get(), t_src_stride, p_stream))
+        {
+            return false;
+        }
+
+        bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer.Get(),
+                                 p_bitmap->width, p_depth,
+                                 p_a_mask, p_r_mask, p_g_mask, p_b_mask);
 
 		if (p_top_down)
 			t_dst_ptr += p_bitmap->stride;
@@ -908,10 +914,9 @@ bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImage
 			t_dst_ptr -= p_bitmap->stride;
 	}
 
-	if (t_success)
-		x_bytes_read += t_src_stride * p_bitmap->height;
+    x_bytes_read += t_src_stride * p_bitmap->height;
 
-	return t_success;
+    return true;
 }
 
 bool bmp_read_rgb_bitfields(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t &r_r_mask, uint32_t &r_g_mask, uint32_t &r_b_mask)
