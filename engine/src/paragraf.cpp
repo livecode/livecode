@@ -522,14 +522,13 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 				case OT_BLOCK:
 				case OT_BLOCK_EXT:
 				{
-					MCBlock *newblock = new (nothrow) MCBlock;
+					MCAutoPointer<MCBlock> newblock = new (nothrow) MCBlock;
 					newblock->setparent(this);
 					
 					// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
 					//   extended block, then pass in 'true' for is_ext.
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
-						delete newblock;
 						return checkloadstat(IO_ERROR);
 					}
 					
@@ -630,7 +629,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
                         // Fix the indices used by the block
                         newblock->SetRange(t_index, len);
 					}
-					newblock->appendto(blocks);
+					newblock.Release()->appendto(blocks);
 				}
 					break;
 				default:
