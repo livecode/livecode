@@ -1511,6 +1511,11 @@ void MCStack::paste(void)
 	open();
 }
 
+bool MCStack::hasstack()
+{
+    return true;
+}
+
 MCStackHandle MCStack::getstack()
 {
 	return GetHandle();
