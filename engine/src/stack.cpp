@@ -1377,7 +1377,13 @@ Boolean MCStack::del(bool p_check_flag)
 {
     if (!isdeletable(true))
 	   return False;
-    
+
+	while (substacks)
+	{
+		if (!substacks -> del(p_check_flag))
+			return False;
+	}
+	
     MCscreen->ungrabpointer();
     MCdispatcher->removemenu();
     
@@ -1448,25 +1454,6 @@ Boolean MCStack::del(bool p_check_flag)
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
-}
-
-void MCStack::scheduledelete(bool p_is_child)
-{
-	// Forcibly close all substacks
-	MCStack* t_substack = substacks;
-	if (t_substack)
-	{
-		do
-		{
-			while (t_substack->opened)
-				t_substack->close();
-
-			t_substack = t_substack->next();
-		} while (t_substack != substacks);
-	}
-
-	// Continue with the deletion
-	MCObject::scheduledelete(p_is_child);
 }
 
 void MCStack::paste(void)
