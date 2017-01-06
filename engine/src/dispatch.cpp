@@ -1473,7 +1473,7 @@ void MCDispatch::wmdragenter(Window w)
     MCdragboard->PullUpdates();
 
     // Change the mouse focus to the stack that has had the drag enter it
-	if (MCmousestackptr && target != MCmousestackptr)
+	if (MCmousestackptr && !MCmousestackptr.IsBoundTo(target))
 		MCmousestackptr -> munfocus();
 
 	MCmousestackptr = target;
@@ -1507,7 +1507,7 @@ void MCDispatch::wmdragleave(Window w)
 {
     // No stacks have mouse focus now
     MCStack *target = findstackd(w);
-	if (target != NULL && target == MCmousestackptr)
+	if (target != nullptr && MCmousestackptr.IsBoundTo(target))
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = nil;
