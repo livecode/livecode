@@ -1490,14 +1490,15 @@ bool cgi_initialize()
 	
 	s_cgi_upload_temp_dir = MCValueRetain(kMCEmptyString);
 	s_cgi_temp_dir = MCValueRetain(kMCEmptyString);
-	// need to ensure PATH_TRANSLATED points to the script and PATH_INFO contains everything that follows
-	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
 	MCAutoStringRef t_env;
-
+    
+    // SN-2017-01-06: [[ Bug 19050 ]] Use SCRIPT_FILENAME, which contains the
+    // correct absolute path to the CGI script, instead of fiddling and
+    // tampering with PATH_TRANSLATED
 	if (t_success)
-		t_success = MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env);
+		t_success = MCS_getenv(MCSTR("SCRIPT_FILENAME"), &t_env);
 	if (t_success)
 		t_success = MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 
