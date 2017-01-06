@@ -113,7 +113,10 @@ MCStackIdCache::~MCStackIdCache(void)
 			continue;
 		
 		MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[i]);
-		t_handle -> setinidcache(false);
+        // Not all deletions route through del, so we may have invalid
+        // objects in the cache
+        if (t_handle . IsValid())
+            t_handle -> setinidcache(false);
 		t_handle.ExternalRelease();
 	}
 	
