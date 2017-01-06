@@ -765,7 +765,7 @@ void MCStack::close()
 	{
 		seticonic(false);
 	}
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 	{
 		MCmousestackptr = nil;
 		int2 x, y;
@@ -1144,7 +1144,7 @@ void MCStack::mfocustake(MCControl *target)
 
 void MCStack::munfocus(void)
 {
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 		MCmousestackptr = nil;
 	if (curcard != 0)
 	{
@@ -1176,7 +1176,7 @@ Boolean MCStack::mup(uint2 which, bool p_release)
 	Boolean handled = curcard->mup(which, p_release);
 	// MW-2010-07-06: [[ Bug ]] We should probably only mfocus the card if this
 	//   stack is still the mouse stack.
-	if (opened && mode < WM_PULLDOWN && MCmousestackptr == this)
+	if (opened && mode < WM_PULLDOWN && MCmousestackptr.IsBoundTo(this))
 		curcard->mfocus(MCmousex, MCmousey);
 	return handled;
 }
