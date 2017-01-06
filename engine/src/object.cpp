@@ -2336,7 +2336,9 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCAutoPointer<char[]> tmptypestring;
     if (parent && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
-        tmptypestring = new (nothrow) char[strlen(itypestring) + 7];
+        tmptypestring.Reset(new (nothrow) char[strlen(itypestring) + 7]);
+        if (!tmptypestring)
+            return false;
         if (parent->gettype() == CT_GROUP)
             sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
         else

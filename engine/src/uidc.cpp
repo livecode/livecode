@@ -1642,8 +1642,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 		return false;
 
     uint4 slength = strlen(*t_cstring);
-    MCAutoPointer<char[]> startptr;
-    startptr = new (nothrow) char[slength + 1];
+    /* UNCHECKED */ MCAutoPointer<char[]> startptr = new (nothrow) char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);
 

@@ -825,10 +825,9 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         stacks->setparent(this);
         stacks->setname_cstring("revScript");
         uint4 size = (uint4)MCS_fsize(stream);
-        MCAutoPointer<char> script;
-        script = new (nothrow) char[size + 2];
-        (*script)[size] = '\n';
-        (*script)[size + 1] = '\0';
+        /* UNCHECKED */ MCAutoPointer<char[]> script = new (nothrow) char[size + 2];
+        script[size] = '\n';
+        script[size + 1] = '\0';
         if (IO_read(*script, size, stream) != IO_NORMAL)
             return IO_ERROR;
         MCAutoStringRef t_script_str;

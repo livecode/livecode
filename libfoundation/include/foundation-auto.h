@@ -213,12 +213,7 @@ public:
     
 	~MCAutoValueRefArrayBase(void)
 	{
-        if (m_values != nil)
-        {
-            for (uindex_t i = 0; i < m_value_count; i++)
-                MCValueRelease(m_values[i]);
-            MCMemoryDeleteArray(m_values);
-        }
+		Reset();
 	}
     
 	//////////
@@ -262,6 +257,18 @@ public:
 
 		r_list = t_list;
 		return true;
+	}
+
+	/* Reset the managed array by releasing all the values in the
+	 * array and the underlying array storage. */
+	void Reset()
+	{
+        if (m_values != nil)
+        {
+            for (uindex_t i = 0; i < m_value_count; i++)
+                MCValueRelease(m_values[i]);
+            MCMemoryDeleteArray(m_values);
+        }
 	}
 
 	//////////
@@ -754,27 +761,51 @@ public:
 template<typename T> class MCAutoPointer
 {
 public:
-	MCAutoPointer(void)
-	{
-		m_ptr = nil;
-	}
-	
-	MCAutoPointer(T* value)
-		: m_ptr(value)
-	{
-	}
+    typedef T* pointer;
 
-	~MCAutoPointer(void)
-	{
-		delete m_ptr;
-	}
+    MCAutoPointer() : m_ptr(nullptr) {}
 
-	T* operator = (T* value)
-	{
-		delete m_ptr;
-		m_ptr = value;
-		return value;
-	}
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
+
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete m_ptr;
+        m_ptr = value;
+    }
+
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
 
 	T*& operator & (void)
 	{
@@ -795,8 +826,7 @@ public:
 
 	void Take(T*&r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
 
 private:
@@ -812,15 +842,51 @@ private:
 template<typename T> class MCAutoPointer<T[]>
 {
 public:
-	MCAutoPointer(void) : m_ptr(nil) {}
-	~MCAutoPointer(void) { delete[] m_ptr; }
+    typedef T* pointer;
 
-	T* operator = (T* value)
-	{
-		delete[] m_ptr;
-		m_ptr = value;
-		return value;
-	}
+    MCAutoPointer() : m_ptr(nullptr) {}
+
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
+
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete[] m_ptr;
+        m_ptr = value;
+    }
+
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
 
 	T*& operator & (void)
 	{
@@ -841,8 +907,7 @@ public:
 
 	void Take(T* & r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
     
     T& operator [] (size_t x)

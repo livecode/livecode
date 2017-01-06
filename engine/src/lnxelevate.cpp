@@ -208,7 +208,6 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 		t_success = MCCStringTokenize(*t_command, t_argv, t_argc);
 
 	MCAutoPointer<char> t_fifo_name;
-	t_fifo_name = nil;
 	if (t_success)
 		t_success = make_tmp_fifo_pair(&t_fifo_name);
 		
