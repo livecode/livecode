@@ -338,18 +338,19 @@ bool MCSessionReadSession(MCSession *p_session)
 
 bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
-	MCAutoStringRef t_remote_addr_str;
-	
-	const char *t_remote_addr = NULL;
+	MCAutoStringRef t_remote_addr;
 
-	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_str))
-		t_remote_addr = "";
-	else
-		t_remote_addr = MCStringGetCString(*t_remote_addr_str);
+	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr))
+        t_remote_addr.Reset(kMCEmptyString);
 
 	for (uint32_t i = 0; i < p_index->session_count; i++)
 	{
-		if (MCStringIsEqualToCString(p_session_id, p_index->session[i]->id, kMCCompareExact) && MCCStringEqual(p_index->session[i]->ip, t_remote_addr))
+        if (MCStringIsEqualToCString(p_session_id,
+                                     p_index->session[i]->id,
+                                     kMCCompareExact) &&
+            MCStringIsEqualToCString(*t_remote_addr,
+                                     p_index->session[i]->ip,
+                                     kMCCompareExact))
 		{
 			r_session = p_index->session[i];
 			return true;
