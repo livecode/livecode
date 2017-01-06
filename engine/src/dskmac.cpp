@@ -5995,26 +5995,3 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
     delete t_doc;
 
 }
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	CFUUIDRef t_uuid;
-	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-	if (t_uuid != NULL)
-	{
-		CFStringRef t_uuid_string;
-		
-		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-		if (t_uuid_string != NULL)
-		{
-			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-			CFRelease(t_uuid_string);
-		}
-		
-		CFRelease(t_uuid);
-        
-		return true;
-	}
-    
-	return false;
-}

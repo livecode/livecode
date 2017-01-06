@@ -169,8 +169,6 @@ extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
-bool MCS_generate_uuid(char buffer[128]);
-
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 
 ///////////////////////////////////////////////////////////////////////////////

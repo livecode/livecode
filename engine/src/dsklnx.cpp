@@ -517,38 +517,6 @@ static void handle_signal(int sig)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_generate_uuid(char p_buffer[128])
-{
-    typedef void (*uuid_generate_ptr)(unsigned char uuid[16]);
-    typedef void (*uuid_unparse_ptr)(unsigned char uuid[16], char *out);
-    static void *s_uuid_generate = NULL, *s_uuid_unparse = NULL;
-
-    if (s_uuid_generate == NULL && s_uuid_unparse == NULL)
-    {
-        void *t_libuuid;
-        t_libuuid = dlopen("libuuid.so", RTLD_LAZY);
-        if (t_libuuid == NULL)
-            t_libuuid = dlopen("libuuid.so.1", RTLD_LAZY);
-        if (t_libuuid != NULL)
-        {
-            s_uuid_generate = dlsym(t_libuuid, "uuid_generate");
-            s_uuid_unparse = dlsym(t_libuuid, "uuid_unparse");
-}
-    }
-
-    if (s_uuid_generate != NULL && s_uuid_unparse != NULL)
-    {
-        unsigned char t_uuid[16];
-        ((uuid_generate_ptr)s_uuid_generate)(t_uuid);
-        ((uuid_unparse_ptr)s_uuid_unparse)(t_uuid, p_buffer);
-        return true;
-    }
-
-    return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
