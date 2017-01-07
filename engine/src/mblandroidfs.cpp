@@ -194,7 +194,7 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 			t_more_entries = false;
 		}
 
-		if (!MCU_stoi4(t_fsize, t_size) && MCU_stob(t_ffolder, t_is_folder))
+		if ( MCU_stob(t_ffolder, t_is_folder) && !MCU_stoi4(t_fsize, t_size))
 			return false;
 
 		// SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
