@@ -1319,7 +1319,7 @@
 	'rule' ResolveIdInNamespace(nil, Id -> Name):
 		Id'Name -> Name
 
-'action' ResolveNamespace(OPTIONALID -> NAME)
+'condition' ResolveNamespace(OPTIONALID -> NAME)
 
 	'rule' ResolveNamespace(id(NamespaceId) -> Name):
 		GetQualifiedName(NamespaceId -> Name)

@@ -628,7 +628,7 @@
 
 --------------------------------------------------------------------------------
 
-'action' ResolveNamespace(OPTIONALID -> NAME)
+'condition' ResolveNamespace(OPTIONALID -> NAME)
 
 'action' DeclareImportedId(ID, ID)
 
