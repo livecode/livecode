@@ -1,16 +1,16 @@
 /* Copyright (C) 2003-2015 LiveCode Ltd.
- 
+
  This file is part of LiveCode.
- 
+
  LiveCode is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License v3 as published by the Free
  Software Foundation.
- 
+
  LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
  WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
@@ -63,11 +63,16 @@ public foreign handler MCEngineRemoveRunloopAction(in pAction as MCRunloopAction
 public foreign handler MCEngineRunloopWait() returns CBool binds to "<builtin>"
 public foreign handler MCEngineRunloopBreakWait() returns nothing binds to "<builtin>"
 
+public foreign handler MCEngineEvalTheColumnDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheRowDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheLineDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheItemDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+
 /**
 Summary:	Resolves a string to a script object.
 Object:		The string describing the script object.
 
-The result:	The resolved script object. 
+The result:	The resolved script object.
 
 Example:
 	variable tObject as ScriptObject
@@ -78,8 +83,8 @@ Example:
 		log the result
 	else
 		log "No such button"
-	end if	
-	
+	end if
+
 Description:
 Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
 
@@ -107,8 +112,8 @@ Example:
 		set property "name" of tObject to "Card5"
 	else
 		log "No such card"
-	end if	
-	
+	end if
+
 Description:
 Use to test the existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject | resolve script object>
 
@@ -133,8 +138,8 @@ Example:
 	put the result into tObject
 	if tObject does not exist then
 		log "No such card"
-	end if	
-	
+	end if
+
 Description:
 Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject|resolve script object>
 
@@ -162,7 +167,7 @@ Example:
 	resolve script object "this stack"
 	set property "invisible" of the result to true
     get property "script" of my script object
-	
+
 Description:
 Use to manipulate properties of a script object.
 
@@ -251,7 +256,7 @@ Example:
 		// Send a message to the script so it can handle it.
 		send "buttonClicked" to my script object
 	end handler
-	
+
 Example:
 	// myScriptFunction takes three arguments and performs some kind of calculation
 
@@ -259,9 +264,9 @@ Example:
 	resolve script object "this stack"
 	put the result into tObject
 	send function "myScriptFunction" to tObject with [ 2, 3, 4 ]
-	
+
 	// the result contains the return value of 'myScriptFunction'
-    
+
 Description:
 Sends a message to the given script object and waits for it to finish so that it
 can return a value.
@@ -290,7 +295,7 @@ Example:
 		// Send a message to the script so it can handle it.
 		post "buttonClicked" to my script object
 	end handler
-    
+
 Description:
 Post a message to the given script object and returns immediately. Posting a message
 will cause the message to be sent at the next wait point (usually when the current
@@ -311,10 +316,10 @@ Example:
 		dispatch "buttonClicked" to my script object
 		if the message was handled then
 			return
-		end if	
+		end if
 		log "The message was not handled"
 	end handler
-	
+
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
 */
@@ -333,9 +338,9 @@ Example:
 		dispatch "buttonClicked" to my script object
 		if the message was not handled then
 			log "The message was not handled"
-		end if	
+		end if
 	end handler
-	
+
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
 */
@@ -382,10 +387,10 @@ Example:
 	variable tList as List
 	get property "name" of my script object
 	push the result onto tList
-	
+
 	get property "id" of my script object
 	push the result onto tList
-	
+
 	log "Widget %@ has id %@" with tList
 
 Description:
@@ -404,6 +409,70 @@ syntax Log is statement
 begin
     MCEngineExecLog(Message)
     MCEngineExecLogWithValues(Message, Arguments)
+end syntax
+
+/**
+Summary: 	Fetches the 'columnDelimiter' property from script context
+
+Example:
+	split tString by the column delimiter
+
+Description:
+Fetches the calling (script) handler's columnDelimiter property. If there is no
+script context, then it returns tab.
+*/
+syntax TheColumnDelimiter is expression
+    "the" "column" "delimiter"
+begin
+    MCEngineEvalTheColumnDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the 'rowDelimiter' property from script context
+
+Example:
+	split tString by the row delimiter
+
+Description:
+Fetches the calling (script) handler's rowDelimiter property. If there is no
+script context, then it returns lf.
+*/
+syntax TheRowDelimiter is expression
+    "the" "row" "delimiter"
+begin
+    MCEngineEvalTheRowDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the 'lineDelimiter' property from script context
+
+Example:
+	split tString by the line delimiter
+
+Description:
+Fetches the calling (script) handler's lineDelimiter property. If there is no
+script context, then it returns lf.
+*/
+syntax TheLineDelimiter is expression
+    "the" "line" "delimiter"
+begin
+    MCEngineEvalTheLineDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the 'itemDelimiter' property from script context
+
+Example:
+	split tString by the item delimiter
+
+Description:
+Fetches the calling (script) handler's itemDelimiter property. If there is no
+script context, then it returns comma.
+*/
+syntax TheItemDelimiter is expression
+    "the" "item" "delimiter"
+begin
+    MCEngineEvalTheItemDelimiter(output)
 end syntax
 
 end module
