@@ -4,7 +4,7 @@ Synonyms: itemdel
 
 Type: property
 
-Syntax: set the itemDelimiter to <character|character(s)>
+Syntax: set the itemDelimiter to <character(s)>
 
 Summary:
 Specifies the <character|character(s)> used to separate <items> in

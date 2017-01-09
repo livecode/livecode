@@ -4,7 +4,7 @@ Synonyms: linedel
 
 Type: property
 
-Syntax: set the lineDelimiter to <character|character(s)>
+Syntax: set the lineDelimiter to <character(s)>
 
 Summary:
 Specifies the <character|character(s)> used to separate <lines> in

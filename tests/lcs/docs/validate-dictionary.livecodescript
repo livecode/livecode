@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 constant kAPITypes = "command,function,property,message,constant,keyword,control structure,operator,statement,expression"
 constant kGlossaryTypes = "library,glossary,object,widget"
 constant kOS = "iOS,Android,Mac,Windows,Linux,RPi,html5"
+constant kPlatform = "desktop,mobile,server,filemaker"
       
 on TestSetup
    -- Only run these tests on desktop platforms
@@ -115,12 +116,9 @@ command __TestDocsLibraryArray pLibrary
             add 1 to tIndex
          end repeat
          
-         /* UNCOMMENT WHEN WE HAVE TIME TO FIX
-         
          -- test summary required
          TestAssert "summary of" && tElement["display name"] && tElement["type"] && "not empty", tElement["summary"] is not empty
          
-         */
       end if
       
       -- !TODO test associations are valid
@@ -226,53 +224,43 @@ command __TestDocsLibraryArray pLibrary
          end repeat
       end if
       
-      -- test parameters
-      local tDocumentedParams
-      repeat for each element tValue in tElement["params"] 
-         put true into tDocumentedParams[tValue["name"]]
-      end repeat
-      
-      local tUnion
-      put tDocumentedParams into tUnion
-      union tUnion with tSyntaxParams
-      
-      local tParam, tType
-      repeat for each key tParam in tUnion
+      -- skip parameter tests for properties
+      if tElement["type"] is not "property" then
          
-         local tParamInGlossary
-         put false into tParamInGlossary
+         -- test parameters
+         local tDocumentedParams
+         repeat for each element tValue in tElement["params"] 
+            put true into tDocumentedParams[tValue["name"]]
+         end repeat
          
-         -- determine if the param specified a type
-         SplitParam tParam
-         if tParam[2] is empty then
-            repeat for each item tType in kGlossaryTypes
-               if not tParamInGlossary then 
-                  put not tReferences[tType][tParam[1]] into tParamInGlossary
-               end if
-            end repeat
-         else
-            put not tReferenes[tParam[2]][tParam[1]] into tParamInGlossary
-         end if
+         local tUnion
+         put tDocumentedParams into tUnion
+         union tUnion with tSyntaxParams
          
-         /* UNCOMMENT WHEN WE HAVE TIME TO FIX
+         local tParam, tType
+         repeat for each key tParam in tUnion
+            
+            local tParamInGlossary
+            put false into tParamInGlossary
+            
+            -- determine if the param specified a type
+            SplitParam tParam
+            
+            -- params in syntax section may be documented in glossary
+            TestAssert "param" && tParam[1] && "in param section" && tElement["display name"] && tElement["Type"], tDocumentedParams[tParam[1]] -- or tParamInGlossary
+            
+            -- params in param section should be in the syntax section otherwise what are they documenting
+            TestAssert "param" && tParam[1] && "in syntax section" && tElement["display name"] && tElement["Type"], tSyntaxParams[tParam[1]]
+         end repeat
          
-         -- params in syntax section may be documented in glossary
-         TestAssert "param" && tParam[1] && "in param section" && tElement["display name"] && tElement["Type"], tDocumentedParams[tParam[1]] or tParamInGlossary
-         
-         -- params in param section should be in the syntax section otherwise what are they documenting
-         TestAssert "param" && tParam[1] && "in syntax section" && tElement["display name"] && tElement["Type"], tSyntaxParams[tParam[1]]
-         
-         */
-      end repeat
+      end if
       
       delete variable tDocumentedParams
       delete variable tSyntaxParams
       
-      /* UNCOMMENT WHEN WE HAVE TIME TO FIX
       -- test description required
       TestAssert "description of" && tElement["display name"] && tElement["type"] && "not empty", tElement["Description"] is not empty
       
-      */
       -- !TODO parse all summaries and descriptions etc
       -- * test all links are listed in references
       -- * test for ambiguous links
@@ -320,12 +308,10 @@ command CheckBrackets pSyntax, pMessage
             SetState tBrackets, "<>", "closed", tPrintDiagnostic, pMessage
             break
          case "|"
-            if not pSyntax contains "port" then -- socket identifiers
-               -- allow pipe for plural params
-               TestAssert pMessage &&  "variant in curly brackets", GetState(tBrackets, "{}") is "open" and GetState(tBrackets, "<>") is "closed"
-               if not (GetState(tBrackets, "{}") is "open" and GetState(tBrackets, "<>") is "closed") then
-                  put true into tPrintDiagnostic
-               end if
+            -- allow pipe for plural params
+            TestAssert pMessage &&  "variant in curly brackets", GetState(tBrackets, "{}") is "open" and GetState(tBrackets, "<>") is "closed"
+            if not (GetState(tBrackets, "{}") is "open" and GetState(tBrackets, "<>") is "closed") then
+               put true into tPrintDiagnostic
             end if
             break
       end switch
@@ -401,7 +387,7 @@ end SetState
 function GetState pBrackets, pType
    local tSize
    repeat with tSize = the number of elements of pBrackets[pType] down to 1
-      if pBrackets[pType] is "open" then return "open"
+      if pBrackets[pType][tSize]["state"] is "open" then return "open"
    end repeat
    
    return "closed"
