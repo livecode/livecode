@@ -219,6 +219,11 @@ MCObjectPropertyTable MCStack::kPropertyTable =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
+    : savecard(),
+      savecontrols(),
+      wposition(WP_DEFAULT),
+      walignment(OP_NONE),
+      scrollmode()
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
@@ -320,7 +325,14 @@ MCStack::MCStack()
     m_is_ide_stack = false;
 }
 
-MCStack::MCStack(const MCStack &sref) : MCObject(sref)
+MCStack::MCStack(const MCStack &sref)
+    : MCObject(sref),
+      savecard(),
+      savecontrols(),
+      wposition(WP_DEFAULT),
+      walignment(OP_NONE),
+      scrollmode(),
+      old_rect(kMCEmptyRectangle)
 {
 	obj_id = sref.obj_id;
 
