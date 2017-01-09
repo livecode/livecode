@@ -38,7 +38,7 @@ typedef enum
 class MCVariable
 {
 protected:
-	MCNameRef name;
+	MCNewAutoNameRef name;
 	MCExecValue value;
 	MCVariable *next;
 
@@ -61,8 +61,7 @@ protected:
 	// The correct way to create variables is with the static 'create' methods
 	// which can catch a failure.
     MCVariable()
-        : name(nullptr),
-          next(nullptr),
+        : next(nullptr),
           is_msg(false),
           is_env(false),
           is_global(false),
@@ -230,12 +229,12 @@ public:
 
 	MCNameRef getname(void)
 	{
-		return name;
+		return *name;
 	}
 
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualTo(*name, other_name, kMCCompareCaseless);
 	}
 
 	//////////
