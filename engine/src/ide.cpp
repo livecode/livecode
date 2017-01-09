@@ -92,7 +92,7 @@ MCIdeState *MCIdeState::s_states = NULL;
 MCIdeState *MCIdeState::s_cache = NULL;
 
 MCIdeState::MCIdeState(void)
-	: f_next(NULL), f_line_count(0), f_line_properties(0)
+	: f_next(NULL), f_field(nullptr), f_line_count(0), f_line_properties(0)
 {
 }
 
