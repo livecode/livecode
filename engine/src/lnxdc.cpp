@@ -90,8 +90,6 @@ MCScreenDC::~MCScreenDC()
 		delete allocs;
 	}
 	
-    MCNameDelete(vendorname);
-	
 	while (pendingevents != NULL)
 	{
 		MCEventnode *tptr =(MCEventnode *)pendingevents->remove

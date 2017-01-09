@@ -164,8 +164,8 @@ public:
 	Boolean has_composite_wm = false;
 	Drawable dest = None; //
 
-	MCNameRef displayname = nullptr; // TODO MCNewAutoNameRef
-	MCNameRef vendorname = nullptr;  // TODO MCNewAutoNameRef
+	MCNewAutoNameRef displayname;
+	MCNewAutoNameRef vendorname;
 	uint4 savedpixel = 0; // Move into per-context
 
 	MCScreenDC();
