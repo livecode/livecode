@@ -498,7 +498,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	Boolean lp = False;
 
 	initpoint(sp);
-	parent = sp.getobj();
 
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_EFFECTIVE) == PS_NORMAL)
 		effective = True;

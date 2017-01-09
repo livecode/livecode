@@ -37,7 +37,6 @@ class MCProperty : public MCExpression
 	Properties which;
 	MCChunk *target;
 	Functions function;
-	MCObject *parent;
 	MCVarref *destvar;
 	Boolean effective;
 	MCNameRef customprop;
