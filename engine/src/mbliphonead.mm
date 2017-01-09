@@ -279,7 +279,7 @@ static void do_display_ad(void *p_context)
     display_ad_context_t *ctxt;
     ctxt = (display_ad_context_t *)p_context;
     
-    ctxt -> result = [InneractiveAd DisplayAd:[NSString stringWithMCStringRef: MCAdGetInneractiveKey()]
+    ctxt -> result = [InneractiveAd DisplayAd:MCStringConvertToAutoreleasedNSString(MCAdGetInneractiveKey())
                                      withType:ctxt -> type 
                                      withRoot:ctxt -> view
                                    withReload:ctxt -> timeout
@@ -446,49 +446,49 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_ty
             t_success = MCNameCreateWithCString("age", &t_age_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Age]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Age]];
 
         MCNewAutoNameRef t_dist_id_key;
         if (t_success)
             t_success = MCNameCreateWithCString("distribution id", &t_dist_id_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_dist_id_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Distribution_Id]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Distribution_Id]];
         
         MCNewAutoNameRef t_gender_key;
         if (t_success)
             t_success = MCNameCreateWithCString("gender", &t_gender_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Gender]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Gender]];
         
         MCNewAutoNameRef t_coordinates_key;
         if (t_success)
             t_success = MCNameCreateWithCString("coordinates", &t_coordinates_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_coordinates_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Gps_Coordinates]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Gps_Coordinates]];
 
         MCNewAutoNameRef t_keywords_key;
         if (t_success)
             t_success = MCNameCreateWithCString("keywords", &t_keywords_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Keywords]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Keywords]];
         
         MCNewAutoNameRef t_location_key;
         if (t_success)
             t_success = MCNameCreateWithCString("location", &t_location_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_location_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Location]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Location]];
         
         MCNewAutoNameRef t_phone_key;
         if (t_success)
             t_success = MCNameCreateWithCString("phone number", &t_phone_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Msisdn]];
+                [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Msisdn]];
     }
     
     if (t_success)

@@ -149,7 +149,7 @@ bool MCFileSetDataProtection(MCStringRef p_filename, NSString *p_protection)
     NSDictionary *t_file_attr = [NSDictionary dictionaryWithObject:p_protection forKey:NSFileProtectionKey];
     NSString *t_path = nil;
     
-    t_path = [NSString stringWithMCStringRef: p_filename];
+    t_path = MCStringConvertToAutoreleasedNSString(p_filename);
     
     t_success = [[NSFileManager defaultManager] setAttributes:t_file_attr ofItemAtPath:t_path error: nil];
     
@@ -160,7 +160,7 @@ bool MCFileGetDataProtection(MCStringRef p_filename, NSString *&r_protection)
 {
     bool t_success = true;
    
-    NSString *t_path = [NSString stringWithMCStringRef: p_filename];
+    NSString *t_path = MCStringConvertToAutoreleasedNSString(p_filename);
     NSDictionary *t_file_attr = [[NSFileManager defaultManager] attributesOfItemAtPath:t_path error:nil];
     
     t_success = t_file_attr != nil;

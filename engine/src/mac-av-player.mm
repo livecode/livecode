@@ -688,9 +688,9 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: p_filename_or_url]];
+        t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
     else
-        t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_filename_or_url]];
+        t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
 
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];

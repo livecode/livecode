@@ -1993,7 +1993,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? [NSString stringWithMCStringRef: m_title] : @""];
+		[m_window_handle setTitle: m_title != nil ? MCStringConvertToAutoreleasedNSString(m_title) : @""];
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];
@@ -2266,7 +2266,7 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
     
     if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
     {
-        t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
+        t_represented_filename = MCStringConvertToAutoreleasedNSString(t_native_filename);
     }
     else
         t_represented_filename = @"";

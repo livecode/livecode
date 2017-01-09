@@ -214,7 +214,7 @@ bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
 		{
 			NSString *t_value = nil;
 			if (t_success)
-				t_success = nil != (t_value = [NSString stringWithMCStringRef: (MCStringRef)t_entry]);
+				t_success = nil != (t_value = MCStringConvertToAutoreleasedNSString((MCStringRef)t_entry));
 			
 			if (t_success)
 				CFDictionaryAddValue(t_dict, t_key, t_value);
@@ -317,7 +317,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 				if (MCStringGetLength(*t_value_string) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithMCStringRef: *t_value_string],
+									 MCStringConvertToAutoreleasedNSString(*t_value_string),
 									 nil);
 				}
 			}
@@ -349,7 +349,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 									if (MCStringGetLength(*t_index_value_string) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithMCStringRef: *t_index_value_string],
+																				 MCStringConvertToAutoreleasedNSString(*t_index_value_string),
 																				 s_label_map[j].label,
 																				 nil);
 									}
@@ -1025,9 +1025,9 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 		{
-            t_title = [NSString stringWithMCStringRef: p_title == nil ? kMCEmptyString : p_title];
-            t_message = [NSString stringWithMCStringRef: p_message == nil ? kMCEmptyString : p_message];
-			t_alternate_name = [NSString stringWithMCStringRef: p_alternate_name == nil ? kMCEmptyString : p_alternate_name];
+            t_title = MCStringConvertToAutoreleasedNSString(p_title == nil ? kMCEmptyString : p_title);
+            t_message = MCStringConvertToAutoreleasedNSString(p_message == nil ? kMCEmptyString : p_message);
+			t_alternate_name = MCStringConvertToAutoreleasedNSString(p_alternate_name == nil ? kMCEmptyString : p_alternate_name);
 			m_success = (t_title != nil) && (t_message != nil) && (t_alternate_name != nil);
 		}
 		

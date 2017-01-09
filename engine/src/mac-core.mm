@@ -1984,8 +1984,8 @@ void MCMacPlatformShowMessageDialog(MCStringRef p_title,
 {
     NSAlert *t_alert = [[NSAlert alloc] init];
     [t_alert addButtonWithTitle:@"OK"];
-    [t_alert setMessageText: [NSString stringWithMCStringRef: p_title]];
-    [t_alert setInformativeText: [NSString stringWithMCStringRef: p_message]];
+    [t_alert setMessageText: MCStringConvertToAutoreleasedNSString(p_title)];
+    [t_alert setInformativeText: MCStringConvertToAutoreleasedNSString(p_message)];
     [t_alert setAlertStyle:NSInformationalAlertStyle];
     [t_alert runModal];
 }
