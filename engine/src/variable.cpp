@@ -48,18 +48,6 @@ bool MCVariable::create(MCVariable*& r_var)
 	if (self == nil)
 		return false;
 
-	self -> next = nil;
-	self -> name = nil;
-
-	self -> value . type = kMCExecValueTypeNone;
-    self -> value . valueref_value = nil;
-
-	self -> is_msg = false;
-	self -> is_env = false;
-	self -> is_global = false;
-	self -> is_deferred = false;
-	self -> is_uql = false;
-
 	r_var = self;
 	
 	return true;
@@ -71,7 +59,7 @@ bool MCVariable::createwithname(MCNameRef p_name, MCVariable*& r_var)
 	if (!create(self))
 		return false;
 
-	if (!MCNameClone(p_name, self -> name))
+	if (!MCNameClone(p_name, &self->name))
 	{
 		delete self;	
 		return false;
