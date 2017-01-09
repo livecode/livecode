@@ -1,0 +1,23 @@
+widget com.livecode.lcs_tests.core.widget
+
+private variable mTestMode
+
+property testMode get mTestMode set mTestMode
+
+public handler OnSave(out rProperties as Array)
+   if mTestMode is "resolve" then
+      resolve script object "this stack"
+   else if mTestMode is "get" then
+      get property "name" of my script object
+   else if mTestMode is "set" then
+      set property "name" of my script object to "foo"
+   else if mTestMode is "send" then
+      send "foo" to my script object
+   else if mTestMode is "post" then
+      post "foo" to my script object
+   else if mTestMode is "execute" then
+      execute script "return 1"
+   end if
+end handler
+
+end widget
