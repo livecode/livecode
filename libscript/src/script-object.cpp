@@ -56,8 +56,16 @@ static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = 
 
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
+static bool __MCScriptAcquireModuleHandle(void);
+static void __MCScriptReleaseModuleHandle(void);
+
 bool MCScriptInitialize(void)
 {
+    if (!__MCScriptAcquireModuleHandle())
+    {
+        return false;
+    }
+    
     MCBuiltinModule **t_modules;
     unsigned int t_module_count;
     if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
@@ -287,6 +295,7 @@ void MCScriptFinalize(void)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
     MCValueRelease(s_builtin_module);
+    __MCScriptReleaseModuleHandle();
 }
 
 void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
@@ -403,6 +412,131 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
     MCLog("FAILURE - %s, %s, %s, %s, %d", label, expr, function, file, line);
     abort();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(_WIN32)
+
+#include <windows.h>
+
+static void *s_windows_module_handle = nullptr;
+
+static bool
+__MCScriptAcquireModuleHandle(void)
+{
+    HMODULE t_handle = nullptr;
+    if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                          (LPCTSTR)__MCScriptAcquireModuleHandle,
+                          &t_handle) == 0)
+    {
+        return false;
+    }
+
+    s_windows_module_handle = (void *)t_handle;
+
+    return true;
+}
+
+static void
+__MCScriptReleaseModuleHandle(void)
+{
+    if (s_windows_module_handle == nullptr)
+    {
+        return;
+    }
+
+    FreeLibrary((HMODULE)s_windows_module_handle);
+
+    return;
+}
+
+void *
+MCScriptGetModuleHandle(void)
+{
+    return s_windows_module_handle;
+}
+
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include <dlfcn.h>
+
+static void *s_android_module_handle = nil;
+
+static bool
+__MCScriptAcquireModuleHandle(void)
+{
+    // IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
+    //    given, so first resolve the path to the library.
+    extern bool MCAndroidResolveLibraryPath(MCStringRef p_library,
+                                            MCStringRef &r_path);
+    MCAutoStringRef t_path;
+    if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"),
+                                     &t_path))
+    {
+        return false;
+    }
+    
+    MCAutoStringRefAsCString t_cstring;
+    if (!t_cstring.Lock(*t_path))
+    {
+        return false;
+    }
+    
+    s_android_module_handle = dlopen(*t_cstring,
+                                     RTLD_LAZY);
+    
+    return true;
+}
+
+static void
+__MCScriptReleaseModuleHandle(void)
+{
+    dlclose(s_android_module_handle);
+    s_android_module_handle = nil;
+}
+
+void *
+MCScriptGetModuleHandle(void)
+{
+    return s_android_module_handle;
+}
+
+#else
+
+#include <dlfcn.h>
+
+static void *s_unix_module_handle = NULL;
+
+static bool
+__MCScriptAcquireModuleHandle(void)
+{
+    Dl_info t_info;
+    if (dladdr((const void *)__MCScriptAcquireModuleHandle,
+               &t_info) == 0 ||
+        t_info.dli_fname == nil)
+    {
+        return false;
+    }
+    
+    s_unix_module_handle = dlopen(t_info.dli_fname,
+                                  RTLD_LAZY);
+    
+    return true;
+}
+
+static void
+__MCScriptReleaseModuleHandle(void)
+{
+    dlclose(s_unix_module_handle);
+}
+
+void *
+MCScriptGetModuleHandle(void)
+{
+    return s_unix_module_handle;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
