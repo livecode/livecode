@@ -2994,7 +2994,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	{
 		MCwatchcursor = False;
 		p_target->resetcursor(True);
-		if (MCmousestackptr && MCmousestackptr != p_target)
+		if (MCmousestackptr && !MCmousestackptr.IsBoundTo(p_target))
 			MCmousestackptr->resetcursor(True);
 	}
     

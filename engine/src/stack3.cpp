@@ -1101,7 +1101,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		
-		if (MCmousestackptr == this)
+		if (MCmousestackptr.IsBoundTo(this))
 			curcard->munfocus();
 		if (state & CS_KFOCUSED)
 		{
@@ -1249,7 +1249,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
  
             if (wasfocused)
 				curcard->kfocus();
-			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+			if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
 		}
 		return ES_NORMAL;
@@ -1277,7 +1277,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
    		
 		if (wasfocused)
 			kfocus();
-		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+		if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 			curcard->message(MCM_mouse_enter);
 	}
     

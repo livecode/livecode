@@ -701,17 +701,16 @@ public:
     void Destroy();
     
 private:
-    MCStringRef m_product_id;
+    MCAutoStringRef m_product_id;
 };
 
 MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(MCStringRef p_product_id)
+    : m_product_id(p_product_id)
 {
-	MCValueAssign(m_product_id, p_product_id);
 }
 
 void MCStoreProductRequestResponseEvent::Destroy()
 {
-    MCValueRelease(m_product_id);    
     delete this;
 }
 
@@ -730,15 +729,15 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     MCAutoStringRef t_subscriptionDurationUnit;
     MCAutoStringRef t_subscriptionDurationMultiplier;
     
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("productId"), &t_product_id);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("description"), &t_description);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("title"), &t_title);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("itemType"), &t_itemType);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("price"), &t_price);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("itemImageUrl"), &t_itemImageUrl);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("itemDownloadUrl"), &t_itemDownloadUrl);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("subscriptionDurationUnit"), &t_subscriptionDurationUnit);
-    MCStoreGetPurchaseProperty(ctxt, m_product_id, MCSTR("subscriptionDurationMultiplier"), &t_subscriptionDurationMultiplier);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("productId"), &t_product_id);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("description"), &t_description);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("title"), &t_title);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("itemType"), &t_itemType);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("price"), &t_price);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("itemImageUrl"), &t_itemImageUrl);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("itemDownloadUrl"), &t_itemDownloadUrl);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("subscriptionDurationUnit"), &t_subscriptionDurationUnit);
+    MCStoreGetPurchaseProperty(ctxt, *m_product_id, MCSTR("subscriptionDurationMultiplier"), &t_subscriptionDurationMultiplier);
     
     
     MCAutoArrayRef t_array;
@@ -755,7 +754,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     MCArrayStoreValue(*t_array, false, MCNAME("subscriptionDurationMultiplier"), *t_subscriptionDurationMultiplier);
     
     MCParameter p1, p2;
-    p1.setvalueref_argument(m_product_id);
+    p1.setvalueref_argument(*m_product_id);
     p1.setnext(&p2);
     p2.setvalueref_argument(*t_array);
     
@@ -786,27 +785,23 @@ public:
     void Dispatch();
     
 private:
-    MCStringRef m_product;
-    MCStringRef m_error;
+    MCAutoStringRef m_product;
+    MCAutoStringRef m_error;
 };
 
 MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(MCStringRef p_product_id, MCStringRef p_error)
+    : m_product(p_product_id), m_error(p_error)
 {
-    m_product = m_error = nil;
-    m_product = MCValueRetain(p_product_id);
-    m_error = MCValueRetain(p_error);
 }
 
 void MCStoreProductRequestErrorEvent::Destroy()
 {
-    MCValueRelease(m_product);
-    MCValueRelease(m_error);
     delete this;
 }
 
 void MCStoreProductRequestErrorEvent::Dispatch()
 {
-    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_product_request_error, m_product, m_error);
+    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_product_request_error, *m_product, *m_error);
 }
 
 bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error)

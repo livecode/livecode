@@ -355,7 +355,6 @@ public:
 
 	virtual Boolean del(bool p_check_flag);
     virtual bool isdeletable(bool p_check_flag);
-	virtual void scheduledelete(bool p_is_child = false);
     
 	virtual void paste(void);
 

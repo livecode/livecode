@@ -269,7 +269,7 @@ void MCPlatformHandleMouseEnter(MCPlatformWindowRef p_window)
 	if (t_stack == nil)
 		return;
 	
-	if (t_stack != MCmousestackptr)
+	if (!MCmousestackptr.IsBoundTo(t_stack))
 	{
 		MCmousestackptr = t_stack;
 		MCmousestackptr -> enter();
@@ -293,7 +293,7 @@ void MCPlatformHandleMouseLeave(MCPlatformWindowRef p_window)
 	if (t_stack == nil)
 		return;
 	
-	if (t_stack == MCmousestackptr)
+	if (MCmousestackptr.IsBoundTo(t_stack))
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = nil;
@@ -310,7 +310,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCeventtime = MCPlatformGetEventTime();
 		
@@ -349,7 +349,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCbuttonstate |= (1 << p_button);
 		
@@ -400,7 +400,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCbuttonstate &= ~(1 << p_button);
 		
@@ -443,7 +443,7 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		tripleclick = False;
 		
@@ -488,7 +488,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 	if (t_stack == nil)
 		return;
 	
-	if (MCmousestackptr != t_stack)
+	if (!MCmousestackptr.IsBoundTo(t_stack))
 		return;
 	
 	MCObject *mfocused;

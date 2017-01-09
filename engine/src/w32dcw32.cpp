@@ -1108,18 +1108,18 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (curinfo->live && !pms->isgrabbed() && LOWORD(lParam) != HTCLIENT)
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		MCmousestackptr = MCdispatcher->findstackd(dw);
-		if (MCmousestackptr != NULL)
+		if (!MCmousestackptr)
 		{
 			MCmousestackptr->resetcursor(True);
 			if (pms->getmousetimer() == 0)
 				pms->setmousetimer(timeSetEvent(LEAVE_CHECK_INTERVAL, 100,
 				                                mouseproc, 0, TIME_ONESHOT));
 		}
-		if (omousestack != MCmousestackptr)
+		if (!MCmousestackptr.IsBoundTo(omousestack))
 		{
 			if (omousestack != NULL && omousestack != MCtracestackptr)
 				omousestack->munfocus();
-			if (MCmousestackptr != NULL && MCmousestackptr != MCtracestackptr)
+			if (MCmousestackptr && MCmousestackptr != MCtracestackptr)
 				MCmousestackptr->enter();
 		}
 		break;
@@ -1163,7 +1163,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					MCscreen->setmouseloc(MCdispatcher->findstackd(dw), t_mouseloc);
 				if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 				{
-					if (t_old_mousestack != NULL && MCmousestackptr != t_old_mousestack)
+					if (t_old_mousestack != NULL && !MCmousestackptr.IsBoundTo(t_old_mousestack))
 						t_old_mousestack->munfocus();
 					if (msg == WM_MOUSEMOVE)
 					{
@@ -1179,7 +1179,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						}
 					}
 					else
-						if (MCmousestackptr != NULL)
+						if (MCmousestackptr)
 							MCmousestackptr->munfocus();
 					curinfo->handled = True;
 				}
@@ -1195,7 +1195,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		break;
 	case WM_APP:
-		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
+		if (MCmousestackptr && MCdispatcher->getmenu() == NULL)
 		{
 			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
 			// IM-2014-08-01: [[ Bug 13058 ]] Use stack view rect to get logical window rect
@@ -1350,7 +1350,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_TIMER:
 		curinfo->handled = True;
-		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
+		if (MCmousestackptr && MCdispatcher->getmenu() == NULL)
 		{
 			int2 x, y;
 			pms->querymouse(x, y);
@@ -1526,7 +1526,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 		{
 			MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (mfocused == NULL)

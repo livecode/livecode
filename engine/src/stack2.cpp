@@ -302,7 +302,7 @@ Tool MCStack::gettool(MCObject *optr) const
 
 void MCStack::hidecursor()
 {
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 	{
 		cursor = MCcursors[PI_NONE];
 		MCscreen->setcursor(window, cursor);
@@ -568,7 +568,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
     
 	mode_takewindow(sptr);
 	
-	if (MCmousestackptr == sptr)
+	if (MCmousestackptr.IsBoundTo(sptr))
 		MCmousestackptr = this;
 	start_externals();
     
