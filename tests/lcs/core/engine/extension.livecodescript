@@ -94,6 +94,11 @@ on TestExtensionBridgeNumbers
          TestExtensionBridgeNumbers_ExecuteScript()
 end TestExtensionBridgeNumbers
 
+on TestExtensionBridgeEmptyArrays
+   TestAssert "LCS empty arrays bridge to LCB empty lists in library handlers", \
+         TestExtensionBridgeArrays_EmptyToEmptyList(empty)
+end TestExtensionBridgeEmptyArrays
+
 //////////
 
 on TestMultiModuleExtensions

@@ -1188,7 +1188,17 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     bool t_is_array;
     if (!__script_try_to_convert_to_array(ctxt, x_value, t_is_array))
         return false;
-    
+	
+	// If we managed to convert to an array, and the array is empty then we
+	// can convert.
+	if (t_is_array &&
+		MCArrayIsEmpty((MCArrayRef)x_value))
+	{
+		MCValueAssign(x_value, (MCValueRef)kMCEmptyProperList);
+		r_converted = true;
+		return true;
+	}
+	
     // If we managed to convert to an array, and the array is a sequence
     // we can convert.
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))
