@@ -126,7 +126,7 @@ private function _TestGetBuildFolder
          return tPath
       end if
       delete item -1 of tPath
-   end repeat	
+   end repeat
 end _TestGetBuildFolder
 
 private function _TestGetBuiltExtensionsFolder
@@ -213,7 +213,7 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
-on TestLoadExtension pName	
+on TestLoadExtension pName
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
@@ -249,6 +249,26 @@ on TestLoadExtension pName
    end if
 
 end TestLoadExtension
+
+-- This loads an extension whose lcb source sits in the same folder as the
+-- current test.
+on TestLoadAuxillaryExtension pName
+	local tBasePath, tExtraPath
+	set the itemDelimiter to slash
+	put item 1 to -2 of the filename of this stack into tBasePath
+	repeat while the last item of tBasePath is not "tests"
+		put item -1 of tBasePath & slash before tExtraPath
+		delete the last item of tBasePath
+	end repeat
+
+	local tModuleFile
+	put tBasePath & "/../_tests/_build/" & tExtraPath & pName & ".lcm" into tModuleFile
+
+	load extension from data url ("binfile:" & tModuleFile)
+	if the result is not empty then
+		throw "Failed to load auxillary extension:" && the result && tModuleFile
+	end if
+end TestLoadAuxillaryExtension
 
 on TestLoadAllExtensions
    local tExtFolder

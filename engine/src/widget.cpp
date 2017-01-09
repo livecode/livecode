@@ -129,6 +129,11 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     // If we failed then store the rep and destroy the imp.
     if (!t_success)
     {
+        // Make sure we swallow the error so that it doesn't affect
+        // future execution.
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        
         MCValueRelease(m_widget);
         m_widget = nil;
         
