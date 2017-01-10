@@ -27,9 +27,13 @@ Description:
 Use the <modal> <command> to display a <stack> as a custom <modal dialog
 box>. 
 
-The <modal> <command> opens the <stack> centered over the
-<defaultStack>, regardless of the <stack|stack's> <rectangle> and
-<location> <properties>.
+>*Important:*  When a <stack> is opened as <modal> its <location> is set
+> to the center of the <defaultStack> if the <defaultStack> is open and
+> <visible>. If not then its <location> is set to the center of the
+> <topStack> if there is one and it is <visible>. If not then the
+> <stack|stack's> own <location> and <rectangle> <property|properties>
+> are used to place the window. To override this behavior set the
+> <location> of the <stack> in its <preOpenStack> <handler>.
 
 While a modal dialog box is open, other windows cannot be edited or
 brought to the front. Because of this, you should use modal dialog boxes
@@ -72,11 +76,11 @@ property (glossary), dialog box (glossary), location (glossary),
 execute (glossary), modal dialog box (glossary), command (glossary),
 global (glossary), Browse tool (glossary), custom property (glossary),
 message (glossary), current card (glossary), handler (glossary),
-rectangle (keyword), button (keyword), openCard (message),
+rectangle (property), button (keyword), openCard (message),
 closeStack (message), closeCard (message), closeBackground (message),
 openStack (message), openBackground (message), stack (object),
 button (object), defaultStack (property), script (property),
-properties (property), lockMessages (property)
+properties (property), lockMessages (property), visible (property),
+preOpenStack (message), topStack (function)
 
 Tags: windowing
-
