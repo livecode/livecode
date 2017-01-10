@@ -194,9 +194,6 @@ on loadUrl x,y
          
          ulGetFormat newUrl,lvCount
          
-         -- SN 2014-02-21 Decode the URL read according to the encoding specified in the head part
-         ulDecodeData newUrl
-         
          if laUrlLoadStatus[newUrl] is "error" and not laCancelled[newurl] then
             ulSendMessage newUrl ##send message now only if error occurred befoe block point
             return "error"
@@ -267,9 +264,7 @@ on getUrl x
       put "getData" into laAction[newUrl]
       put empty into laData[newUrl]
       ulGetFormat newUrl,lvCount # convert url to components
-      
-      -- SN 2014-02-21 Decode the URL read according to the encoding specified in the head part
-      ulDecodeData newUrl
+
       ##final clean up here
       
       if laAuthRecursCount[newUrl] < 1 then
@@ -1240,6 +1235,7 @@ on ulDoProcess x,y
                put empty into laUrlErrorStatus[laUrl[x]]
                if laFile[laUrl[x]] is empty then
                   put "cached" into tStatus
+                  ulDecodeUrlData laUrl[x]
                else
                   put "downloaded" into tStatus
                end if
@@ -1343,6 +1339,7 @@ on ulDoProcessLength x,y
       if char 1 of laStatusCode[laUrl[x]] = 2 then ##in 200 range--OK
          if laFile[laUrl[x]] is empty then
             put "cached" into tStatus
+            ulDecodeUrlData laUrl[x]
          else
             put "downloaded" into tStatus
          end if
@@ -1433,6 +1430,7 @@ on ulDoProcessChunked x,y
             if char 1 of laStatusCode[laUrl[x]] = 2 then ##in 200 range --OK
                if laFile[laUrl[x]] is empty then
                   put "cached" into tStatus
+                  ulDecodeUrlData laUrl[x]
                else
                   put "downloaded" into tStatus
                end if
@@ -1547,6 +1545,7 @@ on ulDoProcessNoLength x,y
                if char 1 of laStatusCode[laUrl[x]] = 2 then
                   if laFile[laUrl[x]] is empty then
                      put "cached" into tStatus
+                     ulDecodeUrlData laUrl[x]
                   else
                      put "downloaded" into tStatus
                   end if
@@ -1575,6 +1574,7 @@ on ulDoProcessNoLength x,y
       if char 1 of laStatusCode[laUrl[x]] = 2 then
          if laFile[laUrl[x]] is empty then
             put "cached" into tStatus
+            ulDecodeUrlData laUrl[x]
          else
             put "downloaded" into tStatus
          end if
@@ -1760,49 +1760,57 @@ function ulNormaliseEncoding pEncoding
 end ulNormaliseEncoding
 
 -- Convert the data according to the encoding specified
-command ulDecodeData pUrl
-   
-   -- MM-2014-04-08: [[ Bug 12006 ]] Ignore the content type encoding for pre 7.0 versions of LiveCode.
-   if the buildNumber < 10000 then
-      return empty
-   end if
-   
-   local tEncoding
-   put empty into tEncoding
-   
-   local tHeadSize
-   --   Only look for the encoding in the head part
-   put offset("</head>", laData[pUrl]) into tHeadSize
-   
-   if tHeadSize is 0 then exit "ulDecodeData"
-   
-   local tHead
-   put char 1 to tHeadSize of laData[pUrl] into tHead
-   
-   local tCharsetRegex
-   put "<meta .*charset=" & quote & "?([a-zA-Z0-9 -]+)" & quote & ".*>" into tCharsetRegex
-   
-   local tCharset
-   if matchtext(tHead, tCharsetRegex, tCharset) then      
-      switch ulNormaliseEncoding(tCharset)
-         case "utf8"            
-            put "UTF8" into tEncoding
-            break
-         case "utf16"
-            put "UTF16" into tEncoding
-            break
-         case "iso88591"
-            put "ANSI" into tEncoding
-            break
-      end switch
-      
-      if tEncoding is not empty then
-         local tDecoded
-         put uniEncode(laData[pUrl], tEncoding) into tDecoded
-         put uniDecode(tDecoded) into laData[pUrl]   
-      end if
-   end if
+command ulDecodeData pHeaders, @pData
+  local tEncoding, tCharset, tLineNo
+
+  put empty into tEncoding
+
+  put lineOffset("Content-Type:", pHeaders) into tLineNo
+  if tLineNo is 0 or not matchText(line tLineNo of pHeaders, "charset=([a-zA-Z0-9 -]+)", tCharSet) then
+    local tCharsetRegex, tHeadSize, tHead
+
+    --   Only look for the encoding in the head part
+    put offset("</head>", pData) into tHeadSize
+
+    if tHeadSize > 0 then
+      put char 1 to tHeadSize of pData into tHead
+      put "<meta .*charset=" & quote & "?([a-zA-Z0-9 -]+)" & quote & ".*>" into tCharsetRegex
+
+      get matchtext(tHead, tCharsetRegex, tCharset)
+    end if
+  end if
+
+  if tCharset is not empty then
+    switch ulNormaliseEncoding(tCharset)
+      case "utf8"
+        put "UTF8" into tEncoding
+        break
+      case "utf16"
+        put "UTF16" into tEncoding
+        break
+      case "iso88591"
+        put "ASCII" into tEncoding
+        break
+    end switch
+
+    if tEncoding is not empty then
+      put textDecode(pData, tEncoding) into pData
+    end if
+  end if
+
+  return empty
 end ulDecodeData
+
+
+command ulDecodeUrlData pUrl
+  if pUrl is among the keys of laLoadedUrls then
+    ulDecodeData laRhHeader[pURL], laLoadedUrls[pUrl]
+  else
+    ulDecodeData laRhHeader[pURL], laData[pUrl]
+  end if
+
+  return empty
+end ulDecodeUrlData
 
 ----------------------------------------------------
 
@@ -3139,6 +3147,7 @@ on socketClosed x
       if char 1 of laStatusCode[laUrl[x]] = 2 then
         if laFile[laUrl[x]] is empty then
           put "cached" into tStatus
+          ulDecodeUrlData laUrl[x]
         else
           put "downloaded" into tStatus
         end if
