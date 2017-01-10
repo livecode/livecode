@@ -75,7 +75,6 @@ void set_dnd_cursor(GdkWindow *w, bool p_okay, MCImage *p_image)
         gdk_window_set_cursor(w, g_dnd_cursor_drop_fail);
 }
 
-
 struct dnd_modal_loop_context
 {
     GdkDragContext* drag_context;
