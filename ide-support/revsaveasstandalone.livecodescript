@@ -240,10 +240,10 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the result into tError
    end if
    
-   if revStandaloneGetWarnings() is not empty then
+   if revStandaloneGetWarnings() is not empty and tError is empty then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    else
-      if not revSBSuppressDialogs() then
+      if not revSBSuppressDialogs() and tError is empty then
          answer information "Standalone application saved successfully."
       end if
       
