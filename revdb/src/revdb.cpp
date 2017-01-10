@@ -872,7 +872,6 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 /// then REVDB_Disconnect returns an error string.
 void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = True;
 	*pass = False;
 
@@ -922,7 +921,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		}
 	}
 
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 /// @brief Commit the last transaction.
