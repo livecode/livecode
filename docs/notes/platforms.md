@@ -57,8 +57,8 @@ iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcod
 Currently, the supported versions of Xcode are:
 * Xcode 6.2 on MacOS X 10.9
 * Xcode 6.2 and 7.2 on Mac OS X 10.10
-* Xcode 8.1 on MacOS X 10.11
-* Xcode 8.1 on MacOS 10.12
+* Xcode 8.2 on MacOS X 10.11
+* Xcode 8.2 on MacOS 10.12
 
 It is also possible to set other versions of Xcode, to allow testing
 on a wider range of iOS simulators. For instance, on MacOS 10.12
@@ -69,7 +69,7 @@ We currently support deployment for the following versions of iOS:
 
 * 8.2 [simulator]
 * 9.2
-* 10.1
+* 10.2
 
 ## Android
 

@@ -258,7 +258,7 @@ typedef void *MCColorTransformRef;
 class MCMovingList : public MCDLlist
 {
 public:
-	MCObject *object;
+	MCObjectHandle object;
 	MCPoint *pts;
 	uint2 lastpt;
 	uint2 curpt;

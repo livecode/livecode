@@ -887,8 +887,9 @@ command revSBRelativeStackFilesList pStack, @rStackFiles
    local tRelativeStackFiles
    set the itemDelimiter to slash
    put item 1 to -2 of line 1 of tFullStackFiles & "/" into tMainStackPath
-   put the number of chars of tMainStackPath into tChars
+   
    repeat for each line tLine in tFullStackFiles
+      put utilityMakePathRelative(tLine, tMainStackPath) into tLine
       appendToStringList tLine, tRelativeStackFiles
    end repeat
    
@@ -2230,9 +2231,6 @@ function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMult
       put pFolder & tFolderName & "/" & pPlatform & "/" into tDirectory
    else
       put pFolder & tFolderName & "/" into tDirectory
-   end if
-   if pPlatform contains "MacOSX" then 
-      put pName & ".app/Contents/MacOS/" after tDirectory
    end if
    return tDirectory
 end revSBStandaloneOutputDirectory

@@ -2994,7 +2994,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	{
 		MCwatchcursor = False;
 		p_target->resetcursor(True);
-		if (MCmousestackptr && MCmousestackptr != p_target)
+		if (MCmousestackptr && !MCmousestackptr.IsBoundTo(p_target))
 			MCmousestackptr->resetcursor(True);
 	}
     
@@ -3090,10 +3090,12 @@ void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNa
 
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
 {
-	if (MCdefaultstackptr->getopened() || !MCtopstackptr)
+	if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCdefaultstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else
+	else if (MCtopstackptr && MCtopstackptr->isvisible())
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
+	else
+		MCInterfaceExecSubwindow(ctxt, p_target, nil, p_target->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 }
 
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
