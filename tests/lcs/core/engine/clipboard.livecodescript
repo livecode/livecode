@@ -205,3 +205,11 @@ on TestClipboardPrivateKey
    TestAssert "private key not present after external change", \
       "private" is not among the keys of the clipboardData
 end TestClipboardPrivateKey
+
+# This is a regression test for Bug 19084
+on TestClipboardTextToStyled
+   set the clipboardData["text"] to "Hello World"
+   TestDiagnostic the clipboardData["html"]
+   TestAssert "plain text should remain plain in htmltext", \
+      the clipboardData["html"] is "<p>Hello World</p>"
+end TestClipboardTextToStyled
