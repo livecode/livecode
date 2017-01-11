@@ -95,7 +95,7 @@ void MCStack::destroywindowshape(void)
 // IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view methods
 void MCStack::setgeom(void)
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
