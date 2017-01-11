@@ -80,7 +80,7 @@ MCStack::platform_openwindow(Boolean override)
 void
 MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 
 	MCRectangle t_old_rect;
