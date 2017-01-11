@@ -127,7 +127,19 @@ void MCClipboard::ReleaseData()
 bool MCClipboard::PullUpdates() const
 {
     // Pass on the request
-    return m_clipboard->PullUpdates();
+    bool t_success =
+        m_clipboard->PullUpdates();
+    
+    // If we no longer own the clipboard and we have private data, we must
+    // release it.
+    if (m_private_data != NULL &&
+        !m_clipboard->IsOwned())
+    {
+        MCValueRelease(m_private_data);
+        m_private_data = NULL;
+    }
+    
+    return t_success;
 }
 
 bool MCClipboard::PushUpdates(bool p_force) const
