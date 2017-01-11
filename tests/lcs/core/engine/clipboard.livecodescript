@@ -20,10 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- Clipboard access requires system interaction so, generally, cannot
 -- be run in no-UI mode
 on TestSetup
-   if the environment is "command line" then
-      return "SKIP Clipboard requires GUI mode"
+   if the environment is "command line" and \
+      the platform is "Linux" then
+      return "SKIP Clipboard requires GUI mode on Linux"
    end if
-   if the platform is not among the items of "MacOS,Windows,Linux" then
+   if the platform is not among the items of "MacOS,Win32,Linux" then
       return "SKIP Clipboard not available on" && the platform
    end if
 end TestSetup
@@ -193,7 +194,11 @@ on TestClipboardPrivateKey
    set the itemDelimiter to slash
    put format("%s/_clipboard_private_setter.livecodescript", \
          _TestPath()) into tHelperFilename
-   TestRunStack "", tHelperFilename
+   if the environment is "command line" then
+      TestRunStack "-ui", tHelperFilename
+   else
+      TestRunStack "", tHelperFilename
+   end if
 
    TestAssert "helper changed clipboard externally", the result is 0
 
