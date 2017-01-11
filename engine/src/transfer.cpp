@@ -108,7 +108,9 @@ bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTr
 			
 		case TRANSFER_TYPE_FILES:
 			r_normal_type = TRANSFER_TYPE_FILES;
-			return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF16, false, r_normal_data);
+            // SN-2015-09-07: [[ Bug 15888 ]] OS X expects the clipboard files
+            // to be UTF-8 encoded (they are already decoded as UTF-8 on fetching)
+			return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF8, false, r_normal_data);
 			
 		default:
 			r_normal_type = p_type;
