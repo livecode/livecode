@@ -528,7 +528,7 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 
 void MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 
 	// MW-2009-09-25: Ensure things are the right size when doing

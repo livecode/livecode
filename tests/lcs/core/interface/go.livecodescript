@@ -91,3 +91,12 @@ end TestGoBinaryStackUrl
 on TestGoScriptOnlyStackUrl
    _TestGoStackUrl "script only"
 end TestGoScriptOnlyStackUrl
+
+on TestGoTwice
+   create stack
+   lock screen
+   go it
+   go it
+   unlock screen
+   TestAssert "go stack twice does not cause crash", true
+end TestGoTwice
