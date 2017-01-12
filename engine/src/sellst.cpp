@@ -562,6 +562,7 @@ Boolean MCSellist::del()
 					us->ud.layer = num;
 					MCundos->savestate(cptr, us);
 					tptr->m_ref = nil;
+					cptr->removefromobjecttree(false);
 				}
 			}
 			delete tptr;

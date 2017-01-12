@@ -1142,6 +1142,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
+    virtual void removefromobjecttree(bool p_is_child = false);
 	virtual void scheduledelete(bool p_is_child = false);
 
     virtual bool isdeletable(bool p_check_flag);

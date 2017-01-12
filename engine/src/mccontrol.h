@@ -126,6 +126,9 @@ public:
 
 	virtual void undo(Ustruct *us);
 
+    virtual void removefromobjecttree(bool p_is_child);
+    virtual void scheduledelete(bool p_is_child = false);
+    
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite) = 0;
 
