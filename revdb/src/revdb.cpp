@@ -746,7 +746,6 @@ inline const char *BooltoStr(Bool b) {return b == True?"True":"False";}
 void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 	       Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = False;
 	*pass = False;
 	if (nargs == 1)
@@ -755,7 +754,7 @@ void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 			free(revdbdriverpaths);
 		revdbdriverpaths = istrdup(args[0]);
 	}
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 void REVDB_GetDriverPath(char *p_arguments[], int p_argument_count, char **r_return_string, Bool *r_pass, Bool *r_error)
@@ -873,7 +872,6 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 /// then REVDB_Disconnect returns an error string.
 void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = True;
 	*pass = False;
 
@@ -923,7 +921,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		}
 	}
 
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 /// @brief Commit the last transaction.
