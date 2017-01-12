@@ -50,6 +50,10 @@ Boolean MCHandler::gotpass;
 ////////////////////////////////////////////////////////////////////////////////
 
 MCHandler::MCHandler(uint1 htype, bool p_is_private)
+    : hlist(),
+      npassedparams(),
+      firstline(),
+      lastline()
 {
 	statements = NULL;
 	vars = NULL;

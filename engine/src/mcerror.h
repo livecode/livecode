@@ -24,7 +24,7 @@ class MCScriptPoint;
 
 class MCError
 {
-	MCStringRef buffer;
+	MCAutoStringRef buffer;
 	uint2 errorline;
 	uint2 errorpos;
 	uint2 depth;
@@ -32,14 +32,10 @@ class MCError
 public:
 	MCError()
 	{
-		MCStringCreateMutable(0, buffer);
+		/* UNCHECKED */ MCStringCreateMutable(0, &buffer);
 		errorline = errorpos = 0;
 		depth = 0;
 		thrown = False;
-	}
-	~MCError()
-	{
-		MCValueRelease(buffer);
 	}
 	void add(uint2 id, MCScriptPoint &);
 	void add(uint2 id, uint2 line, uint2 pos);
@@ -53,7 +49,7 @@ public:
 	void clear();
 	Boolean isempty()
 	{
-		return MCStringIsEmpty(buffer);
+		return MCStringIsEmpty(*buffer);
 	}
 	void geterrorloc(uint2 &line, uint2 &pos);
 

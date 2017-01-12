@@ -70,27 +70,7 @@ MCGFloat MCResGetSystemScale(void)
 
 MCScreenDC::MCScreenDC()
 {
-	ncolors = 0;
-	ownselection = False;
-	pendingevents = NULL;
-	backdrop = DNULL;
-
-	m_backdrop_pixmap = nil;
-	
-	//Xinerama_available = false ;
-	//getdisplays_init = false ;
-
 	m_application_has_focus = true ; // The application start's up having focus, one assumes.
-	
-	backdrop_hard = false;
-	backdrop_active = false;
-    
-    m_has_native_theme = false;
-    m_has_native_color_dialogs = false;
-    m_has_native_file_dialogs = false;
-    m_has_native_print_dialogs = false;
-
-	m_im_context = NULL;
 }
 
 MCScreenDC::~MCScreenDC()
@@ -109,8 +89,6 @@ MCScreenDC::~MCScreenDC()
 		delete colornames;
 		delete allocs;
 	}
-	
-    MCNameDelete(vendorname);
 	
 	while (pendingevents != NULL)
 	{
