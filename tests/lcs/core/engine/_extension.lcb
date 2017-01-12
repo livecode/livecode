@@ -22,6 +22,9 @@ public handler TestExtensionBridgeNames_Send()
 	return the result is a string
 end handler
 
+public handler TestExtensionLibraryHandler(in pValue as Number)
+end handler
+
 public handler TestExtensionSupportModule_Handler()
 	return SupportHandler() is "support handler"
 end handler

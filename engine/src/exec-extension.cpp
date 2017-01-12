@@ -443,8 +443,16 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         t_param = t_param -> getnext();
     }
 	
+    // If the above looped failed with t_success == false, then a type
+    // conversion error occurred.
+    if (!t_success)
+    {
+        MCECptr->LegacyThrow(EE_INVOKE_TYPEERROR);
+    }
+    
 	// Too many parameters error.
-	if (t_param != nil)
+	if (t_success &&
+        t_param != nil)
 	{
 		MCECptr -> LegacyThrow(EE_INVOKE_TOOMANYARGS);
 		t_success = false;
