@@ -70,10 +70,13 @@ function DiffCompare pFrom, pTo, pContext
       put 3 into pContext
    end if
    
+   put _split(pFrom, return) into pFrom
+   put _split(pTo, return) into pTo
+   
    local tEdits
-   put diff_strings(pFrom, pTo) into tEdits
-   split pFrom by cr
-   return convert_to_unified(tEdits, pFrom, the number of elements in pFrom, pContext)
+   put diff_arrays(pFrom, pTo) into tEdits
+   
+   return convert_to_unified(tEdits, pFrom, pTo, pContext)
 end DiffCompare
 
 /**
@@ -96,9 +99,9 @@ An updated version of pSource with the changes from pDiff applied.
 */
 
 function DiffPatch pSource, pDiff
-   local tEdits
-   put parse_unified(pDiff) into tEdits
-   return patch_string(pSource, tEdits)
+   local tEdits, tContent
+   parse_unified pDiff, tEdits, tContent
+   return patch_string(pSource, tEdits, tContent)
 end DiffPatch
 
 /**
@@ -220,14 +223,17 @@ constant kLastSourceIndex = "lastSourceIndex"
 constant kDelta = "delta"
 
 -- produce unified diff from edit list, containing pContextLength lines of context
-private function convert_to_unified pEdits, pSource, pSourceLength, pContextLength
+private function convert_to_unified pEdits, pA, pB, pContextLength
+   local tALength, tBLength
+   put the number of elements in pA into tALength
+   put the number of elements in pB into tBLength
    local tDiff
    local tHunk
    local tDelta = 0
    
    repeat for each line tEdit in pEdits
-      local tA, tB, tOperation, tContent
-      parse_edit tEdit, tA, tB, tOperation, tContent
+      local tA, tB, tOperation
+      parse_edit tEdit, tA, tB, tOperation
       
       if tHunk is an array and not continue_hunk(tHunk, tA, tOperation) then
          end_hunk tHunk
@@ -237,13 +243,13 @@ private function convert_to_unified pEdits, pSource, pSourceLength, pContextLeng
       end if
       
       if tHunk is not an array then
-         begin_hunk tHunk, pSource, pSourceLength, pContextLength
+         begin_hunk tHunk, pA, tALength, pContextLength
       end if
       
       if tOperation is kDiffOperationAdd then
-         add_addition tHunk, tA, tContent
+         add_addition tHunk, tA, pB[tB]
       else if tOperation is kDiffOperationDelete then
-         add_deletion tHunk, tA, tContent
+         add_deletion tHunk, tA, pA[tA]
       end if
    end repeat
    
@@ -279,22 +285,30 @@ end continue_hunk
 
 private command add_deletion @pHunk, pIndex, pContent
    add_context_before pHunk, pIndex
-   put "-" & pContent & cr after pHunk[kContent]
+   put "-" & pContent after pHunk[kContent]
    if pHunk[kFirstSourceIndex] is empty then
       put pIndex into pHunk[kFirstSourceIndex]
    end if
    put pIndex into pHunk[kLastSourceIndex]
    subtract 1 from pHunk[kDelta]
+   
+   if not (pContent ends with return) then
+      put return & "\ No newline at end of file" & return after pHunk[kContent]
+   end if
 end add_deletion
 
 private command add_addition @pHunk, pIndex, pContent
    add_context_before pHunk, pIndex + 1
-   put "+" & pContent & cr after pHunk[kContent]
    if pHunk[kFirstSourceIndex] is empty then
       put pIndex into pHunk[kFirstSourceIndex]
    end if
    put pIndex into pHunk[kLastSourceIndex]
+   put "+" & pContent after pHunk[kContent]
    add 1 to pHunk[kDelta]
+   
+   if not (pContent ends with return) then
+      put return & "\ No newline at end of file" & return after pHunk[kContent]
+   end if
 end add_addition
 
 private command add_context_before @pHunk, pIndex
@@ -318,8 +332,12 @@ private command add_context_before @pHunk, pIndex
    end if
    
    repeat with i = tStart to tEnd
-      put space & pHunk[kSource][i] & cr after pHunk[kContent]
+      put space & pHunk[kSource][i] after pHunk[kContent]
    end repeat
+   
+   if not (pHunk[kContent] ends with return) then
+      put return & "\ No newline at end of file" & return after pHunk[kContent]
+   end if
    
    if pHunk[kFirstSourceIndex] is empty then
       put tStart into pHunk[kFirstSourceIndex]
@@ -358,8 +376,10 @@ end add_hunk
 ----------
 
 -- convert unified diff to edit list
-private function parse_unified pUniDiff
+private command parse_unified pUniDiff, @rEdits, @rContent
    local tEdits
+   local tContent
+   local tLastEdit
    repeat for each line tLine in pUniDiff
       // skip file headers if present
       if tLine begins with "+++" or tLine begins with "---" then
@@ -388,20 +408,35 @@ private function parse_unified pUniDiff
          end if
       else if tLine begins with space then
          // skip context line
+         put empty into tLastEdit
+         
          add 1 to tAStart
          add 1 to tBStart
          subtract 1 from tALength
          subtract 1 from tBLength
       else if tLine begins with "+" then
          // addition
-         put format_edit(tAStart - 1, tBStart, kDiffOperationAdd, char 2 to -1 of tLine) & return after tEdits
+         put tAStart - 1,kDiffOperationAdd,tBStart into tLastEdit
+         put tLastEdit & return after tEdits
+         put char 2 to -1 of tLine & return into tContent[tBStart]
+         
          add 1 to tBStart
          subtract 1 from tBLength
       else if tLine begins with "-" then
          // deletion
-         put format_edit(tAStart, tBStart - 1, kDiffOperationDelete, char 2 to -1 of tLine) & return after tEdits
+         put tAStart, kDiffOperationDelete, tBStart - 1 into tLastEdit
+         put tLastEdit & return after tEdits
+         
          add 1 to tAStart
          subtract 1 from tALength
+      else if tLine begins with "\" then
+         // no newline
+         local tA, tB, tLastOp
+         parse_edit tLastEdit, tA, tB, tLastOp
+         // remove newline from content of last operation (if addition)
+         if tLastOp is kDiffOperationAdd then
+            delete the last char of tContent[tB]
+         end if
       end if
    end repeat
    
@@ -438,13 +473,36 @@ private function _combine @pArray, pDelimiter
    return tCombined
 end _combine
 
+-- split function which retains delimiter chars
+private function _split pString, pDelim
+   local tArray
+   local tIndex = 0
+   set the linedelimiter to pDelim
+   repeat for each line tLine in pString
+      add 1 to tIndex
+      put tLine & pDelim into tArray[tIndex]
+   end repeat
+   
+   // remove delim from last line if missing from string
+   if not (pString ends with pDelim) then
+      delete last char of tArray[tIndex]
+   end if
+   
+   return tArray
+end _split
+
 --------------------------------------------------------------------------------
 
 -- generate list of edits between two strings
 private function diff_strings pA, pB
-   split pA by cr
-   split pB by cr
+   put _split(pA, return) into pA
+   put _split(pB, return) into pB
    
+   return diff_arrays(pA, pB)
+end diff_strings
+
+-- generate list of edits between two arrays
+private function diff_arrays pA, pB
    local tALength, tBLength
    put the number of elements in pA into tALength
    put the number of elements in pB into tBLength
@@ -465,15 +523,15 @@ private function diff_strings pA, pB
    end if
    
    return tEdits
-end diff_strings
+end diff_arrays
 
 -- apply edit list to string
-private function patch_string pString, pEdits
-   split pString by cr
+private function patch_string pString, pEdits, pContent
+   put _split(pString, return) into pString
    local tOutput
-   put patch_arrays(pString, the number of elements in pString, pEdits) into tOutput
+   put patch_arrays(pString, pEdits, pContent) into tOutput
    
-   return _combine(tOutput, cr)
+   return _combine(tOutput, empty)
    
    return tOutput
 end patch_string
@@ -512,26 +570,8 @@ private function compare_arrays pA, pALength, pB, pBLength
       
    end repeat
    
-   return add_content_to_edits(tPath[tDelta], pA, pB)
+   return tPath[tDelta]
 end compare_arrays
-
-private function add_content_to_edits pEdits, pA, pB
-   local tEdits
-   repeat for each line tEdit in pEdits
-      local tA, tB, tOperation
-      put item 2 of tEdit into tOperation
-      local tContent
-      if tOperation is kDiffOperationAdd then
-         put item 3 of tEdit into tB
-         put pB[tB] into tContent
-      else
-         put item 1 of tEdit into tA
-         put pA[tA] into tContent
-      end if
-      put tEdit,tContent & return after tEdits
-   end repeat
-   return tEdits
-end add_content_to_edits
 
 private command compare_diagonal @pFP, @pPath, @pA, pALength, @pB, pBLength, k
    local tLeft, tRight, tNext, tPrevPath, tOperation, tContent
@@ -578,18 +618,18 @@ private function snake @pA, pALength, @pB, pBLength, k, y
 end snake
 
 -- apply edits to source array, producing output array
-private function patch_arrays @pA, pALength, pEdits
+private function patch_arrays pA, pEdits, pContent
    local tOutput
    local tIndex, tAIndex
    put 1 into tIndex
    put 1 into tAIndex
    repeat for each line tEdit in pEdits
-      local tA, tB, tOperation, tContent
-      parse_edit tEdit, tA, tB, tOperation, tContent
+      local tA, tB, tOperation
+      parse_edit tEdit, tA, tB, tOperation
       
       if tOperation is kDiffOperationAdd then
          skip_edits tOutput, tIndex, pA, tAIndex, tA
-         put tContent into tOutput[tIndex]
+         put pContent[tB] into tOutput[tIndex]
          add 1 to tIndex
          put tA + 1 into tAIndex
       else if tOperation is kDiffOperationDelete then
@@ -599,7 +639,7 @@ private function patch_arrays @pA, pALength, pEdits
       
    end repeat
    
-   skip_edits tOutput, tIndex, pA, tAIndex, pALength
+   skip_edits tOutput, tIndex, pA, tAIndex, the number of elements in pA
    
    return tOutput
 end patch_arrays
@@ -617,12 +657,12 @@ private function reverse_edits pEdits
    local tA, tB, tOperation, tContent
    
    repeat for each line tEdit in pEdits
-      parse_edit tEdit, tA, tB, tOperation, tContent
+      parse_edit tEdit, tA, tB, tOperation
       
       if tOperation is kDiffOperationAdd then put kDiffOperationDelete into tOperation
       else if tOperation is kDiffOperationDelete then put kDiffOperationAdd into tOperation
       
-      put format_edit(tB, tA, tOperation, tContent) & return after tEdits
+      put tB, tOperation, tA & return after tEdits
    end repeat
    
    return tEdits
@@ -632,11 +672,10 @@ private function format_edit pAIndex, pBIndex, pOperation, pContent
    return pAIndex,pOperation,pBIndex,pContent
 end format_edit
 
-private command parse_edit pEdit @rAIndex, @rBIndex, @rOperation, @rContent
+private command parse_edit pEdit @rAIndex, @rBIndex, @rOperation
    put item 1 of pEdit into rAIndex
    put item 2 of pEdit into rOperation
    put item 3 of pEdit into rBIndex
-   put item 4 to -1 of pEdit into rContent
 end parse_edit
 
 --------------------------------------------------------------------------------
