@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2745,9 +2745,9 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	IO_handle stream;
 	stream = GetStream();
 	
-	MCColor *colors = nil;
-	colors = new (nothrow) MCColor[m_fh.ncolors];
-	t_success = colors != nil;
+    MCAutoPointer<MCColor[]> colors = new (nothrow) MCColor[m_fh.ncolors];
+    if (!colors)
+        return false;
 
 	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
 	{
@@ -2761,7 +2761,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 			IO_read_uint1(&t_pad, stream) == IO_NORMAL;
 	}
 
-	char *t_newimage_data = nil;
+    MCAutoPointer<char[]> t_newimage_data;
 
 	if (t_success)
 	{
@@ -2772,9 +2772,10 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 		uint4 bytes = m_fh.bytes_per_line * m_fh.pixmap_height;
 		if (m_fh.bits_per_pixel == 1)
 			bytes *= m_fh.pixmap_depth;
-		t_newimage_data = new (nothrow) char[bytes];
-		t_success = t_newimage_data != nil &&
-			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
+		t_newimage_data =
+		    MCAutoPointer<char[]>(new (nothrow) char[bytes]);
+		t_success = t_newimage_data &&
+			IO_read(t_newimage_data.Get(), bytes, stream) == IO_NORMAL;
 	}
 
 	uint32_t t_width, t_height;
@@ -2856,9 +2857,6 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 			}
 		}
 	}
-
-	delete t_newimage_data;
-	delete colors;
 
 	if (t_success)
 	{
