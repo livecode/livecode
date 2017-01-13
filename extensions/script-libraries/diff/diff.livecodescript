@@ -122,12 +122,12 @@ A string representing the changes between pFrom and pTo in unified diff format.
 
 */
 
-function DiffCompareFiles pFrom, pTo
+function DiffCompareFiles pFrom, pTo, pContext
    // produce file header
    local tDiff
    put "--- " & pFrom & tab & udiff_file_timestamp(pFrom) & cr & \
          "+++ " & pTo & tab & udiff_file_timestamp(pTo) & cr into tDiff
-   put udiff_strings(url ("file:" & pFrom), url ("file:" & pTo)) after tDiff
+   put DiffCompare(url ("binfile:" & pFrom), url ("binfile:" & pTo), pContext) after tDiff
    return tDiff
 end DiffCompareFiles
 
