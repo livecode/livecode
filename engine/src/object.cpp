@@ -280,7 +280,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 
 MCObject::~MCObject()
 {
-	while (opened)
+    MCAssert(!m_in_id_cache);
+    
+    while (opened)
 		close();
 
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
