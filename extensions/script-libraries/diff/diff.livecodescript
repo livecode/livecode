@@ -299,10 +299,6 @@ end add_deletion
 
 private command add_addition @pHunk, pIndex, pContent
    add_context_before pHunk, pIndex + 1
-   if pHunk[kFirstSourceIndex] is empty then
-      put pIndex into pHunk[kFirstSourceIndex]
-   end if
-   put pIndex into pHunk[kLastSourceIndex]
    put "+" & pContent after pHunk[kContent]
    add 1 to pHunk[kDelta]
    
