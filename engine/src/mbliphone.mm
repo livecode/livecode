@@ -383,7 +383,12 @@ bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 
 bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 {
-	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] model], r_string);
+    NSString *t_machine = [[UIDevice currentDevice] model];
+#if TARGET_IPHONE_SIMULATOR
+    t_machine = [t_machine stringByAppendingString:@" Simulator"];
+#endif
+    
+    return MCStringCreateWithCFString((CFStringRef)t_machine, r_string);
 }
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
