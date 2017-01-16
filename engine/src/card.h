@@ -118,6 +118,7 @@ public:
 
 	virtual void geometrychanged(const MCRectangle &p_rect);
 
+    virtual void removefromobjecttree(bool p_is_child);
     virtual void scheduledelete(bool p_is_child);
     
     virtual bool isdeletable(bool p_check_flag);

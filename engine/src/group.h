@@ -148,7 +148,8 @@ public:
 	virtual MCRectangle getviewportgeometry();
 	
 	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
-	
+
+    virtual void removefromobjecttree(bool p_is_child);
     virtual void scheduledelete(bool p_is_child);
     
     virtual bool isdeletable(bool p_check_flag);

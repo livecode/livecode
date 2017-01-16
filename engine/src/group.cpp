@@ -3109,9 +3109,15 @@ bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
 	return true;
 }
 
+void MCGroup::removefromobjecttree(bool p_is_child)
+{
+	MCControl::removefromobjecttree(p_is_child);
+}
+
 void MCGroup::scheduledelete(bool p_is_child)
 {
-    MCControl::scheduledelete(p_is_child);
+	if (p_is_child && isshared())
+		return;
     
 	if (controls != NULL)
 	{
@@ -3123,4 +3129,6 @@ void MCGroup::scheduledelete(bool p_is_child)
 		}
 		while(t_control != controls);
 	}
+	
+	MCControl::scheduledelete(p_is_child);
 }

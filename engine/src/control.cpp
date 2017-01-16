@@ -454,6 +454,60 @@ void MCControl::deselect()
 	}
 }
 
+void MCControl::removefromobjecttree(bool p_is_child)
+{
+    // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
+    // to a 'dragdrop' message would leave these globals pointing to the deleted
+    // object, leading to an infinite loop if the target was a field
+    if (MCdragdest == this)
+    {
+        MCdragdest = nil;
+        MCdropfield = nil;
+    }
+    
+    if (MCdragsource == this)
+        MCdragsource = nil;
+	
+    // IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
+    if (getselected())
+        getcard()->dirtyselection(rect);
+    
+	// Remove from the id cache before detaching from parent
+	MCObject::removefromobjecttree(p_is_child);
+    
+    switch (parent->gettype())
+    {
+        case CT_CARD:
+        {
+            if (!p_is_child)
+            {
+                parent.GetAs<MCCard>()->removecontrol(this, False, True);
+            }
+            getstack()->removecontrol(this);
+            break;
+        }
+        case CT_GROUP:
+        {
+            if (!p_is_child)
+            {
+                parent.GetAs<MCGroup>()->removecontrol(this, True);
+            }
+            break;
+        }
+        default:
+        {
+            parent.GetAs<MCStack>()->removecontrol(this);
+        }
+    }
+}
+
+void MCControl::scheduledelete(bool p_is_child)
+{
+	removefromobjecttree(p_is_child);
+	
+	MCObject::scheduledelete(p_is_child);
+}
+
 Boolean MCControl::del(bool p_check_flag)
 {
 	if (!isdeletable(p_check_flag))
@@ -492,47 +546,6 @@ Boolean MCControl::del(bool p_check_flag)
 	default:
 		break;
 	}
-
-	// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
-	if (getselected())
-		getcard()->dirtyselection(rect);
-
-	uint2 num = 0;
-	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
-	switch (parent->gettype())
-	{
-	case CT_CARD:
-		{
-			MCCard *cptr = parent.GetAs<MCCard>();
-			if (!cptr->removecontrol(this, False, True))
-				return False;
-			getstack()->removecontrol(this);
-			break;
-		}
-	case CT_GROUP:
-		{
-			MCGroup *gptr = parent.GetAs<MCGroup>();
-			gptr->removecontrol(this, True);
-			break;
-		}
-	default:
-		{ //stack
-			MCStack *sptr = parent.GetAs<MCStack>();
-			sptr->removecontrol(this);
-		}
-	}
-
-    // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
-    // to a 'dragdrop' message would leave these globals pointing to the deleted
-    // object, leading to an infinite loop if the target was a field
-    if (MCdragdest == this)
-    {
-        MCdragdest = nil;
-        MCdropfield = nil;
-    }
-    
-    if (MCdragsource == this)
-        MCdragsource = nil;
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.

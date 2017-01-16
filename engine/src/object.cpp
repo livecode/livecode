@@ -872,32 +872,7 @@ bool MCObject::isdeletable(bool p_check_flag)
 }
 
 Boolean MCObject::del(bool p_check_flag)
-{
-    // If the object is marked as being used as a parentScript, flush the parentScript
-    // table so we don't get any dangling pointers.
-	if (m_is_parent_script)
-	{
-		MCParentScript::FlushObject(this);
-        m_is_parent_script = false;
-    }
-    
-    // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
-    //  MCObject::scheduledelete, since a deleted object is no longer something
-    //  we want to listen to. In case we undo the deletion, it will be added
-    //  back to the list of listened objects; in case we revert the stack to its
-    //  saved state, we will now be left with a list of listened-to objects with
-    //  no dangling pointers.
-    
-    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
-    //   (if it is in it!).
-    if (m_in_id_cache)
-        getstack() -> uncacheobjectbyid(this);
-	
-	// This object is in the process of being deleted; invalidate any weak refs
-	// and prevent any new ones from being created.
-	m_weak_proxy->Clear();
-	m_weak_proxy = nil;
-	
+{	
 	return True;
 }
 
@@ -5094,10 +5069,35 @@ MCRectangle MCObject::GetNativeViewRect(const MCRectangle &p_object_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCObject::removefromobjecttree(bool p_is_child)
+{
+    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
+    //   (if it is in it!).
+    if (m_in_id_cache)
+		getstack() -> uncacheobjectbyid(this);
+}
+
 void MCObject::scheduledelete(bool p_is_child)
 {
+	removefromobjecttree(p_is_child);
+	
+	// If the object is marked as being used as a parentScript, flush the parentScript
+	// table so we don't get any dangling pointers.
+	if (m_is_parent_script)
+	{
+		MCParentScript::FlushObject(this);
+		m_is_parent_script = false;
+	}
+	
     if (!p_is_child)
+	{
+		// This object is in the process of being deleted; invalidate any weak refs
+		// and prevent any new ones from being created.
+		m_weak_proxy->Clear();
+		m_weak_proxy = nil;
+		
         MCDeletedObjectsOnObjectDeleted(this);
+	}
 }
 
 MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)

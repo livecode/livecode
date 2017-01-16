@@ -1139,34 +1139,6 @@ Boolean MCCard::del(bool p_check_flag)
 	message(MCM_delete_card);
 	
 	MCundos->freestate();
-	state |= CS_NO_MESSAGES | CS_OWN_CONTROLS;
-	getstack()->removecard(this);
-	state &= ~CS_NO_MESSAGES;
-	if (objptrs != NULL)
-	{
-		MCObjptr *optr = objptrs;
-		do
-		{
-			// MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-			//   than removed from the stack since they cannot be 'owned' by the card.
-			if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
-			{
-				// OK-2010-02-18: [[Bug 8268]] - If the group's parent is the card being deleted, reset 
-				// its parent to the stack to prevent dangling reference and crash.
-				if (!optr->getref()->getopened() || optr -> getref() -> getparent() == this)
-					optr->getref()->setparent(getstack());
-			}
-			else
-			{
-				getstack()->removecontrol(optr->getref());
-			}
-			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
-			if (dptr != NULL)
-				dptr->appendto(savedata);
-			optr = optr->next();
-		}
-		while (optr != objptrs);
-	}
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -3545,29 +3517,41 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font, bool p_force)
 	return t_changed;
 }
 
+void MCCard::removefromobjecttree(bool p_is_child)
+{
+    state |= CS_NO_MESSAGES | CS_OWN_CONTROLS;
+    getstack()->removecard(this);
+    state &= ~CS_NO_MESSAGES;
+	
+	MCObject::removefromobjecttree(p_is_child);
+}
+
 void MCCard::scheduledelete(bool p_is_child)
 {
-    MCObject::scheduledelete(p_is_child);
-    
     if (objptrs != NULL)
     {
         MCObjptr *optr = objptrs;
         do
         {
-            // MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-            //   than removed from the stack since they cannot be 'owned' by the card.
-            if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
+			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
+			if (dptr != NULL)
+				dptr->appendto(savedata);
+			
+			// OK-2010-02-18: [[Bug 8268]] - If the group's parent is the card being deleted, reset
+			// its parent to the stack to prevent dangling reference and crash.
+			if (!optr->getref()->getopened() || optr -> getref() -> getparent() == this)
             {
-                // Do nothing for shared groups as they move to the stack.
+				optr->getref()->setparent(getstack());
             }
-            else
-            {
-                optr -> getref() -> scheduledelete(true);
-            }
-            optr = optr->next();
+
+			optr -> getref() -> scheduledelete(true);
+            optr = optr -> next();
         }
         while (optr != objptrs);
     }
+	
+	removefromobjecttree(p_is_child);
+	MCObject::scheduledelete(p_is_child);
 }
 
 MCPlatformControlType MCCard::getcontroltype()
