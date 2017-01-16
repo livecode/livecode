@@ -1250,6 +1250,11 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     else if (group != nil || object != nil)
     {
         MCInterfaceEvalThisCardOfStack(ctxt, t_object, t_object);
+        if (t_object.object == nullptr)
+        {
+            ctxt.LegacyThrow(EE_CHUNK_BADCARDEXP);
+            return;
+        }
     }
 
     // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
