@@ -320,7 +320,7 @@ MCObject::~MCObject()
 
 	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
 	//   all deletions vector through 'scheduledelete'.
-	if (m_in_id_cache)
+	if (m_in_id_cache && hasstack())
 		getstack() -> uncacheobjectbyid(this);
     
     // If this object is a parent-script make sure we flush it from the table.
@@ -890,7 +890,7 @@ Boolean MCObject::del(bool p_check_flag)
     
     // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
     //   (if it is in it!).
-    if (m_in_id_cache)
+    if (m_in_id_cache && hasstack())
         getstack() -> uncacheobjectbyid(this);
 	
 	// This object is in the process of being deleted; invalidate any weak refs
@@ -913,6 +913,14 @@ void MCObject::undo(Ustruct *us)
 
 void MCObject::freeundo(Ustruct *us)
 {}
+
+bool MCObject::hasstack()
+{
+    if (!parent)
+        return false;
+    
+    return parent -> hasstack();
+}
 
 MCStackHandle MCObject::getstack()
 {

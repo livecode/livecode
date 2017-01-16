@@ -358,7 +358,9 @@ public:
     
 	virtual void paste(void);
 
+    virtual bool hasstack(void);
 	virtual MCStackHandle getstack();
+    
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
