@@ -1194,8 +1194,8 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 		uint4 t_class_index;
 		t_class_index = 0;
         
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
         
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
