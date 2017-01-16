@@ -1079,7 +1079,6 @@ Boolean MCGroup::del(bool p_check_flag)
 	if (!isdeletable(p_check_flag))
 	    return False;
 	
-    rect = getcard()->getrect();
 	return MCControl::del(p_check_flag);
 }
 

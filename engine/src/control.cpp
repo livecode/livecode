@@ -497,8 +497,6 @@ Boolean MCControl::del(bool p_check_flag)
 	if (getselected())
 		getcard()->dirtyselection(rect);
 
-	uint2 num = 0;
-	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
 	{
         case CT_STACK:
