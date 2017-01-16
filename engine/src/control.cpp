@@ -501,25 +501,25 @@ Boolean MCControl::del(bool p_check_flag)
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
 	{
-	case CT_CARD:
-		{
-			MCCard *cptr = parent.GetAs<MCCard>();
-			if (!cptr->removecontrol(this, False, True))
+        case CT_STACK:
+            uncacheid();
+            parent.GetAs<MCStack>()->removecontrol(this);
+            break;
+        
+        case CT_CARD:
+            if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
 				return False;
+            uncacheid();
 			getstack()->removecontrol(this);
 			break;
-		}
-	case CT_GROUP:
-		{
-			MCGroup *gptr = parent.GetAs<MCGroup>();
-			gptr->removecontrol(this, True);
+        
+        case CT_GROUP:
+			parent.GetAs<MCGroup>()->removecontrol(this, True);
+            uncacheid();
 			break;
-		}
-	default:
-		{ //stack
-			MCStack *sptr = parent.GetAs<MCStack>();
-			sptr->removecontrol(this);
-		}
+
+        default:
+            MCUnreachable();
 	}
 
     // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
