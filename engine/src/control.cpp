@@ -481,8 +481,7 @@ void MCControl::removefromobjecttree(bool p_is_child)
         {
             if (!p_is_child)
             {
-                MCCard *cptr = parent.GetAs<MCCard>();
-                cptr->removecontrol(this, False, True);
+                parent.GetAs<MCCard>()->removecontrol(this, False, True);
             }
             getstack()->removecontrol(this);
             break;
@@ -491,15 +490,13 @@ void MCControl::removefromobjecttree(bool p_is_child)
         {
             if (!p_is_child)
             {
-                MCGroup *gptr = parent.GetAs<MCGroup>();
-                gptr->removecontrol(this, True);
+                parent.GetAs<MCGroup>()->removecontrol(this, True);
             }
             break;
         }
         default:
         {
-            MCStack *sptr = parent.GetAs<MCStack>();
-            sptr->removecontrol(this);
+            parent.GetAs<MCStack>()->removecontrol(this);
         }
     }
 }
