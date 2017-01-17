@@ -52,6 +52,9 @@ command __TestDiffFilesInFolder pFolder, pFileA, pFileB, pDescription
    __TestDiffFiles (pFileA & ".txt"), (pFileB & ".txt"), (pFileA & "_" & pFileB & ".diff"), (pDescription & " - " & pFileA & " -> " & pFileB)
    __TestDiffFiles (pFileB & ".txt"), (pFileA & ".txt"), (pFileB & "_" & pFileA & ".diff"), (pDescription & " - " & pFileB & " -> " & pFileA)
    
+   __TestPatchFiles (pFileA & ".txt"), (pFileB & ".txt"), (pFileA & "_" & pFileB & ".diff"), (pDescription & " - PATCH " & pFileA & " -> " & pFileB)
+   __TestPatchFiles (pFileB & ".txt"), (pFileA & ".txt"), (pFileB & "_" & pFileA & ".diff"), (pDescription & " - PATCH " & pFileB & " -> " & pFileA)
+   
    set the defaultFolder to tDefaultFolder
 end __TestDiffFilesInFolder
 
@@ -77,6 +80,23 @@ command __TestDiffFiles pFileA, pFileB, pReferenceFile, pDescription
    
    TestAssert pDescription, tDiff is tReferenceDiff
 end __TestDiffFiles
+
+command __TestPatchFiles pFileA, pFileB, pDiffFile, pDescription
+   local tA, tB, tDiff
+   
+   // catch missing files
+   TestAssert "file exists - " & pFileA, there is a file pFileA
+   TestAssert "file exists - " & pFileB, there is a file pFileB
+   TestAssert "file exists - " & pDiffFile, there is a file pDiffFile
+   
+   put url ("binfile:" & pFileA) into tA
+   put url ("binfile:" & pFileB) into tB
+   put url ("binfile:" & pDiffFile) into tDiff
+   
+   put DiffPatch(tA, tDiff) into tA
+   
+   TestAssert pDescription, tA is tB
+end __TestPatchFiles
 
 private function get_library_folder
    return TestGetEngineRepositoryPath() & "/extensions/script-libraries/diff"
