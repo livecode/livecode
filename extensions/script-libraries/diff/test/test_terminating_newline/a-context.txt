@@ -1,0 +1,7 @@
+This file has some text, with the final context line NOT terminated by LF
+
+********
+
+********
+Sample text
+Context
