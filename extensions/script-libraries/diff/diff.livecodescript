@@ -215,6 +215,7 @@ end detailed_files
 -- format conversion --
 
 constant kContent = "content"
+constant kAdditions = "additions"
 constant kSource = "source"
 constant kSourceLength = "sourceLength"
 constant kContextLength = "contextLength"
@@ -270,6 +271,8 @@ private command begin_hunk @pHunk, pSource, pSourceLength, pContextLength
 end begin_hunk
 
 private command end_hunk @pHunk
+   flush_additions pHunk
+   
    if pHunk[kLastSourceIndex] is not empty then
       add_context_before pHunk, pHunk[kLastSourceIndex] + pHunk[kContextLength] + 1
    end if
@@ -299,13 +302,21 @@ end add_deletion
 
 private command add_addition @pHunk, pIndex, pContent
    add_context_before pHunk, pIndex + 1
-   put "+" & pContent after pHunk[kContent]
+   // Defer adding additions to ensure they come after deletions
+   put "+" & pContent after pHunk[kAdditions]
    add 1 to pHunk[kDelta]
    
    if not (pContent ends with return) then
-      put return & "\ No newline at end of file" & return after pHunk[kContent]
+      put return & "\ No newline at end of file" & return after pHunk[kAdditions]
    end if
 end add_addition
+
+private command flush_additions @pHunk
+   if pHunk[kAdditions] is not empty then
+      put pHunk[kAdditions] after pHunk[kContent]
+      put empty into pHunk[kAdditions]
+   end if
+end flush_additions
 
 private command add_context_before @pHunk, pIndex
    local tStart, tEnd
@@ -326,6 +337,8 @@ private command add_context_before @pHunk, pIndex
    if tStart > tEnd or tEnd < 1 then
       exit add_context_before
    end if
+   
+   flush_additions pHunk
    
    repeat with i = tStart to tEnd
       put space & pHunk[kSource][i] after pHunk[kContent]
