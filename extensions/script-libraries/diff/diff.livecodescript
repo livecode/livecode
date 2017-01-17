@@ -449,7 +449,8 @@ private command parse_unified pUniDiff, @rEdits, @rContent
       end if
    end repeat
    
-   return tEdits
+   put tContent into rContent
+   put tEdits into rEdits
 end parse_unified
 
 --------------------------------------------------------------------------------
