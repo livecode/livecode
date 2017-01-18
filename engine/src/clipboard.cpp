@@ -1288,8 +1288,8 @@ MCStringRef MCClipboard::ConvertStyledTextToText(MCDataRef p_pickled_text)
     if (!MCtemplatefield->exportasplaintext(t_paragraphs, 0, INT32_MAX,
                                             &t_text))
         return NULL;
-    
-    return MCValueRetain(*t_text);
+
+    return t_text.Take();
 }
 
 MCStringRef MCClipboard::ConvertStyledTextToHTML(MCDataRef p_pickled_text)
@@ -1348,7 +1348,7 @@ MCDataRef MCClipboard::ConvertStyledTextToRTF(MCDataRef p_pickled_text)
     if (!MCStringEncode(*t_text, kMCStringEncodingNative, false, &t_rtf))
         return NULL;
     
-    return MCValueRetain(*t_rtf);
+    return t_rtf.Take();
 }
 
 MCDataRef MCClipboard::ConvertRTFToStyledText(MCDataRef p_rtf_data)
@@ -1415,8 +1415,8 @@ MCArrayRef MCClipboard::ConvertStyledTextToStyledTextArray(MCDataRef p_pickled_t
     if (*t_style_array == NULL)
         return NULL;
     
-    // Return a copy of the styled text array
-    return MCValueRetain(*t_style_array);
+    // Return the styled text array
+    return t_style_array.Take();
 }
 
 MCDataRef MCClipboard::ConvertStyledTextArrayToStyledText(MCArrayRef p_styles)
