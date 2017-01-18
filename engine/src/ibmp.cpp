@@ -2788,6 +2788,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
     if (!MCImageBitmapCreate(t_width, t_height, t_frame->image))
     {
         MCImageFreeFrames(t_frame, 1);
+        return false;
     }
 
     uint2 redshift, greenshift, blueshift, redbits, greenbits, bluebits;
