@@ -280,7 +280,9 @@ MCObject::MCObject(const MCObject &oref)
 
 MCObject::~MCObject()
 {
-	while (opened)
+    MCAssert(!m_in_id_cache);
+    
+    while (opened)
 		close();
 
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
@@ -316,11 +318,6 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-
-	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
-	//   all deletions vector through 'scheduledelete'.
-	if (m_in_id_cache)
-		getstack() -> uncacheobjectbyid(this);
     
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
@@ -858,6 +855,12 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
+void MCObject::uncacheid()
+{
+    if (m_in_id_cache)
+        getstack()->uncacheobjectbyid(this);
+}
+
 bool MCObject::isdeletable(bool p_check_flag)
 {
     if (!parent || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
@@ -879,18 +882,6 @@ Boolean MCObject::del(bool p_check_flag)
 		MCParentScript::FlushObject(this);
         m_is_parent_script = false;
     }
-    
-    // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
-    //  MCObject::scheduledelete, since a deleted object is no longer something
-    //  we want to listen to. In case we undo the deletion, it will be added
-    //  back to the list of listened objects; in case we revert the stack to its
-    //  saved state, we will now be left with a list of listened-to objects with
-    //  no dangling pointers.
-    
-    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
-    //   (if it is in it!).
-    if (m_in_id_cache)
-        getstack() -> uncacheobjectbyid(this);
 	
 	// This object is in the process of being deleted; invalidate any weak refs
 	// and prevent any new ones from being created.

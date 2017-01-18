@@ -1071,17 +1071,9 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !haswindow())
+	if (!opened)
 	{
-		if (opened)
-		{
-			curcard->close();
-			curcard = card;
-			curcard->open();
-		}
-
-		else
-			curcard = card;
+		curcard = card;
 		return ES_NORMAL;
 	}
 

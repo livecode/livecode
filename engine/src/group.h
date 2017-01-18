@@ -92,7 +92,7 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
 
-    
+    virtual void uncacheid(void);
 	virtual Boolean del(bool p_check_flag);
 	virtual void recompute();
 
