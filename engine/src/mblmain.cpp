@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "system.h"
 #include "font.h"
+#include "debug.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -146,7 +147,12 @@ bool X_main_loop_iteration(void)
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-    if (!MCtodestroy -> isempty())
+	if (MCtracedobject)
+	{
+		MCtracedobject->message(MCM_trace_done);
+		MCtracedobject = nil;
+	}
+	if (!MCtodestroy -> isempty())
     {
         MCtooltip -> cleartip();
         MCtodestroy -> destroy();
