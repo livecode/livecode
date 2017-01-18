@@ -191,7 +191,7 @@ private:
     mutable uindex_t m_lock_count;
     
     // Private data (if any) added to this clipboard
-    MCDataRef m_private_data;
+    mutable MCDataRef m_private_data;
     
     // Set whenever a modification is made to the clipboard. No updates are
     // pushed if no modifications have been made.
