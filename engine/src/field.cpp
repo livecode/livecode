@@ -310,7 +310,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     nalignments = fref.nalignments;
     if (nalignments)
     {
-        alignments = new (nothrow) intenum_t[ntabs];
+        /* UNCHECKED */ alignments = new (nothrow) intenum_t[nalignments];
         uint2 i;
         for (i = 0; i < nalignments; i++)
             alignments[i] = fref.alignments[i];
