@@ -1210,15 +1210,14 @@ MCParagraph* MCClipboard::CopyAsParagraphs(MCField* p_via_field) const
     if (CopyAsLiveCodeStyledText(&t_pickled_text))
     {
         // Turn the pickled text into a StyledText object
-        MCObject *t_object = MCObject::unpickle(*t_pickled_text, p_via_field -> getstack());
-        if (t_object == NULL)
+	    MCAutoPointer<MCObject> t_object = MCObject::unpickle(*t_pickled_text, p_via_field -> getstack());
+        if (!t_object)
             return NULL;
         
         // And from that, get the paragraph structures that the field can deal with
         MCParagraph *t_paragraphs;
-        t_paragraphs = (static_cast<MCStyledText*>(t_object))->grabparagraphs(p_via_field);
-        
-        delete t_object;
+        t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->grabparagraphs(p_via_field);
+
         return t_paragraphs;
     }
     
@@ -1274,21 +1273,20 @@ const MCRawClipboardItem* MCClipboard::GetItem() const
 MCStringRef MCClipboard::ConvertStyledTextToText(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+	MCAutoPointer<MCObject> t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as plain text
     MCAutoStringRef t_text;
-    bool t_success = MCtemplatefield->exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportasplaintext(t_paragraphs, 0, INT32_MAX,
+                                            &t_text))
         return NULL;
     
     return MCValueRetain(*t_text);
@@ -1297,21 +1295,21 @@ MCStringRef MCClipboard::ConvertStyledTextToText(MCDataRef p_pickled_text)
 MCStringRef MCClipboard::ConvertStyledTextToHTML(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as HTML
     MCAutoDataRef t_html;
-    bool t_success = MCtemplatefield->exportashtmltext(t_paragraphs, 0, INT32_MAX, false, &t_html);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportashtmltext(t_paragraphs, 0, INT32_MAX,
+                                           false, &t_html))
         return NULL;
 
 	// Convert the HTML into a string
@@ -1326,21 +1324,20 @@ MCStringRef MCClipboard::ConvertStyledTextToHTML(MCDataRef p_pickled_text)
 MCDataRef MCClipboard::ConvertStyledTextToRTF(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as RTF
     MCAutoStringRef t_text;
-    bool t_success = MCtemplatefield->exportasrtftext(t_paragraphs, 0, INT32_MAX, &t_text);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportasrtftext(t_paragraphs, 0, INT32_MAX, &t_text))
         return NULL;
     
     // The RTF format description specifies that only 7-bit ASCII characters are
@@ -1401,19 +1398,18 @@ MCDataRef MCClipboard::ConvertHTMLToStyledText(MCStringRef p_html_string)
 MCArrayRef MCClipboard::ConvertStyledTextToStyledTextArray(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // Grab the paragraphs from the object and turn them into a text styles
     // array.
     MCParagraph* t_paragraphs;
     MCAutoArrayRef t_style_array;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs != NULL)
         MCtemplatefield->exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_style_array);
-
-    delete t_object;
     
     // If generating the array failed, return NULL
     if (*t_style_array == NULL)
