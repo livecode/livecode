@@ -132,7 +132,6 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    put "&client_id=" & urlEncode(pClientID) after tURL
    
    if pScopes is not empty then
-      replace space with "%20" in pScopes
       put "&scope=" & urlEncode(pScopes) after tURL
    end if
    
@@ -142,7 +141,6 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    
    local tKey
    repeat for each key tKey in pParams
-      replace space with "%20" in pParams[tKey]
       put "&" & tKey & "=" & urlEncode(pParams[tKey]) after tURL
    end repeat
    
