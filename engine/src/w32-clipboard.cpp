@@ -480,16 +480,13 @@ MCDataRef MCWin32RawClipboardCommon::DecodeTransferredHTML(MCDataRef p_data) con
 	uindex_t t_start = -1;
 	uindex_t t_end = -1;
 
+	// Strip off the HTML fragment headers but leave the context elements intact;
+	// the legacy clipboard round-trips through a field object so these will get
+	// removed then while they will be retained for the fullClipboardData.
 	if (t_starthtml != -1 && t_endhtml != -1)
 	{
 		t_start = t_starthtml;
 		t_end = t_endhtml;
-	}
-
-	if (t_startfragment != -1 && t_endfragment != -1)
-	{
-		t_start = t_startfragment;
-		t_end = t_endfragment;
 	}
 
 	t_end = MCClamp(t_end, 0, MCDataGetLength(p_data));
@@ -688,11 +685,6 @@ bool MCWin32RawClipboard::PushUpdates()
 	// Clipboard is now clean
 	if (t_result == S_OK)
 	{
-		// Flush the clipboard. By doing this now, we ensure that other apps
-		// won't hang if LiveCode is busy processing something and they
-		// attempt to fetch data from the clipboard.
-		OleFlushClipboard();
-		
 		m_dirty = false;
 	}
 
