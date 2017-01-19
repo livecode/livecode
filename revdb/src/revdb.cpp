@@ -660,15 +660,15 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		free(t_variable_name);
 		free(t_key_name);
 
-		// OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
-		// to problems where the engine overwrites the buffer, leading to the wrong values being
-		// inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
-		char *t_new_buffer;
-		t_new_buffer = (char *)malloc(t_value . length);
-		memcpy(t_new_buffer, t_value . buffer, t_value . length);
-
 		if (t_value . buffer != NULL) 
 		{
+            // OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
+            // to problems where the engine overwrites the buffer, leading to the wrong values being
+            // inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
+            char *t_new_buffer;
+            t_new_buffer = (char *)malloc(t_value . length);
+            memcpy(t_new_buffer, t_value . buffer, t_value . length);
+
 			t_values[r_value_count] . Set(t_new_buffer, t_value . length, t_is_binary);
 			r_value_count += 1;
 		}
