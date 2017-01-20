@@ -68,7 +68,7 @@ a <file> before continuing.
 The dialog box displayed is the same one most programs use for the
 "Open" command in the File menu.
 
->*Important:*  The <answer file command> does not open the <file>. It
+>*Important:*  The <answer file> <command> does not open the <file>. It
 > only displays the dialog box and retrieves the path to the file the
 > user specifies.
 
@@ -91,7 +91,7 @@ dialog box|standard file dialog>.
 Changes:
 The answer file ... with type ... form was introduced in version 2.6.
 
-References: answer file (command), answer file command (command),
+References: answer file (command), command (glossary),
 property (glossary), variable (glossary), handler (glossary),
 file dialog box (glossary), file path (glossary),
 modal dialog box (glossary), dialog box (glossary), file (keyword),

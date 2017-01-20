@@ -43,7 +43,7 @@ image, and the image's lockLocation <property> is set to false, the
 <lockLocation> is true, the rotated <image(keyword)> is cropped to fit
 within the <image(object)|image's> <rectangle>.
 
-The current setting of the <resizeQuality property> is used to determine
+The current setting of the <resizeQuality> <property> is used to determine
 whether to apply filtering to the rotation operation. If set to normal
 no filtering is used; if set to good or best a bilinear filter is used
 which significantly reduces the distortion that will naturally occur
@@ -79,7 +79,7 @@ property (glossary), referenced control (glossary), paint tool (glossary),
 command (glossary), execution error (glossary), image (keyword),
 rectangle (keyword), image (object), resizeQuality (property),
 angle (property), lockLocation (property),
-resizeQuality property (property)
+
 
 Tags: ui
 

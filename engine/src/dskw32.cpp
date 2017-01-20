@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 #include <AclAPI.h>
 
 #ifdef DeleteFile
@@ -502,7 +502,7 @@ static DWORD readThread(Streamnode *process)
 {
 	DWORD nread;
 	uint32_t t_bufsize = READ_PIPE_SIZE;
-	char* t_buffer = new char[t_bufsize];
+	char* t_buffer = new (nothrow) char[t_bufsize];
 
 	while (process -> ihandle != NULL)
 	{
@@ -1629,7 +1629,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return true;
 		}
         
-        char *buffer = new char[MAXHOSTNAMELEN + 1];
+        char *buffer = new (nothrow) char[MAXHOSTNAMELEN + 1];
         gethostname(buffer, MAXHOSTNAMELEN);
 		buffer[MAXHOSTNAMELEN] = '\0';
         return MCStringFormat(r_address, "%s:%@", buffer, MCcmd);
@@ -1933,21 +1933,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
-        //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
-        //{
-		//char *buf;
-		//ep.reserve(PATH_MAX, buf);
-		//if (GetWindowsDirectoryA(buf, PATH_MAX))
-		//{
-		//	wasfound = True;
-		//	ep.commit(strlen(buf));
-		//}
-        //}
-        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
-                 // so the resources folder is the engine folder.
-                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -2240,12 +2227,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
-					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+					t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                     t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
-					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					t_handle = new (nothrow) MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
                     // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
                     //  file handler open in case the memory mapped file could
                     //  not be allocated. We always close the normal file handle
@@ -2258,13 +2245,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// (for empty files for instance).
 			else
             {
-				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+				t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                 t_close_file_handler = t_handle == NULL;
             }
 		}
 		else
         {
-			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
             t_close_file_handler = t_handle == NULL;
         }
 
@@ -2289,7 +2276,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return nil;
 
 		// Since we can only have an STD fd, we know we have a pipe.
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
+		t_stdio_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -2465,7 +2452,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path)
 	{
-		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+		WCHAR* wcFileNameBuf = new (nothrow) WCHAR[MAX_PATH+1];
 		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
 		
 		MCAutoStringRef t_path;
@@ -2805,8 +2792,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+        MCprocesses[index].ohandle = new (nothrow) MCMemoryFileHandle;
+		MCprocesses[index].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -3098,12 +3085,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
+				MCprocesses[MCnprocesses].ohandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+				MCprocesses[MCnprocesses].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }
@@ -3916,24 +3903,6 @@ uint2 MCS_charsettolangid(uint1 charset)
 		if (langidtocharsets[i].charset == charset)
 			return langidtocharsets[i].langid;
 	return 0;
-}
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	GUID t_guid;
-	if (CoCreateGuid(&t_guid) == S_OK)
-	{
-		unsigned char __RPC_FAR *t_guid_string;
-		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
-		{
-			strcpy(p_buffer, (char *)t_guid_string);
-			RpcStringFreeA(&t_guid_string);
-		}
-        
-		return true;
-	}
-    
-	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

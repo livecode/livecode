@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <wincrypt.h>
@@ -330,8 +329,8 @@ bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &
         if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
             MCsockets[i]->resolve_state == kMCSocketStateError)
             continue;
-        if (MCsockets[i]->connected && !MCsockets[i]->closing
-            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+        if ((MCsockets[i]->connected && !MCsockets[i]->closing
+             && !MCsockets[i]->shared) || MCsockets[i]->accepting)
             FD_SET(fd, &r_rmaskfd);
         if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
             FD_SET(fd, &r_wmaskfd);
@@ -848,7 +847,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 	}
 	else
 	{
-		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetObject(), mptr);
+		MCSocketread *eptr = new (nothrow) MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetObject(), mptr);
 		eptr->appendto(s->revents);
 		s->setselect();
 		if (s->accepting)
@@ -970,29 +969,29 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
 		setsockopt(s -> fd, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
 	
-        MCAutoPointer<char> temp_d;
-        /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
+        MCAutoStringRefAsCString temp_d;
+        /* UNCHECKED */ temp_d.Lock(d);
+
 		if (s->shared)
 		{
-            char *t_name_copy;
-            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name), t_name_copy);
-            
-			char *portptr = strchr(t_name_copy, ':');
+            MCAutoCustomPointer<char,MCMemoryDeleteArray> t_name_copy;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name),
+                                                     &t_name_copy);
+
+			char *portptr = strchr(*t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
+			if (!inet_aton(*t_name_copy, (in_addr *)&to.sin_addr.s_addr)
 				|| sendto(s->fd, *temp_d, MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-            
-            delete[] t_name_copy;
 		}
 		else if (send(s->fd, *temp_d, MCStringGetLength(d), 0) < 0)
 		{
@@ -1009,7 +1008,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	{
 		// MM-2014-02-12: [[ SecureSocket ]] Store against the write if it should be encrypted.
 		//  This way, upon securing a socket, all pending writes will remain unencrypted whilst all new writes will be encrypted.
-		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr, s->secure);
+		MCSocketwrite *eptr = new (nothrow) MCSocketwrite(d, optr, mptr, s->secure);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)
@@ -1086,8 +1085,22 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	memset((char *)&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
+	
+	if (MCdefaultnetworkinterface != NULL)
+	{
+		MCAutoStringRef MCdefaultnetworkinterface_string;
+		if (!MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string) ||
+			!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, addr))
+		{
+			MCresult->sets("can't resolve network interface");
+			return NULL;
+		}
+	}
+	else
+		addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
+	
 	addr.sin_port = MCSwapInt16HostToNetwork(port);
+	
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
@@ -1115,8 +1128,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
     
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
-    MCAutoPointer<char_t[]> t_port_chars;
-    t_port_chars = new char_t[U2L];
+    /* UNCHECKED */ MCAutoPointer<char_t[]> t_port_chars = new (nothrow) char_t[U2L];
     t_length = sprintf((char *)(*t_port_chars), "%d", port);
 
 	MCNewAutoNameRef t_portname;
@@ -1153,6 +1165,98 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 
 bool MCS_hostaddress(MCStringRef &r_host_address)
 {
+#if defined(_MACOSX)
+    bool t_success;
+    t_success = true;
+    
+    SCDynamicStoreRef t_store;
+    t_store = NULL;
+    if (t_success)
+    {
+        t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
+        if (t_store == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_network_key;
+    t_network_key = NULL;
+    if (t_success)
+    {
+        t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
+        if (t_network_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_network_value;
+    t_network_value = NULL;
+    if (t_success)
+    {
+        t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
+        if (t_network_value == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface;
+    t_interface = NULL;
+    if (t_success)
+    {
+        t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
+        if (t_interface == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface_key;
+    t_interface_key = NULL;
+    if (t_success)
+    {
+        t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
+        if (t_interface_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_interface_value;
+    t_interface_value = NULL;
+    if (t_success)
+    {
+        t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
+        if (t_interface_value == NULL)
+            t_success = false;
+    }
+    
+    char *t_result;
+    t_result = NULL;
+    if (t_success)
+    {
+        CFArrayRef t_addresses;
+        t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
+        if (t_addresses != NULL)
+        {
+            CFStringRef t_string;
+            t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
+            if (t_string != NULL)
+                t_result = osx_cfstring_to_cstring(t_string, false, false);
+        }
+    }
+    
+    if (t_interface_value != NULL)
+        CFRelease(t_interface_value);
+    
+    if (t_interface_key != NULL)
+        CFRelease(t_interface_key);
+    
+    if (t_network_value != NULL)
+        CFRelease(t_network_value);
+    
+    if (t_network_key != NULL)
+        CFRelease(t_network_key);
+    
+    if (t_store != NULL)
+        CFRelease(t_store);
+    
+    return MCStringCreateWithCString(t_result, r_host_address);
+ 
+#else
+    
 #if defined(_WINDOWS)
 	if (!wsainit())
 		return NULL;
@@ -1174,102 +1278,13 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 			}
 		}
 	}
-#elif defined(_MACOSX)
-	bool t_success;
-	t_success = true;
 
-	SCDynamicStoreRef t_store;
-	t_store = NULL;
-	if (t_success)
-	{
-		t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
-		if (t_store == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_network_key;
-	t_network_key = NULL;
-	if (t_success)
-	{
-		t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
-		if (t_network_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_network_value;
-	t_network_value = NULL;
-	if (t_success)
-	{
-		t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
-		if (t_network_value == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface;
-	t_interface = NULL;
-	if (t_success)
-	{
-		t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
-		if (t_interface == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface_key;
-	t_interface_key = NULL;
-	if (t_success)
-	{
-		t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
-		if (t_interface_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_interface_value;
-	t_interface_value = NULL;
-	if (t_success)
-	{
-		t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
-		if (t_interface_value == NULL)
-			t_success = false;
-	}
-
-	char *t_result;
-	t_result = NULL;
-	if (t_success)
-	{
-		CFArrayRef t_addresses;
-		t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
-		if (t_addresses != NULL)
-		{
-			CFStringRef t_string;
-			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
-			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false, false);
-		}
-	}
-	
-	if (t_interface_value != NULL)
-		CFRelease(t_interface_value);
-
-	if (t_interface_key != NULL)
-		CFRelease(t_interface_key);
-
-	if (t_network_value != NULL)
-		CFRelease(t_network_value);
-
-	if (t_network_key != NULL)
-		CFRelease(t_network_key);
-
-	if (t_store != NULL)
-		CFRelease(t_store);
-
-	return MCStringCreateWithCString(t_result, r_host_address);
-
-#elif defined(_LINUX)
-#else
 #endif
 
 	r_host_address = MCValueRetain(kMCEmptyString);
     return true;
+    
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1466,7 +1481,7 @@ void MCSocket::acceptone()
 		MCNameRef t_name;
 		MCNameCreate(*n, t_name);
         MCSocket *t_socket;
-        t_socket = new MCSocket(t_name, object, NULL, False, newfd, False, False,False);
+        t_socket = new (nothrow) MCSocket(t_name, object, NULL, False, newfd, False, False,False);
         if (t_socket != NULL)
         {
             MCSocketsAppendToSocketList(t_socket);
@@ -1490,15 +1505,15 @@ void MCSocket::readsome()
 		MCS_socket_ioctl(fd, FIONREAD, t_available);
 		l = t_available;
 
-		char *dbuffer = new char[l + 1]; // don't allocate 0
+		char *dbuffer = new (nothrow) char[l + 1]; // don't allocate 0
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		l++; // Not on MacOS/UNIX?
 		if ((l = recvfrom(fd, dbuffer, l, 0, (struct sockaddr *)&addr, &addrsize))
 		        == SOCKET_ERROR)
 		{
-			delete dbuffer;
-			error = new char[21 + I4L];
+			delete[] dbuffer;
+			error = new (nothrow) char[21 + I4L];
 			sprintf(error, "Error %d on socket", WSAGetLastError());
 			doclose();
 		}
@@ -1509,7 +1524,7 @@ void MCSocket::readsome()
 			delete[] dbuffer;
 			if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			{
-				error = new char[21 + I4L];
+				error = new (nothrow) char[21 + I4L];
 				sprintf(error, "Error %d reading socket", errno);
 				doclose();
 			}
@@ -1517,9 +1532,7 @@ void MCSocket::readsome()
 #endif
 		else
 		{
-			if (message == NULL)
-				delete[] dbuffer;
-			else
+			if (message != NULL)
 			{
 				char *t = inet_ntoa(addr.sin_addr);
 				MCAutoStringRef n;
@@ -1531,22 +1544,24 @@ void MCSocket::readsome()
 				if (accepting && !IO_findsocket(*t_name, index))
 				{
                     MCSocket *t_socket;
-                    t_socket = new MCSocket(*t_name, object, NULL, True, fd, False, True,False);
+                    t_socket = new (nothrow) MCSocket(*t_name, object, NULL, True, fd, False, True,False);
                     if (t_socket != NULL)
                         MCSocketsAppendToSocketList(t_socket);
 				}
 				
 				MCAutoDataRef t_data;
-				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data);
-				
-				MCParameter *params = new MCParameter;
-				params->setvalueref_argument(*t_name);
-				params->setnext(new MCParameter);
-				params->getnext()->setvalueref_argument(*t_data);
-				params->getnext()->setnext(new MCParameter);
-				params->getnext()->getnext()->setvalueref_argument(name);
-				MCscreen->addmessage(object, message, curtime, params);
+				if (MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data))
+				{
+					MCParameter *params = new (nothrow) MCParameter;
+					params->setvalueref_argument(*t_name);
+					params->setnext(new (nothrow) MCParameter);
+					params->getnext()->setvalueref_argument(*t_data);
+					params->getnext()->setnext(new (nothrow) MCParameter);
+					params->getnext()->getnext()->setvalueref_argument(name);
+					MCscreen->addmessage(object, message, curtime, params);
+				}
 			}
+			delete[] dbuffer;
 		}
 		added = True;
 		doread = False;
@@ -1573,7 +1588,7 @@ void MCSocket::readsome()
 				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
                 MCSocket *t_socket;
-                t_socket = new MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
+                t_socket = new (nothrow) MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
                 if (t_socket != NULL)
                 {
                     MCSocketsAppendToSocketList(t_socket);
@@ -1639,7 +1654,7 @@ void MCSocket::readsome()
 								error = sslgraberror();
 							else
 							{
-								error = new char[21 + I4L];
+								error = new (nothrow) char[21 + I4L];
 								sprintf(error, "Error %d reading socket", errno);
 							}
 						}
@@ -1688,7 +1703,7 @@ void MCSocket::processreadqueue()
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
-				MCParameter *params = new MCParameter;
+				MCParameter *params = new (nothrow) MCParameter;
 				params->setvalueref_argument(name);
 				params->setnext(new MCParameter);
 				params->getnext()->setvalueref_argument(*t_data);
@@ -1742,7 +1757,7 @@ void MCSocket::writesome()
 					error = sslgraberror();
 				else
 				{
-					error = new char[16 + I4L];
+					error = new (nothrow) char[16 + I4L];
 					sprintf(error, "Error %d on socket", errno);
 				}
 				doclose();
@@ -2016,7 +2031,7 @@ char *MCSocket::sslgraberror()
 		ecode = ERR_get_error();
 		if (ecode != 0)
 		{
-			terror = new char[256];
+			terror = new (nothrow) char[256];
 			ERR_error_string_n(ecode,terror,255);
 		}
 	}
@@ -2031,11 +2046,7 @@ Boolean MCSocket::sslinit()
 
 		if (!InitSSLCrypt())
 			return False;
-		SSL_library_init();
-		SSL_load_error_strings();
 
-		//consider using SSL_load_error_strings() for SSL error strings;
-		//			ENGINE_load_builtin_engines();
 		sslinited = True;
 	}
 	return sslinited;
@@ -2050,7 +2061,7 @@ Boolean MCSocket::initsslcontext()
 	
 	bool t_success = true;
 	
-	t_success = NULL != (_ssl_context = SSL_CTX_new(SSLv23_method()));
+	t_success = NULL != (_ssl_context = SSL_CTX_new(TLS_method()));
 	
 	if (t_success)
 		t_success = MCSSLContextLoadCertificates(_ssl_context, &sslerror);
@@ -2244,7 +2255,7 @@ static long post_connection_check(SSL *ssl, char *host)
 		for (int32_t i = 0; i < sk_GENERAL_NAME_num(t_alt_names); i++)
 		{
 			GENERAL_NAME *t_name = sk_GENERAL_NAME_value(t_alt_names, i);
-			if (t_name->type == GEN_DNS && ssl_match_identity((char*)ASN1_STRING_data(t_name->d.ia5), host))
+			if (t_name->type == GEN_DNS && ssl_match_identity((char*)ASN1_STRING_get0_data(t_name->d.ia5), host))
 			{
 				ok = 1;
 				break;

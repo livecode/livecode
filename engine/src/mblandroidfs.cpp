@@ -194,7 +194,8 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 			t_more_entries = false;
 		}
 
-		if (!MCU_stoi4(t_fsize, t_size) && MCU_stob(t_ffolder, t_is_folder))
+		// 2017-01-07: [[ Bug 18459 ]] Make sure MCU_stob() is execute and t_is_folder is set.
+		if (MCU_stob(t_ffolder, t_is_folder) && !MCU_stoi4(t_fsize, t_size))
 			return false;
 
 		// SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
@@ -529,7 +530,7 @@ bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolder
 	 * path, a path separator character, and any possible filename. */
 	size_t t_path_len = strlen(*t_path);
 	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
-	char *t_entry_path = new char[t_entry_path_len + 1];
+	char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 	strcpy (t_entry_path, *t_path);
 	if ((*t_path)[t_path_len - 1] != '/')
 	{

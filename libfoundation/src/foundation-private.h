@@ -94,10 +94,13 @@ struct __MCTypeInfo: public __MCValue
         } record;
         struct
         {
+            /* forward declaration, to avoid including FFI header here */
+            typedef struct _ffi_type ffi_type;
+
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
-            void **layout_args;
+            ffi_type** layout_args;
             MCHandlerTypeLayout *layouts;
         } handler;
         struct

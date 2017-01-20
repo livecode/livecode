@@ -16,16 +16,40 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+constant kBytecodePath = "../_tests/_build/lcs/core/engine"
+
+local sTestExtension
+
 on TestSetup
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 
-    TestDiagnostic the defaultfolder
-    load extension from file "../_tests/_build/lcs/core/engine/_extension.lcm"
+    buildMultiModuleExtension "_extension,_extension_support"
+    if the result is not empty then
+       throw "Failed to build test support extension:" && the result
+    end if
+    put it into sTestExtension
+
+    load extension from data sTestExtension
     if the result is not empty then
        throw "Failed to load test support extension:" && the result
     end if
 end TestSetup
+
+private command buildMultiModuleExtension pInputs, pOutput
+    -- Build a multi-module extension
+    local tBasename, tBytecode, tFile
+    repeat for each item tBasename in pInputs
+       put merge("[[kBytecodePath]]/[[tBasename]].lcm") into tFile
+       put url("binfile:" & tFile) after tBytecode
+       put the result into tResult
+       if tResult is not empty then
+          return merge("Failed to load [[tFile]]: [[tResult]]") for error
+       end if
+    end repeat
+
+    return tBytecode for value
+end buildMultiModuleExtension
 
 /////////
 
@@ -69,3 +93,40 @@ on TestExtensionBridgeNumbers
    TestAssert "LCS numbers bridge to LCB numbers in execute script", \
          TestExtensionBridgeNumbers_ExecuteScript()
 end TestExtensionBridgeNumbers
+
+on TestExtensionBridgeEmptyArrays
+   TestAssert "LCS empty arrays bridge to LCB empty lists in library handlers", \
+         TestExtensionBridgeArrays_EmptyToEmptyList(empty)
+end TestExtensionBridgeEmptyArrays
+
+//////////
+
+on TestMultiModuleExtensions
+   TestAssert "support modules are not in extension list", \
+         "com.livecode.lcs_tests.core.extension.support" is not among \
+         the lines of the loadedExtensions
+   TestAssert "main modules are in extension list", \
+         "com.livecode.lcs_tests.core.extension" is among \
+         the lines of the loadedExtensions
+   TestAssert "extension support module handlers work", \
+         TestExtensionSupportModule_Handler()
+
+   -- Check that unloading an extension also unloads support modules
+   -- (allowing them to be loaded again)
+   unload extension "com.livecode.lcs_tests.core.extension"
+   TestAssert "unload multi-module extension", the result is empty
+
+   load extension from data sTestExtension
+   TestAssert "reload multi-module extension", the result is empty
+
+   -- Check that extensions with incorrect support module names don't
+   -- load
+   unload extension "com.livecode.lcs_tests.core.extension"
+   buildMultiModuleExtension "_extension_support,_extension"
+   if the result is not empty then
+      throw "Failed to build assembly:" && the result
+   end if
+   load extension from data it
+   TestAssert "can't load multi-module extensions with bad module names", \
+         the result is not empty
+end TestMultiModuleExtensions

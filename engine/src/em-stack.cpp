@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "resolution.h"
 #include "graphics_util.h"
+#include "globals.h"
 
 /* ================================================================
  * Stack initialisation
@@ -79,7 +80,7 @@ MCStack::platform_openwindow(Boolean override)
 void
 MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 
 	MCRectangle t_old_rect;

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	BUTTON_H
 
 #include "mccontrol.h"
+#include "stack.h"
 
 
 #define AQUA_FUDGE 8
@@ -103,11 +104,14 @@ public:
 
 class ButtonMenuCallback;
 
-class MCButton : public MCControl
+typedef MCObjectProxy<MCButton>::Handle MCButtonHandle;
+
+class MCButton : public MCControl, public MCMixinObjectHandle<MCButton>
 {
 public:
     
     enum { kObjectType = CT_BUTTON };
+    using MCMixinObjectHandle<MCButton>::GetHandle;
     
 private:
     
@@ -118,7 +122,7 @@ private:
 	MCNameRef menuname;
 	MCStringRef menustring;
 	MCField *entry;
-	MCObjectHandle menu;
+	MCStackHandle menu;
 	MCStringRef acceltext;
 	MCArrayRef tabs;
 	MCPlatformMenuRef m_system_menu;

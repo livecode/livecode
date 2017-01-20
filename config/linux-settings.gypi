@@ -72,6 +72,7 @@
 					'-Werror=uninitialized',
 					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',
+					'-Werror=empty-body',
 				],
 
 				'cflags_cc':
@@ -117,7 +118,6 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
-		'-fcheck-new',
 	],
 	
 	'configurations':

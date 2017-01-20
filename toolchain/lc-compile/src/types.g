@@ -319,7 +319,7 @@
     id(Id: ID)
     nil
 
-'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+'table' ID(Position: POS, Name: NAME, Meaning: MEANING, Namespace: OPTIONALID)
 
 'table' MODULEINFO(Index: INT, Generator: INT)
 'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Safety: SYMBOLSAFETY, Kind: SYMBOLKIND, Type: TYPE)

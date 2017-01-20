@@ -40,7 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2010-08-24: Make sure we include 'wspiapi' making it think we are
 //   targetting Win2K to ensure that it 'makes' getaddrinfo.
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #include <ws2tcpip.h>
 #include <wspiapi.h>
 #include <process.h>
@@ -425,7 +424,14 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
 			}
 		}
         else
+		{
             port = MCNumberFetchAsInteger(*t_port_number);
+			if (port > UINT16_MAX)
+			{
+				MCresult->sets("not a valid port");
+				return false;
+			}
+		}
     }
     else
         t_name = MCValueRetain(*t_name_in);
@@ -434,7 +440,7 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
     
 	memset((char *)r_addr, 0, sizeof(struct sockaddr_in));
 	r_addr->sin_family = AF_INET;
-	r_addr->sin_port = MCSwapInt16HostToNetwork(port);
+	r_addr->sin_port = MCSwapInt16HostToNetwork(uint16_t(port));
     
     MCAutoPointer<char> t_name_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_name, &t_name_cstring);

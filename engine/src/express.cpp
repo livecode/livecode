@@ -361,7 +361,7 @@ Parse_stat MCExpression::getparams(MCScriptPoint &sp, MCParameter **params)
 	while (True)
 	{
 		if (pptr == NULL)
-			*params = pptr = new MCParameter;
+			*params = pptr = new (nothrow) MCParameter;
 		else
 		{
 			pptr->setnext(new MCParameter);

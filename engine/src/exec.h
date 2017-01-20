@@ -52,6 +52,12 @@ enum MCExecValueType
 
 struct MCExecValue
 {
+public:
+	MCExecValue()
+	{
+		MCMemoryClear(*this);
+		type = kMCExecValueTypeNone;
+	}
 	union
 	{
 		MCValueRef valueref_value;
@@ -2171,6 +2177,13 @@ extern MCExecMethodInfo *kMCStringsEvalItemOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLineOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalWordOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokenOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalSentenceOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalParagraphOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTrueWordOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodepointOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodeunitOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalByteOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
@@ -3386,6 +3399,10 @@ void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object
 void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+
+MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data);
+bool MCInterfaceStringCouldBeStack(MCStringRef p_string);
+
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);

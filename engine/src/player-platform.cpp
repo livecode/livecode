@@ -785,7 +785,7 @@ static MCPlayerRatePopup *s_rate_popup = nil;
 MCPlayer::MCPlayer()
 {
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
     rect.width = rect.height = 128;
     filename = MCValueRetain(kMCEmptyString);
     resolved_filename = MCValueRetain(kMCEmptyString);
@@ -826,7 +826,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-    nextplayer = NULL;
+    nextplayer = nil;
     filename = MCValueRetain(sref.filename);
     resolved_filename = MCValueRetain(sref.resolved_filename);
 	istmpfile = False;
@@ -874,20 +874,20 @@ MCPlayer::~MCPlayer()
 	playstop();
     
     // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
-	if (MCplayers != NULL)
+	if (MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
 		else
 		{
 			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+			while (tptr->nextplayer && tptr->nextplayer != this)
 				tptr = tptr->nextplayer;
 			if (tptr->nextplayer == this)
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = nil;
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
@@ -958,7 +958,7 @@ Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 Boolean MCPlayer::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || showinvisible())
-        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+        || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
     
     Boolean t_success;
@@ -1173,7 +1173,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -2140,7 +2140,7 @@ void MCPlayer::markerchanged(MCPlatformPlayerDuration p_time)
             MCExecContext ctxt(nil, nil, nil);
             
             MCParameter *t_param;
-            t_param = new MCParameter;
+            t_param = new (nothrow) MCParameter;
             t_param -> set_argument(ctxt, m_callbacks[i] . parameter);
             MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
             
@@ -2181,7 +2181,7 @@ void MCPlayer::currenttimechanged(void)
         state |= CS_CTC_PENDING;
         
         MCParameter *t_param;
-        t_param = new MCParameter;
+        t_param = new (nothrow) MCParameter;
         t_param -> setn_argument(getmoviecurtime());
         MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
         
@@ -2402,10 +2402,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     }
     
 	if (getflag(F_SHOW_BORDER))
+    {
 		if (getflag(F_3D))
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, rect, borderwidth);
+    }
 	
 	if (!p_isolated)
     {
@@ -3253,7 +3255,7 @@ void MCPlayer::handle_mdown(int p_which)
             {
                 if (s_volume_popup == nil)
                 {
-                    s_volume_popup = new MCPlayerVolumePopup;
+                    s_volume_popup = new (nothrow) MCPlayerVolumePopup;
                     s_volume_popup -> setparent(MCdispatcher);
                     MCdispatcher -> add_transient_stack(s_volume_popup);
                 }
@@ -3721,7 +3723,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
             if (s_rate_popup == nil)
             {
-                s_rate_popup = new MCPlayerRatePopup;
+                s_rate_popup = new (nothrow) MCPlayerRatePopup;
                 s_rate_popup -> setparent(MCdispatcher);
                 MCdispatcher -> add_transient_stack(s_rate_popup);
             }

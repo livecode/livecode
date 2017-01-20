@@ -39,12 +39,12 @@ The <revBrowserNavigate> function navigates to the given <url> in the
 browser identified by the <instanceId>.
 
 >*Note:* For general information on using the browser library, please
-> see the notes in the <revBrowserOpen function> reference.
+> see the notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserForward (command), revBrowserRedraw (command),
 revBrowserStop (command), revBrowserRefresh (command),
 revBrowserBack (command), revBrowserOpen (function),
-revBrowserOpen function (function), queryRecordChanged (message),
+function (glossary), queryRecordChanged (message),
 browserBeforeNavigate (message), browserNavigateComplete (message),
 browserNavigateCompleteFrame (message)
 

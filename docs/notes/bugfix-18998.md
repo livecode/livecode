@@ -1,0 +1,1 @@
+# Fix go url <stackurl> for script-only stacks

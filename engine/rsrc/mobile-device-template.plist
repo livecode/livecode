@@ -106,5 +106,21 @@
 	<array>
 		${CUSTOM_FONTS}
 	</array>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>This application requires access to Bluetooth</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This application requires access to the device's calendar</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This application requires access to the device's camera</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This application requires access to your Contacts</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This application requires access to the device's microphone</string>
+	<key>NSMotionUsageDescription</key>
+	<string>This application requires access to the device's accelerometer</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>This application requires access to your Reminders</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This application requires access to Photo Library</string>
 </dict>
 </plist>

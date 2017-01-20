@@ -33,8 +33,10 @@ constant;
 #define ELEMENTS(table) (sizeof(table) / sizeof(table[0]))
 
 enum Accept_constants {
-    AC_UNDEFINED,
-    AC_DATAGRAM,
+    AC_CONNECTIONS,
+	AC_ON,
+	AC_PORT,
+	AC_DATAGRAM,
     AC_SECURE
 };
 
@@ -1681,6 +1683,7 @@ enum Properties {
     P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION,
     P_MANAGE_RETURN_KEY,
     P_MINIMUM_FONT_SIZE,
+    P_MAXIMUM_TEXT_LENGTH,
     P_AUTO_CLEAR,
     P_CLEAR_BUTTON_MODE,
     P_BORDER_STYLE,

@@ -2,7 +2,7 @@ Name: mobileBuildInfo
 
 Type: function
 
-Syntax: mobileBuildInfo(<propertyName>)
+Syntax: mobileBuildInfo(<propertyInfo>)
 
 Summary:
 Returns information about the current device.
@@ -20,16 +20,13 @@ Example:
 put mobileBuildInfo("SERIAL") into tDeviceSerialNumber
 
 Parameters:
-propertyName:
-
-
 propertyInfo (enum):
 The name of the property to be retrieved.
 
 -   "BOARD": The name of the underlying board, like "goldfish"
 -   "BOOTLOADER": The system bootloader version number.
 -   "BRAND": The brand (e.g. carrier) the software is customized for, if
-    any. 
+    any.
 -   "CPU_ABI": The name of the instruction set (CPU type + ABI
     converntion) of native code.
 -   "CPU_ABI2": The name of the second instruction set (CPU type + ABI
@@ -48,20 +45,18 @@ The name of the property to be retrieved.
 -   "RADIO": The radio firmware version number.
 -   "SERIAL": A hardware serial number, if available.
 -   "TAGS": Comma-separated tags describing the build, like
-    "unsigned,debug". 
+    "unsigned,debug".
 -   "TIME": The time, in seconds since the start of the eon.
 -   "TYPE": The type of build, like "user" or "eng".
 -   "USER": The user name of the user who built the current version of
-    Android. 
+    Android.
+
+Returns(string):
+The requested information about the current device.
 
 
 Description:
 Use the <mobileBuildInfo> function to fetch information about the
 current device, such as the manufacturer and device name.
 
-The <mobileBuildInfo> function returns information about the current
-device. 
-
 >*Note:* Property names are case sensitive.
-
-

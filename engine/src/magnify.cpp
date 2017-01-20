@@ -55,9 +55,9 @@ void MCMagnify::open()
 void MCMagnify::close()
 {
 	MCObject::close();
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		MCmagimage->endmag(False);
-	MCmagnifier = NULL;
+	MCmagnifier = nil;
 }
 
 Boolean MCMagnify::kfocusnext(Boolean top)
@@ -72,7 +72,7 @@ Boolean MCMagnify::kfocusprev(Boolean bottom)
 
 Boolean MCMagnify::mfocus(int2 x, int2 y)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 	{
 		if (!inside)
 		{
@@ -91,28 +91,28 @@ void MCMagnify::munfocus()
 
 Boolean MCMagnify::mdown(uint2 which)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		return MCmagimage->magmdown(which);
 	return False;
 }
 
 Boolean MCMagnify::mup(uint2 which, bool p_release)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		return MCmagimage->magmup(which);
 	return False;
 }
 
 Boolean MCMagnify::doubledown(uint2 which)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		return MCmagimage->magdoubledown(which);
 	return False;
 }
 
 Boolean MCMagnify::doubleup(uint2 which)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		return MCmagimage->magdoubleup(which);
 	return False;
 }
@@ -131,7 +131,7 @@ IO_stat MCMagnify::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 
 MCControl *MCMagnify::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCMagnify *newmagnify = new MCMagnify(*this);
+	MCMagnify *newmagnify = new (nothrow) MCMagnify(*this);
 	if (attach)
 		newmagnify->attach(p, invisible);
 	return newmagnify;
@@ -140,7 +140,7 @@ MCControl *MCMagnify::clone(Boolean attach, Object_pos p, bool invisible)
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCMagnify::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite)
 {
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		MCmagimage->magredrawrect(dc, dirty);
 }
 

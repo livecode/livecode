@@ -41,6 +41,9 @@ shown against whatever is directly underneath the <field> or
 Setting a button's or field's <style> <property> to "transparent" sets
 its <opaque> to false.
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
 transfer mode (glossary), srcCopy (keyword), button (keyword),

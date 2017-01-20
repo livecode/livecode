@@ -28,6 +28,9 @@ When the <srcCopy> mode is used, each pixel of the <object(glossary)> is
 drawn over the <pixels> underneath, blocking them completely. The color
 of the <pixel> underneath does not affect the final color.
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), property (glossary), keyword (glossary),
 pixel (glossary), transfer mode (glossary), notSrcCopy (keyword),
 ink (property), pixels (property)

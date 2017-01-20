@@ -34,7 +34,7 @@ screen <object(glossary)> is scaled up from the <PostScript>.
 
 In geometric terms, xScale = xExtent/width.
 
-If the object's <scaleIndependently property> is false, the <xScale>
+If the object's <scaleIndependently> <property> is false, the <xScale>
 <property> is equal to the <scale> of the <object(glossary)>.
 
 This property is supported only on Unix systems with Display PostScript
@@ -42,7 +42,7 @@ installed.
 
 References: EPS (glossary), property (glossary), object (glossary),
 scaleIndependently (property), postScript (property), scale (property),
-scaleIndependently property (property)
+
 
 Tags: multimedia
 

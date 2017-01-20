@@ -240,7 +240,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyCaseFolding:
         {
             // Case-fold the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.foldCase();
@@ -256,7 +256,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyLowercaseMapping:
         {
             // Lowercase the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.toLower();
@@ -267,8 +267,8 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyName:
         {
             // We assume that this is sufficient for a character name
-            s_pointer = new unichar_t[256];
-            char *t_temp = new char[256];
+            s_pointer = new (nothrow) unichar_t[256];
+            char *t_temp = new (nothrow) char[256];
             uindex_t t_length;
             
             t_length = u_charName(p_codepoint, U_UNICODE_CHAR_NAME, t_temp, 255, &t_error);
@@ -295,8 +295,8 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyUnicode1Name:
         {
             // We assume that this is sufficient for a character name
-            s_pointer = new unichar_t[256];
-            char *t_temp = new char[256];
+            s_pointer = new (nothrow) unichar_t[256];
+            char *t_temp = new (nothrow) char[256];
             uindex_t t_length;
             
             t_length = u_charName(p_codepoint, U_UNICODE_10_CHAR_NAME, t_temp, 255, &t_error);
@@ -315,7 +315,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
         case kMCUnicodePropertyUppercaseMapping:
         {
             // Uppercase the codepoint
-            s_pointer = new unichar_t[16];
+            s_pointer = new (nothrow) unichar_t[16];
             icu::UnicodeString t_string;
             t_string.append(UChar32(p_codepoint));
             t_string.toUpper();
@@ -341,14 +341,12 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
         // If the surrogate is not valid, just ignore the error
         codepoint_t t_char = p_chars[t_offset];
         uindex_t t_advance = 1;
-        if (0xD800 <= t_char && t_char < 0xDC00 && (t_offset + 1) < p_char_count)
+        if (MCUnicodeCodepointIsLeadingSurrogate(t_char) &&
+            (t_offset + 1) < p_char_count &&
+            MCUnicodeCodepointIsTrailingSurrogate(p_chars[t_offset + 1]))
         {
-            codepoint_t t_upper = p_chars[t_offset + 1];
-            if (0xDC00 <= t_upper && t_upper < 0xE000)
-            {
-                t_char = (t_char - 0xD800) + ((t_upper - 0xDC00) << 10);
-                t_advance = 2;
-            }
+            t_char = MCUnicodeCombineSurrogates(t_char, p_chars[t_offset + 1]);
+            t_advance = 2;
         }
         
         // Look up the property
@@ -2226,15 +2224,15 @@ bool MCUnicodeCanBreakWordBetween(uinteger_t xc, uinteger_t x, uinteger_t y, uin
 bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bool p_source_native, const void *pattern_chars, uindex_t pattern_length, bool p_pattern_native, MCUnicodeCompareOption p_option)
 {
     // Set up the filter chains for the strings
-	MCAutoPointer<MCTextFilter> t_source_filter;
-	t_source_filter = MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_source_filter =
+        MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
 	
-	MCAutoPointer<MCTextFilter> t_pattern_filter;
-	t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_pattern_filter =
+        MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
     
     codepoint_t t_source_cp, t_pattern_cp;
     
-    while (t_source_filter -> HasData())
+    while (t_source_filter -> HasData() && t_pattern_filter -> HasData())
     {
         t_source_cp = t_source_filter -> GetNextCodepoint();
         t_pattern_cp = t_pattern_filter -> GetNextCodepoint();

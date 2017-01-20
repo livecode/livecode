@@ -192,7 +192,7 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) :
     // Copy the vertical scrollbar
 	if (gref.vscrollbar != NULL)
 	{
-		vscrollbar = new MCScrollbar(*gref.vscrollbar);
+		vscrollbar = new (nothrow) MCScrollbar(*gref.vscrollbar);
 		vscrollbar->setparent(this);
 		vscrollbar->allowmessages(False);
 		vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
@@ -202,7 +202,7 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) :
     // Copy the horizontal scrollbar
 	if (gref.hscrollbar != NULL)
 	{
-		hscrollbar = new MCScrollbar(*gref.hscrollbar);
+		hscrollbar = new (nothrow) MCScrollbar(*gref.hscrollbar);
 		hscrollbar->setparent(this);
 		hscrollbar->allowmessages(False);
 		hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
@@ -221,12 +221,12 @@ MCGroup::~MCGroup()
 	}
 	if (this == MCmenubar)
 	{
-		MCmenubar = NULL;
+		MCmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	if (this == MCdefaultmenubar)
 	{
-		MCdefaultmenubar = NULL;
+		MCdefaultmenubar = nil;
 		MCscreen->updatemenubar(True);
 	}
 	delete vscrollbar;
@@ -1031,9 +1031,25 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	}
 }
 
+void MCGroup::uncacheid()
+{
+    if (controls != NULL)
+    {
+        MCControl *t_control;
+        t_control = controls;
+        do
+        {   t_control -> uncacheid();
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    MCObject::uncacheid();
+}
+
 bool MCGroup::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 ||
+    if (!parent || scriptdepth != 0 ||
         (p_check_flag && getflag(F_G_CANT_DELETE)))
     {
         MCAutoValueRef t_long_name;
@@ -1063,7 +1079,6 @@ Boolean MCGroup::del(bool p_check_flag)
 	if (!isdeletable(p_check_flag))
 	    return False;
 	
-    rect = getcard()->getrect();
 	return MCControl::del(p_check_flag);
 }
 
@@ -1110,7 +1125,7 @@ MCControl *MCGroup::clone(Boolean attach, Object_pos p, bool invisible)
 MCControl *MCGroup::doclone(Boolean attach, Object_pos p, bool p_copy_ids, bool invisible)
 {
 	MCGroup *newgroup;
-	newgroup = new MCGroup(*this, p_copy_ids);
+	newgroup = new (nothrow) MCGroup(*this, p_copy_ids);
 
 	if (attach)
 	{
@@ -1868,9 +1883,9 @@ void MCGroup::clearfocus(MCControl *cptr)
 		kfocused = NULL;
         state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
-			static_cast<MCCard *>(parent) -> erasefocus(this);
+			parent.GetAs<MCCard>()->erasefocus(this);
 		else
-			static_cast<MCGroup *>(parent) -> clearfocus(this);
+			parent.GetAs<MCGroup>()->clearfocus(this);
 	}
 }
 
@@ -2727,7 +2742,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 		{
 		case OT_GROUP:
 			{
-				MCGroup *newgroup = new MCGroup;
+				MCGroup *newgroup = new (nothrow) MCGroup;
 				newgroup->setparent(this);
 				if ((stat = newgroup->load(stream, version)) != IO_NORMAL)
 				{
@@ -2746,7 +2761,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_BUTTON:
 			{
-				MCButton *newbutton = new MCButton;
+				MCButton *newbutton = new (nothrow) MCButton;
 				newbutton->setparent(this);
 				if ((stat = newbutton->load(stream, version)) != IO_NORMAL)
 				{
@@ -2759,7 +2774,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_FIELD:
 			{
-				MCField *newfield = new MCField;
+				MCField *newfield = new (nothrow) MCField;
 				newfield->setparent(this);
 				if ((stat = newfield->load(stream, version)) != IO_NORMAL)
 				{
@@ -2771,7 +2786,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_IMAGE:
 			{
-				MCImage *newimage = new MCImage;
+				MCImage *newimage = new (nothrow) MCImage;
 				newimage->setparent(this);
 				if ((stat = newimage->load(stream, version)) != IO_NORMAL)
 				{
@@ -2784,7 +2799,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_SCROLLBAR:
 			{
-				MCScrollbar *newscrollbar = new MCScrollbar;
+				MCScrollbar *newscrollbar = new (nothrow) MCScrollbar;
 				newscrollbar->setparent(this);
 				if ((stat = newscrollbar->load(stream, version)) != IO_NORMAL)
 				{
@@ -2810,7 +2825,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_GRAPHIC:
 			{
-				MCGraphic *newgraphic = new MCGraphic;
+				MCGraphic *newgraphic = new (nothrow) MCGraphic;
 				newgraphic->setparent(this);
 				if ((stat = newgraphic->load(stream, version)) != IO_NORMAL)
 				{
@@ -2822,7 +2837,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_MCEPS:
 			{
-				MCEPS *neweps = new MCEPS;
+				MCEPS *neweps = new (nothrow) MCEPS;
 				neweps->setparent(this);
 				if ((stat = neweps->load(stream, version)) != IO_NORMAL)
 				{
@@ -2834,7 +2849,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
         break;
         case OT_WIDGET:
         {
-            MCWidget *neweps = new MCWidget;
+            MCWidget *neweps = new (nothrow) MCWidget;
             neweps->setparent(this);
             if ((stat = neweps->load(stream, version)) != IO_NORMAL)
             {
@@ -2846,7 +2861,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
         break;
 		case OT_MAGNIFY:
 			{
-				MCMagnify *newmag = new MCMagnify;
+				MCMagnify *newmag = new (nothrow) MCMagnify;
 				newmag->setparent(this);
 				if ((stat = newmag->load(stream, version)) != IO_NORMAL)
 				{
@@ -2858,7 +2873,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_COLORS:
 			{
-				MCColors *newcolors = new MCColors;
+				MCColors *newcolors = new (nothrow) MCColors;
 				newcolors->setparent(this);
 				if ((stat = newcolors->load(stream, version)) != IO_NORMAL)
 				{
@@ -2870,7 +2885,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			break;
 		case OT_PLAYER:
 			{
-				MCPlayer *newplayer = new MCPlayer;
+				MCPlayer *newplayer = new (nothrow) MCPlayer;
 				newplayer->setparent(this);
 				if ((stat = newplayer->load(stream, version)) != IO_NORMAL)
 				{

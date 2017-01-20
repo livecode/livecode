@@ -169,8 +169,6 @@ extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
-bool MCS_generate_uuid(char buffer[128]);
-
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -240,23 +238,21 @@ MCSErrorMode MCS_get_errormode(void);
 
 enum MCSOutputTextEncoding
 {
-	kMCSOutputTextEncodingUndefined,
-	
 	kMCSOutputTextEncodingWindows1252,
 	kMCSOutputTextEncodingMacRoman,
 	kMCSOutputTextEncodingISO8859_1,
 	kMCSOutputTextEncodingUTF8,
-	
-#if defined(__MACROMAN__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman,
-#elif defined(__WINDOWS_1252__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252,
-#elif defined(__ISO_8859_1__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1,
-#else
-#error Unknown native text encoding
-#endif
 };
+
+#if defined(__MACROMAN__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman;
+#elif defined(__WINDOWS_1252__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252;
+#elif defined(__ISO_8859_1__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1;
+#else
+#   error Unknown native text encoding
+#endif
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding);
 MCSOutputTextEncoding MCS_get_outputtextencoding(void);

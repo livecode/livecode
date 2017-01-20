@@ -2,10 +2,10 @@ Name: revXMLRPC_AddParam
 
 Type: command
 
-Syntax: revXMLRPC_AddParam <XML-RPC document>, <dataType>, <dataValue>
+Syntax: revXMLRPC_AddParam <XMLRPCdocumentID>, <dataType>, <dataValue>
 
 Summary:
-Adds a single parameter to an XML-RPC document structure.
+Adds a single parameter to an <XML-RPC document> structure.
 
 Associations: xml-rpc library
 
@@ -24,40 +24,25 @@ Example:
 revXMLRPC_AddParam theRequest, "base64", base64Encode(theBinaryData)
 
 Example:
-put "<struct>" & \
-    "<member><name>left</name>" & \
-    "<value><int>10</int></value></member>" & \
-    "<member><name>top</name>" & \
-    "<value><int>50</int></value></member>" & \
-    "<member><name>right</name>" & \
-    "<value><int>390</int></value></member>" & \
-    "<member><name>bottom</name>" & \
-    "<value><int>240</int></value></member>" & \
-    "</struct>" into theStruct
+put "&lt;struct&gt;" & \
+    "&lt;member&gt;&lt;name&gt;left&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;10&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;top&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;50&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;right&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;390&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;member&gt;&lt;name&gt;bottom&lt;/name&gt;" & \
+    "&lt;value&gt;&lt;int&gt;240&lt;/int&gt;&lt;/value&gt;&lt;/member&gt;" & \
+    "&lt;/struct&gt;" into theStruct
 revXMLRPC_AddParam theDocID, "xml", theStruct
 
 Parameters:
-dataType:
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you
+created the <XML-RPC> request.
+
+dataType(enum):
 The type of data contained in the <dataValue> parameter.
-
-dataValue:
-The content of the data you want to add as a new parameter.
-
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you
-created the XML-RPC request.
-
-The result:
-If the <revXMLRPC_AddParam> <command> encounters an error,
-the <result> is set to an error message beginning with "xmlerr" or 
-"xmlrpcerr".
-
-Description:
-Use the <revXMLRPC_AddParam> <command> to add a single parameter of a 
-given type to an existing <XML-RPC document>.
-
-The <dataType> can be any of the following:
-
  - "base64": the value is base64-encoded
  - "boolean": the value is true or false
  - "dateTime.iso8601": the value is an Internet date
@@ -67,44 +52,47 @@ The <dataType> can be any of the following:
  - "array": the value is an array of data (see below)
  - "xml": the value is data in xml-format (see below)
 
+dataValue (string):
+The content of the data you want to add as a new parameter.
 
-To pass an array of data, you have to pass the type as well, in the 
+
+The result (string):
+If the <revXMLRPC_AddParam> <command> encounters an error,
+the <result> is set to an error message beginning with "xmlerr" or
+"xmlrpcerr".
+
+Description:
+Use the <revXMLRPC_AddParam> <command> to add a single parameter of a
+given type to an existing <XML-RPC document>.
+
+To pass an array of data, you have to pass the type as well, in the
 following format:
 
-    array[:element type]
+    array[:elementType]
 
 
 For example:
 
     local theArray
     repeat with i = 1 to 10
+        put random(100) into theArray[i]
+    end repeat
+    revXMLRPC_AddParam theDocID, "array:int", theArray
 
-    put random(100) into theArray[i]
-	end repeat
-	revXMLRPC_AddParam theDocID, "array:int", theArray
 
-
-If you do not specify an element type, the <revXMLRPC_AddParam> 
+If you do not specify an element type, the <revXMLRPC_AddParam>
 <command> assumes you're passing an array of strings.
 
-If you need to add complex parameters (such as arrays of various types, 
+If you need to add complex parameters (such as arrays of various types,
 or structs) you can specify a <dataType> of xml, and pass raw xml.
 
->*Important:*  The <revXMLRPC_AddParam> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
-> library checkbox is checked.
 
 References: revXMLRPC_GetParamType (function),
 revXMLRPC_GetParam (function), result (function),
-revXMLRPC_GetParamCount (function),
+revXMLRPC_GetParamCount (function), revXMLRPC_CreateRequest (function),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
 XML-RPC document (glossary), LiveCode custom library (glossary),
-XML-RPC library (library)
+XML-RPC library (library), XML-RPC (glossary)
 
 Tags: networking
-

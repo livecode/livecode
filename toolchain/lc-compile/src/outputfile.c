@@ -28,6 +28,21 @@
 static const char *ImportedModuleDir[8];
 static int ImportedModuleDirCount = 0;
 static const char *s_interface_output_file = NULL;
+static const char *ImportedModuleNames[32];
+static int ImportedModuleNameCount = 0;
+
+static int IsImportedModuleName(const char *p_name)
+{
+    int i;
+    for(i = 0; i < ImportedModuleNameCount; i++)
+    {
+        if (strcmp(p_name, ImportedModuleNames[i]) == 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 void AddImportedModuleDir(const char *p_dir)
 {
@@ -37,15 +52,36 @@ void AddImportedModuleDir(const char *p_dir)
         Fatal_InternalInconsistency("Too many module paths");
 }
 
+void AddImportedModuleName(const char *p_name)
+{
+    if (IsImportedModuleName(p_name))
+    {
+        return;
+    }
+    
+    if (ImportedModuleNameCount == sizeof(ImportedModuleNames) / sizeof(const char *))
+    {
+        Fatal_InternalInconsistency("Too many imported module names");
+        return;
+    }
+    
+    ImportedModuleNames[ImportedModuleNameCount++] = p_name;
+}
+
 int AddImportedModuleFile(const char *p_name)
 {
     char t_path[MAXPATHLEN];
-	FILE *t_file;
+    FILE *t_file;
+    
+    if (IsImportedModuleName(p_name))
+    {
+        return 1;
+    }
     
     t_file = NULL;
     if (ImportedModuleDirCount > 0)
     {
-		int i;
+        int i;
         for(i = 0; i < ImportedModuleDirCount; i++)
         {
             /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
@@ -73,12 +109,12 @@ int AddImportedModuleFile(const char *p_name)
 void FindImportedModuleFile(const char *p_name, char** r_module_file)
 {
     char t_path[MAXPATHLEN];
-	FILE *t_file;
+    FILE *t_file;
     
     t_file = NULL;
     if (ImportedModuleDirCount > 0)
     {
-		int i;
+        int i;
         for(i = 0; i < ImportedModuleDirCount; i++)
         {
             /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
@@ -96,7 +132,7 @@ void FindImportedModuleFile(const char *p_name, char** r_module_file)
     if (t_file == NULL)
     {
         if (ImportedModuleDirCount > 0)
-            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+        /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
     }
     else
         fclose(t_file);
@@ -110,11 +146,11 @@ OpenImportedModuleFile (const char *p_name,
 {
     char t_path[MAXPATHLEN];
     FILE *t_file;
-
+    
     if (ImportedModuleDirCount == 0 &&
         s_interface_output_file == NULL)
         return NULL;
-
+    
     if (NULL == s_interface_output_file)
     {
         // Use the first modulepath to write the interface file into.
@@ -126,10 +162,10 @@ OpenImportedModuleFile (const char *p_name,
     }
     
     if (NULL != r_filename)
-	{
-		*r_filename = strdup(t_path); /* FIXME should be strndup */
-	}
-
+    {
+        *r_filename = strdup(t_path); /* FIXME should be strndup */
+    }
+    
     t_file = fopen(t_path, "w");
     
     return t_file;

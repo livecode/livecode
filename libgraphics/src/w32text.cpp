@@ -506,8 +506,8 @@ static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p
 
 		POINT *t_points;
 		BYTE *t_types;
-		t_points = new POINT[t_count];
-		t_types = new BYTE[t_count];
+		t_points = new (nothrow) POINT[t_count];
+		t_types = new (nothrow) BYTE[t_count];
 		GetPath(t_gdicontext, t_points, t_types, t_count);
 
 		MCGPathCreateMutable(r_path);
@@ -776,8 +776,8 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 
         POINT *t_points;
         BYTE *t_types;
-        t_points = new POINT[t_count];
-        t_types = new BYTE[t_count];
+        t_points = new (nothrow) POINT[t_count];
+        t_types = new (nothrow) BYTE[t_count];
         GetPath(s_measure_dc, t_points, t_types, t_count);
 
         for(int i = 0; i < t_count;)

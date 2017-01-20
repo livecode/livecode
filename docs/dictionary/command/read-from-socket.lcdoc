@@ -2,7 +2,7 @@ Name: read from socket
 
 Type: command
 
-Syntax: read from socket <socketID> [until <string> | for <amount> [<chunkType>]] [with message <callbackMessage>]
+Syntax: read from socket <socketID> [{until <dataString> | for <readAmount> [<chunkType>]}] [with message <callbackMessage>]
 
 Summary:
 Accepts data from a <socket> and places the data in the <it> <variable>.
@@ -23,7 +23,7 @@ Example:
 read from socket mySocket for 30 uInt2s with message "gotData"
 
 Parameters:
-socketID:
+socketID (IP_addr):
 The identifier (set when you opened the socket) of the socket you want
 to get data from. The socket identifier starts with the IP address of
 the host the socket is connected to, and may optionally include a port
@@ -32,21 +32,21 @@ one socket connected to that host and port, you can specify which socket
 by appending the connection name or number that was assigned when the
 socket was opened, separated from the port number by a vertical bar (|).
 
-string (string):
+dataString (string):
 When LiveCode encounters the string in the socket data, it stops
 reading. If the string is not encountered, the read from socket command
 continues reading as long as there is data to be read.
 
-amount:
+readAmount (int):
 A positive integer and specifies how much data to read.
 
-chunkType:
-One of chars, characters, words, items, lines, int1, uInt1, int2, uint2,
-int4, or uint4. The read from socket command reads amount of the
-specified chunkType. If you don't specify a chunkType, amount characters
-are read.
+chunkType (enum):
+One of *chars, characters, words, items, lines, int1, uInt1, int2, uint2,
+int4, or uint4*. The read from socket command reads amount of the
+specified chunkType. If you don't specify a chunkType, <readAmount> of 
+*characters* are read.
 
-callbackMessage:
+callbackMessage (string):
 The name of a message to be sent when the read is successfully
 completed. 
 
@@ -61,7 +61,7 @@ value of each chunk that was read. Otherwise, the data is placed in the
 <it> <variable> as it appears in the incoming data stream.
 
 The result:
-The socket to read from must be opened first with the open socket
+The socket to read from must be opened first with the <open socket>
 <command>. If the <socket> is not open, the <result> <function> is set
 to "Socket is not open.".
 
@@ -71,15 +71,15 @@ a <TCP> <socket>.
 
 The until <string> form reads data until the specified string is
 encountered. The for <amount> form reads data until the specified number
-of chunks have arrived.
+of <chunk|chunks> have arrived.
 
 If you specify a <callbackMessage>, the <message> is sent to the
 <object(glossary)> whose <script> contains the <read from socket>
-<command>, as soon as the read is finished. This message has two
+<command>, as soon as the read is finished. This <message> has two
 <parameter|parameters>: the <socketID> and the data received from the
 <socket>. 
 
-References: accept (command), post (command),
+References: accept (command), post (command), open socket (command)
 function (control structure), result (function), object (glossary),
 property (glossary), binary file (glossary), variable (glossary),
 handler (glossary), message (glossary), socket (glossary),
@@ -88,4 +88,3 @@ character (keyword), it (keyword), socketTimeout (message),
 socketTimeoutInterval (property), script (property)
 
 Tags: networking
-

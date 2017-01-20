@@ -27,13 +27,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "paragraf.h"
 
-MCCdata::MCCdata()
+MCCdata::MCCdata() :
+  id(0),
+  data(nil)
 {
-	id = 0;
-	data = NULL;
 }
 
-MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
+MCCdata::MCCdata(const MCCdata &cref) :
+  MCDLlist(cref)
+{
+	// Ensure that the paragraphs of the cloned data have their parent field
+	// set to nil - this will catch attempts to use them without properly
+	// setting the parent first.
+	CloneData(cref, nil);
+}
+
+MCCdata::MCCdata(const MCCdata& cref, MCField* p_new_owner) :
+  MCDLlist(cref)
+{
+	CloneData(cref, p_new_owner);
+}
+
+void MCCdata::CloneData(const MCCdata& cref, MCField* p_new_owner)
 {
 	id = cref.id;
 	if (cref.data != NULL && cref.data != (void *)1)
@@ -46,7 +61,10 @@ MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
 			MCParagraph *tptr = (MCParagraph *)cref.data;
 			do
 			{
-				MCParagraph *newparagraph = new MCParagraph(*tptr);
+				// Clone the paragraph
+				MCParagraph *newparagraph = new (nothrow) MCParagraph(*tptr);
+				newparagraph->setparent(p_new_owner);
+				
 				newparagraph->appendto(paragraphs);
 				tptr = (MCParagraph *)tptr->next();
 			}
@@ -122,7 +140,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 				case OT_PARAGRAPH:
 				case OT_PARAGRAPH_EXT:
 					{
-						MCParagraph *newpar = new MCParagraph;
+						MCParagraph *newpar = new (nothrow) MCParagraph;
 						newpar->setparent((MCField *)parent);
 						
 						// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph tab was the extended
@@ -205,10 +223,10 @@ MCParagraph *MCCdata::getparagraphs()
 		char *eptr = (char *)data;
 		while ((eptr = strtok(eptr, "\n")) != NULL)
 		{
-			MCParagraph *tpgptr = new MCParagraph;
+			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->appendto(paragraphs);
 			uint2 l = strlen(eptr) + 1;
-			char *sptr = new char[l];
+			char *sptr = new (nothrow) char[l];
 			memcpy(sptr, eptr, l);
 			MCAutoStringRef t_string;
 			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
@@ -220,7 +238,7 @@ MCParagraph *MCCdata::getparagraphs()
 		id &= ~COMPACT_PARAGRAPHS;
 	}
 	if (data == NULL)
-		data = paragraphs = new MCParagraph;
+		data = paragraphs = new (nothrow) MCParagraph;
 	else
 		paragraphs = (MCParagraph *)data;
 	return paragraphs;

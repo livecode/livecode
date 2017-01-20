@@ -90,7 +90,7 @@ void MCU_fix_path(char *cstr)
 
 char *MCS_getcurdir()
 {
-  char *t_path = new char[PATH_MAX + 2];
+  char *t_path = new (nothrow) char[PATH_MAX + 2];
   getcwd(t_path, PATH_MAX);
   return t_path;
 }
@@ -126,7 +126,7 @@ char *MCS_resolvepath(const char *path)
       pw = getpwnam(tpath + 1);
     if (pw == NULL)
       return NULL;
-    tildepath = new char[strlen(pw->pw_dir) + strlen(tptr) + 2];
+    tildepath = new (nothrow) char[strlen(pw->pw_dir) + strlen(tptr) + 2];
     strcpy(tildepath, pw->pw_dir);
     if (*tptr) {
       strcat(tildepath, "/");
@@ -150,7 +150,7 @@ char *MCS_resolvepath(const char *path)
   if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
     return tildepath;
   int size;
-  char *newname = new char[PATH_MAX + 2];
+  char *newname = new (nothrow) char[PATH_MAX + 2];
 
   if ((size = readlink(tildepath, newname, PATH_MAX)) < 0) {
     delete tildepath;
@@ -160,7 +160,7 @@ char *MCS_resolvepath(const char *path)
   delete tildepath;
   newname[size] = '\0';
   if (newname[0] != '/') {
-    char *fullpath = new char[strlen(path) + strlen(newname) + 2];
+    char *fullpath = new (nothrow) char[strlen(path) + strlen(newname) + 2];
     strcpy(fullpath, path);
     char *sptr = strrchr(fullpath, '/');
     if (sptr == NULL)
@@ -199,7 +199,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 		
 
 	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
+	t_result = new (nothrow) DATABASEREC;
 
 	t_result -> driverref = t_driver_handle;
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
@@ -220,7 +220,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	
 	
 	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
+	t_result = new (nothrow) DATABASEREC;
 	
 	t_result -> driverref = t_driver_handle;
 	t_result -> idcounterptr = (idcounterrefptr)resolve_symbol(t_driver_handle, "setidcounterref");

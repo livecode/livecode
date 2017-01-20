@@ -2207,6 +2207,27 @@ command docsBuilderGenerateDistributedAPI pEdition
    
    addToList tDataGridA, tLibrariesA
    
+   local tExtractedDocsFolder
+   put builderExtractedDocsFolder() into tExtractedDocsFolder
+   
+   local tFiles
+   put files(tExtractedDocsFolder) into tFiles
+   filter tFiles with "*.lcdoc"
+   
+   set the itemDelimiter to "."
+   local tFile
+   repeat for each line tFile in tFiles
+      local tLibA
+      put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
+      
+      if tLibA is empty then
+         builderLog "error", "Couldn't parse" && item -2 of tFile && "dictionary data for" && pEdition
+         exit docsBuilderGenerateDistributedAPI
+      end if
+      
+      addToList tLibA, tLibrariesA
+   end repeat
+   
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    

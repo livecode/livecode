@@ -40,7 +40,7 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStri
 bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_new_set;
-	if (createwithname(m_name, t_new_set))
+	if (createwithname(*m_name, t_new_set))
 	{
 		MCValueRelease(t_new_set -> m_props);
 		if (MCArrayMutableCopy(m_props, t_new_set -> m_props))
@@ -58,11 +58,11 @@ bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
 bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_new_set;
-	t_new_set = new MCObjectPropertySet;
+	t_new_set = new (nothrow) MCObjectPropertySet;
 	if (t_new_set == nil)
 		return false;
 
-	t_new_set -> m_name = p_name;
+	t_new_set->m_name.Give(p_name);
 
 	r_set = t_new_set;
 

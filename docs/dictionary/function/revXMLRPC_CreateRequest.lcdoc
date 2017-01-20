@@ -2,10 +2,10 @@ Name: revXMLRPC_CreateRequest
 
 Type: function
 
-Syntax: revXMLRPC_CreateRequest([<host>],[<port>],[<path>],[<protocol>])
+Syntax: revXMLRPC_CreateRequest([<RPChost>],[<RPCport>],[<filePath>],[<connProtocol>])
 
 Summary:
-Creates an <XML-RPC request> structure, optionally setting its host,
+Creates an <XML-RPC> request structure, optionally setting its host,
 port, path and protocol.
 
 Associations: xml-rpc library
@@ -25,24 +25,24 @@ Example:
 put revXMLRPC_CreateRequest("example.com",80,"RPC2","http") into theRequest
 
 Parameters:
-host:
+RPChost (string):
 The IP address or domain name of the host you want to connect to.
 
-port:
+RPCport (string):
 The port number you want to connect to. If you don't specify a port,
 port 80 is used. (On most systems, port 80 is used for HTTP
-connections.) 
+connections.)
 
-path:
+filePath (string):
 Usually a file path, which allows the host to determine which resource
 handles your request.
 
-protocol:
+connProtocol (string):
 The protocol determines the type of connection that is established with
-the host. By default, XML-RPC uses HTTP connections, but for added
+the host. By default, <XML-RPC> uses <HTTP> connections, but for added
 security you can use HTTPS connections, if the host supports it.
 
-Returns:
+Returns (integer):
 The <revXMLRPC_CreateRequest> <function> returns a document ID which can
 be used to refer to the request in other <XML-RPC library>
 <command|commands> and <function|functions>. The request ID is always a
@@ -52,42 +52,45 @@ the data, it returns an error message beginning with "xmlrpcerr".
 Description:
 Use the <revXMLRPC_CreateRequest> <function> to create an <XML-RPC
 document> that you can use with other <XML-RPC library>
-<command|commands> and <function|functions>.
+<command|commands> and <function|functions>. <XML-RPC> is a
+remote procedure call (RPC) protocol which uses XML to encode its
+calls via a <HTTP> transport mechanism.
 
 If the <host> is empty, the <revXMLRPC_CreateRequest> <function>
-defaults the request host to be the computer runnning the application,
+defaults the request host to be the computer running the application,
 also known as "localhost"
 
 If the <port> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request port to 80, which is the default port for <HTTP>
-connections. 
+connections.
 
 If the <path> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request path to "RPC2", which is the standard path for
-XML-RPC server resources.
+<XML-RPC> server resources.
 
 If the <protocol> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request protocol to <HTTP> connections.
 
 If the <revXMLRPC_CreateRequest> <function> encounters an error, it
-<return|returns> an error message starting with "xmlrpcerr".
+<return|returns> an error message starting with "xmlrpcerr". Such an
+error can also be captured and recalled using the <revXMLRPC_Error>
+<function>.
 
->*Important:*  The <revXMLRPC_CreateRequest> <function> is part of the 
-> <XML-RPC library>. To ensure that the <function> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_CreateRequest> <function> is part of the
+> <XML-RPC library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_SetProtocol (command), revXMLRPC_SetPath (command),
 revXMLRPC_SetPort (command), revXMLRPC_SetSocket (command),
 revXMLRPC_DeleteAllDocuments (command), revXMLRPC_GetHost (function),
 LiveCode custom library (glossary), return (glossary),
-XML-RPC request (glossary), Standalone Application Settings (glossary),
+XML-RPC (glossary), Standalone Application Settings (glossary),
 XML-RPC document (glossary), standalone application (glossary),
 function (glossary), command (glossary), integer (keyword),
-http (keyword), XML-RPC library (library)
+HTTP (glossary), http (keyword), XML-RPC library (library)
 
 Tags: networking
-

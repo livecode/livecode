@@ -44,7 +44,7 @@ void yyGetPos(PositionRef *r_result);
 
 void InitializeFiles(void);
 void FinalizeFiles(void);
-
+    
 void AddFile(const char *filename);
 int MoveToNextFile(void);
 void GetFilePath(FileRef file, const char **r_path);

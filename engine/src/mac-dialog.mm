@@ -646,12 +646,6 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else 
 		[t_panel setCanCreateDirectories: YES];
 	
-	if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
-	{
-		// show accessory view when dialog opens
-		[t_panel setAccessoryViewDisclosed: YES];
-	}
-	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
 }
 

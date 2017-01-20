@@ -19,6 +19,7 @@
 #include "prefix.h"
 
 #include "image.h"
+#include "stack.h"
 #include "widget.h"
 
 #include "module-canvas.h"
@@ -205,7 +206,7 @@ bool MCArrayFetchCanvasColor(MCArrayRef p_array, MCNameRef p_key, MCCanvasColorR
 
 //////////
 
-bool MCProperListFetchNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNumberRef &r_number)
+bool MCProperListGetNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNumberRef &r_number)
 {
 	if (p_index >= MCProperListGetLength(p_list))
 		return false;
@@ -215,21 +216,40 @@ bool MCProperListFetchNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MC
 	if (t_value == nil)
 		return false;
 	
-	if (MCValueGetTypeInfo(t_value) != kMCNumberTypeInfo)
-		return false;
+    // Is the value already a (boxed) number?
+    MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo(t_value);
+	if (t_typeinfo == kMCNumberTypeInfo)
+    {
+        r_number = MCValueRetain((MCNumberRef)t_value);
+        return true;
+    }
 	
-	r_number = (MCNumberRef)t_value;
-	
-	return true;
+    // Is the value something that can be bridged to a number?
+    if (MCTypeInfoConforms(t_typeinfo, kMCNumberTypeInfo))
+    {
+        // Get the underlying type
+        if (MCTypeInfoIsNamed(t_typeinfo))
+            t_typeinfo = MCNamedTypeInfoGetBoundTypeInfo(t_typeinfo);
+        
+        if (MCTypeInfoIsForeign(t_typeinfo))
+        {
+            const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_typeinfo);
+            if (t_desc->doimport(MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
+                return true;
+        }
+    }
+    
+    // If we get here, we didn't know how to handle the type
+    return false;
 }
 
 bool MCProperListFetchRealAtIndex(MCProperListRef p_list, uindex_t p_index, real64_t &r_real)
 {
-	MCNumberRef t_number;
-	if (!MCProperListFetchNumberAtIndex(p_list, p_index, t_number))
+	MCAutoNumberRef t_number;
+	if (!MCProperListGetNumberAtIndex(p_list, p_index, &t_number))
 		return false;
 	
-	r_real = MCNumberFetchAsReal(t_number);
+	r_real = MCNumberFetchAsReal(*t_number);
 	
 	return true;
 }
@@ -240,17 +260,17 @@ inline bool MCProperListFetchFloatAtIndex(MCProperListRef p_list, uindex_t p_ind
 	if (!MCProperListFetchRealAtIndex(p_list, p_index, t_real))
 		return false;
 	
-	r_float = t_real;
+	r_float = float32_t(t_real);
 	return true;
 }
 
 bool MCProperListFetchIntegerAtIndex(MCProperListRef p_list, uindex_t p_index, integer_t &r_integer)
 {
-	MCNumberRef t_number;
-	if (!MCProperListFetchNumberAtIndex(p_list, p_index, t_number))
+	MCAutoNumberRef t_number;
+	if (!MCProperListGetNumberAtIndex(p_list, p_index, &t_number))
 		return false;
 
-	r_integer = MCNumberFetchAsInteger(t_number);
+	r_integer = MCNumberFetchAsInteger(*t_number);
 	
 	return true;
 }
@@ -6025,7 +6045,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canv
     t_pixel_count = t_width * t_height;
     
     uint32_t *t_my_pixels, *t_data_ptr;
-    t_my_pixels = new uint32_t[t_pixel_count];
+    t_my_pixels = new (nothrow) uint32_t[t_pixel_count];
     memcpy(t_my_pixels, t_pixels, t_pixel_count * sizeof(uint32_t));
     
     t_data_ptr = t_my_pixels;

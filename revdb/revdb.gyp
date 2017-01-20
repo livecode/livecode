@@ -476,6 +476,16 @@
 					},
 				],
 				[
+					'OS == "linux"',
+					{
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
+					},
+				],
+				[
 					'OS == "mac" or OS == "ios"',
 					{
 						'xcode_settings':
@@ -484,6 +494,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},
@@ -554,6 +565,12 @@
 						[
 							'-fexceptions',
 						],
+	
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
 					},
 				],
 				[
@@ -565,6 +582,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},

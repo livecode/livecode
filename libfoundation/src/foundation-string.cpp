@@ -342,7 +342,6 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
             }
             return true;
         }
-        break;
         case kMCStringEncodingUTF32:
         case kMCStringEncodingUTF32LE:
         case kMCStringEncodingUTF32BE:
@@ -391,7 +390,6 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			
 			return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
 		}
-            break;
 #if !defined(__ISO_8859_1__)
         case kMCStringEncodingISO8859_1:
             break;

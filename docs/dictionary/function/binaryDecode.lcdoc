@@ -5,7 +5,7 @@ Type: function
 Syntax: binaryDecode(<formatsList>, <data>, <variablesList>)
 
 Summary:
-<Decodesbinary data> and places it into the specified
+Decodes binary data and places it into the specified
 <variable|variables>. 
 
 Introduced: 1.0
@@ -28,9 +28,42 @@ binaryDecode(myFormat,placeHolder,importantStuff)
 
 Parameters:
 formatsList:
-The formatsList consists of one or more dataTypes, each followed
-optionally by an amount. A dataType is one of the following single
-letters: x: skip next amount bytes of data
+The <formatsList> consists of one or more dataTypes, each followed
+optionally by an amount. A dataType is one of the following single letters: 
+
+- x: skip next amount bytes of data
+- a: convert next amount bytes of data to characters
+- A: convert next amount bytes of data (skipping spaces) to characters
+- b: convert next amount bits of data to 1s and 0s
+- B: convert next amount bits of data to 1s and 0s, starting at the high end of each byte
+- h: convert next amount bytes of data to hexadecimal digits
+- H: convert next amount bytes of data to hexadecimal digits, starting at the high end of each byte
+- c: convert next amount bytes of data to signed 1-byte integers
+- C: convert next amount bytes of data to unsigned 1-byte integers
+- s: convert next amount 2-byte chunks of data to signed integers in host byte order
+- S: convert next amount 2-byte chunks of data to unsigned integers in host byte order
+- i: convert next amount 4-byte chunks of data to signed integers in host byte order
+- I: convert next amount 4-byte chunks of data to unsigned integers in host byte order
+- n: convert next amount 2-byte chunks of data to signed integers in network byte order
+- N: convert next amount 4-byte chunks of data to signed integers in network byte order
+- m: convert next amount 2-byte chunks of data to unsigned integers in network byte order
+- M: convert next amount 4-byte chunks of data to unsigned integers in network byte order
+- f: convert next amount 4-byte chunks of data to a single-precision float
+- d: convert next amount 8-byte chunks of data to a double-precision float
+
+The amount corresponding to each dataType is an integer or
+the * character. If no amount is specified, the dataType is
+used for a single byte of data. The * character causes the rest of the
+data to be converted according to the formatType, so it should appear
+only as the last character in the <formatsList>.
+
+>*Important:* If you specify an amount with a string dataType (a or A), 
+the <binaryDecode> function places amount bytes in the next variable of the 
+<variablesList>. If you specify an amount with a numeric dataType, the function 
+places amount chunks of data in the next amount variables of the <variablesList>.
+For example, the dataType "a3" requires only one variable, which will
+hold a 3-characterstring, but the dataType "h3" requires three
+variables, each of which will hold a single hex digit.
 
 data (string):
 A string of encoded binary data.
@@ -38,40 +71,7 @@ A string of encoded binary data.
 variablesList:
 A comma-separated list of local or global variable names. The number of
 variable names must be the same as the number of dataTypes specified in
-the formatsList, and the variables must already exist.
-
-amount:
-a: convert next amount bytes of data to charactersA: convert next amount
-bytes of data (skipping spaces) to charactersb: convert next amount bits
-of data to 1s and 0sB: convert next amount bits of data to 1s and 0s,
-starting at the high end of each byteh: convert next amount bytes of
-data to hexadecimal digitsH: convert next amount bytes of data to
-hexadecimal digits, starting at the high end of each bytec: convert next
-amount bytes of data to signed 1-byte integersC: convert next amount
-bytes of data to unsigned 1-byte integerss: convert next amount 2-byte
-chunks of data to signed integers in host byte orderS: convert next
-amount 2-byte chunks of data to unsigned integers in host byte orderi:
-convert next amount 4-byte chunks of data to signed integers in host
-byte orderI: convert next amount 4-byte chunks of data to unsigned
-integers in host byte ordern: convert next amount 2-byte chunks of data
-to signed integers in network byte orderN: convert next amount 4-byte
-chunks of data to signed integers in network byte orderm: convert next
-amount 2-byte chunks of data to unsigned integers in network byte
-orderM: convert next amount 4-byte chunks of data to unsigned integers
-in network byte orderf: convert next amount 4-byte chunks of data to a
-single-precision floatd: convert next amount 8-byte chunks of data to a
-double-precision floatThe amount corresponding to each dataType is an
-integer or the * character. If no amount is specified, the dataType is
-used for a single byte of data. The * character causes the rest of the
-data to be converted according to the formatType, so it should appear
-only as the last character in the formatsList.>*Important:* If you
-specify an amount with a string dataType (a or A), the binaryDecode
-function places amount bytes in the next variable of the variablesList.
-If you specify an amount with a numeric dataType, the function places
-amount chunks of data in the next amount variables of the variablesList.
-For example, the dataType "a3" requires only one variable, which will
-hold a 3-characterstring, but the dataType "h3" requires three
-variables, each of which will hold a single hex digit.
+the <formatsList>, and the variables must already exist.
 
 Returns:
 The <binaryDecode> <function> <return|returns> the number of dataTypes
@@ -119,6 +119,4 @@ was actually converted. Here is an example:
 References: put (command), function (control structure),
 numToChar (function), format (function), value (function),
 return (glossary), binary file (glossary), variable (glossary),
-handler (glossary), local variable (glossary),
-Decodesbinary data (glossary), byte (glossary), command (glossary)
-
+handler (glossary), local variable (glossary), byte (glossary), command (glossary)

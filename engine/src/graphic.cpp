@@ -130,18 +130,18 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	markerlsize = gref.markerlsize;
 	if (gref.dashes != NULL)
 	{
-		dashes = new uint1[ndashes];
+		dashes = new (nothrow) uint1[ndashes];
 		memcpy(dashes, gref.dashes, ndashes);
 	}
 	else
 		dashes = NULL;
 	points = NULL;
 	if (gref.realpoints != NULL)
-		realpoints = new MCPoint[nrealpoints];
+		realpoints = new (nothrow) MCPoint[nrealpoints];
 	else
 		realpoints = NULL;
 	if (gref.markerpoints != NULL)
-		markerpoints = new MCPoint[nmarkerpoints];
+		markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 	else
 		markerpoints = NULL;
 	uint2 i;
@@ -247,7 +247,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        && (getstyleint(flags) == F_CURVE || getstyleint(flags) == F_POLYGON
 	            || getstyleint(flags) == F_LINE))
 	{
-		realpoints = new MCPoint[MCscreen->getmaxpoints()];
+		realpoints = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		MCU_snap(rect.x);
 		MCU_snap(rect.y);
 		startx = rect.x;
@@ -296,8 +296,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		}
 		MCRectangle drect = rect;
 		compute_minrect();
-		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
-		layer_rectchanged(drect, true);
+		Redraw(drect);
 		message_with_args(MCM_mouse_move, x, y);
         
         // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
@@ -437,7 +436,7 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 			MCRectangle trect = reduce_minrect(nrect);
 			if (oldpoints == NULL)
 			{
-				oldpoints = new MCPoint[nrealpoints];
+				oldpoints = new (nothrow) MCPoint[nrealpoints];
 				uint2 i = nrealpoints;
 				while (i--)
 					oldpoints[i] = realpoints[i];
@@ -589,7 +588,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCGraphic *newgraphic = new MCGraphic(*this);
+	MCGraphic *newgraphic = new (nothrow) MCGraphic(*this);
 	if (attach)
 		newgraphic->attach(p, invisible);
 	return newgraphic;
@@ -1045,7 +1044,7 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 		
         if (t_count)
 		{
-			MCPoint *newpts = new MCPoint[npts+t_count] ;
+			MCPoint *newpts = new (nothrow) MCPoint[npts+t_count] ;
 			startpt = pts ;
 			MCPoint *currentpt = newpts ;
 			*(currentpt++) = pts[0] ;
@@ -1141,7 +1140,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			npoints = nsides + 1;
 			if (points != NULL)
 				delete points;
-			points = new MCPoint[npoints];
+			points = new (nothrow) MCPoint[npoints];
 		}
 		// MDW-2014-06-18: [[ rect_points ]] refactored
 		get_points_for_regular_polygon(points, npoints);
@@ -1468,6 +1467,7 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 				if (resizeparent())
 					return;
 			}
+			Redraw(drect);
 			if (opened)
 			{
 				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.
@@ -1892,7 +1892,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
-			markerpoints = new MCPoint[nmarkerpoints];
+			markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
@@ -1909,7 +1909,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
-			realpoints = new MCPoint[nrealpoints];
+			realpoints = new (nothrow) MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
@@ -1931,7 +1931,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
-			dashes = new uint1[ndashes];
+			dashes = new (nothrow) uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
 					return checkloadstat(stat);

@@ -56,6 +56,7 @@ class MCiOSInputControl;
 	MCiOSInputControl *m_instance;
 	bool m_didchange_pending;
 	bool m_return_pressed;
+    NSUInteger m_max_text_length;
 }
 
 - (id)initWithInstance:(MCiOSInputControl*)instance view:(UIView *)view;
@@ -67,6 +68,9 @@ class MCiOSInputControl;
 
 - (BOOL)isDidChangePending;
 - (void)setDidChangePending: (BOOL)pending;
+
+- (NSUInteger)getMaxTextLength;
+- (void)setMaxTextLength: (NSUInteger)p_length;
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string;
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field;
@@ -170,16 +174,18 @@ public:
     
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetMinimumFontSize(MCExecContext& ctxt, integer_t p_size);
+    void SetMaximumTextLength(MCExecContext& ctxt, uinteger_t p_length);
     void SetAutoClear(MCExecContext& ctxt, bool p_value);
     void SetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode p_mode);
     void SetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle p_style);
     
     void GetAutoFit(MCExecContext& ctxt, bool& r_value);
     void GetMinimumFontSize(MCExecContext& ctxt, integer_t& r_size);
+    void GetMaximumTextLength(MCExecContext& ctxt, uinteger_t& r_length);
     void GetAutoClear(MCExecContext& ctxt, bool& r_value);
     void GetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode& r_mode);
     void GetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle& r_style);
-	
+    
 protected:
 	virtual UIView *CreateView(void);
 	virtual void DeleteView(UIView *view);
@@ -441,6 +447,7 @@ MCPropertyInfo MCiOSInputFieldControl::kProperties[] =
 {
     DEFINE_RW_CTRL_PROPERTY(P_AUTO_FIT, Bool, MCiOSInputFieldControl, AutoFit)
     DEFINE_RW_CTRL_PROPERTY(P_MINIMUM_FONT_SIZE, Int32, MCiOSInputFieldControl, MinimumFontSize)
+    DEFINE_RW_CTRL_PROPERTY(P_MAXIMUM_TEXT_LENGTH, UInt32, MCiOSInputFieldControl, MaximumTextLength)
     DEFINE_RW_CTRL_PROPERTY(P_AUTO_CLEAR, Bool, MCiOSInputFieldControl, AutoClear)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_CLEAR_BUTTON_MODE, NativeControlClearButtonMode, MCiOSInputFieldControl, ClearButtonMode)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_BORDER_STYLE, NativeControlBorderStyle, MCiOSInputFieldControl, BorderStyle)
@@ -554,9 +561,16 @@ void MCiOSInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
     
     if (t_field)
     {
+        NSUInteger t_max_length;
+        t_max_length =  m_delegate.getMaxTextLength;
+        
         NSString *t_string;
         t_string = [NSString stringWithMCStringRef: p_string];
-        [t_field setText: t_string];
+        
+        if (t_string.length > t_max_length)
+            [t_field setText: [t_string substringToIndex:t_max_length]];
+        else
+            [t_field setText:t_string];
     }
 }
 
@@ -1128,6 +1142,27 @@ void MCiOSInputFieldControl::SetMinimumFontSize(MCExecContext& ctxt, integer_t p
         [t_field setMinimumFontSize: p_size];
 }
 
+void MCiOSInputFieldControl::SetMaximumTextLength(MCExecContext& ctxt, uinteger_t p_length)
+{
+    if (m_delegate != nil)
+    {
+       	com_runrev_livecode_MCiOSInputDelegate *t_delegate;
+        t_delegate = (com_runrev_livecode_MCiOSInputDelegate*)m_delegate;
+        
+        [t_delegate setMaxTextLength: p_length];
+        
+        UITextField *t_field;
+        t_field = (UITextField *)GetView();
+        
+        // Truncate the text is it exceeds the maximum length
+        if (t_field && t_field.text.length > p_length)
+        {
+            t_field.text = [t_field.text substringToIndex:p_length];
+        }
+    }
+}
+
+
 void MCiOSInputFieldControl::SetAutoClear(MCExecContext& ctxt, bool p_value)
 {
 	UITextField *t_field;
@@ -1213,6 +1248,19 @@ void MCiOSInputFieldControl::GetMinimumFontSize(MCExecContext& ctxt, integer_t& 
         r_size = [t_field minimumFontSize];
     else
         r_size = 0;
+}
+
+void MCiOSInputFieldControl::GetMaximumTextLength(MCExecContext& ctxt, uinteger_t& r_length)
+{
+    if (m_delegate != nil)
+    {
+       	com_runrev_livecode_MCiOSInputDelegate *t_delegate;
+        t_delegate = (com_runrev_livecode_MCiOSInputDelegate*)m_delegate;
+        
+        r_length = [t_delegate getMaxTextLength];
+    }
+    else
+        r_length = 0;
 }
 
 void MCiOSInputFieldControl::GetAutoClear(MCExecContext& ctxt, bool& r_value)
@@ -2042,6 +2090,7 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 	m_instance = instance;
 	m_didchange_pending = false;
 	m_return_pressed = false;
+    m_max_text_length = NSUIntegerMax;
 	
 	for(uint32_t i = 0; s_input_notifications[i] . name != nil; i++)
 		[[NSNotificationCenter defaultCenter] addObserver: self
@@ -2092,9 +2141,36 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 	m_didchange_pending = p_pending;
 }
 
+- (NSUInteger)getMaxTextLength;
+{
+    return m_max_text_length;
+}
+
+- (void)setMaxTextLength: (NSUInteger)p_length;
+{
+    m_max_text_length = p_length;
+}
+
+
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
-	return YES;
+    NSUInteger t_old_length = [textField.text length];
+    NSUInteger t_replacement_length = [string length];
+    NSUInteger t_range_length = range.length;
+    
+    NSUInteger t_new_length = t_old_length - t_range_length + t_replacement_length;
+    
+    BOOL t_return_key = [string rangeOfString: @"\n"].location != NSNotFound;
+    
+    if (t_new_length > m_max_text_length && !t_return_key)
+    {
+        // Truncate the text if it exceeds maximum allowed length
+        // This also covers the case of pasted text
+        textField.text = [[textField.text stringByReplacingCharactersInRange:range withString:string] substringToIndex:m_max_text_length];
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field

@@ -188,27 +188,17 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    -- Make sure there is actually something to build..
-   # Check if any platforms have actually been selected..
-   local tCanBuild
-   put false into tCanBuild
-   
-   local tMessage, tError
-   put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
-   repeat for each item tPlatform in revSBDesktopTargets()
-      put tCanBuild or tSettings[tPlatform] into tCanBuild
-   end repeat
-   put tCanBuild or tSettings["ios"] into tCanBuild
-   put tCanBuild or tSettings["android"] into tCanBuild
-   put tCanBuild or tSettings["emscripten"] into tCanBuild
-   if not tCanBuild then
+   if revSBNoPlatforms(tSettings) then
+      local tMessage
+      put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
       if revSBSuppressDialogs() then
-         return tError
+         return tMessage
       else
          answer error tMessage
       end if
       exit revSaveAsStandalone
    end if
-   
+
    # OK-2010-03-31: Ensure that the standalone name doesn't contain stuff that is not allowed in folder names,
    # otherwise this could cause problems. In particular a return char at the end of the name causes the cleanup
    # routines to try and delete the parent folder, which can result in data loss. The data loss potential has also
@@ -239,20 +229,21 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
-      revSetEdited the short name of stack pStack
+      revIDESetEdited pStack
       setSettings pStack, tSettings
    end if
    
+   local tError
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
       revDoSaveAsStandalone pStack, pFolder
       put the result into tError
    end if
    
-   if revStandaloneGetWarnings() is not empty then
+   if revStandaloneGetWarnings() is not empty and tError is empty then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    else
-      if not revSBSuppressDialogs() then
+      if not revSBSuppressDialogs() and tError is empty then
          answer information "Standalone application saved successfully."
       end if
       
@@ -288,6 +279,24 @@ command revDoSaveAsStandalone pStack, pFolder
    # Set empty values to defaults
    revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
    
+   -- Don't build for any platform we are not licensed for
+   local tRemoved
+   put revSBRemoveUnlicensedTargetsFromSettings(sStandaloneSettingsA) into tRemoved
+   replace return with comma in tRemoved
+   
+   if revSBNoPlatforms(sStandaloneSettingsA) then
+      local tMessage
+      put "You are not licensed to build for any selected platforms." into tMessage
+      if not revSBSuppressDialogs() then
+         answer error tMessage
+      end if
+      return tMessage
+   end if
+   
+   if tRemoved is not empty then
+      revStandaloneAddWarning "Not licensed to build for the following selected platforms:" && tRemoved
+   end if
+   
    revStandaloneProgress "Preparing to build standalone..."
    
    -- pre build message
@@ -299,10 +308,16 @@ command revDoSaveAsStandalone pStack, pFolder
       end if
    end repeat
    
+   local tStackFileName, tRestoreFileName
    if tHasDesktop then
-      try
-         dispatch "savingStandalone" to stack pStack
-      end try
+      put the effective filename of stack pStack into tStackFileName
+      if the mode of stack pStack > 0 then
+         put the long name of stack pStack & return after sResetA["Reopen"]
+      end if
+      __SendSavingStandaloneMessage pStack
+      
+      --Save copy of stack in its post-savingStandalone message state
+      __SaveCopyOfStackInTemporaryLocation pStack, tRestoreFileName
    end if
    
    try
@@ -358,40 +373,36 @@ command revDoSaveAsStandalone pStack, pFolder
                      pStack, tTargetFolder, sStandaloneSettingsA
                break
             case "MacOSX"
-               revSaveAsMacStandalone pStack, tTargetFolder
+               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder
                break
             case "Windows"
-               revSaveAsWindowsStandalone pStack, tTargetFolder
+               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder
                break
             case "Linux"
-               revSaveAsLinuxStandalone pStack, tTargetFolder
+               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder
                break
          end switch
       end repeat
       
       -- post build message
       if tHasDesktop then
-         try
-            dispatch "standaloneSaved" to stack pStack with pFolder & slash
-         end try
+         __ReloadOriginalStackFile tStackFileName, pStack
+         __SendStandaloneSavedMessage pStack, tTargetFolder
       end if
       
    catch tError
       revAbort
       if word 1 of tError = "Standalone:" then 
-         if revSBSuppressDialogs() then
-            return word 2 to -1 of tError
-         else
+         put word 2 to -1 of tError into tError
+         if not revSBSuppressDialogs() then
             answer error word 2 to -1 of tError
          end if
       else  
-         if revSBSuppressDialogs() then
-            return tError
-         else
+         if not revSBSuppressDialogs() then
             answer error "There was an error while saving the standalone application"&cr&tError
          end if
       end if
-      exit to top
+      return tError
    end try
    
    revReset
@@ -480,7 +491,7 @@ command revSearchForInclusions pStack, @xSettings
    end if
 end revSearchForInclusions
 
-private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, @rStackFileList
+private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileList
    revStandaloneProgress "Loading settings..."
    
    -- Make sure all dependencies are included
@@ -500,7 +511,7 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
    put the effective filename of stack pStack into tStackFileName
    
    set the itemdelimiter to slash
-   put item -1 of the effective filename of stack tStackFileName into tStackName
+   put item -1 of tStackFileName into tStackName
    local tExtension
    set the itemdelimiter to "."
    put item -1 of tStackName into tExtension
@@ -518,11 +529,10 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
    set the defaultStack to the short name of stack tStackFileName
    
    put tStackName into rStackName
-   put tStackFileName into rStackFileName
    put tStackFileList into rStackFileList
 end revStandalonePreBuild
 
-private on revStandalonePostBuild pStackFileName, pFolder
+private on revStandalonePostBuild pStack, pFolder
 end revStandalonePostBuild
 
 private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSourceFile, \ 
@@ -581,14 +591,47 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    return tDeployInfo
 end revStandaloneInitialDeployParams
 
-command revSaveAsMacStandalone pStack, pFolder
+private command __SaveCopyOfStackInTemporaryLocation pStack, @rLocation
+   local tFilename, tTemp
+   put the effective filename of stack pStack into tFilename
+   lock messages
+   put the tempname into tTemp
+   save stack pStack as tTemp
+   set the filename of stack pStack to tFilename
+   unlock messages
+   put tTemp into rLocation
+end __SaveCopyOfStackInTemporaryLocation
+
+private command __RestoreStackFromTemporaryLocation pStack, pLocation, pOriginalFileName
+   __ReloadOriginalStackFile pLocation, pStack
+   set the filename of stack pStack to pOriginalFileName
+end __RestoreStackFromTemporaryLocation
+
+private command  __SendSavingStandaloneMessage pStack
+   try
+      dispatch "savingStandalone" to stack pStack
+   end try
+end __SendSavingStandaloneMessage
+
+private command __SendStandaloneSavedMessage pStack, pFolder
+   if char -1 of pFolder is not slash then
+      put slash after pFolder
+   end if
+   try
+      dispatch "standaloneSaved" to stack pStack with pFolder
+   end try
+end __SendStandaloneSavedMessage
+
+command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
-   local tDirectory, tStackSourceFile, tName, tStackFileName, tStackPath
+   local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
+   local tTargetDir
+   
+   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
    
    set the itemDelimiter to slash
-   put item 1 to -2 of the effective filename of stack pStack into tStackPath
-   
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileName, tStackFileList
+   put the effective filename of stack pStack into tOriginalFileName
+   put item 1 to -2 of tOriginalFileName into tStackPath
    
    -- icon and resource file relative path handling
    if there is a file (tStackPath&"/" & sStandaloneSettingsA["MacOS,includeResources"]) then 
@@ -623,7 +666,8 @@ command revSaveAsMacStandalone pStack, pFolder
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
    repeat for each key tTarget in sPlatformDirectoriesA["MacOSX"]
-      put sPlatformDirectoriesA["MacOSX"][tTarget] into tDirectory
+      put sPlatformDirectoriesA["MacOSX"][tTarget] into tTargetDir
+      put tTargetDir & sStandaloneSettingsA["name"] & ".app/Contents/MacOS/" into tDirectory
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
@@ -670,22 +714,24 @@ command revSaveAsMacStandalone pStack, pFolder
       
       revRedirectMacOSResources tStandalonePath
       
-      __ReloadOriginalStackFile tStackFileName, pStack
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
-   revStandalonePostBuild tStackFileName, pFolder
+   revStandalonePostBuild pStack, pFolder
    
    return empty
 end revSaveAsMacStandalone
 
-command revSaveAsWindowsStandalone pStack, pFolder
+command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
-   local tDirectory, tStackSourceFile, tName, tStackFileName, tStackPath
+   local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
    set the itemDelimiter to slash
-   put item 1 to -2 of the effective filename of stack pStack into tStackPath
+   put the effective filename of stack pStack into tOriginalFileName
+   put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileName, tStackFileList
+   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
    
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
    if sStandaloneSettingsA["Windows,iconFile"] = "" then 
@@ -775,6 +821,7 @@ command revSaveAsWindowsStandalone pStack, pFolder
       -- Make sure we use the user's version info data
       put sStandaloneSettingsA["Windows,fileversion1"]&"."&sStandaloneSettingsA["Windows,fileversion2"]&"." & sStandaloneSettingsA["Windows,fileversion3"]&"."&sStandaloneSettingsA["Windows,fileversion4"] into sStandaloneSettingsA["Windows,FileVersion"]
       put sStandaloneSettingsA["Windows,productversion1"]&"."&sStandaloneSettingsA["Windows,productversion2"]&"." & sStandaloneSettingsA["Windows,productversion3"]&"."&sStandaloneSettingsA["Windows,productversion4"] into sStandaloneSettingsA["Windows,ProductVersion"]
+      set the itemDelimiter to comma
       repeat for each item tField in kVersionFlds
          put sStandaloneSettingsA["Windows", tField] into tDeployInfo["version"][tField]
       end repeat
@@ -836,22 +883,24 @@ command revSaveAsWindowsStandalone pStack, pFolder
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
-      __ReloadOriginalStackFile tStackFileName, pStack
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
-   revStandalonePostBuild tStackFileName, pFolder
+   revStandalonePostBuild pStack, pFolder
    
    return empty
 end revSaveAsWindowsStandalone
 
-command revSaveAsLinuxStandalone pStack, pFolder
+command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
-   local tDirectory, tStackSourceFile, tName, tStackFileName, tStackPath
+   local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
    set the itemDelimiter to slash
-   put item 1 to -2 of the effective filename of stack pStack into tStackPath
+   put the effective filename of stack pStack into tOriginalFileName
+   put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileName, tStackFileList
+   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
    
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
@@ -894,10 +943,11 @@ command revSaveAsLinuxStandalone pStack, pFolder
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
-      __ReloadOriginalStackFile tStackFileName, pStack
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
-   revStandalonePostBuild tStackFileName, pFolder
+   revStandalonePostBuild pStack, pFolder
    
    return empty
 end revSaveAsLinuxStandalone
@@ -990,9 +1040,7 @@ private command revCloseOpenStacks pStackFileList, pStack
             # OK-2008-11-10 : Bug 7382 - Remember if stacks were in message path
             put stackIsInGlobalMessagePath(the long name of stack tStack) & return after sResetA["Restore Message Path"]
          end if
-         -- MM-2013-03-20: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
-         set the cantDelete of stack tStack to false
-         delete stack tStack
+         close stack tStack
       end if
    end repeat
 end revCloseOpenStacks

@@ -28,7 +28,7 @@ function.
 
 Description:
 Use the <arrayDecode> function to rebuild an array from an encoded
-string produced by the <arrayEncode function>.
+string produced by the <arrayEncode> <function>.
 
 Encoding and decoding arrays is designed to allow arrays to be written
 to a file on disk, or sent across a network. See the <arrayEncode>
@@ -39,6 +39,6 @@ reference for more information on doing this.
 > see if two encoded arrays are equal, first decode them back into the
 > original array, then directly compare them using the <= operator.>
 
-References: arrayEncode function (function), keys (function),
+References: function (glossary), keys (function),
 arrayEncode (function), URLDecode (function), = operator. (operator)
 

@@ -492,29 +492,32 @@ Boolean MCControl::del(bool p_check_flag)
 	default:
 		break;
 	}
-	uint2 num = 0;
-	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
+
+	// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
+	if (getselected())
+		getcard()->dirtyselection(rect);
+
 	switch (parent->gettype())
 	{
-	case CT_CARD:
-		{
-			MCCard *cptr = (MCCard *)parent;
-			if (!cptr->removecontrol(this, False, True))
+        case CT_STACK:
+            uncacheid();
+            parent.GetAs<MCStack>()->removecontrol(this);
+            break;
+        
+        case CT_CARD:
+            if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
 				return False;
+            uncacheid();
 			getstack()->removecontrol(this);
 			break;
-		}
-	case CT_GROUP:
-		{
-			MCGroup *gptr = (MCGroup *)parent;
-			gptr->removecontrol(this, True);
+        
+        case CT_GROUP:
+			parent.GetAs<MCGroup>()->removecontrol(this, True);
+            uncacheid();
 			break;
-		}
-	default:
-		{ //stack
-			MCStack *sptr = (MCStack *)parent;
-			sptr->removecontrol(this);
-		}
+
+        default:
+            MCUnreachable();
 	}
 
     // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
@@ -540,7 +543,7 @@ void MCControl::paste(void)
 		return;
 
 	parent = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-	MCCard *cptr = (MCCard *)parent;
+	MCCard *cptr = parent.GetAs<MCCard>();
 	obj_id = 0;
 	//newcontrol->resetfontindex(oldstack);
 	if (!MCU_point_in_rect(cptr->getrect(), rect.x + (rect.width >> 1),
@@ -743,7 +746,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	if (invisible)
 		setflag(False, F_VISIBLE);
 
-	if (parent == NULL || parent->gettype() == CT_CARD
+	if (!parent || parent->gettype() == CT_CARD
 	        || parent->gettype() == CT_STACK)
 	{
 		MCCard *card = getcard(cid);
@@ -752,7 +755,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	}
 	else
 	{
-		MCGroup *gptr = (MCGroup *)parent;
+		MCGroup *gptr = parent.GetAs<MCGroup>();
 		gptr->appendcontrol(this);
 	}
 	newmessage();
@@ -1264,7 +1267,7 @@ void MCControl::start(Boolean canclone)
 			}
 			else
 			{
-				Ustruct *us = new Ustruct;
+				Ustruct *us = new (nothrow) Ustruct;
 				us->type = UT_SIZE;
 				us->ud.rect = rect;
 				MCundos->freestate();
@@ -1404,7 +1407,7 @@ void MCControl::leave()
 		}
 		oldfocused->message(MCM_drag_leave);
 		MCdragaction = DRAG_ACTION_NONE;
-		MCdragdest = NULL;
+		MCdragdest = nil;
 	}
 	else
 		oldfocused->message(MCM_mouse_leave);
@@ -1572,7 +1575,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_HSCROLLBAR)
 			{
-				hsb = new MCScrollbar(*MCtemplatescrollbar);
+				hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				hsb->setparent(this);
 				hsb->setflag(False, F_TRAVERSAL_ON);
 				hsb->setflag(flags & F_3D, F_3D);
@@ -1618,7 +1621,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_VSCROLLBAR)
 			{
-				vsb = new MCScrollbar(*MCtemplatescrollbar);
+				vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				vsb->setparent(this);
 				vsb->setflag(False, F_TRAVERSAL_ON);
 				vsb->setflag(flags & F_3D, F_3D);

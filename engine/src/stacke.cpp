@@ -293,7 +293,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				case VE_INVERSE:
 					{
 						MCContext *t_old_context = nil;
-						/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+						/* UNCHECKED */ t_old_context = new (nothrow) MCGraphicsContext(t_context);
 						curcard->draw(t_old_context, t_user_rect, false);
 						delete t_old_context;
 						
@@ -325,7 +325,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				default:
 				{
 					MCContext *t_old_context = nil;
-					/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+					/* UNCHECKED */ t_old_context = new (nothrow) MCGraphicsContext(t_context);
 					curcard->draw(t_old_context, t_user_rect, false);
 					delete t_old_context;
 				}
@@ -358,7 +358,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				IO_handle stream;
 				if ((stream = MCS_open(t_effects->sound, kMCOpenFileModeRead, True, False, 0)) != NULL)
 				{
-					acptr = new MCAudioClip;
+					acptr = new (nothrow) MCAudioClip;
 					acptr->setdisposable();
 					if (!acptr->import(t_effects->sound, stream))
 					{
@@ -375,7 +375,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				MCacptr = acptr;
 				MCU_play();
 #ifndef FEATURE_PLATFORM_AUDIO
-				if (MCacptr != NULL)
+				if (MCacptr)
 					MCscreen->addtimer(MCacptr, MCM_internal, PLAY_RATE);
 #endif
 			}

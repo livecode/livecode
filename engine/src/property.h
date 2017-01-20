@@ -35,13 +35,12 @@ class MCProperty : public MCExpression
 	Chunk_term tocount;
 	Chunk_term ptype;
 	Properties which;
-	MCChunk *target;
+	MCAutoPointer<MCChunk> target;
 	Functions function;
-	MCObject *parent;
-	MCVarref *destvar;
+	MCAutoPointer<MCVarref> destvar;
 	Boolean effective;
-	MCNameRef customprop;
-	MCExpression *customindex;
+	MCNewAutoNameRef customprop;
+	MCAutoPointer<MCExpression> customindex;
 public:
 	MCProperty();
 	virtual ~MCProperty();

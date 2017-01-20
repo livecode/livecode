@@ -723,19 +723,27 @@ static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, MCDataRef
 {
     MCStringEncoding t_encoding;
 
-    if (p_encoding == kMCSOutputTextEncodingUTF8)
-        t_encoding = kMCStringEncodingUTF8;
-    else if (p_encoding == kMCSOutputTextEncodingWindows1252)
-        t_encoding = kMCStringEncodingWindows1252;
-    else if (p_encoding == kMCSOutputTextEncodingMacRoman)
-        t_encoding = kMCStringEncodingMacRoman;
-    else if (p_encoding == kMCSOutputTextEncodingISO8859_1)
-        t_encoding = kMCStringEncodingISO8859_1;
-    else if (p_encoding == kMCSOutputTextEncodingNative)
-        t_encoding = kMCStringEncodingNative;
-    else // kMCSOutputTextEncodingUndefined
-        return false;
-
+	if (kMCSOutputTextEncodingNative == p_encoding)
+		t_encoding = kMCStringEncodingNative;
+	else
+	{
+		switch(p_encoding)
+		{
+			case kMCSOutputTextEncodingUTF8:
+				t_encoding = kMCStringEncodingUTF8;
+				break;
+			case kMCSOutputTextEncodingWindows1252:
+				t_encoding = kMCStringEncodingWindows1252;
+				break;
+			case kMCSOutputTextEncodingISO8859_1:
+				t_encoding = kMCStringEncodingISO8859_1;
+				break;
+			case kMCSOutputTextEncodingMacRoman:
+				t_encoding = kMCStringEncodingMacRoman;
+				break;
+		}
+	}
+	
     if (MCStringDecode(p_text, t_encoding, false, r_native_text))
     {
         MCStringNativize(r_native_text);
@@ -827,87 +835,6 @@ static void cgi_store_form_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 }
 
 
-static void cgi_fix_path_variables()
-{
-    char *t_path;
-
-	MCStringRef env;
-    env = nil;
-    t_path = nil;
-    
-    // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
-    //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
-    //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
-	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
-		t_path = strdup(MCStringGetCString(env));
-    else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
-        t_path = strdup(MCStringGetCString(env));
-
-    // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
-    //  between what is the real filename (into PATH_TRANSLATED)
-    //  and what was appended to the URI (into PATH_INFO)
-    MCStringRef t_path_string;
-    MCStringRef t_path_info;
-             
-    if (t_path != nil)
-    {
-#ifdef _WINDOWS_SERVER
-		for(uint32_t i = 0; t_path[i] != '\0'; i++)
-			if (t_path[i] == '\\')
-				t_path[i] = '/';
-#endif
-
-        // SN-2015-02-12: [[ Bug 14457 ]] We use a mutable string for
-        //  the path info, as we will need to prepend each segment we
-        //  cut off of the TRANSLATED_PATH.
-        // Initialise path_string and path_info
-        MCAutoStringRef t_mutable_path_info;
-        /* UNCHECKED */ MCStringCreateWithCString(t_path, t_path_string);
-        MCStringCreateMutable(0, &t_mutable_path_info);
-        
-        // SN-2015-02-12: [[ Bug 14457 ]] As long as the path does not lead
-        //  to an existing file, we cut it at the last path separator.
-        //
-        while (!MCS_exists(t_path_string, True))
-        {
-            uindex_t t_offset;
-            MCAutoStringRef t_new_path;
-            MCAutoStringRef t_new_path_info;
-
-            // SN-2015-02-11: [[ Bug 14457 ]] If we cannot find any slash, we are done.
-            if (!MCStringLastIndexOfChar(t_path_string, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
-                break;
-
-            // We take split from the last separator (which must be
-            // included in the tail).
-            if (!MCStringCopySubstring(t_path_string, MCRangeMake(0, t_offset), &t_new_path)
-                    || !MCStringCopySubstring(t_path_string, MCRangeMake(t_offset, UINDEX_MAX), &t_new_path_info))
-                break;
-
-            // SN-2015-02-11: [[ Bug 14457 ]] Update path and path_info
-            MCValueAssign(t_path_string, *t_new_path);
-           /* UNCHECKED */ MCStringPrepend(*t_mutable_path_info, *t_new_path_info);
-        }
-
-        // SN-2015-02-12: [[ Bug 14457 ]] We get the constructed path info
-        /* UNCHECKED */ MCStringCopy(*t_mutable_path_info, t_path_info);
-    }
-    else
-    {
-        // SN-2015-02-11: [[ Bug 14457 ]] Initialise the values to empty
-        //  if we failed to get the path
-        t_path_string = MCValueRetain(kMCEmptyString);
-        t_path_info = MCValueRetain(kMCEmptyString);
-    }
-
-    MCS_setenv(MCSTR("PATH_TRANSLATED"), t_path_string);
-    MCS_setenv(MCSTR("PATH_INFO"), t_path_info);
-
-    MCValueRelease(t_path_string);
-    MCValueRelease(t_path_info);
-	free(t_path);
-}
-
 static bool cgi_compute_get_var(void *p_context, MCVariable *p_var)
 {
 	MCAutoStringRef t_query_string;
@@ -973,7 +900,7 @@ static bool cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 // $_POST_RAW contains the entire post message and is read from stdin on access
 static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 {
-	MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+	MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 	
 	bool t_success = true;
 
@@ -987,7 +914,7 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 		uint32_t t_read = 0;
 		
 		char *t_data;
-		t_data = new char[t_length];
+		t_data = new (nothrow) char[t_length];
 		t_success = t_stdin->Read(t_data, t_length, t_read) && t_length == t_read;
 
 		// Store the raw POST data
@@ -1057,7 +984,7 @@ static bool cgi_compute_post_variables()
 	}
 	else if (gotenv && MCStringBeginsWithCString(*t_content_type, (const char_t *)"multipart/form-data;", kMCStringOptionCompareCaseless))
     {
-		MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
         IO_handle t_stdin_handle = t_stdin;
 		
         cgi_store_form_multipart(t_stdin_handle);
@@ -1489,14 +1416,15 @@ bool cgi_initialize()
 	
 	s_cgi_upload_temp_dir = MCValueRetain(kMCEmptyString);
 	s_cgi_temp_dir = MCValueRetain(kMCEmptyString);
-	// need to ensure PATH_TRANSLATED points to the script and PATH_INFO contains everything that follows
-	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
 	MCAutoStringRef t_env;
-
+    
+    // SN-2017-01-06: [[ Bug 19050 ]] Use SCRIPT_FILENAME, which contains the
+    // correct absolute path to the CGI script, instead of fiddling and
+    // tampering with PATH_TRANSLATED
 	if (t_success)
-		t_success = MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env);
+		t_success = MCS_getenv(MCSTR("SCRIPT_FILENAME"), &t_env);
 	if (t_success)
 		t_success = MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 
@@ -1528,12 +1456,12 @@ bool cgi_initialize()
 	// without conflicting
 	if (t_success)
 	{
-		s_cgi_stdin_cache = new MCStreamCache(IO_stdin);
+		s_cgi_stdin_cache = new (nothrow) MCStreamCache(IO_stdin);
 		t_success = s_cgi_stdin_cache != nil;
 	}
 	if (t_success)
 	{
-		IO_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		IO_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 		t_success = IO_stdin != nil;
 	}
 	
@@ -1541,7 +1469,7 @@ bool cgi_initialize()
 	// before any content.
 	if (t_success)
 	{
-		IO_stdout = new cgi_stdout;
+		IO_stdout = new (nothrow) cgi_stdout;
 		t_success = IO_stdout != nil;
 	}
 	
@@ -1633,7 +1561,11 @@ bool cgi_initialize()
 				if (t_success)
 					t_success = MCNameCreate(*t_key, &t_key_name);
 				if (t_success)
-					t_success = s_cgi_server->setvalueref(&!t_key_name, 1, false, *t_value);
+				{
+					// Because MCVariable::setvalueref takes an MCNameRef*...
+					MCNameRef t_key_name_temp = *t_key_name;
+					t_success = s_cgi_server->setvalueref(&t_key_name_temp, 1, false, *t_value);
+				}
 			}
 		}
 	}

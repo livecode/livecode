@@ -29,7 +29,7 @@ Description:
 Use the <waitDepth> <function> to determine how many <wait>
 <command|commands> are currently awaiting completion.
 
-The wait with messages form of the <wait command>, when used in a
+The wait with messages form of the <wait> <command>, when used in a
 <handler>, pauses that handler while allowing LiveCode to <execute>
 other <handler|handlers> while waiting. The <waitDepth> <function>
 indicates how many such <statement|statements> are currently
@@ -38,7 +38,7 @@ paused by a wait with messages <statement>.
 
 If there are no paused handlers, the <waitDepth> <function> returns 1.
 
-References: wait command (command), wait (command),
+References: wait (command),
 function (control structure), handler (glossary), statement (glossary),
 command (glossary), return (glossary), execute (glossary),
 integer (keyword)

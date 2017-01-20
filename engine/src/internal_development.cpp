@@ -80,9 +80,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "ide.h"
 #include "bsdiff.h"
 
-#ifdef _WINDOWS
-#include "w32prefix.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -633,7 +630,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}				
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);
@@ -735,7 +732,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);

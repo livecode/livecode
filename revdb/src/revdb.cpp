@@ -244,7 +244,7 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
         return NULL;
     
     DATABASEREC *t_result;
-    t_result = new DATABASEREC;
+    t_result = new (nothrow) DATABASEREC;
 #if (defined _MACOSX && !defined _MAC_SERVER)
     t_result -> driverref = (CFBundleRef)t_handle;
 #elif (defined _WINDOWS) || defined _WINDOWS_SERVER
@@ -404,9 +404,8 @@ void REVDB_QUIT()
 				break;
 			}
 		}
-		if (databaserec && databaserec ->releaseconnectionptr)
+		if (databaserec != NULL && databaserec ->releaseconnectionptr != NULL)
 			(*databaserec->releaseconnectionptr)(tconnection);
-		break;
 	}
 	connlist->clear();
 	DATABASERECList::iterator theIterator2;
@@ -582,7 +581,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 			qsort(t_map, t_element_count, sizeof(unsigned int), SortKeysCallback);
 
 			// If there are multiple elements...
-			t_values = new DBString[t_element_count];
+			t_values = new (nothrow) DBString[t_element_count];
 			for (int i = 0; i < t_element_count; i++)
 			{
 				char *t_key_buffer;
@@ -632,7 +631,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		}
 	}
 
-	t_values = new DBString[p_argument_count - 2];
+	t_values = new (nothrow) DBString[p_argument_count - 2];
 	for (int i = 2; i < p_argument_count; i++)
 	{
 		Bool t_is_binary;
@@ -661,15 +660,15 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		free(t_variable_name);
 		free(t_key_name);
 
-		// OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
-		// to problems where the engine overwrites the buffer, leading to the wrong values being
-		// inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
-		char *t_new_buffer;
-		t_new_buffer = (char *)malloc(t_value . length);
-		memcpy(t_new_buffer, t_value . buffer, t_value . length);
-
 		if (t_value . buffer != NULL) 
 		{
+            // OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
+            // to problems where the engine overwrites the buffer, leading to the wrong values being
+            // inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
+            char *t_new_buffer;
+            t_new_buffer = (char *)malloc(t_value . length);
+            memcpy(t_new_buffer, t_value . buffer, t_value . length);
+
 			t_values[r_value_count] . Set(t_new_buffer, t_value . length, t_is_binary);
 			r_value_count += 1;
 		}
@@ -747,7 +746,6 @@ inline const char *BooltoStr(Bool b) {return b == True?"True":"False";}
 void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 	       Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = False;
 	*pass = False;
 	if (nargs == 1)
@@ -756,7 +754,7 @@ void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 			free(revdbdriverpaths);
 		revdbdriverpaths = istrdup(args[0]);
 	}
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 void REVDB_GetDriverPath(char *p_arguments[], int p_argument_count, char **r_return_string, Bool *r_pass, Bool *r_error)
@@ -874,7 +872,6 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 /// then REVDB_Disconnect returns an error string.
 void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = True;
 	*pass = False;
 
@@ -924,7 +921,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		}
 	}
 
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 /// @brief Commit the last transaction.

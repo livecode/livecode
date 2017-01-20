@@ -144,7 +144,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -163,7 +163,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 			}
 			if (!needone && sp.skip_token(SP_FACTOR, TT_RPAREN) == PS_NORMAL)
 				return PS_NORMAL;
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add
@@ -575,8 +575,32 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	case CT_WORD:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordOffsetMethodInfo);
 		break;
+	case CT_TOKEN:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokenOffsetMethodInfo);
+		break;
 	case CT_CHARACTER:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
+		break;
+	case CT_PARAGRAPH:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalParagraphOffsetMethodInfo);
+		break;
+	case CT_SENTENCE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalSentenceOffsetMethodInfo);
+		break;
+	case CT_TRUEWORD:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTrueWordOffsetMethodInfo);
+		break;
+	case CT_CODEPOINT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodepointOffsetMethodInfo);
+		break;
+	case CT_CODEUNIT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodeunitOffsetMethodInfo);
+		break;
+	case CT_BYTE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalByteOffsetMethodInfo);
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
 }
@@ -1034,8 +1058,8 @@ Parse_stat MCIntersect::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
 	
-	o1 = new MCChunk(False);
-	o2 = new MCChunk(False);
+	o1 = new (nothrow) MCChunk(False);
+	o2 = new (nothrow) MCChunk(False);
 	
 	Symbol_type stype;
 	if (o1->parse(sp, False) != PS_NORMAL
@@ -1542,7 +1566,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SELECTEDBUTTON_NOOBJECT, sp);
@@ -2281,7 +2305,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 		}
 		if (type == ST_SEP)
 		{
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_VALUE_BADOBJECT, sp);
@@ -2366,7 +2390,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FACTOR_NOLPAREN, sp);
 		return PS_ERROR;
 	}
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_WITHIN_NOOBJECT, sp);
@@ -3074,7 +3098,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 	}
 	
 	Symbol_type type;
-	m_object = new MCChunk(False);
+	m_object = new (nothrow) MCChunk(False);
 	if (sp.next(type) != PS_NORMAL || type != ST_SEP
         || m_object->parse(sp, False) != PS_NORMAL)
 	{

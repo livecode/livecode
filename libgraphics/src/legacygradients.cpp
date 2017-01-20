@@ -888,25 +888,25 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 			{
 				case kMCGradientKindConical:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindConical>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindLinear:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindLinear>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindRadial:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindRadial>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindDiamond:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindDiamond>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindSpiral:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindSpiral>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindXY:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindXY>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindSqrtXY:
 					(*t_combiner) -> combine = MCGradientFillCombine<kMCGradientKindSqrtXY>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 			}
 			break;
 		}
@@ -927,29 +927,28 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 			{
 				case kMCGradientKindConical:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindConical>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindLinear:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindLinear>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindRadial:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindRadial>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindDiamond:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindDiamond>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindSpiral:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindSpiral>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindXY:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindXY>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				case kMCGradientKindSqrtXY:
 					(*t_combiner) -> combine = MCGradientFillBilinearCombine<kMCGradientKindSqrtXY>;
-					return t_combiner.Take();
+					return t_combiner.Release();
 				default:
 					return NULL;
 			}
-			break;
 		}
 	}
 	

@@ -45,13 +45,13 @@ bool MCStackSecurityEncryptString(MCStringRef p_string, MCStringRef &r_enc)
 
 bool MCStackSecurityCreateStack(MCStack *&r_stack)
 {
-	r_stack = new MCStack();
+	r_stack = new (nothrow) MCStack();
 	return r_stack != nil;
 }
 
 bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy)
 {
-	r_copy = new MCStack(*p_stack);
+	r_copy = new (nothrow) MCStack(*p_stack);
 	return r_copy != nil;
 }
 
@@ -59,13 +59,13 @@ bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy)
 
 bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, bool p_new_format, MCObjectInputStream *&r_object_stream)
 {
-	r_object_stream = new MCObjectInputStream(p_stream, p_length, p_new_format);
+	r_object_stream = new (nothrow) MCObjectInputStream(p_stream, p_length, p_new_format);
 	return r_object_stream != nil;
 }
 
 bool MCStackSecurityCreateObjectOutputStream(IO_handle p_stream, MCObjectOutputStream *&r_object_stream)
 {
-	r_object_stream = new MCObjectOutputStream(p_stream);
+	r_object_stream = new (nothrow) MCObjectOutputStream(p_stream);
 	return r_object_stream != nil;
 }
 

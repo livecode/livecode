@@ -272,7 +272,7 @@ char * get_filter_mask ( uint4 p_mask_id, char * p_masks )
 void make_front_widget ( GtkWidget *p_widget)
 {
 	Window t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == DNULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 
 	gtk_widget_realize( GTK_WIDGET( p_widget )) ;

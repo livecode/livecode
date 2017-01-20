@@ -10,7 +10,7 @@ Syntax: weekdayNames()
 
 Summary:
 <return|Returns> a list of names of the days of the week used by the
-<date function>.
+<date> <function>.
 
 Introduced: 1.1
 
@@ -50,7 +50,7 @@ preferences. If the useSystemDate is false or you specify the english
 weekdayNames, the list of names is provided in English.
 
 References: function (control structure), dateFormat (function),
-date function (function), property (glossary), return (glossary),
+date (function), function (glossary), property (glossary), return (glossary),
 useSystemDate (property)
 
 Tags: math

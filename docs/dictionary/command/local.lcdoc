@@ -2,7 +2,7 @@ Name: local
 
 Type: command
 
-Syntax: local <variablesList>
+Syntax: local <variableName> [= <value>] [, ...]
 
 Summary:
 <declare|Declares> one or more <local variable|local variables> and
@@ -18,29 +18,25 @@ Example:
 local currentStatus -- creates one local variable
 
 Example:
-local thisThing,thatThing,theOtherThing -- creates three variables
+local thisThing, thatThing, theOtherThing -- creates 3 variables
 
 Example:
 local A=1,B=2,C=3 -- creates variables with initial values
 
 Example:
 -- To make a numbered list of variables:
-repeat with x=1 to 20
-  do "local tVar_" & x & "; put empty into tVar_" & x
+repeat with tNum = 1 to 20
+    do "local tVar_" & tNum & "; put empty into tVar_" & tNum
 end repeat
 
 Parameters:
-variablesList (enum):
-The variablesList consists of one or more name=value pairs, separated by
-commas: 
-
--  The name is any string.
--  The value is any literal string.
-
+variableName:
+The variableName is any string.
 
 value:
-Optional; you can specify just the variable name. In this case, the
-specified local variables contain empty when created.
+Optional; The <value> is any literal string. You can specify just the 
+variable name. In this case, the specified <local variable>s contain 
+empty when created.
 
 Description:
 Use the <local> <command> to define a <local variable> for a <handler>,
@@ -81,11 +77,18 @@ re-compiled, unless there is an error in the script. With variable
 preservation turned off, script locals lose their values when the script
 is recompiled.
 
+It is recommended that naming conventions are followed for <variable>s in 
+Livecode <script>s. For handler <local variable>s prefix with a lowercase 't' 
+and for <script local variable>s prefix with a lowercase 's' (as in 
+tMyVariable and sMyVariable). This enables anyone reading the code to 
+identify the <scope> of a variable when it is used, without having to 
+find where it is <declare|declared>
+
 References: constant (command), do (command), delete variable (command),
 global (command), variableNames (function), localNames (function),
 property (glossary), variable (glossary), handler (glossary),
 value (glossary), global (glossary), local variable (glossary),
 declare (glossary), script local variable (glossary), command (glossary),
 preserveVariables (property), script (property),
-explicitVariables (property)
+explicitVariables (property), scope (glossary)
 

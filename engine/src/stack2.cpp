@@ -112,13 +112,13 @@ void MCStack::checkdestroy()
 					}
 					while (sptr != substacks);
 				}
-                MCtodestroy -> remove(this);
+                MCtodestroy -> remove(this); // prevent duplicates
                 MCtodestroy -> add(this);
 			}
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
 	{
-		MCStack *sptr = (MCStack *)parent;
+		MCStack *sptr = parent.GetAs<MCStack>();
 		sptr->checkdestroy();
 	}
 }
@@ -302,7 +302,7 @@ Tool MCStack::gettool(MCObject *optr) const
 
 void MCStack::hidecursor()
 {
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 	{
 		cursor = MCcursors[PI_NONE];
 		MCscreen->setcursor(window, cursor);
@@ -496,7 +496,7 @@ MCStack *MCStack::getparentstack()
 		return nil;
 	}
 	
-	return m_parent_stack.GetAs<MCStack>();
+	return m_parent_stack;
 }
 
 static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
@@ -568,7 +568,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
     
 	mode_takewindow(sptr);
 	
-	if (MCmousestackptr == sptr)
+	if (MCmousestackptr.IsBoundTo(sptr))
 		MCmousestackptr = this;
 	start_externals();
     
@@ -626,19 +626,24 @@ void MCStack::kfocusset(MCControl *target)
 {
 	if (!opened)
 		return;
-	if (MCactivefield != NULL && target != NULL && MCactivefield != target)
+	if (MCactivefield && target != NULL && MCactivefield != target)
 	{
 		MCactivefield->unselect(False, True);
-		if (MCactivefield != NULL)
+		if (MCactivefield)
+        {
 			if (MCactivefield->getstack() == this)
 				curcard->kunfocus();
 			else
+            {
 				if (MCactivefield->getstack()->state & CS_KFOCUSED)
 					MCactivefield->getstack()->kunfocus();
 				else
 					MCactivefield->unselect(True, True);
+            }
+
+        }
 	}
-	if (MCactivefield != NULL && target != NULL)
+	if (MCactivefield && target != NULL)
 	{
 		curcard->kfocus();
 		MCstacks -> ensureinputfocus(window);
@@ -665,7 +670,7 @@ MCStack *MCStack::clone()
 	/* UNCHECKED */ MCStackSecurityCopyStack(this, newsptr);
 	MCdispatcher->appendstack(newsptr);
 	newsptr->parent = MCdispatcher->gethome();
-	if (this != MCtemplatestack || rect.x == 0 && rect.y == 0)
+	if (this != MCtemplatestack || (rect.x == 0 && rect.y == 0))
 	{
 		newsptr->positionrel(MCdefaultstackptr->rect, OP_CENTER, OP_MIDDLE);
 		newsptr->rect.x += MCcloneoffset;
@@ -726,7 +731,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname, uint32_t p_version)
 	{
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
-			sptr = (MCStack *)sptr->parent;
+			sptr = sptr->parent.GetAs<MCStack>();
 		return MCdispatcher->savestack(sptr, p_fname, p_version);
 	}
 	return IO_NORMAL;
@@ -753,7 +758,7 @@ MCStack *MCStack::findname(Chunk_term type, MCNameRef p_name)
 
 MCStack *MCStack::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
-	if (type == CT_STACK && (inid == obj_id || alt && inid == altid))
+	if (type == CT_STACK && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -854,7 +859,7 @@ void MCStack::startedit(MCGroup *group)
 	editing->setcontrols(NULL);
 
 	// Create a temporary card
-	cards = curcard = new MCCard;
+	cards = curcard = new (nothrow) MCCard;
 
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
@@ -926,12 +931,17 @@ void MCStack::updatemenubar()
 {
 	if (opened && state & CS_KFOCUSED && !MClockmenus)
 	{
-		if (!hasmenubar() || state & CS_EDIT_MENUS
-		        && mode < WM_PULLDOWN && mode != WM_PALETTE
-		        || gettool(this) != T_BROWSE && MCdefaultmenubar != NULL)
-			MCmenubar = NULL;
+        if (!hasmenubar() || (state & CS_EDIT_MENUS
+            && mode < WM_PULLDOWN && mode != WM_PALETTE)
+            || (gettool(this) != T_BROWSE && MCdefaultmenubar))
+        {
+			MCmenubar = nil;
+        }
+        
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, (getmenubar()));
+        {
+			MCmenubar = MCObjectCast<MCGroup>(getobjname(CT_GROUP, (getmenubar())));
+        }
 		MCscreen->updatemenubar(False);
 	}
 }
@@ -1998,13 +2008,17 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
     
     MCtodestroy -> remove(this);
 	if (wm == WM_LAST)
+    {
 		if (opened)
 			wm = mode;
 		else
+        {
 			if (getstyleint(flags) == 0)
 				wm = WM_TOP_LEVEL;
 			else
 				wm = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
+        }
+    }
 	if (wm == WM_TOP_LEVEL
 	        && (flags & F_CANT_MODIFY || m_is_ide_stack || !MCdispatcher->cut(True)))
 		wm = WM_TOP_LEVEL_LOCKED;
@@ -2016,7 +2030,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	//   it might not be.
 	if (opened)
 	{
-		if (window == NULL && !MCModeMakeLocalWindows() && (wm != WM_MODAL && wm != WM_SHEET || wm == mode))
+		if (window == NULL && !MCModeMakeLocalWindows() && ((wm != WM_MODAL && wm != WM_SHEET) || wm == mode))
 			return ES_NORMAL;
 
 		if (wm == mode && parentptr == NULL)
@@ -2197,7 +2211,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
         }
         else
         {
-            if (MCmousestackptr == NULL)
+            if (!MCmousestackptr)
                 MCscreen->querymouse(trect.x, trect.y);
             else
             {
@@ -2414,7 +2428,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		// Just do a little more adjusting for Full Screen Menus that are cascaded.
 		// We need to pull the Y co-ord up again to be level (a little above in fact) of
 		// the control we are bound to.
-		if (( mode == WM_CASCADE ) && t_fullscreen_menu ) 
+		if (( mode == WM_CASCADE ) && t_fullscreen_menu )
+        {
 			if ( t_menu_downwards )
 				rect.y = ( rel.y - 2) ;
 			else
@@ -2424,6 +2439,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				//   adjust the y-coord.
 				rect.y += rel.height + 2 ;
 			}
+        }
 	
 	}
 
@@ -2870,7 +2886,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	t_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGraphicsContext *t_old_context = nil;
-	t_old_context = new MCGraphicsContext(p_context);
+	t_old_context = new (nothrow) MCGraphicsContext(p_context);
 	if (t_old_context != nil)
 		render(t_old_context, t_rect);
 	delete t_old_context;
@@ -2939,9 +2955,11 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	t_tilecache = view_gettilecache();
 	
     // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == this)
-            t_player -> syncbuffering(nil);
+    for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
+	{
+        	if (t_player -> getstack() == this)
+            	t_player -> syncbuffering(nil);
+	}
     
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
@@ -3027,7 +3045,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
 			MCGContextConcatCTM(t_context, t_transform);
 			
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 		}
 
 		if (t_success)

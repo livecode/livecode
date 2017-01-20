@@ -66,13 +66,14 @@ lost in the transformation.
 If you use the `as set` form the <combine> command rebuilds the list using
 the delimiter passed; the values of the <array> are ignored.
 
->*Note:*  The order of the elements is not alphabetical or
-> chronological; it is based on the internal hash order of the <array>. To
-> alphabetize the list, use the <sort> command:
-
-    combine monthlyReceivables using return and comma
-    sort lines of monthlyReceivables by item 2 of each
-
+> *Note:* The order of the elements is based on case-sensitive
+> lexicographical sorting of the array's keys.  The ordering is
+> equivalent to:
+>
+>     local tKeys
+>     put the keys of tArray into tKeys
+>     set the caseSensitive to true
+>     sort tKeys text ascending
 
 If the second form of the <combine> command is used, the elements of the
 original <array> are considered to be either columns or rows, separated by
@@ -83,7 +84,7 @@ separated by the <rowDelimiter>. Each row in the resulting string is
 the contents of the corresponding <key> in the <array>.
 
 Combining an <array> by column converts the <array> into a table
-with columns separated by the <columnDelimiter property>. Each column of
+with columns separated by the <columnDelimiter> <property>. Each column of
 the resulting string is the contents of the corresponding <key> in the
 <array>.
 

@@ -837,7 +837,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
 MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisible)
 {
 	MCWidget *t_new_widget;
-	t_new_widget = new MCWidget(*this);
+	t_new_widget = new (nothrow) MCWidget(*this);
 	if (p_attach)
 		t_new_widget -> attach(p_position, invisible);
     
@@ -981,7 +981,7 @@ void MCWidget::SendError(void)
 {
     MCExecContext ctxt(this, nil, nil);
     MCExtensionCatchError(ctxt);
-    if (MCerrorptr == NULL)
+    if (!MCerrorptr)
         MCerrorptr = this;
     senderror();
 }

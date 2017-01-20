@@ -4,6 +4,9 @@ Type: command
 
 Syntax: libURLSetAuthCallback
 
+Summary:
+Allows HTTP Server authentication message handling by a callback routine.
+
 Associations: internet library
 
 Introduced: 2.5

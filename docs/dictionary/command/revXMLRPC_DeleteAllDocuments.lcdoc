@@ -25,22 +25,21 @@ revXMLRPC_DeleteAllDocuments
 Example:
 if revXMLRPC_Documents() is not empty then revXMLRPC_DeleteAllDocuments
 
-The result:
+The result (string):
 If the <revXMLRPC_DeleteAllDocuments> <command> encounters an error, the
 <result> is set to an error message beginning with "xmlerr" or
-"xmlrpcerr". 
+"xmlrpcerr".
 
 Description:
 Use the <revXMLRPC_DeleteAllDocuments> <command> to free up memory after
 you finish using the <XML-RPC library>.
 
 >*Important:*  The <revXMLRPC_DeleteAllDocuments> <command> is part of
-> the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+> the <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_DeleteDocument (command),
@@ -52,4 +51,3 @@ XML-RPC document (glossary), LiveCode custom library (glossary),
 XML-RPC library (library)
 
 Tags: networking
-

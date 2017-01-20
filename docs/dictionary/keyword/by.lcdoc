@@ -32,7 +32,7 @@ Use the <by> <keyword> to divide or multiply a <container> by a number
 or to specify how to <sort>.
 
 When used with the <combine> or <split> <command>, the <by> <keyword> is
-a synonym for <using>.
+a synonym for the <using> <keyword>.
 
 References: sort (command), combine (command), split (command),
 rotate (command), sort container (command), multiply (command),

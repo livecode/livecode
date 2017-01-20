@@ -5,7 +5,7 @@ Type: function
 Syntax: binaryEncode(<formatsList>, <dataStringList>)
 
 Summary:
-<encode|Encodes> a set of <value|values> into a single <binaryvalue>.
+<encode|Encodes> a set of <value|values> into a set of <binary|binary> values.
 
 Introduced: 1.0
 
@@ -27,15 +27,27 @@ charToNum(binaryEncode("B*","01111111")) -- returns 127
 
 Parameters:
 formatsList:
-The formatsList consists of one or more dataTypes, each followed
-optionally by an amount. A dataType is one of the following single
-letters: x: output amount null characters
+The <formatsList> consists of one or more dataTypes, each followed
+optionally by an amount.
 
-dataStringList (string):
-A comma-separated list of dataStrings. Each dataString is a string, or
-an expression that evaluates to a string.
+A dataType is one of the following letters:
 
-amount (enum):
+-    c: encode amount numbers as signed 1-byte integers
+-    C: encode amount numbers as unsigned 1-byte integers
+-    s: encode amount numbers as signed 2-byte integers in host byte order
+-    S: encode amount numbers as unsigned 2-byte integers in host byte order
+-    i: encode amount numbers as signed 4-byte integers in host byte order
+-    I: encode amount numbers as unsigned 4-byte integers in host byte order
+-    n: encode amount numbers as signed 2-byte integers in network byte order
+-    N: encode amount numbers as signed 4-byte integers in network byte order
+-    m: encode amount numbers as unsigned 2-byte integers in network byte order
+-    M: encode amount numbers as unsigned 4-byte integers in network byte order
+-    f: encode amount numbers as single-precision floating-point numbers
+-    d: encode amount numbers as double-precision floating-point numbers
+-    x: encode amount null characters
+
+The amount is an integer or * and specifies the encoding in the
+following way:
 
 -  If the dataType is a, A, b, B, h, or H, the amount specifies the
    number of characters or groups of the dataString to use; extra
@@ -49,21 +61,9 @@ amount (enum):
 -  If the dataType is x, the amount specifies how many nulls to place in
    the returned value.
 
-
--   byte integersC: encode amount numbers as unsigned 1-byte integerss:
-    encode amount numbers as signed 2-byte integers in host byte orderS:
-    encode amount numbers as unsigned 2-byte integers in host byte
-    orderi: encode amount numbers as signed 4-byte integers in host byte
-    orderI: encode amount numbers as unsigned 4-byte integers in host
-    byte ordern: encode amount numbers as signed 2-byte integers in
-    network byte orderN: encode amount numbers as signed 4-byte integers
-    in network byte orderm: encode amount numbers as unsigned 2-byte
-    integers in network byte orderM: encode amount numbers as unsigned
-    4-byte integers in network byte orderf: encode amount numbers as
-    single-precision floating-point numbersd: encode amount numbers as
-    double-precision floating-point numbersThe amount corresponding to
-    each dataType is an integer or the * character:
-
+dataStringList (string):
+A comma-separated list of dataStrings. Each dataString is a string, or
+an expression that evaluates to a string.
 
 Returns:
 The <binaryEncode> <function> <return|returns> the binary string
@@ -94,8 +94,7 @@ adding a zero to the end to make the dataString two <characters> long.
 References: function (control structure), numToChar (function),
 format (function), return (glossary), binary file (glossary),
 value (glossary), null (glossary), encode (glossary),
-binaryvalue (glossary), hexadecimal (glossary), string (keyword),
+binary data (glossary), hexadecimal (glossary), string (keyword),
 character (keyword), characters (keyword)
 
 Tags: text processing
-

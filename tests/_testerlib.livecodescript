@@ -200,6 +200,7 @@ function TesterTapAnalyse pTapData
             add 1 to tStats["xfail"]
          else
             add 1 to tStats["fail"]
+            put tLine & return after tStats["failures"]
          end if
       end if
 
@@ -233,7 +234,7 @@ function TesterTapCombine pAnalysisA, pAnalysisB
 
    if pAnalysisA is an array and pAnalysisB is an array then
       repeat for each key tKey in pAnalysisB
-         if tKey is "log" then
+         if tKey is among the words of "log failures" then
             put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
          else
             put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
@@ -260,13 +261,17 @@ local sLogInfo
 -- FIXME this really doesn't work properly if LiveCode's stdout
 -- *isn't* a TTY.
 private command logInit
-   if sLogInfo is false or sLogInfo is an array then
+   -- Don't colour output from dev engine as it's processed by 
+   -- standalone engine
+   if the environment contains "development" then
+      put false into sLogInfo
       exit logInit
    end if
 
    -- We can only do colour on Linux and OS X
    if the platform is not "Linux" and the platform is not "MacOS" then
       put false into sLogInfo
+      exit logInit
    end if
 
    -- Check if colouring is possible
@@ -274,6 +279,7 @@ private command logInit
    put shell("tput colors") into tTput
    if the result is not empty or tTput <= 8 then
       put false into sLogInfo
+      exit logInit
    end if
 
    -- Get colours
@@ -320,5 +326,9 @@ command TesterLogSummaryLine pTapResults, pTestName
    put TesterTapGetWorstResult(pTapResults) into tWorst
    put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   if pTapResults["failures"] is not empty then
+      put return & pTapResults["failures"] after tMessage
+   end if
+
    TesterLog tWorst, tMessage
 end TesterLogSummaryLine

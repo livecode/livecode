@@ -25,24 +25,23 @@ public:
 	MCObjectPropertySet(void)
 	{
 		m_next = nil;
-		m_name = nil;
         /* UNCHECKED */ MCArrayCreateMutable(m_props);
 	}
 
 	~MCObjectPropertySet(void)
 	{
-		MCNameDelete(m_name);
 		MCValueRelease(m_props);
 	}
 
 	bool hasname(MCNameRef p_name)
 	{
-		return MCNameIsEqualTo(m_name, p_name, kMCCompareCaseless);
+        return m_name.IsSet() &&
+            MCNameIsEqualTo(*m_name, p_name, kMCCompareCaseless);
 	}
 
 	MCNameRef getname(void)
 	{
-		return m_name;
+		return *m_name;
 	}
 
 	MCObjectPropertySet *getnext(void)
@@ -57,8 +56,7 @@ public:
 
 	void changename_nocopy(MCNameRef p_name)
 	{
-		MCNameDelete(m_name);
-		m_name = p_name;
+        m_name.Give(p_name);
 	}
 
 	/* CAN FAIL */ bool clone(MCObjectPropertySet*& r_set);
@@ -113,7 +111,7 @@ public:
 
 private:
 	MCObjectPropertySet *m_next;
-	MCNameRef m_name;
+	MCNewAutoNameRef m_name;
 	MCArrayRef m_props;
 };
 

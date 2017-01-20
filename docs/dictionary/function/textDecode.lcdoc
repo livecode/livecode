@@ -36,11 +36,9 @@ the encoding of the original data
 - "UTF-32LE"
 - "UTF-8"
 - "CP1252"
-
-
--   "ISO-8859-1": Linux only
--   "MacRoman": OS X only
--   "Native": ISO-8859-1 on Minux, MacRoman on OS X, CP1252 on Windows
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Minux, MacRoman on OS X, CP1252 on Windows
 
 
 Returns:

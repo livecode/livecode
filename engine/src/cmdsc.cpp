@@ -74,7 +74,7 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL)
 		visible = False;
 
-	source = new MCChunk(False);
+	source = new (nothrow) MCChunk(False);
 	if (source->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -155,7 +155,7 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 	MCerrorlock--;
 	if (sp.skip_token(SP_FACTOR, TT_TO, PT_TO) == PS_NORMAL)
 	{
-		dest = new MCChunk(False);
+		dest = new (nothrow) MCChunk(False);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_COPY_BADDEST, sp);
@@ -542,7 +542,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
         {
             if (!script_only_stack)
             {
-                container = new MCChunk(False);
+                container = new (nothrow) MCChunk(False);
                 if (container->parse(sp, False) != PS_NORMAL)
                 {
                     MCperror->add
@@ -754,7 +754,7 @@ Parse_stat MCCustomProp::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	sp.skip_token(SP_FACTOR, TT_OF);
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1215,7 +1215,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
 	
 	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
-	image = new MCChunk(False);
+	image = new (nothrow) MCChunk(False);
 	if (image->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_FLIP_BADIMAGE, sp);
@@ -1257,7 +1257,7 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
         MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
     }
 
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
         MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
 }
 
@@ -1380,7 +1380,7 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 
 	if (t_is_url && sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
 	{
-		widget = new MCChunk(False);
+		widget = new (nothrow) MCChunk(False);
 		if (widget->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_LAUNCH_BADWIDGETEXP, sp);
@@ -1735,7 +1735,8 @@ void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			if (!t_chunk -> getobj(ctxt, t_object, True) || t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
+			if (!t_chunk -> getobj(ctxt, t_object, True) ||
+			    !MCChunkTermIsControl(t_object . object -> gettype()))
             {
                 ctxt .Throw();
 				return;
@@ -1810,7 +1811,7 @@ MCPlace::~MCPlace()
 Parse_stat MCPlace::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	group = new MCChunk(False);
+	group = new (nothrow) MCChunk(False);
 	if (group->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1819,7 +1820,7 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 	}
 	while (sp.skip_token(SP_FACTOR, TT_PREP) == PS_NORMAL)
 		;
-	card = new MCChunk(False);
+	card = new (nothrow) MCChunk(False);
 	if (card->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1953,7 +1954,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
 	{
 		sp.skip_token(SP_FACTOR, TT_OF);
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -1992,7 +1993,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 		return PS_NORMAL;
 	}
 
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2001,7 +2002,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	}
 	while (sp.skip_token(SP_FACTOR, TT_FROM) == PS_NORMAL)
 		;
-	card = new MCChunk(False);
+	card = new (nothrow) MCChunk(False);
 	if (card->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2161,7 +2162,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	sp.skip_token(SP_FACTOR, TT_IN, PT_IN);
-	container = new MCChunk(True);
+	container = new (nothrow) MCChunk(True);
 	if (container->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_REPLACE_BADCONTAINER, sp);
@@ -2279,7 +2280,7 @@ Parse_stat MCRevert::parse(MCScriptPoint &sp)
     
     // Otherwise backup and parse a chunk
     sp.backup();
-    stack = new MCChunk(False);
+    stack = new (nothrow) MCChunk(False);
     if (stack->parse(sp, False) != PS_NORMAL)
     {
         MCperror->add(PE_REVERT_BADSTACK, sp);
@@ -2337,7 +2338,7 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
 	{
 		sp.backup();
-		image = new MCChunk(False);
+		image = new (nothrow) MCChunk(False);
 		if (image->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -2420,7 +2421,7 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
 	{
 		sp.backup();
-		image = new MCChunk(False);
+		image = new (nothrow) MCChunk(False);
 		if (image->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -2678,7 +2679,7 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 	initpoint(sp);
 	MCScriptPoint oldsp(sp);
 	MCerrorlock++;
-	group = new MCChunk(False);
+	group = new (nothrow) MCChunk(False);
 	if (group->parse(sp, False) != PS_NORMAL)
 	{
 		delete group;
@@ -2750,7 +2751,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
 
-	control = new MCChunk(False);
+	control = new (nothrow) MCChunk(False);
 	if (control -> parse(sp, False) != PS_NORMAL)
 	{
 		MCperror -> add(PE_RELAYER_BADCONTROL, sp);
@@ -2798,7 +2799,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 	else
 	{
 		form = kMCRelayerFormRelativeToControl;
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_RELAYER_BADTARGET, sp);

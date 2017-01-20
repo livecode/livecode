@@ -5,9 +5,6 @@ The engine supports a variety of operating systems and versions. This section de
 
 LiveCode supports the following versions of Windows:
 
-* Windows XP SP2 and above
-* Windows Server 2003
-* Windows Vista SP1 and above (both 32-bit and 64-bit)
 * Windows 7 (both 32-bit and 64-bit)
 * Windows Server 2008
 * Windows 8.x (Desktop)
@@ -49,9 +46,6 @@ requirements:
 ## Mac
 The Mac engine supports:
 
-* 10.6.x (Snow Leopard) on Intel
-* 10.7.x (Lion) on Intel
-* 10.8.x (Mountain Lion) on Intel
 * 10.9.x (Mavericks) on Intel
 * 10.10.x (Yosemite) on Intel
 * 10.11.x (El Capitan) on Intel
@@ -61,22 +55,21 @@ The Mac engine supports:
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
 
 Currently, the supported versions of Xcode are:
-* Xcode 4.6 on MacOS X 10.7
-* Xcode 5.1 on MacOS X 10.8
 * Xcode 6.2 on MacOS X 10.9
 * Xcode 6.2 and 7.2 on Mac OS X 10.10
-* Xcode 8.0 on MacOS X 10.11
-* Xcode 8.0 on MacOS 10.12
+* Xcode 8.2 on MacOS X 10.11
+* Xcode 8.2 on MacOS 10.12
 
-It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on OS X 10.10 (Yosemite), you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
+It is also possible to set other versions of Xcode, to allow testing
+on a wider range of iOS simulators. For instance, on MacOS 10.12
+(Sierra), you can add *Xcode 6.2* in the *Mobile Support* preferences,
+to let you test your stack on the *iOS Simulator 8.2*.
 
 We currently support deployment for the following versions of iOS:
 
-* 6.1 [simulator]
-* 7.1 [simulator]
 * 8.2 [simulator]
 * 9.2
-* 10.0
+* 10.2
 
 ## Android
 
@@ -86,11 +79,9 @@ also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
 
-The Android engine supports devices using ARMv6, ARMv7 or ARMv8
-processors.  It will run on the following versions of Android:
+The Android engine supports devices using ARMv7 or ARMv8 processors.
+It will run on the following versions of Android:
 
-* 2.3.3-2.3.7 (Gingerbread)
-* 4.0 (Ice Cream Sandwich)
 * 4.1-4.3 (Jelly Bean)
 * 4.4 (KitKat)
 * 5.0-5.1 (Lollipop)

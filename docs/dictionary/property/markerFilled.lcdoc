@@ -6,7 +6,7 @@ Syntax: set the markerFilled of <graphic> to {true | false}
 
 Summary:
 Specifies whether the markers drawn at each <vertex> of a <polygon>
-<graphic> are filled or hollow.
+<graphic(object)> are filled or hollow.
 
 Associations: graphic
 
@@ -20,28 +20,28 @@ Example:
 set the markerFilled of graphic 10 to false
 
 Value (bool):
-The <markerFilled> of a <graphic(keyword)> is true or false.
+The <markerFilled> of a <graphic(object)> is true or false.
 By default, the <markerFilled> <property> of newly created
 <graphic(object)|graphics> is set to false.
 
 Description:
 Use the <markerFilled> <property> to change the <appearance> of the
-small shapes at each <vertex> of a <graphic>.
+small shapes at each <vertex> of a <graphic(object)>.
 
-Irregular polygon graphics can be drawn with a marker at each vertex,
+Irregular polygon <graphic(object)|graphics> can be drawn with a marker at each vertex,
 whose shape is defined by the markerPoints <property>. If the
 <markerFilled> <property> is true, the marker shapes are filled with the
 <borderPattern> or <borderColor>. If it is false, the marker shapes are
 hollow. 
 
-If the style <property> of the <graphic> is not polygon or curve, the
+If the style <property> of the <graphic(object)> is not polygon or curve, the
 setting of its <markerFilled> <property> has no effect.
 
 If the markerPoints <property> is empty or the <markerDrawn> <property>
 is false, the <markerFilled> <property> has no effect.
 
 References: vertex (glossary), property (glossary), appearance (glossary),
-polygon (keyword), graphic (keyword), graphic (object),
+polygon (keyword), graphic (object),
 borderPattern (property), borderColor (property), filled (property),
 markerDrawn (property), markerLineSize (property)
 

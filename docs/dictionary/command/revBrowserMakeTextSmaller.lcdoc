@@ -40,8 +40,8 @@ the browser specified by the <instanceId>.
 > clicking on View -&gt; Make Text Smaller
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserMakeTextBigger (command),
-revBrowserOpen function (function)
+revBrowserOpen (function), function (glossary)
 

@@ -167,10 +167,29 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 	return false;
 }
 
+static bool
+MCEngineCheckModulesHaveNamePrefix(MCNameRef p_prefix,
+                                   MCSpan<MCScriptModuleRef> p_modules)
+{
+    MCAutoStringRef t_prefix;
+    if (!(MCStringMutableCopy(MCNameGetString(p_prefix), &t_prefix) &&
+          MCStringAppendChar(*t_prefix, '.')))
+        return false;
+
+    while (!p_modules.empty())
+    {
+        if (!MCStringBeginsWith(MCNameGetString(MCScriptGetNameOfModule(*p_modules)),
+                                *t_prefix, kMCStringOptionCompareCaseless))
+            return false;
+        ++p_modules;
+    }
+    return true;
+}
+
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
-    MCAutoScriptModuleRef t_module;
-    if (!MCScriptCreateModuleFromData(p_extension_data, &t_module))
+    MCAutoScriptModuleRefArray t_modules;
+    if (!MCScriptCreateModulesFromData(p_extension_data, t_modules))
     {
         MCAutoErrorRef t_error;
         if (MCErrorCatch(Out(t_error)))
@@ -179,11 +198,34 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
             ctxt . SetTheResultToStaticCString("failed to load module");
         return;
     }
-    
-    MCEngineAddExtensionFromModule(*t_module);
+
+    MCScriptModuleRef t_main = t_modules[0];
+
+    /* Check that the 2nd to Nth modules have names that have the
+     * appropriate prefix */
+    if (!MCEngineCheckModulesHaveNamePrefix(MCScriptGetNameOfModule(t_main),
+                                            t_modules.Span().subspan(1)))
+    {
+        MCAutoStringRef t_message;
+        /* It's probably okay not to check this; failures will be
+         * dealt with by the following MCErrorCatch(). */
+        /*UNCHECKED*/ MCStringFormat(&t_message,
+                                     "failed to load modules: support modules' names did not begin with '%@'",
+                                     MCScriptGetNameOfModule(t_main));
+
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+            ctxt.SetTheResultToValue(MCErrorGetMessage(*t_error));
+        else
+            ctxt.SetTheResultToValue(*t_message);
+    }
+
+    /* Only the head module is registered as an extension */
+    MCEngineAddExtensionFromModule(t_main);
+
     if (p_resource_path != nil)
-        MCEngineAddResourcePathForModule(*t_module, p_resource_path);
-    
+        MCEngineAddResourcePathForModule(t_main, p_resource_path);
+
     return;
 }
 
@@ -476,14 +518,19 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
         MCLog("Error state indicated with no error having been thrown");
         return ES_ERROR;
     }
-    
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
-    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
-    if (MCErrorGetDepth(*t_error) > 0)
-    {
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, 0));
-        ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, 0));
-    }
+
+	uindex_t t_num_frames = MCErrorGetDepth(*t_error);
+	for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+	{
+		if (t_depth == 0)
+		{
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
+			ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
+		}
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, t_depth));
+		ctxt . LegacyThrow(EE_EXTENSION_ERROR_COLUMN, MCErrorGetColumnAtLevel(*t_error, t_depth));
+	}
     
     return ES_ERROR;
 }
@@ -666,6 +713,31 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
         }
         return true;
             
+        case kMCValueTypeCodeForeignValue:
+        {
+            // Get the type info for the foreign value so we can find its bridge
+            // type
+            MCTypeInfoRef t_foreign_type = MCValueGetTypeInfo(x_value);
+            const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_foreign_type);
+            if (t_desc->bridgetype == nil)
+                break;
+
+            // Import the type
+            MCValueRef t_imported;
+            if (!t_desc->doimport(MCForeignValueGetContentsPtr(x_value), false, t_imported))
+                return false;
+
+            // Recursively convert to a script type
+            if (!MCExtensionConvertToScriptType(ctxt, t_imported))
+            {
+                MCValueRelease(t_imported);
+                return false;
+            }
+
+            MCValueAssign(x_value, t_imported);
+        }
+        return true;
+
         // The rest have no conversion
         default:
             break;
@@ -684,7 +756,8 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_type, MCValueRef& x_value, bool& r_converted)
 {
     MCResolvedTypeInfo t_resolved_type;
-    MCTypeInfoResolve(p_as_type, t_resolved_type);
+    if (!MCTypeInfoResolve(p_as_type, t_resolved_type))
+		return false;
     
     if (t_resolved_type . named_type == kMCAnyTypeInfo)
     {
@@ -1115,7 +1188,17 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     bool t_is_array;
     if (!__script_try_to_convert_to_array(ctxt, x_value, t_is_array))
         return false;
-    
+	
+	// If we managed to convert to an array, and the array is empty then we
+	// can convert.
+	if (t_is_array &&
+		MCArrayIsEmpty((MCArrayRef)x_value))
+	{
+		MCValueAssign(x_value, (MCValueRef)kMCEmptyProperList);
+		r_converted = true;
+		return true;
+	}
+	
     // If we managed to convert to an array, and the array is a sequence
     // we can convert.
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))

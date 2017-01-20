@@ -35,6 +35,7 @@ enum DependencyModeType
 };
     
 void AddImportedModuleDir(const char *dir);
+void AddImportedModuleName(const char *name);
 int AddImportedModuleFile(const char *name);
     
 void SetOutputBytecodeFile(const char *filename);

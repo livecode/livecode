@@ -17,7 +17,36 @@ Example:
 dispatch "updateWidget"
 
 Example:
-dispatch "setList" with tNewList
+on mouseUp
+  local tWidth, tHeight
+   
+  put 200 into tWidth
+  put 100 into tHeight
+  dispatch "setSize" with tWidth, tHeight
+end mouseUp
+
+on setSize pWidth, pHeight
+  set the width of graphic "myRectangle" to pWidth
+  set the height of graphic "myRectangle" to pHeight
+end setSize
+
+Example:
+# An example of using an array as an argument
+
+on mouseUp
+  local tDataArray
+  
+  put "Mickey" into tDataArray["firstName"]
+  put "Mouse" into tDataArray["lastName"]
+  
+  dispatch "updateUI" to card "myCard" with "Hello World", tDataArray
+end mouseUp
+
+on updateUI pTitle, @pArray
+  put pTitle into field "Title"
+  put pArray["firstName"] into field "First Name"
+  put pArray["lastName"] into field "Last Name"
+end updateUI
 
 Parameters:
 message:
@@ -28,6 +57,7 @@ A reference to any LiveCode object.
 
 argumentList:
 A comma separated list of expressions containing the arguments to send.
+Arrays are expressions and are valid to send as arguments.
 
 It (enum):
 Set by <dispatch> to indicate how the message was processed.
@@ -38,7 +68,7 @@ Set by <dispatch> to indicate how the message was processed.
 
 
 Description:
-Use the <dispatch> command to send a mesage to an object, via the
+Use the <dispatch> command to send a message to an object, via the
 message path and find out whether it was handled or not.
 
 The <dispatch> command is most useful when using <behavior|behaviors>,

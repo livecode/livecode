@@ -395,27 +395,7 @@ MCRunLoadModulesFromFile (MCStringRef p_filename,
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	size_t t_available = 0;
-	do
-	{
-		MCAutoScriptModuleRef t_module;
-
-		if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
-			return false;
-
-		x_modules.Push(*t_module);
-
-		if (!MCStreamGetAvailableForRead (*t_stream, t_available))
-			return false;
-	}
-	while (t_available > 0);
-
-	return true;
+	return MCScriptCreateModulesFromData(*t_module_data, x_modules);
 }
 
 static bool

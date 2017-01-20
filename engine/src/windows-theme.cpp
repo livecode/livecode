@@ -30,8 +30,6 @@
 #include "stack.h"
 #include "font.h"
 
-#include <windows.h>
-
 
 static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
 {

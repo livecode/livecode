@@ -74,8 +74,10 @@ function buildOpenSSL {
 			local PLATFORM_NAME=${PLATFORM}
 		fi
 		
+		CUSTOM_SPEC="${SPEC}-livecode"
+
 		OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-		OPENSSL_ARCH_CONFIG="no-idea no-rc5 no-hw shared --prefix=${INSTALL_DIR}/${NAME} ${SPEC}"
+		OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC}"
 		OPENSSL_ARCH_LOG="${OPENSSL_ARCH_SRC}.log"
 	
 		# Copy the source to a target-specific directory
@@ -94,6 +96,17 @@ function buildOpenSSL {
 		# Re-configure and re-build, if required
 		if [ "${OPENSSL_ARCH_CONFIG}" != "${OPENSSL_ARCH_CURRENT_CONFIG}" ] ; then
 			cd "${OPENSSL_ARCH_SRC}"
+
+			# Customise the OpenSSL configuration to ensure variables are exported as functions
+			cat > Configurations/99-livecode.conf << EOF
+%targets = (
+	"${CUSTOM_SPEC}" => {
+		inherit_from => [ "${SPEC}" ],
+		bn_ops => sub { join(" ",(@_,"EXPORT_VAR_AS_FN")) },
+	},
+);
+EOF
+
 			echo "Configuring OpenSSL for ${NAME}"
 			
 			setCCForArch "${ARCH}" "${SUBPLATFORM_INDEX}"
@@ -108,9 +121,6 @@ function buildOpenSSL {
 			if [ "${PLATFORM}" == "ios" ] ; then
 				sed -i "" -e "s/MAKEDEPPROG=makedepend/MAKEDEPPROG=$\(CC\) -M/" Makefile
 			fi
-
-			# Ensure that variables get exported as functions
-			echo "#define OPENSSL_EXPORT_VAR_AS_FUNCTION 1" >> crypto/opensslconf.h
 
 			echo "Building OpenSSL for ${NAME}"
 			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make depend >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
@@ -136,6 +146,8 @@ function buildOpenSSL {
 			cp "${INSTALL_DIR}/${NAME}/lib/libcrypto.a" "${OUTPUT_DIR}/lib/${NAME}/libcustomcrypto.a"
 			cp "${INSTALL_DIR}/${NAME}/lib/libssl.a" "${OUTPUT_DIR}/lib/${NAME}/libcustomssl.a"
 		fi
+
+		cp -R "${INSTALL_DIR}/${NAME}/include/openssl" "${OUTPUT_DIR}/include/openssl"
 	done
 
 	# Create the universal libraries

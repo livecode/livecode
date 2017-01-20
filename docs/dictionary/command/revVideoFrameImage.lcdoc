@@ -11,7 +11,7 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -68,6 +68,10 @@ x 100 <pixels>, but you specify 200 as the <frameWidth> and 100 as the
 > <Standalone Application Settings> window, make sure the
 > "Video Grabber" 
 > library checkbox is checked.
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revPreviewVideo (command), revRecordVideo (command),
 function (control structure), format (function), value (function),

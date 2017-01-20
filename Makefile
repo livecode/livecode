@@ -25,8 +25,8 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 9.2 10.0
-IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.0
+IPHONEOS_VERSIONS ?= 9.2 10.2
+IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.2
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -45,12 +45,7 @@ else
 endif
 
 # Prettifying output for CI builds
-ifeq ($(TRAVIS),true)
-  XCODEBUILD := set -o pipefail && $(XCODEBUILD)
-  XCODEBUILD_FILTER := | xcpretty
-else
-  XCODEBUILD_FILTER :=
-endif 
+XCODEBUILD_FILTER ?= 
 
 include Makefile.common
 

@@ -41,10 +41,10 @@ data. The archive must have first been opened with <revZipOpenArchive>.
 This command is useful if data is being placed into an archive simply to
 package it up neatly, rather than to reduce the size of the data. Using
 <revZipAddUncompressedItemWithData> to add items to archives is
-generally faster than using the <revZipAddItemWithData command>, which
+generally faster than using the <revZipAddItemWithData> <command>, which
 compresses the data.
 
-References: revZipAddItemWithData command (command),
+References: command (glossary),
 revZipAddUncompressedItemWithFile (command), revZipOpenArchive (command),
 revZipAddItemWithData (command)
 

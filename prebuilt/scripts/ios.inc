@@ -23,14 +23,11 @@ function addiOS {
 XCODES_DIR="${HOME}/Builds/Platforms"
 
 # Detect iOS variants
-if [ -e "${XCODES_DIR}/Xcode_4_3_1" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_4_3_1/Xcode.app/Contents/Developer" iPhoneSimulator 5.1 i386
+if [ -e "${XCODES_DIR}/Xcode_4_6_2" ] ; then
+	addiOS "${XCODES_DIR}/Xcode_4_6_2/Xcode.app/Contents/Developer" iPhoneSimulator 6.1 i386
 fi
-if [ -e "${XCODES_DIR}/Xcode_4_6_0" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_4_6_0/Xcode.app/Contents/Developer" iPhoneSimulator 6.1 i386
-fi
-if [ -e "${XCODES_DIR}/Xcode_5_1_0" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_5_1_0/Xcode.app/Contents/Developer" iPhoneSimulator 7.1 i386
+if [ -e "${XCODES_DIR}/Xcode_5_1_1" ] ; then
+	addiOS "${XCODES_DIR}/Xcode_5_1_1/Xcode.app/Contents/Developer" iPhoneSimulator 7.1 i386
 fi
 if [ -e "${XCODES_DIR}/Xcode_6_2_0" ] ; then
 	addiOS "${XCODES_DIR}/Xcode_6_2_0/Xcode.app/Contents/Developer" iPhoneSimulator 8.2 "i386 x86_64"
@@ -39,7 +36,7 @@ if [ -e "${XCODES_DIR}/Xcode_7_2_0" ] ; then
 	addiOS "${XCODES_DIR}/Xcode_7_2_0/Xcode.app/Contents/Developer" iPhoneSimulator 9.2 "i386 x86_64"
 	addiOS "${XCODES_DIR}/Xcode_7_2_0/Xcode.app/Contents/Developer" iPhoneOS 9.2 "armv7 arm64"
 fi
-if [ -e "${XCODES_DIR}/Xcode_8_0_0" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_8_0_0/Xcode.app/Contents/Developer" iPhoneSimulator 10.0 "i386 x86_64"
-	addiOS "${XCODES_DIR}/Xcode_8_0_0/Xcode.app/Contents/Developer" iPhoneOS 10.0 "armv7 arm64"
+if [ -e "${XCODES_DIR}/Xcode_8_2_0" ] ; then
+	addiOS "${XCODES_DIR}/Xcode_8_2_0/Xcode.app/Contents/Developer" iPhoneSimulator 10.2 "i386 x86_64"
+	addiOS "${XCODES_DIR}/Xcode_8_2_0/Xcode.app/Contents/Developer" iPhoneOS 10.2 "armv7 arm64"
 fi

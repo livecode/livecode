@@ -2,14 +2,17 @@ Name: function
 
 Type: control structure
 
-Syntax: function <functionName> [<parametersList>] <statementList> end <functionName>
+Syntax: 
+function <functionName> [<parametersList>] 
+  <statementList> 
+end <functionName>
 
 Summary:
 Defines a custom function <handler>.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -17,6 +20,11 @@ Example:
 function myFunction
    return "test"
 end myFunction
+
+Example:
+function cubeIt pNum
+   return pNum * pNum * pNum
+end cubeIt
 
 Parameters:
 functionName (string):
@@ -27,17 +35,25 @@ The parametersList consists of one or more parameter names, separated by
 commas. 
 
 statementList:
-The statementList consists of one or more LiveCode statements.
+The statementList consists of one or more LiveCode <statement|statements>. 
+The final <statement> is typically a <return(control structure)> <statement>, 
+which sends the value derived in the <function> <handler> back to the 
+<statement> that <caller|calls> the function.
+
 
 The result:
->*Note:* As the <result> is a global property, if you do not explicitly
-> <return(control structure)> a value, then <the result> will not
-> change, but reflect the last engine command, engine function or
-> command or function handler that did return a value.
+By default the <result> is set to the value <return(glossary)|returned> by 
+the function. See entry for the <return(control structure)> 
+<control structure> for more details.
+>*Note:* As the <result> function is global in scope, if you do not 
+> explicitly <return(glossary)> a value, then the <result> 
+> will not change, but reflect the last engine command, engine function 
+> or command or function handler that did <return(glossary)> a value.
 
 Description:
 Use the <function> <control structure> to implement a custom function.
-Form:The first line of a <function> <handler> consists of the word
+
+**Form.** The first line of a <function> <handler> consists of the word
 "function" followed by the function's name. If the function has any
 <parameter|parameters>, their names come after the function name,
 separated by commas.
@@ -45,58 +61,59 @@ separated by commas.
 The last line of a <function> <handler> consists of the word "end"
 followed by the function's name.
 
-The purpose of a function is to compute a value and return it to the
-handler that called the function. The function's value is returned by a
-return <control structure> within the <function> <handler>.
+The purpose of a function is to compute a value and <return(glossary)> 
+it to the <handler> that called the function. The function's value is 
+<return(glossary)|returned> by a <return(control structure)> 
+<control structure> within the <function> <handler>.
 
-A function handler can contain any set of LiveCode statements. Most
-functions contain a return <statement>, which <return(glossary)|returns>
-the value to the <caller|calling handler>. This example of a custom
-function uses two <parameter|parameters> and <return(glossary)|returns>
-a <string> :
+A <function> <handler> can contain any set of LiveCode <statement|statements>.
+Most functions contain a <return(control structure)> <statement>, which 
+<return(glossary)|returns> the value to the <caller|calling handler>. 
+This example of a custom function uses two <parameter|parameters> and 
+<return(glossary)|returns> a <string> :
 
-function reversedName firstName,lastName
--- firstName and lastName are parameters
-put lastName,firstName into constructedName
-return constructedName
-end reversedName
+    function reversedName firstName,lastName
+      -- firstName and lastName are parameters
+      put lastName,firstName into constructedName
+      return constructedName
+    end reversedName
 
-You create a custom function by writing a function handler for it. When
-you use the function in a script, the function call is passed through
-the message path. When it reaches the object whose script contains the
+You create a custom function by writing a <function> <handler> for it. When
+you <call> the function in a <handler>, the function <call> is passed through
+the <message path>. When it reaches the object whose script contains the
 <function> <handler>, the <statement|statements> in the <handler> are
 <execute|executed>. 
 
 A custom function is called by name, just like a built-in function, as
-part of an expression. For example, this handler calls the custom
+part of an <expression>. For example, this handler calls the custom
 function above:
 
-on mouseUp
-ask "What is your first name?"
-put it into firstParam
-ask "What is your last name?"
-put it into secondParam
-put reversedName(firstParam,secondParam) into field "Name"
-end mouseUp
+    on mouseUp
+      ask "What is your first name?"
+      put it into firstParam
+      ask "What is your last name?"
+      put it into secondParam
+      put reversedName(firstParam,secondParam) into field "Name"
+    end mouseUp
 
 A function can call itself. The following example calls itself to
 compute the factorial of an integer:
 
-function factorial theNumber
-if theNumber = 1 then return 1
-else return theNumber * factorial(theNumber -1)
-end factorial
+    function factorial theNumber
+      if theNumber = 1 then return 1
+      else return theNumber * factorial(theNumber -1)
+    end factorial
 
 >*Note:* To declare a function that is local to the script it is
 > contained in, prefix the declaration with <private>. For more
-> information about this see the dictionary entry for the <private
-> keyword>. 
+> information about this see the dictionary entry for the <private>
+> keyword. 
 
-References: exit (control structure), return (control structure),
-param (function), functionNames (function), result (function),
-paramCount (function), the result (function), return (glossary),
-handler (glossary), execute (glossary), statement (glossary),
-control structure (glossary), parameter (glossary), caller (glossary),
-private keyword (keyword), end (keyword), $ (keyword), private (keyword),
+References: $ (keyword), call (glossary), caller (glossary), 
+control structure (glossary), end (keyword), execute (glossary), 
+exit (control structure), expression (glossary), 
+functionNames (function), handler (glossary), 
+message path (glossary), param (function), paramCount (function), 
+parameter (glossary), private (keyword), result (function), 
+return (control structure), return (glossary), statement (glossary), 
 string (keyword)
-

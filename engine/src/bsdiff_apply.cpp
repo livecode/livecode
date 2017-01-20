@@ -62,7 +62,8 @@ static bool bspatchmain(MCBsDiffInputStream *p_patch_stream, MCBsDiffInputStream
 
 	// Read in the sizes of all the data arrays
 
-	int32_t t_control_byte_size, t_diff_size, t_extra_size, t_new_size;
+	int32_t t_control_byte_size, t_diff_size, t_extra_size;
+	int32_t t_new_size = 0;
 	if (t_success)
 		t_success =
 			p_patch_stream -> ReadInt32(t_control_byte_size) &&

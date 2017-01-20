@@ -22,6 +22,90 @@
 	'targets':
 	[
 		{
+			'target_name': 'extract_docs',
+			'type': 'none',
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files':
+					[
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/extracted_docs/',
+					],
+				},
+			},
+			
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'host_os == "linux"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "mac"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "win"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community.exe',
+						},
+					],
+				],
+			},
+			
+			'dependencies':
+			[
+				# Requires a working LiveCode engine
+				'server',
+			],
+			
+			'sources':
+			[
+				'../extensions/script-libraries/oauth2/oauth2.livecodescript',
+				'../extensions/script-libraries/getopt/getopt.livecodescript',
+				'../extensions/script-libraries/mime/mime.livecodescript',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'extract_docs_from_stacks',
+					'message': 'Extracting docs from stacks',
+					
+					'inputs':
+					[
+						'../util/extract-docs.livecodescript',
+						'../ide-support/revdocsparser.livecodescript',
+						'<@(_sources)',
+					],
+					
+					'outputs':
+					[
+						'<(PRODUCT_DIR)/extracted_docs',
+					],
+					
+					'action':
+					[
+						'<(engine)',
+						'../util/extract-docs.livecodescript',
+						'../ide-support/revdocsparser.livecodescript',
+						'<(PRODUCT_DIR)/extracted_docs',
+						'<@(_sources)',
+					],
+				},
+			],
+		},
+		
+		{
 			'target_name': 'update_liburl_script',
 			'type': 'none',
 			
@@ -266,7 +350,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -607,6 +691,7 @@
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
+				'extract_docs',
 			],
 			
 			'sources':
@@ -881,6 +966,7 @@
 									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
 								],
@@ -912,6 +998,7 @@
 									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
 								],

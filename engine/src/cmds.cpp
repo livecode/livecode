@@ -141,7 +141,7 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
 	MCerrorlock++;
-	container = new MCChunk(True);
+	container = new (nothrow) MCChunk(True);
 	MCScriptPoint tsp(sp);
 	if (container->parse(sp, False) != PS_NORMAL)
 	{
@@ -342,7 +342,7 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 			caller = true;
 		else
 		{
-			widget = new MCChunk(False);
+			widget = new (nothrow) MCChunk(False);
 			if (widget->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_DO_BADENV, sp);
@@ -505,7 +505,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 		MCperror->add(PE_EDIT_NOOF, sp);
 		return PS_ERROR;
 	}
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_EDIT_NOTARGET, sp);
@@ -583,7 +583,7 @@ Parse_stat MCFind::parse(MCScriptPoint &sp)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
 	{
-		field = new MCChunk(False);
+		field = new (nothrow) MCChunk(False);
 		if (field->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -681,7 +681,7 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 	if (sp.lookup(SP_MARK, te) != PS_NORMAL)
 	{
 		sp.backup();
-		card = new MCChunk(False);
+		card = new (nothrow) MCChunk(False);
 		if (card->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -753,7 +753,7 @@ if (sp.next(type) != PS_NORMAL)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
 	{
-		field = new MCChunk(False);
+		field = new (nothrow) MCChunk(False);
 		if (field->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -975,7 +975,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 		sp.skip_token(SP_SHOW, TT_UNDEFINED, SO_MESSAGE); // "box"
 		return PS_NORMAL;
 	}
-	dest = new MCChunk(True);
+	dest = new (nothrow) MCChunk(True);
 	if (dest->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_PUT_BADCHUNK, sp);
@@ -1317,9 +1317,8 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
     else if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
     {
         kind = kReturnWithUrlResult;
-		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) == PS_NORMAL)
-            ;
-        if (sp.parseexp(False, True, &extra_source) != PS_NORMAL)
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) != PS_NORMAL ||
+			sp.parseexp(False, True, &extra_source) != PS_NORMAL)
         {
             MCperror->add(PE_RETURN_BADEXP, sp);
             return PS_ERROR;
@@ -1415,7 +1414,7 @@ Parse_stat MCSet::parse(MCScriptPoint &sp)
 		MCperror->add(PE_SET_NOTHE, sp);
 		return PS_ERROR;
 	}
-	target = new MCProperty;
+	target = new (nothrow) MCProperty;
 	if (target->parse(sp, True) != PS_NORMAL)
 	{
 		MCperror->add(PE_SET_NOPROP, sp);
@@ -1480,7 +1479,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 			switch (te->which)
 			{
 			case ST_OF:
-				of = new MCChunk(True);
+				of = new (nothrow) MCChunk(True);
 				if (of->parse(sp, False) != PS_NORMAL)
 				{
 					MCperror->add
@@ -1535,7 +1534,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 			sp.backup();
 			if (of == NULL)
 			{
-				of = new MCChunk(True);
+				of = new (nothrow) MCChunk(True);
 				if (of->parse(sp, False) != PS_NORMAL)
 				{
 					MCperror->add
@@ -1887,7 +1886,7 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
     // Parse the target object clause
     if (t_stat == PS_NORMAL)
     {
-        m_relative_object = new MCChunk(false);
+        m_relative_object = new (nothrow) MCChunk(false);
         t_stat = m_relative_object -> parse(p_sp, False);
     }
     else

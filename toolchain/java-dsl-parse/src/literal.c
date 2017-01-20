@@ -21,30 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef _WIN32
-#  define strcasecmp _stricmp
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
-
-void ConcatenateNameParts(NameRef p_left, NameRef p_right, NameRef *r_output)
-{
-    const char* t_left;
-    GetStringOfNameLiteral(p_left, &t_left);
-    
-    const char* t_right;
-    GetStringOfNameLiteral(p_right, &t_right);
-    
-    char *t_output;
-    t_output = malloc(strlen(t_left) + strlen(t_right) + 2);
-    if (t_output == NULL)
-        Fatal_OutOfMemory();
-    
-    if (sprintf(t_output, "%s.%s", t_left, t_right) < 0)
-       Fatal_OutOfMemory();
-    
-    MakeNameLiteral(t_output, r_output);
-}
 
 void JavaQualifiedNameToClassPath(NameRef p_input, NameRef *r_output)
 {

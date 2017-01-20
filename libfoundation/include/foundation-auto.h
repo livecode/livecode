@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation.h"
 #endif
 
+#include "foundation-span.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> class MCAutoValueRefBase;
@@ -50,7 +52,13 @@ public:
 	{
 	}
     
-    inline explicit MCAutoValueRefBase(T p_value)
+    inline MCAutoValueRefBase(const MCAutoValueRefBase& other) :
+      m_value(nil)
+    {
+        Reset(other.m_value);
+    }
+    
+    inline MCAutoValueRefBase(T p_value)
 		: m_value(nil)
 	{
         if (p_value)
@@ -80,16 +88,19 @@ public:
 		return m_value;
 	}
     
+	bool IsSet() const
+	{
+		return m_value != nil;
+	}
+
     void Reset(T value = nil)
     {
+        if (value == m_value)
+                return;
+        
         if (m_value)
             MCValueRelease(m_value);
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
-    }
-    
-    inline T& operator ! (void)
-    {
-		return m_value;
     }
     
     // The give method places the given value into the container without
@@ -202,12 +213,7 @@ public:
     
 	~MCAutoValueRefArrayBase(void)
 	{
-        if (m_values != nil)
-        {
-            for (uindex_t i = 0; i < m_value_count; i++)
-                MCValueRelease(m_values[i]);
-            MCMemoryDeleteArray(m_values);
-        }
+		Reset();
 	}
     
 	//////////
@@ -251,6 +257,18 @@ public:
 
 		r_list = t_list;
 		return true;
+	}
+
+	/* Reset the managed array by releasing all the values in the
+	 * array and the underlying array storage. */
+	void Reset()
+	{
+        if (m_values != nil)
+        {
+            for (uindex_t i = 0; i < m_value_count; i++)
+                MCValueRelease(m_values[i]);
+            MCMemoryDeleteArray(m_values);
+        }
 	}
 
 	//////////
@@ -337,6 +355,11 @@ public:
         MCAssert(m_values != nil);
         return m_values[p_index];
     }
+
+	MCSpan<T> Span() const
+	{
+		return MCMakeSpan(m_values, m_value_count);
+	}
     
 private:
 	T* m_values;
@@ -399,7 +422,12 @@ typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsLPCWSTR;
 class MCAutoStringRefAsLPWSTR
 {
 public:
-	MCAutoStringRefAsLPWSTR() {}
+	MCAutoStringRefAsLPWSTR() :
+	  m_buffer(nil),
+	  m_size(0)
+	{
+	}
+
 	~MCAutoStringRefAsLPWSTR()
 	{
 		Unlock();
@@ -683,6 +711,10 @@ public:
 	{
 		m_string.Reset();
 	}
+	operator bool () const
+	{
+		return m_string.IsSet();
+	}
 	const char_t * operator*() const
 	{
 		MCAssert(MCStringIsNative(*m_string));
@@ -694,6 +726,10 @@ public:
 		uindex_t t_length;
 		(void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
 		return t_length;
+	}
+	MCSpan<const char_t> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
 	}
 private:
 	MCAutoStringRef m_string;
@@ -708,6 +744,10 @@ public:
 	{
 		return reinterpret_cast<const char *>(MCAutoStringRefAsNativeChars::operator*());
 	}
+	MCSpan<const char> Span() const
+	{
+		return MCMakeSpan(operator*(), Size());
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -716,32 +756,56 @@ public:
  * manage a value created with the "new" operator.  For example:
  *
  *     MCAutoPointer<int> number;
- *     number = new int;
+ *     number = new (nothrow) int;
  */
 template<typename T> class MCAutoPointer
 {
 public:
-	MCAutoPointer(void)
-	{
-		m_ptr = nil;
-	}
-	
-	MCAutoPointer(T* value)
-		: m_ptr(value)
-	{
-	}
+    typedef T* pointer;
 
-	~MCAutoPointer(void)
-	{
-		delete m_ptr;
-	}
+    MCAutoPointer() : m_ptr(nullptr) {}
 
-	T* operator = (T* value)
-	{
-		delete m_ptr;
-		m_ptr = value;
-		return value;
-	}
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
+
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete m_ptr;
+        m_ptr = value;
+    }
+
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
 
 	T*& operator & (void)
 	{
@@ -762,8 +826,7 @@ public:
 
 	void Take(T*&r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
 
 private:
@@ -774,20 +837,56 @@ private:
  * manage a value created with the "new[]" operator.  For example:
  *
  *     MCAutoPointer<int[]> numbers;
- *     numbers = new int[25];
+ *     numbers = new (nothrow) int[25];
  */
 template<typename T> class MCAutoPointer<T[]>
 {
 public:
-	MCAutoPointer(void) : m_ptr(nil) {}
-	~MCAutoPointer(void) { delete[] m_ptr; }
+    typedef T* pointer;
 
-	T* operator = (T* value)
-	{
-		delete[] m_ptr;
-		m_ptr = value;
-		return value;
-	}
+    MCAutoPointer() : m_ptr(nullptr) {}
+
+    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+
+    /* Construct the managed pointer using a specific value. */
+    MCAutoPointer(pointer p) : m_ptr(p) {}
+
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCAutoPointer(MCAutoPointer&& other) : m_ptr(other.Release()) {}
+
+    ~MCAutoPointer() { Reset(); }
+
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete[] m_ptr;
+        m_ptr = value;
+    }
+
+    /* Relinquish ownership of the managed pointer.  The MCAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+
+    /* Test whether the MCAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+
+    /* Return the pointer managed by the MCAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+
+    MCAutoPointer& operator=(MCAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
 
 	T*& operator & (void)
 	{
@@ -808,8 +907,7 @@ public:
 
 	void Take(T* & r_ptr)
 	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
+        r_ptr = Release();
 	}
     
     T& operator [] (size_t x)
@@ -821,53 +919,67 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
+template <typename T, void (Deleter)(T*)>
+class MCAutoCustomPointer
 {
-	
 public:
-	MCAutoCustomPointer(void)
+ 
+    typedef T* pointer;
+    
+	MCAutoCustomPointer() :
+      m_ptr(nil)
 	{
-		m_ptr = nil;
+	}
+    
+    MCAutoCustomPointer(T*&& take) :
+      m_ptr(take)
+    {
+    }
+    
+	~MCAutoCustomPointer()
+	{
+		Deleter(m_ptr);
 	}
 	
-	~MCAutoCustomPointer(void)
+	MCAutoCustomPointer& operator= (T*&& value)
 	{
-		FREE(m_ptr);
-	}
-	
-	T *operator = (T *value)
-	{
-		FREE(m_ptr);
+		Deleter(m_ptr);
 		m_ptr = value;
-		return value;
+		return *this;
 	}
 	
-	T*& operator & (void)
+	T*& operator& ()
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T *operator * (void) const
+	T* operator* () const
 	{
 		return m_ptr;
 	}
+    
+    operator bool () const
+    {
+        return m_ptr != nil;
+    }
 	
-	void Take(T*&r_ptr)
+	void ReleaseTo(T*& r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
-	T *Take()
+	T* Release()
 	{
-		T *t_ptr = m_ptr;
+		T* t_ptr = m_ptr;
 		m_ptr = nil;
 		return t_ptr;
 	}
 	
 private:
-	T *m_ptr;
+    
+	T* m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

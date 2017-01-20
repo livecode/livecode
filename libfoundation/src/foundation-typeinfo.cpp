@@ -217,7 +217,13 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     // have unnamed typeinfos which we need to compare with potentially named
     // handler type typeinfos).
     MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
-    
+	
+	// If the two types are the same, they conform.
+	if (source == target)
+	{
+		return true;
+	}
+	
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
     if (!MCTypeInfoResolve(source, t_resolved_source))
@@ -257,6 +263,14 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     // the source type, or one of the source's supertypes.
     if (MCTypeInfoIsForeign(source . type))
     {
+        // If both sides are foreign, do they have a bridge type in common?
+        if (MCTypeInfoIsForeign(target.type))
+        {
+            if (source.type->foreign.descriptor.bridgetype != kMCNullTypeInfo &&
+                source.type->foreign.descriptor.bridgetype == target.type->foreign.descriptor.bridgetype)
+                return true;
+        }
+        
         // Check to see if the target is the source's bridge type.
         if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
             target . named_type == source . type -> foreign . descriptor . bridgetype)
@@ -973,7 +987,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
-        if (t_return_type != kMCNullTypeInfo)
+        if (t_resolved_return_type.named_type != kMCNullTypeInfo)
         {
             if (MCTypeInfoIsForeign(t_resolved_return_type . type))
                 t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
@@ -988,8 +1002,9 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         // We need arity + 1 ffi_type slots, as we use the first slot to store
         // the return type (if any).
-        ffi_type **t_ffi_arg_types;
-        if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
+        MCAutoPointer<ffi_type*[]> t_ffi_arg_types =
+            new (std::nothrow) ffi_type*[t_arity + 1];
+        if (!t_ffi_arg_types)
             return false;
         
         t_ffi_arg_types[0] = t_ffi_return_type;
@@ -1016,7 +1031,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
                 t_ffi_arg_types[i + 1] = &ffi_type_pointer;
         }
         
-        self -> handler . layout_args = (void **)t_ffi_arg_types;
+        self -> handler . layout_args = t_ffi_arg_types.Release();
     }
     
     // Now we must create a new layout object.
@@ -1026,7 +1041,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
 
 	t_layout -> abi = p_abi;
     
-    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
+    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, self -> handler . layout_args[0], self -> handler . layout_args + 1) != FFI_OK)
     {
         MCMemoryDeallocate(t_layout);
         return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
@@ -1063,8 +1078,6 @@ bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfo
     MCValueRelease(self);
     
     return false;
-    
-    return true;
 }
 
 MC_DLLEXPORT_DEF
@@ -1245,7 +1258,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         }
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
-        MCMemoryDeleteArray(self -> handler . layout_args);
+        delete[] self -> handler . layout_args;
         while(self -> handler . layouts != nil)
         {
             MCHandlerTypeLayout *t_layout;
