@@ -70,6 +70,8 @@
     OutputWriteN
     OutputWriteD
 
+    GetOutputLCBModuleName
+
     ErrorsDidOccur
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
@@ -170,6 +172,10 @@
 'action' OutputWriteS(STRING, STRING, STRING)
 'action' OutputWriteN(STRING, INT, STRING)
 'action' OutputWriteD(STRING, DOUBLE, STRING)
+
+--------------------------------------------------------------------------------
+
+'action' GetOutputLCBModuleName(-> STRING)
 
 --------------------------------------------------------------------------------
 

@@ -15,30 +15,23 @@
 %% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
 
 %TEST ParseTrivialPackage
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 end package
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
 
-%TEST ParseMissingPackageAlias
-foreign package java.test
-%{EXPECT_ALIAS}end package
-%EXPECT PASS
-%ERROR "Parsing error" AT EXPECT_ALIAS
-%ENDTEST
-
 %TEST ParseMultiplePackages
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 end package
-foreign package java.test2 named com.livecode.wrap2
+foreign package java.test2
 end package
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
 
 %TEST ParseNontrivialPackages
-foreign package java.b named com.livecode.wrapped.java.b
+foreign package java.b
 
 use java.a.MyClass
 use java.a.MyInterface
@@ -93,7 +86,7 @@ end class
 
 end package
 
-foreign package java.a named com.livecode.wrapped.java.a
+foreign package java.a
 
 class SomeException
 end class

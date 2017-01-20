@@ -48,12 +48,10 @@
 
 'action' OutputSinglePackage(PACKAGE)
 
-    'rule' OutputSinglePackage(Package:package(_, Id, WrappedId, Definitions)):
+    'rule' OutputSinglePackage(Package:package(_, Id, Definitions)):
         ResolveIdName(Id -> Name)
-        OutputWriteI("foreign package ", Name, " ")
+        OutputWriteI("foreign package ", Name, "\n")
 
-        ResolveIdName(WrappedId -> WrappedName)
-        OutputWriteI("named ", WrappedName, "\n\n")
         OutputImportedDefinitions(Definitions)
         OutputDefinitions(Definitions)
         OutputWrite("end package\n\n")

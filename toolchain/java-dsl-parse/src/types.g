@@ -36,7 +36,7 @@
 --------------------------------------------------------------------------------
 
 'type' PACKAGE
-	package(Position: POS, Name: ID, Alias: ID, Definitions: DEFINITION)
+	package(Position: POS, Name: ID, Definitions: DEFINITION)
 
 'type' PACKAGELIST
 	packagelist(Head: PACKAGE, Tail: PACKAGELIST)
@@ -148,7 +148,7 @@
     upper(Type: TYPE)
     lower(Type: TYPE)
 
-'table' PACKAGEINFO(Index: INT, Generator: INT, Alias: ID)
+'table' PACKAGEINFO(Index: INT, Generator: INT)
 'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Modifiers: MODIFIER, Kind: SYMBOLKIND, Type: TYPE)
 
 'table' ID(Position: POS, Name: QUALIFIEDNAME, Meaning: MEANING)

@@ -93,16 +93,16 @@
 
 'nonterm' Package(-> PACKAGE)
 
-	'rule' Package(-> package(Position, Name, Alias, Definitions)):
+	'rule' Package(-> package(Position, Name, Definitions)):
         OptionalSeparator
-		"foreign" "package" @(-> Position) PackageId(-> Name) QualifiedAliasClause(-> Alias) Separator
+		"foreign" "package" @(-> Position) PackageId(-> Name) Separator
 		Definitions(-> Definitions)
 		"end" "package" OptionalSeparator
         END_OF_UNIT
 
-	'rule' Package(-> package(Position, Name, Alias, Definitions)):
+	'rule' Package(-> package(Position, Name, Definitions)):
         OptionalSeparator
-		"foreign" "package" @(-> Position) PackageId(-> Name) QualifiedAliasClause(-> Alias) Separator
+		"foreign" "package" @(-> Position) PackageId(-> Name) Separator
 		Definitions(-> Definitions)
 		"end" "package" OptionalSeparator
 		

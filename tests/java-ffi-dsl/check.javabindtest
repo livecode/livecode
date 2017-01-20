@@ -15,11 +15,11 @@
 %% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
 
 %TEST CheckClassInheritsClass
-foreign package java.import named com.livecode.import
+foreign package java.import
 interface A
 end interface
 end package
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 use java.import.A
 %{BEFORE_INHERITING_CLASS}class B inherits A
 end class
@@ -29,11 +29,11 @@ end package
 %ENDTEST
 
 %TEST CheckClassImplementsInterface
-foreign package java.import named com.livecode.import
+foreign package java.import
 class A
 end class
 end package
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 use java.import.A
 %{BEFORE_IMPLEMENTING_CLASS}class B implements A
 end class
@@ -43,11 +43,11 @@ end package
 %ENDTEST
 
 %TEST CheckInterfaceInheritsInterface
-foreign package java.import named com.livecode.import
+foreign package java.import
 class A
 end class
 end package
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 use java.import.A
 %{BEFORE_INHERITING_INTERFACE}interface B inherits A
 end interface
@@ -57,7 +57,7 @@ end package
 %ENDTEST
 
 %TEST CheckMatchingTemplateArguments
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 class A<T,U,V>
 end class
 class X

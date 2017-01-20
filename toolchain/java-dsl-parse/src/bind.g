@@ -30,8 +30,8 @@
 -- the defining id.
 'action' Bind(PACKAGE, PACKAGELIST)
 
-    'rule' Bind(Package:package(Position, Name, Alias, Definitions), ImportedPackages):
-        DefinePackageId(Name, Alias)
+    'rule' Bind(Package:package(Position, Name, Definitions), ImportedPackages):
+        DefinePackageId(Name)
 
         -- Make sure all the imported modules are bound
         BindImports(Definitions, ImportedPackages)
@@ -72,11 +72,10 @@
         (|
             FindPackageInList(Name, Imports -> Package)
             Package'Name -> PackageId
-            Package'Alias -> PackageAlias
             (|
                 QueryId(PackageId -> package(Info))
             ||
-                DefinePackageId(PackageId, PackageAlias)
+                DefinePackageId(PackageId)
                 Bind(Package, Imports)
             |)
         ||
@@ -616,13 +615,12 @@
 
 --------------------------------------------------------------------------------
 
-'action' DefinePackageId(ID, ID)
+'action' DefinePackageId(ID)
 
-    'rule' DefinePackageId(Id, Alias):
+    'rule' DefinePackageId(Id):
         Info::PACKAGEINFO
         Info'Index <- -1
         Info'Generator <- -1
-        Info'Alias <- Alias
         Id'Meaning <- package(Info)
 
 'action' DefineSymbolId(ID, MODIFIER, ID, SYMBOLKIND, TYPE)
@@ -641,7 +639,7 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(PACKAGE'package(_, Name, _, Definitions)):
+    'rule' DumpBindings(PACKAGE'package(_, Name, Definitions)):
         DumpId("package", Name)
         DumpBindings(Definitions)
 

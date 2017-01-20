@@ -33,7 +33,8 @@
 
     'rule' GeneratePackages(List):
         OutputLCBBegin()
-        OutputWrite("module com.livecode.wrapped.java \n\n")
+        GetOutputLCBModuleName(-> ModuleName)
+        OutputWriteS("module ", ModuleName, " \n\n")
         OutputWrite("use com.livecode.java\n")
         GeneratingPackageIndex <- 1
         GenerateForEachPackage(List)
@@ -53,88 +54,12 @@
 
 'action' GenerateSinglePackage(PACKAGE)
 
-    'rule' GenerateSinglePackage(Package:package(_, _, WrappedId, Definitions)):
-        ModuleDependencyList <- nil
-        ResolveIdName(WrappedId -> Name)
-        OutputWriteI("/* module ", Name, " */\n\n")
-        OutputWrite("/* use com.livecode.java */\n")
-        CollectImports(Definitions)
-        ModuleDependencyList -> List
-        OutputImports(List)
-        OutputWrite("\n")
+    'rule' GenerateSinglePackage(Package:package(_, _, Definitions)):
         GenerateForeignHandlers(Definitions)
         OutputWrite("\n")
         GenerateDefinitions(Definitions)
-        OutputWrite("/* end module */\n\n")
 
 ----------
-
-'condition' IsNameInList(NAME, NAMELIST)
-    'rule' IsNameInList(Id, namelist(Head, Tail)):
-        IsNameEqualToName(Id, Head)
-    'rule' IsNameInList(Id, namelist(Head, Tail)):
-        IsNameInList(Id, Tail)
-
-'action' AddModuleToDependencyList(NAME)
-
-    'rule' AddModuleToDependencyList(Name):
-        ModuleDependencyList -> List
-        IsNameInList(Name, List)
-        
-    'rule' AddModuleToDependencyList(Name):
-        ModuleDependencyList -> List
-        ModuleDependencyList <- namelist(Name, List)
-
-'action' CollectImports(DEFINITION)
-
-    'rule' CollectImports(nil):
-        -- done
-
-    'rule' CollectImports(sequence(Head, Tail)):
-        CollectImport(Head)
-        CollectImports(Tail)
-
-'action' CollectImport(DEFINITION)
-
-    'rule' CollectImport(use(_, Id))
-        QueryId(Id -> Meaning)
-        QuerySymbolId(Id -> Info)
-        Info'Type -> Type
-
-        Info'Parent -> PackageId
-
-        QueryPackageId(PackageId -> PackageInfo)
-        PackageInfo'Alias -> Alias
-        ResolveIdName(Alias -> Name)
-
-        AddModuleToDependencyList(Name)
-
-        -- Fetch the info about the symbol.
-        QuerySymbolId(Id -> SymbolInfo)
-        SymbolInfo'Kind -> SymbolKind
-        SymbolInfo'Type -> SymbolType
-
-        GeneratingPackageIndex -> Generator
-        SymbolInfo'Generator <- Generator
-
-    'rule' CollectImport(Id):
-        -- If we get here then either the id isn't imported, or we have previously
-        -- generated it.
-
-'action' OutputImports(NAMELIST)
-
-    'rule' OutputImports(nil):
-        -- done
-
-    'rule' OutputImports(namelist(Head, Tail)):
-        OutputImport(Head)
-        OutputImports(Tail)
-
-'action' OutputImport(NAME)
-
-    'rule' OutputImport(Name):
-        OutputWriteI("/* use ", Name, " */\n")
-----
 
 'action' GenerateForeignHandlers(DEFINITION)
 

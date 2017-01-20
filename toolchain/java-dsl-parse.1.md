@@ -18,11 +18,15 @@ abstract form, and outputs as specified.
   loading _LCBFILE_ using **lc-compile** allows the functionality 
   described by the _DSLFILE_ to be used by LCB modules.
 
+* --modulename _NAME_:
+  Use _NAME_ as the name of the LiveCode Builder module specified by the
+  --output option.
+
 * --check _CHECKFILE_:
   Output the parsed data to _CHECKFILE_. This is used for checking
   consistency of output - the result of running **java-dsl-parse** on 
   _CHECKFILE_ should be identical to _CHECKFILE_.
-
+  
 * -h, --help: Print some basic usage information.
 
 * --: Stop processing options.  This is useful in case _DSLFILE_ begins with `-`

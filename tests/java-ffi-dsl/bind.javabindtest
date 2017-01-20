@@ -15,7 +15,7 @@
 %% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
 
 %TEST BindMissingImport
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 use %{BEFORE_IMPORT}java.import.SomeClass
 end package
 %EXPECT PASS
@@ -23,9 +23,9 @@ end package
 %ENDTEST
 
 %TEST BindMissingImportedDefinition
-foreign package java.import named com.livecode.import
+foreign package java.import
 end package
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 use %{BEFORE_IMPORTED_DEFINITION}java.import.SomeClass
 end package
 %EXPECT PASS
@@ -33,7 +33,7 @@ end package
 %ENDTEST
 
 %TEST BindIdentifierPreviouslyDeclared
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 class A
 end class
 
@@ -45,7 +45,7 @@ end package
 %ENDTEST
 
 %TEST BindIdentifierNotDeclared
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 class A %{BEFORE_INHERITS}inherits B
 end class
 end package
@@ -54,7 +54,7 @@ end package
 %ENDTEST
 
 %TEST BindConstructorPreviouslyDeclared
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 class A
 	constructor A()
 	constructor %{BEFORE_CONSTRUCTOR_ID}A(param as String)
@@ -65,7 +65,7 @@ end package
 %ENDTEST
 
 %TEST BindConstructorPreviouslyDeclaredAlias
-foreign package java.test named com.livecode.wrap
+foreign package java.test
 class A
 	constructor A()
 	constructor A(param as String) named AVariant

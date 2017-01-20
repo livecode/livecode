@@ -3,16 +3,18 @@ The Java FFI DSL is used to describe the classes and interfaces of a
 java package, and their constructors, methods, variables and constants.
 
 All java class definitions should have a unique representation in the 
-DSL (indeed in many cases it will be very similar)
+DSL (indeed in many cases it will be very similar).
+
+The extension `.lcb-java` is recommended for java class definitions 
+using this syntax.
 
 ## DSL syntax
 ### Package definition
-A package consists of a declaration of the Name, a ModuleName which is 
-used for the LiveCode Builder output module, and a collection of class 
-and interface definitions, and use clauses.
+A package consists of a declaration of the Name and a collection of 
+class and interface definitions, and use clauses.
 
 	Package
-	  : "foreign" "package" <Name: QualifiedName> "named" <ModuleName: STRING> SEPARATOR
+	  : "foreign" "package" <Name: QualifiedName>
 		{ Definition SEPARATOR }
 		"end" "package"
 

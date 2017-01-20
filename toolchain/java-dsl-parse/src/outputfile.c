@@ -21,6 +21,7 @@
 
 static const char *s_output_file = NULL;
 static const char *s_output_lcb_file = NULL;
+static const char *s_output_lcb_module_name = NULL;
 
 void SetOutputFile(const char *p_output)
 {
@@ -40,6 +41,16 @@ void SetOutputLCBFile(const char *p_output)
 void GetOutputLCBFile(const char **r_output)
 {
     *r_output = s_output_lcb_file;
+}
+
+void SetOutputLCBModuleName(const char* p_module_name)
+{
+    s_output_lcb_module_name = p_module_name;
+}
+
+void GetOutputLCBModuleName(const char* *r_module_name)
+{
+    *r_module_name = s_output_lcb_module_name;
 }
 
 FILE *OpenOutputFile(void)

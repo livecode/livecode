@@ -29,6 +29,9 @@ void GetOutputFile(const char **r_filename);
 void SetOutputLCBFile(const char *filename);
 void GetOutputLCBFile(const char **r_filename);
     
+void SetOutputLCBModuleName(const char* p_module_name);
+void GetOutputLCBModuleName(const char* *r_module_name);
+    
 FILE *OpenOutputFile(void);
 FILE *OpenLCBOutputFile(void);
 
