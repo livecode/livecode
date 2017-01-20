@@ -65,7 +65,7 @@ MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
     return NULL;
 }
 
-bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return false;
 }

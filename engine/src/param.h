@@ -81,7 +81,7 @@ public:
 	// <ep>.
     bool eval(MCExecContext& ctxt, MCValueRef &r_value);
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
-    bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
     MCVariable *evalvar(MCExecContext& ctxt);
 
 	Parse_stat parse(MCScriptPoint &);

@@ -597,7 +597,6 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 // This method follows along the same lines as MCComref::exec
 void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 {
-	
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
         return;
@@ -623,9 +622,9 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 	while (tptr != NULL)
 	{
         // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCContainer *t_container;
-        if (tptr -> evalcontainer(ctxt, t_container))
-            tptr -> set_argument_container(t_container);
+        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+        if (tptr -> evalcontainer(ctxt, **t_container))
+            tptr -> set_argument_container(t_container.Release());
         else
         {
             MCExecValue t_value;
