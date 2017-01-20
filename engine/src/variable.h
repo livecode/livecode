@@ -399,12 +399,7 @@ public:
 	virtual void compile_out(MCSyntaxFactoryRef);
 	virtual void compile_inout(MCSyntaxFactoryRef);
 
-	//virtual MCVariable *getvar();
 	virtual MCVarref *getrootvarref(void);
-
-	// This method returns true if p_other refers to the same root
-	// variable as self.
-	bool rootmatches(MCVarref *p_other) const;
 
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
