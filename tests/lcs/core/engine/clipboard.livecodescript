@@ -201,9 +201,15 @@ on TestClipboardPrivateKey
    end if
 
    TestAssert "helper changed clipboard externally", the result is 0
-
-   TestAssert "private key not present after external change", \
-      "private" is not among the keys of the clipboardData
+   
+   if the platform is "Linux" then
+      TestAssertBroken "private key not present after external change", \
+         "private" is not among the keys of the clipboardData, \
+         "Bug 19117"
+   else
+      TestAssert "private key not present after external change", \
+         "private" is not among the keys of the clipboardData
+   end if
 end TestClipboardPrivateKey
 
 # This is a regression test for Bug 19084
