@@ -1472,10 +1472,12 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	return IO_NORMAL;
 }
 
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
+// In installer mode, the environment depends on the command line args
 MCNameRef MCModeGetEnvironment(void)
 {
+    if (MCnoui)
+        return MCN_installer_cmdline;
+    
 	return MCN_installer;
 }
 

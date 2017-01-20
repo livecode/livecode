@@ -169,6 +169,7 @@ extern MCNameRef MCN_development;
 extern MCNameRef MCN_development_cmdline;
 extern MCNameRef MCN_helper_application;
 extern MCNameRef MCN_installer;
+extern MCNameRef MCN_installer_cmdline;
 extern MCNameRef MCN_mobile;
 extern MCNameRef MCN_player;
 extern MCNameRef MCN_server;
