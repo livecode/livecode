@@ -39,13 +39,20 @@ end startup
 -- Top-level actions
 ----------------------------------------------------------------
 
+command CompilerTestRunner_ValidateEnvironment
+   if $LC_COMPILE is empty then
+      return "LC_COMPILE environment var must be set to lc-compile to use"
+   end if
+   return empty
+end CompilerTestRunner_ValidateEnvironment
+
 command CompilerTestRunner_DoUsage pStatus
    write "Usage: _compilertestrunner.livecodescript run [SCRIPT [COMMAND]]" & return to stderr
    quit pStatus
 end CompilerTestRunner_DoUsage
 
 command CompilerTestRunner_DoRunTest pTestInfo, @rOutput, @rExitStatus
-   -- Next we emit the code for the test, then attempt to compile it
+   -- Emit the code for the test, then attempt to compile it
    local tTestFile, tTestInterfaceFile
    put tempName() into tTestFile
    put tempName() into tTestInterfaceFile

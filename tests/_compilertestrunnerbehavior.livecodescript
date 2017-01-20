@@ -33,10 +33,12 @@ on CompilerTestRunnerMain
 end CompilerTestRunnerMain
 
 command TestRunnerImpl_DoRun pInfo
-   -- TODO: This should happen in the lc-compile test runner
-   if $LC_COMPILE is empty then
-      throw "LC_COMPILE environment var must be set to lc-compile to use"
-   end if
+   local tResult
+   dispatch "CompilerTestRunner_ValidateEnvironment" to me
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
+   end if 
    
    local tScript, tCommand
    put pInfo["args"][2] into tScript
