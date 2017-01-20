@@ -59,7 +59,7 @@ command TestRunnerImpl_DoRun pInfo
    return the result for value
 end TestRunnerImpl_DoRun
 
-private command TestRunnerImpl_DoUsage pStatus
+command TestRunnerImpl_DoUsage pStatus
    write "Usage: _testrunner.livecodescript run [SCRIPT [COMMAND]]" & return to stderr
    quit pStatus
 end TestRunnerImpl_DoUsage

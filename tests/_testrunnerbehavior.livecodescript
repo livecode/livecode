@@ -85,10 +85,6 @@ private command doInvoke pInfo
 end doInvoke
 
 private command doRun pInfo
-   if pInfo["args"][2] is empty then
-      doUsage 1
-   end if
-   
    TestRunnerRunLoadLibraries
 
    local tAnalysis
