@@ -1190,19 +1190,17 @@ void MCU_snap(int2 &p)
 
 // MDW-2014-07-09: [[ oval_points ]] need to factor in startAngle and arcAngle
 // this is now used for both roundrects and ovals
-void MCU_roundrect(MCPoint *&points, uint2 &npoints,
+bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
 	uint2 x, y;
 	bool ignore = false;
 
-	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
-	{
-		delete[] points;
-		points = new MCPoint[4 * QA_NPOINTS + 1];
-	}
-
+	MCAutoArray<MCPoint> t_points;
+	if (!t_points.New(4 * QA_NPOINTS + 1))
+		return false;
+	
 	MCRectangle tr = rect;
 	tr . width--;
 	tr . height--;
@@ -1277,10 +1275,10 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 		if (ignore == false)
 		{
-			if (x != points[i-1] . x || y != points[i-1] . y)
+			if (i == 0 || x != t_points[i-1] . x || y != t_points[i-1] . y)
 			{
-				points[i] . x = x;
-				points[i] . y = y;
+				t_points[i] . x = x;
+				t_points[i] . y = y;
 				i++;
 			}
 		}
@@ -1292,7 +1290,10 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		if (k > QA_NPOINTS)
 			k = 1;
 	}
-	npoints = i;
+	
+	t_points.Shrink(i);
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
