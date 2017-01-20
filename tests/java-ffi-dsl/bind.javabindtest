@@ -74,3 +74,20 @@ end package
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
+
+%TEST BindCircularReferences
+foreign package java.testA
+use java.testB.B
+class A
+	method getB() returns B
+end class
+end package
+foreign package java.testB
+use java.testA.A
+class B
+	method getA() returns A
+end class
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
