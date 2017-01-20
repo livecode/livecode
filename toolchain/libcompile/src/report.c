@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,9 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "report.h"
-#include "position.h"
-#include "literal.h"
+#include <position.h>
+#include <report.h>
+#include <literal.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -282,6 +282,15 @@ static void _WarningI(long p_position, const char *p_message, NameRef p_name)
 
 #define DEFINE_ERROR_S(Name, Message) \
 void Error_##Name(long p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
+
+DEFINE_ERROR_I(UnableToFindImportedPackage, "Unable to find imported package '%s'");
+DEFINE_ERROR_I(UnableToFindImportedDefinition, "Unable to find imported definition '%s'");
+
+DEFINE_ERROR(ClassesMayOnlyInheritFromClasses, "Classes may only inherit from classes");
+DEFINE_ERROR(ClassesMayOnlyImplementInterfaces, "Classes may only implement interfaces");
+DEFINE_ERROR(InterfacesMayOnlyInheritFromInterfaces, "Interfaces may only inherit from interfaces");
+
+DEFINE_ERROR(GenericTypeMismatch, "Generic type parameters do not match definition");
 
 DEFINE_ERROR_I(UnableToFindImportedModule, "Unable to find imported module '%s'");
 

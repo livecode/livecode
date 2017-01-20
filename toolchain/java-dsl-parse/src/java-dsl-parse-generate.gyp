@@ -14,6 +14,7 @@
 		'dependencies':
 		[
 			'../../gentle/gentle/grts.gyp:grts',
+			'../../libcompile/libcompile.gyp:libcompile',
 			'java-dsl-parse-lib.gyp:java-dsl-parse-lib',
 		],
 		
