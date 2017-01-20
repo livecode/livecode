@@ -582,14 +582,14 @@
     'rule' DeclareId(Id):
         Id'Name -> QualifiedName
         GetUnqualifiedIdName(QualifiedName -> Name)
-        DefineMeaning(Name, definingid(Id))
+        DefineUnqualifiedMeaning(Name, definingid(Id))
 
 'action' ApplyId(ID)
 
     'rule' ApplyId(Id):
         Id'Name -> QualifiedName
         GetUnqualifiedIdName(QualifiedName -> Name)
-        HasMeaning(Name -> Meaning)
+        HasUnqualifiedMeaning(Name -> Meaning)
         Id'Meaning <- Meaning
         
     'rule' ApplyId(Id):
