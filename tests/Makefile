@@ -49,6 +49,8 @@ LCC_LOG = _compiler_test_suite.log
 LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
 LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
+LC_RUN_LOG = _lc_run_test_suite.log
+
 ########## Java FFI DSL test parameters
 
 JAVA_DSL_PARSER ?= $(bin_dir)/java-dsl-parse
@@ -129,7 +131,8 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 
 lcs-check: $(LCS_ENGINE) lcm_compile
 	@rm -f $(LCS_LOG)
-	@cmd="$(LCS_CMD)"; \
+	@export TEST_SUITE_LOG_FILE="$(LCS_LOG)"; \
+	cmd="$(LCS_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 
@@ -143,6 +146,7 @@ compiler-check: $(LC_COMPILE)
 	@rm -f $(LCC_LOG)
 	@export LC_COMPILE="$(LC_COMPILE)"; \
 	export LCC_VERBOSE="$(LCC_VERBOSE)"; \
+	export TEST_SUITE_LOG_FILE="$(LCC_LOG)"; \
 	cmd="$(LCC_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
@@ -154,6 +158,7 @@ compiler-check: $(LC_COMPILE)
 lc-run-check: $(LC_RUN) lcm_compile
 	@export LC_RUN="$(LC_RUN)"; \
 	export LCM_DIR="$(LCM_DIR)/lc-run"; \
+	export TEST_SUITE_LOG_FILE="$(LC_RUN_LOG)"; \
 	cmd="$(LC_RUN_TEST_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
@@ -170,6 +175,7 @@ LC_RUN_FLAGS += -l $(LCB_TESTLIB)
 
 lcb-check: lcm_compile
 	@set -e; \
+	export TEST_SUITE_LOG_FILE="$(LCB_LOG)"; \
 	for lcbfile in $(LCM_TEST_SOURCES); do \
 	    lcmfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:lcb$$:lcm:'`" ; \
 	    logfile="$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:log:'`" ; \
@@ -191,7 +197,8 @@ lcb-check: lcm_compile
 java-ffi-dsl-check: $(JAVA_DSL_PARSE)
 	@rm -f $(JAVA_DSL_PARSER_LOG)
 	@export JAVA_DSL_PARSER="$(JAVA_DSL_PARSER)"; \
-	export JAVA_DSL_PARSE_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
+	export LCC_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
+	export TEST_SUITE_LOG_FILE="$(JAVA_DSL_PARSER_LOG)"; \
 	cmd="$(JAVA_DSL_PARSER_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd

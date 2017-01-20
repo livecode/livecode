@@ -16,9 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
--- FIXME provide this on the command line
-constant kLogFilename = "_test_suite.log"
-
 private function getTestRunnerBehavior
    -- Compute the filename of the test runner
    local tTestsPath, tStack
