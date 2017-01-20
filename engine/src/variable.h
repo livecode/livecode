@@ -289,14 +289,25 @@ public:
     {
     }
     
+    MCContainer(MCVariable *var)
+        : m_variable(var),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
 	~MCContainer(void);
 
 	//
 
+    bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-	bool remove(MCExecContext& ctxt);
+    bool eval_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
+    
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool set_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef p_value);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -396,11 +407,8 @@ public:
 	}
     virtual ~MCVarref();
     
-    bool needsContainer(void) const {return dimensions != 0;}
-    
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
     virtual bool evalcontainer(MCExecContext &ctxt, MCContainer& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_in(MCSyntaxFactoryRef);
@@ -465,7 +473,6 @@ public:
 	// super-class methods with the same name are invoked.
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

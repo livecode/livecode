@@ -94,19 +94,10 @@ void MCParameter::clear_argument(void)
     // AL-2014-09-17: [[ Bug 13465 ]] Delete container when clearing a parameter
     delete container;
     container = nil;
-    var  = nil;
 	MCExecTypeRelease(value);
 }
 
 ////////
-
-MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
-{
-    if (exp == NULL)
-        return NULL;
-
-    return exp -> evalvar(ctxt);
-}
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
@@ -154,9 +145,6 @@ bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer& r_container)
 
 bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
 {
-    if (var != NULL)
-        return var -> eval(ctxt, r_value);
-
     // AL-2014-08-28: [[ ArrayElementRefParams ]] MCParameter argument can now be a container
     if (container != nil)
         return container -> eval(ctxt, r_value);
@@ -182,19 +170,11 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
 
 bool MCParameter::eval_argument_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    if (var != NULL)
-        return var -> eval_ctxt(ctxt, r_value);
-    
     if (container != nil)
         return container -> eval_ctxt(ctxt, r_value);
     
     MCExecTypeCopy(value, r_value);
     return true;
-}
-
-MCVariable *MCParameter::eval_argument_var(void)
-{
-	return var;
 }
 
 MCContainer *MCParameter::eval_argument_container(void)
@@ -210,7 +190,6 @@ void MCParameter::set_argument(MCExecContext& ctxt, MCValueRef p_value)
     t_new_value = MCValueRetain(p_value);
     MCExecTypeRelease(value);
     MCExecTypeSetValueRef(value, t_new_value);
-	var = NULL;
 }
 
 void MCParameter::set_exec_argument(MCExecContext& ctxt, MCExecValue p_value)
@@ -219,12 +198,6 @@ void MCParameter::set_exec_argument(MCExecContext& ctxt, MCExecValue p_value)
 	t_old_value = value;
     MCExecTypeCopy(p_value, value);
 	MCExecTypeRelease(t_old_value);
-	var = NULL;
-}
-
-void MCParameter::set_argument_var(MCVariable* p_var)
-{
-	var = p_var;
 }
 
 void MCParameter::set_argument_container(MCContainer* p_container)
