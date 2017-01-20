@@ -934,17 +934,30 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
         MCRedrawUnlockScreen();
 	}
 	
-    // SN-2014-11-10: [[ Bug 13836 ]] Make sure that
-	// Now we've got the menu to update, process the new menu spec, but only if the
-	// menu button still exists!
-	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index].IsValid())
-	{
-		MCButton *t_button = s_menubar_targets[t_parent_menu_index];
-		
-		MCPlatformRemoveAllMenuItems(p_menu);
-		MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
-		populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, t_button);
-	}
+    // We only send one message - to the group - to rebuild the menus. Therefore,
+    // after this is done we must rebuild all menubar menus at once.
+	if (!t_update_menubar)
+    {
+        uindex_t t_count;
+        MCPlatformCountMenuItems(s_menubar, t_count);
+        for(uindex_t i = 0; i < t_count; i++)
+        {
+            MCPlatformMenuRef t_menu;
+            MCPlatformGetMenuItemProperty(s_menubar, i, kMCPlatformMenuItemPropertySubmenu, kMCPlatformPropertyTypeMenuRef, &t_menu);
+            
+            // Always remove all items - we can't delete the menu if the button has
+            // been deleted as it might be referenced by Cocoa still.
+            MCPlatformRemoveAllMenuItems(t_menu);
+            
+            // Only rebuild the menu if the button still exists.
+            if (s_menubar_targets[i].IsValid())
+            {
+                MCButton *t_button = s_menubar_targets[i];
+                MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
+                populate_menubar_menu_from_button(s_menubar, i, t_menu, t_button);
+            }
+        }
+    }
 }
 
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)

@@ -369,7 +369,7 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
         else if (p_as_type == TRANSFER_TYPE_HTML_TEXT)
         {
             // Copy as the round-tripped form of HTML
-            return p_clipboard->CopyAsHTMLText((MCDataRef&)r_value);
+            return p_clipboard->CopyAsHTMLText((MCStringRef&)r_value);
         }
     }
     
@@ -1363,20 +1363,17 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
 			{
 				// For backwards compatibility, HTML can be added to the
                 // clipboard as either data or text.
-				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeData)
-                    t_success = t_clipboard->AddHTML(static_cast<MCDataRef>(p_data));
+				if (MCValueGetTypeCode(p_data) != kMCValueTypeCodeString)
+				{
+					// Legacy behaviour: treat data as native-encoded text
+					MCAutoStringRef t_html;
+					t_success = ctxt.ConvertToString(p_data, &t_html);
+					if (t_success)
+						t_success = t_clipboard->AddHTMLText(*t_html);
+				}
 				else
 				{
-                    // If it is a string, encode it into the native encoding
-                    // then add as data. This probably should be ASCII but we've
-                    // always used the native encoding here...
-                    MCAutoStringRef t_string;
-                    MCAutoDataRef t_data;
-                    t_success = ctxt.ConvertToString(p_data, &t_string);
-                    if (t_success)
-                        t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-                    if (t_success)
-                        t_success = t_clipboard->AddHTML(*t_data);
+                        t_success = t_clipboard->AddHTMLText(static_cast<MCStringRef>(p_data));
 				}
 				
 				break;
@@ -1595,7 +1592,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            p_clipboard->CopyAsHTMLText((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTMLText((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_STYLED_TEXT:
@@ -1611,7 +1608,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            p_clipboard->CopyAsHTML((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTML((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_IMAGE:
@@ -1696,8 +1693,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTMLText(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTMLText(*t_string);
             break;
             
         case TRANSFER_TYPE_RTF_TEXT:
@@ -1721,8 +1718,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTML(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTML(*t_string);
             break;
             
         case TRANSFER_TYPE_IMAGE:
