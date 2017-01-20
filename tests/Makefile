@@ -45,6 +45,14 @@ LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
 LCC_LOG = _compiler_test_suite.log
 
+########## LiveCode Script Parser test parameters
+
+LCP_COMPILERTESTRUNNER ?= $(top_srcdir)/tests/_parsertestrunner.livecodescript
+
+LCP_CMD = $(LCS_ENGINE) -ui $(LCP_COMPILERTESTRUNNER) run
+
+LCP_LOG = _parser_test_suite.log
+
 ########## lc-run test params
 
 LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
@@ -68,7 +76,7 @@ LC_COMPILE_FFI_JAVA_LOG = _lc-compile-ffi-java_test_suite.log
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check lc-compile-ffi-java-check
+check: lcs-check lcb-check compiler-check lc-compile-ffi-java-check lcs-parser-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -149,6 +157,17 @@ compiler-check: $(LC_COMPILE)
 	export LCC_VERBOSE="$(LCC_VERBOSE)"; \
 	export TEST_SUITE_LOG_FILE="$(LCC_LOG)"; \
 	cmd="$(LCC_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
+	
+################################################################
+# LCS parser tests
+################################################################
+
+lcs-parser-check:
+	@rm -f $(LCP_LOG)
+	export LCC_VERBOSE="$(LCC_VERBOSE)"; \
+	cmd="$(LCP_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 
