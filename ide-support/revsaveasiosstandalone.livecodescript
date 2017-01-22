@@ -266,6 +266,12 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- Generate the plist
    revCreateMobilePlist pSettings, pAppBundle, pTarget, tCopiedFonts, tPlist
+
+   // HH-2017-01-22: [[ Bug 17664 ]] Let iOS detect supported language
+   put "af-NA ar Base ca cs da de el es-MX es fi fr he hr hu id it ja ko ms nb nl pl pt-BR pt-PT ro ru sk sv th tr uk vi zh-Hans zh-Hant" into tSupportLangs
+   repeat for each word tLang in tSupportLangs
+      create folder (pAppBundle & slash & tLang & ".lproj")
+   end repeat
    
    -- Generate the PkgInfo file
    put "APPL????" into url ("binfile:" & pAppBundle & slash & "PkgInfo")
