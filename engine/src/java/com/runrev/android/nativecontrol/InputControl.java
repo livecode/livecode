@@ -247,6 +247,7 @@ class InputControl extends NativeControl
         {
             m_transformation_method = m_text_view.getTransformationMethod();
             m_text_view.setTransformationMethod(PasswordTransformationMethod.getInstance());
+            m_text_view.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         }
         else if (!p_password && m_transformation_method != null)
         {
