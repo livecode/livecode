@@ -424,8 +424,10 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	if (t_headers != NULL)
 		curl_slist_free_all(t_headers);
 	
-	/* UNCHECKED */ MCStringCreateWithCString(t_error, r_error);
-	
+    if (t_error == NULL)
+        r_error = MCValueRetain(kMCEmptyString);
+    else
+        /* UNCHECKED */ MCStringCreateWithCString(t_error, r_error);
 }
 
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
