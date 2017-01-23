@@ -435,6 +435,46 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 //////////////////////
 
+MC_DLLEXPORT_DEF bool
+MCArrayMutateValue(MCArrayRef self,
+                   bool p_case_sensitive,
+                   MCNameRef p_key,
+                   MCValueRef*& r_slot_ptr)
+{
+    // The array must be mutable.
+    MCAssert(MCArrayIsMutable(self));
+    __MCAssertIsName(p_key);
+    
+    // Ensure it is not indirect.
+    if (__MCArrayIsIndirect(self))
+        if (!__MCArrayResolveIndirect(self))
+            return false;
+    
+    // Lookup the slot for the key
+    bool t_found;
+    uindex_t t_slot;
+    t_found = __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_key, t_slot);
+    if (!t_found)
+    {
+        // AL-2014-07-15: [[ Bug 12532 ]] Rehash according to hash table capacities rather than sizes
+        if (t_slot == UINDEX_MAX || self -> key_value_count >= __MCArrayGetTableCapacity(self))
+        {
+            if (!__MCArrayRehash(self, 1))
+                return false;
+            
+            __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_key, t_slot);
+        }
+        
+        self -> key_values[t_slot] . key = MCValueRetain(p_key);
+        self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(kMCNull);
+        self -> key_value_count += 1;
+    }
+    
+    r_slot_ptr = (MCValueRef*)&self -> key_values[t_slot] . value;
+
+    return true;
+}
+
 MC_DLLEXPORT_DEF
 bool MCArrayStoreValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef p_value)
 {

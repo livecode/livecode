@@ -2708,6 +2708,11 @@ MC_DLLEXPORT bool MCArrayFetchValue(MCArrayRef array, bool case_sensitive, MCNam
 MC_DLLEXPORT bool MCArrayStoreValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef value);
 // Remove the given key from the array.
 MC_DLLEXPORT bool MCArrayRemoveValue(MCArrayRef array, bool case_sensitive, MCNameRef key);
+// Ensure that the given key is present in array, and return the pointer to its
+// slot. If the key was not present, the value in the slot will be kMCNull.
+// The returned pointer is only valid up until the next operation on array and
+// should be MCValueAssign'd to.
+MC_DLLEXPORT bool MCArrayMutateValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef*& r_value);
 
 // Fetches index i in the given (sequence) array.
 MC_DLLEXPORT bool MCArrayFetchValueAtIndex(MCArrayRef array, index_t index, MCValueRef& r_value);
