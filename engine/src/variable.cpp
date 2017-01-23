@@ -1431,6 +1431,14 @@ Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 			exps[dimensions] = t_new_dimension;
 			dimensions = t_dimensions;
 		}
+        
+        // If we are pure, but the new index expression is not pure, then
+        // we are not pure.
+        if (m_is_pure &&
+            !t_new_dimension->is_pure())
+        {
+            m_is_pure = false;
+        }
 	}
 
 	return PS_NORMAL;

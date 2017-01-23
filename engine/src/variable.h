@@ -367,6 +367,9 @@ protected:
 	//   a plain var and doesn't require synching.
 	bool isplain : 1;
 
+    // If this is true, then none of the index expressions have side-effects.
+    bool m_is_pure : 1;
+    
 public:
 	MCVarref(MCVariable *var)
 	{
@@ -378,6 +381,10 @@ public:
 		isscriptlocal = False;
 		handler = NULL;
 		isplain = var -> isplain();
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
 
 	// MW-2008-10-28: [[ ParentScripts ]] A new constructor to handle the case
@@ -391,7 +398,11 @@ public:
 		isparam = False;
 		isscriptlocal = True;
 		handler = NULL;
-		isplain = true;
+        isplain = true;
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
 
 	MCVarref(MCHandler *hptr, uint2 i, Boolean param)
@@ -403,7 +414,11 @@ public:
 		exp = NULL;
 		dimensions = 0;
 		isscriptlocal = False;
-		isplain = true;
+        isplain = true;
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
     virtual ~MCVarref();
     
@@ -417,6 +432,8 @@ public:
 
 	virtual MCVarref *getrootvarref(void);
 
+    virtual bool is_pure(void) const { return m_is_pure; }
+    
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
