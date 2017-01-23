@@ -92,8 +92,7 @@ bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCCompareOptions options);
 bool MCNameIsEqualToCString(MCNameRef left, const char *cstring, MCCompareOptions options);
 bool MCNameIsEqualToOldString(MCNameRef left, const MCString& string, MCCompareOptions options);
 
-MCNameRef MCNameLookupWithCString(const char *cstring, MCCompareOptions options);
-MCNameRef MCNameLookupWithOldString(const MCString& string, MCCompareOptions options);
+MCNameRef MCNameLookupWithCStringCaseless(const char *cstring);
 
 ////////////////////////////////////////////////////////////////////////////////
 

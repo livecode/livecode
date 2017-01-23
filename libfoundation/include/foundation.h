@@ -1917,7 +1917,7 @@ MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t coun
 MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
 
 // Looks for an existing name matching the given string.
-MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
+MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
 
 // Returns a unsigned integer which can be used to order a table for a binary
 // search.

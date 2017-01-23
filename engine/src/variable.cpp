@@ -900,7 +900,7 @@ MCVariable *MCVariable::lookupglobal_cstring(const char *p_name)
 	// If we can't find an existing name, then there can be no global with
 	// name 'p_name'.
 	MCNameRef t_name;
-	t_name = MCNameLookupWithCString(p_name, kMCCompareCaseless);
+	t_name = MCNameLookupWithCStringCaseless(p_name);
 	if (t_name == nil)
 		return nil;
 
