@@ -2322,6 +2322,7 @@ MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // Returns true if the two strings are equal, processing as appropriate according
 // to options.
 MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
+MC_DLLEXPORT bool MCStringIsEqualToChars(MCStringRef string, const unichar_t *chars, uindex_t char_count, MCStringOptions options);
 MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
 
 // Returns true if the substring is equal to the other, according to options
