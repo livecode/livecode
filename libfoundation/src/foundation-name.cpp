@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 
 #include "foundation-private.h"
+#include "foundation-span.h"
+#include "foundation-string-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,142 +58,443 @@ MCNameRef MCNAME(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This class is a generic implementation of the algorithm used to search the
+// name table for a given key, and then create it if required.
+//
+// It is parameterized by an Input class which must have the following methods:
+//
+//   1) IsEmpty() - should return true if the input is the empty string
+//   2) IsEquivalentTo(other) - should return true if the input lies in the same
+//      (caseless) equivalence class as other.
+//   3) IsEqualTo(other) - should return true if the input is identical to
+//      other.
+//   4) Copy(&string) - return a copy of the input as a string ref for use in
+//      constructing the new name.
+//   5) Hash() - return the hash of the input.
+//
+// The LookupCaseless method can be used to check to see if a name is already in
+// the table. This method returns the representative up to caseless equivalence
+// for the given input if it is present in the table, or nil otherwise.
+//
+// The Create method can be used to ensure the given input exists as an exact
+// name. This method returns true if construction is successful, and returns a
+// copy of the new name as an out parameter.
+//
+template<typename Input>
+class __MCNameTableSearcher
+{
+public:
+    __MCNameTableSearcher(const Input& p_input)
+        : m_input(p_input),
+          m_hash(p_input.Hash())
+    {
+    }
+    
+    MCNameRef LookupCaseless(void) const
+    {
+        // If the input is the empty string, then make sure we return the existing
+        // empty name value.
+        if (m_input.IsEmpty() &&
+            kMCEmptyName != nil)
+        {
+            return kMCEmptyName;
+        }
+        
+        // Calculate the index of the chain in the name table where this might be
+        // found. The capacity is always a power-of-two, so its just a mask op.
+        uindex_t t_index =
+                m_hash & (s_name_table_capacity - 1);
+        
+        // Search for the first representation of the would-be name's equivalence
+        // class.
+        __MCName *t_key_name =
+                s_name_table[t_index];
+        while(t_key_name != nil)
+        {
+            // If the hash is the same, see if the input is equivalent to the
+            // key name in the current equivalence class.
+            if (m_hash == t_key_name->hash &&
+                m_input.IsEquivalentTo(t_key_name->string))
+                break;
+            
+            // Skip to the next equivalence class.
+            while(t_key_name->next != nil &&
+                  t_key_name->key == t_key_name->next->key)
+                t_key_name = t_key_name -> next;
+            
+            // Next name must be the next one.
+            t_key_name = t_key_name->next;
+        }
+
+        return t_key_name;
+    }
+    
+    bool Create(MCNameRef& r_name)
+    {
+        MCNameRef t_key_name =
+                LookupCaseless();
+        
+        // Search for the exact representative, if present and return it if found.
+        __MCName *t_name = nil;
+        for(t_name = t_key_name; t_name != nil && t_name -> key == t_key_name; t_name = t_name -> next)
+            if (m_input.IsEqualTo(t_name->string))
+            {
+                r_name = MCValueRetain(t_name);
+                return true;
+            }
+        
+        // An exact match was not found, so we must now create a new name.
+        
+        if (!__MCValueCreate(kMCValueTypeCodeName,
+                             t_name))
+        {
+            return false;
+        }
+        
+        if (!m_input.Copy(t_name->string))
+        {
+            MCMemoryDelete(t_name);
+            return false;
+        }
+        
+        // If there is no existing equivalence class, we chain at the start,
+        // otherwise we insert the name after the representative.
+        if (t_key_name == nil)
+        {
+            // To keep hashin efficient, we (try to) double the size of the
+            // table each time occupancy reaches capacity.
+            uindex_t t_index;
+            if (s_name_table_occupancy == s_name_table_capacity)
+            {
+                __MCNameGrowTable();
+            }
+            t_index = m_hash & (s_name_table_capacity - 1);
+            
+            // Increase occupancy.
+            s_name_table_occupancy += 1;
+            
+            t_name->next = s_name_table[t_index];
+            t_name->key = t_name;
+            s_name_table[t_index] = t_name;
+        }
+        else
+        {
+            t_name -> next = t_key_name -> next;
+            t_name -> key = t_key_name;
+            t_key_name -> next = t_name;
+            
+            // Increment the reference count of the representative as we need
+            // it to 'hang around' for the entire lifetime of all others in the
+            // equivalence class to give a search handle.
+            t_key_name -> references += 1;
+        }
+        
+        // Record the hash (speeds up searching and such).
+        t_name->hash = m_hash;
+        
+        // Return the new name.
+        r_name = t_name;
+        
+        return true;
+    }
+    
+private:
+    const Input& m_input;
+    const hash_t m_hash;
+};
+
+//////////
+
+// This comparator is used to search for a stringref in the name table. The
+// provided StringRef can be mutable or immutable, as it is Copied if the
+// name needs to be created.
+class __MCNameStringInput
+{
+public:
+    __MCNameStringInput(MCStringRef p_string)
+        : m_string(p_string)
+    {
+    }
+
+    bool IsEmpty(void) const
+    {
+        return m_string->char_count == 0;
+    }
+    
+    hash_t Hash(void) const
+    {
+        return MCStringHash(m_string,
+                            kMCStringOptionCompareCaseless);
+    }
+    
+    bool IsEquivalentTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualTo(m_string,
+                                 p_other_string,
+                                 kMCStringOptionCompareCaseless);
+    }
+    
+    bool IsEqualTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualTo(m_string,
+                                 p_other_string,
+                                 kMCStringOptionCompareExact);
+    }
+    
+    bool Copy(MCStringRef& r_copied_string) const
+    {
+        return MCStringCopy(m_string,
+                            r_copied_string);
+    }
+    
+private:
+    MCStringRef m_string;
+};
+
 MC_DLLEXPORT_DEF
 bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 {
 	__MCAssertIsString(p_string);
-
-	if (p_string -> char_count == 0 && kMCEmptyName != nil)
-	{
-		MCValueRetain(kMCEmptyName);
-		r_name = kMCEmptyName;
-		return true;
-	}
-
-	// Compute the has of the characters, up to case.
-	hash_t t_hash;
-	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
-
-	// Calculate the index of the chain in the name table where this might be
-	// found. The capacity is always a power-of-two, so its just a mask op.
-	uindex_t t_index;
-	t_index = t_hash & (s_name_table_capacity - 1);
-
-	// Search for the first representation of the would-be name's equivalence
-	// class.
-	__MCName *t_key_name;
-	t_key_name = s_name_table[t_index];
-	while(t_key_name != nil)
-	{
-		// If the string matches, then we are done - notice we compare the
-		// full hash first.
-		if (t_hash == t_key_name -> hash &&
-			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
-			break;
-
-		// Otherwise skip all other members of the same equivalence class.
-		while(t_key_name -> next != nil &&
-				t_key_name -> key == t_key_name -> next -> key)
-			t_key_name = t_key_name -> next;
-
-		// Next name must be the next one.
-		t_key_name = t_key_name -> next;
-	}
-
-	// Now search within the equivalence class for one with the same string and
-	// return immediately if we find a match.
-	__MCName *t_name;
-	for(t_name = t_key_name; t_name != nil && t_name -> key == t_key_name; t_name = t_name -> next)
-		if (MCStringIsEqualTo(p_string, t_name -> string, kMCStringOptionCompareExact))
-		{
-			t_name -> references += 1;
-			r_name = t_name;
-			return true;
-		}
-
-	// We haven't found an exact match, so we create a new name...
-	bool t_success;
-	t_success = true;
-
-	// Allocate a name record.
-	if (t_success)
-		t_success = __MCValueCreate(kMCValueTypeCodeName, t_name);
-
-	// Copy the string (as immutable).
-	if (t_success)
-		t_success = MCStringCopy(p_string, t_name -> string);
-
-	// Now add the name to the table and fill in the rest of the fields.
-	if (t_success)
-	{
-		// If there is no existing equivalence class, we chain at the start,
-		// otherwise we insert the name after the representative.
-		if (t_key_name == nil)
-		{
-			// To keep hashin efficient, we (try to) double the size of the
-			// table each time occupancy reaches capacity.
-			if (s_name_table_occupancy == s_name_table_capacity)
-			{
-				__MCNameGrowTable();
-				t_index = t_hash & (s_name_table_capacity - 1);
-			}
-
-			// Increase occupancy.
-			s_name_table_occupancy += 1;
-
-			t_name -> next = s_name_table[t_index];
-			t_name -> key = t_name;
-			s_name_table[t_index] = t_name;
-		}
-		else
-		{
-			t_name -> next = t_key_name -> next;
-			t_name -> key = t_key_name;
-			t_key_name -> next = t_name;
-
-			// Increment the reference count of the representative as we need
-			// it to 'hang around' for the entire lifetime of all others in the
-			// equivalence class to give a search handle.
-			t_key_name -> references += 1;
-		}
-
-		// Record the hash (speeds up searching and such).
-		t_name -> hash = t_hash;
-
-		// Return the new name.
-		r_name = t_name;
-	}
-	else
-	{
-		MCValueRelease(t_name -> string);
-		MCMemoryDelete(t_name);
-	}
-
-	return t_success;
+    
+    return __MCNameTableSearcher<__MCNameStringInput>(p_string).Create(r_name);
 }
+
+//////////
+
+// This comparator is used to search for native string in the name table.
+class __MCNameNativeCharsInput
+{
+public:
+    __MCNameNativeCharsInput(MCSpan<const char_t> p_native_chars)
+        : m_native_chars(p_native_chars)
+    {
+    }
+    
+    bool IsEmpty(void) const
+    {
+        return m_native_chars.length() == 0;
+    }
+    
+    hash_t Hash(void) const
+    {
+        return MCHashNativeChars(m_native_chars.data(),
+                                 m_native_chars.length());
+    }
+    
+    bool IsEquivalentTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualToNativeChars(p_other_string,
+                                            m_native_chars.data(),
+                                            m_native_chars.length(),
+                                            kMCStringOptionCompareCaseless);
+    }
+    
+    bool IsEqualTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualToNativeChars(p_other_string,
+                                            m_native_chars.data(),
+                                            m_native_chars.length(),
+                                            kMCStringOptionCompareExact);
+    }
+    
+    bool Copy(MCStringRef& r_copied_string) const
+    {
+        return MCStringCreateWithNativeChars(m_native_chars.data(),
+                                             m_native_chars.length(),
+                                             r_copied_string);
+    }
+    
+private:
+    MCSpan<const char_t> m_native_chars;
+};
 
 MC_DLLEXPORT_DEF
 bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCNameRef& r_name)
 {
-	MCStringRef t_string;
-	if (!MCStringCreateWithNativeChars(p_chars, p_count, t_string))
-		return false;
-	if (!MCNameCreateAndRelease(t_string, r_name))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return __MCNameTableSearcher<__MCNameNativeCharsInput>(MCMakeSpan(p_chars,
+                                                                      p_count)).Create(r_name);
 }
+
+//////////
+
+// This comparator is used to search for native string in the name table.
+class __MCNameCharsInput
+{
+public:
+    __MCNameCharsInput(MCSpan<const unichar_t> p_chars)
+        : m_chars(p_chars)
+    {
+    }
+    
+    bool IsEmpty(void) const
+    {
+        return m_chars.length() == 0;
+    }
+    
+    hash_t Hash(void) const
+    {
+        return MCHashChars(m_chars.data(),
+                           m_chars.length());
+    }
+    
+    bool IsEquivalentTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualToChars(p_other_string,
+                                      m_chars.data(),
+                                      m_chars.length(),
+                                      kMCStringOptionCompareCaseless);
+    }
+    
+    bool IsEqualTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualToChars(p_other_string,
+                                      m_chars.data(),
+                                      m_chars.length(),
+                                      kMCStringOptionCompareExact);
+    }
+    
+    bool Copy(MCStringRef& r_copied_string) const
+    {
+        return MCStringCreateWithChars(m_chars.data(),
+                                       m_chars.length(),
+                                       r_copied_string);
+    }
+    
+private:
+    MCSpan<const unichar_t> m_chars;
+};
 
 MC_DLLEXPORT_DEF
 bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
 {
-	MCStringRef t_string;
-	if (!MCStringCreateWithChars(p_chars, p_count, t_string))
-		return false;
-	return MCNameCreateAndRelease(t_string, r_name);
+    return __MCNameTableSearcher<__MCNameCharsInput>(MCMakeSpan(p_chars,
+                                                                p_count)).Create(r_name);
 }
+
+//////////
+
+class __MCNameIndexInput
+{
+public:
+    __MCNameIndexInput(index_t p_index)
+        : m_char_count(0)
+    {
+        IndexToString(p_index);
+    }
+    
+    bool IsEmpty(void) const
+    {
+        return false;
+    }
+    
+    hash_t Hash(void) const
+    {
+        return MCHashNativeChars(m_chars,
+                                 m_char_count);
+    }
+    
+    bool IsEquivalentTo(MCStringRef p_other_string) const
+    {
+        return MCStringIsEqualToNativeChars(p_other_string,
+                                            m_chars,
+                                            m_char_count,
+                                            kMCStringOptionCompareCaseless);
+    }
+    
+    // As equivalence => equality for index strings, this is always true.
+    bool IsEqualTo(MCStringRef p_other_string) const
+    {
+        return true;
+    }
+    
+    bool Copy(MCStringRef& r_copied_string) const
+    {
+        return MCStringCreateWithNativeChars(m_chars,
+                                             m_char_count,
+                                             r_copied_string);
+    }
+    
+private:
+    char_t m_chars[16];
+    uindex_t m_char_count;
+    
+    static uindex_t CountDigits(uindex_t p_index)
+    {
+        uint32_t t_count = 1;
+        for (;;) {
+            if (p_index < 10) return t_count;
+            if (p_index < 100) return t_count + 1;
+            if (p_index < 1000) return t_count + 2;
+            if (p_index < 10000) return t_count + 3;
+            p_index /= 10000U;
+            t_count += 4;
+        }
+        return t_count;
+    }
+    
+    void IndexToString(index_t p_value)
+    {
+        static const char kDigits[201] =
+            "0001020304050607080910111213141516171819"
+            "2021222324252627282930313233343536373839"
+            "4041424344454647484950515253545556575859"
+            "6061626364656667686970717273747576777879"
+            "8081828384858687888990919293949596979899";
+        
+        uindex_t t_value;
+        if (p_value < 0)
+        {
+            m_chars[m_char_count++] = '-';
+            t_value = -p_value;
+        }
+        else
+        {
+            t_value = p_value;
+        }
+        
+        uindex_t t_length =
+                CountDigits(t_value);
+        
+        m_char_count += t_length;
+        
+        uindex_t t_next =
+                m_char_count - 1;
+        
+        while(t_value >= 100)
+        {
+            index_t t_offset =
+                (t_value % 100) * 2;
+            t_value /= 100;
+            
+            m_chars[t_next] = kDigits[t_offset + 1];
+            m_chars[t_next - 1] = kDigits[t_offset];
+            
+            t_next -= 2;
+        }
+        
+        if (t_value < 10)
+        {
+            m_chars[t_next] = '0' + t_value;
+        }
+        else
+        {
+            index_t t_offset =
+                    t_value * 2;
+            
+            m_chars[t_next] = kDigits[t_offset + 1];
+            m_chars[t_next - 1] = kDigits[t_offset];
+        }
+    }
+};
+
+MC_DLLEXPORT_DEF
+bool MCNameCreateWithIndex(index_t p_index,
+                           MCNameRef& r_name)
+{
+    return __MCNameTableSearcher<__MCNameIndexInput>(p_index).Create(r_name);
+}
+
+//////////
 
 MC_DLLEXPORT_DEF
 bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
@@ -205,39 +508,23 @@ bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 	return false;
 }
 
+//////////
+
 MC_DLLEXPORT_DEF
 MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 {
-	// Compute the hash of the characters, up to case.
-	hash_t t_hash;
-	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
-
-	// Calculate the index of the chain in the name table where this name might
-	// be found. The capacity is always a power-of-two, so its just a mask op.
-	uindex_t t_index;
-	t_index = t_hash & (s_name_table_capacity - 1);
-
-	// Search for the first representative of the would-be name's equivalence class.
-	__MCName *t_key_name;
-	t_key_name = s_name_table[t_index];
-	while(t_key_name != nil)
-	{
-		// If the string matches, then we are done - notice we compare the full
-		// hash first.
-		if (t_hash == t_key_name -> hash &&
-			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
-			break;
-
-		// Otherwise skip all other members of the same equivalence class.
-		while(t_key_name -> next != nil && t_key_name -> key == t_key_name -> next -> key)
-			t_key_name = t_key_name -> next;
-
-		// Next name must be the next one
-		t_key_name = t_key_name -> next;
-	}
-
-	return t_key_name;
+    __MCAssertIsString(p_string);
+    
+    return __MCNameTableSearcher<__MCNameStringInput>(p_string).LookupCaseless();
 }
+
+MC_DLLEXPORT_DEF
+MCNameRef MCNameLookupIndex(index_t p_index)
+{
+    return __MCNameTableSearcher<__MCNameIndexInput>(p_index).LookupCaseless();
+}
+
+//////////
 
 MC_DLLEXPORT_DEF
 uintptr_t MCNameGetCaselessSearchKey(MCNameRef self)

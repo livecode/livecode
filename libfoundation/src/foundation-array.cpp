@@ -612,14 +612,15 @@ bool MCArrayFetchValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef& r_va
 {
 	__MCAssertIsArray(self);
 
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
+    MCNameRef t_key =
+            MCNameLookupIndex(p_index);
+    
+    if (t_key == nil)
+    {
+        return false;
+    }
 
-	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str, strlen(t_index_str), &t_key))
-		return false;
-
-	return MCArrayFetchValue(self, true, *t_key, r_value);
+	return MCArrayFetchValue(self, true, t_key, r_value);
 }
 
 MC_DLLEXPORT_DEF
@@ -627,27 +628,30 @@ bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_val
 {
 	__MCAssertIsArray(self);
 
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
-
 	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str, strlen(t_index_str), &t_key))
+	if (!MCNameCreateWithIndex(p_index,
+                               &t_key))
+    {
 		return false;
-
+    }
+    
 	return MCArrayStoreValue(self, true, *t_key, p_value);
 }
 
 bool
 MCArrayRemoveValueAtIndex(MCArrayRef self, index_t p_index)
 {
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
-	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str,
-									 strlen(t_index_str),
-									 &t_key))
-		return false;
-	return MCArrayRemoveValue(self, true, *t_key);
+    __MCAssertIsArray(self);
+    
+    MCNameRef t_key =
+            MCNameLookupIndex(p_index);
+    
+    if (t_key == nil)
+    {
+        return true;
+    }
+
+	return MCArrayRemoveValue(self, true, t_key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

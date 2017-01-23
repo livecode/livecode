@@ -99,6 +99,28 @@ uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 	return self -> real >= 0.0 ? (uinteger_t)(self -> real + 0.5) : (uinteger_t)0.0;
 }
 
+MC_DLLEXPORT_DEF
+bool MCNumberStrictFetchAsIndex(MCNumberRef self,
+                                index_t& r_index)
+{
+    MCStaticAssert(sizeof(index_t) == sizeof(integer_t));
+    
+    if (MCNumberIsInteger(self))
+    {
+        r_index = self->integer;
+        return true;
+    }
+    
+    index_t t_as_int = (index_t)(self -> real);
+    if (self->real - t_as_int != 0.0)
+    {
+        return false;
+    }
+    
+    r_index = t_as_int;
+    return true;
+}
+
 compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 {
 	// First determine the storage types of both numbers.
