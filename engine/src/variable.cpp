@@ -1296,16 +1296,6 @@ MCContainer *MCVarref::fetchcontainer(MCExecContext& ctxt)
     return nil;
 }
 
-void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
-{
-    MCContainer t_container;
-    if (evalcontainer(ctxt, t_container)
-            && t_container.eval_ctxt(ctxt, r_value))
-        return;
-    
-    ctxt . Throw();
-}
-
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return resolve(ctxt, r_container);
@@ -1342,42 +1332,6 @@ void MCVarref::compile_inout(MCSyntaxFactoryRef ctxt)
 MCVarref *MCVarref::getrootvarref(void)
 {
 	return this;
-}
-
-bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
-{
-	MCContainer t_container;
-    if (!evalcontainer(ctxt, t_container))
-		return false;
-	
-	return t_container.set(ctxt, p_value, p_setting);
-}
-
-bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
-{
-    MCContainer t_container;
-    if (!evalcontainer(ctxt, t_container))
-		return false;
-	
-    return t_container.give_value(ctxt, p_value, p_setting);
-}
-
-bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
-{
-    MCContainer t_container;
-    if (!evalcontainer(ctxt, t_container))
-        return false;
-    
-    return t_container.replace(ctxt, p_replacement, p_range);
-}
-
-bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
-{
-    MCContainer t_container;
-    if (!evalcontainer(ctxt, t_container))
-        return false;
-    
-    return t_container.deleterange(ctxt, p_range);
 }
 
 Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
@@ -1471,97 +1425,22 @@ void MCVarref::clearuql()
         handler->getcontainer(index, isparam)->getvar()->clearuql();
 }
 
-// MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
-bool MCVarref::dofree(MCExecContext& ctxt)
+bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-	MCContainer t_container;
-    if (!resolve(ctxt, t_container))
+    MCContainer t_container;
+    if (!evalcontainer(ctxt, t_container))
         return false;
     
-	return t_container.remove(ctxt);
+    return t_container.replace(ctxt, p_replacement, p_range);
 }
 
-// Resolve references to the appropriate element refered to by this Varref.
-bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
+bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
 {
-    if (dimensions == 0 && !isparam)
-        return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
-
-	MCExpression **t_dimensions;
-	if (dimensions == 1)
-		t_dimensions = &exp;
-	else
-		t_dimensions = exps;
-    
-	uindex_t t_path_length;
-	t_path_length = 0;
-    
-    // AL-2014-08-20: [[ ArrayElementRefParams ]] If the Varref refers to a container then
-    //  resolving the path requires appending the new dimensions to the old path
-    
-	MCNameRef *t_path, *t_old_path;
-    getpath(ctxt, t_old_path, t_path_length);
-    
-    uindex_t t_new_dimension_count;
-	t_new_dimension_count = dimensions + t_path_length;
-
-    /* UNCHECKED */ MCMemoryNewArray(t_new_dimension_count, t_path, t_new_dimension_count);
-
-    for (uindex_t i = 0; i < t_path_length; i++)
-        t_path[i] = MCValueRetain(t_old_path[i]);
-    
-    for(uindex_t i = 0; i < dimensions && !ctxt . HasError(); i++)
-	{
-        MCAutoValueRef t_value;
-        if (ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
-        {
-            MCAutoArrayRef t_array;
-
-            if (ctxt . ConvertToArray(*t_value, &t_array)
-                    && !MCArrayIsEmpty(*t_array))
-            {
-                if (!MCArrayIsSequence(*t_array))
-                    ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-                else
-				{
-					uindex_t t_length;
-                    t_length = MCArrayGetCount(*t_array);
-                    
-					/* UNCHECKED */ MCMemoryResizeArray(t_new_dimension_count + t_length, t_path, t_new_dimension_count);
-
-					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
-                    {
-                        MCValueRef t_value_fetched;
-                        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, t_index, t_value_fetched);
-
-                        if (!ctxt . ConvertToName(t_value_fetched, t_path[t_path_length++]))
-                        {
-                            ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-							break;
-						}
-					}
-				}
-			}
-            else if (!ctxt . ConvertToName(*t_value, t_path[t_path_length++]))
-                ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-		}
-	}
-
-    if (!ctxt . HasError())
-    {
-        if (isparam)
-            return MCContainer::copywithpath(fetchcontainer(ctxt), t_path, t_path_length, r_container);
-        else
-            return MCContainer::createwithpath(fetchvar(ctxt), t_path, t_path_length, r_container);
-    }
-	else
-	{
-		for(uindex_t i = 0; i < t_path_length; i++)
-			MCValueRelease(t_path[i]);
-        MCMemoryDeleteArray(t_path);
-
+    MCContainer t_container;
+    if (!evalcontainer(ctxt, t_container))
         return false;
-    }
+    
+    return t_container.deleterange(ctxt, p_range);
 }
 
 void MCVarref::getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length)
@@ -1574,6 +1453,547 @@ void MCVarref::getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_leng
     }
     
     fetchcontainer(ctxt) -> getpath(r_path, r_length);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename Actor>
+static bool
+__MCVarrefDimensionAction(MCExecContext& ctxt,
+                          Actor& p_actor,
+                          MCValueRef p_key)
+{
+    if (MCValueGetTypeCode(p_key) == kMCValueTypeCodeArray)
+    {
+        MCArrayRef t_array_key =
+        (MCArrayRef)p_key;
+        
+        // If the array is not a sequence, it is an error.
+        if (!MCArrayIsSequence(t_array_key))
+        {
+            ctxt.LegacyThrow(EE_VARIABLE_BADINDEX);
+            return false;
+        }
+        
+        // Get the number of keys.
+        uindex_t t_array_key_count =
+        MCArrayGetCount(t_array_key);
+        
+        // Hint at the number of dimensions
+        if (!p_actor.Hint(ctxt,
+                          t_array_key_count - 1))
+        {
+            return false;
+        }
+        
+        // Now iterate and recurse on each element of the sequence.
+        for(uindex_t i = 1; i <= MCArrayGetCount(t_array_key); i++)
+        {
+            MCValueRef t_sub_key = nullptr;
+            /* CANNOT_FAIL */ MCArrayFetchValueAtIndex(t_array_key,
+                                                       i,
+                                                       t_sub_key);
+            
+            if (!__MCVarrefDimensionAction(ctxt,
+                                           p_actor,
+                                           t_sub_key))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    MCNewAutoNameRef t_name_key;
+    if (!ctxt.ConvertToName(p_key,
+                            &t_name_key))
+    {
+        ctxt.LegacyThrow(EE_VARIABLE_BADINDEX);
+        return false;
+    }
+    
+    if (!p_actor.Continue(ctxt,
+                          *t_name_key))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+template<typename Actor>
+void MCVarref::action(MCExecContext& ctxt,
+                      Actor& p_actor)
+{
+    MCVariable *t_var = nullptr;
+    MCNameRef *t_existing_path = nullptr;
+    uindex_t t_existing_path_length = 0;
+    if (!isparam)
+    {
+        t_var = fetchvar(ctxt);
+    }
+    else
+    {
+        MCContainer *t_container =
+        fetchcontainer(ctxt);
+        
+        t_var = t_container->getvar();
+        t_container->getpath(t_existing_path,
+                             t_existing_path_length);
+    }
+    
+    // Start the action
+    if (!p_actor.Begin(ctxt,
+                       t_var))
+    {
+        return;
+    }
+    
+    // Hint at the number of upcoming dimensions.
+    if (!p_actor.Hint(ctxt,
+                      t_existing_path_length + dimensions))
+    {
+        return;
+    }
+    
+    // Iterate over the existing path
+    for(uindex_t i = 0; i < t_existing_path_length; i++)
+    {
+        if (!p_actor.Continue(ctxt,
+                              t_existing_path[i]))
+        {
+            return;
+        }
+    }
+    
+    // Get the dimension array (which is a union tagged by dimensions).
+    if (dimensions > 0)
+    {
+        MCExpression **t_dimensions =
+        dimensions == 1 ? &exp : exps;
+        
+        // Iterate through each provided dimension.
+        for(uindex_t i = 0; i < dimensions; i++)
+        {
+            // First evaluate the dimension expression to get the next key.
+            MCAutoValueRef t_key;
+            if (!ctxt.EvalExprAsValueRef(t_dimensions[i],
+                                         EE_VARIABLE_BADINDEX,
+                                         &t_key))
+            {
+                return;
+            }
+            
+            // Now visit the key. As the key could be an array, it is possible for a
+            // single dimension to give rise to multiple keys.
+            if (!__MCVarrefDimensionAction(ctxt,
+                                           p_actor,
+                                           *t_key))
+            {
+                return;
+            }
+        }
+    }
+    
+    // Complete the operation.
+    if (!p_actor.End(ctxt))
+    {
+        return;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class __MCVarrefPureFetchActor
+{
+public:
+    __MCVarrefPureFetchActor(void)
+        : m_value(nil)
+    {
+    }
+    
+    bool Hint(MCExecContext& ctxt,
+              uindex_t p_extra_dimensions)
+    {
+        return true;
+    }
+    
+    bool Begin(MCExecContext& ctxt,
+               MCVariable* p_var)
+    {
+        m_value = p_var->getvalueref();
+        return true;
+    }
+    
+    bool Continue(MCExecContext& ctxt,
+                  MCNameRef p_key)
+    {
+        // If m_value is not an array, or the array key is not present in it as
+        // an array then we return null.
+        if (MCValueGetTypeCode(m_value) != kMCValueTypeCodeArray ||
+            !MCArrayFetchValue((MCArrayRef)m_value,
+                               ctxt.GetCaseSensitive(),
+                               p_key,
+                               m_value))
+        {
+            m_value = kMCNull;
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool End(MCExecContext& ctxt)
+    {
+        return true;
+    }
+    
+    ////////
+    
+    bool Copy(MCValueRef& r_value)
+    {
+        return MCValueCopy(m_value,
+                           r_value);
+    }
+    
+private:
+    MCValueRef m_value;
+};
+
+void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    if (m_is_pure)
+    {
+        __MCVarrefPureFetchActor t_actor;
+        
+        action(ctxt,
+               t_actor);
+        
+        if (ctxt.HasError())
+        {
+            return;
+        }
+        
+        if (!t_actor.Copy(r_value.valueref_value))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        r_value.type = kMCExecValueTypeValueRef;
+    }
+    else
+    {
+        MCContainer t_container;
+        if (evalcontainer(ctxt, t_container) &&
+            t_container.eval_ctxt(ctxt, r_value))
+            return;
+        
+        ctxt.Throw();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class __MCVarrefPureMutateActor
+{
+public:
+    __MCVarrefPureMutateActor(void)
+        : m_variable(nullptr),
+          m_array(nullptr)
+    {
+    }
+    
+    bool Hint(MCExecContext& ctxt,
+              uindex_t p_extra_dimensions)
+    {
+        return true;
+    }
+    
+    bool Begin(MCExecContext& ctxt,
+               MCVariable* p_var)
+    {
+        if (!p_var->converttomutablearray())
+        {
+            ctxt.Throw();
+            return false;
+        }
+        
+        m_variable = p_var;
+        m_array = (MCArrayRef)p_var->getvalueref();
+        
+        return true;
+    }
+    
+    bool Continue(MCExecContext& ctxt,
+                  MCNameRef p_key)
+    {
+        if (*m_key == nullptr)
+        {
+            m_key.Reset(p_key);
+            return true;
+        }
+        
+        MCValueRef *t_slot_ptr;
+        if (!MCArrayMutateValue(m_array,
+                                ctxt.GetCaseSensitive(),
+                                *m_key,
+                                t_slot_ptr))
+        {
+            ctxt.Throw();
+            return false;
+        }
+        
+        MCArrayRef t_new_array = nullptr;
+        if (MCValueGetTypeCode(*t_slot_ptr) == kMCValueTypeCodeArray)
+        {
+            MCArrayRef& t_array_slot = (MCArrayRef&)*t_slot_ptr;
+            if (!MCArrayIsMutable(t_array_slot))
+            {
+                if (!MCArrayMutableCopyAndRelease(t_array_slot,
+                                                  t_array_slot))
+                {
+                    ctxt.Throw();
+                    return false;
+                }
+            }
+            
+            t_new_array = t_array_slot;
+        }
+        else
+        {
+            if (!MCArrayCreateMutable(t_new_array))
+            {
+                ctxt.Throw();
+                return false;
+            }
+            
+            MCValueAssignAndRelease(*t_slot_ptr,
+                                    (MCValueRef)t_new_array);
+        }
+        
+        m_array = t_new_array;
+        m_key.Reset(p_key);
+        
+        return true;
+    }
+    
+    bool End(MCExecContext& ctxt)
+    {
+        m_variable->synchronize(ctxt,
+                                true);
+        return true;
+    }
+    
+protected:
+    MCVariable *m_variable;
+    MCArrayRef m_array;
+    MCNewAutoNameRef m_key;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class __MCVarrefPureStoreActor: public __MCVarrefPureMutateActor
+{
+public:
+    __MCVarrefPureStoreActor(MCValueRef p_value)
+        : m_value(p_value)
+    {
+    }
+    
+    bool End(MCExecContext& ctxt)
+    {
+        if (!MCArrayStoreValue(m_array,
+                               ctxt.GetCaseSensitive(),
+                               *m_key,
+                               m_value))
+        {
+            ctxt.Throw();
+            return false;
+        }
+        
+        return __MCVarrefPureMutateActor::End(ctxt);
+    }
+    
+private:
+    MCValueRef m_value;
+};
+
+bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
+{
+    if (!isparam &&
+        dimensions > 0 &&
+        p_setting == kMCVariableSetInto &&
+        m_is_pure)
+    {
+        __MCVarrefPureStoreActor t_actor(p_value);
+        
+        action(ctxt,
+               t_actor);
+        
+        return ctxt.HasError();
+    }
+    else
+    {
+        MCContainer t_container;
+        if (!evalcontainer(ctxt, t_container))
+            return false;
+        
+        return t_container.set(ctxt, p_value, p_setting);
+    }
+}
+
+bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
+{
+    if (!isparam &&
+        dimensions > 0 &&
+        p_setting == kMCVariableSetInto &&
+        m_is_pure)
+    {
+        MCAutoValueRef t_boxed_value;
+        MCExecTypeConvertAndReleaseAlways(ctxt,
+                                          p_value.type,
+                                          &p_value,
+                                          kMCExecValueTypeValueRef,
+                                          &(&t_boxed_value));
+        if (ctxt.HasError())
+        {
+            return false;
+        }
+
+        __MCVarrefPureStoreActor t_actor(*t_boxed_value);
+        
+        action(ctxt,
+               t_actor);
+        
+        return ctxt.HasError();
+    }
+    else
+    {
+        MCContainer t_container;
+        if (!evalcontainer(ctxt, t_container))
+            return false;
+        
+        return t_container.give_value(ctxt, p_value, p_setting);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class __MCVarrefPureRemoveActor: public __MCVarrefPureMutateActor
+{
+public:
+    bool End(MCExecContext& ctxt)
+    {
+        if (!MCArrayRemoveValue(m_array,
+                                ctxt.GetCaseSensitive(),
+                                *m_key))
+        {
+            ctxt.Throw();
+            return false;
+        }
+        
+        return __MCVarrefPureMutateActor::End(ctxt);
+    }
+};
+
+// MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
+bool MCVarref::dofree(MCExecContext& ctxt)
+{
+    if (!isparam &&
+        dimensions > 0 &&
+        m_is_pure)
+    {
+        if (ctxt.HasError())
+        {
+            return false;
+        }
+        
+        __MCVarrefPureRemoveActor t_actor;
+        
+        action(ctxt,
+               t_actor);
+        
+        return ctxt.HasError();
+    }
+    else
+    {
+        MCContainer t_container;
+        if (!resolve(ctxt, t_container))
+            return false;
+    
+        return t_container.remove(ctxt);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class __MCVarrefResolveActor
+{
+public:
+    bool Hint(MCExecContext& ctxt,
+              uindex_t p_extra_dimensions)
+    {
+        return m_path.Ensure(p_extra_dimensions);
+    }
+    
+    bool Begin(MCExecContext& ctxt,
+               MCVariable* p_var)
+    {
+        m_variable = p_var;
+        return true;
+    }
+    
+    bool Continue(MCExecContext& ctxt,
+                  MCNameRef p_key)
+    {
+        m_path.Push(p_key);
+        return true;
+    }
+    
+    bool End(MCExecContext& ctxt)
+    {
+        return true;
+    }
+    
+    //////////
+    
+    bool Defer(MCExecContext& ctxt,
+               MCContainer& r_container)
+    {
+        MCNameRef *t_path = nullptr;
+        uindex_t t_path_length = 0;
+        m_path.Take(t_path,
+                    t_path_length);
+        
+        MCContainer::createwithpath(m_variable,
+                                    t_path,
+                                    t_path_length,
+                                    r_container);
+        
+        m_variable = nullptr;
+        
+        return true;
+    }
+    
+private:
+    MCVariable *m_variable;
+    MCAutoNameRefArray m_path;
+};
+
+bool MCVarref::resolve(MCExecContext& ctxt,
+                       MCContainer& r_container)
+{
+    __MCVarrefResolveActor t_actor;
+    action(ctxt,
+           t_actor);
+    if (ctxt.HasError())
+    {
+        return false;
+    }
+    return t_actor.Defer(ctxt,
+                         r_container);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

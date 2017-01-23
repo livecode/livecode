@@ -449,6 +449,10 @@ public:
 	bool getisplain(void) const { return isplain; }
 	
 private:
+    template<typename T>
+    void action(MCExecContext& ctxt,
+                T& actor);
+    
     MCVariable *fetchvar(MCExecContext& ctxt);
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
