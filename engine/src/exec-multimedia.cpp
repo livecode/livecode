@@ -448,7 +448,7 @@ static MCPlayer* MCMultimediaExecGetClip(MCExecContext& ctxt, MCStringRef p_clip
 	{
         // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
 		MCNameRef t_obj_name;
-		t_obj_name = MCNameLookup(p_clip);
+		t_obj_name = MCNameLookupCaseless(p_clip);
 		if (t_obj_name != nil)
 		{
 			tptr = MCplayers;

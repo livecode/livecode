@@ -206,7 +206,7 @@ bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 }
 
 MC_DLLEXPORT_DEF
-MCNameRef MCNameLookup(MCStringRef p_string)
+MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 {
 	// Compute the hash of the characters, up to case.
 	hash_t t_hash;
