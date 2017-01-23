@@ -724,12 +724,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		
         // MM-2015-08-11: [[ Bug 15700 ]] Poll the sockets. Code pulled over from OS X wait.
         extern Boolean MCS_handle_sockets();
-        if (MCS_handle_sockets())
-        {
-            if (anyevent)
-                done = True;
-            t_sleep = 0.0;
-        }
+        MCS_handle_sockets();
         
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
