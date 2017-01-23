@@ -1201,6 +1201,7 @@ bool MCContainer::remove(MCExecContext& ctxt)
 
 bool MCContainer::set_valueref(MCValueRef p_value)
 {
+    m_variable->clearuql();
 	return m_variable -> setvalueref(m_path, m_length, m_case_sensitive, p_value);
 }
 
@@ -1901,15 +1902,10 @@ public:
 // MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
 bool MCVarref::dofree(MCExecContext& ctxt)
 {
-    if (!isparam &&
+    /*if (!isparam &&
         dimensions > 0 &&
         m_is_pure)
     {
-        if (ctxt.HasError())
-        {
-            return false;
-        }
-        
         __MCVarrefPureRemoveActor t_actor;
         
         action(ctxt,
@@ -1917,7 +1913,7 @@ bool MCVarref::dofree(MCExecContext& ctxt)
         
         return ctxt.HasError();
     }
-    else
+    else*/
     {
         MCContainer t_container;
         if (!resolve(ctxt, t_container))
