@@ -26,6 +26,9 @@ public handler TestExtensionBridgeArrays_EmptyToEmptyList(in pList as List) retu
 	return pList is the empty list
 end handler
 
+public handler TestExtensionLibraryHandler(in pValue as Number)
+end handler
+
 public handler TestExtensionSupportModule_Handler()
 	return SupportHandler() is "support handler"
 end handler

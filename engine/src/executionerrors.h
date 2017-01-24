@@ -2733,7 +2733,10 @@ enum Exec_errors
 	EE_EXTENSION_ERROR_COLUMN,
 	
 	// {EE-0895} parentScript: can't change parent while parent script is executing
-	EE_PARENTSCRIPT_EXECUTING,
+    EE_PARENTSCRIPT_EXECUTING,
+    
+    // {EE-0896} call: type conversion error
+    EE_INVOKE_TYPEERROR,
 };
 
 extern const char *MCexecutionerrors;
