@@ -50,17 +50,9 @@ private:
 MCClipboard::MCClipboard(MCRawClipboard* p_clipboard) :
   m_clipboard(p_clipboard),
   m_lock_count(0),
-  m_private_data(NULL),
   m_dirty(false)
 {
     ;
-}
-
-MCClipboard::~MCClipboard()
-{
-    // Delete the private data, if any
-    if (m_private_data != NULL)
-        MCValueRelease(m_private_data);
 }
 
 bool MCClipboard::IsOwned() const
@@ -643,9 +635,7 @@ bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
         Clear();
     
     // Update the stored private data
-    if (m_private_data != NULL)
-        MCValueRelease(m_private_data);
-    m_private_data = MCValueRetain(p_private_data);
+    m_private_data.Reset(p_private_data);
     
     // Ensure that an item is always on the clipboard, even if it is empty
     if (m_clipboard->GetItemCount() == 0)
@@ -846,7 +836,7 @@ bool MCClipboard::HasLiveCodeStyledTextOrCompatible() const
 
 bool MCClipboard::HasPrivateData() const
 {
-    return m_private_data != NULL;
+    return m_private_data.IsSet();
 }
 
 bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
@@ -1151,19 +1141,16 @@ bool MCClipboard::CopyAsImage(MCDataRef& r_image) const
 
 bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const
 {
-    if (m_private_data == NULL)
+    if (!m_private_data.IsSet())
         return false;
     
-    r_data = MCValueRetain(m_private_data);
+    r_data = MCValueRetain(*m_private_data);
     return true;
 }
 
 void MCClipboard::ClearPrivateData()
 {
-	if (m_private_data)
-		MCValueRelease(m_private_data);
-
-	m_private_data = nil;
+    m_private_data.Reset();
 }
 
 // Wrapper for MCStringIsEqualTo that handles NULL parameters
