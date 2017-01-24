@@ -2096,6 +2096,7 @@ void XML_ListByAttributeValue(char *args[], int nargs, char **retstring,
 						if (attributevalue){
 							util_concatstring(attributevalue, strlen(attributevalue), 
 							result, buflen , bufsize);
+                            free(attributevalue);
 						}
 						util_concatstring(itemsep, itemseplen,result, buflen , bufsize);
 				}
