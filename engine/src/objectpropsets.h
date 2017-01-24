@@ -25,12 +25,6 @@ public:
 	MCObjectPropertySet(void)
 	{
 		m_next = nil;
-        /* UNCHECKED */ MCArrayCreateMutable(m_props);
-	}
-
-	~MCObjectPropertySet(void)
-	{
-		MCValueRelease(m_props);
 	}
 
 	bool hasname(MCNameRef p_name) const
@@ -110,9 +104,13 @@ public:
 	IO_stat savearrayprops_legacy(MCObjectOutputStream& stream) const;
 
 private:
+    /* Always returns a valid array, even if m_props isn't set.  The
+     * returned array is _not_ owned by the caller */
+    MCArrayRef fetch_nocopy() const;
+
 	MCObjectPropertySet *m_next;
 	MCNewAutoNameRef m_name;
-	MCArrayRef m_props;
+	MCAutoArrayRef m_props;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
