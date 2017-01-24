@@ -393,7 +393,7 @@ command revDoSaveAsStandalone pStack, pFolder
       -- post build message
       if tHasDesktop then
          __ReloadOriginalStackFile tStackFileName, pStack
-         __SendStandaloneSavedMessage pStack, tTargetFolder
+         __SendStandaloneSavedMessage pStack, tOutputFolder
       end if
       
    catch tError
