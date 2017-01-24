@@ -32,9 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <unistd.h>
 
-/* Declarations that should probably be in a header */
-extern "C" bool MCModulesInitialize(void);
-
 /* ================================================================
  * Emscripten engine start-up
  * ================================================================ */
@@ -63,10 +60,6 @@ platform_main(int argc, char *argv[], char *envp[])
 	if (!MCScriptInitialize())
 	{
 		MCEmscriptenBootError("LCB VM initialisation");
-	}
-	if (!MCModulesInitialize())
-	{
-		MCEmscriptenBootError("LCB library initialisation");
 	}
 
 	/* ---------- Process command-line arguments.

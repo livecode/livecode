@@ -2053,8 +2053,6 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-extern "C" bool MCModulesInitialize();
-
 MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
@@ -2065,8 +2063,9 @@ MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+        !MCSInitialize() ||
+        !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

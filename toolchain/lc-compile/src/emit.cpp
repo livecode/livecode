@@ -277,16 +277,25 @@ static EmittedModule *s_emitted_modules = NULL;
 
 //////////
 
-// String used for output as C sources
-#define MC_AS_C_PREFIX "\n" \
-    "#ifdef _MSC_VER \n" \
-    "#  pragma section(\"__modules\") \n" \
-    "#  define MODULE_SECTION __declspec(allocate(\"__modules\")) \n" \
-    "#elif defined __APPLE__ \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__MODULES,__modules\"))) __attribute__((used)) \n" \
-    "#else \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
-    "#endif \n"
+static const char *kOutputCDefinitions =
+    "struct __builtin_module_info\n"
+    "{\n"
+    "    void *next;\n"
+    "    void *handle;\n"
+    "    unsigned char *data;\n"
+    "    unsigned long length;\n"
+    "    bool (*initializer)();\n"
+    "    void (*finalizer)();\n"
+    "};\n"
+    "extern \"C\" void MCScriptRegisterBuiltinModule(__builtin_module_info *desc);\n"
+    "class __builtin_module_loader\n"
+    "{\n"
+    "public:\n"
+    "    __builtin_module_loader(__builtin_module_info *p_desc)\n"
+    "    {\n"
+    "        MCScriptRegisterBuiltinModule(p_desc);\n"
+    "    }\n"
+    "};\n\n";
 
 void EmitStart(void)
 {
@@ -297,9 +306,7 @@ void EmitStart(void)
     
     if (s_output_code_file != NULL)
     {
-        if (fprintf(s_output_code_file, MC_AS_C_PREFIX) < 0)
-            goto error_cleanup;
-        if (fprintf(s_output_code_file, "typedef struct { const char *name; unsigned char *data; unsigned long length; } builtin_module_descriptor;\n\n") < 0)
+        if (fprintf(s_output_code_file, "%s", kOutputCDefinitions) < 0)
             goto error_cleanup;
     }
     
@@ -324,94 +331,8 @@ static void __EmitModuleOrder(NameRef p_name)
     s_ordered_modules[s_ordered_module_count++] = p_name;
 }
 
-static bool __FindEmittedModule(NameRef p_name, EmittedModule*& r_module)
-{
-    for(EmittedModule *t_module = s_emitted_modules; t_module != NULL; t_module = t_module -> next)
-        if (IsNameEqualToName(p_name, t_module -> name))
-        {
-            r_module = t_module;
-            return true;
-        }
-    
-    return false;
-}
-
 void EmitFinish(void)
 {
-    if (s_output_code_file != NULL && IsBootstrapCompile())
-    {
-        if (fprintf(s_output_code_file, "builtin_module_descriptor* g_builtin_modules[] =\n{\n") < 0)
-            goto error_cleanup;
-        
-        for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-                if (fprintf(s_output_code_file, "    &__%s_module_info,\n", t_module -> modified_name) < 0)
-                    goto error_cleanup;
-        }
-        
-        if (fprintf(s_output_code_file, "};\n\n") < 0)
-            goto error_cleanup;
-        
-        if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern int %s_Initialize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    if (!%s_Initialize())\n"
-                            "        return 0;\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern void %s_Finalize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
-            goto error_cleanup;
-        for(unsigned int i = s_ordered_module_count; i > 0; i--)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i - 1], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    %s_Finalize();\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        
-        if (fprintf(s_output_code_file, "}\n\n") < 0)
-            goto error_cleanup;
-    }
-    
 	if (nil != s_output_code_file)
     {
 		fclose (s_output_code_file);
@@ -539,6 +460,18 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
     
+    // Emit the initializer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" bool %s_Initialize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
+    // Emit the finalizer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" void %s_Finalize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
 	if (0 > fprintf(t_file, "static unsigned char %s_module_data[] = {", t_modified_name))
 		goto error_cleanup;
 
@@ -551,12 +484,15 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (0 > fprintf(t_file, "0x%02x, ", ((unsigned char *)p_bytecode)[i]))
 			goto error_cleanup;
 	}
-	if (0 > fprintf(t_file, "};\n\n"))
-		goto error_cleanup;
+	if (0 > fprintf(t_file, "};\n"))
+        goto error_cleanup;
 
-	if (0 > fprintf(t_file, "builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
+	if (0 > fprintf(t_file, "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n", t_modified_name, t_modified_name, t_modified_name, t_modified_name, t_modified_name))
 		goto error_cleanup;
-
+    
+    if (0 > fprintf(t_file, "static __builtin_module_loader __%s_loader(&__%s_module_info);\n\n", t_modified_name, t_modified_name))
+        goto error_cleanup;
+    
     EmittedModule *t_mod;
     t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
     t_mod -> next = s_emitted_modules;

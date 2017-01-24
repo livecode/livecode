@@ -2001,9 +2001,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
 int platform_main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
@@ -2023,8 +2020,9 @@ int platform_main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() ||
+        !MCSInitialize() ||
+	    !MCScriptInitialize())
 		exit(-1);
     
 	// On OSX, argv and envp are encoded as UTF8
@@ -2076,7 +2074,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	[t_pool release];
 	
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

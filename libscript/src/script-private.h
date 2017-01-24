@@ -404,6 +404,10 @@ struct MCScriptModule: public MCScriptObject
     // This is the module-chain link. We keep a linked list of all modules in memory
     // with unique names -- not pickled.
     MCScriptModule *next_module;
+    
+    // These are the native code initializer/finalizer (if any) -- not pickled
+    bool (*initializer)(void);
+    void (*finalizer)(void);
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);

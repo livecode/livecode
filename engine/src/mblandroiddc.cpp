@@ -56,8 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
-extern "C" bool MCModulesInitialize();
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -1971,7 +1969,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 {
     MCInitialize();
     MCSInitialize();
-    MCModulesInitialize();
     MCScriptInitialize();
     
 	MCLog("doCreate called");

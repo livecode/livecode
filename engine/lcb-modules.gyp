@@ -29,7 +29,61 @@
 					],
 				},
 			},
-			
+							
+			'conditions':
+			[
+				[
+					'OS == "win"',
+					{
+						'all_dependent_settings':
+						{
+							'msvs_settings':
+							{
+								'VCLinkerTool':
+								{
+									'AdditionalOptions':
+									[
+										'/WHOLEARCHIVE:<(PRODUCT_DIR)/lib/engine_lcb_modules.lib',
+									],
+								},
+							},
+						},
+					},
+				],
+				[
+					'OS == "mac" or OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'xcode_settings':
+							{
+								'OTHER_LDFLAGS':
+								[
+									'-force_load <(PRODUCT_DIR)/libengine_lcb_modules.a',
+								],
+							},
+						},
+					},
+				],
+                [
+                    'OS == "android" or OS == "linux"',
+                    {
+                        'direct_dependent_settings':
+                        {
+                            'link_settings':
+                            {
+                                'ldflags':
+                                [
+                                    '-Wl,--whole-archive',
+                                    '-Wl,<(PRODUCT_DIR)/obj.target/engine/libengine_lcb_modules.a',
+                                    '-Wl,--no-whole-archive',
+                                ],
+                            },
+                        },
+                    },
+                ],
+			],
+
 			'actions':
 			[
 				{
@@ -47,7 +101,7 @@
 					
 					'outputs':
 					[
-						'<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
+						'<(INTERMEDIATE_DIR)/engine_lcb_modules.cpp',
                         
   						# A specific output file is required here to ensure that
   						# all build systems create the output directory while
@@ -62,7 +116,7 @@
 						'--bootstrap',
 						'--inputg', '../toolchain/lc-compile/src/grammar.g',
 						'--outputi', '<(PRODUCT_DIR)/modules/lci',
-						'--outputc', '<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
+						'--outputc', '<(INTERMEDIATE_DIR)/engine_lcb_modules.cpp',
 						'<@(_inputs)',
 					],
 				},

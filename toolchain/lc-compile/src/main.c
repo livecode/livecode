@@ -272,10 +272,6 @@ static void full_main(int argc, char *argv[])
     }
 }
 
-// No built-in modules for the compiler
-void* g_builtin_modules[1] = {NULL};
-unsigned int g_builtin_module_count = 0;
-
 extern int yydebug;
 extern void InitializeFoundation(void);
 
