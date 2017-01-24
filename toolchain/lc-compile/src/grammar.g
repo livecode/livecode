@@ -227,7 +227,12 @@
 
     'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, foreign, Signature))):
         "foreign" @(-> Position) "handler" "type" Identifier(-> Id) Signature(-> Signature)
-        
+
+    'rule' ImportDefinition(-> type(Position, public, Id, record(Position, Fields))):
+        "record" @(-> Position) "type" Identifier(-> Id) Separator
+            RecordFields(-> Fields)
+        "end" "type"
+
     'rule' ImportDefinition(-> type(Position, public, Id, Type)):
         "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
 

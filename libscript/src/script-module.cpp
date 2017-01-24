@@ -1388,8 +1388,24 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                     }
                     break;
                     case kMCScriptTypeKindRecord:
-                        // TODO - Records not yet supported
-                        break;
+                    {
+                        auto t_record_type =
+                            static_cast<MCScriptRecordType *>(t_type);
+                        __enterln(stream, "record type %@", t_def_name);
+                        for (uindex_t t_field = 0;
+                             t_field < t_record_type->field_count;
+                             ++t_field)
+                        {
+                            MCAutoStringRef t_ftype_name;
+                            type_to_string(self, t_record_type->fields[t_field].type,
+                                           &t_ftype_name);
+                            __writeln(stream, "%@ as %@",
+                                      t_record_type->fields[t_field].name,
+                                      *t_ftype_name);
+                        }
+                        __leaveln(stream, "end type");
+                    }
+                    break;
                     default:
                     {
                         MCAutoStringRef t_sig;
