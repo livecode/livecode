@@ -290,6 +290,13 @@ public:
         Set(p_handle.m_proxy);
     }
     
+    Handle(Handle&& p_handle) : m_proxy(nullptr)
+    {
+        /* TODO[C++11] std::swap */
+        m_proxy = p_handle.m_proxy;
+        p_handle.m_proxy = nullptr;
+    }
+
     Handle(decltype(nullptr)) :
       m_proxy(nullptr)
     {
@@ -313,6 +320,15 @@ public:
         return *this;
     }
     
+    Handle& operator=(Handle&& p_handle)
+    {
+        Set(nullptr);
+        /* TODO[C++11] std::swap */
+        m_proxy = p_handle.m_proxy;
+        p_handle.m_proxy = nullptr;
+        return *this;
+    }
+
     Handle& operator= (decltype(nullptr))
     {
         Set(nullptr);
