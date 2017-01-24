@@ -467,7 +467,8 @@ static MCRGB color_table[] =
         {"Plum3", 195, 142, 199},
         {"Plum4", 126, 88, 126},
         {"PowderBlue", 173, 220, 227},
-        {"Purple", 142, 53, 239},
+		// PM-2015-07-21: [[ Bug 15621 ]] Make LC "purple" to match X11 purple
+        {"Purple", 160, 32, 240},
         {"Purple1", 137, 59, 255},
         {"Purple2", 127, 56, 236},
         {"Purple3", 108, 45, 199},
