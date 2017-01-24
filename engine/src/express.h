@@ -142,9 +142,8 @@ public:
 
 class MCFuncref : public MCExpression
 {
-	MCNameRef name;
+	MCNewAutoNameRef name;
     MCHandler *handler;
-	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
     bool global_handler : 1;
