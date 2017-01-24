@@ -142,7 +142,7 @@ public:
 
 class MCFuncref : public MCExpression
 {
-	MCNameRef name;
+	MCNewAutoNameRef name;
     MCHandler *handler;
 	MCObject *parent;
 	MCParameter *params;
