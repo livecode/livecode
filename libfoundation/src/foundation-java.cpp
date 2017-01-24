@@ -84,6 +84,7 @@ static bool initialise_weak_link_jvm()
 
 #endif
 
+#ifdef TARGET_SUPPORTS_JAVA
 static void init_jvm_args(JavaVMInitArgs *x_args)
 {
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_MACOS_X)
@@ -100,6 +101,7 @@ static bool create_jvm(JavaVMInitArgs *p_args)
     
     return ret == 0;
 }
+#endif 
 
 static bool initialise_jvm()
 {
@@ -124,12 +126,12 @@ static bool initialise_jvm()
 
 static void finalise_jvm()
 {
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
     if (s_jvm != nil)
     {
-#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
         s_jvm -> DestroyJavaVM();
-#endif
     }
+#endif
 }
 
 
