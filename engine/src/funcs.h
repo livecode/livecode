@@ -317,6 +317,18 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCCommandArguments : public MCFunction
+{
+public:
+    virtual Exec_stat eval(MCExecPoint &ep);
+};
+
+class MCCommandName : public MCFunction
+{
+public:
+    virtual Exec_stat eval(MCExecPoint &ep);
+};
+
 class MCCommandNames : public MCFunction
 {
 public:

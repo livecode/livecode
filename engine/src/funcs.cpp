@@ -1616,6 +1616,28 @@ Exec_stat MCColorNames::eval(MCExecPoint &ep)
 #endif /* MCColorNames */
 }
 
+Exec_stat MCCommandArguments::eval(MCExecPoint &ep)
+{
+#ifdef /* MCCommandArguments */ LEGACY_EXEC
+    ep.clear();
+    for (uint32_t i = 0; i < MCcommandargumentcount; ++i)
+        ep . concatcstring(MCcommandarguments[i], EC_RETURN, i == 0);
+
+    return ES_NORMAL;
+#endif /* MCCommandArguments */
+}
+
+Exec_stat MCCommandName::eval(MCExecPoint &ep)
+{
+#ifdef /* MCCommandName */ LEGACY_EXEC
+    ep.clear();
+    if (MCcommandname != NULL)
+        ep.setcstring(MCcommandname);
+
+    return ES_NORMAL;
+#endif /* MCCommandName */
+}
+
 Exec_stat MCCommandNames::eval(MCExecPoint &ep)
 {
 #ifdef /* MCCommandNames */ LEGACY_EXEC

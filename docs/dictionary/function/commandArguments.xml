@@ -1,0 +1,64 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>commandArguments</name>
+	<type>function</type>
+
+	<syntax>
+		<example>the commandArguments</example>
+	</syntax>
+
+	<synonyms>
+		<synonym>cmdArgs</synonym>
+	</synonyms>
+
+	<summary>Returns a return-separated list of the commandline arguments</summary>
+
+	<examples>
+<example>put the commandArguments</example>
+<example><p>if "-v" is among the lines of the cmdArgs then</p><p>    put true into tVerbose</p><p>end if</p></example>
+	</examples>
+
+	<history>
+		<introduced version="6.7.8">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version=""></changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<function tag="$">$ Function</function>
+	</references>
+
+	<description>
+	<overview>Returns a return-separated list of the commandline arguments</overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments>The <b>commandArguments</b> function returns the list of the parameters given at the launch of the application.<p>The list only exists on desktop standalones applications and server scripts. On mobile platform or in the IDE, the <b>commandArguments</b> returns empty.</p></comments>
+	</description>
+</doc>

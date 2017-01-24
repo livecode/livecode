@@ -792,6 +792,16 @@ bool MCModeIsExecutableFirstArgument(void)
 	return true;
 }
 
+// Desktop standalone have command line arguments - not mobile platforms
+bool MCModeHasCommandLineArguments(void)
+{
+#ifdef _MOBILE
+    return false;
+#else
+    return true;
+#endif
+}
+
 // In standalone mode, we only automatically open stacks if there isn't an
 // embedded stack.
 bool MCModeShouldLoadStacksOnStartup(void)

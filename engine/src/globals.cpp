@@ -502,6 +502,11 @@ Boolean MCallowdatagrambroadcasts = False;
 
 uint32_t MCactionsrequired = 0;
 
+// SN-2015-07-17: [[ CommandArguments ]] Add global array for the arguments.
+char *MCcommandname;
+char **MCcommandarguments;
+uint32_t MCcommandargumentcount;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -829,6 +834,19 @@ void X_clear_globals(void)
     
     MCactionsrequired = 0;
 
+    if (MCcommandarguments != NULL)
+    {
+        for (uint32_t i = 0; i < MCcommandargumentcount; +i)
+            free(MCcommandarguments[i]);
+        MCcommandarguments = NULL;
+    }
+    MCcommandargumentcount = 0;
+    if (MCcommandname != NULL)
+    {
+        free(MCcommandname);
+        MCcommandname = NULL;
+    }
+
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
     MCAdInitialize();
@@ -904,6 +922,25 @@ bool X_open(int argc, char *argv[], char *envp[])
 				delete vname;
 			}
 		}
+
+
+    // SN-2015-07-17: [[ CommandArguments ]] Initialise the commandName and
+    //  commandArguments properties.
+    MCcommandname = nil;
+    MCcommandargumentcount = 0;
+    if (MCModeHasCommandLineArguments())
+    {
+        MCcommandname = strdup(argv[0]);
+
+        if (argc > 1)
+        {
+            if (!MCMemoryNewArray(argc - 1, MCcommandarguments))
+                return false;
+
+            for (int i = 1; i < argc; i++)
+                MCcommandarguments[MCcommandargumentcount++] = strdup(argv[i]);
+        }
+    }
     
     MCDeletedObjectsSetup();
 
@@ -1019,7 +1056,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 		}
 		else
 			delete newtheme;
-	}
+    }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
@@ -1192,6 +1229,14 @@ int X_close(void)
 	delete MCiconmenu;
 	delete MCstatusiconmenu;
 	delete MCstatusicontooltip;
+
+    // SN-2015-07-17: [[ CommandArguments ]] Clean up the memory
+    free(MCcommandname);
+    MCcommandname = NULL;
+    for (uint32_t i = 0; i < MCcommandargumentcount; ++i)
+        free(MCcommandarguments[i]);
+    MCMemoryDeleteArray(MCcommandarguments);
+    MCcommandarguments = NULL;
 
 	// Cleanup the cursors array - *before* we close the screen!!
 	if (MCModeMakeLocalWindows())

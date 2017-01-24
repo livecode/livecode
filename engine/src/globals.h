@@ -367,6 +367,10 @@ extern uint4 MCstatusiconid;
 extern char *MCstatusiconmenu;
 extern char *MCstatusicontooltip;
 
+extern char *MCcommandname;
+extern char **MCcommandarguments;
+extern uint32_t MCcommandargumentcount;
+
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif
