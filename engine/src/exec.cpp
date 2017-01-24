@@ -1460,23 +1460,18 @@ static bool MCPropertyFormatDoubleList(double *p_list, uindex_t p_count, char_t 
         r_string = MCValueRetain(kMCEmptyString);
         return true;
     }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-		if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%f", p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(p_delimiter, &t_list))
+        return false;
+
+    for (uindex_t i = 0; i < p_count; ++i)
+    {
+        if (!MCListAppendFormat(*t_list, "%f", p_list[i]))
+            return false;
+    }
+
+    return MCListCopyAsString(*t_list, r_string);
 }
 
 static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
