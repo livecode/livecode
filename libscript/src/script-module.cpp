@@ -74,7 +74,6 @@ MC_PICKLE_BEGIN_RECORD(MCScriptRecordTypeField)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptRecordType)
-    MC_PICKLE_UINDEX(base_type)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptRecordTypeField, fields, field_count)
 MC_PICKLE_END_RECORD()
 
@@ -751,7 +750,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 						goto error_cleanup; // oom
                 }
                 
-                if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
+                if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, &t_typeinfo))
 					goto error_cleanup; // oom
             }
             break;

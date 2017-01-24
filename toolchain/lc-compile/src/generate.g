@@ -2070,7 +2070,7 @@
             where(Type -> handler(_, _, _))
             where(ThisType -> Base)
         ||
-            where(Type -> record(_, _, _))
+            where(Type -> record(_, _))
             where(ThisType -> Base)
         ||
             where(Type -> Base)
@@ -2105,9 +2105,8 @@
     'rule' GenerateBaseType(foreign(_, Binding) -> Index):
         EmitForeignType(Binding -> Index)
 
-    'rule' GenerateBaseType(record(_, Base, Fields) -> Index):
-        GenerateType(Base -> BaseTypeIndex)
-        EmitBeginRecordType(BaseTypeIndex)
+    'rule' GenerateBaseType(record(_, Fields) -> Index):
+        EmitBeginRecordType()
         GenerateRecordTypeFields(Fields)
         EmitEndRecordType(-> Index)
 

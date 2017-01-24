@@ -375,8 +375,8 @@
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" StringLiteral(-> Binding)
         
-    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
-        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Fields))):
+        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) Separator
             RecordFields(-> Fields)
         "end" "type"
         
