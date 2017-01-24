@@ -2182,7 +2182,7 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 						else
 							t_comparison_result = util_strnicmp(attvalue, tvalue, strlen(tvalue));
                         
-                        delete tvalue;
+                        free(tvalue);
                         
                         if (t_comparison_result == 0)
                         {
