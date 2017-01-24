@@ -425,10 +425,7 @@
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
     
-    'rule' Apply(TYPE'record(_, BaseType, Fields)):
-        -- Apply the base type
-        Apply(BaseType)
-        
+    'rule' Apply(TYPE'record(_, Fields)):
         -- Enter a new scope for fields
         EnterScope
         

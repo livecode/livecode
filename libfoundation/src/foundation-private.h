@@ -90,7 +90,6 @@ struct __MCTypeInfo: public __MCValue
         {
             MCRecordTypeFieldInfo *fields;
             uindex_t field_count;
-            MCTypeInfoRef base;
         } record;
         struct
         {
@@ -558,7 +557,6 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 uindex_t __MCRecordTypeInfoGetFieldCount (__MCTypeInfo *self);
-void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
 
 bool __MCForeignValueInitialize(void);
 void __MCForeignValueFinalize(void);

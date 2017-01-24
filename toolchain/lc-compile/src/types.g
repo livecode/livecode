@@ -86,7 +86,7 @@
     named(Position: POS, Name: ID)
     foreign(Position: POS, Binding: STRING)
     optional(Position: POS, Type: TYPE)
-    record(Position: POS, Base: TYPE, Fields: FIELDLIST)
+    record(Position: POS, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
     handler(Position: POS, Language: LANGUAGE, Signature: SIGNATURE)
     boolean(Position: POS)

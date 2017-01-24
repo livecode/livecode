@@ -918,7 +918,7 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
     __add_script_type(self, t_type, r_new_type);
 }
 
-void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_base_type)
+void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self)
 {
     if (self == nil ||
         !self -> valid)
@@ -932,7 +932,6 @@ void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_b
     }
     
     t_type -> kind = kMCScriptTypeKindRecord;
-    t_type -> base_type = p_base_type;
     
     self -> current_type = t_type;
 }
@@ -974,9 +973,6 @@ void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_ne
         t_other_type = static_cast<MCScriptRecordType *>(self -> module . types[i]);
         
         if (t_type -> field_count != t_other_type -> field_count)
-            continue;
-        
-        if (t_type -> base_type != t_other_type -> base_type)
             continue;
         
         bool t_equal;

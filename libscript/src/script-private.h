@@ -194,7 +194,6 @@ struct MCScriptRecordTypeField
 
 struct MCScriptRecordType: public MCScriptType
 {
-    uindex_t base_type;
     MCScriptRecordTypeField *fields;
     uindex_t field_count;
 };

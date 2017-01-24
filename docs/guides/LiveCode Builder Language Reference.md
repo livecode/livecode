@@ -324,6 +324,19 @@ parameter in a foreign handler definition.
 > creation of a function pointer. The lifetime of the function pointer
 > is the same as the widget or module which created it.
 
+### Record Types
+
+    RecordTypeDefinition
+      : 'record' 'type' <Name: Identifier> SEPARATOR
+        { RecordTypeFieldDefinition }
+        'end' 'record'
+
+    RecordTypeFieldDefinition
+      : <Name: Identifier> [ 'as' <TypeOf: Type> ]
+
+A record type definition defines a type that consists of 0 or more
+named fields, each with its own optional type.
+
 ### Variables
 
     VariableDefinition
