@@ -170,6 +170,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalV0::MCExternalV0(void)
+    : m_name(nullptr)
 {
 	m_table = nil;
 	m_free = nil;
