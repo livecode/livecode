@@ -58,6 +58,9 @@ public:
         Reset(other.m_value);
     }
     
+    MCAutoValueRefBase(MCAutoValueRefBase&& other)
+        : m_value(other.Take()) {}
+
     inline MCAutoValueRefBase(T p_value)
 		: m_value(nil)
 	{
@@ -76,6 +79,12 @@ public:
 		m_value = (T)MCValueRetain(value);
 		return value;
 	}
+
+    MCAutoValueRefBase& operator=(MCAutoValueRefBase&& other)
+    {
+        Give(other.Take());
+        return *this;
+    }
 
 	inline T& operator & (void)
 	{
