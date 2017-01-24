@@ -144,7 +144,6 @@ class MCFuncref : public MCExpression
 {
 	MCNewAutoNameRef name;
     MCHandler *handler;
-	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
     bool global_handler : 1;

@@ -461,7 +461,6 @@ MCFuncref::~MCFuncref()
 
 Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 {
-	parent = sp.getobj();
 	initpoint(sp);
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
