@@ -61,6 +61,13 @@ public:
 		return m_value;
 	}
 
+	T Release(void)
+	{
+		T t_value = m_value;
+		m_value = nil;
+		return t_value;
+	}
+
 private:
 	T m_value;
 	MCAutoScriptObjectRefBase<T,REF,UNREF> & operator = (MCAutoScriptObjectRefBase<T,REF,UNREF> & x);
