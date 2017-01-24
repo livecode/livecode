@@ -959,7 +959,7 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
     // as modal mode breaks the color picker
     //[NSApp runModalForWindow: t_colorPicker];
     [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
-    [NSApp becomePseudoModalFor: t_colorPicker];
+	MCMacPlatformApplicationBecomePseudoModalFor(t_colorPicker);
 }
 
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
@@ -969,8 +969,8 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
     {
         if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
             r_color = s_color_dialog_color;
-        
-        [NSApp becomePseudoModalFor: nil];
+		
+		MCMacPlatformApplicationBecomePseudoModalFor(nil);
         [s_color_dialog_delegate dealloc];
         s_color_dialog_delegate = NULL;
     }
