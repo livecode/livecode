@@ -37,7 +37,7 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStri
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
+bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set) const
 {
 	MCObjectPropertySet *t_new_set;
 	if (createwithname(*m_name, t_new_set))
@@ -89,7 +89,7 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
-bool MCObjectPropertySet::list(MCStringRef& r_keys)
+bool MCObjectPropertySet::list(MCStringRef& r_keys) const
 {
     if (MCArrayListKeys(m_props, '\n', r_keys))
 		return true;
@@ -103,7 +103,7 @@ bool MCObjectPropertySet::clear(void)
 	return MCArrayCreateMutable(m_props);
 }
 
-bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
+bool MCObjectPropertySet::fetch(MCArrayRef& r_array) const
 {
     return MCArrayCopy(m_props, r_array);
 }
@@ -114,7 +114,7 @@ bool MCObjectPropertySet::store(MCArrayRef p_array)
     return MCArrayMutableCopy(p_array, m_props);
 }
 
-bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
+bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value) const
 {
 	return MCArrayFetchValue(m_props, ctxt . GetCaseSensitive(), p_name, r_value);
 }
@@ -167,14 +167,14 @@ IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
 	return IO_NORMAL;
 }
 
-IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream) const
 {
 	return IO_write_valueref_new(m_props, p_stream);
 }
 
 //////////
 
-uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only)
+uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only) const
 {
 	return MCArrayMeasureForStreamLegacy(m_props, p_nested_only);
 }
@@ -194,12 +194,12 @@ IO_stat MCObjectPropertySet::loadarrayprops_legacy(MCObjectInputStream& p_stream
 	return MCArrayLoadFromStreamLegacy(m_props, p_stream);
 }
 
-IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream) const
 {
 	return MCArraySaveToHandleLegacy(m_props, p_stream);
 }
 
-IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream)
+IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream) const
 {
 	return MCArraySaveToStreamLegacy(m_props, true, p_stream);
 }
