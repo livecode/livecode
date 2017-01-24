@@ -1586,7 +1586,7 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
 			{
-				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+				/* UNCHECKED */ tptr->getAVname(type, p_name, optr);
 			}
 			else
 				optr = tptr->getcontrolname(type, p_name);
