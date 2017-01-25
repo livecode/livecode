@@ -57,7 +57,7 @@ struct MCSortnode
 	const void *data;
 	
 	MCSortnode()
-	: svalue(nil) {}
+	: svalue(nil), data(nullptr) {}
 	
 	~MCSortnode()
 	{
