@@ -159,29 +159,18 @@
 						'sources/':
 						[
 							['exclude', '.*-posix\\.cpp$'],
-							['exclude', '.*-mac\\.cpp$'],
 							['exclude', '.*-lnx\\.cpp$'],
 						],
 					},
-				],
-				[
-					'OS == "linux"', 
 					{
-						'include_dirs':
-						[
-							'<(javahome)/include',
-							'<(javahome)/include/linux',
-						],
-						
 						'sources/':
 						[
-							['exclude', '.*-w32\\.cpp$'],
-							['exclude', '.*-mac\\.cpp$'],	
+							['exclude', '.*-w32\\.cpp$'],	
 						],
 					},
 				],
 				[
-					'OS == "mac"',
+					'OS == "mac" or OS == "ios"',
 					{
 						'include_dirs':
 						[
@@ -191,10 +180,25 @@
 						
 						'sources/':
 						[
-							['exclude', '.*-w32\\.cpp$'],
 							['exclude', '.*-lnx\\.cpp$'],	
 						],
-					},	
+					},
+					{
+						'sources/':
+						[
+							['exclude', '.*-mac\\.cpp$'],	
+						],
+					},
+				],
+				[
+					'OS == "linux" or OS == "android"', 
+					{
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/linux',
+						],
+					},
 				],
 				[
 					'OS == "linux" or OS == "mac"',
