@@ -13,6 +13,10 @@ constant kRunOnce = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersio
 local sIsFaceless
 local sFacelessLog
 
+private function isInstallerEnvironment
+   return (the environment begins with "installer")
+end isInstallerEnvironment
+
 ################################################################################
 #
 #   FRONT-END FUNCTIONS
@@ -24,7 +28,7 @@ local sInstallerError
 
 command installerRun pPath, pRecord, pOptions, pWithoutElevation
    local tCommand
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       put the effective filename of stack "Installer" into tCommand
    else
       put specialFolderPath("Desktop") & "/installbackend.exe" into tCommand
@@ -73,7 +77,7 @@ end installerRun
 
 command installerRunUninstall pPath, pRecord, pWithoutElevation
    local tCommand
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       put the effective filename of stack "Installer" into tCommand
    else
       put "C:/Users/Mark/Desktop/installbackend.exe" into tCommand
@@ -1343,7 +1347,7 @@ end uninstallCanRemoveRegistryKey
 local sPayloadArchive
 
 private command payloadOpen pArchive
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       if the platform is "MacOS" then
          local tPayload
          set the itemDel to slash
@@ -1364,7 +1368,7 @@ private command payloadOpen pArchive
 end payloadOpen
 
 private command payloadClose
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload close"
    else
       revZipCloseArchive sPayloadArchive
@@ -1375,7 +1379,7 @@ end payloadClose
 
 private function payloadDescribeItem pItem
    local it
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload describe pItem"
       if the result is not empty then
          get the result
@@ -1391,7 +1395,7 @@ private function payloadDescribeItem pItem
 end payloadDescribeItem
 
 private command payloadExtractItemToVariable pItem, @rData
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload extract pItem; put it into rData"
    else
       revZipExtractItemToVariable sPayloadArchive, pItem, "rData"
@@ -1406,7 +1410,7 @@ end payloadExtractItemToVariable
 private command payloadExtractItemToFile pItem, pBaseItem, pFile
    local tShortFile
    put installShortenPath(pFile) into tShortFile
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       if pBaseItem is empty then
          log "Payload: Extracting item '" & pItem & "' to file '" & pFile & "'"
          do "_internal payload extract pItem to tShortFile"
@@ -1434,7 +1438,7 @@ private command reportCheckCancel
       exit reportCheckCancel
    end if
    
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       -- Attempt to read 1 line from the parent
       read from stdin for 1 line in 0 millisecs
       
@@ -1462,7 +1466,7 @@ end reportCheckCancel
 
 private command reportPhase pPhase
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          write "phase" & tab & pPhase & return to stdout
       else
          log "Phase Changed to -" && pPhase
@@ -1474,7 +1478,7 @@ end reportPhase
 
 private command reportProgress pProgress, pMessage
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          replace "\" with "\\" in pMessage
          replace return with "\n" in pMessage
          write "progress" & tab & pProgress & tab & pMessage & return to stdout
@@ -1486,7 +1490,7 @@ end reportProgress
 
 private command reportFinished pIsUninstall
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          log "Done"
          write "done" & return to stdout
       end if
@@ -1501,7 +1505,7 @@ end reportFinished
 
 private command reportError pMessage
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          replace "\" with "\\" in pMessage
          replace return with "\n" in pMessage
          write "error" & tab & pMessage & return to stdout
