@@ -170,7 +170,7 @@
 					},
 				],
 				[
-					'host_os == "mac"',
+					'host_os == "mac" and OS != "ios"',
 					{
 						'include_dirs':
 						[
@@ -195,7 +195,7 @@
 					},
 				],
 				[
-					'host_os == "linux"',
+					'host_os == "linux" and OS != "emscripten"',
 					{
 						'include_dirs':
 						[

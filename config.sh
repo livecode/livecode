@@ -399,7 +399,7 @@ case ${OS} in
     export OBJDUMP="${ANDROID_OBJDUMP}"
     export STRIP="${ANDROID_STRIP}"
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" \
-                           -Dcross_compile=1 \
+    					   "-Djavahome=${JAVA_SDK}" -Dcross_compile=1 \
                            "-Gandroid_ndk_version=${ANDROID_NDK_VERSION}" "$@"
     ;;
   win)
