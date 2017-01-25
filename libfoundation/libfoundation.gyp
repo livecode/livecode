@@ -170,14 +170,18 @@
 					},
 				],
 				[
-					'OS == "mac" or OS == "ios"',
+					'host_os == "mac"',
 					{
 						'include_dirs':
 						[
 							'<(javahome)/include',
 							'<(javahome)/include/darwin',
 						],
-						
+					},
+				],
+				[
+					'OS == "mac" or OS == "ios"',
+					{						
 						'sources/':
 						[
 							['exclude', '.*-lnx\\.cpp$'],	
@@ -191,7 +195,7 @@
 					},
 				],
 				[
-					'OS == "linux" or OS == "android"', 
+					'host_os == "linux"',
 					{
 						'include_dirs':
 						[
