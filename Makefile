@@ -180,6 +180,16 @@ all-win-%:
 
 $(addsuffix -win,all config compile): %: %-x86
 
+# Dummy rules for Windows x86-64 builds
+# TODO Replace with real rules
+config-win-x86_64:
+	mkdir -p build-win-x86_64
+compile-win-x86_64:
+	mkdir -p win-x86_64-bin
+all-win-x86_64:
+	$(MAKE) config-win-x86_64
+	$(MAKE) compile-win-x86_64
+
 ################################################################
 # Emscripten rules
 ################################################################
