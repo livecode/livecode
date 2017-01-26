@@ -174,6 +174,10 @@
 				[
 					'host_os == "mac" and OS != "ios"',
 					{
+						'defines':
+						[
+							'TARGET_SUPPORTS_JAVA',
+						],
 						'include_dirs':
 						[
 							'<(javahome)/include',
@@ -182,7 +186,7 @@
 					},
 				],
 				[
-					'OS == "mac" or OS == "ios"',
+					'OS == "mac"',
 					{						
 						'sources/':
 						[
@@ -199,6 +203,10 @@
 				[
 					'host_os == "linux" and OS != "emscripten"',
 					{
+						'defines':
+						[
+							'TARGET_SUPPORTS_JAVA',
+						],
 						'include_dirs':
 						[
 							'<(javahome)/include',
