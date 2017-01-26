@@ -543,6 +543,8 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
+                
+                ctxt.SetTheResultToEmpty();
                 ctxt . SetItToValue(*t_string);
 			}
 			else
