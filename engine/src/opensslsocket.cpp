@@ -752,14 +752,10 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 
 	MCSocketHandle sock = socket(AF_INET, datagram ? SOCK_DGRAM : SOCK_STREAM, 0);
 
-	// HH-2017-01-17: [[ Bug 18454 ]] Set socket option to allow broadcast on Android.
-#ifdef _ANDROID_MOBILE
-	if(MCNameIsEqualToCString(name, "255.255.255.255", kMCCompareCaseless) == 0)
-	{
-		int _i = 1;
-		setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&_i, sizeof(_i));
-	}
-#endif
+	// HH-2017-01-26: [[ Bug 18454 ]] Set socket option to allow broadcast
+	int t_broadcast;
+	t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
+	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
 
 	if (!MCS_valid_socket(sock))
 	{
