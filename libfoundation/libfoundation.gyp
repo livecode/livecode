@@ -82,6 +82,8 @@
 				'src/foundation-filters.cpp',
 				'src/foundation-foreign.cpp',
 				'src/foundation-java.cpp',
+				'src/foundation-java-private.cpp',
+				'src/foundation-java-private.h',
 				'src/foundation-handler.cpp',
 				'src/foundation-list.cpp',
 				'src/foundation-locale.cpp',
