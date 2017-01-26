@@ -710,15 +710,16 @@ public:
 			
 		MCAndroidObjectRemoteCall(m_view, "executeJavaScript", "ss", &m_js_tag, p_script);
 		
-		// wait for result, timeout after 30 seconds    
-		double t_current_time = MCBrowserTimeInSeconds();
-		double t_timeout = t_current_time + 30.0;
+		// HH-2017-01-26: [[ Bug 19154 ]]: Fix browser stuck for JS handlers execute 
+		// wait for result, timeout after 30 seconds
+		// double t_current_time = MCBrowserTimeInSeconds();
+		// double t_timeout = t_current_time + 30.0;
 		
-		while (m_js_tag != nil && t_current_time < t_timeout)
-		{
-			MCBrowserRunloopWait();
-			t_current_time = MCBrowserTimeInSeconds();
-		}
+		// while (m_js_tag != nil && t_current_time < t_timeout)
+		// {
+		// 	MCBrowserRunloopWait();
+		// 	t_current_time = MCBrowserTimeInSeconds();
+		// }
 		
 		if (m_js_tag != nil)
 		{
