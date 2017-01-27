@@ -106,7 +106,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    put empty into tError
    
    local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   put revSBGetSettings(pTargetStack, true) into tSettings
    
    put revTestEnvironment() into tRunningTest
    

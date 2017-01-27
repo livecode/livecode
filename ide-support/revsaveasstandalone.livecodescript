@@ -77,18 +77,6 @@ end getWindowsMaxLength
 
 local sStubPath
 
-
--- Standalone settings are always set on the mainstack
-private function getSettings pStack
-   return the customProperties["cRevStandaloneSettings"] of stack \
-         (the mainstack of stack pStack)
-end getSettings
-
-private command setSettings pStack, pSettings
-   set the customProperties["cRevStandaloneSettings"] of stack \
-         (the mainstack of stack pStack) to pSettings
-end setSettings
-
 # OK-2009-05-22 : Added ability to remember default folder
 private function getBuildFolder pStack, pFolder, pSettings
    # If the standalone builder has been passed a folder to build in from outside, we just use this.
@@ -173,7 +161,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    local tSettings
-   put getSettings(pStack) into tSettings
+   put revSBGetSettings(pStack) into tSettings
    
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
    if tSettings["MacOSX"] then
@@ -230,7 +218,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
       revIDESetEdited pStack
-      setSettings pStack, tSettings
+      revSBSetSettings pStack, tSettings
    end if
    
    local tError
@@ -267,7 +255,7 @@ command revDoSaveAsStandalone pStack, pFolder
    
    put the directory into sResetA["Directory"]
    put the fileType into sResetA["FileType"]
-   put getSettings(pStack) into sStandaloneSettingsA
+   put revSBGetSettings(pStack) into sStandaloneSettingsA
    
    put the mainStack of stack pStack into pStack
    set the defaultStack to pStack
@@ -275,9 +263,6 @@ command revDoSaveAsStandalone pStack, pFolder
    revStandaloneResetWarnings
    
    local tError, tStandaloneFolder
-   
-   # Set empty values to defaults
-   revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
    
    -- Don't build for any platform we are not licensed for
    local tRemoved
