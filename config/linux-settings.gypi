@@ -71,6 +71,7 @@
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
 					'-Werror=uninitialized',
+					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',
 					'-Werror=empty-body',
 				],
