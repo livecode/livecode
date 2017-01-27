@@ -752,10 +752,13 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 
 	MCSocketHandle sock = socket(AF_INET, datagram ? SOCK_DGRAM : SOCK_STREAM, 0);
 
-	// HH-2017-01-26: [[ Bug 18454 ]] Set socket option to allow broadcast
-	int t_broadcast;
-	t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
-	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
+	// HH-2017-01-26: [[ Bug 18454 ]] Set the broadcast flagged base on property 'allowDatagramBroadcasts'
+	if(datagram)
+	{
+		int t_broadcast;
+		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
+		setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
+	}
 
 	if (!MCS_valid_socket(sock))
 	{
@@ -968,10 +971,6 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 {
 	if (s->datagram)
 	{
-		// MW-2012-11-13: [[ Bug 10516 ]] Set the 'broadcast' flag based on whether the
-		//   user has enabled broadcast addresses.
-		// HH-2017-01-26: [[ Bug 18454 ]] Move socket option setting to MCS_open_socket
-
         MCAutoPointer<char> temp_d;
         /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
 		if (s->shared)
