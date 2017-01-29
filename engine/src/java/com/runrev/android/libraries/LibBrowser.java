@@ -348,7 +348,7 @@ class LibBrowserWebView extends WebView
 
 	class JSInterface
 	{
-		//@JavascriptInterface
+		@JavascriptInterface
 		public void __invokeHandler(String p_handler, String p_json_args)
 		{
 			if (m_js_handler_list != null && m_js_handler_list.contains(p_handler))
@@ -368,7 +368,7 @@ class LibBrowserWebView extends WebView
 			}
 		}
 
-		//@JavascriptInterface
+		@JavascriptInterface
 		public void __storeExecuteJavaScriptResult(String p_tag, String p_result)
 		{
 			doJSExecutionResult(p_tag, p_result);
