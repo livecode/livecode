@@ -42,7 +42,7 @@ bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set) const
     MCAutoPointer<MCObjectPropertySet> t_new_set;
     if (!createwithname(*m_name, &t_new_set))
         return false;
-    if (!t_new_set->store(*m_props))
+    if (!t_new_set->store(fetch_nocopy()))
         return false;
     r_set = t_new_set.Release();
     return true;
