@@ -582,7 +582,6 @@ void MCControl::undo(Ustruct *us)
 		{
 			MCCard *card = (MCCard *)parent->getcard();
 			getstack()->appendcontrol(this);
-			this->MCObject::m_weak_proxy = new MCObjectProxyBase(this);
 			card->newcontrol(this, False);
 			Boolean oldrlg = MCrelayergrouped;
 			MCrelayergrouped = True;
