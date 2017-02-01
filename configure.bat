@@ -46,15 +46,6 @@ IF %ERRORLEVEL% NEQ 0 (
   SET python=python
 )
 
-REM Attempt to locate the QuickTime SDK
-IF EXIST "%programfiles(x86)%\QuickTime SDK\*" (
-  SET extra_options=%extra_options% -Dquicktime_sdk="%programfiles(x86)%/QuickTime SDK"
-) ELSE (
-  ECHO >&2 Error: could not locate the QuickTime SDK
-  PAUSE
-  EXIT 1
-)
-
 REM Attempt to locate the Microsoft Speech SDK v5.1
 IF EXIST "%programfiles(x86)%\Microsoft Speech SDK 5.1\*" (
   SET extra_options=%extra_options% -Dms_speech_sdk5="%programfiles(x86)%/Microsoft Speech SDK 5.1"
