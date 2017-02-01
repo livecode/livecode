@@ -11,6 +11,10 @@ sub trim
 
 my $inputFile = $ARGV[1];
 my $outputFile = $ARGV[2];
+my $exportDefOpt = $ARGV[3];
+
+my ($exportDefArg, $exportDefModule) = split(/=/, $exportDefOpt);
+my $isWindows = $exportDefArg eq "--exportdef";
 
 # Read all of the input data
 open INPUT, "<$inputFile"
@@ -28,6 +32,16 @@ if (defined $ARGV[0] and $ARGV[0] ne "")
 {
 	$prefix = $ARGV[0];
 }
+
+# Output header for windows
+if ($isWindows)
+{
+	print OUTPUT "LIBRARY $exportDefModule\n";
+	print OUTPUT "EXPORTS\n";
+}
+
+# Symbol index counter
+my $symbolIndex = 1;
 
 foreach my $line (@spec)
 {
@@ -69,5 +83,14 @@ foreach my $line (@spec)
 	$symbol =~ s/:$// ;
 	
 	# Write the symbol to the output
-	print OUTPUT "$prefix$symbol\n";
+	if ($isWindows)
+	{
+		print OUTPUT "    $prefix$symbol    \@$symbolIndex\n";
+	}
+	else
+	{
+		print OUTPUT "$prefix$symbol\n";
+	}
+
+	$symbolIndex += 1;
 }
