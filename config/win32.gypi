@@ -181,6 +181,12 @@
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
 				'Detect64BitPortabilityProblems': 'false',
+
+				# Silence abundent warnings to speed up build:
+				#   4577: exception handling mode mismatch
+				#   4800: performance warning about cast to bool
+				#   4244: possible loss of data due to int-like truncation
+				'DisableSpecificWarnings': '4577;4800;4244',
 			},
 			
 			'VCLibrarianTool':
