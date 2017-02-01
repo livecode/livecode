@@ -54,14 +54,6 @@ IF EXIST "%programfiles(x86)%\Microsoft Speech SDK 5.1\*" (
   SET warnings=1
 )
 
-REM Attempt to locate the Microsoft Speech SDK v4
-IF EXIST "%programfiles(x86)%\Microsoft Speech SDK\*" (
-  SET extra_options=%extra_options% -Dms_speech_sdk4="%programfiles(x86)%/Microsoft Speech SDK"
-) ELSE (
-  ECHO >&2 Warning: could not locate the Microsoft Speech SDK v4; revSpeech will not build
-  SET warnings=1
-)
-
 REM Pause so any warnings can be seen
 IF %warnings% NEQ 0 PAUSE
 

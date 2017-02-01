@@ -28,11 +28,9 @@
 			[
 				'src/osxspeech.h',
 				'src/revspeech.h',
-				'src/w32sapi4speech.h',
 				'src/w32sapi5speech.h',
 				'src/osxspeech.cpp',
 				'src/revspeech.cpp',
-				'src/w32sapi4speech.cpp',
 				'src/w32sapi5speech.cpp',
 				'src/w32speech.cpp',
 			],
@@ -66,11 +64,6 @@
 				[
 					'OS == "win"',
 					{
-						'include_dirs':
-						[
-							'<(ms_speech_sdk4)/Include',
-						],
-						
 						'libraries':
 						[
 							'-ladvapi32',
