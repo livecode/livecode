@@ -40,6 +40,8 @@ static NSLock *s_callback_lock = nil;
 //   moved by the windowserver.
 static MCPlatformWindowRef s_moving_window = nil;
 
+static NSWindow *s_pseudo_modal_for = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -52,56 +54,56 @@ enum
 
 @implementation com_runrev_livecode_MCApplication
 
--(id)init
+- (void)sendEvent:(NSEvent *)p_event
 {
-    self = [super init];
-    if (self)
-    {
-        m_pseudo_modal_for = nil;
+	if (!MCMacPlatformApplicationSendEvent(p_event))
+	{
+        [super sendEvent: p_event];
     }
-    
-    return self;
 }
 
-- (void)sendEvent:(NSEvent *)event
+@end
+
+bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
 {
-    if ([event type] == NSApplicationDefined &&
-        [event subtype] == kMCMacPlatformMouseSyncEvent)
+    if ([p_event type] == NSApplicationDefined &&
+        [p_event subtype] == kMCMacPlatformMouseSyncEvent)
+	{
         MCMacPlatformHandleMouseSync();
-    else
-    {
-        // MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
-        //   we intercept mouseDragged events so we can keep script informed.
-        NSWindow *t_window;
-        t_window = [event window];
-        if (s_moving_window != nil &&
-            [event window] == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
-        {
-            if ([event type] == NSLeftMouseDragged)
-                [t_window com_runrev_livecode_windowMoved: s_moving_window];
-            else if ([event type] == NSLeftMouseUp)
-                [self windowStoppedMoving: s_moving_window];
-        }
-        
-        [super sendEvent: event];
-    }
+		return true;
+	}
+
+	// MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
+	//   we intercept mouseDragged events so we can keep script informed.
+	NSWindow *t_window;
+	t_window = [p_event window];
+	if (s_moving_window != nil &&
+		t_window == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+	{
+		if ([p_event type] == NSLeftMouseDragged)
+			MCMacPlatformWindowWindowMoved(t_window, s_moving_window);
+		else if ([p_event type] == NSLeftMouseUp)
+			MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
+	}
+	
+	return false;
 }
 
-- (bool)windowIsMoving: (MCPlatformWindowRef)window
+bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window)
 {
-    return window == s_moving_window;
+    return p_window == s_moving_window;
 }
 
-- (void)windowStartedMoving: (MCPlatformWindowRef)window
+void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window)
 {
     if (s_moving_window != nil)
-        [self windowStoppedMoving: s_moving_window];
+        MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
     
-    MCPlatformRetainWindow(window);
-    s_moving_window = window;
+    MCPlatformRetainWindow(p_window);
+    s_moving_window = p_window;
 }
 
-- (void)windowStoppedMoving: (MCPlatformWindowRef)window
+void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window)
 {
     if (s_moving_window == nil)
         return;
@@ -114,25 +116,23 @@ enum
     s_moving_window = nil;
 }
 
-- (void)becomePseudoModalFor: (NSWindow*)window
+void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window)
 {
     // MERG-2016-03-04: ensure pseudo modals open above any calling modals
-    [window setLevel: kCGPopUpMenuWindowLevel];
-    m_pseudo_modal_for = window;
+    [p_window setLevel: kCGPopUpMenuWindowLevel];
+    s_pseudo_modal_for = p_window;
 }
 
-- (NSWindow*)pseudoModalFor
+NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 {
     // MERG-2016-03-04: ensure pseudo modals remain above any calling modals
     // If we need to check whether we're pseudo-modal, it means we're in a
     // situation where that window needs to be forced to the front
-    if (m_pseudo_modal_for != nil)
-        [m_pseudo_modal_for orderFrontRegardless];
+    if (s_pseudo_modal_for != nil)
+        [s_pseudo_modal_for orderFrontRegardless];
     
-    return m_pseudo_modal_for;
+    return s_pseudo_modal_for;
 }
-
-@end
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -393,7 +393,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NSTerminateCancel;
     
     // There is an NSApplicationTerminateReplyLater result code which will place
@@ -1984,8 +1984,8 @@ void MCMacPlatformShowMessageDialog(MCStringRef p_title,
 {
     NSAlert *t_alert = [[NSAlert alloc] init];
     [t_alert addButtonWithTitle:@"OK"];
-    [t_alert setMessageText: [NSString stringWithMCStringRef: p_title]];
-    [t_alert setInformativeText: [NSString stringWithMCStringRef: p_message]];
+    [t_alert setMessageText: MCStringConvertToAutoreleasedNSString(p_title)];
+    [t_alert setInformativeText: MCStringConvertToAutoreleasedNSString(p_message)];
     [t_alert setAlertStyle:NSInformationalAlertStyle];
     [t_alert runModal];
 }

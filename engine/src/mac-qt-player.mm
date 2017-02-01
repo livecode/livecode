@@ -492,9 +492,9 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     
     id t_filename_or_url;
     if (!p_is_url)
-        t_filename_or_url = [NSString stringWithMCStringRef: t_filename];
+        t_filename_or_url = MCStringConvertToAutoreleasedNSString(t_filename);
     else
-        t_filename_or_url = [NSURL URLWithString: [NSString stringWithMCStringRef: t_filename]];
+        t_filename_or_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(t_filename)];
     
 	NSDictionary *t_attrs;
     extern NSString **QTMovieFileNameAttribute_ptr;

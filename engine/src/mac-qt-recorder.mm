@@ -676,7 +676,7 @@ bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
             fclose(t_file);
         
         NSString *t_capture_path;
-        t_capture_path = [NSString stringWithMCStringRef:m_temp_file];
+        t_capture_path = MCStringConvertToAutoreleasedNSString(m_temp_file);
         
         Handle t_data_ref = nil;
         OSType t_data_ref_type = 0;

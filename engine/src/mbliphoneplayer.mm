@@ -270,13 +270,13 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 	t_url = nil;
     
 	if (MCStringBeginsWith(p_file, MCSTR("http://"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("https://"), kMCCompareExact))
-		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_file ]];
+		t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_file )];
 	else if (!MCStringIsEmpty(p_file))
 	{
 		MCAutoStringRef t_path;
 		
         MCS_resolvepath(p_file, &t_path);
-		t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_path ]];
+		t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(*t_path )];
 	}
 	else
 		t_url = [NSURL URLWithString: @""];

@@ -1007,7 +1007,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                     MCAutoStringRef t_string;
                     if (!ctxt . ConvertToString(t_prop_value, &t_string))
                         continue;
-					t_value = [NSString stringWithMCStringRef: *t_string];
+					t_value = MCStringConvertToAutoreleasedNSString(*t_string);
                 }
 					break;
 				case kRCDPropTypeImage:
@@ -1021,7 +1021,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                         MCImageDataIsGIF(*t_data) ||
                         MCImageDataIsPNG(*t_data))
                     {
-                        t_image = [[UIImage alloc] initWithData: [NSData dataWithMCDataRef : *t_data]];
+                        t_image = [[UIImage alloc] initWithData: MCDataConvertToAutoreleasedNSData(*t_data)];
                     }
                     else
                     {
@@ -1032,7 +1032,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                         if (MCS_exists(*t_string, true))
                         {
                             /* UNCHECKED */ MCS_resolvepath(*t_string, &t_resolved);
-                            t_image = [[UIImage alloc] initWithContentsOfFile: [NSString stringWithMCStringRef: *t_resolved]];
+                            t_image = [[UIImage alloc] initWithContentsOfFile: MCStringConvertToAutoreleasedNSString(*t_resolved)];
                         }
                     }
                     

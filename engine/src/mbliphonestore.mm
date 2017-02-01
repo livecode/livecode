@@ -123,7 +123,7 @@ bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_co
 		if (t_success)
         {
 			t_ios_data->product_id = MCValueRetain(p_product_id);
-			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: [NSString stringWithMCStringRef:t_ios_data->product_id]]);
+			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: MCStringConvertToAutoreleasedNSString(t_ios_data->product_id)]);
 		}
 		if (t_success)
 		{
@@ -739,7 +739,7 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithMCStringRef: p_product_id];
+    t_product_id = MCStringConvertToAutoreleasedNSString(p_product_id);
     t_request = [[com_runrev_livecode_MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[com_runrev_livecode_MCProductsRequestDelegate alloc] init]];
