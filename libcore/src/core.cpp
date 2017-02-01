@@ -62,18 +62,11 @@ bool MCThrow(uint32_t p_error)
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 
+#include <windows.h>
 #include <crtdbg.h>
 #include <dbghelp.h>
 
-extern "C"
-_CRTIMP int __cdecl _VCrtDbgReportA(
-        int nRptType,
-        const char * szFile,
-        int nLine,
-        const char * szModule,
-        const char * szFormat,
-        va_list arglist
-        );
+extern "C" USHORT WINAPI RtlCaptureStackBackTrace(ULONG, ULONG, PVOID*, PULONG);
 
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 {
