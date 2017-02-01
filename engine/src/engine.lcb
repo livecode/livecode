@@ -31,6 +31,8 @@ Description:
 Use the <ResolveScriptObject|resolve script object>, or <MyScriptObject|my script object> to obtain an object of type <ScriptObject>
 
 References: ResolveScriptObject(statement), MyScriptObject(expression)
+
+Tags: Script Engine
 */
 
 module com.livecode.engine
@@ -90,6 +92,8 @@ Use the <ResolveScriptObject|resolve script object> statement to obtain a <Scrip
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 
 syntax ResolveScriptObject is statement
@@ -118,6 +122,8 @@ Description:
 Use to test the existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject | resolve script object>
 
 References: ResolveScriptObject(statement)
+
+Tags: Script Engine
 */
 
 syntax ScriptObjectExists is postfix operator with comparison precedence
@@ -144,6 +150,8 @@ Description:
 Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject|resolve script object>
 
 References: ResolveScriptObject(statement)
+
+Tags: Script Engine
 */
 
 syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
@@ -175,6 +183,8 @@ Use to manipulate properties of a script object.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 
 syntax PropertyOfScriptObject is prefix operator with property precedence
@@ -204,6 +214,8 @@ Description:
 	Use to get the script object that contains a script object.
 
 >*Note:* An error is thrown if the script object does not exist.
+
+Tags: Script Engine
 */
 
 syntax OwnerOfScriptObject is prefix operator with property precedence
@@ -235,6 +247,8 @@ Description:
 	Use to get the script objects contained within a script object.
 
 >*Note:* An error is thrown if the script object does not exist.
+
+Tags: Script Engine
 */
 
 syntax ChildrenOfScriptObject is prefix operator with property precedence
@@ -276,6 +290,8 @@ message passed through the message path untouched.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 syntax SendToScriptObject is statement
     "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
@@ -300,6 +316,8 @@ Description:
 Post a message to the given script object and returns immediately. Posting a message
 will cause the message to be sent at the next wait point (usually when the current
 event has finished being handled).
+
+Tags: Script Engine
 */
 syntax PostToScriptObject is statement
     "post" <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
@@ -322,6 +340,8 @@ Example:
 
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
+
+Tags: Script Engine
 */
 
 syntax MessageWasHandled is expression
@@ -343,6 +363,8 @@ Example:
 
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
+
+Tags: Script Engine
 */
 
 syntax MessageWasNotHandled is expression
@@ -370,6 +392,8 @@ Executes the given piece of LiveCode script in the context of the current script
 object.
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 
 syntax ExecuteScript is statement
@@ -402,6 +426,7 @@ on logChanged pLog
 end logChanged
 ```
 
+Tags: Script Engine
 */
 
 syntax Log is statement
@@ -426,6 +451,8 @@ Fetches the calling (script) handler's `columnDelimiter` property, or horizontal
 tab (U+0009) if no script context is available.
 
 Related: TheRowDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
+
+Tags: Script Engine
 */
 syntax TheColumnDelimiter is expression
     "the" "column" "delimiter"
@@ -448,6 +475,8 @@ Fetches the calling (script) handler's `rowDelimiter` property, or linefeed
 (U+000A) if no script context is available.
 
 Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
+
+Tags: Script Engine
 */
 syntax TheRowDelimiter is expression
     "the" "row" "delimiter"
@@ -470,6 +499,8 @@ Fetches the calling (script) handler's `lineDelimiter` property, or linefeed
 (U+000A) if no script context is available.
 
 Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheRowDelimiter (expression)
+
+Tags: Script Engine
 */
 syntax TheLineDelimiter is expression
     "the" "line" "delimiter"
@@ -492,6 +523,8 @@ Fetches the calling (script) handler's `itemDelimiter` property, or the comma
 char if no script context is available.
 
 Related: TheColumnDelimiter (expression), TheLineDelimiter (expression), TheRowDelimiter (expression)
+
+Tags: Script Engine
 */
 syntax TheItemDelimiter is expression
     "the" "item" "delimiter"
