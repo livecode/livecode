@@ -28,17 +28,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 template<typename T> class MCAutoValueRefBase;
 
-template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T In(const MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . In();
 }
 
-template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T& Out(MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . Out();
 }
 
-template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T& InOut(MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . InOut();
 }
@@ -139,20 +142,20 @@ protected:
 	T m_value;
     
     // Return the contents of the auto pointer in a form for an in parameter.
-    inline T In(void) const
+    T In(void) const
     {
         return m_value;
     }
     
     // Return the contents of the auto pointer in a form for an out parameter.
-    inline T& Out(void)
+    T& Out(void)
     {
 		MCAssert(m_value == nil);
 		return m_value;
     }
     
     // Return the contents of the auto pointer in a form for an inout parameter.
-    inline T& InOut(void)
+    T& InOut(void)
     {
         return m_value;
     }
