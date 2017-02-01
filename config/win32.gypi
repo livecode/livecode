@@ -44,8 +44,6 @@
 					
 					'VCLinkerTool':
 					{
-						'AdditionalOptions': '/NODEFAULTLIB:LIBCMT',
-						'LinkIncremental': '2',
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
 						'EnableCOMDATFolding': '2',
@@ -185,10 +183,23 @@
 				'Detect64BitPortabilityProblems': 'false',
 			},
 			
+			'VCLibrarianTool':
+			{
+				'AdditionalOptions':
+				[
+					'/MACHINE:<(target_arch)',
+				],
+			},
+
 			'VCLinkerTool':
 			{
 				'SubSystem': '2',
 				'RandomizedBaseAddress': '1',	# /DYNAMICBASE:NO - disable ASLR
+				'ImageHasSafeExceptionHandlers': 'false',
+				'AdditionalOptions':
+				[
+					'/MACHINE:<(target_arch)',
+				],
 			},
 		},
 	},

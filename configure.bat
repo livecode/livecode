@@ -12,6 +12,16 @@ IF NOT DEFINED programfiles(x86) SET programfiles(x86)=%programfiles%
 REM When calling configure.bat from the command line, BUILD_EDITION is not defined
 IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION="community"
 
+REM Target architecture currently defaults to 32-bit x86
+IF NOT DEFINED ARCH SET ARCH=x86
+
+REM The internal MSVC/Gyp name for x86_64 is x64
+IF %ARCH%==x86_64 (
+  SET MSVC_ARCH=x64
+) ELSE (
+  SET MSVC_ARCH=%ARCH%
+)
+
 REM Note: to test whether a directory exists in batch script, you need to check
 REM whether a file within that directory exists. Easiest way to do this is to
 REM add the "*" wildcard after the directory
@@ -63,8 +73,7 @@ IF /I %BUILD_EDITION% == commercial (
 )
 
 REM Run the configure step
-%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-x86/livecode -Gmsvs_version=2010 %extra_options% %gypfile%
-PAUSE
+%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-%ARCH%/livecode -Dtarget_arch=%MSVC_ARCH% -Gmsvs_version=2015 %extra_options% %gypfile%
 
 REM Pause if there was an error so that the user gets a chance to see it
 IF %ERRORLEVEL% NEQ 0 PAUSE
