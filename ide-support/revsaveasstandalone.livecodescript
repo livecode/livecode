@@ -224,7 +224,8 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    local tError
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
-      revDoSaveAsStandalone pStack, pFolder
+      local tStandalonePaths
+      revDoSaveAsStandalone pStack, pFolder, ,tStandalonePaths
       put the result into tError
    end if
    
@@ -243,7 +244,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    return tError
 end revSaveAsStandalone
 
-command revDoSaveAsStandalone pStack, pFolder
+command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
    lock cursor
@@ -255,7 +256,12 @@ command revDoSaveAsStandalone pStack, pFolder
    
    put the directory into sResetA["Directory"]
    put the fileType into sResetA["FileType"]
-   put revSBGetSettings(pStack) into sStandaloneSettingsA
+   
+   if pSettings is not an array then
+      put revSBGetSettings(pStack) into sStandaloneSettingsA
+   else
+      put pSettings into sStandaloneSettingsA
+   end if
    
    put the mainStack of stack pStack into pStack
    set the defaultStack to pStack
@@ -346,25 +352,28 @@ command revDoSaveAsStandalone pStack, pFolder
                if not (the platform begins with "MacOS") then
                   next repeat
                end if
+               put tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app" into xStandalonePaths[tPlatform]
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device", sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], "Device", sStandaloneSettingsA
                break
             case "Android"
+               put tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk" into xStandalonePaths[tPlatform]
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build", sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], "Build", sStandaloneSettingsA, xStandalonePaths
                break
             case "Emscripten"
+               put tTargetFolder into xStandalonePaths[tPlatform]
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tTargetFolder, sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], sStandaloneSettingsA, xStandalonePaths
                break
             case "MacOSX"
-               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
             case "Windows"
-               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
             case "Linux"
-               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
          end switch
       end repeat
@@ -607,7 +616,7 @@ private command __SendStandaloneSavedMessage pStack, pFolder
    end try
 end __SendStandaloneSavedMessage
 
-command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
@@ -673,6 +682,9 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
       end if
       
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
+      
       put tDirectory & tStackName into tStackSourceFile
       
       revStandaloneCopyInclusions pStack, tStackFileList, tStackSourceFile, \ 
@@ -708,7 +720,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
    return empty
 end revSaveAsMacStandalone
 
-command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -774,6 +786,8 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
       -- add ".exe" to windows standalone file
       put ".exe" after tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
       
       put tDirectory & tStackName into tStackSourceFile
       
@@ -877,7 +891,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
    return empty
 end revSaveAsWindowsStandalone
 
-command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -917,6 +931,9 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
       end if
       
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
+      
       put tDirectory & tStackName into tStackSourceFile
       
       revStandaloneCopyInclusions pStack, tStackFileList, tStackSourceFile, \ 
