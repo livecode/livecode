@@ -165,6 +165,11 @@
 						{
 							'WarningLevel': '0',
 						},
+
+						'MASM':
+						{
+							'WarningLevel': '0',
+						}
 					},
 				},
 			],
