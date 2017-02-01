@@ -17,9 +17,26 @@
 
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'conditions':
 				[
-					'include',
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 		},
@@ -34,9 +51,26 @@
 
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'conditions':
 				[
-					'include',
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 
@@ -104,7 +138,7 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

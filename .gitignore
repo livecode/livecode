@@ -121,6 +121,7 @@ prebuilt/lib
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
+prebuilt/unpacked
 
 # Stamp files and generated C files
 ###################################
