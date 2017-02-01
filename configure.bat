@@ -36,7 +36,7 @@ IF %ERRORLEVEL% NEQ 0 (
   ) ELSE (
     ECHO >&2 Error: could not locate a copy of perl
     PAUSE
-    EXIT 1
+    EXIT /B 1
   )
 )
 
@@ -50,7 +50,7 @@ IF %ERRORLEVEL% NEQ 0 (
   ) ELSE (
     ECHO >&2 Error: could not locate a copy of python
     PAUSE
-    EXIT 1
+    EXIT /B 1
   )
 ) ELSE (
   SET python=python
@@ -77,4 +77,4 @@ REM Run the configure step
 
 REM Pause if there was an error so that the user gets a chance to see it
 IF %ERRORLEVEL% NEQ 0 PAUSE
-EXIT %ERRORLEVEL%
+EXIT /B %ERRORLEVEL%
