@@ -189,7 +189,7 @@ bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 	t_page_format = NULL;
 	if (t_success)
 	{
-        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_settings_data.getstring(), t_settings_data.getlength());
+        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_page_format_data.getstring(), t_page_format_data.getlength());
         if (t_data == nil || noErr != PMPageFormatCreateWithDataRepresentation(t_data, &t_page_format))
             t_success = false;
         CFRelease(t_data);
