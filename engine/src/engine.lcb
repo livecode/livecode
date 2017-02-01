@@ -412,14 +412,20 @@ begin
 end syntax
 
 /**
-Summary: 	Fetches the 'columnDelimiter' property from script context
+Summary: 	Fetches the `columnDelimiter` property from script context
 
 Example:
-	split tString by the column delimiter
+   -- Split a string into a list using the column delimiter
+   variable tItems
+   put "alice\tbob\teve" into tItems
+   split tItems by the column delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
 
 Description:
-Fetches the calling (script) handler's columnDelimiter property. If there is no
-script context, then it returns tab.
+Fetches the calling (script) handler's `columnDelimiter` property, or horizontal
+tab (U+0009) if no script context is available.
+
+Related: TheRowDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
 */
 syntax TheColumnDelimiter is expression
     "the" "column" "delimiter"
@@ -428,14 +434,20 @@ begin
 end syntax
 
 /**
-Summary: 	Fetches the 'rowDelimiter' property from script context
+Summary: 	Fetches the `rowDelimiter` property from script context
 
 Example:
-	split tString by the row delimiter
+  -- Split a string into a list using the row delimiter
+   variable tItems
+   put "alice\nbob\neve" into tItems
+   split tItems by the row delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
 
 Description:
-Fetches the calling (script) handler's rowDelimiter property. If there is no
-script context, then it returns lf.
+Fetches the calling (script) handler's `rowDelimiter` property, or linefeed
+(U+000A) if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
 */
 syntax TheRowDelimiter is expression
     "the" "row" "delimiter"
@@ -444,14 +456,20 @@ begin
 end syntax
 
 /**
-Summary: 	Fetches the 'lineDelimiter' property from script context
+Summary: 	Fetches the `lineDelimiter` property from script context
 
 Example:
-	split tString by the line delimiter
+  -- Split a string into a list using the line delimiter
+   variable tItems
+   put "alice\nbob\neve" into tItems
+   split tItems by the line delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
 
 Description:
-Fetches the calling (script) handler's lineDelimiter property. If there is no
-script context, then it returns lf.
+Fetches the calling (script) handler's `lineDelimiter` property, or linefeed
+(U+000A) if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheRowDelimiter (expression)
 */
 syntax TheLineDelimiter is expression
     "the" "line" "delimiter"
@@ -460,14 +478,20 @@ begin
 end syntax
 
 /**
-Summary: 	Fetches the 'itemDelimiter' property from script context
+Summary: 	Fetches the `itemDelimiter` property from script context
 
 Example:
-	split tString by the item delimiter
+  -- Split a string into a list using the item delimiter
+   variable tItems
+   put "alice,bob,eve" into tItems
+   split tItems by the item delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
 
 Description:
-Fetches the calling (script) handler's itemDelimiter property. If there is no
-script context, then it returns comma.
+Fetches the calling (script) handler's `itemDelimiter` property, or the comma
+char if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheLineDelimiter (expression), TheRowDelimiter (expression)
 */
 syntax TheItemDelimiter is expression
     "the" "item" "delimiter"
