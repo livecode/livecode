@@ -183,6 +183,10 @@
 							'<(javahome)/include',
 							'<(javahome)/include/darwin',
 						],
+						'sources':
+						[
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
+						],
 					},
 				],
 				[
@@ -212,11 +216,6 @@
 							'<(javahome)/include',
 							'<(javahome)/include/linux',
 						],
-					},
-				],
-				[
-					'OS == "linux" or OS == "mac"',
-					{
 						'sources':
 						[
 							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
