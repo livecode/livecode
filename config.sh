@@ -274,7 +274,7 @@ WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 
 # Android default settings and tools
 if test "${OS}" = "android" ; then
-    ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
+    ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r13b}
     ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
 
     # Attempt to locate an Android NDK

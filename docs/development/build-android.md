@@ -2,7 +2,7 @@
 
 ![LiveCode Community Logo](http://livecode.com/wp-content/uploads/2015/02/livecode-logo.png)
 
-Copyright © 2015 LiveCode Ltd., Edinburgh, UK
+Copyright © 2015-2017 LiveCode Ltd., Edinburgh, UK
 
 ## Dependencies
 
@@ -14,37 +14,40 @@ The main non-standard dependency needed for building LiveCode is a Java Developm
 
 ### Installing the Android SDK and NDK
 
-LiveCode requires both the Android Software Development Kit (SDK) and Native Development Kit (NDK).  You can download both from the [Android Developers site](https://developer.android.com/sdk/index.html).
+LiveCode requires both the Android Software Development Kit (SDK) and Native Development Kit (NDK).  You can download both from the [Android Developers site](https://developer.android.com/sdk/index.html). Note that recent versions of the Android SDK are now named "Android Studio command line tools".
 
 Extract both the NDK and SDK to a suitable directory, e.g. `~/android/toolchain`.  For example, you would run:
 
 ````bash
 mkdir -p ~/android/toolchain
 cd ~/android/toolchain
+unzip ~/Downloads/android-ndk-r13b-linux-x86_64.zip
 
-tar -xf ~/Downloads/android-sdk_r24.1.2-linux.tgz
-7z x ~/Downloads/android-ndk-r10e-linux-x86_64.bin
+mkdir android-sdk-linux
+cd android-sdk-linux
+unzip ~/Downloads/tools_r25.2.3-linux.zip
+cd ..
 ````
 
-Update the SDK:
+Install the Android-17 platform and a known-working build tools version:
 
-    android-sdk-linux/tools/android update sdk --no-ui
+    android-sdk-linux/tools/bin/sdkmanager 'platforms;android-17' 'build-tools;23.0.3'
 
 ### Setting up the ARM toolchain
 
 Create a standalone toolchain (this simplifies setting up the build environment):
 
 ````bash
-android-ndk-r10e/build/tools/make-standalone-toolchain.sh \
-    --toolchain=arm-linux-androideabi-clang3.5 \
-    --platform=android-10 \
+android-ndk-r13b/build/tools/make-standalone-toolchain.sh \
+    --toolchain=arm-linux-androideabi-clang3.8 \
+    --platform=android-17 \
     --install-dir=${HOME}/android/toolchain/standalone
 ````
 
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
 
 ````bash
-ln -s android-ndk-r10e android-ndk
+ln -s android-ndk-r13b android-ndk
 ln -s android-sdk-linux android-sdk
 ````
 
@@ -75,11 +78,11 @@ LINK="${BINDIR}/${TRIPLE}-clang ${COMMON_FLAGS} -fuse-ld=bfd"
 AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
-ANDROID_NDK_VERSION=r10e
-ANDROID_PLATFORM=android-10
-ANDROID_NDK=${TOOLCHAIN}/android-ndk-r10e
+ANDROID_NDK_VERSION=r13b
+ANDROID_PLATFORM=android-17
+ANDROID_NDK=${TOOLCHAIN}/android-ndk-r13b
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
-ANDROID_BUILD_TOOLS=23.0.1
+ANDROID_BUILD_TOOLS=23.0.3
 
 export JAVA_SDK
 export CC CXX LINK AR
