@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 extern "C" {
 
 #include <system-commandline.h>
+#include <system-dylib.h>
 #include <system-file.h>
 #include <system-init.h>
 #include <system-random.h>
