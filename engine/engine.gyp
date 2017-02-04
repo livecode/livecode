@@ -362,7 +362,7 @@
 						'product_prefix': '',
 						'product_extension': '',
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
-						'type': 'shared_library',
+						'type': 'loadable_module',		# Shared library imples --whole-archive
 						
 						'sources':
 						[

@@ -626,11 +626,11 @@ gobject libgobject-2.0.so.0
 	g_free: (pointer) -> ()
 	g_object_ref: (pointer) -> (pointer)
 	g_object_unref: (pointer) -> ()
-	g_type_class_peek: (integer) -> (pointer)
-	g_type_class_ref: (integer) -> (pointer)
+	g_type_class_peek: (pointer) -> (pointer)
+	g_type_class_ref: (pointer) -> (pointer)
 	g_type_class_unref: (pointer) -> ()
-	g_type_check_instance_cast: (pointer, integer) -> (pointer)
-	g_type_check_instance_is_a: (pointer, integer) -> (integer)
+	g_type_check_instance_cast: (pointer, pointer) -> (pointer)
+	g_type_check_instance_is_a: (pointer, pointer) -> (integer)
 	g_type_init: () -> ()
 	@ g_object_get
 	g_object_get_valist: (pointer, pointer, pointer) -> ()
@@ -661,11 +661,3 @@ esd libesd.so.0
 	esd_play_stream: (integer, integer, pointer, pointer) -> (integer)
 	esd_open_sound: (pointer) -> (integer)
 
-fontconfig libfontconfig.so.1
-	FcInit: () -> (integer)
-	FcInitLoadConfigAndFonts: () -> (pointer)
-	FcConfigAppFontAddFile: (pointer, pointer) -> (integer)
-	FcConfigAppFontClear: (pointer) -> ()
-	FcConfigBuildFonts: (pointer) -> (integer)
-	FcConfigSetCurrent: (pointer) -> (integer)
-    

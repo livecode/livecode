@@ -404,6 +404,7 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 	switch (p_function)
 	{
 		case GXblendClear:
+        case GXclear:
 			t_blend_mode = kMCGBlendModeClear;
 			break;
 		case GXblendSrcOver:
@@ -432,6 +433,7 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			t_blend_mode = kMCGBlendModeDestinationAtop;
 			break;
 		case GXblendXor:
+        case GXxor:
 			t_blend_mode = kMCGBlendModeXor;
 			break;
 		case GXblendPlus:
@@ -469,11 +471,10 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			break;
 		case GXblendExclusion:
 			t_blend_mode = kMCGBlendModeExclusion;
-			break;		
-			
-		case GXclear:
-			t_blend_mode = kMCGBlendModeLegacyClear;
 			break;
+			
+        // Legacy blend modes with no equivalent in Skia
+            
 		case GXand:
 			t_blend_mode = kMCGBlendModeLegacyAnd;
 			break;
@@ -485,9 +486,6 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			break;
 		case GXnoop:
 			t_blend_mode = kMCGBlendModeLegacyNoop;
-			break;
-		case GXxor:
-			t_blend_mode = kMCGBlendModeLegacyXor;
 			break;
 		case GXor:
 			t_blend_mode = kMCGBlendModeLegacyOr;
