@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <Windows.h>
+
 #include "graphics.h"
 #include "graphics-internal.h"
 
@@ -249,25 +251,24 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 		t_paint . setStyle(SkPaint::kFill_Style);	
 		t_paint . setAntiAlias(p_context -> state -> should_antialias);
+
+		t_paint.setBlendMode(MCGBlendModeToSkBlendMode(p_context->state->blend_mode));		
 		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(p_context -> state -> blend_mode);
-		t_paint . setXfermode(t_blend_mode);
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();		
-		
-		t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_bounds . width, p_bounds . height);
-        t_bitmap . setAlphaType(kPremul_SkAlphaType);
+		t_bitmap . setInfo(SkImageInfo::MakeN32Premul(p_bounds.width, p_bounds.height));
 		t_bitmap . setPixels(t_rgb_data);
 
 		SetBkMode(p_gdicontext, TRANSPARENT);
 	}
 
+	// We want all drawing to ignore the transform matrix within this function
+	p_context->layer->canvas->save();
+	p_context->layer->canvas->resetMatrix();
+
 	// Now process depending on the first pixel - if transparent, then first process
 	// transparency then process opacity; otherwise vice-versa.
 	if (t_success)
 	{
-		if ((*t_context_pxls >> 24) != 0xff)
+		if (true || (*t_context_pxls >> 24) != 0xff)
 		{
 			// Render the text for the transparent pixels (white/black text on black/white background).
 			w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, p_rtl);
@@ -280,7 +281,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 			// Blend the bitmap into the background (we definitely have transparent pixels).
 			t_bitmap . setAlphaType(kPremul_SkAlphaType);	
-			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+			p_context -> layer -> canvas -> drawBitmap(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 
 			// If there are any opaque pixels, process those.
 			if (t_has_opaque)
