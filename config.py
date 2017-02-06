@@ -98,7 +98,7 @@ def exec_gyp(args):
 def process_env_options(opts):
     vars = ('OS', 'PLATFORM', 'GENERATOR_OUTPUT', 'FORMATS', 'DEPTH',
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
-        'TARGET_ARCH', 'WIN_PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
+        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
         'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION')
@@ -145,6 +145,7 @@ def process_arg_options(opts, args):
             '-Dtarget_sdk': 'XCODE_TARGET_SDK',
             '-Dtarget_arch': 'TARGET_ARCH',
             '-DOS': 'OS',
+            '-Dperl': 'PERL',
             '-Gmsvs_version': 'WIN_MSVS_VERSION',
             '-Gandroid_ndk_version': 'ANDROID_NDK_VERSION',
         }
@@ -273,9 +274,22 @@ def validate_java_tools(opts):
 # Windows-specific options
 ################################################################
 
+def guess_windows_perl():
+    # Check the PATH first
+    if (any(os.access(os.path.join(p, 'perl.exe'), os.X_OK)
+            for p in os.environ['PATH'].split(os.pathsep))):
+        return 'perl.exe'
+
+    for p in ('C:\\perl64\\bin', 'C:\\perl\\bin'):
+        perl = os.path.join(p, 'perl.exe')
+        if os.access(perl, os.X_OK):
+            return perl
+
+    error('Perl not found; set $PERL')
+
 def validate_windows_tools(opts):
-    if opts['WIN_PERL'] is None:
-        opts['WIN_PERL'] = 'C:\\perl\\bin\\perl.exe'
+    if opts['PERL'] is None:
+        opts['PERL'] = guess_windows_perl()
 
     if opts['WIN_MSVS_VERSION'] is None:
         opts['WIN_MSVS_VERSION'] = '2010'
@@ -398,6 +412,9 @@ def core_gyp_args(opts):
              '--generator-output', opts['GENERATOR_OUTPUT'],
              '-DOS=' + opts['OS']]
 
+    if opts['PERL'] is not None:
+        args.append('-Dperl=' + opts['PERL'])
+
     if opts['BUILD_EDITION'] == 'commercial':
         args.append(os.path.join('..', 'livecode-commercial.gyp'))
 
@@ -438,9 +455,11 @@ def configure_android(opts):
 def configure_win(opts):
     validate_windows_tools(opts)
 
-    args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION'],
-                                  '-Dunix_configure=1',
-                                  '-Dperl=' + opts['WIN_PERL']]
+    args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
+
+    if platform.system() != 'Windows':
+        args.append('-Dunix_configure=1')
+
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_mac(opts):
