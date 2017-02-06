@@ -119,7 +119,15 @@ uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
 
 	if (t_file == NULL)
 		return 0;
-	
+
+    /* If the file was newly-created, link it into the MCServerScript
+     * instance's list of files so that it doesn't get leaked. */
+    /* TODO[2017-02-06] This is fragile; FindFile() should be
+     * refactored so that it's not necessary to guess whether the
+     * caller owns the returned pointer or not. */
+    if (t_file->next == m_files)
+        m_files = t_file;
+
 	return t_file -> index;
 }
 
