@@ -782,6 +782,46 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCExecContext *MCECptr;
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheColumnDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetColumnDelimiter() : MCSTR("\t");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheRowDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetRowDelimiter() : MCSTR("\n");
+    
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheLineDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetLineDelimiter() : MCSTR("\n");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheItemDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetItemDelimiter() : MCSTR(",");
+    
+    r_del = MCValueRetain(t_del);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
 
