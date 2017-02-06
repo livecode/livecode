@@ -1113,6 +1113,10 @@ template<typename T> bool MCMemoryReallocate(T *p_block, size_t p_new_size, T*& 
 	return false;
 }
 
+template<typename T> void MCMemoryDeallocate(T* p_block) {
+    MCMemoryDeallocate (static_cast<void*>(p_block));
+}
+
 extern "C" {
     
 ////////////////////////////////////////////////////////////////////////////////
