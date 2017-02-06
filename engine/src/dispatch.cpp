@@ -563,15 +563,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
-		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+		        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return checkloadstat(IO_ERROR);
 		}
-		delete newsf; // stackfiles is obsolete
 		MCtranslatechars = charset != CHARSET;
 		sptr = nil;
 		/* UNCHECKED */ MCStackSecurityCreateStack(sptr);
@@ -586,12 +584,8 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
 			//   legacy.
-			char *lstring = NULL;
-			char *cstring = NULL;
-			IO_read_cstring_legacy(lstring, stream, 2);
-			IO_read_cstring_legacy(cstring, stream, 2);
-			delete lstring;
-			delete cstring;
+			IO_discard_cstring_legacy(stream, 2);
+			IO_discard_cstring_legacy(stream, 2);
 		}
 
 		MCresult -> clear();
