@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "stack.h"
 #include "cmds.h"
+#include "variable.h"
 
 
 #include "system.h"
