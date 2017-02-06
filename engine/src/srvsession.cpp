@@ -336,12 +336,18 @@ bool MCSessionReadSession(MCSession *p_session)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCAutoStringRef
+MCSessionGetRemoteAddress()
+{
+    MCAutoStringRef t_remote_addr;
+    if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr))
+        t_remote_addr = kMCEmptyString;
+    return t_remote_addr;
+}
+
 bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
-	MCAutoStringRef t_remote_addr;
-
-	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr))
-        t_remote_addr.Reset(kMCEmptyString);
+    MCAutoStringRef t_remote_addr = MCSessionGetRemoteAddress();
 
 	for (uint32_t i = 0; i < p_index->session_count; i++)
 	{
