@@ -455,13 +455,12 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
 	uint32_t version;
 	uint1 charset, type;
-	char *newsf;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+	        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -469,7 +468,6 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	s_loaded_parent_script_reference = false;
 
 	MCtranslatechars = charset != CHARSET;
-	delete newsf; // stackfiles is obsolete
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
