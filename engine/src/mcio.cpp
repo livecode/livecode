@@ -473,6 +473,15 @@ IO_stat IO_read_cstring_legacy(char *&r_string, IO_handle stream, uint1 size)
 	return IO_read_string_legacy_full(r_string, t_length, stream, size, true, true);
 }
 
+IO_stat IO_discard_cstring_legacy(IO_handle stream, uint1 size)
+{
+    /* TODO[2017-02-06] Refactor so that this doesn't allocate any
+     * memory, rather than inefficiently allocating a buffer and then
+     * immediately freeing it. */
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_discarded;
+	return IO_read_cstring_legacy(&t_discarded, stream, size);
+}
+
 #if 0
 IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream,
                        bool isunicode, uint1 size)
