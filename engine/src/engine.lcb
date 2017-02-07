@@ -404,13 +404,17 @@ Example:
 	end handler
 
 Description:
-Executes the given piece of LiveCode script in the context of the target script
-object, or the current script object if none is specified. The list of arguments
-is accessible from the script fragment using the paramCount() and param()
-functions.
+Executes the given fragment of LiveCode script in the context of the target
+script object, or `this card of the defaultStack` if none is specified. The list
+of arguments is accessible from the script fragment using the `paramCount()` and
+`param()` functions.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+>*Note:* The `execute script` command is subject to Anomaly 19137. It is
+recommended to always use targetted forms of the command, as the default target
+might change in a future release.
 
 Tags: Script Engine
 */
