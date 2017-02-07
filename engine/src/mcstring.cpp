@@ -341,6 +341,7 @@ MCNameRef MCN_titled;
 MCNameRef MCN_warning;
 
 MCNameRef MCN_messagename;
+MCNameRef MCM_msgchanged;
 MCNameRef MCN_hcstat;
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
@@ -813,6 +814,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("warning", MCN_warning);
 
 	/* UNCHECKED */ MCNameCreateWithCString("Message Box", MCN_messagename);
+	/* UNCHECKED */ MCNameCreateWithCString("msgchanged", MCM_msgchanged);
 	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
@@ -1279,7 +1281,8 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_warning);
 	
 	MCNameDelete(MCN_messagename);
-    MCNameDelete(MCN_hcstat);
+	MCNameDelete(MCM_msgchanged);
+	MCNameDelete(MCN_hcstat);
     
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);

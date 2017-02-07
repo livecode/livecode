@@ -1217,6 +1217,8 @@ LT factor_table[] =
         {"menuobject", TT_FUNCTION, F_MENU_OBJECT},
         {"menus", TT_FUNCTION, F_MENUS},
         {"merge", TT_FUNCTION, F_MERGE},
+		{"messageboxlastobject", TT_PROPERTY, P_MESSAGE_BOX_LAST_OBJECT},
+		{"messageboxredirect", TT_PROPERTY, P_MESSAGE_BOX_REDIRECT},
         {"messagemessages", TT_PROPERTY, P_MESSAGE_MESSAGES},
 		{"metadata", TT_PROPERTY, P_METADATA},
         {"metal", TT_PROPERTY, P_METAL},
@@ -1465,8 +1467,6 @@ LT factor_table[] =
 #ifdef MODE_DEVELOPMENT
 		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
-		{"revmessageboxlastobject", TT_PROPERTY, P_REV_MESSAGE_BOX_LAST_OBJECT},
-		{"revmessageboxredirect", TT_PROPERTY, P_REV_MESSAGE_BOX_REDIRECT},
 #ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-09-05: [[ Property Listener ]] Returns the list of all active object property listeners
 		{"revobjectlisteners", TT_PROPERTY, P_REV_OBJECT_LISTENERS},

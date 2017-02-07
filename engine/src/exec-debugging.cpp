@@ -34,6 +34,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "param.h"
 
+#include "chunk.h"
+#include "scriptpt.h"
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Breakpoint, 2)
@@ -59,6 +63,8 @@ MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
 MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
 
 MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Assert, 3)
+
+MC_EXEC_DEFINE_EXEC_METHOD(Debugging, PutIntoMessage, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -456,3 +462,92 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	
 	ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
+{
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
+static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
+{
+	MCObject *objptr = NULL;
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
+	MCerrorlock++;
+	MCScriptPoint sp(p_string);
+	if (tchunk->parse(sp, False) == PS_NORMAL)
+	{
+		uint4 parid;
+		tchunk->getobj(ctxt, objptr, parid, True);
+	}
+	MCerrorlock--;
+	delete tchunk;
+	return objptr;
+}
+
+void MCDebuggingSetMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
+{
+	MCObject *t_object;
+	t_object = getobj(ctxt, p_target);
+	
+	if (t_object != NULL)
+		MCmessageboxredirect = t_object -> GetHandle();
+	else
+		MCmessageboxredirect = nil;
+}
+
+void MCDebuggingGetMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
+{
+	if (MCmessageboxlastobject.IsValid())
+	{
+		bool t_success;
+		
+		MCAutoStringRef t_obj, t_long_id;
+		MCAutoValueRef t_id_value;
+		t_success = MCStringCreateMutable(0, &t_obj);
+		
+		if (t_success)
+			t_success = MCmessageboxlastobject->names(P_LONG_ID, &t_id_value);
+		if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+			t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
+		
+		if (t_success && MCmessageboxlastobject->getparentscript() != nil)
+		{
+			t_success = MCmessageboxlastobject->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
+			if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+				t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
+		}
+		if (t_success && MCStringCopy(*t_obj, r_object))
+			return;
+	}
+	else
+	{
+		r_object = MCValueRetain(kMCEmptyString);
+		return;
+	}
+	
+	ctxt . Throw();
+}
+
+void MCDebuggingGetMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
+{
+	if (MCmessageboxredirect.IsValid())
+	{
+		MCAutoValueRef t_long_id;
+		if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
+			ctxt . ConvertToString(*t_long_id, r_id))
+			return;
+	}
+	else
+	{
+		r_id = MCValueRetain(kMCEmptyString);
+		return;
+	}
+	
+	ctxt . Throw();
+}
+
+
+

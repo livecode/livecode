@@ -505,6 +505,12 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+MCObjectHandle MCmessageboxredirect = nil;
+MCObjectHandle MCmessageboxlastobject = nil;
+MCNameRef MCmessageboxlasthandler = nil;
+uint32_t MCmessageboxlastline = 0;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -873,6 +879,12 @@ void X_clear_globals(void)
 #endif
 	
 	MCDateTimeInitialize();
+	
+	MCmessageboxredirect = nil;
+	MCmessageboxlastobject = nil;
+	MCmessageboxlasthandler = nil;
+	MCmessageboxlastline = 0;
+
 }
 
 /* ---------------------------------------------------------------- */

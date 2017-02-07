@@ -129,7 +129,7 @@ void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
 
 void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
-	if (MCnoui)
+	if (!MCmessageboxredirect.IsValid())
 	{
 		MCAutoStringRefAsCString t_output;
 		/* UNCHECKED */ t_output . Lock(p_string);
@@ -139,31 +139,47 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 			MCS_write("\n", sizeof(char), 1, IO_stdout);
 		return;
 	}
-	
-	if (!MCModeHandleMessageBoxChanged(ctxt, p_string))
+	else
 	{
-		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
-		if (!MCmbstackptr)
-			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
-			
-		if (MCmbstackptr)
+		MCObject *t_src_object = nil;
+		if (ctxt.GetObject() != nil)
+			t_src_object = ctxt.GetObject();
+		
+		bool t_in_msg_box = false;
+		
+		MCObject *t_obj_ptr = t_src_object;
+		while (t_obj_ptr != nil)
 		{
-			Window_mode newmode = MCmbstackptr->userlevel() == 0 ? WM_MODELESS
-														: (Window_mode)(MCmbstackptr->userlevel() + WM_TOP_LEVEL_LOCKED);
-			
-			// MW-2011-07-05: [[ Bug 9608 ]] The 'ep' that is passed through to us does
-			//   not necessarily have an attached object any more. Given that the 'rel'
-			//   parameter of the open stack call is unused, computing it from that
-			//   context is redundent.
-			if (MCmbstackptr->getmode() != newmode)
-				MCmbstackptr->openrect(MCmbstackptr -> getrect(), newmode, NULL, WP_DEFAULT,OP_NONE);
-			else
-				MCmbstackptr->raise();
-			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
-			if (fptr != NULL)
-				fptr->settext(0, p_string, False);
+			if (t_obj_ptr == MCmessageboxredirect)
+			{
+				t_in_msg_box = true;
+				break;
+			}
+			t_obj_ptr = t_obj_ptr->getparent();
 		}
+		
+		if (!t_in_msg_box)
+		{
+			MCmessageboxlastobject = t_src_object->GetHandle();
+			
+			MCNameDelete(MCmessageboxlasthandler);
+			MCmessageboxlasthandler = nil;
+			MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
+			
+			MCmessageboxlastline = ctxt . GetLine();
+		}
+		
+		bool t_added = false;
+		if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
+		{
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+			t_added = true;
+		}
+		
+		MCmessageboxredirect -> message(MCM_msgchanged);
+		
+		if (t_added)
+			MCnexecutioncontexts--;
 	}
 }
 

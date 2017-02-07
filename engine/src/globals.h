@@ -434,6 +434,13 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
+// Message Box
+extern MCObjectHandle MCmessageboxredirect;
+extern MCObjectHandle MCmessageboxlastobject;
+extern MCNameRef MCmessageboxlasthandler;
+extern uint32_t MCmessageboxlastline;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HOOK REGISTRATION

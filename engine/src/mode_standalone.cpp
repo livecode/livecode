@@ -1082,12 +1082,6 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef &r_id)
 {

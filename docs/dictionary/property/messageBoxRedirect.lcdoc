@@ -1,0 +1,26 @@
+Name: messageBoxRedirect
+
+Type: property
+
+Syntax: set the messageBoxRedirect to <object>
+
+Summary:
+Set the object that should receive the <msgChanged> <message> when the
+the <put> <command> is used without specifying a <container>.
+
+Introduced: 9.0
+
+OS: mac, windows, linux, ios, android, html5
+
+Platforms: desktop, mobile
+
+Example:
+set the messageBoxRedirect to the long id of stack "Message Box"
+
+Description:
+Use the messageBoxRedirect <property> to provide an object that handles
+the <msgChanged> <message>.
+
+References: put (command), container (glossary), command (glossary),
+message (glossary), message box (glossary), property (glossary), 
+msgChanged (message), messageBoxLastObject (property)
