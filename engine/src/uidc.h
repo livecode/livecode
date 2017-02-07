@@ -528,6 +528,7 @@ public:
     virtual void configureIME(int32_t x, int32_t y);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
+	virtual void activateIME(Boolean activate, Boolean reposition);
 	virtual void closeIME();
 
 	virtual void seticon(uint4 p_icon);

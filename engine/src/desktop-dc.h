@@ -111,6 +111,7 @@ public:
 	virtual void clearIME(Window w);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
+	virtual void activateIME(Boolean activate, Boolean reposition);
 	virtual void closeIME();
 	
 	virtual void seticon(uint4 p_icon);

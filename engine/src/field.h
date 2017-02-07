@@ -713,6 +713,8 @@ public:
     void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
     void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
     void GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_ranges);
+    void SetAutoReposition(MCExecContext& ctxt, bool setting);
+    void GetAutoReposition(MCExecContext& ctxt, bool& r_setting);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);

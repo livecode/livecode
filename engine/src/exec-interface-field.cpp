@@ -454,7 +454,7 @@ void MCField::DoSetInputControl(MCExecContext& ctxt, Properties which, bool sett
 		// MW-2011-09-28: [[ Bug 9610 ]] If the lockText has changed then make sure
 		//   keyboard state is in sync.
 		if (t_was_locked != (getflag(F_LOCK_TEXT) == True) && getstate(CS_KFOCUSED))
-			MCModeActivateIme(getstack(), !getflag(F_LOCK_TEXT));
+			MCModeActivateIme(getstack(), !getflag(F_LOCK_TEXT), flags & F_AUTO_REPOSITION);
 		
 		if (vscrollbar != NULL)
 			vscrollbar->setflag(False, F_TRAVERSAL_ON);
@@ -468,6 +468,16 @@ void MCField::DoSetInputControl(MCExecContext& ctxt, Properties which, bool sett
 void MCField::SetLockText(MCExecContext& ctxt, bool setting)
 {
     DoSetInputControl(ctxt, P_LOCK_TEXT, setting);
+}
+
+void MCField::SetAutoReposition(MCExecContext& ctxt, bool setting)
+{
+	changeflag(setting, F_AUTO_REPOSITION);
+}
+
+void MCField::GetAutoReposition(MCExecContext& ctxt, bool& r_setting)
+{
+	r_setting = getflag(F_AUTO_REPOSITION);
 }
 
 void MCField::SetTraversalOn(MCExecContext& ctxt, bool setting)

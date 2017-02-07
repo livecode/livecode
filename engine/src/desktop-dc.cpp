@@ -938,6 +938,11 @@ void MCScreenDC::activateIME(Boolean activate)
 	MCPlatformConfigureTextInputInWindow(MCactivefield -> getstack() -> getwindow(), activate);
 }
 
+void MCScreenDC::activateIME(Boolean activate, Boolean reposition)
+{
+	activateIME(activate);
+}	
+
 void MCScreenDC::closeIME()
 {
 }

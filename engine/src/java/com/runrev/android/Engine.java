@@ -609,8 +609,13 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 	}
 
-	public void setTextInputVisible(boolean p_visible)
+	public void setTextInputVisible(boolean p_visible, boolean p_reposition)
 	{
+		if(p_reposition)
+			((Activity)getContext()).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+		else
+			((Activity)getContext()).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+
 		m_text_editor_visible = p_visible;
 		
 		if (!s_running)
@@ -1404,7 +1409,7 @@ public class Engine extends View implements EngineApi
 		Rect t_rect;
 		t_rect = null;
 		
-		if ((oldw == 0 && oldh == 0) || m_orientation_sizechange)
+		if ((oldw == 0 && oldh == 0) || m_orientation_sizechange || !(t_height_diff > 100))
 			t_rect = getWorkarea(true, w, h);
 		
 		m_keyboard_sizechange = m_orientation_sizechange = false;

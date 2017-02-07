@@ -768,6 +768,11 @@ void MCScreenDC::openIME()
 {
 }
 
+void MCScreenDC::activateIME(Boolean activate, Boolean reposition)
+{
+	activateIME(activate);
+}
+
 void MCScreenDC::activateIME(Boolean activate)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.

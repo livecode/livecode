@@ -355,6 +355,10 @@ void MCModeActivateIme(MCStack *p_stack, bool p_activate)
 {
 }
 
+void MCModeActivateIme(MCStack *p_stack, bool p_activate, bool p_reposition)
+{
+}
+
 void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 }

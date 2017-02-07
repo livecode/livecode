@@ -1025,6 +1025,8 @@ void MCUIDC::openIME()
 {}
 void MCUIDC::activateIME(Boolean activate)
 {}
+void MCUIDC::activateIME(Boolean activate, Boolean reposition)
+{}
 void MCUIDC::clearIME(Window w)
 {}
 void MCUIDC::closeIME()

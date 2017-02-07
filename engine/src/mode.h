@@ -202,6 +202,7 @@ Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script);
 
 // This hook is used to activate (passive) IME.
 void MCModeActivateIme(MCStack *stack, bool activate);
+void MCModeActivateIme(MCStack *stack, bool activate, bool reposition);
 // This hook is used to configure an IME session.
 void MCModeConfigureIme(MCStack *stack, bool enabled, int32_t x, int32_t y);
 

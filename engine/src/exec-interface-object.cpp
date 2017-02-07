@@ -330,6 +330,7 @@ static PropList fieldprops[] =
     {
         {"altId", P_ALT_ID},
         {"autoHilite", P_AUTO_HILITE},
+        {"autoReposition", P_AUTO_REPOSITION},
         {"autoTab", P_AUTO_TAB},
         {"backColor", P_BACK_COLOR},
         {"backPattern", P_BACK_PATTERN},

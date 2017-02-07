@@ -147,6 +147,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MCField attributes
 #define F_VGRID                 (1UL << 0)
 #define F_HGRID                 (1UL << 1)
+#define F_AUTO_REPOSITION		(1UL << 2)
 #define F_AUTO_TAB              (1UL << 14)
 #define F_F_DONT_SEARCH         (1UL << 15)
 #define F_DONT_WRAP             (1UL << 16)

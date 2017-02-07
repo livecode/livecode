@@ -104,6 +104,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_LIST_BEHAVIOR, Bool, MCField, ListBehavior)
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
+	// Hao-2017-02-04: [[ Bug 16714]] Auto reposition when IME activate.
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_REPOSITION, Bool, MCField, AutoReposition)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_CURSORMOVEMENT, InterfaceFieldCursorMovement, MCField, CursorMovement)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_TEXTDIRECTION, InterfaceTextDirection, MCField, TextDirection)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
@@ -611,8 +613,9 @@ void MCField::kfocus()
             // PM-2015-03-05: [[ Bug 14664 ]] Avoid flickering and draw cursor in the correct position after focussing the field
             replacecursor(False, False);
 		}
+
 		if (!(flags & F_LOCK_TEXT))
-			MCModeActivateIme(getstack(), true);
+			MCModeActivateIme(getstack(), true, (flags & F_AUTO_REPOSITION));
 
 		MCstacks -> ensureinputfocus(getstack() -> getwindow());
 	}
@@ -625,7 +628,7 @@ void MCField::kunfocus()
 		getstack() -> resetcursor(True);
 	
 		stopcomposition(False, True);
-		MCModeActivateIme(getstack(), false);
+		MCModeActivateIme(getstack(), false, (flags & F_AUTO_REPOSITION));
 
 		uint2 t_old_trans;
 		t_old_trans = gettransient();
