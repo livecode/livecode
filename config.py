@@ -434,7 +434,7 @@ def configure_emscripten(opts):
     validate_target_arch(opts)
     validate_emscripten_tools(opts)
 
-    export_opts(opts, ('NODE_JS'))
+    export_opts(opts, ('NODE_JS',))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
