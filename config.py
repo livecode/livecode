@@ -285,6 +285,10 @@ def guess_windows_perl():
         if os.access(perl, os.X_OK):
             return perl
 
+    # If this is running on a non-Windows platform, default to "perl"
+    if platform.system() != 'windows':
+        return 'perl'
+
     error('Perl not found; set $PERL')
 
 def validate_windows_tools(opts):
