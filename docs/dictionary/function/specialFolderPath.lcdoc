@@ -194,6 +194,7 @@ supported:
 
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
+* "documents": The current user's documents folder
 * "temporary": The folder where temporary files can be placed
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
