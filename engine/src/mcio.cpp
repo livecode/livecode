@@ -435,33 +435,31 @@ IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handl
 		}
 	}
 	
-	char *t_string = nil;
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_string;
 	if (t_bytes != 0)
 	{
 		t_length = p_includes_null ? t_bytes - 1 : t_bytes;
-		if (!MCMemoryAllocate(t_bytes, t_string))
+		if (!MCMemoryAllocate(t_bytes, &t_string))
 			return IO_ERROR;
-		stat = MCStackSecurityRead(t_string, t_length, p_stream);
+		stat = MCStackSecurityRead(*t_string, t_length, p_stream);
 		if (stat == IO_NORMAL && p_includes_null)
-			stat = IO_read_uint1((uint1*)t_string + t_length, p_stream);
+			stat = IO_read_uint1(reinterpret_cast<uint1*>(*t_string) + t_length,
+                                 p_stream);
 		if (stat != IO_NORMAL)
-		{
-			delete t_string;
 			return stat;
-		}
 
 		if (MCtranslatechars && p_translate)
 		{
 #ifdef __MACROMAN__
-			IO_iso_to_mac(t_string, t_length);
+			IO_iso_to_mac(*t_string, t_length);
 #else
-			IO_mac_to_iso(t_string, t_length);
+			IO_mac_to_iso(*t_string, t_length);
 #endif
 			
 		}
 	}
 	
-	r_string = t_string;
+	r_string = t_string.Release();
 	r_length = t_length;
 	
 	return IO_NORMAL;
