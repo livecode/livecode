@@ -796,7 +796,7 @@ IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, u
 		return stat;
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
 	{
-		delete[] t_bytes;
+		MCMemoryDeallocate (t_bytes);
 		return IO_ERROR;
 	}
 	
