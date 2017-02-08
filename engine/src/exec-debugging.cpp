@@ -58,7 +58,7 @@ MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
 MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
 MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
 
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Assert, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Assert, 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
