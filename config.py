@@ -112,7 +112,7 @@ def process_env_options(opts):
 
 def process_arg_options(opts, args):
     gyp_options = []
-    offset = 1
+    offset = 0
     while offset < len(args):
         key = args[offset]
         if offset + 1 < len(args):
@@ -495,4 +495,4 @@ def configure(args):
     configure_procs[opts['OS']](opts)
 
 if __name__ == '__main__':
-    configure(sys.argv)
+    configure(sys.argv[1:])
