@@ -1,9 +1,16 @@
-# Message box properties aded to all engines
+# Message box refactor
 
-Previously global properties `revMessageBoxRedirect` and
-`revMessageBoxLastObject` were only availbe in the IDE engine. These
-properties have now been renamed to `messageBoxRedirect` and 
-`messageBoxLastObject` and they are now available in all engines.
+The way the message box functions has been refactored:
 
-Set the `messageBoxRedirect` to the long id of the object that should
-receive `msgChanged` messages whenever the `msg` global is modified.
+- the IDE only global property `revMessageBoxRedirect` has been removed
+- the IDE only global property `revMessageBoxLastObject` has been removed
+- the legacy message box behavior setting the text of the first field
+of a stack named `Message Box` has been removed
+- the `msgChanged` message is now sent to the object that changed the
+message
+- IDE plugin developers should subscribe to `ideMsgChanged` for custom
+message box development.
+- If the `msgChanged` message is not handled the content of the 
+`message box` will be logged to the system log unless the engine is
+running in no ui (command line) mode which will write the content to
+STDOUT.

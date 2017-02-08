@@ -398,10 +398,6 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     
     // MW-2014-12-10: [[ Extensions ]] Returns a list of loaded extensions.
     DEFINE_RO_PROPERTY(P_LOADED_EXTENSIONS, ProperLinesOfString, Engine, LoadedExtensions)
-	
-	DEFINE_RO_PROPERTY(P_MESSAGE_BOX_LAST_OBJECT, String, Debugging, MessageBoxLastObject)
-	DEFINE_RW_PROPERTY(P_MESSAGE_BOX_REDIRECT, String, Debugging, MessageBoxRedirect)
-
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -879,7 +875,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_NETWORK_INTERFACES:
 
 	case P_MESSAGE_BOX_LAST_OBJECT:
-	case P_MESSAGE_BOX_REDIRECT:
 	case P_REV_LICENSE_LIMITS: // DEVELOPMENT only
 
 	// MW-2010-06-04: Add support for dock menu and status icon separation.

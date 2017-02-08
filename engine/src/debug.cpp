@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "mode.h"
 #include "exec.h"
+#include "system.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,58 +130,61 @@ void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
 
 void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
-	if (!MCmessageboxredirect.IsValid())
-	{
-		MCAutoStringRefAsCString t_output;
-		/* UNCHECKED */ t_output . Lock(p_string);
-		MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
-		uint4 length = MCStringGetLength(p_string);
-		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
-			MCS_write("\n", sizeof(char), 1, IO_stdout);
-		return;
-	}
-	else
-	{
-		MCObject *t_src_object = nil;
-		if (ctxt.GetObject() != nil)
-			t_src_object = ctxt.GetObject();
-		
-		bool t_in_msg_box = false;
-		
-		MCObject *t_obj_ptr = t_src_object;
-		while (t_obj_ptr != nil)
-		{
-			if (t_obj_ptr == MCmessageboxredirect)
-			{
-				t_in_msg_box = true;
-				break;
-			}
-			t_obj_ptr = t_obj_ptr->getparent();
-		}
-		
-		if (!t_in_msg_box)
-		{
-			MCmessageboxlastobject = t_src_object->GetHandle();
-			
-			MCNameDelete(MCmessageboxlasthandler);
-			MCmessageboxlasthandler = nil;
-			MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
-			
-			MCmessageboxlastline = ctxt . GetLine();
-		}
-		
-		bool t_added = false;
-		if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
-		{
-			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-			t_added = true;
-		}
-		
-		MCmessageboxredirect -> message(MCM_msgchanged);
-		
-		if (t_added)
-			MCnexecutioncontexts--;
-	}
+    Exec_stat t_stat = ES_NOT_HANDLED;
+    
+    MCObject *t_target = nil;
+    if (ctxt.GetObject() != nil)
+        t_target = ctxt.GetObject();
+    else if (MCdefaultstackptr . IsValid())
+        t_target = MCdefaultstackptr;
+    
+    if (t_target != nil)
+    {
+        MCAutoStringRef t_handler;
+        t_handler = MCNameGetString(ctxt.GetHandler()->getname());
+        MCParameter *t_handler_parameter = new (nothrow) MCParameter;
+        t_handler_parameter -> setvalueref_argument(*t_handler);
+        
+        MCAutoNumberRef t_line;
+        MCParameter *t_line_parameter;
+        if (MCNumberCreateWithUnsignedInteger(ctxt.GetLine(), &t_line))
+        {
+            t_line_parameter = new (nothrow) MCParameter;
+            t_line_parameter -> setvalueref_argument(*t_line);
+            t_handler_parameter -> setnext(t_line_parameter);
+        }
+        
+        bool t_added = false;
+        if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            t_added = true;
+        }
+        
+        t_stat = t_target -> message(MCM_msgchanged, t_handler_parameter, True, True, False);
+        
+        if (t_added)
+            MCnexecutioncontexts--;
+    }
+    
+    if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+    {
+        if (MCnoui)
+        {
+            MCAutoStringRefAsCString t_output;
+            /* UNCHECKED */ t_output . Lock(p_string);
+            MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
+            uint4 length = MCStringGetLength(p_string);
+            if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
+                MCS_write("\n", sizeof(char), 1, IO_stdout);
+            return;
+        }
+        else
+        {
+            MCsystem -> Debug(p_string);
+        }
+    }
+    
 }
 
 void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)

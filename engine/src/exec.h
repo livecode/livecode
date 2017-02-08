@@ -5148,10 +5148,6 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingGetWatchedVariables(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
 void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
-void MCDebuggingGetMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object);
-void MCDebuggingGetMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id);
-void MCDebuggingSetMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target);
-
 
 ///////////
 

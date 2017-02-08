@@ -71,6 +71,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <gtk/gtk.h>
 
+#include <syslog.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This is in here so we do not need GLIBC2.4
@@ -731,7 +733,9 @@ public:
 
     virtual void Debug(MCStringRef p_string)
     {
-        // TODO implement?
+		MCAutoStringRefAsSysString t_string;
+		if (t_string.Lock(p_string))
+			syslog(LOG_DEBUG, "%s", *t_string);
     }
 
     virtual real64_t GetCurrentTime(void)
