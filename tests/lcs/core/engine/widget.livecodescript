@@ -26,8 +26,8 @@ end TestSetup
 //////////
 
 on TestWidgetBindErrorsDontEscape
-   create stack "WidgetErrorTest"
-   set the defaultStack to "WidgetErrorTest"
+   create stack "WidgetBindErrorTest"
+   set the defaultStack to "WidgetBindErrorTest"
 
    local tArray
    put "foo" into tArray["$kind"]
@@ -42,6 +42,41 @@ on TestWidgetBindErrorsDontEscape
    end try
 
    TestAssert "no error lingers after widget bind failure", not tErrorIsPending
+
+   delete stack "WidgetBindErrorTest"
 end TestWidgetBindErrorsDontEscape
 
 //////////
+
+global gLastSentWidgetError
+
+private command _DoTestWidgetScriptObjectAccess pMode
+   set the testMode of widget "Test" to pMode
+
+   export widget "Test" to array tVar
+
+   put empty into gLastSentWidgetError
+   wait for messages
+
+   TestAssert "no script access allowed for" && pMode, gLastSentWidgetError contains "script access not allowed"
+end _DoTestWidgetScriptObjectAccess
+
+on TestWidgetScriptObjectAccess
+   create stack "WidgetScriptAccessTest"
+   set the defaultStack to "WidgetScriptAccessTest"
+
+   create widget "Test" as "com.livecode.lcs_tests.core.widget"
+   set the behavior of it to the long id of me
+
+   repeat for each item tMode in "resolve,get,set,send,post,execute"
+      _DoTestWidgetScriptObjectAccess tMode
+   end repeat
+
+   delete stack "WidgetScriptAccessTest"
+end TestWidgetScriptObjectAccess
+
+//////////
+
+on errorDialog pError
+   put pError into gLastSentWidgetError
+end errorDialog

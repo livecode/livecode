@@ -387,7 +387,7 @@ command revDoSaveAsStandalone pStack, pFolder
       -- post build message
       if tHasDesktop then
          __ReloadOriginalStackFile tStackFileName, pStack
-         __SendStandaloneSavedMessage pStack, tTargetFolder
+         __SendStandaloneSavedMessage pStack, tOutputFolder
       end if
       
    catch tError
@@ -1456,6 +1456,8 @@ private command revCopyIcons pStack
       
       put "revGeneralIcons" & return & "revCompatibilityIcons1" & return & "revGeneralPatterns" & return & "revCompatibilityPatterns1" & return & "revCompatibilityPatterns2" & return & "revCustomCursors" into tStacksList
       set the itemDel to slash
+      local tIconA
+      put sIconA into tIconA
       repeat for each line tFile in tFiles
          if there is not a stack tFile then next repeat -- windows placeholder
          put return & the short name of stack tFile after tStacksList
@@ -1466,10 +1468,10 @@ private command revCopyIcons pStack
          repeat with tCard =1 to tCardNum
             put the number of images of cd tCard of stack tStack into tImageNum
             repeat with tImage =1 to tImageNum
-               if sIconA[the short id of image tImage of cd tCard of stack tStack] then
+               if tIconA[the short id of image tImage of cd tCard of stack tStack] then
                   copy image tImage of cd tCard of stack tStack to stack "revCopiedIcons"
                   set the id of the last image of stack "revCopiedIcons" to the short id of image tImage of cd tCard of stack tStack
-                  put false into sIconA[the short id of image tImage of cd tCard of stack tStack]
+                  put false into tIconA[the short id of image tImage of cd tCard of stack tStack]
                end if
             end repeat
          end repeat

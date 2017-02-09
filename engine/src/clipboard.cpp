@@ -115,7 +115,7 @@ void MCClipboard::ReleaseData()
 bool MCClipboard::PullUpdates() const
 {
     // If ownership has changed, the private clipboard data needs to be cleared
-	if (!m_clipboard->IsOwned())
+	if (!this->IsDragboard() && !m_clipboard->IsOwned())
 		const_cast<MCClipboard*>(this)->ClearPrivateData();
 	
 	// Pass on the request
@@ -1532,4 +1532,9 @@ MCStringEncoding MCClipboard::GuessHTMLEncoding(MCDataRef p_html_data)
 	// function should be updated to detect it if possible.
 
 	return kMCStringEncodingUTF8;
+}
+
+bool MCClipboard::IsDragboard() const
+{
+	return this == MCdragboard;
 }

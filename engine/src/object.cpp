@@ -2091,15 +2091,15 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean changedefault, Boolean send, Boolean p_is_debug_message)
 {
-	MCStack *mystack = getstack();
-	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
+	MCStackHandle t_stack = getstack();
+	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
     // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
 	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
-	MCscreen->flush(mystack->getw());
+	MCscreen->flush(t_stack->getw());
 	
 	// Object's cannot be deleted whilst they are executing script. However,
 	// this method will run script when script in the object is *not* running
@@ -2116,7 +2116,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
-		MCdefaultstackptr = mystack;
+		MCdefaultstackptr = t_stack;
 		MCtargetptr . object = this;
         MCtargetptr . part_id = 0;
 	}
@@ -2133,19 +2133,23 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
-		Window mywindow = mystack->getw();
-		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == NULL
-		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+		
+		if (t_stack.IsValid())
 		{
-			// PASS STATE FIX
-			Exec_stat oldstat = stat;
-			stat = handle(HT_MESSAGE, mess, paramptr, this);
-			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-				stat = ES_PASS;
+			Window mywindow = t_stack->getw();
+			if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
+					&& (MCtracewindow == NULL
+						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+			{
+				// PASS STATE FIX
+				Exec_stat oldstat = stat;
+				stat = handle(HT_MESSAGE, mess, paramptr, this);
+				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+					stat = ES_PASS;
+			}
 		}
 	}
-	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
 		MCdefaultstackptr = t_old_defaultstack;
 	
