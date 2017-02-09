@@ -183,6 +183,11 @@ def validate_platform(opts):
 def validate_os(opts):
     validate_platform(opts)
 
+    # Windows systems may have $OS set automatically in the
+    # environment
+    if opts['OS'] == 'Windows_NT':
+        opts['OS'] = 'win'
+
     if opts['OS'] is None:
         opts['OS'] = opts['PLATFORM'].split('-')[0]
 
