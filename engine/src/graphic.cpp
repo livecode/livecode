@@ -522,30 +522,38 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
-bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_roundrect(MCPoint* &r_points, uindex_t &r_point_count)
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
-	return (true);
+	return MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 }
 
-bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_rect(MCPoint* &r_points, uindex_t &r_point_count)
 {
-	r_points[0].x = rect.x;
-	r_points[0].y = rect.y;
-	r_points[1].x = rect.x + rect.width;
-	r_points[1].y = rect.y;
-	r_points[2].x = rect.x + rect.width;
-	r_points[2].y = rect.y + rect.height;
-	r_points[3].x = rect.x;
-	r_points[3].y = rect.y + rect.height;
-	return (true);
+	MCAutoArray<MCPoint> t_points;
+	if (!t_points.New(4))
+		return false;
+	
+	t_points[0].x = rect.x;
+	t_points[0].y = rect.y;
+	t_points[1].x = rect.x + rect.width;
+	t_points[1].y = rect.y;
+	t_points[2].x = rect.x + rect.width;
+	t_points[2].y = rect.y + rect.height;
+	t_points[3].x = rect.x;
+	t_points[3].y = rect.y + rect.height;
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
-bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_point_count)
 {
-	MCPoint fakepoint;
+	MCAutoArray<MCPoint> t_points;
+	
+	if (!t_points.New(nsides + 1))
+		return false;
 	
 	real8 dx = (real8)((rect.width >> 1) - 1);
 	real8 dy = (real8)((rect.height >> 1) - 1);
@@ -558,20 +566,20 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	for (i = 0 ; i < nsides ; i++)
 	{
 		real8 iangle = rangle + (real8)i * factor;
-		fakepoint.x = cx + (int2)(cos(iangle) * dx);
-		fakepoint.y = cy + (int2)(sin(iangle) * dy);
-		r_points[i] = fakepoint;
+		t_points[i].x = cx + (int2)(cos(iangle) * dx);
+		t_points[i].y = cy + (int2)(sin(iangle) * dy);
 	}
     
     // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
     // regular polygon.
-	r_points[nsides] = r_points[0];
-	r_point_count = nsides + 1;
-	return (true);
+	t_points[nsides] = t_points[0];
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
 // MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
-bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uindex_t& r_point_count)
 {
 	int	tRadius;
 	
@@ -581,8 +589,8 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
-	return (true);
+	
+	return MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
@@ -1135,15 +1143,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (linesize != 0)
 			trect = MCU_reduce_rect(trect, linesize >> 1);
 		
-		if (npoints <= nsides)
-		{
-			npoints = nsides + 1;
-			if (points != NULL)
-				delete points;
-			points = new (nothrow) MCPoint[npoints];
-		}
 		// MDW-2014-06-18: [[ rect_points ]] refactored
-		get_points_for_regular_polygon(points, npoints);
+		uindex_t t_count;
+		/* UNCHECKED */ get_points_for_regular_polygon(points, t_count);
+		npoints = t_count;
 	}
 	if (points == NULL && getstyleint(flags) == F_OVAL)
 	{
