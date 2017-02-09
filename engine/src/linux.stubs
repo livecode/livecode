@@ -655,6 +655,7 @@ glib libglib-2.0.so.0
 	g_main_context_dispatch: (pointer) -> ()
 	g_main_context_find_source_by_id: (pointer, integer) -> (pointer)
 	g_source_destroy: (pointer) -> ()
+	g_get_user_special_dir: (pointer) -> (integer)
 
 esd libesd.so.0
 	esd_close: (integer) -> (integer)
@@ -668,4 +669,3 @@ fontconfig libfontconfig.so.1
 	FcConfigAppFontClear: (pointer) -> ()
 	FcConfigBuildFonts: (pointer) -> (integer)
 	FcConfigSetCurrent: (pointer) -> (integer)
-    

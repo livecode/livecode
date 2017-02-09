@@ -1024,12 +1024,12 @@ public:
             return false;
 
         if (MCNameIsEqualTo(p_type, MCN_desktop, kMCCompareCaseless))
-            return MCStringFormat(r_folder, "%@/Desktop", *t_home);
+            return MCStringCreateWithSysString(g_get_user_special_dir(G_USER_DIRECTORY_DESKTOP), r_folder);
         else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
             return MCStringCopy(*t_home, r_folder);
         // Hao-2017-02-08: [[ Bug 15094 ]] Add documents folder for linux
         else if (MCNameIsEqualTo(p_type, MCN_documents, kMCCompareCaseless))
-            return MCStringFormat(r_folder, "%@/Documents", *t_home);
+            return MCStringCreateWithSysString(g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS), r_folder);
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
