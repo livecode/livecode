@@ -600,7 +600,8 @@ public class Engine extends View implements EngineApi
 		if (imm != null)
 			imm.restartInput(this);
 		
-        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
+		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
+        imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
     }
 
     public void hideKeyboard()
