@@ -1517,7 +1517,11 @@ function revSBAdditionalExternalsList pPlatform
          local tExternalFolder
          repeat for each line tExternalFolder in folders(tFolder)
             if tExternalFolder begins with "." then next repeat
-           
+            
+            if there is a file (tFolder & slash & tExternalFolder & slash & "ide_only") then
+               next repeat
+            end if
+            
             local tContents
             put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
             
