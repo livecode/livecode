@@ -454,6 +454,20 @@ public class Engine extends View implements EngineApi
 						case KeyEvent.KEYCODE_DEL:
 							keyCode = 0xff08;
 							break;
+						// Hao-2017-02-08: [[ Bug 11727 ]] Detect arrow key for field input
+						case KeyEvent.KEYCODE_DPAD_LEFT:
+							keyCode = 0xff51;
+							break;
+						case KeyEvent.KEYCODE_DPAD_UP:
+							keyCode = 0xff52;
+							break;
+						case KeyEvent.KEYCODE_DPAD_RIGHT:
+							keyCode = 0xff53;
+							break;
+						case KeyEvent.KEYCODE_DPAD_DOWN:
+							keyCode = 0xff54;
+							break;
+							
 							
 						default:
 					}
