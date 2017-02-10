@@ -2729,3 +2729,35 @@ function revSBNoPlatforms pSettings
    
    return true
 end revSBNoPlatforms
+
+local sDeployInclusions
+
+command revSBAddDeployInclusion pInclusion, pKey
+   put empty into sDeployInclusions[pKey][pInclusion]
+end revSBAddDeployInclusion
+
+-- Standalone settings are always set on the mainstack
+function revSBGetSettings pStack, pDeploy
+   local tSettingsA
+   put the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) into tSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, tSettingsA
+   
+   if pDeploy then
+      local tKey, tInclusion
+      repeat for each key tKey in sDeployInclusions
+         repeat for each key tInclusion in sDeployInclusions[tKey]
+            revSBAddInclusion tInclusion, tKey, tSettingsA
+         end repeat
+      end repeat
+   end if
+   
+   return tSettingsA
+end revSBGetSettings
+
+command revSBSetSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end revSBSetSettings
