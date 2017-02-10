@@ -41,7 +41,7 @@ use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
 metadata author is "LiveCode"
-metadata version is "1.2.0"
+metadata version is "1.2.1"
 metadata title is "Line Graph"
 metadata preferredSize is "300,175"
 metadata svgicon is "M50.6,27.2h-2.2v-3.3l0.8-0.5l-0.2-0.3h2.9v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4H5V2.5C5,1.1,3.9,0,2.5,0S0,1.1,0,2.5v29.7h50.6c1.4,0,2.5-1.1,2.5-2.5C53.1,28.4,52,27.2,50.6,27.2z M47.4,27.2h-10v-4.1h8l1.2,1.9l0.8-0.5V27.2z M15.4,15.2l1.4,0.9h-1.4V15.2z M14.4,17.1v5h-4.2l3.6-5H14.4z M15.4,17.1h2.9l7.1,4.6v0.4h-10V17.1z M26.4,17.1h0.1l-0.1,0.2V17.1z M25.4,18.1l-1.6-1h1.6V18.1z M26.4,22l4-4.9h6v5h-10V22z M37.4,17.1h4.2l3.2,5h-7.4V17.1z M37.4,16.1v-5h0.4l3.2,5H37.4z M36.4,10.1h-0.1l0.1-0.2V10.1z M36.4,11.1v5h-5.1l4.2-5H36.4z M27.4,16.1h-1v-5h5.1L27.4,16.1z M25.4,16.1h-3.1l-6.9-4.5v-0.5h10V16.1z M14.4,11.3l-3.5,4.9H5v-5h9.4V11.3z M10.1,17.1l-3.6,5H5v-5H10.1z M5.7,23.1l-0.7,1v-1H5.7z M9.5,23.1h4.9v4.1H6.5L9.5,23.1z M15.4,23.1h10v4.1h-10V23.1z M26.4,23.1h10v4.1h-10V23.1z M47.4,20.7l-2.3-3.6h2.3V20.7z M47.4,16.1h-2.9l-3.2-5h6.1V16.1z M47.4,10.1h-6.7l-3.2-5h9.9V10.1z M36.4,5.1v0.1l-4,4.9h-6v-5H36.4z M25.4,5.1v5h-10v-5H25.4z M14.4,5.1v5H5v-5H14.4z"
@@ -232,6 +232,26 @@ metadata markerScale.max is "5"
 metadata markerScale.label is "Marker scale"
 
 /**
+Summary: A scale factor to apply to lines
+
+Syntax:
+set the lineScale of <widget> to <real>
+get the lineScale of <widget>
+
+Value (real): A scale factor to apply to graph lines
+
+Description:
+The default scale factor is 1
+*/
+property lineScale get mLineSize set SetLineSize
+metadata lineScale.default is "1"
+metadata lineScale.editor is "com.livecode.pi.number"
+metadata lineScale.step is "0.05"
+metadata lineScale.min is "0"
+metadata lineScale.max is "5"
+metadata lineScale.label is "Line scale"
+
+/**
 Summary: The coordinates of a highlighted point on the graph
 
 Syntax:
@@ -287,6 +307,7 @@ private variable mLinesShow as Boolean
 
 private variable mMarkerStyles as List
 private variable mMarkerScale as Real
+private variable mLineSize
 
 private variable mYMax as Number
 private variable mYMin as Number
@@ -340,7 +361,8 @@ public handler OnCreate() returns nothing
 	
 	put [] into mMarkerStyles
 	put 1 into mMarkerScale
-	
+	put 1 into mLineSize
+
    put my height into mHeight
    put my width into mWidth
 
@@ -394,6 +416,7 @@ public handler OnSave(out rProperties as Array)
 	put mMarkerStyles into rProperties["markerStyles"]
 	put mLinesShow into rProperties["showLines"]
 	put mMarkerScale into rProperties["markerScale"]
+	put mLineSize into rProperties["lineScale"]
 end handler
 
 -- Process saved data array and re-set properties accordingly
@@ -427,6 +450,9 @@ public handler OnLoad(in pProperties as Array)
 	end if
 	if "markerScale" is among the keys of pProperties then
 		put pProperties["markerScale"] into mMarkerScale
+	end if
+	if "lineScale" is among the keys of pProperties then
+		put pProperties["lineScale"] into mLineSize
 	end if
 	EnsureMarkerStyles()
 end handler
@@ -559,6 +585,11 @@ end handler
 
 public handler SetMarkerScale(in pMarkerScale as Real) returns nothing
 	put pMarkerScale into mMarkerScale
+	redraw all
+end handler
+
+public handler SetLineSize(in pLineSize as Real) returns nothing
+	put pLineSize into mLineSize
 	redraw all
 end handler
 
@@ -1153,9 +1184,10 @@ private handler drawGraph() returns nothing
 			end if
 		end repeat
 		if mLinesShow is true then
+			set the stroke width of this canvas to mLineSize
 			stroke tPath on this canvas
 		end if
-		
+
 		if mVerticesShow is true then
 			if tFilledMarkers then
 				fill tPathVertices on this canvas
