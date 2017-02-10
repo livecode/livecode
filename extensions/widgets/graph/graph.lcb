@@ -26,11 +26,9 @@ The graph has labelled axes and allows multiple lines to be displayed.
   <hilitedCoordinates>
 
 References: graphData(property), graphColors(property), hilitedCoordinates(property)
-
-Amended by Andy Piddock v1.2.2 added Line scale proprty
 */
 
-widget community.livecode.widget.lineGraph
+widget com.livecode.widget.lineGraph
 --
 
 -- dependency declarations
@@ -43,7 +41,7 @@ use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
 metadata author is "LiveCode"
-metadata version is "1.2.2"
+metadata version is "1.2.0"
 metadata title is "Line Graph"
 metadata preferredSize is "300,175"
 metadata svgicon is "M50.6,27.2h-2.2v-3.3l0.8-0.5l-0.2-0.3h2.9v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4H5V2.5C5,1.1,3.9,0,2.5,0S0,1.1,0,2.5v29.7h50.6c1.4,0,2.5-1.1,2.5-2.5C53.1,28.4,52,27.2,50.6,27.2z M47.4,27.2h-10v-4.1h8l1.2,1.9l0.8-0.5V27.2z M15.4,15.2l1.4,0.9h-1.4V15.2z M14.4,17.1v5h-4.2l3.6-5H14.4z M15.4,17.1h2.9l7.1,4.6v0.4h-10V17.1z M26.4,17.1h0.1l-0.1,0.2V17.1z M25.4,18.1l-1.6-1h1.6V18.1z M26.4,22l4-4.9h6v5h-10V22z M37.4,17.1h4.2l3.2,5h-7.4V17.1z M37.4,16.1v-5h0.4l3.2,5H37.4z M36.4,10.1h-0.1l0.1-0.2V10.1z M36.4,11.1v5h-5.1l4.2-5H36.4z M27.4,16.1h-1v-5h5.1L27.4,16.1z M25.4,16.1h-3.1l-6.9-4.5v-0.5h10V16.1z M14.4,11.3l-3.5,4.9H5v-5h9.4V11.3z M10.1,17.1l-3.6,5H5v-5H10.1z M5.7,23.1l-0.7,1v-1H5.7z M9.5,23.1h4.9v4.1H6.5L9.5,23.1z M15.4,23.1h10v4.1h-10V23.1z M26.4,23.1h10v4.1h-10V23.1z M47.4,20.7l-2.3-3.6h2.3V20.7z M47.4,16.1h-2.9l-3.2-5h6.1V16.1z M47.4,10.1h-6.7l-3.2-5h9.9V10.1z M36.4,5.1v0.1l-4,4.9h-6v-5H36.4z M25.4,5.1v5h-10v-5H25.4z M14.4,5.1v5H5v-5H14.4z"
@@ -234,26 +232,6 @@ metadata markerScale.max is "5"
 metadata markerScale.label is "Marker scale"
 
 /**
-Summary: A scale factor to apply to lines
-
-Syntax:
-set the lineScale of <widget> to <real>
-get the lineScale of <widget>
-
-Value (real): A scale factor to apply to graph lines
-
-Description:
-The default scale factor is 1
-*/
-property lineScale get mLineSize set SetLineSize
-metadata lineScale.default is "1"
-metadata lineScale.editor is "com.livecode.pi.number"
-metadata lineScale.step is "0.05"
-metadata lineScale.min is "0"
-metadata lineScale.max is "5"
-metadata lineScale.label is "Line scale"
-
-/**
 Summary: The coordinates of a highlighted point on the graph
 
 Syntax:
@@ -309,7 +287,6 @@ private variable mLinesShow as Boolean
 
 private variable mMarkerStyles as List
 private variable mMarkerScale as Real
-private variable mLineSize
 
 private variable mYMax as Number
 private variable mYMin as Number
@@ -360,18 +337,17 @@ public handler OnCreate() returns nothing
 	put true into mLabelYShow
 	put true into mLinesShow
 	put true into mVerticesShow
-
+	
 	put [] into mMarkerStyles
 	put 1 into mMarkerScale
-	put 1 into mLineSize
-
+	
    put my height into mHeight
    put my width into mWidth
 
 	put [] into mHilitedCoordinates
 	put "0,0,0,255" into mHilitedCoordinatesColor
 	put true into mRecalculateAll
-
+	
 	EnsureMarkerStyles()
 end handler
 
@@ -381,7 +357,7 @@ public handler OnPaint() returns nothing
 	-- Set the font prior to doing text measurements
    set the font of this canvas to my font
    set the paint of this canvas to getPaint("axis","stroke")
-
+	
 	if mRecalculateAll then
 		calculateAll()
 	else if mRecalculateGrid then
@@ -401,7 +377,7 @@ public handler OnPaint() returns nothing
 	end if
 
 	drawGraph()
-
+	
 	drawHilited()
 end handler
 
@@ -418,7 +394,6 @@ public handler OnSave(out rProperties as Array)
 	put mMarkerStyles into rProperties["markerStyles"]
 	put mLinesShow into rProperties["showLines"]
 	put mMarkerScale into rProperties["markerScale"]
-	put mLineSize into rProperties["lineScale"]
 end handler
 
 -- Process saved data array and re-set properties accordingly
@@ -452,9 +427,6 @@ public handler OnLoad(in pProperties as Array)
 	end if
 	if "markerScale" is among the keys of pProperties then
 		put pProperties["markerScale"] into mMarkerScale
-	end if
-	if "lineScale" is among the keys of pProperties then
-		put pProperties["lineScale"] into mLineSize
 	end if
 	EnsureMarkerStyles()
 end handler
@@ -566,7 +538,7 @@ public handler GetMarkerStyles() returns String
 	if mMarkerStyles is [] then
 		return ""
 	end if
-
+	
 	variable tMarkerStyles as String
 	combine mMarkerStyles with newline into tMarkerStyles
 	return tMarkerStyles
@@ -590,16 +562,11 @@ public handler SetMarkerScale(in pMarkerScale as Real) returns nothing
 	redraw all
 end handler
 
-public handler SetLineSize(in pLineSize as Real) returns nothing
-	put pLineSize into mLineSize
-	redraw all
-end handler
-
 public handler EnsureMarkerStyles() returns nothing
 	if mVerticesShow and the number of elements in mMarkerStyles < the number of elements in mData - 1 then
 		variable tStyles as List
 		put ["filled circle", "filled square", "filled diamond", "circle", "square", "diamond"] into tStyles
-
+		
 		variable tCount as Integer
 		repeat with tCount from the number of elements in mMarkerStyles + 1 up to the number of elements in mData - 1
 			push tStyles[(tCount - 1) mod 6 + 1] onto back of mMarkerStyles
@@ -636,7 +603,7 @@ public handler SetHilitedCoordinates(in pCoordinates as String) returns nothing
 			return
 		end if
 	end if
-
+	
 	if tCoordList is not mHilitedCoordinates then
 		put tCoordList into mHilitedCoordinates
 		put true into mRecalculateAll
@@ -648,7 +615,7 @@ public handler SetHilitedCoordinatesColor(in pColor as String)
 	if pColor is not mHilitedCoordinatesColor then
 		put pColor into mHilitedCoordinatesColor
 		redraw all
-	end if
+	end if 
 end handler
 
 ----------
@@ -755,27 +722,27 @@ private handler calculateAll()
 
 	-- Use the same number of points for the y-axis
 	put mHPointCount into mVPointCount
-
+	
 	calculateMinMaxes()
-
+	
 	-- Set the y axis point increment
 	put (mYMax - mYMin) / mVPointCount into mYIncrement
-
+	
 	-- Calculate geomentry of any elements that affect the grid space
 	calculateGrid()
-
+	
 	put false into mRecalculateAll
 end handler
 
 private handler calculateMinMaxes() returns nothing
 	variable tYMax as optional Number
 	variable tYMin as optional Number
-
-	variable tXMax as optional Number
+	
+	variable tXMax as optional Number	
 	variable tXMin as optional Number
-
+	
 	variable tLineNumber as Integer
-
+	
 	variable tMax as Number
 	variable tMin as Number
 	repeat with tLineNumber from 2 up to the number of elements in mData
@@ -784,13 +751,13 @@ private handler calculateMinMaxes() returns nothing
 			put tMax into tYMax
 		else
 			put the maximum of tMax and tYMax into tYMax
-		end if
+		end if 
 		put listMin(mData[tLineNumber], false) into tMin
 		if tYMin is nothing then
 			put tMin into tYMin
 		else
 			put the minimum of tMin and tYMin into tYMin
-		end if
+		end if 
 	end repeat
 
 	-- No data
@@ -798,13 +765,13 @@ private handler calculateMinMaxes() returns nothing
 		put 0 into tYMax
 		put 0 into tYMin
 	end if
-
+	
 	put tYMax into mYMax
 	put tYMin into mYMin
-
+	
 	put listMin(mData[1], true) into mXMin
 	put listMax(mData[1], true) into mXMax
-
+	
 	if mHilitedCoordinates is not [] then
 		variable tNumber as Number
 		if mXMin is not nothing then
@@ -813,15 +780,15 @@ private handler calculateMinMaxes() returns nothing
 				put tNumber into mXMin
 			else if tNumber > mXMax then
 				put tNumber into mXMax
-			end if
+			end if 
 		end if
-
+		
 		put mHilitedCoordinates[2] parsed as number into tNumber
 		if tNumber < mYMin then
 			put tNumber into mYMin
 		else if tNumber > mYMax then
 			put tNumber into mYMax
-		end if
+		end if 
 	end if
 end handler
 
@@ -832,7 +799,7 @@ private handler LabelRect(in pLabel as any) returns Rectangle
    else
       put pLabel formatted as string into tString
    end if
-
+		
 	variable tThisRect as Rectangle
 	measure tString on this canvas into tThisRect
 
@@ -845,12 +812,12 @@ private handler calculateXOverhangs() returns nothing
 
    variable tRightOverhang as Real
    put 0 into tRightOverhang
-
+	
    if mLabelXShow then
       put the width of LabelRect(the head of mData[1]) / 2 into tLeftOverhang
 		put the width of LabelRect(the tail of mData[1]) / 2 into tRightOverhang
 	end if
-
+      
 	put tLeftOverhang into mXLabelLeftOverhang
    put tRightOverhang into mXLabelRightOverhang
 end handler
@@ -858,13 +825,13 @@ end handler
 private handler calculateYLabelGeometry() returns nothing
    variable tMaxWidth as Real
    put 0 into tMaxWidth
-
+	
 	variable tTopOverhang as Real
-   put 0 into tTopOverhang
-
+   put 0 into tTopOverhang	
+	
 	variable tBottomOverhang as Real
    put 0 into tBottomOverhang
-
+	
    if mLabelYShow then
       variable tNumber as Real
       variable tString as String
@@ -877,7 +844,7 @@ private handler calculateYLabelGeometry() returns nothing
          if the width of tTextBounds > tMaxWidth then
             put the width of tTextBounds into tMaxWidth
          end if
-
+			
 			if tCount is 1 then
 				put the height of tTextBounds / 2 into tBottomOverhang
 			else if tCount is mVPointCount + 1 then
@@ -893,15 +860,15 @@ end handler
 private handler calculateGridWidth()
 	variable tPadding as Real
 	put gridPadding() into tPadding
-
+	
 	variable tYLabelNeed as Real
 	if mLabelYShow then
 		put mMaxYLabelWidth + tPadding into tYLabelNeed
 	end if
-
+	
 	variable tLabelSpaceLeft as Real
 	put the maximum of mXLabelLeftOverhang and tYLabelNeed into tLabelSpaceLeft
-
+	
 	-- There will be padding either side in addition to the specified padding
 	variable tGridWidth as Real
 	put mWidth - tLabelSpaceLeft - 2 * tPadding into tGridWidth
@@ -911,13 +878,13 @@ end handler
 private handler calculateXLabelGeometry() returns nothing
    variable tMaxHeight as Real
    put 0 into tMaxHeight
-
+	
    variable tXLabelRows as Number
    put 0 into tXLabelRows
 
    if mLabelXShow then
 		put 1 into tXLabelRows
-
+		
       variable tXLabels as List
       put mData[1] into tXLabels
 
@@ -983,7 +950,7 @@ private handler gridBottom() returns Real
 	variable tNeededBottom as Real
 	variable tPadding as Real
 	put gridPadding() into tPadding
-
+	
 	variable tXLabelsSpace as Real
 	put mXLabelRows * (mMaxXLabelHeight + tPadding) into tXLabelsSpace
 
@@ -1002,21 +969,21 @@ end handler
 private handler calculateGrid()
 	-- First calculate the size of any x-axis label overhangs
 	calculateXOverhangs()
-
+	
 	-- Next calculate the geometry (especially max width) of the y-axis labels
 	calculateYLabelGeometry()
-
+	
 	-- Now we know how much horizontal space the grid has, we can work
 	-- out the spacing of the vertical grid lines
 	calculateGridWidth()
-
+	
 	-- Now we can work out how to fit the x-axis labels correctly, so they don't overlap
 	calculateXLabelGeometry()
-
+	
 	-- Now we know how much vertical space the grid has, we can work
 	-- out the rest of the grid geometry.
 	calculateGridRect()
-
+	
 	put false into mRecalculateGrid
 end handler
 
@@ -1063,10 +1030,10 @@ private handler drawXLabels() returns nothing
          put tRight into tLeft
          add mGridHWidth to tRight
       end if
-
+      
 		put mHeight into tBottom
       put mHeight - ((tCount mod mXLabelRows) + 1) * (mMaxXLabelHeight + gridPadding()) into tTop
-
+      
       put rectangle [tLeft, tTop, tRight, tBottom] into tThisRect
       fill text tLabel at center of tThisRect on this canvas
    end repeat
@@ -1130,25 +1097,25 @@ private handler drawGraph() returns nothing
 			put stringToColor("0,0,0") into tColour
 		end if
 		set the paint of this canvas to solid paint with tColour
-
+		
 		variable tFilledMarkers as Boolean
 		variable tMarkerPath as Path
-
+		
 		if mVerticesShow is true then
 			variable tStyle as String
 			put mMarkerStyles[tGraphLine - 1] into tStyle
-
+			
 			if tStyle contains "circle" then
 				put circle path centered at point [0,0] with radius tMarkerSize into tMarkerPath
-
+			
 				put tStyle contains "filled" into tFilledMarkers
 			else if tStyle contains "square" or mMarkerStyles[tGraphLine - 1] contains "diamond" then
 				put rectangle path of rectangle [-tMarkerSize,-tMarkerSize,tMarkerSize,tMarkerSize] into tMarkerPath
-
+				
 				if tStyle contains "diamond" then
 					rotate tMarkerPath by 45
 				end if
-
+				
 				put tStyle contains "filled" into tFilledMarkers
 			else
 				put path iconSVGPathFromName(tStyle) into tMarkerPath
@@ -1156,19 +1123,19 @@ private handler drawGraph() returns nothing
 				constrainPathToRect(rectangle [-tMarkerSize,-tMarkerSize,tMarkerSize,tMarkerSize],tMarkerPath)
 			end if
 		end if
-
+		
 		variable tPointIndex as Integer
 		repeat with tPointIndex from 1 up to the number of elements in tDataPoints
 			if tDataPoints[tPointIndex] is not nothing then
 				variable tPointX as Real
 				variable tPointY as Real
 				put the left of mGridRect + ((tPointIndex - 1) * mGridHWidth) into tPointX
-
+				
 				variable tHeightRatio as Real
 				put (tDataPoints[tPointIndex] - mYMin) / (mYMax - mYMin) into tHeightRatio
 				put the bottom of mGridRect - the height of mGridRect * tHeightRatio into tPointY
 				put point [tPointX, tPointY] into tPoint
-
+				
 				if mLinesShow is true then
 					if tPointIndex is 1 then
 						move to tPoint on tPath
@@ -1186,10 +1153,9 @@ private handler drawGraph() returns nothing
 			end if
 		end repeat
 		if mLinesShow is true then
-			set the stroke width of this canvas to mLineSize
 			stroke tPath on this canvas
 		end if
-
+		
 		if mVerticesShow is true then
 			if tFilledMarkers then
 				fill tPathVertices on this canvas
@@ -1213,20 +1179,20 @@ private handler drawHilited() returns nothing
 
 	variable tX as Real
 	variable tY as Real
-
+	
 	variable tHilitedY as optional Number
 	put mHilitedCoordinates[2] parsed as number into tHilitedY
 	-- At the moment, the Y hilite must be a number (as the data points are assumed to be)
 	if tHilitedY is nothing then
 		return
 	end if
-
+	
 	variable tHilitedX as optional Number
 	put mHilitedCoordinates[1] parsed as number into tHilitedX
-
-	-- If there is a non-numeric x axis element then we need it to be one of the named x-axis
+	
+	-- If there is a non-numeric x axis element then we need it to be one of the named x-axis 
 	-- values. Otherwise we can interpolate the hliited x-coord.
-	if mXMin is nothing or tHilitedX is nothing then
+	if mXMin is nothing or tHilitedX is nothing then 
 		if not mHilitedCoordinates[1] is in mData[1] then
 			return
 		else
@@ -1237,28 +1203,28 @@ private handler drawHilited() returns nothing
 	else
 		put the width of mGridRect  * (tHilitedX - mXMin) / (mXMax - mXMin) into tX
 	end if
-
+		
 	put the height of mGridRect * (tHilitedY - mYMin) / (mYMax - mYMin) into tY
-
+	
 	// Draw the graph lines
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
 	set the dashes of this canvas to [4,4]
-
+	
 	variable tColor as String
 	if mHilitedCoordinatesColor is "" then
 		put "0,0,0" into tColor
 	else
 		put mHilitedCoordinatesColor into tColor
-	end if
-
+	end if 
+	
 	set the paint of this canvas to solid paint with stringToColor(tColor)
-
+	
 	variable tPointX as Real
 	variable tPointY as Real
 	put the left of mGridRect + tX into tPointX
 	put the bottom of mGridRect - tY into tPointY
-
+	
 	stroke line path from point [the left of mGridRect, tPointY] to point [tPointX, tPointY] on this canvas
 	stroke line path from point [tPointX, tPointY] to point [tPointX, the bottom of mGridRect] on this canvas
 	set the antialias of this canvas to true
