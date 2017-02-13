@@ -259,7 +259,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     }
     break;
         
-	case kMCCapsuleSectionTypeStack:
+	case kMCCapsuleSectionTypeMainStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
@@ -270,7 +270,19 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		//   the startup script and such work.
 		MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
-			
+            
+    case kMCCapsuleSectionTypeScriptOnlyMainStack:
+        if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read standalone stack");
+            return false;
+        }
+            
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
+        break;
+            
 	case kMCCapsuleSectionTypeExternal:
 	{
 		MCAutoStringRef t_external_str;
@@ -332,6 +344,25 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
+
+    case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadscriptonlystackofsize(kMCEmptyString,
+                                                           p_stream,
+                                                           p_length,
+                                                           nullptr,
+                                                           t_aux_stack,
+                                                           t_result)
+            != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+    break;
             
     case kMCCapsuleSectionTypeModule:
     {

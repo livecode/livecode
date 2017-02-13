@@ -448,6 +448,12 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 	return IO_NORMAL;
 }
 
+bool MCDispatch::streamstackisscriptonly(IO_handle stream)
+{
+    uint32_t t_version;
+    return readheader(stream, t_version) != IO_NORMAL;
+}
+
 // This method reads a stack from the given stream. The stack is set to
 // have parent MCDispatch, and filename MCcmd. It is designed to be used
 // for embedded stacks/deployed stacks/revlet stacks.

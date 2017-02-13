@@ -292,6 +292,9 @@ public:
                                            MCStack* &r_stack,
                                            const char* &r_result);
     
+    // Determine if the stream contains a script-only stack
+    bool streamstackisscriptonly(IO_handle stream);
+    
     // Integrate a loaded stack into the environemnt, sending reloadStack
     // if required.
     void processstack(MCStringRef p_openpath, MCStack* &x_stack);
