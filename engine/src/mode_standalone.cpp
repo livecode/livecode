@@ -317,16 +317,21 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 			
-	case kMCCapsuleSectionTypeAuxiliaryStack:
-	{
-		MCStack *t_aux_stack;
-		if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
-		{
-            MCresult -> sets("failed to read auxiliary stack");
-			return false;
-		}
-	}
-	break;
+    case kMCCapsuleSectionTypeAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadbinarystack(kMCEmptyString,
+                                                 kMCEmptyString,
+                                                 p_stream, nullptr,
+                                                 t_aux_stack, t_result) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+        break;
             
     case kMCCapsuleSectionTypeModule:
     {
