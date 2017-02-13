@@ -635,53 +635,43 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         
         // Load the file into memory - we need to process a byteorder mark and any
         // line endings.
-        int64_t t_size;
-        t_size = MCS_fsize(stream);
-        
-        uint8_t *t_script;
-        /* UNCHECKED */ MCMemoryAllocate(t_size, t_script);
+        uindex_t t_size = static_cast<uindex_t>(MCS_fsize(stream));
 
-        if (IO_read(t_script, t_size, stream) == IO_ERROR)
+        MCAutoPointer<byte_t> t_script = new byte_t[t_size];
+        if (IO_read(*t_script, t_size, stream) == IO_ERROR)
         {
             MCresult -> sets("unable to read file");
             return checkloadstat(IO_ERROR);
         }
-
-        // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
+        
+        uindex_t t_bom_size = 0;
+        MCFileEncodingType t_file_encoding =
+        MCS_resolve_BOM_from_bytes(*t_script, t_size, t_bom_size);
+        
         MCStringEncoding t_string_encoding;
-        MCAutoStringRef t_raw_script_string, t_LC_script_string;
-
-        uint32_t t_BOM_offset;
         switch (t_file_encoding)
         {
-        case kMCFileEncodingUTF8:
-            t_BOM_offset = 3;
-            t_string_encoding = kMCStringEncodingUTF8;
-            break;
-        case kMCFileEncodingUTF16:
-            t_string_encoding = kMCStringEncodingUTF16;
-            t_BOM_offset = 2;
-            break;
-        case kMCFileEncodingUTF16BE:
-            t_string_encoding = kMCStringEncodingUTF16BE;
-            t_BOM_offset = 2;
-            break;
-        case kMCFileEncodingUTF16LE:
-            t_string_encoding = kMCStringEncodingUTF16LE;
-            t_BOM_offset = 2;
-            break;
-        default:
-            // Assume native
-            t_string_encoding = kMCStringEncodingNative;
-            t_BOM_offset = 0;
-            break;
+            case kMCFileEncodingUTF8:
+                t_string_encoding = kMCStringEncodingUTF8;
+                break;
+            case kMCFileEncodingUTF16:
+                t_string_encoding = kMCStringEncodingUTF16;
+                break;
+            case kMCFileEncodingUTF16BE:
+                t_string_encoding = kMCStringEncodingUTF16BE;
+                break;
+            case kMCFileEncodingUTF16LE:
+                t_string_encoding = kMCStringEncodingUTF16LE;
+                break;
+            default:
+                // Assume native
+                t_string_encoding = kMCStringEncodingNative;
+                break;
         }
 
-        /* UNCHECKED */ MCStringCreateWithBytes(t_script + t_BOM_offset, t_size - t_BOM_offset, t_string_encoding, false, &t_raw_script_string);
+        MCAutoStringRef t_raw_script_string, t_LC_script_string;
+        /* UNCHECKED */ MCStringCreateWithBytes(*t_script + t_bom_size, t_size - t_bom_size, t_string_encoding, false, &t_raw_script_string);
         /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
-
-        MCMemoryDeallocate(t_script);
         
         // Now attempt to parse the header line:
         //   'script' <string>
