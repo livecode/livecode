@@ -42,7 +42,7 @@
 			'YYWRAP.b',
 		],
 		
-		'java-dsl-parse_source_files':
+		'lc-compile-ffi-java_source_files':
 		[
 			'literal.c',
 			'main.c',

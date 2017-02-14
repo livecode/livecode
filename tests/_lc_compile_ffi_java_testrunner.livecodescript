@@ -1,4 +1,4 @@
-﻿script "JavaDSLParserTestRunner"
+﻿script "LCCompileFFIJavaTestRunner"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -37,14 +37,14 @@ end startup
 ----------------------------------------------------------------
 
 command CompilerTestRunner_ValidateEnvironment
-   if $JAVA_DSL_PARSER is empty then
-      return "JAVA_DSL_PARSER environment var must be set to java-dsl-parse to use"
+   if $LC_COMPILE_FFI_JAVA is empty then
+      return "LC_COMPILE_FFI_JAVA environment var must be set to lc-compile-ffi-java to use"
    end if
    return empty
 end CompilerTestRunner_ValidateEnvironment
 
 private command CompilerTestRunner_DoUsage pStatus
-   write "Usage: _javadslparsertestrunner.livecodescript run [SCRIPT [COMMAND]]" & return to stderr
+   write "Usage: _lc_compile_ffi_java_testrunner.livecodescript run [SCRIPT [COMMAND]]" & return to stderr
    quit pStatus
 end CompilerTestRunner_DoUsage
 
@@ -63,7 +63,7 @@ command CompilerTestRunner_DoRunTest pTestInfo, @rOutput, @rExitStatus
    
    -- Build the command line
    local tJavaDSLParserCmdLine
-   put format("%s --check %s %s", $JAVA_DSL_PARSER, tOutputFile, tTestFile) into tJavaDSLParserCmdLine
+   put format("%s --check %s %s", $LC_COMPILE_FFI_JAVA, tOutputFile, tTestFile) into tJavaDSLParserCmdLine
    reportCompilerTestDiag format("compile command is %s", tJavaDSLParserCmdLine)
 
    -- Try to execute the compilation
@@ -76,7 +76,7 @@ command CompilerTestRunner_DoRunTest pTestInfo, @rOutput, @rExitStatus
    if tJavaDSLParserExitStatus is 0 then
    	  local tFirstOutput, tSecondOutput, tIsIdempotent
 	  put textDecode(url("binfile:" & tOutputFile), "utf8") into tFirstOutput
-      put format("%s --check %s %s", $JAVA_DSL_PARSER, tOutputFile, tTestFile) into tJavaDSLParserCmdLine
+      put format("%s --check %s %s", $LC_COMPILE_FFI_JAVA, tOutputFile, tTestFile) into tJavaDSLParserCmdLine
       local tJavaDSLParserSecondOutput, tJavaDSLParserSecondExitStatus
       put shell(tJavaDSLParserCmdLine) into tJavaDSLParserSecondOutput
    	  put the result into tJavaDSLParserSecondExitStatus

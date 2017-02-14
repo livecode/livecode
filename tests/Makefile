@@ -51,15 +51,15 @@ LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
 LC_RUN_LOG = _lc_run_test_suite.log
 
-########## Java FFI DSL test parameters
+########## lc-compile-ffi-java test parameters
 
-JAVA_DSL_PARSER ?= $(bin_dir)/java-dsl-parse
+LC_COMPILE_FFI_JAVA ?= $(bin_dir)/lc-compile-ffi-java
 
-JAVA_DSL_PARSER_TESTRUNNER ?= $(top_srcdir)/tests/_javadslparsertestrunner.livecodescript
+LC_COMPILE_FFI_JAVA_TESTRUNNER ?= $(top_srcdir)/tests/_lc_compile_ffi_java_testrunner.livecodescript
 
-JAVA_DSL_PARSER_CMD = $(LCS_ENGINE) -ui $(JAVA_DSL_PARSER_TESTRUNNER) run
+LC_COMPILE_FFI_JAVA_CMD = $(LCS_ENGINE) -ui $(LC_COMPILE_FFI_JAVA_TESTRUNNER) run
 
-JAVA_DSL_PARSER_LOG = _java_dsl_parser_test_suite.log
+LC_COMPILE_FFI_JAVA_LOG = _lc-compile-ffi-java_test_suite.log
 
 ################################################################
 # Top-level targets
@@ -67,7 +67,7 @@ JAVA_DSL_PARSER_LOG = _java_dsl_parser_test_suite.log
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check java-ffi-dsl-check
+check: lcs-check lcb-check compiler-check lc-compile-ffi-java-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -191,14 +191,14 @@ lcb-check: lcm_compile
 	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
 
 ################################################################
-# Java FFI DSL parser tests
+# lc-compile-ffi-java tests
 ################################################################
 
-java-ffi-dsl-check: $(JAVA_DSL_PARSE)
-	@rm -f $(JAVA_DSL_PARSER_LOG)
-	@export JAVA_DSL_PARSER="$(JAVA_DSL_PARSER)"; \
-	export LCC_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
-	export TEST_SUITE_LOG_FILE="$(JAVA_DSL_PARSER_LOG)"; \
-	cmd="$(JAVA_DSL_PARSER_CMD)"; \
+lc-compile-ffi-java-check: $(LC_COMPILE_FFI_JAVA)
+	@rm -f $(LC_COMPILE_FFI_JAVA_LOG)
+	@export LC_COMPILE_FFI_JAVA="$(LC_COMPILE_FFI_JAVA)"; \
+	export LCC_VERBOSE="$(LC_COMPILE_FFI_JAVA_VERBOSE)"; \
+	export TEST_SUITE_LOG_FILE="$(LC_COMPILE_FFI_JAVA_LOG)"; \
+	cmd="$(LC_COMPILE_FFI_JAVA_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd

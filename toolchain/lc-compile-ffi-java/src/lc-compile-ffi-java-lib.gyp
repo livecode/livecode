@@ -2,13 +2,13 @@
 	'includes':
 	[
 		'../../../common.gypi',
-		'java-dsl-parse-sources.gypi'
+		'lc-compile-ffi-java-sources.gypi'
 	],
 
 	'targets':
 	[
 		{
-			'target_name': 'java-dsl-parse-lib',
+			'target_name': 'lc-compile-ffi-java-lib',
 			'type': 'static_library',
 
 			'dependencies':
@@ -18,11 +18,11 @@
 	
 			'toolsets': ['host', 'target'],
 
-			'product_name': 'java-dsl-parse-lib-<(_toolset)',
+			'product_name': 'lc-compile-ffi-java-lib-<(_toolset)',
 
 			'sources':
 			[
-					'<@(java-dsl-parse_source_files)',
+					'<@(lc-compile-ffi-java_source_files)',
 			],
 		},
 	],

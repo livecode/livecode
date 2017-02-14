@@ -36,7 +36,7 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: java-dsl-parse [OPTION ...] --check OUTFILE --output OUTFILE [--] SOURCEFILES\n"
+"Usage: lc-compile-ffi-java [OPTION ...] --check OUTFILE --output OUTFILE [--] SOURCEFILES\n"
 "\n"
 "Parse a Java FFI DSL source file.\n"
 "\n"

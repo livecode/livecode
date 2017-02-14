@@ -8,7 +8,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'java-dsl-parse',
+			'target_name': 'lc-compile-ffi-java',
 			'type': 'none',
 			
 			'toolsets': ['host','target'],
@@ -20,22 +20,22 @@
 					{
 						'dependencies':
 						[
-							'src/java-dsl-parse-generate.gyp:java-dsl-parse#target',
+							'src/lc-compile-ffi-java-generate.gyp:lc-compile-ffi-java#target',
 						],
 						
 						'direct_dependent_settings':
 						{
 							'variables':
 							{
-								'java-dsl-parse_target': '<(PRODUCT_DIR)/java-dsl-parse<(EXECUTABLE_SUFFIX)',
-								'java-dsl-parse_host':   '<(PRODUCT_DIR)/java-dsl-parse<(EXECUTABLE_SUFFIX)',
+								'lc-compile-ffi-java_target': '<(PRODUCT_DIR)/lc-compile-ffi-java<(EXECUTABLE_SUFFIX)',
+								'lc-compile-ffi-java_host':   '<(PRODUCT_DIR)/lc-compile-ffi-java<(EXECUTABLE_SUFFIX)',
 							},
 						},
 					},
 					{
 						'dependencies':
 						[
-							'src/java-dsl-parse-generate.gyp:java-dsl-parse#host',
+							'src/lc-compile-ffi-java-generate.gyp:lc-compile-ffi-java#host',
 						],
 						
 						'conditions':
@@ -45,7 +45,7 @@
 								{
 									'dependencies':
 									[
-										'src/java-dsl-parse-generate.gyp:java-dsl-parse#target',
+										'src/lc-compile-ffi-java-generate.gyp:lc-compile-ffi-java#target',
 									],
 
 									'direct_dependent_settings':
@@ -54,7 +54,7 @@
 										{
 											'dist_files':
 											[
-												'<(java-dsl-parse_target)',
+												'<(lc-compile-ffi-java_target)',
 											],
 										},
 									},
@@ -68,7 +68,7 @@
 										'variables':
 										{
 											# Work-around for Xcode/Gyp impedance mismatch
-											'java-dsl-parse_host': '<(mac_tools_dir)/java-dsl-parse-host',
+											'lc-compile-ffi-java_host': '<(mac_tools_dir)/lc-compile-ffi-java-host',
 										},
 									},
 								},
@@ -79,8 +79,8 @@
 						{
 							'variables':
 							{
-								'java-dsl-parse_target': '<(PRODUCT_DIR)/java-dsl-parse-target<(EXECUTABLE_SUFFIX)',
-								'java-dsl-parse_host':   '<(PRODUCT_DIR)/java-dsl-parse-host<(EXECUTABLE_SUFFIX)',
+								'lc-compile-ffi-java_target': '<(PRODUCT_DIR)/lc-compile-ffi-java-target<(EXECUTABLE_SUFFIX)',
+								'lc-compile-ffi-java_host':   '<(PRODUCT_DIR)/lc-compile-ffi-java-host<(EXECUTABLE_SUFFIX)',
 							},
 						},
 					},

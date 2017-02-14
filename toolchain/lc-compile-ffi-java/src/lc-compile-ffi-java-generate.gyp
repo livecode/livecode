@@ -8,14 +8,14 @@
 	{
 		'includes':
 		[
-			'java-dsl-parse-sources.gypi',
+			'lc-compile-ffi-java-sources.gypi',
 		],
 
 		'dependencies':
 		[
 			'../../gentle/gentle/grts.gyp:grts',
 			'../../libcompile/libcompile.gyp:libcompile',
-			'java-dsl-parse-lib.gyp:java-dsl-parse-lib',
+			'lc-compile-ffi-java-lib.gyp:lc-compile-ffi-java-lib',
 		],
 		
 		'include_dirs':
@@ -51,7 +51,7 @@
 						{
 							'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
 							
-							# On Windows, java-dsl-parse can run out of stack space in certain
+							# On Windows, lc-compile-ffi-java can run out of stack space in certain
 							# builds (it needs more than the 1MB default provided).
 							# Increase the number to 64MB to be on the safe side
 							'StackReserveSize': '0x04000000',
@@ -169,7 +169,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'java-dsl-parse',
+			'target_name': 'lc-compile-ffi-java',
 			'type': 'executable',
 			
 			'toolsets': ['target', 'host'],
@@ -190,10 +190,10 @@
 				[
 					'_toolset != "target"',
 					{
-						'product_name': 'java-dsl-parse-<(_toolset)',
+						'product_name': 'lc-compile-ffi-java-<(_toolset)',
 					},
 					{
-						'product_name': 'java-dsl-parse',
+						'product_name': 'lc-compile-ffi-java',
 						
 						'all_dependent_settings':
 						{

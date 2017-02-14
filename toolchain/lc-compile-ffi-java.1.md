@@ -1,13 +1,13 @@
-java-dsl-parse(1) -- convert java package spec files into lcb code
+lc-compile-ffi-java(1) -- convert java package spec files into lcb code
 ===================================================
 
 ## SYNOPSIS
 
-**java-dsl-parse** [_OPTION_ ...] [--] _DSLFILE_...
+**lc-compile-ffi-java** [_OPTION_ ...] [--] _DSLFILE_...
 
 ## DESCRIPTION
 
-**java-dsl-parse** parses a specification of a java package into an 
+**lc-compile-ffi-java** parses a specification of a java package into an 
 abstract form, and outputs as specified.
 
 ## OPTIONS
@@ -24,7 +24,7 @@ abstract form, and outputs as specified.
 
 * --check _CHECKFILE_:
   Output the parsed data to _CHECKFILE_. This is used for checking
-  consistency of output - the result of running **java-dsl-parse** on 
+  consistency of output - the result of running **lc-compile-ffi-java** on 
   _CHECKFILE_ should be identical to _CHECKFILE_.
   
 * -h, --help: Print some basic usage information.

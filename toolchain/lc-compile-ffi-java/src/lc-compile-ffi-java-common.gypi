@@ -14,7 +14,7 @@
 	[
 		{
 			'action_name': 'gentle',
-			'message': 'Running gentle on full java-dsl-parse grammar',
+			'message': 'Running gentle on full lc-compile-ffi-java grammar',
 			'process_outputs_as_sources': 1,
 			
 			'inputs':
@@ -45,7 +45,7 @@
 		},
 		{
 			'action_name': 'reflex',
-			'message': 'Running reflex on full java-dsl-parse grammar',
+			'message': 'Running reflex on full lc-compile-ffi-java grammar',
 			'process_outputs_as_sources': 1,
 			
 			'inputs':
