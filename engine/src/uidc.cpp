@@ -1480,11 +1480,14 @@ bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
 		MCMovingList *mptr = moving;
 		do
 		{
-			MCAutoValueRef t_string;
-			if (!mptr->object->names(P_LONG_ID, &t_string))
-				return false;
-			if (!MCListAppend(*t_list, *t_string))
-				return false;
+            if (mptr->object)
+            {
+                MCAutoValueRef t_string;
+                if (!mptr->object->names(P_LONG_ID, &t_string))
+                    return false;
+                if (!MCListAppend(*t_list, *t_string))
+                    return false;
+            }
 			mptr = mptr->next();
 		}
 		while (mptr != moving);
@@ -1499,7 +1502,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 		MCMovingList *mptr = moving;
 		do
 		{
-			if (mptr->object == optr)
+			if (mptr->object.IsBoundTo(optr))
 			{
 				mptr->remove(moving);
 				if (finish)
@@ -1515,7 +1518,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 						// MW-2011-08-18: [[ Layers ]] Notify of position change.
 						if (mptr->object -> gettype() >= CT_GROUP)
-							static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+							mptr->object.GetAs<MCControl>()->layer_setrect(newrect, false);
 						else
 							mptr->object->setrect(newrect);
 					}
@@ -1539,34 +1542,47 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 	Boolean done = False;
 	do
 	{
-		MCRectangle rect = mptr->object->getrect();
-		MCRectangle newrect = rect;
-		real8 dt = 0.0;
-		if (curtime >= mptr->starttime + mptr->duration
-		        || (rect.x == mptr->donex && rect.y == mptr->doney))
-		{
-			newrect.x = mptr->donex;
-			newrect.y = mptr->doney;
-			dt = curtime - (mptr->starttime + mptr->duration);
-			done = True;
-		}
-		else
-		{
-			newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
-			            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
-			newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
-			            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
-		}
-		if (newrect.x != rect.x || newrect.y != rect.y)
-		{
-			moved = True;
-		
-			// MW-2011-08-18: [[ Layers ]] Notify of position change.
-			if (mptr->object -> gettype() >= CT_GROUP)
-				static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
-			else
-				mptr->object->setrect(newrect);
-		}
+        if (!mptr->object)
+        {
+            moving = mptr->prev();
+            mptr->remove(moving);
+            delete mptr;
+            if (moving == NULL)
+                mptr = NULL;
+            else
+                mptr = moving->next();
+            continue;
+        }
+        
+        MCRectangle rect = mptr->object->getrect();
+        MCRectangle newrect = rect;
+        real8 dt = 0.0;
+        if (curtime >= mptr->starttime + mptr->duration
+            || (rect.x == mptr->donex && rect.y == mptr->doney))
+        {
+            newrect.x = mptr->donex;
+            newrect.y = mptr->doney;
+            dt = curtime - (mptr->starttime + mptr->duration);
+            done = True;
+        }
+        else
+        {
+            newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
+                        + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
+            newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
+                        + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
+        }
+        if (newrect.x != rect.x || newrect.y != rect.y)
+        {
+            moved = True;
+        
+            // MW-2011-08-18: [[ Layers ]] Notify of position change.
+            if (mptr->object -> gettype() >= CT_GROUP)
+                mptr->object.GetAs<MCControl>()->layer_setrect(newrect, false);
+            else
+                mptr->object->setrect(newrect);
+        }
+
 		if (done)
 		{
 			if (mptr->curpt < mptr->lastpt - 1)
@@ -1642,8 +1658,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 		return false;
 
     uint4 slength = strlen(*t_cstring);
-    MCAutoPointer<char[]> startptr;
-    startptr = new (nothrow) char[slength + 1];
+    /* UNCHECKED */ MCAutoPointer<char[]> startptr = new (nothrow) char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);
 

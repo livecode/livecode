@@ -81,13 +81,6 @@ public:
 		return name;
 	}
 	
-	const char *getname_cstring(void)
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
-		return t_name;
-	}
-	
 	bool hasname(MCNameRef other_name)
 	{
 		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);

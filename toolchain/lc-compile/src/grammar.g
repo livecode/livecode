@@ -227,7 +227,12 @@
 
     'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, foreign, Signature))):
         "foreign" @(-> Position) "handler" "type" Identifier(-> Id) Signature(-> Signature)
-        
+
+    'rule' ImportDefinition(-> type(Position, public, Id, record(Position, Fields))):
+        "record" @(-> Position) "type" Identifier(-> Id) Separator
+            RecordFields(-> Fields)
+        "end" "type"
+
     'rule' ImportDefinition(-> type(Position, public, Id, Type)):
         "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
 
@@ -375,8 +380,8 @@
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" StringLiteral(-> Binding)
         
-    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
-        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Fields))):
+        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) Separator
             RecordFields(-> Fields)
         "end" "type"
         
@@ -1319,7 +1324,7 @@
 	'rule' ResolveIdInNamespace(nil, Id -> Name):
 		Id'Name -> Name
 
-'action' ResolveNamespace(OPTIONALID -> NAME)
+'condition' ResolveNamespace(OPTIONALID -> NAME)
 
 	'rule' ResolveNamespace(id(NamespaceId) -> Name):
 		GetQualifiedName(NamespaceId -> Name)

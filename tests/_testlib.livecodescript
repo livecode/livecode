@@ -38,15 +38,15 @@ private function _TestValidateDescription pDescription
    if the number of lines in pDescription > 1 then
       throw "Bad test description '" & line 1 of pDescription & "...': multiple lines"
    end if
-   
+
    if "0123456789" contains codepoint 1 of pDescription then
       throw "Bad test description '" & pDescription & "': starts with digit"
    end if
-   
+
    if pDescription contains "#" then
       throw "Bad test description '" & pDescription & "': contains '#'"
    end if
-   
+
    return line 1 of pDescription
 end _TestValidateDescription
 
@@ -54,11 +54,11 @@ private function _TestValidateReason pReason
    if the number of lines in pReason > 1 then
       throw "Bad test directive reason '" & line 1 of pReason & "...': multiple lines"
    end if
-   
+
    if pReason contains "#" then
       throw "Bad test directive reason '" & pReason & "': contains '#'"
    end if
-   
+
    return line 1 of pReason
 end _TestValidateReason
 
@@ -81,26 +81,26 @@ private command _TestOutput pIsOkay, pDescription, pDirective, pReason
    put _TestValidateDescription(pDescription) into tDescription
    put _TestValidateDirective(pDirective) into tDirective
    put _TestValidateReason(pReason) into tReason
-   
+
    local tMessage
    if pIsOkay then
       put "ok" into tMessage
    else
       put "not ok" into tMessage
    end if
-   
+
    if tDescription is not empty then
       put " - " & tDEscription after tMessage
    end if
-   
+
    if tDirective is not empty then
       put " # " & tDirective after tMessage
-      
+
       if tReason is not empty then
          put " " & tReason after tMessage
       end if
    end if
-   
+
    _TestWriteOutput tMessage & return
 end _TestOutput
 
@@ -118,7 +118,7 @@ private function _TestGetBuildFolder
    local tPath, tRepoPath
    put specialfolderpath("engine") into tPath
    put TestGetEngineRepositoryPath() into tRepoPath
-   
+
    # Find the built extensions folder
    set the itemdelimiter to slash
    repeat while tPath is not tRepoPath and tPath is not empty
@@ -126,7 +126,7 @@ private function _TestGetBuildFolder
          return tPath
       end if
       delete item -1 of tPath
-   end repeat	
+   end repeat
 end _TestGetBuildFolder
 
 private function _TestGetBuiltExtensionsFolder
@@ -154,7 +154,7 @@ function TestFetchAndClearOutput
    if not sOutputToVariable then
       return empty
    end if
-   
+
    local tOutput
    put sOutput into tOutput
    put empty into sOutput
@@ -190,7 +190,7 @@ on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode, pParam
       dispatch pHandler to pTarget with pParam
     catch tError
     end try
-    
+
     TestAssert pDescription, pErrorCode is item 1 of line 1 of tError
 end TestAssertThrow
 
@@ -213,50 +213,70 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
-on TestLoadExtension pName	
+on TestLoadExtension pName
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
-   
+
    local tError
    put "extension" && pName && "not found" into tError
-   
+
    local tExtensionsFolder
    put _TestGetBuiltExtensionsFolder() into tExtensionsFolder
-   
+
    local tExtensionFolder
    if tExtensionsFolder is not empty then
       if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
         put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
-   
+
    local tExtensionFile
    if tExtensionFolder is not empty then
       if there is a file (tExtensionFolder & slash & "module.lcm") then
          put (tExtensionFolder & slash & "module.lcm") into tExtensionFile
       end if
    end if
-   
+
    if tExtensionFile is not empty then
       _TestLoadExtension tExtensionFolder, tExtensionFile
    end if
    put the result into tError
-   
+
    if tError is not empty then
       write tError & return to stderr
       quit 1
    end if
-   
+
 end TestLoadExtension
 
-on TestLoadAllExtensions   
+-- This loads an extension whose lcb source sits in the same folder as the
+-- current test.
+on TestLoadAuxillaryExtension pName
+	local tBasePath, tExtraPath
+	set the itemDelimiter to slash
+	put item 1 to -2 of the filename of this stack into tBasePath
+	repeat while the last item of tBasePath is not "tests"
+		put item -1 of tBasePath & slash before tExtraPath
+		delete the last item of tBasePath
+	end repeat
+
+	local tModuleFile
+	put tBasePath & "/../_tests/_build/" & tExtraPath & pName & ".lcm" into tModuleFile
+
+	load extension from data url ("binfile:" & tModuleFile)
+	if the result is not empty then
+		throw "Failed to load auxillary extension:" && the result && tModuleFile
+	end if
+end TestLoadAuxillaryExtension
+
+on TestLoadAllExtensions
    local tExtFolder
    put _TestGetBuiltExtensionsFolder() into tExtFolder
 
    local tExtensions
    put folders(tExtFolder) into tExtensions
-   
+
    local tFiles, tExtensionsA
    local tHasCompiled, tSource
 
@@ -283,7 +303,7 @@ on TestLoadAllExtensions
          end if
       end repeat
    end repeat
-   
+
    # Use the lc-compile --deps option to sort by dependency
    local tLCCompile, tLCBFiles
    put the keys of tExtensionsA into tLCBFiles
@@ -295,7 +315,7 @@ on TestLoadAllExtensions
       write the result & return to stderr
       quit 1
    end if
-   
+
    # Load the extensions in order
    repeat for each line tExtFile in tLCBFiles
       _TestLoadExtension tExtensionsA[tExtFile], tExtensionsA[tExtFile] & slash & "module.lcm"
@@ -314,16 +334,16 @@ on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
         	put ", pParamsArray[" & tParam & "]" after tParams
         end if
     end repeat
-    
+
     put tParams after tDoString
     put "; put the result into tResult" after tDoString
-    
+
     put false into tResult
-    
+
     local tTimer, tTimeout
     put false into tTimeout
     put the millisecs into tTimerStart
-    
+
     repeat while tResult is false and not tTimeout
        wait 1 millisecs with messages
 	   do tDoString
@@ -331,10 +351,24 @@ on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
           put true into tTimeOut
        end if
 	end repeat
-	
+
     TestAssert pDesc, tResult
-    
+
     if (not tResult) and tTimeOut then
 		TestDiagnostic pDesc & "- timed out"
 	end if
 end TestRepeat
+
+on TestRunStack pOptions, pStackFilePath
+	local tEnginePath
+	set the itemDelimiter to ":"
+	put item 2 of the address into tEnginePath
+
+	local tCommand
+	put format("\"%s\" %s \"%s\"", tEnginePath, pOptions, pStackFilePath) into tCommand
+
+	local tOutput
+	put shell(tCommand) into tOutput
+
+	return the result
+end TestRunStack

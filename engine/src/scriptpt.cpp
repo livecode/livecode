@@ -158,15 +158,18 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
+    : utf16_script(MCValueRetain(kMCEmptyData)),
+      length(MCDataGetLength(utf16_script)/sizeof(unichar_t)),
+      curptr(reinterpret_cast<const unichar_t*>(MCDataGetBytePtr(utf16_script))),
+      tokenptr(curptr),
+      backupptr(curptr),
+      endptr(curptr + length)
 {
-    utf16_script = MCValueRetain(kMCEmptyData);
     codepoint = '\0';
     curlength = 1;
     curobj = ctxt . GetObject();
     curhlist = ctxt . GetHandlerList();
     curhandler = ctxt . GetHandler();
-    curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
-    endptr = curptr + length;
     line = pos = 0;
     escapes = False;
     tagged = False;

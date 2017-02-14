@@ -22,8 +22,19 @@ public handler TestExtensionBridgeNames_Send()
 	return the result is a string
 end handler
 
+public handler TestExtensionBridgeArrays_EmptyToEmptyList(in pList as List) returns Boolean
+	return pList is the empty list
+end handler
+
+public handler TestExtensionLibraryHandler(in pValue as Number)
+end handler
+
 public handler TestExtensionSupportModule_Handler()
 	return SupportHandler() is "support handler"
+end handler
+
+public handler TestExtensionDelimiterAccess()
+	return [the item delimiter, the line delimiter, the column delimiter, the row delimiter]
 end handler
 
 end library

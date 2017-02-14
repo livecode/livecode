@@ -1158,6 +1158,7 @@ Boolean MCCard::del(bool p_check_flag)
 			}
 			else
 			{
+                optr->getref()->uncacheid();
 				getstack()->removecontrol(optr->getref());
 			}
 			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
@@ -1167,6 +1168,8 @@ Boolean MCCard::del(bool p_check_flag)
 		}
 		while (optr != objptrs);
 	}
+    
+    uncacheid();
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -1742,54 +1745,73 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	}
 	else
 	{
-		MCObjptr *newptr = new (nothrow) MCObjptr;
-		newptr->setparent(this);
-		newptr->setref(optr);
-		optr->setparent(this);
-		getstack()->appendcontrol(optr);
-		if (foundobj == NULL)
-			if (newlayer <= 1)
-				newptr->insertto(objptrs);
-			else
-				newptr->appendto(objptrs);
-		else
-		{
-			Boolean g = False;
-			if (!MCrelayergrouped)
-			{
-				while (foundobj->getparent() != this)
-				{
-					foundobj = (MCControl *)foundobj->getparent();
-					g = True;
-				}
-			}
-			tptr = objptrs;
-			do
-			{
-				if (tptr->getref() == foundobj)
-				{
-					if (g)
-					{
-						uint2 tnum;
-						count(CT_LAYER, CT_UNDEFINED, tptr->next()->getref(), tnum, True);
-						if (tptr->next() == objptrs || newlayer < tnum)
-						{
-							if (tptr == objptrs)
-								newptr->insertto(objptrs);
-							else
-								tptr->prev()->append(newptr);
-							break;
-						}
-					}
-					tptr->append(newptr);
-					break;
-				}
-				tptr = tptr->next();
-			}
-			while (tptr != objptrs);
-		}
+        /* Find place in the object pointer list at which the
+         * relayered object should be placed.  If t_before, the object
+         * should be placed immediately before the iterator. */
+        MCObjptr *t_insert_iter = objptrs;
+        bool t_before = false;
+        if (foundobj == nullptr)
+        {
+            t_before = (newlayer <= 1);
+        }
+        else
+        {
+            /* If there's a target object for relayering, and group
+             * relayering is banned, then we need to find the outer
+             * group of the target object. */
+            bool t_found_in_group = false;
+            while (!MCrelayergrouped &&
+                   foundobj->getparent() != this)
+            {
+                foundobj = MCObjectCast<MCControl>(foundobj->getparent());
+                t_found_in_group = true;
+            }
 
-		layer_added(optr, newptr -> prev() != objptrs -> prev() ? newptr -> prev() : nil, newptr -> next() != objptrs ? newptr -> next() : nil);
+            do
+            {
+                if (foundobj == t_insert_iter->getref())
+                {
+                    if (t_found_in_group)
+                    {
+                        uint2 t_minimum_layer = 0;
+                        count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
+                              t_minimum_layer, True);
+                        t_before = (t_insert_iter->next() == objptrs ||
+                                    newlayer < t_minimum_layer);
+                    }
+                    break;
+                }
+            }
+            while (t_insert_iter != objptrs);
+        }
+
+        /* Create and insert an object pointer */
+        MCObjptr *newptr = new (nothrow) MCObjptr();
+        if (newptr == nullptr)
+            return ES_ERROR;
+        newptr->setparent(this);
+        newptr->setref(optr);
+        optr->setparent(this);
+        getstack()->appendcontrol(optr);
+
+        if (t_insert_iter == objptrs)
+        {
+            if (t_before)
+                newptr->insertto(objptrs);
+            else
+                newptr->appendto(objptrs);
+        }
+        else
+        {
+            if (t_before)
+                t_insert_iter->prev()->append(newptr);
+            else
+                t_insert_iter->append(newptr);
+        }
+
+        layer_added(optr,
+                    (newptr->prev() != objptrs->prev()) ? newptr->prev() : nil,
+                    (newptr->next() != objptrs)         ? newptr->next() : nil);
 	}
 
 	if (oldparent == this)

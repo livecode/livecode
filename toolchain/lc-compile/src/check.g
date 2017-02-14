@@ -1674,7 +1674,7 @@
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
     'rule' IsHighLevelType(handler(_, _, _)):
-    'rule' IsHighLevelType(record(_, _, _)):
+    'rule' IsHighLevelType(record(_, _)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
     'rule' IsHighLevelType(real(_)):

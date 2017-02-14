@@ -29,7 +29,8 @@
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
-		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
+        'CLANG_CXX_LIBRARY': 'libc++'
 	},
 	
 	'target_defaults':
@@ -86,9 +87,6 @@
 				{
 					'xcode_settings':
 					{
-						# Always use libc++ standard library
-						'CLANG_CXX_LIBRARY': 'libc++',
-
 						'GCC_WARN_CHECK_SWITCH_STATEMENTS': 'YES',
 						'CLANG_WARN_EMPTY_BODY': 'YES',
 						'GCC_WARN_SHADOW': 'YES',

@@ -330,12 +330,21 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
     if (!casesensitive)
         flags |= REG_ICASE;
 
-	// Search the cache.
+	// Search the cache - keeping a note of any free slots in t_last_free.
 	uint2 i;
+	int t_last_free = -1;
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
+		if (MCregexcache[i] == NULL)
+		{
+			t_last_free = i;
+		}
+		
+		// Notice we only do a pointer comparison here. So the cache will
+		// work if the same pattern valueref is used more than once, but
+		// not if a pattern has a different valueref but same content.
 		if (MCregexcache[i] &&
-            MCStringIsEqualTo(exp, MCregexcache[i]->pattern, casesensitive ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless) &&
+            exp == MCregexcache[i]->pattern &&
 			flags == MCregexcache[i]->flags)
 		{
 			found = True;
@@ -347,7 +356,7 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	// If the pattern isn't found with the given flags, then create a new one.
 	if (re == nil)
 	{
-		/* UNCHECKED */ re = new (nothrow) regexp;
+		/* UNCHECKED */ re = new(std::nothrow) regexp;
 		/* UNCHECKED */ re->pattern = MCValueRetain(exp);
 		re->flags = flags;
 		int status;
@@ -364,11 +373,17 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	// If the pattern is new, put it in the cache.
 	if (!found)
 	{
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
+		// If we don't have a free slot, evict a randomish one.
+		if (t_last_free == -1)
 		{
-			MCregexcache[i] = MCregexcache[i - 1];
+			t_last_free = MCHashPointer(exp) % PATTERN_CACHE_SIZE;
+			MCR_free(MCregexcache[t_last_free]);
 		}
+		
+		// Make sure the new re is at position 0 in the cache.
+		// (We assume that if a pattern is used once then it is
+		// likely to be used again immediately after).
+		MCregexcache[t_last_free] = MCregexcache[0];
 		MCregexcache[0] = re;
 	}
 	
@@ -379,11 +394,20 @@ int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 {
     int status;
 	int flags = 0;
-    
+	
+	// Make sure we take a copy of the string to ensure it is Unicode.
+	// Otherwise, subsequent uses of 'string' will follow much slower
+	// codepaths causing unexpected degredation in performance.
+	MCAutoStringRef t_uni_string;
+	if (!MCStringUnicodeCopy(string, &t_uni_string))
+	{
+		regerror(REG_ESPACE, NULL, regexperror);
+		return 0;
+	}
+	
     // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
     // AL-2015-02-05: [[ Bug 14504 ]] Now that 'CanBeNative' flag is preserved, we can just use MCStringGetCharPtr here.
-    status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
-
+    status = regexec(&prog->rexp, MCStringGetCharPtr(*t_uni_string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
 	if (status != REG_OKAY)
 	{
 		if (status == REG_NOMATCH)

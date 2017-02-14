@@ -140,7 +140,7 @@ class MCSegment;
 class MCParagraph : public MCDLlist
 {
 	MCField *parent;
-	MCStringRef m_text;
+	MCAutoStringRef m_text;
 	MCBlock *blocks;
     MCSegment *segments;
 	MCLine *lines;
@@ -177,10 +177,10 @@ public:
 		// This assumes that the input string is valid UTF-16 and all surrogate
 		// pairs are matched correctly.
 		unichar_t t_lead, t_tail;
-		t_lead = MCStringGetCharAtIndex(m_text, p_index);
-		if (MCStringIsValidSurrogatePair(m_text, p_index))
+		t_lead = MCStringGetCharAtIndex(*m_text, p_index);
+		if (MCStringIsValidSurrogatePair(*m_text, p_index))
 		{
-            t_tail = MCStringGetCharAtIndex(m_text, p_index + 1);
+            t_tail = MCStringGetCharAtIndex(*m_text, p_index + 1);
 			return MCStringSurrogatesToCodepoint(t_lead, t_tail);
 		}
 		return t_lead;
@@ -192,11 +192,11 @@ public:
 	{
 		if (p_in < 0)
 			return 0;
-		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
+		unichar_t t_char = MCStringGetCharAtIndex(*m_text, p_in);
         // SN-2015-09-08: [[ Bug 15895 ]] A field can end with half of a
         //  surrogate pair - in which case the index only increments by 1.
 		if (0xD800 <= t_char && t_char < 0xDC00)
-            return (findex_t)MCU_min((uindex_t)(p_in + 2), MCStringGetLength(m_text));
+            return (findex_t)MCU_min((uindex_t)(p_in + 2), MCStringGetLength(*m_text));
 		return p_in + 1;
 	}
 	
@@ -206,7 +206,7 @@ public:
 	{
 		if (p_in <= 0)
             return 0;
-        unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
+        unichar_t t_char = MCStringGetCharAtIndex(*m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
 			return p_in - 2;
 		return p_in - 1;
@@ -257,7 +257,7 @@ public:
 	// paragraph in any way and should not be retained.
 	MCStringRef GetInternalStringRef() const
 	{
-		return m_text;
+		return *m_text;
 	}
 	
 	////////// BIDIRECTIONAL SUPPORT
@@ -436,13 +436,13 @@ public:
 			
         if (p_char_indices)
         {
-            MCRange t_cu_range = {0,MCStringGetLength(m_text)};
+            MCRange t_cu_range = {0,MCStringGetLength(*m_text)};
             MCRange t_char_range;
-            MCStringUnmapIndices(m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            MCStringUnmapIndices(*m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
             return t_char_range . length;
         }
         else
-            return MCStringGetLength(m_text);
+            return MCStringGetLength(*m_text);
 	}
 
 	// Same as gettextsize, except adjust by one for the CR character.

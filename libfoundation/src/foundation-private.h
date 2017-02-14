@@ -90,14 +90,16 @@ struct __MCTypeInfo: public __MCValue
         {
             MCRecordTypeFieldInfo *fields;
             uindex_t field_count;
-            MCTypeInfoRef base;
         } record;
         struct
         {
+            /* forward declaration, to avoid including FFI header here */
+            typedef struct _ffi_type ffi_type;
+
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
-            void **layout_args;
+            ffi_type** layout_args;
             MCHandlerTypeLayout *layouts;
         } handler;
         struct
@@ -555,7 +557,6 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 uindex_t __MCRecordTypeInfoGetFieldCount (__MCTypeInfo *self);
-void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
 
 bool __MCForeignValueInitialize(void);
 void __MCForeignValueFinalize(void);

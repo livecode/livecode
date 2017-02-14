@@ -310,7 +310,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     nalignments = fref.nalignments;
     if (nalignments)
     {
-        alignments = new (nothrow) intenum_t[ntabs];
+        /* UNCHECKED */ alignments = new (nothrow) intenum_t[nalignments];
         uint2 i;
         for (i = 0; i < nalignments; i++)
             alignments[i] = fref.alignments[i];
@@ -770,6 +770,9 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 
 			finsertnew(function, p_string, key);
 		}
+		break;
+	case FT_SELECTALL:
+		seltext(0, getpgsize(nil), True);
 		break;
 	case FT_DELBCHAR:
     case FT_DELBSUBCHAR:

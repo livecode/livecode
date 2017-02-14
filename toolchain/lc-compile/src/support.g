@@ -609,7 +609,7 @@
 'action' EmitListType(-> INT)
 'action' EmitUndefinedType(-> INT)
 
-'action' EmitBeginRecordType(BaseType: INT)
+'action' EmitBeginRecordType()
 'action' EmitRecordTypeField(Name: NAME, Type: INT)
 'action' EmitEndRecordType(-> INT)
 

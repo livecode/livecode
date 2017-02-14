@@ -77,8 +77,8 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 	NSString *t_key = nil;
 	NSString *t_value = nil;
 	
-    t_key = [NSString stringWithMCStringRef: p_key];
-    t_value = [NSString stringWithMCStringRef: p_value];
+    t_key = MCStringConvertToAutoreleasedNSString(p_key);
+    t_value = MCStringConvertToAutoreleasedNSString(p_value);
 	
 	t_success = (t_key != nil && t_value != nil);
 	
@@ -295,7 +295,7 @@ static void do_system_load_url(void *p_ctxt)
 	t_request = nil;
 	if (t_success)
 	{
-		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]];
+		t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(ctxt -> url )];
 		t_request = [NSMutableURLRequest requestWithURL: t_url
 											cachePolicy: NSURLRequestUseProtocolCachePolicy
 										timeoutInterval: MCsockettimeout];
@@ -415,7 +415,7 @@ static void do_post_url(void *p_ctxt)
 	if (t_success)
 	{
 		t_request = [NSMutableURLRequest
-					 requestWithURL:[NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]]
+					 requestWithURL:[NSURL URLWithString: MCStringConvertToAutoreleasedNSString(ctxt -> url )]
 					 cachePolicy: NSURLRequestUseProtocolCachePolicy
 					 timeoutInterval: MCsockettimeout];
 		t_success = (t_request != nil);
@@ -723,7 +723,7 @@ static void do_put_url(void *p_ctxt)
 	
 	bool t_success = true;
 	NSURL *t_url = nil;
-	t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]];
+	t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(ctxt -> url )];
 	t_success = t_url != nil;
 	
 	if (t_success)

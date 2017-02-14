@@ -102,10 +102,10 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+    : _name(kMCEmptyName)
 {
 	parent = nil;
 	obj_id = 0;
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
 	dflags = 0;
@@ -173,14 +173,14 @@ MCObject::MCObject()
     MCDeletedObjectsOnObjectCreated(this);
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+    : MCDLlist(oref),
+      _name(oref._name)
 {
 	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
-	
-	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
 	rect = oref.rect;
@@ -280,7 +280,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 
 MCObject::~MCObject()
 {
-	while (opened)
+    MCAssert(!m_in_id_cache);
+    
+    while (opened)
 		close();
 
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
@@ -303,7 +305,6 @@ MCObject::~MCObject()
 	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
-	MCNameDelete(_name);
 	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
@@ -317,11 +318,6 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-
-	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
-	//   all deletions vector through 'scheduledelete'.
-	if (m_in_id_cache)
-		getstack() -> uncacheobjectbyid(this);
     
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
@@ -358,14 +354,14 @@ bool MCObject::hasname(MCNameRef p_other_name)
 
 void MCObject::setname(MCNameRef p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameClone(p_new_name, _name);
+	_name.Reset(p_new_name);
 }
 
 void MCObject::setname_cstring(const char *p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	setname(*t_name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
@@ -859,6 +855,12 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
+void MCObject::uncacheid()
+{
+    if (m_in_id_cache)
+        getstack()->uncacheobjectbyid(this);
+}
+
 bool MCObject::isdeletable(bool p_check_flag)
 {
     if (!parent || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
@@ -880,18 +882,6 @@ Boolean MCObject::del(bool p_check_flag)
 		MCParentScript::FlushObject(this);
         m_is_parent_script = false;
     }
-    
-    // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
-    //  MCObject::scheduledelete, since a deleted object is no longer something
-    //  we want to listen to. In case we undo the deletion, it will be added
-    //  back to the list of listened objects; in case we revert the stack to its
-    //  saved state, we will now be left with a list of listened-to objects with
-    //  no dangling pointers.
-    
-    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
-    //   (if it is in it!).
-    if (m_in_id_cache)
-        getstack() -> uncacheobjectbyid(this);
 	
 	// This object is in the process of being deleted; invalidate any weak refs
 	// and prevent any new ones from being created.
@@ -903,12 +893,14 @@ Boolean MCObject::del(bool p_check_flag)
 
 void MCObject::paste(void)
 {
-	fprintf(stderr, "Object: ERROR tried to paste %s\n", getname_cstring());
+	MCLog("Object: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::undo(Ustruct *us)
 {
-	fprintf(stderr, "Object: ERROR tried to undo %s\n", getname_cstring());
+	MCLog("Object:: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::freeundo(Ustruct *us)
@@ -2099,15 +2091,15 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean changedefault, Boolean send, Boolean p_is_debug_message)
 {
-	MCStack *mystack = getstack();
-	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
+	MCStackHandle t_stack = getstack();
+	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
     // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
 	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
-	MCscreen->flush(mystack->getw());
+	MCscreen->flush(t_stack->getw());
 	
 	// Object's cannot be deleted whilst they are executing script. However,
 	// this method will run script when script in the object is *not* running
@@ -2124,7 +2116,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
-		MCdefaultstackptr = mystack;
+		MCdefaultstackptr = t_stack;
 		MCtargetptr . object = this;
         MCtargetptr . part_id = 0;
 	}
@@ -2141,19 +2133,23 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
-		Window mywindow = mystack->getw();
-		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == NULL
-		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+		
+		if (t_stack.IsValid())
 		{
-			// PASS STATE FIX
-			Exec_stat oldstat = stat;
-			stat = handle(HT_MESSAGE, mess, paramptr, this);
-			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-				stat = ES_PASS;
+			Window mywindow = t_stack->getw();
+			if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
+					&& (MCtracewindow == NULL
+						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+			{
+				// PASS STATE FIX
+				Exec_stat oldstat = stat;
+				stat = handle(HT_MESSAGE, mess, paramptr, this);
+				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+					stat = ES_PASS;
+			}
 		}
 	}
-	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
 		MCdefaultstackptr = t_old_defaultstack;
 	
@@ -2335,7 +2331,9 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCAutoPointer<char[]> tmptypestring;
     if (parent && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
-        tmptypestring = new (nothrow) char[strlen(itypestring) + 7];
+        tmptypestring.Reset(new (nothrow) char[strlen(itypestring) + 7]);
+        if (!tmptypestring)
+            return false;
         if (parent->gettype() == CT_GROUP)
             sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
         else
@@ -3177,11 +3175,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	MCNewAutoNameRef t_name;
+	if ((stat = IO_read_nameref_new(&t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
-	MCNameDelete(_name);
-	_name = t_name;
+	setname(*t_name);
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
@@ -3501,7 +3498,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(getname(), stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))

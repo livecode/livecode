@@ -290,6 +290,13 @@ public:
         Set(p_handle.m_proxy);
     }
     
+    Handle(Handle&& p_handle) : m_proxy(nullptr)
+    {
+        /* TODO[C++11] std::swap */
+        m_proxy = p_handle.m_proxy;
+        p_handle.m_proxy = nullptr;
+    }
+
     Handle(decltype(nullptr)) :
       m_proxy(nullptr)
     {
@@ -313,6 +320,15 @@ public:
         return *this;
     }
     
+    Handle& operator=(Handle&& p_handle)
+    {
+        Set(nullptr);
+        /* TODO[C++11] std::swap */
+        m_proxy = p_handle.m_proxy;
+        p_handle.m_proxy = nullptr;
+        return *this;
+    }
+
     Handle& operator= (decltype(nullptr))
     {
         Set(nullptr);
@@ -515,7 +531,7 @@ class MCObject :
 protected:
 	uint4 obj_id;
 	MCObjectHandle parent;
-	MCNameRef _name;
+	MCNewAutoNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
@@ -673,6 +689,8 @@ public:
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
 
+    virtual void uncacheid(void);
+    
 	// [[ C++11 ]] MSVC doesn't support typename here while other compilers require it
 #ifdef _MSC_VER
 	virtual MCObjectProxy<MCStack>::Handle getstack();
@@ -801,20 +819,13 @@ public:
 	// Returns true if the object has not been named.
 	bool isunnamed(void) const
 	{
-		return MCNameIsEmpty(_name);
+		return MCNameIsEmpty(getname());
 	}
 
 	// Returns the name of the object.
 	MCNameRef getname(void) const
 	{
-		return _name;
-	}
-
-	const char *getname_cstring(void) const
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
-		return t_name;
+		return *_name;
 	}
 
     /*

@@ -218,6 +218,7 @@ MCNameRef MCN_development;
 MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
+MCNameRef MCN_installer_cmdline;
 MCNameRef MCN_mobile;
 MCNameRef MCN_player;
 MCNameRef MCN_server;
@@ -689,6 +690,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
+    /* UNCHECKED */ MCNameCreateWithCString("installer command line", MCN_installer_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
 	/* UNCHECKED */ MCNameCreateWithCString("player", MCN_player);
 	/* UNCHECKED */ MCNameCreateWithCString("server", MCN_server);
@@ -1155,6 +1157,7 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
+	MCNameDelete(MCN_installer_cmdline);
 	MCNameDelete(MCN_mobile);
 	MCNameDelete(MCN_player);
 	MCNameDelete(MCN_server);

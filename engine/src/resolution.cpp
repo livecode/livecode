@@ -114,9 +114,10 @@ void MCResListScreenPixelScales(bool p_plural, uindex_t& r_count, double *&r_lis
 	t_limit = p_plural ? t_display_count : 1;
 	
     MCAutoArray<double> t_list;
-	for (uint32_t i = 0; i < t_limit; i++)
-		t_list . Push(t_displays[i].pixel_scale);
-    
+    if (t_list.New(t_limit))
+        for (uint32_t i = 0; i < t_limit; i++)
+            t_list[i] = t_displays[i].pixel_scale;
+
     t_list . Take(r_list, r_count);
 }
 

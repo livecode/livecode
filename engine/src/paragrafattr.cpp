@@ -177,6 +177,14 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 	// PM-2016-02-26: [[ Bug 17019 ]] Make sure listIndex is set correctly
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listIndex"), false, t_uint_value))
         SetListIndex(ctxt, &t_uint_value);
+    
+    if (ctxt . CopyElementAsBoolean(src, MCNAME("hidden"), false, t_boolean_value))
+    {
+        bool t_bool;
+        t_bool = t_boolean_value == kMCTrue;
+        SetInvisible(ctxt, t_bool);
+        MCValueRelease(t_boolean_value);
+    }
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
@@ -1261,7 +1269,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_layout_width = parent -> getlayoutwidth();
 	t_para_width = getwidth();
 
-    int32_t t_offset;
+    int32_t t_offset = 0;
 	if (getdontwrap())
 	{
 		switch(gettextalign())

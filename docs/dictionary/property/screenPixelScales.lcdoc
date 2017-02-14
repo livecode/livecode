@@ -21,9 +21,12 @@ Value:
 The <screenPixelScales> property returns a return-delimited list of
 non-zero real numbers.
 
+Description:
+Returns a return-delimited list of the pixel scale of each connected
+display. 
+
 References: iphoneUseDeviceResolution (command),
 usePixelScaling (property), pixelScale (property),
 systemPixelScale (property), screenPixelScale (property)
 
 Tags: windowing
-

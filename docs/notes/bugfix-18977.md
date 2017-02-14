@@ -1,0 +1,1 @@
+# Ensure setting the card triggers openCard / closeCard in no UI mode

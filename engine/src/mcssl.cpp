@@ -160,8 +160,7 @@ unsigned long SSLError(MCStringRef& errbuf)
     //  errbuf won't be nil, but will always be empty though.
     if (ecode)
     {
-        MCAutoPointer<char> t_errbuf;
-        t_errbuf = new (nothrow) char[256];
+        /* UNCHECKED */ MCAutoPointer<char[]> t_errbuf = new (nothrow) char[256];
         ERR_error_string_n(ecode,&t_errbuf,255);
         /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
     }

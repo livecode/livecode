@@ -2482,7 +2482,7 @@ void MCField::SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
 
 void MCParagraph::GetEncoding(MCExecContext &ctxt, intenum_t &r_encoding)
 {
-    if (MCStringIsNative(m_text))
+    if (MCStringIsNative(*m_text))
         r_encoding = 0; // nativestring
     else
         r_encoding = 1; // unicode

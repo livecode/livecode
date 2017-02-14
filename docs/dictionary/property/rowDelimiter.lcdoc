@@ -2,7 +2,7 @@ Name: rowDelimiter
 
 Type: property
 
-Syntax: set the rowDelimiter to <character|character(s)>
+Syntax: set the rowDelimiter to <character(s)>
 
 Syntax: get the rowDelimiter
 
@@ -44,5 +44,4 @@ only for the current handler and setting it in one handler does not
 affect its value in other handlers called.
 
 References: combine (command), split (command),
-command (glossary)
-
+command (glossary), character (keyword)

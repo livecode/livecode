@@ -455,13 +455,12 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
 	uint32_t version;
 	uint1 charset, type;
-	char *newsf;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+	        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -469,7 +468,6 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	s_loaded_parent_script_reference = false;
 
 	MCtranslatechars = charset != CHARSET;
-	delete newsf; // stackfiles is obsolete
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
@@ -563,15 +561,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
-		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+		        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return checkloadstat(IO_ERROR);
 		}
-		delete newsf; // stackfiles is obsolete
 		MCtranslatechars = charset != CHARSET;
 		sptr = nil;
 		/* UNCHECKED */ MCStackSecurityCreateStack(sptr);
@@ -586,12 +582,8 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
 			//   legacy.
-			char *lstring = NULL;
-			char *cstring = NULL;
-			IO_read_cstring_legacy(lstring, stream, 2);
-			IO_read_cstring_legacy(cstring, stream, 2);
-			delete lstring;
-			delete cstring;
+			IO_discard_cstring_legacy(stream, 2);
+			IO_discard_cstring_legacy(stream, 2);
 		}
 
 		MCresult -> clear();
@@ -825,10 +817,9 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         stacks->setparent(this);
         stacks->setname_cstring("revScript");
         uint4 size = (uint4)MCS_fsize(stream);
-        MCAutoPointer<char> script;
-        script = new (nothrow) char[size + 2];
-        (*script)[size] = '\n';
-        (*script)[size + 1] = '\0';
+        /* UNCHECKED */ MCAutoPointer<char[]> script = new (nothrow) char[size + 2];
+        script[size] = '\n';
+        script[size + 1] = '\0';
         if (IO_read(*script, size, stream) != IO_NORMAL)
             return IO_ERROR;
         MCAutoStringRef t_script_str;
@@ -1473,7 +1464,7 @@ void MCDispatch::wmdragenter(Window w)
     MCdragboard->PullUpdates();
 
     // Change the mouse focus to the stack that has had the drag enter it
-	if (MCmousestackptr && target != MCmousestackptr)
+	if (MCmousestackptr && !MCmousestackptr.IsBoundTo(target))
 		MCmousestackptr -> munfocus();
 
 	MCmousestackptr = target;
@@ -1507,7 +1498,7 @@ void MCDispatch::wmdragleave(Window w)
 {
     // No stacks have mouse focus now
     MCStack *target = findstackd(w);
-	if (target != NULL && target == MCmousestackptr)
+	if (target != nullptr && MCmousestackptr.IsBoundTo(target))
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = nil;

@@ -887,8 +887,9 @@ command revSBRelativeStackFilesList pStack, @rStackFiles
    local tRelativeStackFiles
    set the itemDelimiter to slash
    put item 1 to -2 of line 1 of tFullStackFiles & "/" into tMainStackPath
-   put the number of chars of tMainStackPath into tChars
+   
    repeat for each line tLine in tFullStackFiles
+      put utilityMakePathRelative(tLine, tMainStackPath) into tLine
       appendToStringList tLine, tRelativeStackFiles
    end repeat
    
@@ -2231,9 +2232,6 @@ function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMult
    else
       put pFolder & tFolderName & "/" into tDirectory
    end if
-   if pPlatform contains "MacOSX" then 
-      put pName & ".app/Contents/MacOS/" after tDirectory
-   end if
    return tDirectory
 end revSBStandaloneOutputDirectory
 
@@ -2282,6 +2280,22 @@ command revSBUpdateForDependencies @xSettings
                end repeat
             end repeat
          end if
+      end repeat
+   end repeat
+   
+   -- Update the settings with any additional extension dependencies
+   repeat for each line tExtension in xSettings["extensions"]
+      local tPermissions, tFeatures
+      put revIDEExtensionProperty(tExtension, "android.permissions") into tPermissions
+      put revIDEExtensionProperty(tExtension, "android.features") into tFeatures
+      repeat for each item tPermission in tPermissions
+         put true into xSettings["android,application permissions"][tPermission]
+      end repeat
+      repeat for each item tFeature in tFeatures
+         local tIsRequired, tRequiredMetadata
+         put "android." & tFeature & ".required" into tRequiredMetadata
+         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
+         put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
    end repeat
 end revSBUpdateForDependencies
@@ -2715,3 +2729,35 @@ function revSBNoPlatforms pSettings
    
    return true
 end revSBNoPlatforms
+
+local sDeployInclusions
+
+command revSBAddDeployInclusion pInclusion, pKey
+   put empty into sDeployInclusions[pKey][pInclusion]
+end revSBAddDeployInclusion
+
+-- Standalone settings are always set on the mainstack
+function revSBGetSettings pStack, pDeploy
+   local tSettingsA
+   put the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) into tSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, tSettingsA
+   
+   if pDeploy then
+      local tKey, tInclusion
+      repeat for each key tKey in sDeployInclusions
+         repeat for each key tInclusion in sDeployInclusions[tKey]
+            revSBAddInclusion tInclusion, tKey, tSettingsA
+         end repeat
+      end repeat
+   end if
+   
+   return tSettingsA
+end revSBGetSettings
+
+command revSBSetSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end revSBSetSettings

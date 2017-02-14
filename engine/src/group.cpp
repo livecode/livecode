@@ -1031,6 +1031,22 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	}
 }
 
+void MCGroup::uncacheid()
+{
+    if (controls != NULL)
+    {
+        MCControl *t_control;
+        t_control = controls;
+        do
+        {   t_control -> uncacheid();
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    MCObject::uncacheid();
+}
+
 bool MCGroup::isdeletable(bool p_check_flag)
 {
     if (!parent || scriptdepth != 0 ||
@@ -1063,7 +1079,6 @@ Boolean MCGroup::del(bool p_check_flag)
 	if (!isdeletable(p_check_flag))
 	    return False;
 	
-    rect = getcard()->getrect();
 	return MCControl::del(p_check_flag);
 }
 

@@ -511,7 +511,7 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	SendCardMessageUTF8(t_message, &t_retval);
 	t_instance -> callback_depth -= 1;
 	
-    delete t_message;
+    MCCStringFree (t_message);
     
 	if (t_instance -> stack_id != NULL)
 		free(t_instance -> stack_id);

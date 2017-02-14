@@ -52,6 +52,12 @@ enum MCExecValueType
 
 struct MCExecValue
 {
+public:
+	MCExecValue()
+	{
+		MCMemoryClear(*this);
+		type = kMCExecValueTypeNone;
+	}
 	union
 	{
 		MCValueRef valueref_value;

@@ -94,6 +94,7 @@ MCPlayer::MCPlayer()
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
+	atom = GDK_NONE;
 #endif
     
 }
@@ -118,6 +119,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
+	atom = GDK_NONE;
 #endif
     
 }

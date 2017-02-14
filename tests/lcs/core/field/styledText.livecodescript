@@ -47,8 +47,8 @@ on TestParagraphTabAlignRoundtrip
    TestAssert "styledText doesn't include inherited tabAlign", tabAlign is not among the keys of tStyledText[1]["style"]
    
    put the effective styledText of field "testField" into tStyledText
-   TestAssert "effective htmlText does include inherited tabAlign", tStyledText[1]["style"]["tabAlign"] is "right,center,left"
-
+   TestAssert "effective styledText does include inherited tabAlign", tStyledText[1]["style"]["tabAlign"] is "right,center,left"
+   
    delete stack "Test"
 end TestParagraphTabAlignRoundtrip
 
@@ -74,3 +74,34 @@ on TestStyledTextSplitRunRoundTrip
    TestAssert "split styled text run doesn't lose data", \
       tBeforeText is the text of tFieldAfter
 end TestStyledTextSplitRunRoundTrip
+
+on TestParagraphHidden
+   create stack "Test"
+   set the defaultStack to "Test"
+   
+   create field "TestField"
+   
+   // set up styledText array with text and tabAlign
+   local tStyledText
+   put "test" into tStyledText[1]["runs"][1]["text"]
+   put true into tStyledText[1]["style"]["hidden"]
+   
+   
+   set the styledText of field "TestField" to tStyledText
+   TestAssert "styledText supports hidden", the hidden of line 1 of field "TestField"
+   
+   put the styledText of field "testField" into tStyledText
+   TestAssert "styledText roundtrips hidden", tStyledText[1]["style"]["hidden"]
+   
+   // clear field styles
+   set the text of field "testField" to "test"
+   set the hidden of field "testField" to true
+   
+   put the styledText of field "testField" into tStyledText
+   TestAssert "styledText doesn't include inherited hidden", "hidden" is not among the keys of tStyledText[1]["style"]
+   
+   put the effective styledText of field "testField" into tStyledText
+   TestAssert "effective styledText includes hidden key but not inherited value", "hidden" is among the keys of tStyledText[1]["style"] and not tStyledText[1]["style"]
+   
+   delete stack "Test"
+end TestParagraphHidden

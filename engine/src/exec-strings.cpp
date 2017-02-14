@@ -415,7 +415,8 @@ bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encod
     //  Map A-Z to a-z
     //  From left-to-right, delete each 0 not preceded by a digit
     MCAutoArray<char_t> t_cleaned;
-    t_cleaned.New(MCStringGetLength(p_encoding) + 1);   // Cannot exceed incoming length
+    if (!t_cleaned.New(MCStringGetLength(p_encoding) + 1))   // Cannot exceed incoming length
+        return false;
     
     uindex_t t_cleaned_len;
     t_cleaned_len = 0;

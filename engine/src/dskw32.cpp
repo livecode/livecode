@@ -3895,23 +3895,5 @@ uint2 MCS_charsettolangid(uint1 charset)
 	return 0;
 }
 
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	GUID t_guid;
-	if (CoCreateGuid(&t_guid) == S_OK)
-	{
-		unsigned char __RPC_FAR *t_guid_string;
-		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
-		{
-			strcpy(p_buffer, (char *)t_guid_string);
-			RpcStringFreeA(&t_guid_string);
-		}
-        
-		return true;
-	}
-    
-	return false;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 

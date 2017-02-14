@@ -517,38 +517,6 @@ static void handle_signal(int sig)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_generate_uuid(char p_buffer[128])
-{
-    typedef void (*uuid_generate_ptr)(unsigned char uuid[16]);
-    typedef void (*uuid_unparse_ptr)(unsigned char uuid[16], char *out);
-    static void *s_uuid_generate = NULL, *s_uuid_unparse = NULL;
-
-    if (s_uuid_generate == NULL && s_uuid_unparse == NULL)
-    {
-        void *t_libuuid;
-        t_libuuid = dlopen("libuuid.so", RTLD_LAZY);
-        if (t_libuuid == NULL)
-            t_libuuid = dlopen("libuuid.so.1", RTLD_LAZY);
-        if (t_libuuid != NULL)
-        {
-            s_uuid_generate = dlsym(t_libuuid, "uuid_generate");
-            s_uuid_unparse = dlsym(t_libuuid, "uuid_unparse");
-}
-    }
-
-    if (s_uuid_generate != NULL && s_uuid_unparse != NULL)
-    {
-        unsigned char t_uuid[16];
-        ((uuid_generate_ptr)s_uuid_generate)(t_uuid);
-        ((uuid_unparse_ptr)s_uuid_unparse)(t_uuid, p_buffer);
-        return true;
-    }
-
-    return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
@@ -1786,23 +1754,24 @@ public:
 
     virtual void CheckProcesses(void)
     {
-        uint2 i;
-        bool cleanPID = false;
-
-        int wstat;
-        for (i = 0 ; i < MCnprocesses ; i++)
+        for (int i = 0; i < MCnprocesses; ++i)
         {
-            cleanPID = (MCprocesses[i].pid != 0 && MCprocesses[i].pid != -1 ) ;
-            if (waitedpid == -1  || (waitedpid != -1 && MCprocesses[i].pid != waitedpid))
-                cleanPID = cleanPID && (waitpid(MCprocesses[i].pid, &wstat, WNOHANG) > 0) ;
+            pid_t t_pid = MCprocesses[i].pid;
+            if (t_pid <= 0)
+                continue; /* No PID in this table slot */
 
-            if (cleanPID)
-            {
-                if (MCprocesses[i].ihandle != NULL)
-                    clearerr((FILE*)MCprocesses[i].ihandle->GetFilePointer());
-                MCprocesses[i].pid = 0;
-                MCprocesses[i].retcode = WEXITSTATUS(wstat);
-            }
+            if (t_pid == waitedpid)
+                continue; /* This PID was already dealt with in signal handler */
+
+            int t_wait_status = 0;
+            pid_t t_wait_pid = waitpid(t_pid, &t_wait_status, WNOHANG);
+            if (t_wait_pid != t_pid)
+                continue; /* Process hasn't exited or is not a child */
+
+            if (MCprocesses[i].ihandle != nullptr)
+                clearerr(static_cast<FILE*>(MCprocesses[i].ihandle->GetFilePointer()));
+            MCprocesses[i].pid = 0;
+            MCprocesses[i].retcode = WEXITSTATUS(t_wait_status);
         }
     }
 

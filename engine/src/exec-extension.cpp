@@ -443,8 +443,16 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         t_param = t_param -> getnext();
     }
 	
+    // If the above looped failed with t_success == false, then a type
+    // conversion error occurred.
+    if (!t_success)
+    {
+        MCECptr->LegacyThrow(EE_INVOKE_TYPEERROR);
+    }
+    
 	// Too many parameters error.
-	if (t_param != nil)
+	if (t_success &&
+        t_param != nil)
 	{
 		MCECptr -> LegacyThrow(EE_INVOKE_TOOMANYARGS);
 		t_success = false;
@@ -1188,7 +1196,17 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     bool t_is_array;
     if (!__script_try_to_convert_to_array(ctxt, x_value, t_is_array))
         return false;
-    
+	
+	// If we managed to convert to an array, and the array is empty then we
+	// can convert.
+	if (t_is_array &&
+		MCArrayIsEmpty((MCArrayRef)x_value))
+	{
+		MCValueAssign(x_value, (MCValueRef)kMCEmptyProperList);
+		r_converted = true;
+		return true;
+	}
+	
     // If we managed to convert to an array, and the array is a sequence
     // we can convert.
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))

@@ -665,15 +665,13 @@ IO_stat MCGradientFillSerialize(MCGradientFill *p_gradient, MCObjectOutputStream
 		t_stat = p_stream . WriteU8(p_gradient -> repeat);
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU8(p_gradient -> ramp_length);
-	
-	MCPoint *t_point;
-	t_point = &p_gradient -> origin;
-	for(int i = 0; i < 3 && t_stat == IO_NORMAL; ++i)
-	{
-		t_stat = p_stream . WriteS16(t_point[i] . x);
-		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteS16(t_point[i] . y);
-	}
+
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->origin);
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->primary);
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->secondary);
 
 	for(int i = 0; i < p_gradient -> ramp_length; ++i)
 	{
@@ -745,40 +743,6 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 	}
 
 	return t_stat;
-}
-
-uint1 *MCGradientFillSerialize(MCGradientFill *p_gradient, uint4 &r_length)
-{
-	uint1 *t_data = (uint1*)malloc(GRADIENT_HEADER_SIZE + p_gradient->ramp_length * (2 + 4));
-	uint1 *t_ptr = t_data;
-
-	*t_ptr++ = ((p_gradient->kind << 4) | (p_gradient->quality << 2) | 
-		(p_gradient->mirror << 1) | (p_gradient->wrap));
-	*t_ptr++ = p_gradient->repeat;
-	*t_ptr++ = p_gradient->ramp_length;
-
-	MCPoint *t_point = &p_gradient->origin;
-
-	//write out 3 byte-swapped pairs of coordinates
-	for (int i = 0; i < 3; i++)
-	{
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2) t_point[i].x);
-		t_ptr += 2;
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2) t_point[i].y);
-		t_ptr += 2;
-	}
-
-	//write out byte-swapped ramp
-	for (int i = 0; i < p_gradient->ramp_length; i++)
-	{
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2)p_gradient->ramp[i].offset);
-		t_ptr += 2;
-		*((uint4*)t_ptr) = MCSwapInt32HostToNetwork(p_gradient->ramp[i].color);
-		t_ptr += 4;
-	}
-
-	r_length = t_ptr - t_data;
-	return t_data;
 }
 
 template <typename IntType>

@@ -1,0 +1,1 @@
+# Prevent crash when deleting mousestack stack via button click

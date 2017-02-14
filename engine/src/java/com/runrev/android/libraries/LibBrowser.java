@@ -95,6 +95,16 @@ public class LibBrowser
 		
 		return s_file_url_prefix + s_asset_path + t_url.substring(t_package_path.length());
 	}
+
+	public static String fromAssetPath(String p_url)
+	{
+		String t_package_path = Engine.getEngine().getPackagePath();
+		
+		if(!p_url.startsWith(t_package_path))
+			return p_url;
+
+		return "file:///android_asset" + p_url.substring(t_package_path.length());
+	}
 	
 	/*
     public boolean canGoBack()
@@ -168,7 +178,7 @@ class LibBrowserWebView extends WebView
 				//Log.i(TAG, String.format("shouldOverrideUrlLoading(%s)", p_url));
 				if (useExternalHandler(getContext(), p_url))
 					return true;
-			
+	
 				setUrl(p_url);
 				return true;
 			}
@@ -417,9 +427,9 @@ class LibBrowserWebView extends WebView
 	
 	public void setUrl(String p_url)
 	{
-		//p_url = fromAPKPath(p_url);
-		
-		//loadUrl(p_url);
+		// HH-2017-01-11: [[ Bug 19036  ]] If p_url is point to asset folder change prefix to "file:///android_asset/".
+		p_url = LibBrowser.fromAssetPath(p_url);
+
 		loadUrl(p_url);
 	}
 	

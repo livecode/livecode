@@ -29,18 +29,9 @@ binaryDecode(myFormat,placeHolder,importantStuff)
 Parameters:
 formatsList:
 The <formatsList> consists of one or more dataTypes, each followed
-optionally by an amount. A dataType is one of the following single
-letters: x: skip next amount bytes of data
+optionally by an amount. A dataType is one of the following single letters: 
 
-data (string):
-A string of encoded binary data.
-
-variablesList:
-A comma-separated list of local or global variable names. The number of
-variable names must be the same as the number of dataTypes specified in
-the <formatsList>, and the variables must already exist.
-
-amount:
+- x: skip next amount bytes of data
 - a: convert next amount bytes of data to characters
 - A: convert next amount bytes of data (skipping spaces) to characters
 - b: convert next amount bits of data to 1s and 0s
@@ -73,6 +64,14 @@ places amount chunks of data in the next amount variables of the <variablesList>
 For example, the dataType "a3" requires only one variable, which will
 hold a 3-characterstring, but the dataType "h3" requires three
 variables, each of which will hold a single hex digit.
+
+data (string):
+A string of encoded binary data.
+
+variablesList:
+A comma-separated list of local or global variable names. The number of
+variable names must be the same as the number of dataTypes specified in
+the <formatsList>, and the variables must already exist.
 
 Returns:
 The <binaryDecode> <function> <return|returns> the number of dataTypes

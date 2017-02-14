@@ -25,8 +25,8 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 9.2 10.1
-IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.1
+IPHONEOS_VERSIONS ?= 9.2 10.2
+IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.2
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -184,6 +184,16 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+
+# Dummy rules for Windows x86-64 builds
+# TODO Replace with real rules
+config-win-x86_64:
+	mkdir -p build-win-x86_64
+compile-win-x86_64:
+	mkdir -p win-x86_64-bin
+all-win-x86_64:
+	$(MAKE) config-win-x86_64
+	$(MAKE) compile-win-x86_64
 
 ################################################################
 # Emscripten rules

@@ -148,11 +148,11 @@ public:
     
     ///////////////
     
-	bool get_points_for_rect(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_oval(MCPoint*& r_points, uint2& r_point_count);
-
+	bool get_points_for_rect(MCPoint* &r_points, uindex_t &r_point_count);
+	bool get_points_for_roundrect(MCPoint* &r_points, uindex_t &r_point_count);
+	bool get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_point_count);
+	bool get_points_for_oval(MCPoint* &r_points, uindex_t &r_point_count);
+	
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(MCRectangle drect);

@@ -308,10 +308,9 @@ void MCStack::setopacity(uint1 p_level)
 			Bool t_is_xp_menu;
 			t_is_xp_menu = (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE) && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN);
 
-			if (!t_is_xp_menu && mode < WM_PULLDOWN)
-				window -> handle . window = (MCSysWindowHandle)CreateWindowExW(t_ex_style, MC_WIN_CLASS_NAME_W, WideCString(getname_cstring()), t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
-			else
-				window -> handle . window = (MCSysWindowHandle)CreateWindowExA(t_ex_style, t_is_xp_menu ? MC_MENU_WIN_CLASS_NAME : mode >= WM_PULLDOWN ? MC_POPUP_WIN_CLASS_NAME : MC_WIN_CLASS_NAME, getname_cstring(), t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
+            MCAutoStringRefAsWString t_window_name;
+            /* UNCHECKED */ t_window_name.Lock(MCNameGetString(getname()));
+            window -> handle . window = (MCSysWindowHandle)CreateWindowExW(t_ex_style, MC_WIN_CLASS_NAME_W, *t_window_name, t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
 			
 			// MW-2010-10-22: [[ Bug 8151 ]] Make sure we update the title string.
 			MCscreen -> setname(window, titlestring);
@@ -429,14 +428,10 @@ void MCStack::realize()
 
 		HWND t_parenthwnd = NULL;
 
-		// MW-2007-07-06: [[ Bug 3226 ]] If the platform is NT always create a Unicode window
-		if ((MCruntimebehaviour & RTB_NO_UNICODE_WINDOWS) == 0 && !isxpmenu && mode < WM_PULLDOWN)
-			window -> handle . window = (MCSysWindowHandle)CreateWindowExW(exstyle, MC_WIN_CLASS_NAME_W, WideCString(getname_cstring()),wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
-		                 t_parenthwnd, NULL, MChInst, NULL);
-		else
-			window->handle.window = (MCSysWindowHandle)CreateWindowExA(exstyle, isxpmenu? MC_MENU_WIN_CLASS_NAME: mode >= WM_PULLDOWN ? MC_POPUP_WIN_CLASS_NAME
-		                 : MC_WIN_CLASS_NAME, getname_cstring(), wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
-		                 t_parenthwnd, NULL, MChInst, NULL);
+        MCAutoStringRefAsWString t_window_name;
+        /* UNCHECKED */ t_window_name.Lock(MCNameGetString(getname()));
+        window -> handle . window = (MCSysWindowHandle)CreateWindowExW(exstyle, MC_WIN_CLASS_NAME_W, *t_window_name, wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
+                                                                       t_parenthwnd, NULL, MChInst, NULL);
 
 		SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
 		
@@ -533,7 +528,7 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 
 void MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 
 	// MW-2009-09-25: Ensure things are the right size when doing

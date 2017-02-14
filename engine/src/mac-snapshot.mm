@@ -281,12 +281,12 @@ static void wait_for_refresh(void)
     s_display_link_fired = false;
     
     while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, false);
+		MCPlatformWaitForEvent(60.0, true);
     
     s_display_link_fired = false;
     
     while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, false);
+		MCPlatformWaitForEvent(60.0, true);
     
     CVDisplayLinkStop(t_link);
     

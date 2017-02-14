@@ -174,6 +174,11 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
         /* UNCHECKED */ MCNumberCreateWithInteger(p_style . padding, &t_padding);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("padding"), *t_padding);
     }
+    
+    if (p_style . hidden  || p_effective)
+    {
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("hidden"), p_style . hidden == True ? kMCTrue : kMCFalse);
+    }
 }
 
 
@@ -259,13 +264,6 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
             /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("metadata"), p_event_data . paragraph_style . metadata);
 		}
 		
-		// MW-2012-03-05: [[ HiddenText ]] If the paragraph is hidden, mark it as such in the
-		//   array.
-		if (p_event_data . paragraph_style . hidden)
-		{
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("hidden"), kMCTrue);
-		}
-
 		// Now create the 'runs' entry in the paragraph array.
 		/* UNCHECKED */ MCArrayCreateMutable(ctxt . runs_array);
 

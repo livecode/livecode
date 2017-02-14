@@ -92,7 +92,7 @@ MCIdeState *MCIdeState::s_states = NULL;
 MCIdeState *MCIdeState::s_cache = NULL;
 
 MCIdeState::MCIdeState(void)
-	: f_next(NULL), f_line_count(0), f_line_properties(0)
+	: f_next(NULL), f_field(nullptr), f_line_count(0), f_line_properties(0)
 {
 }
 
@@ -828,8 +828,8 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		uint4 t_class_index;
 		t_class_index = 0;
 
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
 
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
@@ -1194,8 +1194,8 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 		uint4 t_class_index;
 		t_class_index = 0;
         
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
         
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
@@ -1543,7 +1543,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 	t_state = MCIdeState::Find(t_target);
 
 
-    if (t_target && t_target -> getparagraphs() != NULL)
+    if (t_target && t_target -> getparagraphs() != NULL && t_target -> getopened())
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
 }
 
@@ -2154,7 +2154,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
 
     // First try a (command) call.
     MCAutoStringRef t_call_error;
-    uint2 t_call_pos;
+    uint2 t_call_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.

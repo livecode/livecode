@@ -219,6 +219,11 @@ MCObjectPropertyTable MCStack::kPropertyTable =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
+    : savecard(),
+      savecontrols(),
+      wposition(WP_DEFAULT),
+      walignment(OP_NONE),
+      scrollmode()
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
@@ -320,7 +325,14 @@ MCStack::MCStack()
     m_is_ide_stack = false;
 }
 
-MCStack::MCStack(const MCStack &sref) : MCObject(sref)
+MCStack::MCStack(const MCStack &sref)
+    : MCObject(sref),
+      savecard(),
+      savecontrols(),
+      wposition(WP_DEFAULT),
+      walignment(OP_NONE),
+      scrollmode(),
+      old_rect(kMCEmptyRectangle)
 {
 	obj_id = sref.obj_id;
 
@@ -765,7 +777,7 @@ void MCStack::close()
 	{
 		seticonic(false);
 	}
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 	{
 		MCmousestackptr = nil;
 		int2 x, y;
@@ -1145,7 +1157,7 @@ void MCStack::mfocustake(MCControl *target)
 
 void MCStack::munfocus(void)
 {
-	if (MCmousestackptr == this)
+	if (MCmousestackptr.IsBoundTo(this))
 		MCmousestackptr = nil;
 	if (curcard != 0)
 	{
@@ -1177,7 +1189,7 @@ Boolean MCStack::mup(uint2 which, bool p_release)
 	Boolean handled = curcard->mup(which, p_release);
 	// MW-2010-07-06: [[ Bug ]] We should probably only mfocus the card if this
 	//   stack is still the mouse stack.
-	if (opened && mode < WM_PULLDOWN && MCmousestackptr == this)
+	if (opened && mode < WM_PULLDOWN && MCmousestackptr.IsBoundTo(this))
 		curcard->mfocus(MCmousex, MCmousey);
 	return handled;
 }
@@ -1376,9 +1388,15 @@ bool MCStack::isdeletable(bool p_check_flag)
 
 Boolean MCStack::del(bool p_check_flag)
 {
-    if (!isdeletable(true))
+    if (!isdeletable(p_check_flag))
 	   return False;
-    
+
+	while (substacks)
+	{
+		if (!substacks -> del(false))
+			return False;
+	}
+	
     MCscreen->ungrabpointer();
     MCdispatcher->removemenu();
     
@@ -1449,25 +1467,6 @@ Boolean MCStack::del(bool p_check_flag)
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
-}
-
-void MCStack::scheduledelete(bool p_is_child)
-{
-	// Forcibly close all substacks
-	MCStack* t_substack = substacks;
-	if (t_substack)
-	{
-		do
-		{
-			while (t_substack->opened)
-				t_substack->close();
-
-			t_substack = t_substack->next();
-		} while (t_substack != substacks);
-	}
-
-	// Continue with the deletion
-	MCObject::scheduledelete(p_is_child);
 }
 
 void MCStack::paste(void)

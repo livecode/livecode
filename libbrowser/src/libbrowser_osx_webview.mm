@@ -341,7 +341,6 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 {
 	MCWebViewBrowser *m_instance;
 	bool m_pending_request;
-	bool m_frame_request;
 	char *m_request_url;
 	char *m_frame_request_url;
 }
@@ -1020,7 +1019,7 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didStartProvisionalLoadForFrame:(WebFrame *)frame
 {
-	m_frame_request = ![sender.mainFrame isEqual: frame];
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
 	
 	if (m_pending_request)
 	{
@@ -1031,14 +1030,14 @@ bool MCWebViewBrowser::Init(void)
 	NSURLRequest *t_request;
 	t_request = frame.provisionalDataSource.initialRequest;
 
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url != nil)
 		MCCStringFree(t_url);
 	t_url = nil;
 	
 	/* UNCHECKED */ MCCStringClone([t_request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
-	if (!m_frame_request)
+	if (!t_frame_request)
 		m_instance->OnNavigationBegin(false, t_url);
 	
 	return;
@@ -1046,24 +1045,28 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didCommitLoadForFrame:(WebFrame *)frame
 {
-	if (!m_frame_request)
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	if (!t_frame_request)
 		m_instance->SyncJavaScriptHandlers();
 	
-	char *t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
-	m_instance->OnDocumentLoadBegin(m_frame_request, t_url);
+	m_instance->OnDocumentLoadBegin(t_frame_request, t_url);
 }
 
 - (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
-	m_instance->OnDocumentLoadComplete(m_frame_request, t_url);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadComplete(t_frame_request, t_url);
+	if (!t_frame_request)
 		m_instance->OnNavigationComplete(false, t_url);
 	
 	MCCStringFree(t_url);
@@ -1072,15 +1075,17 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 	
-	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadFailed(t_frame_request, t_frame_request ? m_frame_request_url : m_request_url, t_error);
+	if (!t_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
 	
 	MCCStringFree(t_url);
@@ -1089,15 +1094,17 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 	
-	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadFailed(t_frame_request, t_frame_request ? m_frame_request_url : m_request_url, t_error);
+	if (!t_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
 	
 	MCCStringFree(t_url);

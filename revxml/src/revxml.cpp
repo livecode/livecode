@@ -2091,13 +2091,18 @@ void XML_ListByAttributeValue(char *args[], int nargs, char **retstring,
 				CXMLElementEnumerator tenum(&telement,maxdepth);
 				while (tenum.Next(childfilter))
 				{
-					CXMLElement *curelement = tenum.GetElement();
-						char *attributevalue = curelement->GetAttributeValue(attname, True);
+                    if (attname != nullptr)
+                    {
+                        char *attributevalue =
+                            tenum.GetElement()->GetAttributeValue(attname, True);
+
 						if (attributevalue){
 							util_concatstring(attributevalue, strlen(attributevalue), 
 							result, buflen , bufsize);
+                            free(attributevalue);
 						}
-						util_concatstring(itemsep, itemseplen,result, buflen , bufsize);
+                    }
+                    util_concatstring(itemsep, itemseplen,result, buflen , bufsize);
 				}
 				if (buflen)
 					result[buflen-itemseplen] = '\0'; //strip trailing item seperator
@@ -2181,7 +2186,7 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 						else
 							t_comparison_result = util_strnicmp(attvalue, tvalue, strlen(tvalue));
                         
-                        delete tvalue;
+                        free(tvalue);
                         
                         if (t_comparison_result == 0)
                         {

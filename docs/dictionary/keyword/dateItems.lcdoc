@@ -26,22 +26,23 @@ date and/or time.
 
 The <dateItems> format is a comma-separated list of numbers:
 
-        * the year
-        * the month number
-        * the day of the month
-        * the hour in 24-hour time
-        * the minute
-        * the second
-        * the numeric day of the week where Monday is day 1, Tuesday is
-          day 2, and so forth
+ * the year
+ * the month number
+ * the day of the month
+ * the hour in 24-hour time
+ * the minute
+ * the second
+ * the numeric day of the week where Sunday is day 1, Monday is day 2, 
+ and so forth
 
 
 The <dateItems> does not change depending on the user's settings, so you
-can use it (or the <seconds> <format>) to store a date and time with a
-<stack>, in an invariant form that won't change.
+can use it (or the <seconds> format) to store a date and time in an 
+invariant form that won't change.
 
-References: convert (command), format (function), seconds (function),
-command (glossary), keyword (glossary), stack (object)
+References: convert (command), date (function),  
+seconds (function), time (function), command (glossary), 
+keyword (glossary)
 
 Tags: math
 

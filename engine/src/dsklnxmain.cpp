@@ -95,24 +95,24 @@ int platform_main(int argc, char *argv[], char *envp[])
 	initialise_required_weak_link_glib();
 	
 	// Convert the argv array to StringRefs
-	MCStringRef* t_argv;
-	/* UNCHECKED */ MCMemoryNewArray(argc, t_argv);
+    MCAutoStringRefArray t_argv;
+    /* UNCHECKED */ t_argv.New(argc);
 	for (int i = 0; i < argc; i++)
 	{
         /* UNCHECKED */ MCStringCreateWithSysString(argv[i], t_argv[i]);
 	}
 	
 	// Convert the envp array to StringRefs
-	int envc = 0;
-	MCStringRef* t_envp = nil;
-	while (envp[envc] != NULL)
-	{
-		uindex_t t_count = envc + 1;
-		/* UNCHECKED */ MCMemoryResizeArray(t_count + 1, t_envp, t_count);
-        /* UNCHECKED */ MCStringCreateWithSysString(envp[envc], t_envp[envc]);
-		envc++;
-	}
-	
+    int envc = 0;
+    while (envp[envc] != nullptr)
+        ++envc;
+    MCAutoStringRefArray t_envp;
+    /* UNCHECKED */ t_envp.New(envc + 1);
+    for (int i = 0; envp[i] != nullptr; ++i)
+    {
+        /* UNCHECKED */ MCStringCreateWithSysString(envp[i], t_envp[i]);
+    }
+
 	// Terminate the envp array
 	t_envp[envc] = nil;
 	
@@ -120,7 +120,7 @@ int platform_main(int argc, char *argv[], char *envp[])
 	if (argc == 3&& strcmp(argv[1], "-elevated-slave") == 0)
 		return MCSystemElevatedMain(argc, argv);
 	
-	if (!X_init(argc, t_argv, t_envp))
+	if (!X_init(argc, *t_argv, *t_envp))
     {
 		// Try to print an informative error message or, failing that, just
 		// report that an error occurred.
@@ -142,14 +142,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 		
 		exit(-1);
 	}
-	
-	// Clean up the created argv/envp StringRefs
-	for (int i = 0; i < argc; i++)
-		MCValueRelease(t_argv[i]);
-	for (int i = 0; i < envc; i++)
-		MCValueRelease(t_envp[i]);
-	MCMemoryDeleteArray(t_argv);
-	MCMemoryDeleteArray(t_envp);
 	
 	X_main_loop();
 	

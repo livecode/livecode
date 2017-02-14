@@ -48,18 +48,6 @@ bool MCVariable::create(MCVariable*& r_var)
 	if (self == nil)
 		return false;
 
-	self -> next = nil;
-	self -> name = nil;
-
-	self -> value . type = kMCExecValueTypeNone;
-    self -> value . valueref_value = nil;
-
-	self -> is_msg = false;
-	self -> is_env = false;
-	self -> is_global = false;
-	self -> is_deferred = false;
-	self -> is_uql = false;
-
 	r_var = self;
 	
 	return true;
@@ -71,11 +59,7 @@ bool MCVariable::createwithname(MCNameRef p_name, MCVariable*& r_var)
 	if (!create(self))
 		return false;
 
-	if (!MCNameClone(p_name, self -> name))
-	{
-		delete self;	
-		return false;
-}
+    self->name.Reset(p_name);
 
 	r_var = self;
 
@@ -85,29 +69,17 @@ bool MCVariable::createwithname(MCNameRef p_name, MCVariable*& r_var)
 // This is only called by MCObject to create copies of prop sets.
 bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
 {
-	bool t_success;
-	t_success = true;
+	MCVariable *self = nullptr;
+	if (!create(self))
+        return false;
 
-	MCVariable *self;
-	self = nil;
-	if (t_success)
-		t_success = create(self);
+    self->name.Reset(*p_var.name);
+    p_var . value . valueref_value = self -> value . valueref_value;
+    p_var . value . type = self -> value . type;
 
-	if (t_success)
-		t_success = MCNameClone(p_var . name, self -> name);
+    r_new_var = self;
 
-	if (t_success)
-    {
-		p_var . value . valueref_value = self -> value . valueref_value;
-        p_var . value . type = self -> value . type;
-    }
-
-	if (t_success)
-		r_new_var = self;
-	else
-		delete self;
-
-    return t_success;
+    return true;
 }
 
 bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
@@ -245,7 +217,6 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
 
 MCVariable::~MCVariable(void)
 {
-	MCNameDelete(name);
     MCExecTypeRelease(value);
 }
 
@@ -263,7 +234,7 @@ void MCVariable::clearuql(void)
     
     // SN-2014-04-09 [[ Bug 12160 ]] Put after/before on an uninitialised, by-reference parameter inserts the variable's name in it
     // The content of a UQL value was not cleared when needed
-    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, name))
+    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, *name))
         clear();
     
 	is_uql = false;
@@ -373,7 +344,7 @@ MCValueRef MCVariable::getvalueref(void)
         
         return value . valueref_value;
     }
-	return name;
+	return *name;
 }
 
 MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive)
@@ -777,10 +748,10 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
 		
 		if (is_env)
 		{
-			if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
+			if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
 			{
 				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
 				MCS_unsetenv(*t_env);
 			}
 		}
@@ -995,13 +966,13 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 	MCExecContext ctxt(ep);
 	if (is_env)
 	{
-		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
+		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
 		{
 			MCAutoStringRef t_string;
 			if (ep . copyasstringref(&t_string))
 			{
 				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
 				MCS_setenv(*t_env, *t_string);
 			}
 		}
@@ -1061,14 +1032,14 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
     MCAutoStringRef t_stringref_value;
 	if (is_env)
 	{
-		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
+		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
 		{
             MCExecTypeCopy(value, t_value);
             MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_stringref_value));
             if (!ctxt . HasError())
             {
                 MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
 				MCS_setenv(*t_env, *t_stringref_value);
             }
 		}
@@ -1105,11 +1076,11 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
                     
 					MCAutoBooleanRef t_bool;
 					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
-						MCB_setvalue(ctxt, value, name);
+						MCB_setvalue(ctxt, value, *name);
 				}
 				else
                 {
-                    MCB_setvalue(ctxt, value, name);
+                    MCB_setvalue(ctxt, value, *name);
                 }
                 
 				break;
@@ -1125,8 +1096,8 @@ Exec_stat MCVariable::remove(MCExecPoint& ep, Boolean notify)
 	
 	if (is_env)
 	{
-		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
-			MCS_unsetenv(MCNameGetCString(name) + 1);
+		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
+			MCS_unsetenv(MCNameGetCString(*name) + 1);
 	}
 
 	return ES_NORMAL;

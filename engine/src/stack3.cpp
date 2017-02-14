@@ -1071,17 +1071,9 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !haswindow())
+	if (!opened)
 	{
-		if (opened)
-		{
-			curcard->close();
-			curcard = card;
-			curcard->open();
-		}
-
-		else
-			curcard = card;
+		curcard = card;
 		return ES_NORMAL;
 	}
 
@@ -1101,7 +1093,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		
-		if (MCmousestackptr == this)
+		if (MCmousestackptr.IsBoundTo(this))
 			curcard->munfocus();
 		if (state & CS_KFOCUSED)
 		{
@@ -1249,7 +1241,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
  
             if (wasfocused)
 				curcard->kfocus();
-			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+			if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
 		}
 		return ES_NORMAL;
@@ -1277,7 +1269,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
    		
 		if (wasfocused)
 			kfocus();
-		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+		if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 			curcard->message(MCM_mouse_enter);
 	}
     
@@ -1594,7 +1586,7 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
 			{
-				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+				/* UNCHECKED */ tptr->getAVname(type, p_name, optr);
 			}
 			else
 				optr = tptr->getcontrolname(type, p_name);

@@ -341,14 +341,12 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
         // If the surrogate is not valid, just ignore the error
         codepoint_t t_char = p_chars[t_offset];
         uindex_t t_advance = 1;
-        if (0xD800 <= t_char && t_char < 0xDC00 && (t_offset + 1) < p_char_count)
+        if (MCUnicodeCodepointIsLeadingSurrogate(t_char) &&
+            (t_offset + 1) < p_char_count &&
+            MCUnicodeCodepointIsTrailingSurrogate(p_chars[t_offset + 1]))
         {
-            codepoint_t t_upper = p_chars[t_offset + 1];
-            if (0xDC00 <= t_upper && t_upper < 0xE000)
-            {
-                t_char = (t_char - 0xD800) + ((t_upper - 0xDC00) << 10);
-                t_advance = 2;
-            }
+            t_char = MCUnicodeCombineSurrogates(t_char, p_chars[t_offset + 1]);
+            t_advance = 2;
         }
         
         // Look up the property
@@ -2226,11 +2224,11 @@ bool MCUnicodeCanBreakWordBetween(uinteger_t xc, uinteger_t x, uinteger_t y, uin
 bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bool p_source_native, const void *pattern_chars, uindex_t pattern_length, bool p_pattern_native, MCUnicodeCompareOption p_option)
 {
     // Set up the filter chains for the strings
-	MCAutoPointer<MCTextFilter> t_source_filter;
-	t_source_filter = MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_source_filter =
+        MCTextFilterCreate(source_chars, source_length, p_source_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
 	
-	MCAutoPointer<MCTextFilter> t_pattern_filter;
-	t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
+    MCAutoPointer<MCTextFilter> t_pattern_filter =
+        MCTextFilterCreate(pattern_chars, pattern_length, p_pattern_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
     
     codepoint_t t_source_cp, t_pattern_cp;
     

@@ -918,7 +918,7 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
     
     // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
+    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
     
     if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
         return false;
@@ -5976,27 +5976,4 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
     
     delete t_doc;
 
-}
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	CFUUIDRef t_uuid;
-	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-	if (t_uuid != NULL)
-	{
-		CFStringRef t_uuid_string;
-		
-		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-		if (t_uuid_string != NULL)
-		{
-			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-			CFRelease(t_uuid_string);
-		}
-		
-		CFRelease(t_uuid);
-        
-		return true;
-	}
-    
-	return false;
 }

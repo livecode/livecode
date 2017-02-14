@@ -503,6 +503,10 @@ struct MCGDeviceMaskInfo
 
 struct MCGFont
 {
+  MCGFont()
+	: fid(nullptr), size(0), fixed_advance(0),
+	  m_ascent(0), m_descent(0), m_leading(0), ideal(false) {}
+
 	void		*fid;
 	uint16_t	size;
 	uint16_t	fixed_advance;

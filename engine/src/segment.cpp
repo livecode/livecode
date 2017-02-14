@@ -33,6 +33,10 @@
 
 
 MCSegment::MCSegment(MCLine *p_parent)
+    : m_FirstVisualBlock(),
+      m_LastVisualBlock(),
+      m_HAlign(),
+      m_VAlign()
 {
     m_Parent = p_parent;
     m_FirstBlock = m_LastBlock = NULL;
@@ -48,6 +52,8 @@ MCSegment::MCSegment(MCLine *p_parent)
 
 
 MCSegment::MCSegment(const MCSegment *sg)
+    : m_FirstVisualBlock(),
+      m_LastVisualBlock()
 {
     m_Parent = sg->m_Parent;
     m_FirstBlock = m_LastBlock = NULL;

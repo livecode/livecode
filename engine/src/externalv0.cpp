@@ -170,6 +170,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalV0::MCExternalV0(void)
+    : m_name(nullptr)
 {
 	m_table = nil;
 	m_free = nil;
@@ -286,13 +287,23 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     // If we want UTF8, then the type is lowercase.
     bool t_wants_utf8;
     t_wants_utf8 = islower(t_handler -> type[0]);
-    
+
+    // Count the number of arguments passed
+    size_t nargs = 0;
+    for (MCParameter *t_iter = p_parameters; t_iter != NULL; t_iter = t_iter->getnext())
+    {
+        ++nargs;
+    }
+
+    MCAutoCustomPointerArray<char*, MCMemoryDeleteArray> args;
+    if (!args.New(nargs))
+        return ES_ERROR;
+
     char *retval;
     Bool Xpass, Xerr;
-    int nargs = 0;
-    char **args = NULL;
     MCExecContext ctxt(p_context, nil, nil);
-    
+    size_t t_parameter_idx = 0;
+
     while (p_parameters != NULL)
     {
         // MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
@@ -307,15 +318,14 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		if (!ctxt . ConvertToString(*t_value, &t_string))
 			return ES_ERROR;
         
-		MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
-		
 		// If we want UTF8 use a different conversion method.
         if (t_wants_utf8)
-            MCStringConvertToUTF8String(*t_string, args[nargs++]);
+            MCStringConvertToUTF8String(*t_string, args[t_parameter_idx]);
         else
             // AL-2014-09-30: [[ Bug 13530 ]] Nativize string before conversion for legacy behavior
-            MCStringNormalizeAndConvertToCString(*t_string, args[nargs++]);
-        
+            MCStringNormalizeAndConvertToCString(*t_string, args[t_parameter_idx]);
+
+        ++t_parameter_idx;
         p_parameters = p_parameters -> getnext();
     }
     
@@ -323,7 +333,7 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     MCExternalAllocPool *t_old_pool = MCexternalallocpool;
     MCexternalallocpool = new (nothrow) MCExternalAllocPool;
     
-    (t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
+    (t_handler -> call)(args.Ptr(), args.Size(), &retval, &Xpass, &Xerr);
     
     MCExternalDeallocatePool(MCexternalallocpool);
     MCexternalallocpool = t_old_pool;
@@ -349,14 +359,6 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         else
             ctxt . SetTheResultToCString(retval);
         m_free(retval);
-    }
-    
-    if (args != NULL)
-    {
-        while (nargs--)
-	        MCMemoryDeleteArray(args[nargs]); /* Allocated with MCStringNormalizeAndConvertToCString */
-        
-        delete[] args; /* Allocated with new[] */
     }
     
     if (Xerr)

@@ -475,9 +475,10 @@ void MCPlayer::SetEndTime(MCExecContext& ctxt, double* p_time)
 	//for QT, this is the selection end time
 	if (p_time == nil)
 		starttime = endtime = MAXUINT4;
+    
 	else
 	{
-		endtime = *p_time;
+        endtime = *p_time >= getduration() ? getduration() : *p_time;
 #ifndef _MOBILE
 		if (starttime == MAXUINT4)
 			starttime = 0;

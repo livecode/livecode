@@ -37,6 +37,9 @@ struct Cvalue
 
 class MCScriptPoint
 {
+    MCDataRef utf16_script;
+    uint32_t length;
+
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
@@ -51,8 +54,6 @@ class MCScriptPoint
 	Boolean escapes;
 	Symbol_type m_type;
 	
-    uint32_t length;
-    MCDataRef utf16_script;
     codepoint_t codepoint;
     uint1 curlength;
     

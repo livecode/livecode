@@ -1427,110 +1427,56 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+template<typename Formatter, typename Element>
+static bool MCPropertyFormatList(Formatter p_format,
+                                 Element *p_list,
+                                 uindex_t p_count,
+                                 char_t p_delimiter,
+                                 MCStringRef &r_string)
 {
     if (p_count == 0)
+        return MCStringCopy(kMCEmptyString, r_string);
+
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(p_delimiter, &t_list))
+        return false;
+
+    for (uindex_t i = 0; i < p_count; ++i)
     {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
+        MCAutoStringRef t_formatted;
+        if (!p_format(p_list[i], &t_formatted))
+            return false;
+        if (!MCListAppend(*t_list, *t_formatted))
+            return false;
     }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-		if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%d", p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+
+    return MCListCopyAsString(*t_list, r_string);
+}
+
+static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    auto t_format =
+        [](uinteger_t& x, MCStringRef& s) { return MCStringFormat(s, "%d", x); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatDoubleList(double *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-		if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%f", p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+    auto t_format =
+        [](double& x, MCStringRef& s) { return MCStringFormat(s, "%f", x); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-        if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppend(*t_list, p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+    return MCPropertyFormatList(MCStringCopy, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-        if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-        // AL-2014-05-19: [[ Bug 12428 ]] Only add one empty line for non-linked vertices.
-        if (p_list[i].x != MININT2 && p_list[i].y != MININT2)
-            t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+    auto t_format =
+        [](MCPoint& p, MCStringRef& s) { return MCStringFormat(s, "%d,%d", p.x, p.y); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
