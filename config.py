@@ -255,6 +255,18 @@ def validate_gyp_settings(opts):
         opts['BUILD_EDITION'] = 'community'
 
 def guess_java_home(platform):
+    if platform.startswith('linux'):
+        try:
+            javac_str = '/bin/javac'
+            javac_path = subprocess.check_output(['/usr/bin/env', 
+                         'readlink', '-f', '/usr' + javac_str]).strip()
+            if javac_path.endswith(javac_str):
+                return javac_path[:-len(javac_str)]
+        except subprocess.CalledProcessError as e:
+            print(e)
+            pass # Fall through to other ways of guessing
+
+    # More guesses
     try:
         if os.path.isfile('/usr/libexec/java_home'):
             return subprocess.check_output('/usr/libexec/java_home').strip()
