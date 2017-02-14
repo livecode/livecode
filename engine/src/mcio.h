@@ -190,7 +190,8 @@ extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);
-extern MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
+extern MCFileEncodingType MCS_resolve_BOM_from_bytes(byte_t *p_bytes, uindex_t p_size, uint32_t &r_size);
+extern MCFileEncodingType MCS_resolve_BOM(IO_handle &x_stream, uint32_t &r_size);
 
 ///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
 extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);
