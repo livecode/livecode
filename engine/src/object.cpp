@@ -978,7 +978,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
@@ -1005,7 +1004,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1074,72 +1072,80 @@ Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_messag
 // and executes it. If one is not found, or the message is passed, it moves onto
 // the parentScript of the object.
 Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message, MCParameter* p_parameters)
-{	
-	Exec_stat t_stat;
-	t_stat = ES_NOT_HANDLED;
-
-	// Make sure this object has its script compiled.
-	parsescript(True);
-
-	// MW-2012-08-08: [[ BeforeAfter ]] If we have a parentScript then see if there
-	//   is a before handler to execute.
-	if (p_handler_type == HT_MESSAGE && parent_script != nil)
-	{
-		// Try to invoke a before handler.
-		t_stat = handleparent(HT_BEFORE, p_message, p_parameters);
-		
-		// If we encountered an exit all or error, we are done.
-		if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
-			return t_stat;
-	}
-
-	// If this object has handlers, then look for the required handler there
-	// first.
-	Exec_stat t_main_stat;
-	t_main_stat = ES_NOT_HANDLED;
-	if (hlist != NULL)
-	{
-		// Search for the handler in this object's handler list.
-		MCHandler *t_handler;
-		if (hlist -> findhandler(p_handler_type, p_message, t_handler) == ES_NORMAL)
-		{
-			// If the handler is not private, then execute it
-			if (!t_handler -> isprivate())
-			{
-				// Execute the handler we have found.
-				t_main_stat = exechandler(t_handler, p_parameters);
-
-				// If there was an error we are done.
-				if (t_main_stat == ES_ERROR)
-					return t_main_stat;
-			}
-		}
-	}
-	
-	// If the object has a parent script and the object's handler passed (or wasn't
-	// handled) then try the parenscript.
-	if (parent_script != nil && (t_main_stat == ES_PASS || t_main_stat == ES_NOT_HANDLED))
-	{
-		t_main_stat = handleparent(p_handler_type, p_message, p_parameters);
-		if (t_main_stat == ES_ERROR)
-			return t_main_stat;
-	}
-	
-	// MW-2012-08-08: [[ BeforeAfter ]] If we have a parentScript then see if there
-	//   is an after handler to execute.
-	if (p_handler_type == HT_MESSAGE && parent_script != nil)
-	{
-		// Try to invoke after handler.
-		t_stat = handleparent(HT_AFTER, p_message, p_parameters);
-		
-		// If we encountered an exit all or error, we are done.
-		if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
-			return t_stat;
-	}
-
-	// Return the result of executing the main handler in the object
-	return t_main_stat;
+{
+    Exec_stat t_main_stat;
+    t_main_stat = ES_NOT_HANDLED;
+    
+    lockforexecution();
+    
+    // Make sure this object has its script compiled.
+    parsescript(True);
+    
+    // MW-2012-08-08: [[ BeforeAfter ]] If we have a parentScript then see if there
+    //   is a before handler to execute.
+    if (p_handler_type == HT_MESSAGE &&
+        parent_script != nil)
+    {
+        Exec_stat t_stat;
+        t_stat = ES_NOT_HANDLED;
+        
+        // Try to invoke a before handler.
+        t_stat = handleparent(HT_BEFORE, p_message, p_parameters);
+        
+        // If we encountered an exit all or error, we are done.
+        if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
+            t_main_stat = t_stat;
+    }
+    
+    // If this object has handlers, then look for the required handler there
+    // first.
+    if (hlist != NULL &&
+        t_main_stat != ES_ERROR &&
+        t_main_stat != ES_EXIT_ALL)
+    {
+        // Search for the handler in this object's handler list.
+        MCHandler *t_handler;
+        if (hlist -> findhandler(p_handler_type, p_message, t_handler) == ES_NORMAL)
+        {
+            // If the handler is not private, then execute it
+            if (!t_handler -> isprivate())
+            {
+                // Execute the handler we have found.
+                t_main_stat = exechandler(t_handler, p_parameters);
+            }
+        }
+    }
+    
+    // If the object has a parent script and the object's handler passed (or wasn't
+    // handled) then try the parenscript.
+    if (parent_script != nil &&
+        (t_main_stat == ES_PASS || t_main_stat == ES_NOT_HANDLED))
+        t_main_stat = handleparent(p_handler_type, p_message, p_parameters);
+    
+    // MW-2012-08-08: [[ BeforeAfter ]] If we have a parentScript then see if there
+    //   is an after handler to execute.
+    if (p_handler_type == HT_MESSAGE &&
+        parent_script != nil &&
+        t_main_stat != ES_ERROR &&
+        t_main_stat != ES_EXIT_ALL)
+    {
+        Exec_stat t_stat;
+        t_stat = ES_NOT_HANDLED;
+    
+        // Try to invoke after handler.
+        t_stat = handleparent(HT_AFTER, p_message, p_parameters);
+        
+        // If we encountered an exit all or error, we are done.
+        if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
+            t_main_stat = t_stat;
+    }
+    
+    unlockforexecution();
+    
+    // Return the result of executing the main handler in the object
+    return t_main_stat;
 }
+
 
 Exec_stat MCObject::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
 {
