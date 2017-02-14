@@ -2073,6 +2073,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCdefaultstackptr = t_this_stack;
 	MCtargetptr . object = this;
     MCtargetptr . part_id = 0;
+    
+    lockforexecution();
 
 	// Dispatch the message
 	Exec_stat t_stat;
@@ -2082,7 +2084,9 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		t_stat = handle(p_type, p_message, p_params, this);
 
-	// Reset the default stack pointer and target - note that we use 'send'esque
+    unlockforexecution();
+    
+    // Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
     if (MCdefaultstackptr == t_this_stack
                 && t_old_defaultstack.IsValid())
@@ -2136,6 +2140,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+        lockforexecution();
+        
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
@@ -2154,6 +2160,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 					stat = ES_PASS;
 			}
 		}
+        
+        unlockforexecution();
 	}
 	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
@@ -2903,7 +2911,11 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
+    
+    lockforexecution();
 	Exec_stat stat = hptr->exec(ctxt, NULL);
+    unlockforexecution();
+    
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2941,6 +2953,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    lockforexecution();
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -2950,6 +2963,8 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	{
 		MCresult->copyasvalueref(r_value);
 	}
+    unlockforexecution();
+    
 	MClockerrors = oldlock;
 	MCtargetptr = oldtargetptr;
 	ctxt.SetHandlerList(oldhlist);

@@ -1221,6 +1221,8 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
+    
+    t_object . object -> lockforexecution();
 
 	// Dispatch the message
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
@@ -1235,6 +1237,8 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		default:
 			break;
 		}
+    
+    t_object . object -> unlockforexecution();
 	
 	// Set 'it' appropriately
 	switch(t_stat)
