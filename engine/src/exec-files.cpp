@@ -915,7 +915,8 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
 		{
-			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+            uint32_t t_bom_size;
+            t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream, t_bom_size);
 			MCS_close(t_BOM_stream);
 		}
 		else
