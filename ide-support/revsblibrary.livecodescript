@@ -1167,7 +1167,7 @@ private function revSBPlatformToRuntimeFolderName pPlatform
 end revSBPlatformToRuntimeFolderName
 
 function revSBExternalsMapping
-   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip"
 end revSBExternalsMapping
 
 function revSBDatabaseDriversMapping
@@ -2390,10 +2390,6 @@ on initialiseSearchForInclusions
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
    put "scriptLibraries" into sPatternsA["Browser"]["Key"]
-   
-   # revFont
-   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
-   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
    
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
