@@ -21,6 +21,35 @@ on TestSetup
    create stack "test"
 end TestSetup
 
+on TestDeleteLibrary
+   start using stack "test"
+   delete stack "test"
+   TestAssert "Delete library stack", "test" is not among the lines of the stacksInUse
+end TestDeleteLibrary
+
+on TestDeleteFrontScript
+   local tID
+   put the long id of stack "test" into tID
+   insert the script of stack "test" into front
+   delete stack "test"
+   TestAssert "Delete front script", tID is not among the lines of the frontScripts
+end TestDeleteFrontScript
+
+on TestDeleteBackScripts
+   local tID
+   put the long id of stack "test" into tID
+   insert the script of stack "test" into back
+   delete stack "test"
+   TestAssert "Delete back scripts", tID is not among the lines of the backScripts
+end TestDeleteBackScripts
+
+on TestDeleteObjectWithPendingMessage
+   local tID
+   put the long id of stack "test" into tID
+   send "TestMessage" to stack "test" in 10 seconds
+   delete stack "test"
+   TestAssert "Delete object with pending message", tID is not in the pendingMessages
+end TestDeleteObjectWithPendingMessage
 
 on TestDeleteObjectInNestedGroup
    set the defaultStack to "test"
