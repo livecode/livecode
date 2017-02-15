@@ -300,9 +300,6 @@ MCObject::~MCObject()
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
-	MCscreen->cancelmessageobject(this, NULL);
-	removefrom(MCfrontscripts);
-	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
 	MCNameDelete(_name);
@@ -876,6 +873,10 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
+    
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
 	if (m_is_parent_script)
