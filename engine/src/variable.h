@@ -338,11 +338,11 @@ protected:
 	};
 	unsigned index : 16;
 	unsigned dimensions : 8;
-	Boolean isparam : 1;
+	bool isparam : 1;
 
 	// MW-2008-10-28: [[ ParentScripts ]] This boolean flag is True if this
 	//   varref refers to a script local.
-	Boolean isscriptlocal : 1;
+	bool isscriptlocal : 1;
 	
 	// MW-2012-03-15: [[ Bug ]] This boolean flag is true if this varref is
 	//   a plain var and doesn't require synching.

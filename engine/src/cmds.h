@@ -93,7 +93,7 @@ class MCDo : public MCStatement
 	MCChunk *widget;
 protected:
 	bool browser : 1;
-	Boolean debug : 1;
+	bool debug : 1;
 	bool caller : 1;
 public:
 	MCDo()
@@ -500,11 +500,11 @@ class MCCreate : public MCStatement
 	MCExpression *file;
     MCExpression *kind;
     MCChunk *container;
-    Boolean directory: 1;
-    Boolean visible: 1;
-    Boolean alias: 1;
+    bool directory: 1;
+    bool visible: 1;
+    bool alias: 1;
     // MW-2014-09-30: [[ ScriptOnlyStack ]] For 'create script only stack ...' form.
-    Boolean script_only_stack : 1;
+    bool script_only_stack : 1;
 public:
 	MCCreate()
 	{
@@ -1517,16 +1517,16 @@ class MCOpen : public MCStatement
 	MCStringRef destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
-	Boolean dialog : 1;
-	Boolean datagram : 1;
-	Boolean sheet : 1;
-	Boolean secure : 1;
-	Boolean secureverify : 1;
-    Boolean textmode : 1;
+	bool dialog : 1;
+	bool datagram : 1;
+	bool sheet : 1;
+	bool secure : 1;
+	bool secureverify : 1;
+    bool textmode : 1;
 
 	// MW-2010-05-09: Indicates that the process should be opened with elevated
 	//   (admin) permissions
-	Boolean elevated : 1;
+	bool elevated : 1;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added new "open socket <socket> with verification for <host>" variant.
 	MCExpression *verifyhostname;
@@ -1768,7 +1768,7 @@ class MCSetOp : public MCStatement
 	MCVarref *destvar;
 	MCExpression *source;
 protected:
-	Boolean intersect : 1;
+	bool intersect : 1;
 	bool overlap : 1;
     // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     bool recursive : 1;
@@ -2197,7 +2197,7 @@ public:
 	
 private:
 	MCExpression *m_sock_name;
-	Boolean secureverify : 1;
+	bool secureverify : 1;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added new host name variant for use with verification.
 	MCExpression *m_verify_host_name;
