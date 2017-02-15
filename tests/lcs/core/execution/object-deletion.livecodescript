@@ -67,6 +67,19 @@ on TestDeleteSubstackWithCantDelete
    TestAssert "Delete stack with cantDelete substack", true
 end TestDeleteSubstackWithCantDelete
 
+on TestDeleteObjectInBehaviorOfNonTarget
+   create button "behavior"
+   set the script of button "behavior" to \
+         "on DeleteIt" & return & \
+         "delete stack "& quote & "lib" & quote  & return & \
+         "end DeleteIt"
+   create stack "lib"
+   set the behavior of stack "lib" to the long id of button "behavior"
+   start using stack "lib"
+   TestAssertThrow "Delete object from its behavior when not target", "DeleteIt", the long id of stack "test", 347
+end TestDeleteObjectInBehaviorOfNonTarget
+
+
 on __TestDeleteStack
       delete stack "test"
 end __TestDeleteStack
