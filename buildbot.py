@@ -30,6 +30,7 @@ import os
 import platform as _platform
 import shutil
 import tarfile
+import uuid
 
 # LiveCode build configuration script
 import config
@@ -79,9 +80,6 @@ def get_buildtype():
 
 def get_build_edition():
     return os.environ.get('BUILD_EDITION', 'community')
-
-def get_git_commit():
-    return subprocess.check_output(['git','rev-parse','HEAD']).strip()
 
 ################################################################
 # Defer to buildbot.mk
@@ -160,8 +158,7 @@ def exec_make(target):
 #   even if a Python exception causes a non-local exit.
 class UniqueMspdbsrv(object):
     def __enter__(self):
-        os.environ['_MSPDBSRV_ENDPOINT_'] = '{}-{}-{}'.format(
-            get_build_edition(), get_git_commit()[0:8], get_buildtype())
+        os.environ['_MSPDBSRV_ENDPOINT_'] = str(uuid.uuid4())
 
         mspdbsrv_exe = os.path.join(config.get_program_files_x86(),
             'Microsoft Visual Studio 10.0\\Common7\\IDE\\mspdbsrv.exe')
