@@ -448,65 +448,34 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 	return IO_NORMAL;
 }
 
+bool MCDispatch::streamstackisscriptonly(IO_handle stream)
+{
+    uint32_t t_version;
+    return readheader(stream, t_version) != IO_NORMAL;
+}
+
 // This method reads a stack from the given stream. The stack is set to
 // have parent MCDispatch, and filename MCcmd. It is designed to be used
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	uint32_t version;
-	uint1 charset, type;
-	char *newsf;
-	
-	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
-	if (readheader(stream, version) != IO_NORMAL
-	        || IO_read_uint1(&charset, stream) != IO_NORMAL
-	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
-		return IO_ERROR;
-
-	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
-	//   parentscript resolution is required to false.
-	s_loaded_parent_script_reference = false;
-
-	MCtranslatechars = charset != CHARSET;
-	delete newsf; // stackfiles is obsolete
-
-	MCStack *t_stack = nil;
-	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
-
-	t_stack -> setparent(this);
-	
+    MCAutoStringRef t_filename;
 	// MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
 	//   This solves relative file path referencing issues.
 #ifdef TARGET_SUBPLATFORM_ANDROID
-    MCAutoStringRef t_filename;
     /* UNCHECKED */ MCStringFormat(&t_filename, "%@/mainstack", MCcmd);
-	t_stack -> setfilename(*t_filename);
 #else
-   	t_stack -> setfilename(MCcmd);
+   	t_filename = MCcmd;
 #endif
 
-	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
-	        || t_stack->load(stream, version, type) != IO_NORMAL)
-	{
-		delete t_stack;
-		return IO_ERROR;
-	}
-
-	if (t_stack->load_substacks(stream, version) != IO_NORMAL
-	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_END)
-	{
-		delete t_stack;
-		return IO_ERROR;
-	}
-
-	// We are reading the startup stack, so this becomes the root of the
-	// stack list.
-	stacks = t_stack;
-
-	r_stack = t_stack;
+    const char* t_result = nullptr;
+    MCStack* t_stack = nullptr;
+    if (trytoreadbinarystack(*t_filename, kMCEmptyString, stream, this,
+                             t_stack, t_result) != IO_NORMAL ||
+        t_stack == nullptr)
+    {
+        return IO_ERROR;
+    }
 
 #ifndef _MOBILE
 	// Make sure parent script references are up to date.
@@ -518,8 +487,42 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	if (s_loaded_parent_script_reference)
 		t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
 #endif
-
+    
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list.
+    stacks = t_stack;
+    
+    r_stack = t_stack;
 	return IO_NORMAL;
+}
+
+IO_stat MCDispatch::readscriptonlystartupstack(IO_handle stream, uindex_t p_length, MCStack*& r_stack)
+{
+    MCAutoStringRef t_filename;
+    // MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
+    //   This solves relative file path referencing issues.
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    /* UNCHECKED */ MCStringFormat(&t_filename, "%@/mainstack", MCcmd);
+#else
+   	t_filename = MCcmd;
+#endif
+    
+    const char* t_result = nullptr;
+    MCStack* t_stack = nullptr;
+    
+    // Read a script-only stack from the stream
+    if (trytoreadscriptonlystackofsize(*t_filename, stream,
+                                       p_length, this,
+                                       t_stack, t_result) != IO_NORMAL
+        || t_stack == nullptr)
+        return IO_ERROR;
+
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list.
+    stacks = t_stack;
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
 }
 
 // MW-2012-02-17: [[ LogFonts ]] Load a stack file, ensuring we clear up any
@@ -540,266 +543,365 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 	return stat;
 }
 
-// MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
-//   to handle font table cleanup).
-IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
+                                         MCStringRef p_name,
+                                         IO_handle &x_stream,
+                                         MCObject* p_parent,
+                                         MCStack* &r_stack,
+                                         const char* &r_result)
 {
-	uint32_t version;
-
-    sptr = NULL;
-    
-    // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
-	if (readheader(stream, version) == IO_NORMAL)
-	{
-		if (version > kMCStackFileFormatCurrentVersion)
-		{
-			MCresult->sets("stack was produced by a newer version");
-			return checkloadstat(IO_ERROR);
-		}
-        
-		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
-		//   parentscript resolution is required to false.
-		s_loaded_parent_script_reference = false;
-		
-		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
-		uint1 charset, type;
-		char *newsf;
-		if (IO_read_uint1(&charset, stream) != IO_NORMAL
-		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
-		{
-			MCresult->sets("stack is corrupted, check for ~ backup file");
-			return checkloadstat(IO_ERROR);
-		}
-		delete newsf; // stackfiles is obsolete
-		MCtranslatechars = charset != CHARSET;
-		sptr = nil;
-		/* UNCHECKED */ MCStackSecurityCreateStack(sptr);
-		if (stacks == NULL)
-			sptr->setparent(this);
-		else
-			sptr->setparent(stacks);
-			
-		sptr->setfilename(p_openpath);
-
-		if (MCModeCanLoadHome() && type == OT_HOME)
-		{
-			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
-			//   legacy.
-			char *lstring = NULL;
-			char *cstring = NULL;
-			IO_read_cstring_legacy(lstring, stream, 2);
-			IO_read_cstring_legacy(cstring, stream, 2);
-			delete lstring;
-			delete cstring;
-		}
-
-		MCresult -> clear();
-
-		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
-		    || sptr->load(stream, version, type) != IO_NORMAL)
-		{
-			if (MCresult -> isclear())
-				MCresult->sets("stack is corrupted, check for ~ backup file");
-			destroystack(sptr, False);
-			sptr = NULL;
-			return checkloadstat(IO_ERROR);
-		}
-		
-		// MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
-		//   appropriately.
-		sptr -> checksharedgroups();
-		
-		if (sptr->load_substacks(stream, version) != IO_NORMAL
-		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || type != OT_END)
-		{
-			if (MCresult -> isclear())
-				MCresult->sets("stack is corrupted, check for ~ backup file");
-			destroystack(sptr, False);
-			sptr = NULL;
-			return checkloadstat(IO_ERROR);
-		}
+    uint32_t t_version;
+    if (readheader(x_stream, t_version) != IO_NORMAL)
+    {
+        return IO_NORMAL;
     }
     
-    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we failed to load a stack from that step
-    //   then check to see if it is a script file stack.
-    if (sptr == NULL)
+    if (t_version > kMCStackFileFormatCurrentVersion)
     {
-        // Clear the error return.
-        MCresult -> clear();
-        
-        // Reset to position 0.
-        MCS_seek_set(stream, 0);
-        
-        // Load the file into memory - we need to process a byteorder mark and any
-        // line endings.
-        uindex_t t_size = static_cast<uindex_t>(MCS_fsize(stream));
+        r_result = "stack was produced by a newer version";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    // MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
+    //   parentscript resolution is required to false.
+    s_loaded_parent_script_reference = false;
+    
+    // MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
+    uint1 charset, type;
+    char* t_newsf = nullptr;
+    if (IO_read_uint1(&charset, x_stream) != IO_NORMAL
+        || IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || IO_read_cstring_legacy(t_newsf, x_stream, 2) != IO_NORMAL)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        return checkloadstat(IO_ERROR);
+    }
+    MCMemoryDeallocate(t_newsf);
 
-        MCAutoPointer<byte_t> t_script = new byte_t[t_size];
-        if (IO_read(*t_script, t_size, stream) == IO_ERROR)
+    MCtranslatechars = charset != CHARSET;
+
+    MCStack *t_stack;
+    if (!MCStackSecurityCreateStack(t_stack))
+    {
+        r_result = "couldn't create stack";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    if (p_parent != nullptr)
+        t_stack -> setparent(p_parent);
+    else if (stacks != nullptr)
+        t_stack->setparent(stacks);
+    else
+        t_stack->setparent(this);
+
+    t_stack->setfilename(p_openpath);
+    
+    if (MCModeCanLoadHome() && type == OT_HOME)
+    {
+        // MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
+        //   legacy.
+        char* lstring = nullptr;
+        char* cstring = nullptr;
+        if (IO_read_cstring_legacy(lstring, x_stream, 2) != IO_NORMAL
+            || IO_read_cstring_legacy(cstring, x_stream, 2) != IO_NORMAL)
         {
-            MCresult -> sets("unable to read file");
+            r_result = "stack is corrupted, check for ~ backup file";
             return checkloadstat(IO_ERROR);
         }
-        
-        uindex_t t_bom_size = 0;
-        MCFileEncodingType t_file_encoding =
-        MCS_resolve_BOM_from_bytes(*t_script, t_size, t_bom_size);
-        
-        MCStringEncoding t_string_encoding;
-        switch (t_file_encoding)
-        {
-            case kMCFileEncodingUTF8:
-                t_string_encoding = kMCStringEncodingUTF8;
-                break;
-            case kMCFileEncodingUTF16:
-                t_string_encoding = kMCStringEncodingUTF16;
-                break;
-            case kMCFileEncodingUTF16BE:
-                t_string_encoding = kMCStringEncodingUTF16BE;
-                break;
-            case kMCFileEncodingUTF16LE:
-                t_string_encoding = kMCStringEncodingUTF16LE;
-                break;
-            default:
-                // Assume native
-                t_string_encoding = kMCStringEncodingNative;
-                break;
-        }
 
-        MCAutoStringRef t_raw_script_string, t_LC_script_string;
-        /* UNCHECKED */ MCStringCreateWithBytes(*t_script + t_bom_size, t_size - t_bom_size, t_string_encoding, false, &t_raw_script_string);
-        /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
-        
-        // Now attempt to parse the header line:
-        //   'script' <string>
-        MCScriptPoint sp(*t_LC_script_string);
-        
-        // Parse 'script' token.
-        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
+        MCMemoryDeallocate(lstring);
+        MCMemoryDeallocate(cstring);
+    }
+    
+    if (IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || (type != OT_STACK && type != OT_ENCRYPT_STACK)
+        || t_stack->load(x_stream, t_version, type) != IO_NORMAL)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        destroystack(t_stack, False);
+        return checkloadstat(IO_ERROR);
+    }
+    
+    // MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
+    //   appropriately.
+    t_stack -> checksharedgroups();
+    
+    if (t_stack->load_substacks(x_stream, t_version) != IO_NORMAL
+        || IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || type != OT_END)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        destroystack(t_stack, False);
+        return checkloadstat(IO_ERROR);
+    }
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
+}
+
+static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
+                                             uindex_t p_size,
+                                             MCStringEncoding p_encoding)
+{
+    MCAutoStringRef t_raw_script_string, t_LC_script_string;
+    if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
+                                 &t_raw_script_string) ||
+        !MCStringConvertLineEndingsToLiveCode(*t_raw_script_string,
+                                              &t_LC_script_string))
+    {
+        return nullptr;
+    }
+    
+    // Now attempt to parse the header line:
+    //   'script' <string>
+    MCScriptPoint sp(*t_LC_script_string);
+    
+    // Parse 'script' token.
+    if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
+    {
+        return nullptr;
+    }
+    
+    // Parse <string> token.
+    Symbol_type t_type;
+    if (sp . next(t_type) != PS_NORMAL || t_type != ST_LIT)
+    {
+        return nullptr;
+    }
+    
+    MCNewAutoNameRef t_script_name;
+    if (!MCNameClone(sp . gettoken_nameref(), &t_script_name))
+    {
+        return nullptr;
+    }
+    
+    // Parse end of line.
+    Parse_stat t_stat;
+    t_stat = sp . next(t_type);
+    if (t_stat != PS_EOL && t_stat != PS_EOF)
+        return nullptr;
+    
+    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
+    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+    // Now trim the ep down to the remainder of the script.
+    // Trim the header.
+    uint32_t t_lines = sp.getline();
+    uint32_t t_index = 0;
+    
+    // Jump over the possible lines before the string token
+    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index,
+                                    kMCStringOptionCompareExact, t_index)
+           && t_lines > 0)
+    {
+        t_lines -= 1;
+    }
+    
+    // Add one to the index so we include the LF
+    t_index += 1;
+    
+    // t_line now has the last LineFeed of the token
+    MCAutoStringRef t_LC_script_body;
+    
+    // We copy the body of the stack script
+    if (!MCStringCopySubstring(*t_LC_script_string,
+                               MCRangeMake(t_index,
+                                           MCStringGetLength(*t_LC_script_string)
+                                           - t_index), &t_LC_script_body))
+    {
+        return nullptr;
+    }
+    
+    // Create a stack.
+    MCStack *t_stack;
+    if (!MCStackSecurityCreateStack(t_stack))
+        return nullptr;
+    
+    // Set it up as script only.
+    t_stack -> setasscriptonly(*t_LC_script_body);
+    
+    // Set its name.
+    t_stack -> setname(*t_script_name);
+    
+    return t_stack;
+}
+
+IO_stat MCDispatch::trytoreadscriptonlystackofsize(MCStringRef p_openpath,
+                                                   IO_handle &x_stream,
+                                                   uindex_t p_size,
+                                                   MCObject* p_parent,
+                                                   MCStack* &r_stack,
+                                                   const char* &r_result)
+{
+    MCAutoPointer<byte_t> t_bytes = new byte_t[p_size];
+    if (IO_read(*t_bytes, p_size, x_stream) == IO_ERROR)
+    {
+        return checkloadstat(IO_ERROR);
+    }
+    
+    uindex_t t_bom_size = 0;
+    MCFileEncodingType t_file_encoding =
+        MCS_resolve_BOM_from_bytes(*t_bytes, p_size, t_bom_size);
+    
+    MCStringEncoding t_string_encoding;
+    switch (t_file_encoding)
+    {
+        case kMCFileEncodingUTF8:
+            t_string_encoding = kMCStringEncodingUTF8;
+            break;
+        case kMCFileEncodingUTF16:
+            t_string_encoding = kMCStringEncodingUTF16;
+            break;
+        case kMCFileEncodingUTF16BE:
+            t_string_encoding = kMCStringEncodingUTF16BE;
+            break;
+        case kMCFileEncodingUTF16LE:
+            t_string_encoding = kMCStringEncodingUTF16LE;
+            break;
+        default:
+            // Assume native
+            t_string_encoding = kMCStringEncodingNative;
+            break;
+    }
+    
+    MCStack *t_stack = script_only_stack_from_bytes(*t_bytes + t_bom_size,
+                                                    p_size - t_bom_size,
+                                                    t_string_encoding);
+    if (t_stack == nullptr)
+        return IO_NORMAL;
+    
+    // Set its parent.
+    if (p_parent != nullptr)
+        t_stack -> setparent(p_parent);
+    else if (stacks != nullptr)
+        t_stack->setparent(stacks);
+    else
+        t_stack->setparent(this);
+    
+    // Set its filename.
+    t_stack->setfilename(p_openpath);
+    
+    // Make it invisible
+    t_stack -> setflag(False, F_VISIBLE);
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
+}
+
+IO_stat MCDispatch::trytoreadscriptonlystack(MCStringRef p_openpath,
+                                             IO_handle &x_stream,
+                                             MCObject* p_parent,
+                                             MCStack* &r_stack,
+                                             const char* &r_result)
+{
+    // Load the file into memory - we need to process a byteorder mark and any
+    // line endings.
+    uindex_t t_size = static_cast<uindex_t>(MCS_fsize(x_stream));
+    
+    if (trytoreadscriptonlystackofsize(p_openpath, x_stream, t_size,
+                                       p_parent, r_stack, r_result)
+        != IO_NORMAL)
+    {
+        r_result = "failed to load script only stack";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    return IO_NORMAL;
+}
+
+void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
+{
+    if (stacks != NULL)
+    {
+        MCStack *tstk = stacks;
+        do
         {
-            // Parse <string> token.
-            Symbol_type t_type;
-            if (sp . next(t_type) == PS_NORMAL &&
-                t_type == ST_LIT)
+            if (x_stack->hasname(tstk->getname()))
             {
-                MCNewAutoNameRef t_script_name;
-                MCNameClone(sp . gettoken_nameref(), &t_script_name);
+                MCAutoNameRef t_stack_name;
+                /* UNCHECKED */ t_stack_name . Clone(x_stack -> getname());
                 
-                // Parse end of line.
-                Parse_stat t_stat;
-                t_stat = sp . next(t_type);
-                if (t_stat == PS_EOL || t_stat == PS_EOF)
+                delete x_stack;
+                x_stack = nullptr;
+                
+                
+                if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
+                    x_stack = tstk;
+                else
                 {
-                    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
-                    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-                    // Now trim the ep down to the remainder of the script.
-                    // Trim the header.
-                    uint32_t t_lines = sp.getline();
-                    uint32_t t_index = 0;
-
-                    // Jump over the possible lines before the string token
-                    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index) &&
-                           t_lines > 0)
-                        t_lines -= 1;
-                    
-                    // Add one to the index so we include the LF
-                    t_index += 1;
-
-                    // t_line now has the last LineFeed of the token
-                    MCAutoStringRef t_LC_script_body;
-
-                    // We copy the body of the stack script
-                    MCStringCopySubstring(*t_LC_script_string, MCRangeMake(t_index, MCStringGetLength(*t_LC_script_string) - t_index), &t_LC_script_body);
-                    
-                    // Create a stack.
-                    /* UNCHECKED */ MCStackSecurityCreateStack(sptr);
-                    
-                    // Set its parent.
-                    if (stacks == NULL)
-                        sptr->setparent(this);
-                    else
-                        sptr->setparent(stacks);
-                    
-                    // Set its filename.
-                    sptr->setfilename(p_openpath);
-                    
-                    // Set its name.
-                    sptr -> setname(*t_script_name);
-                    
-                    // Make it invisible
-                    sptr -> setflag(False, F_VISIBLE);
-                    
-                    // Set it up as script only.
-                    sptr -> setasscriptonly(*t_LC_script_body);
+                    MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
+                    tstk = stacks;
+                    do
+                    {
+                        if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
+                        {
+                            x_stack = tstk;
+                            break;
+                        }
+                        tstk = (MCStack *)tstk->next();
+                    }
+                    while (tstk != stacks);
                 }
+                return;
             }
+            tstk = (MCStack *)tstk->next();
         }
-        
+        while (tstk != stacks);
+    }
+    
+    appendstack(x_stack);
+    
+    x_stack->extraopen(false);
+    
+    // MW-2008-10-28: [[ ParentScript ]]
+    // We just loaded a stackfile, so check to see if parentScript resolution
+    // is required and if so do it.
+    // MW-2009-01-28: [[ Inherited parentScripts ]]
+    // Resolving parentScripts may allocate memory, so 'resolveparentscripts'
+    // will return false if it fails to allocate what it needs. At some point
+    // this needs to be dealt with by deleting the stack and returning an error,
+    // *However* at the time of writing, 'readfile' isn't designed to handle
+    // this - so we just ignore the result for now (note that all the 'load'
+    // methods *fail* to check for no-memory errors!).
+    if (s_loaded_parent_script_reference)
+        x_stack -> resolveparentscripts();
+}
+
+// MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
+//   to handle font table cleanup).
+IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack* &r_stack)
+{
+    MCresult -> clear();
+    
+    const char* t_result = nullptr;
+    MCStack *t_stack = nullptr;
+    
+	if (trytoreadbinarystack(p_openpath, p_name, stream, nullptr,
+                             t_stack, t_result) != IO_NORMAL)
+    {
+        /* UNCHECKED */ MCresult -> setvalueref(MCSTR(t_result));
+        return IO_ERROR;
+    }
+    
+    // If there was no IO error but it wasn't a binary stack then try as script-only
+    if (t_stack == nullptr)
+    {
+        // Reset to position 0.
+        MCS_seek_set(stream, 0);
+    
+        if (trytoreadscriptonlystack(p_openpath, stream, nullptr,
+                                     t_stack, t_result) != IO_NORMAL)
+        {
+            /* UNCHECKED */ MCresult -> setvalueref(MCSTR(t_result));
+            return IO_ERROR;
+        }
     }
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If we managed to load a stack as either binary
     //   or script, then do the normal processing.
-    if (sptr != NULL)
+    if (t_stack != nullptr)
     {
-		if (stacks != NULL)
-		{
-			MCStack *tstk = stacks;
-			do
-			{
-				if (sptr->hasname(tstk->getname()))
-				{
-					MCAutoNameRef t_stack_name;
-					/* UNCHECKED */ t_stack_name . Clone(sptr -> getname());
-
-					delete sptr;
-					sptr = NULL;
-					
-					
-					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
-						sptr = tstk;
-					else
-					{
-						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
-						tstk = stacks;
-						do
-						{
-							if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
-							{
-								sptr = tstk;
-								break;
-							}
-							tstk = (MCStack *)tstk->next();
-						}
-						while (tstk != stacks);
-					}
-
-					return IO_NORMAL;
-				}
-				tstk = (MCStack *)tstk->next();
-			}
-			while (tstk != stacks);
-		}
-		
-		appendstack(sptr);
-		
-		sptr->extraopen(false);
-
-		// MW-2008-10-28: [[ ParentScript ]]
-		// We just loaded a stackfile, so check to see if parentScript resolution
-		// is required and if so do it.
-		// MW-2009-01-28: [[ Inherited parentScripts ]]
-		// Resolving parentScripts may allocate memory, so 'resolveparentscripts'
-		// will return false if it fails to allocate what it needs. At some point
-		// this needs to be dealt with by deleting the stack and returning an error,
-		// *However* at the time of writing, 'readfile' isn't designed to handle
-		// this - so we just ignore the result for now (note that all the 'load'
-		// methods *fail* to check for no-memory errors!).
-		if (s_loaded_parent_script_reference)
-            sptr -> resolveparentscripts();
-        
+        processstack(p_openpath, t_stack);
+        r_stack = t_stack;
         return IO_NORMAL;
     }
     
@@ -829,11 +931,12 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     else
     {
         // MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
+        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, t_stack) != IO_NORMAL)
         {
             MCresult->sets("file is not a stack");
             return IO_ERROR;
         }
+        r_stack = t_stack;
 	}
     
 	return IO_NORMAL;
