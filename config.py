@@ -101,7 +101,9 @@ def process_env_options(opts):
         'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
         'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
-        'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION')
+        'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION',
+        'MS_SPEECH_SDK4', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
+        )
     for v in vars:
         opts[v] = os.getenv(v)
 
@@ -146,6 +148,9 @@ def process_arg_options(opts, args):
             '-Dtarget_arch': 'TARGET_ARCH',
             '-DOS': 'OS',
             '-Dperl': 'PERL',
+            '-Dms_speech_sdk4': 'MS_SPEECH_SDK4',
+            '-Dms_speech_sdk5': 'MS_SPEECH_SDK5',
+            '-Dquicktime_sdk': 'QUICKTIME_SDK',
             '-Gmsvs_version': 'WIN_MSVS_VERSION',
             '-Gandroid_ndk_version': 'ANDROID_NDK_VERSION',
         }
@@ -182,6 +187,11 @@ def validate_platform(opts):
 
 def validate_os(opts):
     validate_platform(opts)
+
+    # Windows systems may have $OS set automatically in the
+    # environment
+    if opts['OS'] == 'Windows_NT':
+        opts['OS'] = 'win'
 
     if opts['OS'] is None:
         opts['OS'] = opts['PLATFORM'].split('-')[0]
@@ -274,6 +284,11 @@ def validate_java_tools(opts):
 # Windows-specific options
 ################################################################
 
+def get_program_files_x86():
+    return os.environ.get('ProgramFiles(x86)',
+                          os.environ.get('ProgramFiles',
+                                         'C:\\Program Files\\'))
+
 def guess_windows_perl():
     # Check the PATH first
     if (any(os.access(os.path.join(p, 'perl.exe'), os.X_OK)
@@ -291,9 +306,36 @@ def guess_windows_perl():
 
     error('Perl not found; set $PERL')
 
+def guess_ms_speech_sdk4():
+    d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK')
+    if not os.path.isdir(d):
+        return None
+    return d
+
+def guess_ms_speech_sdk5():
+    d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK 5.1')
+    if not os.path.isdir(d):
+        return None
+    return d
+
+def guess_quicktime_sdk():
+    d = os.path.join(get_program_files_x86(), 'QuickTime SDK')
+    if not os.path.isdir(d):
+        return None
+    return d
+
 def validate_windows_tools(opts):
     if opts['PERL'] is None:
         opts['PERL'] = guess_windows_perl()
+
+    if opts['MS_SPEECH_SDK4'] is None:
+        opts['MS_SPEECH_SDK4'] = guess_ms_speech_sdk4()
+
+    if opts['MS_SPEECH_SDK5'] is None:
+        opts['MS_SPEECH_SDK5'] = guess_ms_speech_sdk5()
+
+    if opts['QUICKTIME_SDK'] is None:
+        opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
         opts['WIN_MSVS_VERSION'] = '2010'
@@ -429,6 +471,11 @@ def export_opts(opts, names):
         print (n + '=' + opts[n])
         os.environ[n] = opts[n]
 
+def gyp_define_args(opts, names):
+    return ['-D{}={}'.format(key, opts[value])
+            for key, value in names.iteritems()
+            if opts[value] is not None]
+
 def configure_linux(opts):
     validate_target_arch(opts)
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH']]
@@ -460,6 +507,9 @@ def configure_win(opts):
     validate_windows_tools(opts)
 
     args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
+    args += gyp_define_args(opts, {'ms_speech_sdk4': 'MS_SPEECH_SDK4',
+                                   'ms_speech_sdk5': 'MS_SPEECH_SDK5',
+                                   'quicktime_sdk':  'QUICKTIME_SDK', })
 
     if platform.system() != 'Windows':
         args.append('-Dunix_configure=1')
