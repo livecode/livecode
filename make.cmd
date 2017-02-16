@@ -15,7 +15,12 @@ ECHO %ProgramFilesBase%
 @REM Works around hangs when generating .pdb files
 @REM Needs to run in the background as never terminates
 @REM
-@start /min /b mspdbsrv -start -spawn -shutdowntime -1
+@REM Run this with its CWD outside the build tree so that
+@REM the fact it hangs around does not interfere with
+@REM cleaning up the build tree.
+@pushd \
+@REM @start /min mspdbsrv -start -spawn -shutdowntime -1
+@popd
 
 @REM Select the correct build mode.
 @REM
