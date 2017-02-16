@@ -83,7 +83,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.0.1"
+metadata version is "2.0.2"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 
@@ -1521,6 +1521,11 @@ end handler
 
 // Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
+	// Unselect the existing selection if applicable
+	if mSelectedElement begins with pPath then
+		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
+	end if
+
 	if applyToNode(removeKey, pPath, 0, 1, mDataList, mData) then
 		post "dataChanged"
 		put true into mRecalculate
