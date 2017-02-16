@@ -30,6 +30,10 @@ import os
 import platform as _platform
 import shutil
 import tarfile
+import uuid
+
+# LiveCode build configuration script
+import config
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORMS = ('linux-x86', 'linux-x86_64', 'android-armv6', 'mac',
@@ -91,7 +95,6 @@ def exec_buildbot_make(target):
 ################################################################
 
 def exec_configure(args):
-    import config
     print('config.py ' + ' '.join(args))
     sys.exit(config.configure(args))
 
@@ -118,15 +121,68 @@ def exec_make(target):
     print(' '.join(args))
     sys.exit(subprocess.call(args))
 
+# mspdbsrv is the service used by Visual Studio to collect debug
+# data during compilation.  One instance is shared by all C++
+# compiler instances and threads.  It poses a unique challenge in
+# several ways:
+#
+# - If not running when the build job starts, the build job will
+#   automatically spawn it as soon as it needs to emit debug symbols.
+#   There's no way to prevent this from happening.
+#
+# - The build job _doesn't_ automatically clean it up when it finishes
+#
+# - By default, mspdbsrv inherits its parent process' file handles,
+#   including (unfortunately) some log handles owned by Buildbot.  This
+#   can prevent Buildbot from detecting that the compile job is finished
+#
+# - If a compile job starts and detects an instance of mspdbsrv already
+#   running, by default it will reuse it.  So, if you have a compile
+#   job A running, and start a second job B, job B will use job A's
+#   instance of mspdbsrv.  If you kill mspdbsrv when job A finishes,
+#   job B will die horribly.  To make matters worse, the version of
+#   mspdbsrv should match the version of Visual Studio being used.
+#
+# This class works around these problems:
+#
+# - It sets the _MSPDBSRV_ENDPOINT_ to a value that's probably unique to
+#   the build, to prevent other builds on the same machine from sharing
+#   the same mspdbsrv endpoint
+#
+# - It launches mspdbsrv with _all_ file handles closed, so that it
+#   can't block the build from being detected as finished.
+#
+# - It explicitly kills mspdbsrv after the build job has finished.
+#
+# - It wraps all of this into a context manager, so mspdbsrv gets killed
+#   even if a Python exception causes a non-local exit.
+class UniqueMspdbsrv(object):
+    def __enter__(self):
+        os.environ['_MSPDBSRV_ENDPOINT_'] = str(uuid.uuid4())
+
+        mspdbsrv_exe = os.path.join(config.get_program_files_x86(),
+            'Microsoft Visual Studio 10.0\\Common7\\IDE\\mspdbsrv.exe')
+        args = [mspdbsrv_exe, '-start', '-shutdowntime', '-1']
+        print(' '.join(args))
+        self.proc = subprocess.Popen(args, close_fds=True)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.proc.terminate()
+        return False
+
 def exec_msbuild(platform):
     # Run the make.cmd batch script; it's run using Wine if this is
     # not actually a Windows system.
     cwd = 'build-' + platform
 
     if _platform.system() == 'Windows':
-        args = ['cmd', '/C', '..\\make.cmd']
-        print(' '.join(args))
-        sys.exit(subprocess.call(args, cwd=cwd))
+        with UniqueMspdbsrv() as mspdbsrv:
+            args = ['cmd', '/C', '..\\make.cmd']
+            print(' '.join(args))
+            result = subprocess.call(args, cwd=cwd)
+
+        sys.exit(result)
 
     else:
         args = ['wine', 'cmd', '/K', '..\\make.cmd']
