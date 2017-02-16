@@ -18,8 +18,8 @@ ECHO %ProgramFilesBase%
 @REM Run this with its CWD outside the build tree so that
 @REM the fact it hangs around does not interfere with
 @REM cleaning up the build tree.
-@pushd %ProgramFilesBase%
-@start /min /b mspdbsrv -start -spawn -shutdowntime -1
+@pushd \
+@REM @start /min mspdbsrv -start -spawn -shutdowntime -1
 @popd
 
 @REM Select the correct build mode.
