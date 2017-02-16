@@ -1698,11 +1698,28 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                         const MCForeignTypeDescriptor *t_descriptor;
                         t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
                         
-                        // If the foreign value has a bridge type, then import.
-                        if (t_descriptor -> bridgetype != kMCNullTypeInfo)
-                            t_success = t_descriptor -> doimport(t_result, true, t_result_value);
-                        else if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type, t_result, (MCForeignValueRef&)t_result_value))
+                        // If the foreign value has a notion of defined, then we
+                        // check thatm and if the value isn't defined, we return
+                        // bridge to null.
+                        // If the foreign value has a bridge type we import.
+                        // Otherwise we just build a foreign value.
+                        if (t_descriptor -> defined != nil &&
+                            !t_descriptor -> defined(t_result))
+                        {
+                            t_result_value = MCValueRetain(kMCNull);
+                        }
+                        else if (t_descriptor -> bridgetype != kMCNullTypeInfo)
+                        {
+                            t_success = t_descriptor -> doimport(t_result,
+                                                                 true,
+                                                                 t_result_value);
+                        }
+                        else if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type,
+                                                                 t_result,
+                                                                 (MCForeignValueRef&)t_result_value))
+                        {
                             t_success = false;
+                        }
                     }
                     else
                     {
