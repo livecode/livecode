@@ -148,9 +148,10 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 			fi
 		done
 	done
-	
-	# Re-name the "i386" output folder to "x86" but only for non-windows
+
+        # Windows-only hacks
 	if [ "$PLATFORM" = "win32" ]; then
+		# Re-name the "i386" output folder to "x86"
 		if [ -d "${EXTRACT_DIR}/lib/${PLATFORM}/i386" ] ; then
 			if [ ! -d "${EXTRACT_DIR}/lib/${PLATFORM}/x86" ] ; then
 				mkdir "${EXTRACT_DIR}/lib/${PLATFORM}/x86"
@@ -158,6 +159,29 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 			cp -R "${EXTRACT_DIR}/lib/${PLATFORM}/i386/"* "${EXTRACT_DIR}/lib/${PLATFORM}/x86/"
 			rm -r "${EXTRACT_DIR}/lib/${PLATFORM}/i386"
 		fi
+
+		# TODO[2017-02-17] Monkey-patch in a "Fast" prebuilt
+		# The "Fast" configuration used by CI builds is identical to
+		# the "Release" configuration, in terms of linkability.  So if
+		# there's a "Release" build of any given library, duplicate
+		# it for "Fast"
+                for ARCH in "${ARCHS[@]}" ; do
+                        for LIB in "${LIBS[@]}" ; do
+                                echo "Providing 'Fast' configuration for ${LIB} library"
+                                for SUBPLATFORM in "${SUBPLATFORMS[@]}"; do
+                                        if [[ ! ${SUBPLATFORM} =~ _release$ ]]; then
+                                                continue
+                                        fi
+                                        SRC_TRIPLE="${ARCH}-${PLATFORM}-${SUBPLATFORM}"
+                                        DST_TRIPLE=$(echo "${SRC_TRIPLE}" | sed 's/release/fast/')
+                                        SRC_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${SRC_TRIPLE}"
+                                        DST_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${DST_TRIPLE}"
+                                        if [[ -d "${SRC_DIR}" && ! -d "${DST_DIR}" ]]; then
+                                                cp -a "${SRC_DIR}" "${DST_DIR}"
+                                        fi
+                                done
+                        done
+		done
 	fi
 done
 
