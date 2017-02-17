@@ -20,9 +20,32 @@
 			# Needs to be all dependents as used by the HarfBuzz public headers
 			'all_dependent_settings':
 			{
-				'include_dirs':
+				'defines':
 				[
-					'include',
+					# Ensure that symbols are referenced in the right way for a static lib
+					'U_STATIC_IMPLEMENTATION=1',
+				],
+
+				'conditions':
+				[
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 			
@@ -133,15 +156,13 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':
 							[
 								'-lsicuin',
 								'-lsicuio',
-								'-lsicule',
-								'-lsiculx',
 								'-lsicutu',
 								'-lsicuuc',
 								'-lsicudt',

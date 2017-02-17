@@ -459,10 +459,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
 #      define constexpr /*constexpr*/
 #    endif
-#  elif defined(_MSC_VER) && (_MCS_VER < 1900)
+#  elif defined(_MSC_VER)
      // MSVC added C++11 constexpr in Visual Studio 2015 (compiler
      // version 14.0, _MSC_VER 1900)
-#    define constexpr /*constexpr*/
+#    if _MSC_VER < 1900
+#      define constexpr /*constexpr*/
+#    endif
 #  else
 #    error Do not know whether this compiler provides C++11 constexpr
 #  endif
