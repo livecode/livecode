@@ -117,6 +117,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+	private NFCModule m_nfc_module;
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
@@ -174,6 +175,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
@@ -2762,6 +2764,29 @@ public class Engine extends View implements EngineApi
 
 ////////
 
+	// NFC
+	public boolean isNFCAvailable()
+	{
+		return m_nfc_module.isAvailable();
+	}
+	
+	public boolean isNFCEnabled()
+	{
+		return m_nfc_module.isEnabled();
+	}
+	
+	public void enableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(true);
+	}
+	
+	public void disableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(false);
+	}
+	
+////////
+
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
     public String getLaunchUri(Intent intent)
     {
@@ -2963,6 +2988,9 @@ public class Engine extends View implements EngineApi
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
 		
+		if (m_nfc_module != null)
+			m_nfc_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2985,6 +3013,9 @@ public class Engine extends View implements EngineApi
 		
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
+		
+		if (m_nfc_module != null)
+			m_nfc_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
@@ -2993,6 +3024,9 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
+			if (m_nfc_module != null)
+				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
+				
 			doLaunchDataChanged();
 			
 			String t_launch_url;

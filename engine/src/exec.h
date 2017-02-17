@@ -5580,6 +5580,18 @@ void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCExecMethodInfo* kMCNFCGetIsNFCAvailable;
+extern MCExecMethodInfo* kMCNFCGetIsNFCEnabled;
+extern MCExecMethodInfo* kMCNFCExecEnableNFCDispatch;
+extern MCExecMethodInfo* kMCNFCExecDisableNFCDispatch;
+
+void MCNFCGetIsNFCAvailable(MCExecContext& ctxt);
+void MCNFCGetIsNFCEnabled(MCExecContext& ctxt);
+void MCNFCExecEnableNFCDispatch(MCExecContext& ctxt);
+void MCNFCExecDisableNFCDispatch(MCExecContext& ctxt);
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
 

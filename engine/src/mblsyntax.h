@@ -516,4 +516,15 @@ enum MCMiscKeyboardReturnKey
 
 bool MCSystemLaunchUrl(MCStringRef p_url);
 
+////////////////////////////////////////////////////////////////////////////////
+// From NFC module
+
+bool MCSystemNFCIsAvailable(void);
+bool MCSystemNFCIsEnabled(void);
+
+void MCSystemEnableNFCDispatch(void);
+void MCSystemDisableNFCDispatch(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
