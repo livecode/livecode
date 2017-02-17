@@ -42,7 +42,7 @@ ios-iphonesimulator targets. It maps to the default 64-bit x86-64 ABI and
 processor configuration for the target.
 
 The armv6 architecture is currently supported for android. It maps to
-the the (linux) armeabi ABI and processor configuration.
+the (linux) armeabi ABI and processor configuration.
 
 The armv7 architecture is currently supported for android and ios-iphoneos. It
 maps to the (linux) armeabi_v7a ABI and processor configuration on android, and
