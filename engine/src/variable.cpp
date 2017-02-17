@@ -119,7 +119,7 @@ bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
     }
     else if (MCExecTypeIsNumber(value . type))
     {
-        double t_value;
+        double t_value = 0.0;
         if (value . type == kMCExecValueTypeUInt)
             t_value = (double)value . uint_value;
         else if (value . type == kMCExecValueTypeUInt)

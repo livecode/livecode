@@ -288,7 +288,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	// restoration info
 	MCImageBitmap *t_restore_image = nil;
 	int t_disposal_mode = DISPOSAL_UNSPECIFIED;
-	MCRectangle t_disposal_region;
+	MCRectangle t_disposal_region = kMCEmptyRectangle;
 
 	// The list of frames.
 	MCBitmapFrame *t_frames = nil;
