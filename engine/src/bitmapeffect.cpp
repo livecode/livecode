@@ -678,10 +678,6 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
 		t_effect = &self -> effects[t_type];
 	else
 		t_effect = nil;
-    
-    MCBitmapEffectProperty t_prop;
-    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
-        return false;
 
     if (t_is_array)
     {
@@ -716,6 +712,10 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     }
     else
     {
+        MCBitmapEffectProperty t_prop;
+        if (MCBitmapEffectLookupProperty(t_type, p_index,
+                                         t_prop) != ES_NORMAL)
+            return false;
         MCBitmapEffectFetchProperty(ctxt, t_effect, t_prop, r_value);
         return true;
     }
@@ -983,7 +983,6 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
 		return true;
     }
     
-    MCBitmapEffectProperty t_prop;
     MCBitmapEffect effect;
     bool t_dirty;
     
@@ -1002,10 +1001,6 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
         // regardless.
         t_dirty = true;
     }
-    
-    // Lookup the property and ensure it is appropriate for our type.
-    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
-        return false;
     
     if (t_is_array)
     {
@@ -1035,8 +1030,15 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
         
     }
     else
+    {
+        MCBitmapEffectProperty t_prop;
+        if (MCBitmapEffectLookupProperty(t_type, p_index,
+                                         t_prop) != ES_NORMAL)
+            return false;
+
         MCBitmapEffectStoreProperty(ctxt, effect, t_prop, p_value, t_dirty);
-    
+    }
+
     if (t_dirty)
     {
         // If we are currently empty, then allocate a new object
