@@ -857,8 +857,8 @@ MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCOb
 		}
 		else
 		{
-			MCOpenSocketCallbackInfo *t_info;
-			MCMemoryNew(t_info);
+			MCOpenSocketCallbackInfo *t_info = nullptr;
+			/* UNCHECKED */ MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
 			if (!MCS_name_to_sockaddr(MCNameGetString(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))

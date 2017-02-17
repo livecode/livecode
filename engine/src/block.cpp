@@ -169,7 +169,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block, then work out
 	//   where to skip to when all the attrs currently recognized have been read.
-	int64_t t_attr_end;
+	int64_t t_attr_end = 0;
 	if (is_ext)
 	{
 		// Read the size.

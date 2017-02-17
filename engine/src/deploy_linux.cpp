@@ -546,22 +546,24 @@ static bool MCDeployToLinuxReadProgramHeaders(MCDeployFileRef p_file, typename T
 }
 
 template<typename T>
-static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, typename T::Shdr& p_string_header, uint32_t p_index, char*& r_string)
+static MCAutoCustomPointer<char,MCMemoryDeleteArray>
+MCDeployToLinuxReadString(MCDeployFileRef p_file, typename T::Shdr& p_string_header, uint32_t p_index)
 {
 	bool t_success;
 	t_success = true;
 
 	// First check that the index is valid
 	if (p_index >= p_string_header . sh_size)
-		return MCDeployThrow(kMCDeployErrorLinuxBadStringIndex);
+    {
+		MCDeployThrow(kMCDeployErrorLinuxBadStringIndex);
+        return nullptr;
+    }
 
 	// As the string table does not contain any string lengths and they are
 	// just NUL terminated, we must gradually load portions until a NUL is
 	// reached.
-	char *t_buffer;
-	uint32_t t_length;
-	t_buffer = NULL;
-	t_length = 0;
+    MCAutoArray<char> t_buffer;
+    uint32_t t_length = 0;
 
 	while(t_success)
 	{
@@ -574,56 +576,48 @@ static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, typename T::Shdr& 
 		// If we are about to request 0 bytes, then this is a malformed
 		// string.
 		if (t_request == 0)
-			t_success = MCDeployThrow(kMCDeployErrorLinuxBadString);
+			return nullptr;
 
 		// Try to read the chunk of data
 		char t_piece[32];
-		if (t_success)
-			t_success = MCDeployFileReadAt(p_file, t_piece, t_request, p_string_header . sh_offset + p_index + t_length);
+		if (!MCDeployFileReadAt(p_file, t_piece, t_request,
+                                p_string_header . sh_offset + p_index + t_length))
+            return nullptr;
 
 		// Adjust the size of request, by whether there is NUL in the piece
 		uint32_t t_piece_size;
 		t_piece_size = 0;
-		if (t_success)
-		{
-			if (memchr(t_piece, '\0', t_request) == NULL)
-				t_piece_size = t_request;
-			else
-				t_piece_size = strlen(t_piece);
+        if (memchr(t_piece, '\0', t_request) == NULL)
+            t_piece_size = t_request;
+        else
+            t_piece_size = strlen(t_piece);
 
-			// If the resulting length is less than request, it means it
-			// contains a NUL, thus increase length by one to include it.
-			if (t_piece_size < t_request)
-				t_piece_size += 1;
-		}
+        // If the resulting length is less than request, it means it
+        // contains a NUL, thus increase length by one to include it.
+        if (t_piece_size < t_request)
+            t_piece_size += 1;
 
 		// Resize the output buffer and copy in the new data
-		if (t_success)
-		{
-			char *t_new_buffer;
-			t_new_buffer = (char *)realloc(t_buffer, t_length + t_piece_size);
-			if (t_new_buffer != NULL)
-			{
-				t_buffer = t_new_buffer;
-				memcpy(t_buffer + t_length, t_piece, t_piece_size);
-				t_length += t_piece_size;
-			}
-			else
-				t_success = MCDeployThrow(kMCDeployErrorNoMemory);
-		}
+        if (!t_buffer.Extend(t_length + t_piece_size))
+        {
+            MCDeployThrow(kMCDeployErrorNoMemory);
+            return nullptr;
+        }
+
+        memcpy(&t_buffer[t_length], t_piece, t_piece_size);
+        t_length += t_piece_size;
 
 		// Next check to see if we are done, by looking at the last
 		// (new) byte in the buffer.
-		if (t_success && t_buffer[t_length - 1] == '\0')
+		if (t_buffer[t_length - 1] == '\0')
 			break;
 	}
 
-	if (t_success)
-		r_string = t_buffer;
-	else
-		free(t_buffer);
+    char *t_buffer_raw = nullptr;
+    uindex_t t_buffer_len = 0;
+    t_buffer.Take(t_buffer_raw, t_buffer_len);
 
-	return t_success;
+	return t_buffer_raw;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,17 +682,17 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	t_payload_section = NULL;
 	for(uint32_t i = 0; t_success && i < t_header . e_shnum && t_project_section == NULL; i++)
 	{
-		char *t_section_name;
-		t_success = MCDeployToLinuxReadString<T>(t_engine, t_section_headers[t_header . e_shstrndx], t_section_headers[i] . sh_name, t_section_name);
+		MCAutoCustomPointer<char,MCMemoryDeleteArray> t_section_name =
+            MCDeployToLinuxReadString<T>(t_engine,
+                                         t_section_headers[t_header . e_shstrndx],
+                                         t_section_headers[i] . sh_name);
 
 		// Notice that we compare 9 bytes, this is to ensure we match .project
 		// only and not .project<otherchar> (i.e. we match the NUL char).
-		if (t_success && memcmp(t_section_name, ".project", 9) == 0)
+		if (t_success && memcmp(*t_section_name, ".project", 9) == 0)
 			t_project_section = &t_section_headers[i];
-		if (t_success && memcmp(t_section_name, ".payload", 9) == 0)
+		if (t_success && memcmp(*t_section_name, ".payload", 9) == 0)
 			t_payload_section = &t_section_headers[i];
-		
-		delete t_section_name;
 	}
 
 	if (t_success && t_project_section == NULL)
