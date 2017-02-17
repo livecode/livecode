@@ -609,7 +609,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		in_tag = True;
 		
 		// Stores the length of the <? tag (if found)
-		uint32_t t_tag_length;
+		uint32_t t_tag_length = 0;
         
 		// Loop until a NUL char, or we find '<?rev'
 		bool t_in_comment;
@@ -1049,7 +1049,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		in_tag = True;
 		
 		// Stores the length of the <? tag (if found)
-		uint32_t t_tag_length;
+		uint32_t t_tag_length = 0;
 
 		// Loop until a NUL char, or we find '<?rev'
 		bool t_in_comment;
