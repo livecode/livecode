@@ -77,7 +77,7 @@ function fetchLibrary {
 		
 			# Download using an HTTP client of some variety
 			if $(which curl 1>/dev/null 2>/dev/null) ; then
-				curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
+				curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2" --fail
 			elif $(which wget 1>/dev/null 2>/dev/null) ; then
 				get "${URL}/${NAME}.tar.bz2" -O "${FETCH_DIR}/${NAME}.tar.bz2"
 			else
