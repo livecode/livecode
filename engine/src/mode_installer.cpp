@@ -1276,6 +1276,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MCresult -> sets("failed to read auxillary stack");
             return false;
         }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
 			
