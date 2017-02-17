@@ -220,6 +220,11 @@ def validate_target_arch(opts):
             opts['TARGET_ARCH'] = 'js'
             return
 
+        # Windows builds don't understand 'x86_64'
+        if platform == 'win-x86_64':
+            opts['TARGET_ARCH'] = 'x64'
+            return
+
         platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
         if platform_arch is not None:
             opts['TARGET_ARCH'] = platform_arch.group(1)
@@ -338,7 +343,7 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
-        opts['WIN_MSVS_VERSION'] = '2010'
+        opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
 # Mac & iOS-specific options
@@ -504,10 +509,12 @@ def configure_android(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_win(opts):
+    validate_target_arch(opts)
     validate_windows_tools(opts)
 
     args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
-    args += gyp_define_args(opts, {'ms_speech_sdk4': 'MS_SPEECH_SDK4',
+    args += gyp_define_args(opts, {'target_arch':    'TARGET_ARCH',
+                                   'ms_speech_sdk4': 'MS_SPEECH_SDK4',
                                    'ms_speech_sdk5': 'MS_SPEECH_SDK5',
                                    'quicktime_sdk':  'QUICKTIME_SDK', })
 
