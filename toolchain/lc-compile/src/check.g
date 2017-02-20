@@ -1754,8 +1754,6 @@
         Id'Position -> Position
 		Id'Namespace -> Namespace
         (|
-			where(Namespace -> id(_))
-		||
             IsNameSuitableForDefinition(Name)
         ||
             Warning_UnsuitableNameForDefinition(Position, Name)

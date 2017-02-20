@@ -870,7 +870,16 @@ IsNameSuitableForDefinition (NameRef p_id)
 
 	GetStringOfNameLiteral (p_id, &t_id);
 
-	for (i = 0; '\0' != t_id[i]; ++i)
+    for(i = 0; '\0' != t_id[i]; ++i)
+    {
+        /* We ignore any number of _ before the identifier */
+        if ('_' != t_id[i])
+        {
+            break;
+        }
+    }
+    
+	for (; '\0' != t_id[i]; ++i)
 	{
 		/* If char is not in [a-z] then string is okay */
 		if (t_id[i] < 'a' || t_id[i] > 'z')
