@@ -34,30 +34,3 @@ bool load_ssl_library()
 	return true;
 }
 #endif
-
-#ifdef TARGET_SUBPLATFORM_IPHONE
-#if defined(__i386__) || defined(__x86_64__)
-#include <dlfcn.h>
-extern "C" void *IOS_LoadModule(const char *mod)
-{
-    return dlopen(mod, RTLD_NOW);
-}
-
-extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
-{
-    return dlsym(mod, sym);
-}
-#else
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
-extern "C" void *IOS_LoadModule(const char *mod)
-{
-    return load_module(mod);
-}
-
-extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
-{
-    return resolve_symbol(mod, sym);
-}
-#endif
-#endif

@@ -30,28 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define istrdup strdup
 
-struct DATABASEREC
-{
-	char dbname[255];
-	idcounterrefptr idcounterptr;
-	new_connectionrefptr  newconnectionptr;
-	release_connectionrefptr releaseconnectionptr;
-    set_callbacksrefptr setcallbacksptr;
-	HINSTANCE driverref;
-};
-
-char *GetModuleFolder(HINSTANCE p_module);
-const char *GetExternalFolder(void);
-const char *GetApplicationFolder(void);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path);
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec);
 void MCU_path2std(char *p_path);
 void MCU_path2native(char *p_path);
 void MCU_fix_path(char *cstr);
 char *MCS_getcurdir(void);
 char *MCS_resolvepath(const char *p_path);
-BOOL WINAPI DllMain(HINSTANCE tInstance, DWORD dwReason, LPVOID /*lpReserved*/);
-
-extern HINSTANCE hInstance;
-
-
