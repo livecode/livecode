@@ -46,7 +46,7 @@ protected:
 	MCExternal *m_next;
 
 	uint32_t m_references;
-	MCSysModuleHandle m_module;
+	MCSAutoLibraryRef m_module;
 	const char *m_name;
 
 	static MCExternal *s_externals;

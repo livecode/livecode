@@ -1,4 +1,3 @@
-
 QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	CDSequenceEnd: (integer) -> (integer)
 	CDSequenceNewDataSource: (integer, pointer, integer, integer, pointer, pointer, pointer) -> (integer)
@@ -80,14 +79,12 @@ QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	SetTrackEnabled: (pointer, integer) -> ()
 	MoviesTask: (pointer, integer) -> ()
 
-
 QuickDraw none /System/Library/Frameworks/ApplicationServices.framework/Frameworks/QD.framework/QD
 	GetGWorldPixMap: (pointer) -> (pointer)
 	DisposeGWorld: (pointer) -> ()
 	GetPixBaseAddr: (pointer) -> (pointer)
 	LockPixels: (pointer) -> ()
 	UnlockPixels: (pointer) -> ()
-
 
 QTKit none /System/Library/Frameworks/QTKit.framework/QTKit none
 	@ QTMovieSelectionDidChangeNotification

@@ -1229,6 +1229,9 @@ static void empty_signal_handler(int)
 {
 }
 
+extern
+bool MCAndroidGetLibraryPath(MCStringRef &r_path);
+
 static void *mobile_main(void *arg)
 {
 	co_enter_engine();
@@ -1255,6 +1258,16 @@ static void *mobile_main(void *arg)
 		co_leave_engine();
 		return (void *)1;
 	}
+    
+    MCAutoStringRef t_lib_path;
+    if (!MCAndroidGetLibraryPath(&t_lib_path) ||
+        !MCSInitialize(*t_lib_path) ||
+        !MCModulesInitialize() ||
+        !MCScriptInitialize())
+    {
+        co_leave_engine();
+        return (void *)1;
+    }
     
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
@@ -1970,9 +1983,6 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
     MCInitialize();
-    MCSInitialize();
-    MCModulesInitialize();
-    MCScriptInitialize();
     
 	MCLog("doCreate called");
 
