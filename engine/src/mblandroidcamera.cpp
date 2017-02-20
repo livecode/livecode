@@ -82,7 +82,7 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
 
 bool MCAndroidPickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
 {
-	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
+	MCAndroidEngineCall("showPhotoPicker", "vsii", nil, p_source, p_max_width, p_max_height);
     // SN-2014-09-03: [[ Bug 13329 ]] MCAndroidPickPhoto's return value is ignored in 6.x,
     // but not in 7.0 - whence the failure in mobilePickPhoto
     return true;

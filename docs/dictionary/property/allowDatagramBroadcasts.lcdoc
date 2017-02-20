@@ -10,9 +10,9 @@ allowed
 
 Introduced: 6.0
 
-OS: mac, windows, linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop, server
+Platforms: desktop, server, mobile
 
 Security: network
 

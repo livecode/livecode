@@ -266,10 +266,8 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so load, delete and unset the flag.
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
 			//   so is legacy,
-			char *backcolorname;
-			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
+			if ((stat = IO_discard_cstring_legacy(stream, 2)) != IO_NORMAL)
 				return checkloadstat(stat);
-			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}

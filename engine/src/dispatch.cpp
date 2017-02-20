@@ -455,13 +455,12 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
 	uint32_t version;
 	uint1 charset, type;
-	char *newsf;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+	        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -469,7 +468,6 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	s_loaded_parent_script_reference = false;
 
 	MCtranslatechars = charset != CHARSET;
-	delete newsf; // stackfiles is obsolete
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
@@ -563,15 +561,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
-		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
+		        || IO_discard_cstring_legacy(stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return checkloadstat(IO_ERROR);
 		}
-		delete newsf; // stackfiles is obsolete
 		MCtranslatechars = charset != CHARSET;
 		sptr = nil;
 		/* UNCHECKED */ MCStackSecurityCreateStack(sptr);
@@ -586,12 +582,8 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
 			//   legacy.
-			char *lstring = NULL;
-			char *cstring = NULL;
-			IO_read_cstring_legacy(lstring, stream, 2);
-			IO_read_cstring_legacy(cstring, stream, 2);
-			delete lstring;
-			delete cstring;
+			IO_discard_cstring_legacy(stream, 2);
+			IO_discard_cstring_legacy(stream, 2);
 		}
 
 		MCresult -> clear();
@@ -635,53 +627,43 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         
         // Load the file into memory - we need to process a byteorder mark and any
         // line endings.
-        int64_t t_size;
-        t_size = MCS_fsize(stream);
-        
-        uint8_t *t_script;
-        /* UNCHECKED */ MCMemoryAllocate(t_size, t_script);
+        uindex_t t_size = static_cast<uindex_t>(MCS_fsize(stream));
 
-        if (IO_read(t_script, t_size, stream) == IO_ERROR)
+        MCAutoPointer<byte_t> t_script = new byte_t[t_size];
+        if (IO_read(*t_script, t_size, stream) == IO_ERROR)
         {
             MCresult -> sets("unable to read file");
             return checkloadstat(IO_ERROR);
         }
-
-        // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
+        
+        uindex_t t_bom_size = 0;
+        MCFileEncodingType t_file_encoding =
+        MCS_resolve_BOM_from_bytes(*t_script, t_size, t_bom_size);
+        
         MCStringEncoding t_string_encoding;
-        MCAutoStringRef t_raw_script_string, t_LC_script_string;
-
-        uint32_t t_BOM_offset;
         switch (t_file_encoding)
         {
-        case kMCFileEncodingUTF8:
-            t_BOM_offset = 3;
-            t_string_encoding = kMCStringEncodingUTF8;
-            break;
-        case kMCFileEncodingUTF16:
-            t_string_encoding = kMCStringEncodingUTF16;
-            t_BOM_offset = 2;
-            break;
-        case kMCFileEncodingUTF16BE:
-            t_string_encoding = kMCStringEncodingUTF16BE;
-            t_BOM_offset = 2;
-            break;
-        case kMCFileEncodingUTF16LE:
-            t_string_encoding = kMCStringEncodingUTF16LE;
-            t_BOM_offset = 2;
-            break;
-        default:
-            // Assume native
-            t_string_encoding = kMCStringEncodingNative;
-            t_BOM_offset = 0;
-            break;
+            case kMCFileEncodingUTF8:
+                t_string_encoding = kMCStringEncodingUTF8;
+                break;
+            case kMCFileEncodingUTF16:
+                t_string_encoding = kMCStringEncodingUTF16;
+                break;
+            case kMCFileEncodingUTF16BE:
+                t_string_encoding = kMCStringEncodingUTF16BE;
+                break;
+            case kMCFileEncodingUTF16LE:
+                t_string_encoding = kMCStringEncodingUTF16LE;
+                break;
+            default:
+                // Assume native
+                t_string_encoding = kMCStringEncodingNative;
+                break;
         }
 
-        /* UNCHECKED */ MCStringCreateWithBytes(t_script + t_BOM_offset, t_size - t_BOM_offset, t_string_encoding, false, &t_raw_script_string);
+        MCAutoStringRef t_raw_script_string, t_LC_script_string;
+        /* UNCHECKED */ MCStringCreateWithBytes(*t_script + t_bom_size, t_size - t_bom_size, t_string_encoding, false, &t_raw_script_string);
         /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
-
-        MCMemoryDeallocate(t_script);
         
         // Now attempt to parse the header line:
         //   'script' <string>

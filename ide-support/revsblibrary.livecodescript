@@ -1167,7 +1167,7 @@ private function revSBPlatformToRuntimeFolderName pPlatform
 end revSBPlatformToRuntimeFolderName
 
 function revSBExternalsMapping
-   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip"
 end revSBExternalsMapping
 
 function revSBDatabaseDriversMapping
@@ -1533,7 +1533,11 @@ function revSBAdditionalExternalsList pPlatform
          local tExternalFolder
          repeat for each line tExternalFolder in folders(tFolder)
             if tExternalFolder begins with "." then next repeat
-           
+            
+            if there is a file (tFolder & slash & tExternalFolder & slash & "ide_only") then
+               next repeat
+            end if
+            
             local tContents
             put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
             
@@ -2391,10 +2395,6 @@ on initialiseSearchForInclusions
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
    put "scriptLibraries" into sPatternsA["Browser"]["Key"]
    
-   # revFont
-   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
-   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
-   
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
@@ -2729,3 +2729,35 @@ function revSBNoPlatforms pSettings
    
    return true
 end revSBNoPlatforms
+
+local sDeployInclusions
+
+command revSBAddDeployInclusion pInclusion, pKey
+   put empty into sDeployInclusions[pKey][pInclusion]
+end revSBAddDeployInclusion
+
+-- Standalone settings are always set on the mainstack
+function revSBGetSettings pStack, pDeploy
+   local tSettingsA
+   put the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) into tSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, tSettingsA
+   
+   if pDeploy then
+      local tKey, tInclusion
+      repeat for each key tKey in sDeployInclusions
+         repeat for each key tInclusion in sDeployInclusions[tKey]
+            revSBAddInclusion tInclusion, tKey, tSettingsA
+         end repeat
+      end repeat
+   end if
+   
+   return tSettingsA
+end revSBGetSettings
+
+command revSBSetSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end revSBSetSettings

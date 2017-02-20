@@ -51,6 +51,8 @@ import android.os.Vibrator;
 import android.os.Environment;
 import android.provider.MediaStore.*;
 import android.provider.MediaStore.Images.Media;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.net.*;
 import java.io.*;
@@ -127,6 +129,8 @@ public class Engine extends View implements EngineApi
     private String m_last_certificate_verification_error;
 	
 	private boolean m_new_intent;
+
+	private int m_photo_width, m_photo_height;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +223,9 @@ public class Engine extends View implements EngineApi
 		System.setProperty("http.keepAlive", "false");
 		
 		m_new_intent = false;
+
+		m_photo_width = 0;
+		m_photo_height = 0;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,6 +454,20 @@ public class Engine extends View implements EngineApi
 						case KeyEvent.KEYCODE_DEL:
 							keyCode = 0xff08;
 							break;
+						// Hao-2017-02-08: [[ Bug 11727 ]] Detect arrow key for field input
+						case KeyEvent.KEYCODE_DPAD_LEFT:
+							keyCode = 0xff51;
+							break;
+						case KeyEvent.KEYCODE_DPAD_UP:
+							keyCode = 0xff52;
+							break;
+						case KeyEvent.KEYCODE_DPAD_RIGHT:
+							keyCode = 0xff53;
+							break;
+						case KeyEvent.KEYCODE_DPAD_DOWN:
+							keyCode = 0xff54;
+							break;
+							
 							
 						default:
 					}
@@ -579,7 +600,8 @@ public class Engine extends View implements EngineApi
 		if (imm != null)
 			imm.restartInput(this);
 		
-        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
+		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
+        imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
     }
 
     public void hideKeyboard()
@@ -1818,8 +1840,11 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-	public void showPhotoPicker(String p_source)
+	public void showPhotoPicker(String p_source, int p_width, int p_height)
 	{
+		m_photo_width = p_width;
+		m_photo_height = p_height;
+
 		if (p_source.equals("camera"))
 			showCamera();
 		else if (p_source.equals("album"))
@@ -1914,7 +1939,20 @@ public class Engine extends View implements EngineApi
 				{
 					t_out.write(t_buffer, 0, t_readcount);
 				}
-				doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+
+				// HH-2017-01-19: [[ Bug 11313 ]]Support maximum width and height of the image
+				if(m_photo_height > 0 && m_photo_width > 0)
+				{
+					Bitmap bm = BitmapFactory.decodeByteArray(t_out.toByteArray(), 0, t_out.size());
+					Bitmap rBm = Bitmap.createScaledBitmap(bm, m_photo_width, m_photo_height, true);
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					rBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte[] byteArray = stream.toByteArray();
+					doPhotoPickerDone(byteArray, byteArray.length);
+				}
+				else
+					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+				
 				t_in.close();
 				t_out.close();
 			}

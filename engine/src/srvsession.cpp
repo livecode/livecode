@@ -336,12 +336,18 @@ bool MCSessionReadSession(MCSession *p_session)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCAutoStringRef
+MCSessionGetRemoteAddress()
+{
+    MCAutoStringRef t_remote_addr;
+    if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr))
+        t_remote_addr = kMCEmptyString;
+    return t_remote_addr;
+}
+
 bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
-	MCAutoStringRef t_remote_addr;
-
-	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr))
-        t_remote_addr.Reset(kMCEmptyString);
+    MCAutoStringRef t_remote_addr = MCSessionGetRemoteAddress();
 
 	for (uint32_t i = 0; i < p_index->session_count; i++)
 	{
@@ -381,52 +387,39 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 
 bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
-	bool t_success = true;
-	
-	MCSession *t_session = NULL;
+    MCAutoStringRef t_remote_addr = MCSessionGetRemoteAddress();
 
-	MCAutoStringRef t_remote_addr_string;
-	char *t_remote_addr;
-	t_remote_addr = NULL;
+    MCAutoStringRef t_session_id;
+    if (p_session_id != nullptr && !MCStringIsEmpty(p_session_id))
+    {
+        t_session_id = p_session_id;
+    }
+    else
+    {
+        if (!MCSessionGenerateID(&t_session_id))
+            return false;
+    }
 
-	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
-		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
-	
-	t_success = MCMemoryNew(t_session);
-	
-	if (t_success)
-		t_success = MCCStringClone(t_remote_addr ? t_remote_addr : "", t_session->ip);
+    MCAutoStringRefAsCString t_remote_addr_chars;
+    MCAutoStringRefAsCString t_session_id_chars;
+    if (!(t_remote_addr_chars.Lock(*t_remote_addr) &&
+          t_session_id_chars.Lock(*t_session_id)))
+        return false;
 
-	if (t_success)
-	{
-		if (p_session_id != nil && !MCStringIsEmpty(p_session_id))
-		{
-			t_session->id = strdup(MCStringGetCString(p_session_id));
-			t_success = true;
-		}
-		else
-		{
-			MCAutoStringRef t_session_id;
-			t_success = MCSessionGenerateID(&t_session_id);
-			t_session->id = strdup(MCStringGetCString(*t_session_id));
-		}
-	}
-	
-	if (t_success)
-		t_success = MCCStringFormat(t_session->filename, "%s_%s", t_remote_addr ? t_remote_addr : "", t_session->id);
-	
-	if (t_success)
-		t_success = MCSessionIndexAddSession(p_index, t_session);
-	
-	if (t_success)
-		r_session = t_session;
-	else
-	{
-		if (t_session != NULL)
-			MCSessionCloseSession(t_session, false);
-	}
-	
-	return t_success;
+    MCAutoCustomPointer<MCSession,MCSessionDisposeSession> t_session;
+
+    if (MCMemoryNew(&t_session) &&
+        MCCStringClone(*t_remote_addr_chars, t_session->ip) &&
+        MCCStringClone(*t_session_id_chars, t_session->id) &&
+        MCCStringFormat(t_session->filename, "%s_%s",
+                        *t_remote_addr_chars, t_session->id) &&
+        MCSessionIndexAddSession(p_index, *t_session))
+    {
+        r_session = t_session.Release();
+        return true;
+    }
+
+    return false;
 }
 
 bool MCSessionCopySession(MCSession *p_src, MCSession *&r_dst)
