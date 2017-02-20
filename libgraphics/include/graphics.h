@@ -248,6 +248,10 @@ typedef uint32_t MCGColor;
 
 struct MCGPoint
 {
+public:
+    /* TODO[C++11] Use member initialisers and remove these constructors */
+    MCGPoint() : x(0), y(0) {}
+    MCGPoint(MCGFloat p_x, MCGFloat p_y) : x(p_x), y(p_y) {}
 	MCGFloat x, y;
 };
 
