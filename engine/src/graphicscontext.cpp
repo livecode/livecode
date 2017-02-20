@@ -782,10 +782,10 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 				break;
 		}
 		
-		MCGFloat *t_stops;
-		/* UNCHECKED */ MCMemoryNewArray(p_gradient -> ramp_length, t_stops);
-		MCGColor *t_colors;
-		/* UNCHECKED */ MCMemoryNewArray(p_gradient -> ramp_length, t_colors);
+		/* UNCHECKED */ MCAutoPointer<MCGFloat[]> t_stops =
+			new MCGFloat[p_gradient->ramp_length]();
+		/* UNCHECKED */ MCAutoPointer<MCGColor[]> t_colors =
+			new MCGColor[p_gradient->ramp_length]();
 		for (uint32_t i = 0; i < p_gradient -> ramp_length; i++)
 		{
 			t_stops[i] = (MCGFloat) p_gradient -> ramp[i] . offset / STOP_INT_MAX;
@@ -800,11 +800,8 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 		t_transform . tx = p_gradient -> origin . x;
 		t_transform . ty = p_gradient -> origin . y;
 
-		MCGContextSetFillGradient(m_gcontext, t_function, t_stops, t_colors, p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
-		MCGContextSetStrokeGradient(m_gcontext, t_function, t_stops, t_colors, p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
-		
-		MCMemoryDeleteArray(t_stops);
-		MCMemoryDeleteArray(t_colors);
+		MCGContextSetFillGradient(m_gcontext, t_function, t_stops.Get(), t_colors.Get(), p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
+		MCGContextSetStrokeGradient(m_gcontext, t_function, t_stops.Get(), t_colors.Get(), p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
 	}
 }
 
@@ -1011,19 +1008,17 @@ void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 	else
 	{	
 		// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.	
-		MCGPoint *t_points;
-		/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
+		/* UNCHECKED */ MCAutoPointer<MCGPoint[]> t_points =
+			new MCGPoint[npoints]();
 		for (uint32_t i = 0; i < npoints; i++)
 			t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
 		
 		MCGContextBeginPath(m_gcontext);
 		if (p_closed)
-			MCGContextAddPolygon(m_gcontext, t_points, npoints);
+			MCGContextAddPolygon(m_gcontext, t_points.Get(), npoints);
 		else
-			MCGContextAddPolyline(m_gcontext, t_points, npoints);	
+			MCGContextAddPolyline(m_gcontext, t_points.Get(), npoints);
 		MCGContextStroke(m_gcontext);
-		
-		MCMemoryDeleteArray(t_points);
 	}
 }
 
@@ -1031,16 +1026,14 @@ void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 {
 	// MM-2013-11-26: [[ Bug 11501 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
 	//  Here the adjust is 0.25 - not the same path as draw lines but appears to solve the issue where the fill interfers with the stroke.
-	MCGPoint *t_points;
-	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
+	/* UNCHECKED */ MCAutoPointer<MCGPoint[]> t_points =
+		new MCGPoint[npoints]();
 	for (uint32_t i = 0; i < npoints; i++)
 		t_points[i] = MCPointToMCGPoint(points[i], 0.25f);
 	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddPolygon(m_gcontext, t_points, npoints);	
+	MCGContextAddPolygon(m_gcontext, t_points.Get(), npoints);
 	MCGContextFill(m_gcontext);
-	
-	MCMemoryDeleteArray(t_points);	
 }
 
 static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
