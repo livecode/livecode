@@ -435,6 +435,25 @@
 									'cp', '<@(_inputs)', '<@(_outputs)',
 								],
 							},
+							{
+								'action_name': 'copy_nfc_tech_filter',
+								'message': 'Copying NFC tech filter file',
+								
+								'inputs':
+								[
+									'rsrc/android-nfc_tech_filter.xml',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
 						],
 						
 						'all_dependent_settings':
