@@ -1816,6 +1816,7 @@ MCOpen::~MCOpen()
 	MCValueRelease(destination);
 	delete certificate;
 	delete verifyhostname;
+    delete fromaddress;
 }
 
 Parse_stat MCOpen::parse(MCScriptPoint &sp)
@@ -1894,6 +1895,14 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 		return PS_NORMAL;
 	}
+    if (arg == OA_SOCKET && sp.skip_token(SP_FACTOR, TT_FROM, PT_FROM) == PS_NORMAL)
+    {
+        if (sp.parseexp(False, True, &fromaddress) != PS_NORMAL)
+        {
+            MCperror->add(PE_OPEN_NOFROM, sp);
+            return PS_ERROR;
+        }
+    }
 	sp.skip_token(SP_FACTOR, TT_TO, PT_TO);
 	if (sp.parseexp(False, True, &fname) != PS_NORMAL)
 	{
@@ -2131,17 +2140,21 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
                 return;
             
+            MCNewAutoNameRef t_from_address;
+            if (!ctxt . EvalOptionalExprAsNameRef(fromaddress, kMCEmptyName, EE_OPEN_BADFROMADDRESS, &t_from_address))
+                return;
+
             // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
             MCNewAutoNameRef t_end_hostname;
             if (!ctxt . EvalOptionalExprAsNameRef(verifyhostname, kMCEmptyName, EE_OPEN_BADHOST, &t_end_hostname))
                 return;
 
 			if (datagram)
-				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname);
 			else if (secure)
-				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, *t_end_hostname, secureverify);
+				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname, secureverify);
 			else
-				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+				MCNetworkExecOpenSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname);
 			break;
         }
 		default:

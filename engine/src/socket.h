@@ -142,8 +142,9 @@ public:
 	MCSocketHandle fd;	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCNameRef endhostname;
+    MCNameRef from;
     
-	MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
+	MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
 
 	void setselect();
 	void setselect(uint2 sflags);
@@ -209,6 +210,9 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr,
 
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr);
 
+bool MCS_name_to_host_and_port(MCStringRef p_name, MCStringRef &r_host, MCNumberRef &r_port);
+bool MCS_host_and_port_to_sockaddr(MCStringRef p_host, MCNumberRef p_port, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context);
+bool MCS_host_and_port_to_sockaddr(MCStringRef p_host, MCNumberRef p_port, struct sockaddr_in &r_addr);
 
 
 bool addrinfo_lookup(const char *p_name, const char *p_port, int p_socktype, struct addrinfo *&r_addrinfo);
