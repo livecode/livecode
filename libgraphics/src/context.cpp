@@ -1078,11 +1078,11 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 			t_tmp_mask . fRowBytes = p_mask . fRowBytes;
 			t_tmp_mask . fImage = SkMask::AllocImage(p_mask . computeImageSize());
 			
-			uint8_t *t_blur_ptr, *t_mask_ptr, *t_shape_ptr;
-			t_shape_ptr = p_mask . fImage;
-			t_shape_ptr -= p_mask . fBounds . left();
-			t_blur_ptr = t_tmp_mask . fImage;
-			t_blur_ptr -= t_tmp_mask . fBounds . left();
+			uint8_t *t_mask_ptr = nullptr;
+			uint8_t *t_shape_ptr =
+				(p_mask . fImage - p_mask . fBounds . left());
+			uint8_t *t_blur_ptr =
+				(t_tmp_mask . fImage - t_tmp_mask . fBounds . left());
 			if (t_overlap)
 			{
 				t_mask_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
