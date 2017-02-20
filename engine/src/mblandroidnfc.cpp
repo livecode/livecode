@@ -104,17 +104,14 @@ bool MCNFCPostTagReceived(MCArrayRef p_tag)
 	return t_success;
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_NFCModule_doTagReceived(JNIEnv *env, jobject object, jbyteArray idData) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_NFCModule_doTagReceived(JNIEnv *env, jobject object, jbyteArray idData)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_NFCModule_doTagReceived(JNIEnv *env, jobject object, jobject tagMap) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_NFCModule_doTagReceived(JNIEnv *env, jobject object, jobject tagMap)
 {
-	MCAutoDataRef t_id;
-	MCJavaByteArrayToDataRef(env, idData, &t_id);
-	
+	bool t_success;
 	MCAutoArrayRef t_tag;
-	MCArrayCreateMutable(&t_tag);
-	MCArrayStoreValue(*t_tag, false, MCNAME("id"), *t_id);
-	
-	MCNFCPostTagReceived(*t_tag);
+	t_success = MCJavaMapToArrayRef(env, tagMap, &t_tag);
+	if (t_success)
+		MCNFCPostTagReceived(*t_tag);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

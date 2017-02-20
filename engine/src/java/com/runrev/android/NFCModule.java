@@ -18,7 +18,15 @@ package com.runrev.android;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.nfc.*;
+import android.content.IntentFilter;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.Ndef;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class NFCModule
 {    
@@ -28,7 +36,7 @@ public class NFCModule
     // Native Functions
     ////////////////////////////////////////////////////////////////////////////////
 	
-	public static native void doTagReceived(byte[] id);
+	public static native void doTagReceived(Map<String, Object> p_tag);
 	
     ////////////////////////////////////////////////////////////////////////////////
     // Constants
@@ -145,9 +153,43 @@ public class NFCModule
 			t_action.equals(NfcAdapter.ACTION_TECH_DISCOVERED) ||
 			t_action.equals(NfcAdapter.ACTION_TAG_DISCOVERED))
 		{
+			Map<String, Object> t_tag_map = new HashMap<String, Object>();
+			
 			// Todo - expand this to include more information from the tag
 			Tag t_tag = p_intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-			doTagReceived(t_tag.getId());
+			
+			t_tag_map.put("id", t_tag.getId());
+			
+			Ndef t_ndef = Ndef.get(t_tag);
+			// check if tag contains Ndef data
+			if (t_ndef != null)
+			{
+				NdefMessage t_ndef_message = t_ndef.getCachedNdefMessage();
+				if (t_ndef_message != null)
+				{
+					Map<String, Object> t_ndef_map = new HashMap<String, Object>();
+					
+					int t_index = 1;
+					for (NdefRecord t_record : t_ndef_message.getRecords())
+					{
+						Map<String, Object> t_record_map = new HashMap<String, Object>();
+						t_record_map.put("tnf", Integer.valueOf(t_record.getTnf()));
+						
+						if (t_record.getId().length != 0)
+							t_record_map.put("id", t_record.getId());
+						if (t_record.getType().length != 0)
+							t_record_map.put("type", t_record.getType());
+						if (t_record.getPayload().length != 0)
+							t_record_map.put("payload", t_record.getPayload());
+						
+						t_ndef_map.put(Integer.toString(t_index), t_record_map);
+					}
+					
+					t_tag_map.put("ndef", t_ndef_map);
+				}
+			}
+			
+			doTagReceived(t_tag_map);
 		}
 	}
 }
