@@ -114,20 +114,22 @@ static inline void MCGPixelUnpack(MCGPixelFormat p_format, uint32_t p_pixel, uin
 	{
 		case kMCGPixelFormatRGBA:
 			__MCGPixelUnpackComponents(p_pixel, r_red, r_green, r_blue, r_alpha);
-			break;
+			return;
 			
 		case kMCGPixelFormatBGRA:
 			__MCGPixelUnpackComponents(p_pixel, r_blue, r_green, r_red, r_alpha);
-			break;
+			return;
 			
 		case kMCGPixelFormatABGR:
 			__MCGPixelUnpackComponents(p_pixel, r_alpha, r_blue, r_green, r_red);
-			break;
+			return;
 			
 		case kMCGPixelFormatARGB:
 			__MCGPixelUnpackComponents(p_pixel, r_alpha, r_red, r_green, r_blue);
-			break;
+			return;
 	}
+	r_red = r_green = r_blue = r_alpha = 0;
+	MCUnreachable();
 }
 
 static inline void MCGPixelUnpackNative(uint32_t p_pixel, uint8_t &r_red, uint8_t &r_green, uint8_t &r_blue, uint8_t &r_alpha)
