@@ -21,11 +21,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
 
+#ifdef __cplusplus
+#   include <foundation-auto.h>
+#endif
+
 extern "C" {
 
 #include <system-commandline.h>
 #include <system-file.h>
 #include <system-init.h>
+#include <system-library.h>
 #include <system-random.h>
 #include <system-stream.h>
 
