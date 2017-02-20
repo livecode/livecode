@@ -68,3 +68,36 @@ end repeat
 TestSkip "peeraddress", "connection timed out"
 close socket tSock
 end TestPeerAddress
+
+on TestOpenSocketFrom
+   open socket from ":8000" to "livecode.com"
+   TestAssert "open socket from", "livecode.com" is among the lines of the openSockets
+   close socket "livecode.com"
+end TestOpenSocketFrom
+
+on TestOpenSocketFromWithLSOF
+   if the platform is "MacOS" or the platform contains "linux" then
+      open socket from ":8001" to "livecode.com"
+      get shell("lsof -i4TCP:8001")
+      TestAssert "open socket from testing with lsof", it contains "LiveCode"
+      close socket "livecode.com"
+   end if
+end TestOpenSocketFromWithLSOF
+
+on TestOpenSocketFromMultipleHostsSamePort
+   open socket from ":8002" to "livecode.com"
+   open socket from ":8002" to "google.com"
+   TestAssert "open socket from with multiple hosts on same local port", "livecode.com" is among the lines of the openSockets
+   TestAssert "open socket from with multiple hosts on same local port", "livecode.com" is among the lines of the openSockets
+   close socket "livecode.com"
+   close socket "google.com"
+end TestOpenSocketFromMultipleHostsSamePort
+
+on TestOpenSocketFromSameHostDifferntPort
+   open socket from ":8003" to "livecode.com|1"
+   open socket from ":8004" to "livecode.com|2"
+   TestAssert "open socket from with same host on different local port", "livecode.com|1" is among the lines of the openSockets
+   TestAssert "open socket from with same host on different local port", "livecode.com|2" is among the lines of the openSockets
+   close socket "livecode.com|1"
+   close socket "livecode.com|2"
+end TestOpenSocketFromSameHostDifferntPort
