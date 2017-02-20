@@ -243,7 +243,7 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
 //       linux-x86_64/<name>.so
 //       win-x86/<name>.dll
 //
-static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+static bool MCEngineLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibraryRef& r_library)
 {
     // If the module has no resource path, then it has no code.
     MCAutoStringRef t_resource_path;
@@ -251,7 +251,8 @@ static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef
         return false;
     
     MCSLibraryRef t_library = nullptr;
-    if (t_resource_path.IsSet() **
+    if (t_resource_path.IsSet() &&
+        !MCStringIsEmpty(*t_resource_path))
     {
 #if defined(__MAC__)
         static const char *kLibraryFormat = "%@/code/mac/%@";
@@ -267,6 +268,8 @@ static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef
         static const char *kLibraryFormat = "%@/code/ios/%@";
 #elif defined(__EMSCRIPTEN__)
         static const char *kLibraryFormat = "%@/code/emscripten/%@";
+#else
+#error No default code path set for this platform
 #endif
         MCAutoStringRef t_ext_path;
         if (!MCStringFormat(&t_ext_path,
@@ -287,20 +290,12 @@ static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef
     
     if (t_library == nullptr)
     {
->>>>>>> patched
         return false;
+    }
     
-#if defined(_MACOSX)
-    return MCStringFormat(r_path, "%@/code/mac/%@.dylib", *t_resource_path, p_name);
-#elif defined(_LINUX) && defined(__32_BIT__)
-    return MCStringFormat(r_path, "%@/code/linux-x86/%@.so", *t_resource_path, p_name);
-#elif defined(_LINUX) && defined(__64_BIT__)
-    return MCStringFormat(r_path, "%@/code/linux-x86_64/%@.so", *t_resource_path, p_name);
-#elif defined(_WINDOWS)
-    return MCStringFormat(r_path, "%@/code/win-x86/%@.dll", *t_resource_path, p_name);
-#else
-    return false;
-#endif
+    r_library = t_library;
+    
+    return true;
 }
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
@@ -317,7 +312,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     
     // Make sure we set the shared library callback - this should be done in
     // module init for 'extension' when we have such a mechanism.
-    MCScriptSetResolveSharedLibraryCallback(MCEngineResolveSharedLibrary);
+    MCScriptSetLoadLibraryCallback(MCEngineLoadLibrary);
     
     MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
  }
