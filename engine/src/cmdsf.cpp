@@ -1816,7 +1816,6 @@ MCOpen::~MCOpen()
 	MCValueRelease(destination);
 	delete certificate;
 	delete verifyhostname;
-    delete fromaddress;
 }
 
 Parse_stat MCOpen::parse(MCScriptPoint &sp)
@@ -1897,7 +1896,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	}
     if (arg == OA_SOCKET && sp.skip_token(SP_FACTOR, TT_FROM, PT_FROM) == PS_NORMAL)
     {
-        if (sp.parseexp(False, True, &fromaddress) != PS_NORMAL)
+        if (sp.parseexp(False, True, &(&fromaddress)) != PS_NORMAL)
         {
             MCperror->add(PE_OPEN_NOFROM, sp);
             return PS_ERROR;
@@ -2141,7 +2140,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
                 return;
             
             MCNewAutoNameRef t_from_address;
-            if (!ctxt . EvalOptionalExprAsNameRef(fromaddress, kMCEmptyName, EE_OPEN_BADFROMADDRESS, &t_from_address))
+            if (!ctxt . EvalOptionalExprAsNameRef(fromaddress.Get(), kMCEmptyName, EE_OPEN_BADFROMADDRESS, &t_from_address))
                 return;
 
             // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.

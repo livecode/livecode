@@ -142,7 +142,7 @@ public:
 	MCSocketHandle fd;	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCNameRef endhostname;
-    MCNameRef from;
+    MCNewAutoNameRef from;
     
 	MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
 

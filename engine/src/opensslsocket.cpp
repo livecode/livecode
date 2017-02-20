@@ -659,9 +659,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
         // if no local host has been passed then, if set, use the network interface
         MCAutoStringRef t_from_host;
         MCAutoNumberRef t_from_port;
-        if (!MCValueIsEmpty(p_socket->from))
+        if (!MCValueIsEmpty(*p_socket->from))
         {
-            if (!MCS_name_to_host_and_port(MCNameGetString(p_socket->from), &t_from_host, &t_from_port))
+            if (!MCS_name_to_host_and_port(MCNameGetString(*p_socket->from), &t_from_host, &t_from_port))
             {
                 p_socket->error = strclone("error parsing the local host and port");
                 p_socket->doclose();
@@ -1385,6 +1385,7 @@ MCSocketwrite::~MCSocketwrite()
 ////////////////////////////////////////////////////////////////////////////////
 
 MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
+    : from(f)
 {
 	name = MCValueRetain(n);
 	object = o;
@@ -1413,7 +1414,6 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	endhostname = MCValueRetain(kMCEmptyName);
-    from = MCValueRetain(f);
 }
 
 MCSocket::~MCSocket()
@@ -1427,7 +1427,6 @@ MCSocket::~MCSocket()
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCValueRelease(endhostname);
-    MCValueRelease(from);
 }
 
 void MCSocket::deletereads()
