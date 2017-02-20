@@ -1,6 +1,6 @@
 # Android options
-ANDROID_NDK=${ANDROID_NDK:-"$HOME/Workspace/livecode/sdks/android-ndk"}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-10}
+ANDROID_NDK=${ANDROID_NDK:-"${HOME}/android/toolchain/android-ndk"}
+ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
 
 # Has a full, custom toolchain been specified?
 #  AR, CC, CXX, LINK, OBJCOPY, RANLIB, STRIP
@@ -12,10 +12,13 @@ else
 	# Attempt to set up the toolchain automatically
 	if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
 		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi"
+
+        # OpenSSL requires this to be set when cross-compiling for Android
+        export CROSS_SYSROOT="${HOME}/android/toolchain/standalone/sysroot"
 	fi
 
 	ANDROID_CC_NAME=${ANDROID_CC_NAME:-clang}
-	ANDROID_CXX_NAME=${ANDROID_CXX_NAME:-clang}
+	ANDROID_CXX_NAME=${ANDROID_CXX_NAME:-clang++}
 
 	ANDROID_CC="${ANDROID_TOOLCHAIN}-${ANDROID_CC_NAME}"
 	ANDROID_CXX="${ANDROID_TOOLCHAIN}-${ANDROID_CXX_NAME}"

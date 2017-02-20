@@ -970,7 +970,13 @@ public:
 	{
 		return m_ptr;
 	}
-    
+
+    T* operator -> (void)
+    {
+        MCAssert(m_ptr != nullptr);
+        return m_ptr;
+    }
+
     operator bool () const
     {
         return m_ptr != nil;

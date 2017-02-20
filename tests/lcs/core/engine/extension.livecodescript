@@ -161,3 +161,19 @@ on TestExtensionLibraryHandlerCallErrors
          the long id of me, \
          886
 end TestExtensionLibraryHandlerCallErrors
+
+//////////
+
+on TestExtensionLibraryDelimiterAccess
+   set the itemDelimiter to "a"
+   set the lineDelimiter to "b"
+   set the columnDelimiter to "c"
+   set the rowDelimiter to "d"
+
+   local tDelimiters
+   put TestExtensionDelimiterAccess() into tDelimiters
+   combine tDelimiters with comma
+
+   TestDiagnostic tDelimiters
+   TestAssert "library handler can access delimiters", tDelimiters is "a,b,c,d"
+end TestExtensionLibraryDelimiterAccess

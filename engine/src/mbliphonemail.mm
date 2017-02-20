@@ -149,24 +149,24 @@ static void iphone_send_email_prewait(void *p_context)
 	NSArray *t_recipients;
 	t_recipients = nil;
 	if (ctxt -> to_addresses != nil && !MCStringIsEmpty(ctxt -> to_addresses))
-		t_recipients = [[NSString stringWithMCStringRef: ctxt -> to_addresses] componentsSeparatedByString: @","];
+		t_recipients = [MCStringConvertToAutoreleasedNSString(ctxt -> to_addresses) componentsSeparatedByString: @","];
 	
 	NSArray *t_ccs;
 	t_ccs = nil;
 	if (ctxt -> cc_addresses != nil && !MCStringIsEqualTo(ctxt -> cc_addresses, kMCEmptyString, kMCCompareCaseless))
-		t_ccs = [[NSString stringWithMCStringRef: ctxt -> cc_addresses] componentsSeparatedByString: @","];
+		t_ccs = [MCStringConvertToAutoreleasedNSString(ctxt -> cc_addresses) componentsSeparatedByString: @","];
 	
 	[ ctxt -> dialog setToRecipients: t_recipients ];
 	
 	[ ctxt -> dialog setCcRecipients: t_ccs ];
 	
 	if (ctxt -> subject != nil)
-		[ ctxt -> dialog setSubject: [NSString stringWithMCStringRef: ctxt -> subject]];
+		[ ctxt -> dialog setSubject: MCStringConvertToAutoreleasedNSString(ctxt -> subject)];
 	else
 		[ ctxt -> dialog setSubject: @"" ];
 	
 	if (ctxt -> body != nil)
-		[ ctxt -> dialog setMessageBody: [NSString stringWithMCStringRef: ctxt -> body] isHTML: NO ];
+		[ ctxt -> dialog setMessageBody: MCStringConvertToAutoreleasedNSString(ctxt -> body) isHTML: NO ];
 	else
 		[ ctxt -> dialog setMessageBody: @"" isHTML: NO ];
 	
@@ -195,7 +195,7 @@ static void iphone_send_email_postwait(void *p_context)
 
 static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_separator_set)
 {
-	return [[NSString stringWithMCStringRef: p_string] componentsSeparatedByCharactersInSet: p_separator_set];
+	return [MCStringConvertToAutoreleasedNSString(p_string) componentsSeparatedByCharactersInSet: p_separator_set];
 }
 
 static NSData *mcstringref_to_nsdata(MCStringRef p_string)
@@ -244,24 +244,24 @@ static void compose_mail_prewait(void *p_context)
 			if (ctxt -> attachments[i] . file == nil && ctxt -> attachments[i] . data == nil)
 				t_data = [[NSData alloc] initWithBytes: nil length: 0];
 			else if (ctxt -> attachments[i] . data != nil)
-				t_data = [NSData dataWithMCDataRef: ctxt -> attachments[i] . data];
+				t_data = MCDataConvertToAutoreleasedNSData(ctxt -> attachments[i] . data);
 			else
 			{
                 MCAssert(ctxt -> attachments[i] . file != nil);
 				MCAutoStringRef t_resolved_path;
 				MCS_resolvepath(ctxt -> attachments[i] . file, &t_resolved_path);
-				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithMCStringRef: *t_resolved_path]];
+				t_data = [[NSData alloc] initWithContentsOfMappedFile: MCStringConvertToAutoreleasedNSString(*t_resolved_path)];
 			}
 			
 			if (ctxt -> attachments[i] . type == nil)
 				t_type = @"application/octet-stream";
 			else
-				t_type = [NSString stringWithMCStringRef: ctxt -> attachments[i] . type];
+				t_type = MCStringConvertToAutoreleasedNSString(ctxt -> attachments[i] . type);
 			
 			if (ctxt -> attachments[i] . name == nil)
 				t_name = nil;
 			else
-				t_name = [NSString stringWithMCStringRef: ctxt -> attachments[i] . name];
+				t_name = MCStringConvertToAutoreleasedNSString(ctxt -> attachments[i] . name);
 				
 			[ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
 		}
@@ -271,10 +271,12 @@ static void compose_mail_prewait(void *p_context)
 	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
 	
 	NSString *t_ns_subject;
-	t_ns_subject = [NSString stringWithMCStringRef: ctxt -> subject];
+	t_ns_subject = MCStringConvertToAutoreleasedNSString(ctxt -> subject);
 	
 	NSString *t_ns_body;
-	t_ns_body = [NSString stringWithMCStringRef: ctxt -> body];
+    t_ns_body = nil;
+    if (ctxt -> body != nil && !MCStringIsEmpty(ctxt -> body))
+        t_ns_body = MCStringConvertToAutoreleasedNSString(ctxt -> body);
 	
 	NSArray *t_ns_to;
 	t_ns_to = nil;

@@ -185,7 +185,7 @@ enum MCShadowedItemTags
 
 - (void)menuItemSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     NSMenuItem *t_item;
@@ -319,7 +319,7 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately

@@ -86,21 +86,8 @@ class MCMacPlatformSurface;
 // MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
 //   at the MouseSync event.
 @interface com_runrev_livecode_MCApplication: NSApplication
-{
-    NSWindow* m_pseudo_modal_for;
-}
-
--(id)init;
 
 - (void)sendEvent:(NSEvent *)event;
-
-- (bool)windowIsMoving: (MCPlatformWindowRef)window;
-
-// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
-- (void)becomePseudoModalFor: (NSWindow*)window;
-- (NSWindow*)pseudoModalFor;
-
-- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply;
 
 @end
 
@@ -127,8 +114,9 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
 
-
 @end
+
+void MCMacPlatformWindowWindowMoved(NSWindow *p_self, MCPlatformWindowRef p_window);
 
 @interface com_runrev_livecode_MCPanel: NSPanel  <com_runrev_livecode_MCMovingFrame>
 {
@@ -149,6 +137,13 @@ class MCMacPlatformSurface;
 - (void)popupAndMonitor;
 
 @end
+
+bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
+bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window);
+NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,11 +201,15 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Returns the value of 'm_user_reshape'
 - (bool)inUserReshape;
 
+- (void)windowMoveFinished;
+
 //////////
 
 - (BOOL)windowShouldClose:(id)sender;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
+
+- (void)windowWillMove:(NSNotification *)notification;
 - (void)windowDidMove:(NSNotification *)notification;
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification;

@@ -968,7 +968,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         [t_temp_picker_array retain];
         for (int j = 0; j < p_pick_lists[i] . option_count; j++)
         {
-            t_options = [NSString stringWithMCStringRef: p_pick_lists[i] . options[j]];
+            t_options = MCStringConvertToAutoreleasedNSString(p_pick_lists[i] . options[j]);
             t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
         }
         t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];

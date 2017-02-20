@@ -1046,7 +1046,7 @@ void MCIPhoneSystem::Debug(MCStringRef p_string)
     // MM-2012-09-07: [[ Bug 10320 ]] put does not write to console on Mountain Lion
     // AL-2014-03-25: [[ Bug 11985 ]] NSStrings created with stringWithMCStringRef are autoreleased.
     NSString *t_msg;
-    t_msg = [NSString stringWithMCStringRef: p_string];
+    t_msg = MCStringConvertToAutoreleasedNSString(p_string);
     NSLog(@"%@", t_msg);
 }
 

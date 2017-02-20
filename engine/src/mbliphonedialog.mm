@@ -113,9 +113,9 @@ static void dopopupanswerdialog_prewait(void *p_context)
 	ctxt = (popupanswerdialog_t *)p_context;
 	
 	NSString *t_title;
-	t_title = [NSString stringWithMCStringRef: ctxt -> title == nil ? kMCEmptyString : ctxt -> title ];
+	t_title = MCStringConvertToAutoreleasedNSString(ctxt -> title == nil ? kMCEmptyString : ctxt -> title );
     NSString *t_prompt;
-    t_prompt = [NSString stringWithMCStringRef: ctxt -> message == nil ? kMCEmptyString : ctxt -> message ];
+    t_prompt = MCStringConvertToAutoreleasedNSString(ctxt -> message == nil ? kMCEmptyString : ctxt -> message );
 
     if (MCmajorosversion < 800)
     {
@@ -131,7 +131,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
         {
             [ctxt -> delegate setIndex: ctxt -> button_count - 1];
             for(uint32_t i = 0; i < ctxt -> button_count; i++)
-                [ctxt -> alert_view addButtonWithTitle: [ NSString stringWithMCStringRef: ctxt -> buttons[i] ]];
+                [ctxt -> alert_view addButtonWithTitle: MCStringConvertToAutoreleasedNSString(ctxt -> buttons[i])];
         }
         [ctxt -> alert_view show];
     }
@@ -161,7 +161,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
             for(uint32_t i = 0; i < ctxt -> button_count; i++)
             {
                 UIAlertAction *t_action;
-                t_action = [UIAlertAction actionWithTitle: [NSString stringWithMCStringRef: ctxt -> buttons[i] ]
+                t_action = [UIAlertAction actionWithTitle: MCStringConvertToAutoreleasedNSString(ctxt -> buttons[i])
                                                     style: UIAlertActionStyleDefault
                                                   handler: ^(UIAlertAction *action)
                             {
@@ -419,13 +419,13 @@ static void dopopupaskdialog_prewait(void *p_context)
 	ctxt = (popupaskdialog_t *)p_context;
 	
     NSString *t_title;
-	t_title = [NSString stringWithMCStringRef: (ctxt -> title == nil ? kMCEmptyString : ctxt -> title) ];
+	t_title = MCStringConvertToAutoreleasedNSString((ctxt -> title == nil ? kMCEmptyString : ctxt -> title) );
 	NSString *t_message;
-	t_message = [NSString stringWithMCStringRef: (ctxt -> message == nil ? kMCEmptyString : ctxt -> message) ];
+	t_message = MCStringConvertToAutoreleasedNSString((ctxt -> message == nil ? kMCEmptyString : ctxt -> message) );
 	
     // MM-2012-03-14: [[ Bug 10084 ]] Intial text was being set to space by default meaning a space was prepended to anby data returned.
 	NSString *t_initial;
-	t_initial = [NSString stringWithMCStringRef: (ctxt -> initial == nil ? kMCEmptyString : ctxt -> initial) ];
+	t_initial = MCStringConvertToAutoreleasedNSString((ctxt -> initial == nil ? kMCEmptyString : ctxt -> initial) );
     
     if (MCmajorosversion < 800)
     {
