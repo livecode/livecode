@@ -2,11 +2,11 @@ Name: open socket
 
 Type: command
 
-Syntax: open [datagram] socket [from [<localHostName>][:localPort]] [to] <socketID> [with message <callbackMessage>]
+Syntax: open [datagram] socket [from [<localHostName>][:<localPort>]] [to] <socketID> [with message <callbackMessage>]
 
-Syntax: open secure socket [from [<localHostName>][:localPort]] [to] <socketID> [with message <callbackMessage>] [without verification] [using certificate <certificate> and key <key>]
+Syntax: open secure socket [from [<localHostName>][:<localPort>]] [to] <socketID> [with message <callbackMessage>] [without verification] [using certificate <certificate> and key <key>]
 
-Syntax: open secure socket [from [<localHostName>][:localPort]] [to] <socketID> [with message <callbackMessage>] [with verification [for host <verificationHostName>]] [using certificate <certificate> and key <key>]
+Syntax: open secure socket [from [<localHostName>][:<localPort>]] [to] <socketID> [with message <callbackMessage>] [with verification [for host <verificationHostName>]] [using certificate <certificate> and key <key>]
 
 Summary:
 Establishes a <TCP> communications <socket> between your system and
@@ -35,7 +35,7 @@ Example:
 open secure socket to "livecode.com:443" with message "wasConnected" with verification for host "livecode.com"
 
 Example:
-open udp socket from ":8080" to "10.2.1.1:8080"
+open datagram socket from ":8080" to "10.2.1.1:8080"
 
 Example:
 on mouseUp
