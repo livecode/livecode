@@ -63,14 +63,14 @@ public class NFCModule
     {
 		if (m_enable_dispatch)
 		{
-			startDispatch();
+			stopDispatch();
 		}
     }
 	
     public void onResume()
     {
 		if (m_enable_dispatch)
-			stopDispatch();
+			startDispatch();
     }
 	
 	public void onNewIntent(Intent p_intent)
@@ -110,12 +110,10 @@ public class NFCModule
 		{
 			try
 			{
-				Intent intent = new Intent(m_engine.getContext(), m_engine.getClass());
+				Intent intent = new Intent(m_engine.getActivity().getApplicationContext(), m_engine.getActivity().getClass());
 				intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				
-				PendingIntent pendingIntent = PendingIntent.getActivity(m_engine.getContext(), 0, intent, 0);
-				
-				// pass null as filter & techlist to receive all tags
+				PendingIntent pendingIntent = PendingIntent.getActivity(m_engine.getActivity().getApplicationContext(), 0, intent, 0);
 				m_nfc.enableForegroundDispatch(m_engine.getActivity(), pendingIntent, null, null);
 			}
 			catch (SecurityException e)
