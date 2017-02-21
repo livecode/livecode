@@ -65,8 +65,6 @@
 										[
 											'lib/mac/libicui18n.a',
 											'lib/mac/libicuio.a',
-											'lib/mac/libicule.a',
-											'lib/mac/libiculx.a',
 											'lib/mac/libicutu.a',
 											'lib/mac/libicuuc.a',
 											'lib/mac/libicudata.a',
@@ -82,8 +80,6 @@
 										[
 											'-licui18n',
 											'-licuio',
-											'-licule',
-											'-liculx',
 											'-licutu',
 											'-licuuc',
 											'-licudata',
@@ -100,8 +96,6 @@
 							[
 								'lib/ios/$(SDK_NAME)/libicui18n.a',
 								'lib/ios/$(SDK_NAME)/libicuio.a',
-								'lib/ios/$(SDK_NAME)/libicule.a',
-								'lib/ios/$(SDK_NAME)/libiculx.a',
 								'lib/ios/$(SDK_NAME)/libicuuc.a',
 								'lib/ios/$(SDK_NAME)/libicudata.a',
 							],
@@ -120,8 +114,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licutu',
 								'-licuuc',
 								'-licudata',
@@ -142,8 +134,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licuuc',
 								'-licudata',
 								'-lstdc++',
@@ -184,8 +174,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licutu',
 								'-licuuc',
 								'-licudata',
