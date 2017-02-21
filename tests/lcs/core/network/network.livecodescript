@@ -171,3 +171,27 @@ on TestOpenSocketFromSameHostDifferentAddress
       end repeat
    end if
 end TestOpenSocketFromSameHostDifferentAddress
+
+on TestOpenSocketFromWithAddressUsingLocalServer
+   accept connections on port "8008" with message "connectedPlaceHolder"
+   wait until "8008" is among the lines of the openSockets with messages
+
+   open socket from "127.0.0.1" to "127.0.0.1:8008"
+   TestAssert "open socket from with local address to local server", "127.0.0.1:8008" is among the lines of the openSockets
+
+   repeat for each line tSocket in the openSockets
+      close socket tSocket
+   end repeat
+end TestOpenSocketFromWithAddressUsingLocalServer
+
+on TestOpenSocketFromWithAddressAndPortUsingLocalServer
+   accept connections on port "8009" with message "connectedPlaceHolder"
+   wait until "8009" is among the lines of the openSockets with messages
+
+   open socket from "127.0.0.1:8010" to "127.0.0.1:8009"
+   TestAssert "open socket from with local address and port to local server", "127.0.0.1:8009" is among the lines of the openSockets
+
+   close socket "127.0.0.1:8010"
+   close socket "127.0.0.1:8009"
+   close socket "8009"
+end TestOpenSocketFromWithAddressAndPortUsingLocalServer
