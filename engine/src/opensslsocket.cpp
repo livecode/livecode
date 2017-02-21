@@ -708,9 +708,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
                 return false;
             }
 
-            // setting the SO_REUSEPORT option allows the same local port to be used to connect to multiple hosts
+            // setting the SO_REUSEADDR option allows the same local address to be used to connect to multiple hosts
             int t_port_reuse = 1;
-            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
+            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
             {
                 p_socket->error = strclone("can't use the local port");
                 p_socket->doclose();
@@ -1531,7 +1531,7 @@ void MCSocket::acceptone()
 		MCNameRef t_name;
 		MCNameCreate(*n, t_name);
         MCSocket *t_socket;
-        t_socket = new (nothrow) MCSocket(t_name, object, NULL, False, newfd, False, False,False);
+        t_socket = new (nothrow) MCSocket(t_name, NULL, object, NULL, False, newfd, False, False,False);
         if (t_socket != NULL)
         {
             MCSocketsAppendToSocketList(t_socket);
