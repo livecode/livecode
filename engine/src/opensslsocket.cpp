@@ -655,29 +655,76 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 	if (p_socket != NULL && p_socket->fd != 0)
 	{
 		
-		// MM-2011-07-07: Added support for binding sockets to a network interface.
-		if (MCdefaultnetworkinterface != NULL)
-		{
-			struct sockaddr_in t_bind_addr;
-			MCAutoStringRef MCdefaultnetworkinterface_string;
-			/* UNCHECKED */ MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string);
-			if (!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, t_bind_addr))
-			{
-				p_socket->error = strclone("can't resolve network interface");
-				p_socket->doclose();
-				return false;
-			}
-			
-			t_bind_addr.sin_port = 0;
-			
-			if (0 != bind(p_socket->fd, (struct sockaddr *)&t_bind_addr, sizeof(struct sockaddr_in)))
-			{
-				p_socket->error = strclone("can't bind to network interface address");
-				p_socket->doclose();
-				return false;
-			}
-		}
-		
+        // check to see if a local host or port has been passed and if so, attempt to bind
+        // if no local host has been passed then, if set, use the network interface
+        MCAutoStringRef t_from_host;
+        MCAutoNumberRef t_from_port;
+        if (!MCValueIsEmpty(*p_socket->from))
+        {
+            if (!MCS_name_to_host_and_port(MCNameGetString(*p_socket->from), &t_from_host, &t_from_port))
+            {
+                p_socket->error = strclone("error parsing the local host and port");
+                p_socket->doclose();
+                return false;
+            }
+        }
+        if (!t_from_host.IsSet() && MCdefaultnetworkinterface != NULL)
+        {
+            if (!MCStringCreateWithCString(MCdefaultnetworkinterface, &t_from_host))
+            {
+                p_socket->error = strclone("error parsing the network interface address");
+                p_socket->doclose();
+                return false;
+            }
+        }
+
+        if (t_from_host.IsSet() || t_from_port.IsSet())
+        {
+            // the 0 defaults tell the OS to choose any avaliable host or port
+            if (!t_from_host.IsSet())
+            {
+                if (!MCStringCreateWithCString("0.0.0.0", &t_from_host))
+                {
+                    p_socket->error = strclone("error setting the default local host");
+                    p_socket->doclose();
+                    return false;
+                }
+            }
+            else if (!t_from_port.IsSet())
+            {
+                if (!MCNumberCreateWithUnsignedInteger(0, &t_from_port))
+                {
+                    p_socket->error = strclone("error setting the default local port");
+                    p_socket->doclose();
+                    return false;
+                }
+            }
+
+            struct sockaddr_in t_bind_addr;
+            if (!MCS_host_and_port_to_sockaddr(*t_from_host, *t_from_port, t_bind_addr))
+            {
+                p_socket->error = strclone("can't resolve local host and port");
+                p_socket->doclose();
+                return false;
+            }
+
+            // setting the SO_REUSEADDR option allows the same local address to be used to connect to multiple hosts
+            int t_port_reuse = 1;
+            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
+            {
+                p_socket->error = strclone("can't use the local port");
+                p_socket->doclose();
+                return false;
+            }
+
+            if (bind(p_socket->fd, (struct sockaddr *)&t_bind_addr, sizeof(struct sockaddr_in)) != 0)
+            {
+                p_socket->error = strclone("can't bind to local host and port");
+                p_socket->doclose();
+                return false;
+            }
+        }
+
 		p_socket->setselect();
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
@@ -738,7 +785,7 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 }
 
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef hostname)
+MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef hostname)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -775,7 +822,7 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 	MCS_socket_ioctl(sock, FIONBIO, on);
 
 	MCSocket *s = NULL;
-	s = (MCSocket *)new MCSocket(name, o, mess, datagram, sock, False, False,secure);
+	s = (MCSocket *)new MCSocket(name, from, o, mess, datagram, sock, False, False,secure);
 
 	if (s != NULL)
 	{
@@ -1137,7 +1184,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	if (!MCNameCreateWithNativeChars(*t_port_chars, t_length, &t_portname))
         return nil;
     
-	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
+	return new MCSocket(*t_portname, NULL, object, message, datagram, sock, True, False, secure);
 }
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
@@ -1337,7 +1384,8 @@ MCSocketwrite::~MCSocketwrite()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
+MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
+    : from(f)
 {
 	name = MCValueRetain(n);
 	object = o;
@@ -1483,7 +1531,7 @@ void MCSocket::acceptone()
 		MCNameRef t_name;
 		MCNameCreate(*n, t_name);
         MCSocket *t_socket;
-        t_socket = new (nothrow) MCSocket(t_name, object, NULL, False, newfd, False, False,False);
+        t_socket = new (nothrow) MCSocket(t_name, NULL, object, NULL, False, newfd, False, False,False);
         if (t_socket != NULL)
         {
             MCSocketsAppendToSocketList(t_socket);
@@ -1546,7 +1594,7 @@ void MCSocket::readsome()
 				if (accepting && !IO_findsocket(*t_name, index))
 				{
                     MCSocket *t_socket;
-                    t_socket = new (nothrow) MCSocket(*t_name, object, NULL, True, fd, False, True,False);
+                    t_socket = new (nothrow) MCSocket(*t_name, NULL, object, NULL, True, fd, False, True,False);
                     if (t_socket != NULL)
                         MCSocketsAppendToSocketList(t_socket);
 				}
@@ -1590,7 +1638,7 @@ void MCSocket::readsome()
 				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
                 MCSocket *t_socket;
-                t_socket = new (nothrow) MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
+                t_socket = new (nothrow) MCSocket(*t_name, NULL, object, NULL, False, newfd, False, False,secure);
                 if (t_socket != NULL)
                 {
                     MCSocketsAppendToSocketList(t_socket);

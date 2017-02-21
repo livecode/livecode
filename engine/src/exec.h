@@ -4440,9 +4440,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url);
 
