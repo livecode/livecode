@@ -88,16 +88,86 @@ on TestOpenSocketFromMultipleHostsSamePort
    open socket from ":8002" to "livecode.com"
    open socket from ":8002" to "google.com"
    TestAssert "open socket from with multiple hosts on same local port", "livecode.com" is among the lines of the openSockets
-   TestAssert "open socket from with multiple hosts on same local port", "livecode.com" is among the lines of the openSockets
+   TestAssert "open socket from with multiple hosts on same local port", "google.com" is among the lines of the openSockets
    close socket "livecode.com"
    close socket "google.com"
 end TestOpenSocketFromMultipleHostsSamePort
 
-on TestOpenSocketFromSameHostDifferntPort
+on TestOpenSocketFromSameHostDifferentPort
    open socket from ":8003" to "livecode.com|1"
    open socket from ":8004" to "livecode.com|2"
    TestAssert "open socket from with same host on different local port", "livecode.com|1" is among the lines of the openSockets
    TestAssert "open socket from with same host on different local port", "livecode.com|2" is among the lines of the openSockets
    close socket "livecode.com|1"
    close socket "livecode.com|2"
-end TestOpenSocketFromSameHostDifferntPort
+end TestOpenSocketFromSameHostDifferentPort
+
+on TestOpenSocketFromWithAddress
+   local tLocalAddress
+   repeat for each line tInterface in the networkInterfaces
+      if tInterface is not "127.0.0.1" then
+         put tInterface into tLocalAddress
+         exit repeat
+      end if
+   end repeat
+
+   if tLocalAddress is not empty then
+      open socket from tLocalAddress to "livecode.com"
+      TestAssert "open socket from with local address", "livecode.com" is among the lines of the openSockets
+      close socket "livecode.com"
+   end if
+end TestOpenSocketFromWithAddress
+
+on TestOpenSocketFromWithAddressAndPort
+   local tLocalAddress
+   repeat for each line tInterface in the networkInterfaces
+      if tInterface is not "127.0.0.1" then
+         put tInterface into tLocalAddress
+         exit repeat
+      end if
+   end repeat
+
+   if tLocalAddress is not empty then
+      open socket from tLocalAddress & ":8005" to "livecode.com"
+      TestAssert "open socket from with local address and port", "livecode.com" is among the lines of the openSockets
+      close socket "livecode.com"
+   end if
+end TestOpenSocketFromWithAddressAndPort
+
+on TestOpenSocketFromMultipleHostsSameAddress
+   local tLocalAddress
+   repeat for each line tInterface in the networkInterfaces
+      if tInterface is not "127.0.0.1" then
+         put tInterface into tLocalAddress
+         exit repeat
+      end if
+   end repeat
+
+   if tLocalAddress is not empty then
+      open socket from tLocalAddress & ":8006" to "livecode.com"
+      open socket from tLocalAddress & ":8006" to "google.com"
+      TestAssert "open socket from with multiple hosts using same local address", "livecode.com" is among the lines of the openSockets
+      TestAssert "open socket from with multiple hosts using same local address", "google.com" is among the lines of the openSockets
+      close socket "livecode.com"
+      close socket "google.com"
+   end if
+end TestOpenSocketFromMultipleHostsSameAddress
+
+on TestOpenSocketFromSameHostDifferentAddress
+   local tLocalAddresses
+   put the networkInterfaces into tLocalAddresses
+   filter tLocalAddresses without "127.0.0.1"
+
+   if the number of lines in tLocalAddresses > 1 then
+      local tSocketCount
+      put 1 into tSocketCount
+      repeat for each line tLocalAddress in tLocalAddresses
+         open socket from tLocalAddress & ":8007" to "livecode.com|" & tSocketCount
+         TestAssert "open socket from with same host on different local address", "livecode.com|" & tSocketCount is among the lines of the openSockets
+         add 1 to tSocketCount
+      end repeat
+      repeat with tSocketCount = 1 to the number of lines in tLocalAddresses
+         close socket "livecode.com|" & tSocketCount
+      end repeat
+   end if
+end TestOpenSocketFromSameHostDifferentAddress
