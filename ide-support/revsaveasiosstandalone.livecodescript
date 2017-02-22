@@ -477,7 +477,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    repeat for each key tExternalName in tCopiedExternals
       local tExternalRec
       put tCopiedExternals[tExternalName] into tExternalRec
-      answer (tExternalName, tExternalRec["location"])
       if tExternalRec["type"] is among the words of "external external-tmp" then
          put tExternalName & return after tDeploy["externals"]
       end if

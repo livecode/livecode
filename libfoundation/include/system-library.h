@@ -89,6 +89,14 @@ MC_DLLEXPORT void *
 MCSLibraryLookupSymbol(MCSLibraryRef p_library,
                        MCStringRef p_symbol);
 
+#if defined(__ANDROID__)
+/* Sets the path to use as the base path for the paths of libraries.
+ * This must be called after MCSInitialize, with the value of the
+ * Android application's context's nativeLibPath member. */
+MC_DLLEXPORT void
+MCSLibraryAndroidSetNativeLibPath(MCStringRef p_path);
+#endif
+
 #ifdef __MCS_INTERNAL_API__
 
 bool
@@ -108,7 +116,7 @@ __MCSLibraryThrowResolvePathFailed(void);
 
 /* New style (C++ based) - not implemented yet */
 
-#if 0
+#if defined(MCS_LIBRARY_CXX_IOS_STATIC)
 /* The record which each statically linked library should register using a
  * constructor. */
 struct MCSLibraryStaticInfo
@@ -130,7 +138,7 @@ MCSLibraryRegisterStatic(MCSLibraryStaticInfo& p_info);
 
 /* Old style (section based) */
 
-#if 1
+#if !defined(MCS_LIBRARY_CXX_IOS_STATIC)
 
 struct MCSLibraryStaticLibExport
 {
@@ -140,7 +148,7 @@ struct MCSLibraryStaticLibExport
 
 struct MCSLibraryStaticLibInfo
 {
-    char ** const name;
+    char * const * name;
     const struct MCSLibraryStaticLibExport *exports;
 };
 

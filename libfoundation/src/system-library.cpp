@@ -27,6 +27,11 @@ MCTypeInfoRef kMCSLibraryTypeInfo = nullptr;
 /* The MCSLibraryCouldNotLoadError error. */
 MCErrorRef kMCSLibraryCouldNotLoadError = nullptr;
 
+/* The native lib path on Android. */
+#if defined(__ANDROID__)
+static MCStringRef sMCSLibraryAndroidNativeLibPath = nullptr;
+#endif
+
 /* ================================================================
  * Types
  * ================================================================ */
@@ -184,6 +189,10 @@ __MCSLibraryInitialize(void)
 void
 __MCSLibraryFinalize(void)
 {
+#if defined(__ANDROID__)
+    MCValueRelease(sMCSLibraryAndroidNativeLibPath);
+#endif
+    
     MCValueRelease(kMCSLibraryTypeInfo);
 }
 
@@ -302,3 +311,11 @@ MCSLibraryLookupSymbol(MCSLibraryRef p_library,
     return __MCSLibraryGetImpl(p_library).LookupSymbol(p_symbol);
 }
 
+#if defined(__ANDROID__)
+MC_DLLEXPORT_DEF void
+MCSLibraryAndroidSetNativeLibPath(MCStringRef p_path)
+{
+    MCValueAssign(sMCSLibraryAndroidNativeLibPath,
+                  p_path);
+}
+#endif

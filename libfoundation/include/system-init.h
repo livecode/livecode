@@ -24,11 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 /* Library setup. Call before any other functions in this library. */
-#if defined(__ANDROID__)
-MC_DLLEXPORT bool MCSInitialize(MCStringRef p_native_path);
-#else
 MC_DLLEXPORT bool MCSInitialize(void);
-#endif
 
 /* Call when the library is no longer needed, in order to clear any
  * library state. */

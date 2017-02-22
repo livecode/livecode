@@ -70,8 +70,6 @@ dl_iterate_phdr(int (*)(struct dl_phdr_info *, size_t, void *),
                 void *);
 #endif
 
-extern MCStringRef gMCSAndroidNativeLibPath;
-
 class __MCSLibraryHandleAndroid: public __MCSLibraryHandlePosix
 {
 public:
@@ -103,7 +101,7 @@ public:
         MCAutoStringRef t_full_native_path;
         if (!MCStringFormat(&t_full_native_path,
                             "%@/%@",
-                            gMCSAndroidNativeLibPath,
+                            sMCSLibraryAndroidNativeLibPath,
                             *t_filename))
         {
             return false;
@@ -119,12 +117,10 @@ public:
         
         if (p_type == kMCSFileTypeRegular)
         {
-            MCLog("Full native path - %@", *t_full_native_path);
             r_native_path = t_full_native_path.Take();
         }
         else
         {
-            MCLog("Leaf path - %@", *t_filename);
             r_native_path = t_filename.Take();
         }
         
@@ -143,7 +139,11 @@ private:
         
         const char *Run(void)
         {
-            dl_iterate_phdr(Thunk,
+            dl_iterate_phdr([](struct dl_phdr_info* p_info, size_t p_size, void *p_context)
+                            {
+                                auto t_func = static_cast<CopyNativePathModern *>(p_context);
+                                return (*t_func)(p_info, p_size);
+                            },
                             this);
             return m_filename;
         }
@@ -183,16 +183,6 @@ private:
             return 0;
         }
         
-        static int Thunk(struct dl_phdr_info* p_info,
-                         size_t p_size,
-                         void *p_context)
-        {
-            CopyNativePathModern *t_this =
-                    reinterpret_cast<CopyNativePathModern *>(p_context);
-            return (*t_this)(p_info,
-                             p_size);
-        }
-        
         void *m_handle;
         const char *m_filename;
     };
@@ -208,18 +198,14 @@ private:
         };
         
         const struct soinfo* t_si =
-                reinterpret_cast<const struct soinfo*>(m_handle);
+                static_cast<const struct soinfo*>(m_handle);
         
         Dl_info t_addr_info;
         if (dladdr(t_si->base,
                    &t_addr_info) == 0)
         {
-            MCLog("  failed :(");
             return nullptr;
         }
-        
-        MCLog("  base = %p", t_addr_info.dli_fbase);
-        MCLog("  fname = %s", t_addr_info.dli_fname);
         
         return t_addr_info.dli_fname;
     }

@@ -1260,8 +1260,9 @@ static void *mobile_main(void *arg)
 	}
     
     MCAutoStringRef t_lib_path;
-    if (!MCAndroidGetLibraryPath(&t_lib_path) ||
-        !MCSInitialize(*t_lib_path) ||
+    if (!MCSInitialize() ||
+        !MCAndroidGetLibraryPath(&t_lib_path) ||
+        !(MCSLibraryAndroidSetNativeLibPath(*t_lib_path), true) ||
         !MCModulesInitialize() ||
         !MCScriptInitialize())
     {

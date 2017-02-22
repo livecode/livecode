@@ -78,6 +78,9 @@ public:
             case kDynamic:
                 m_dynamic.~__MCSLibraryHandleMac();
                 break;
+            default:
+                MCUnreachable();
+                break;
         }
     }
     
@@ -101,6 +104,9 @@ public:
                 return m_static.IsEqualTo(p_other.m_static);
             case kDynamic:
                 return m_dynamic.IsEqualTo(p_other.m_dynamic);
+            default:
+                MCUnreachableReturn(false);
+                break;
         }
         
         return false;
@@ -116,6 +122,9 @@ public:
                 return m_static.Hash();
             case kDynamic:
                 return m_dynamic.Hash();
+            default:
+                MCUnreachableReturn(hash_t());
+                break;
         }
         
         return hash_t();
@@ -161,6 +170,9 @@ public:
                 return m_static.CopyNativePath(r_native_path);
             case kDynamic:
                 return m_dynamic.CopyNativePath(r_native_path);
+            default:
+                MCUnreachableReturn(false);
+                break;
         }
         return false;
     }
@@ -175,6 +187,9 @@ public:
                 return m_static.LookupSymbol(p_symbol);
             case kDynamic:
                 return m_dynamic.LookupSymbol(p_symbol);
+            default:
+                MCUnreachableReturn(nullptr);
+                break;
         }
         return nullptr;
     }

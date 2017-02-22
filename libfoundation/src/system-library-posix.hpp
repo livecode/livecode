@@ -68,38 +68,32 @@ public:
             return false;
         }
         
-        void *t_dl_handle =
-                dlopen(*t_sys_exe_path,
-                       RTLD_LAZY);
-        if (t_dl_handle == nullptr)
+        m_handle = dlopen(*t_sys_exe_path,
+                          RTLD_LAZY);
+        if (m_handle == nullptr)
         {
             /* TODO: dlerror message */
             return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
         }
-        
-        m_handle = t_dl_handle;
         
         return true;
     }
     
     bool CreateWithAddress(void *p_address)
     {
-        void *t_dl_handle = nullptr;
         Dl_info t_addr_info;
         if (dladdr(p_address,
                    &t_addr_info) != 0)
         {
-            t_dl_handle = dlopen(t_addr_info.dli_fname,
-                                 RTLD_LAZY);
+            m_handle = dlopen(t_addr_info.dli_fname,
+                              RTLD_LAZY);
         }
         
-        if (t_dl_handle == nullptr)
+        if (m_handle == nullptr)
         {
             /* TODO: Use dlerror */
             return __MCSLibraryThrowCreateWithAddressFailed(p_address);
         }
-        
-        m_handle = t_dl_handle;
         
         return true;
     }

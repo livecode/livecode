@@ -23,7 +23,8 @@
  * Static Handle Class -- new style (not yet implemented)
  * ================================================================ */
 
-#if 0
+#if defined(MCS_LIBRARY_CXX_IOS_STATIC)
+
 class __MCSLibraryHandleStatic
 {
 public:
@@ -114,11 +115,14 @@ protected:
 };
 
 MCSLibraryStaticInfo *__MCSLibraryHandleStatic::s_chain = nullptr;
+
 #endif
 
 /* ================================================================
  * Static Handle Class -- old style
  * ================================================================ */
+
+#if !defined(MCS_LIBRARY_CXX_IOS_STATIC)
 
 /* The __MCSLibraryHandleStatic class is used on platforms which don't allow
  * user-level dynamic linking (e.g. iOS). In this case, all included loadable
@@ -192,17 +196,18 @@ class __MCSLibraryHandleStatic
         }
         
         size_t t_section_size = 0;
-        char *t_section_ptr = nullptr;
-        t_section_ptr = getsectdata("__DATA",
-                                    "__libs",
-                                    &t_section_size);
+        char [[gnu::may_alias]] *t_section_ptr =
+                    getsectdata("__DATA",
+                                "__libs",
+                                &t_section_size);
+        
         if (t_section_ptr != nullptr)
         {
             t_section_ptr += (size_t)_dyld_get_image_vmaddr_slide(0);
             
-            MCSLibraryStaticLibInfo **t_libs =
+            MCSLibraryStaticLibInfo [[gnu::may_alias]] **t_libs =
                     reinterpret_cast<MCSLibraryStaticLibInfo **>(t_section_ptr);
-            for(size_t t_lib_index = 0; t_lib_index < t_section_size / sizeof(void *); t_lib_index++)
+            for(size_t t_lib_index = 0; t_lib_index < t_section_size / sizeof(*t_libs); t_lib_index++)
             {
                 const char *t_lib_name =
                         *(t_libs[t_lib_index]->name);
@@ -249,3 +254,6 @@ class __MCSLibraryHandleStatic
 protected:
     const MCSLibraryStaticLibInfo *m_handle;
 };
+
+#endif
+
