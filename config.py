@@ -264,10 +264,24 @@ def validate_gyp_settings(opts):
     if opts['BUILD_EDITION'] is None:
         opts['BUILD_EDITION'] = 'community'
 
-def guess_java_home(os):
+def guess_java_home(platform):
+    if platform.startswith('linux'):
+        try:
+            javac_str = '/bin/javac'
+            javac_path = subprocess.check_output(['/usr/bin/env', 
+                         'readlink', '-f', '/usr' + javac_str]).strip()
+            if javac_path.endswith(javac_str):
+                return javac_path[:-len(javac_str)]
+        except subprocess.CalledProcessError as e:
+            print(e)
+            pass # Fall through to other ways of guessing
+
+    # More guesses
     try:
-        return subprocess.check_output('/usr/libexec/java_home')
+        if os.path.isfile('/usr/libexec/java_home'):
+            return subprocess.check_output('/usr/libexec/java_home').strip()
     except subprocess.CalledProcessError as e:
+        print(e)
         pass
     for d in ('/usr/lib/jvm/default', '/usr/lib/jvm/default-java'):
         if os.path.isdir(d):
@@ -275,8 +289,8 @@ def guess_java_home(os):
 
 def validate_java_tools(opts):
     if opts['JAVA_SDK'] is None:
-        validate_os(opts)
-        sdk = guess_java_home(os)
+        validate_platform(opts)
+        sdk = guess_java_home(opts['PLATFORM'])
         if sdk is None:
             error('Java SDK not found; set $JAVA_SDK')
         opts['JAVA_SDK'] = sdk
@@ -479,7 +493,9 @@ def gyp_define_args(opts, names):
 
 def configure_linux(opts):
     validate_target_arch(opts)
-    args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH']]
+    validate_java_tools(opts)
+    args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_emscripten(opts):
@@ -501,7 +517,8 @@ def configure_android(opts):
                        'OBJDUMP', 'STRIP'))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
                                   '-Dcross_compile=1',
-                                  '-Gandroid_ndk_version=' + opts['ANDROID_NDK_VERSION']]
+                                  '-Gandroid_ndk_version=' + opts['ANDROID_NDK_VERSION'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_win(opts):
@@ -520,10 +537,12 @@ def configure_win(opts):
 def configure_mac(opts):
     validate_target_arch(opts)
     validate_xcode_sdks(opts)
+    validate_java_tools(opts)
 
     args = core_gyp_args(opts) + ['-Dtarget_sdk=' + opts['XCODE_TARGET_SDK'],
                                   '-Dhost_sdk=' + opts['XCODE_HOST_SDK'],
-                                  '-Dtarget_arch=' + opts['TARGET_ARCH']]
+                                  '-Dtarget_arch=' + opts['TARGET_ARCH'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]                                  
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_ios(opts):
