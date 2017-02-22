@@ -41,6 +41,8 @@ MCErrorRef kMCSLibraryCouldNotLoadError = nullptr;
 #include "system-library-linux.hpp"
 #elif defined(__ANDROID__)
 #include "system-library-android.hpp"
+#elif defined(__EMSCRIPTEN__)
+#include "system-library-emscripten.hpp"
 #endif
 
 class __MCSLibraryImpl

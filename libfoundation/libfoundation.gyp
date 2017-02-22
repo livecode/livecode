@@ -111,6 +111,7 @@
                 'src/system-init.cpp',
                 'src/system-library.cpp',
                 'src/system-library-android.hpp',
+                'src/system-library-emscripten.hpp',
                 'src/system-library-ios.hpp',
                 'src/system-library-mac.hpp',
                 'src/system-library-posix.hpp',
