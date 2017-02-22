@@ -1755,11 +1755,15 @@
         Id'Namespace -> Namespace
         (|
             IsNameValidForNamespace(Name)
-            (|
-                IsNameSuitableForNamespace(Name)
-            ||
-                Warning_UnsuitableNameForNamespace(Position, Name)
-            |)
+
+            --This check is disabled for now, as it causes some public
+            --extensions we have to break due to the leaf name being
+            --cased.
+            --(|
+            --    IsNameSuitableForNamespace(Name)
+            --||
+            --    Warning_UnsuitableNameForNamespace(Position, Name)
+            --|)
         ||
             Error_InvalidNameForNamespace(Position, Name)
         |)
