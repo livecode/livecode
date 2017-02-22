@@ -60,9 +60,9 @@ on TestSetHilitedItem
 end TestSetHilitedItem
 
 on TestSetHilitedItemName
-	set the hilitedItemName of widget "testNavBar" to "Contacts"
-   	TestAssert "hilitedItemName set to Contacts", the hilitedItemName of widget "testNavBar" is "Contacts"
+	set the hilitedItemName of widget "testNavBar" to "contacts"
+   	TestAssert "hilitedItemName set to Contacts", the hilitedItemName of widget "testNavBar" is "contacts"
    	
-   	set the hilitedItemName of widget "testNavBar" to "Search"
-   	TestAssert "hilitedItemName set to Search", the hilitedItemName of widget "testNavBar" is "Search"
+   	set the hilitedItemName of widget "testNavBar" to "search"
+   	TestAssert "hilitedItemName set to Search", the hilitedItemName of widget "testNavBar" is "search"
 end TestSetHilitedItemName
