@@ -592,6 +592,8 @@ extern MCNameRef MCM_input_return_key;
 extern MCNameRef MCM_input_text_changed;
 extern MCNameRef MCM_product_details_received;
 extern MCNameRef MCM_product_request_error;
+
+extern MCNameRef MCM_nfc_tag_received;
 #endif
 
 #ifdef _IOS_MOBILE

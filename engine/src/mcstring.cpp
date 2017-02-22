@@ -611,6 +611,7 @@ MCNameRef MCM_input_return_key;
 MCNameRef MCM_input_text_changed;
 MCNameRef MCM_product_details_received;
 MCNameRef MCM_product_request_error;
+MCNameRef MCM_nfc_tag_received;
 
 #endif
 
@@ -1081,6 +1082,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("inputTextChanged", MCM_input_text_changed);
     /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
     /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
+	/* UNCHECKED */ MCNameCreateWithCString("nfcTagReceived", MCM_nfc_tag_received);
 #endif
 	
 #ifdef _IOS_MOBILE
@@ -1539,6 +1541,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_input_end_editing);
 	MCNameDelete(MCM_input_return_key);
 	MCNameDelete(MCM_input_text_changed);
+	MCNameDelete(MCM_nfc_tag_received);
 #endif
 	
 #ifdef _IOS_MOBILE

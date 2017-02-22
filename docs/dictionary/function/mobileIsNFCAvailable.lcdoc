@@ -1,0 +1,33 @@
+Name: mobileIsNFCAvailable
+
+Type: function
+
+Syntax: mobileIsNFCAvailable()
+
+Summary:
+Returns true if the device can communicate with other NFC devices or tags, false otherwise.
+
+Introduced: 9.0
+
+OS: android
+
+Platforms: mobile
+
+Example:
+get mobileIsNFCAvailable()
+
+Example:
+if mobileIsNFCAvailable() is "true" then 
+  answer "NFC tags can be read"
+end if
+
+Returns:
+The <mobileIsNFCAvailable> function returns true if the device
+can read NFC tags and false otherwise.
+
+Description:
+Use the <mobileIsNFCAvailable> function to check whether the
+device can read NFC tags.
+
+References: mobileIsNFCEnabled (function), mobileEnableNFCDispatch (command),
+nfcTagReceived (message)

@@ -539,6 +539,7 @@ component Runtime.Android
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
+		file android:nfc_tech_filter.xml
 		executable android:Standalone[[BaseEditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml
