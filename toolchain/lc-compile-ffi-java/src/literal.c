@@ -26,9 +26,10 @@
 void JavaQualifiedNameToClassPath(NameRef p_input, NameRef *r_output)
 {
     const char* t_input;
-    GetStringOfNameLiteral(p_input, &t_input);
-
     char *t_output;
+    
+    GetStringOfNameLiteral(p_input, &t_input);
+    
     t_output = malloc(strlen(t_input) + 1);
     if (t_output == NULL)
         Fatal_OutOfMemory();
@@ -41,6 +42,8 @@ void JavaQualifiedNameToClassPath(NameRef p_input, NameRef *r_output)
     }
     
     MakeNameLiteral(t_output, r_output);
+    
+    free(t_output);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
