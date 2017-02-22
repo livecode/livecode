@@ -1774,6 +1774,9 @@ enum Parse_errors
 
 	// {PE-0574} folders: bad folder expression
 	PE_FOLDERS_BADPARAM,
+
+    // {PE-0575} open: expected 'from' address
+    PE_OPEN_NOFROM,
 };
 
 extern const char *MCparsingerrors;

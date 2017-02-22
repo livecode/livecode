@@ -1530,6 +1530,7 @@ class MCOpen : public MCStatement
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added new "open socket <socket> with verification for <host>" variant.
 	MCExpression *verifyhostname;
+    MCAutoPointer<MCExpression> fromaddress;
 public:
 	MCOpen()
 	{

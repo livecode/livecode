@@ -54,9 +54,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Network, CloseSocket, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, DeleteUrl, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, LoadUrl, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, UnloadUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSocket, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSecureSocket, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenDatagramSocket, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSocket, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSecureSocket, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenDatagramSocket, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, PostToUrl, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptConnectionsOnPort, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptDatagramConnectionsOnPort, 2)
@@ -547,7 +547,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_ssl, MCNameRef p_end_hostname)
+void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_ssl, MCNameRef p_end_hostname)
 {
 	if (!ctxt . EnsureNetworkAccessIsAllowed() && !MCModeCanAccessDomain(MCNameGetString(p_name)))
 		return;
@@ -563,24 +563,24 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	MCresult -> clear();
     
     // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
+	MCSocket *s = MCS_open_socket(p_name, p_from_address, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
 	if (s != NULL)
         MCSocketsAppendToSocketList(s);
 }
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, false, false, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, false, false, false, p_end_hostname);
 }
 
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification)
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, true, p_with_verification, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, false, true, p_with_verification, p_end_hostname);
 }
 
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, true, false, false, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, true, false, false, p_end_hostname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

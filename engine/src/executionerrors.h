@@ -2737,6 +2737,9 @@ enum Exec_errors
     
     // {EE-0896} call: type conversion error
     EE_INVOKE_TYPEERROR,
+
+    // {EE-0897} open: error in from address expression
+    EE_OPEN_BADFROMADDRESS,
 };
 
 extern const char *MCexecutionerrors;

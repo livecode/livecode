@@ -187,7 +187,7 @@ extern void MCS_setplayloudness(uint2 p_loudness);
 
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
-extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
+extern MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
 extern void MCS_close_socket(MCSocket *s);
 extern MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
