@@ -265,8 +265,8 @@ static bool MCEngineLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, 
         static const char *kLibraryFormat = "%@/code/android-armv6/%@";
 #elif defined(__IOS__)
         static const char *kLibraryFormat = "%@/code/ios/%@";
-#else
-#error No default code path set for this platform
+#elif defined(__EMSCRIPTEN__)
+        static const char *kLibraryFormat = "%@/code/emscripten/%@";
 #endif
         MCAutoStringRef t_ext_path;
         if (!MCStringFormat(&t_ext_path,
