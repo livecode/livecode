@@ -143,7 +143,6 @@
                                     'lib/linux/<(target_arch)/CEF/cef_200_percent.pak',
                                     'lib/linux/<(target_arch)/CEF/cef_extensions.pak',
                                     'lib/linux/<(target_arch)/CEF/cef.pak',
-                                    'lib/linux/<(target_arch)/CEF/chrome-sandbox',
                                     'lib/linux/<(target_arch)/CEF/devtools_resources.pak',
                                     'lib/linux/<(target_arch)/CEF/libcef.so',
                                 ],

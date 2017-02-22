@@ -304,6 +304,7 @@
                                    
                                     'ldflags':
                                     [
+                                        '-Wl,--allow-shlib-undefined',
                                         '-Wl,-rpath=\\$$ORIGIN',
                                     ],
                                 },
