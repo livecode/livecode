@@ -1897,7 +1897,7 @@ void MCGroup::radio(uint4 parid, MCControl *focused)
 		{
 			MCButton *bptr = (MCButton *)focused;
 			if (bptr->getstyle() == F_RADIO
-			        && (bptr->gethilite(parid)
+                && (!bptr->gethilite(parid).isFalse()
 			            || (bptr->getstate(CS_MFOCUSED)
 			                && MCU_point_in_rect(bptr->getrect(), mx, my))))
 			{
@@ -1930,7 +1930,7 @@ MCButton *MCGroup::gethilitedbutton(uint4 parid)
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(parid))
+                    && !bptr->gethilite(parid).isFalse())
 					return bptr;
 			}
 			cptr = cptr->next();

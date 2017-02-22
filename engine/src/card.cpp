@@ -2788,7 +2788,7 @@ bool MCCard::selectedbutton(integer_t p_family, bool p_background, MCStringRef& 
 	MCButton *bptr;
 	while (nil != (bptr = (MCButton *)getnumberedchild(i, CT_BUTTON, ptype)))
 	{
-		if (bptr->getfamily() == p_family && bptr->gethilite(obj_id))
+		if (bptr->getfamily() == p_family && !(bptr->gethilite(obj_id).isFalse()))
 		{
 			uint2 bnum = 0;
 			getcard()->count(CT_BUTTON, ptype, bptr, bnum, True);
