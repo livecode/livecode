@@ -1,4 +1,6 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+script "CoreCustomProps"
+/*
+Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -14,17 +16,15 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __REVFONT__
-#define __REVFONT__
+on TestCloneCustomProps
+    local tOriginal, tClone
+	create button
+	put it into tOriginal
+	set the custompropertysets of tOriginal to "set"
+	
+	clone tOriginal
+	put it into tClone
+	TestAssert "clone object clones custom prop sets", \
+		the custompropertysets of tClone is "set"
+end TestCloneCustomProps
 
-enum FontLoadStatus
-{
-	kFontLoadStatusSuccess,
-	kFontLoadStatusNotFound,
-	kFontLoadStatusBadFont
-};
-
-FontLoadStatus FontLoad(const char *p_filename);
-bool FontUnload(const char *p_filename);
-
-#endif

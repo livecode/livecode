@@ -68,7 +68,7 @@ examining the file itself.
     set the scriptOnly of stack "Secrets" to false
     set the password of stack "Secrets" to field "Password"
 
-Refereneces:create stack (command), stack (object)
+References:create stack (command), stack (object)
 
 Tags: objects
 

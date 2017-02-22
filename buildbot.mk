@@ -16,6 +16,9 @@
 
 # This file contains rules used by the LiveCode Buildbot installation at
 # <https://vulcan.livecode.com/>
+#
+# Tasks that may be run on Windows workers must be implemented in the
+# buildbot.py script.
 
 # Load version information
 include version
@@ -28,48 +31,11 @@ GIT_VERSION=g$(shell git rev-parse --short HEAD)
 endif
 
 ################################################################
-# Configure with gyp
+# Extract built binaries
 ################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-CONFIG_TARGET = config-$(BUILD_PLATFORM)
-else
-CONFIG_TARGET = config-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-config:
-	$(MAKE) $(CONFIG_TARGET)
-
-.PHONY: config
-
-################################################################
-# Compile
-################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)
-else
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-compile:
-	$(MAKE) $(COMPILE_TARGET)
-
-.PHONY: compile
-
-################################################################
-# Archive / extract built binaries
-################################################################
-
-bin-archive:
-	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
 bin-extract:
-	find . -maxdepth 1 -name '*-bin.tar.xz' -print0 | xargs -0 -n1 tar -xvf
+	find . -maxdepth 1 -name '*-bin.tar.*' -exec tar -xvf '{}' ';'
 
 ################################################################
 # Installer generation

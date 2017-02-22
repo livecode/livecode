@@ -25,26 +25,20 @@ public:
 	MCObjectPropertySet(void)
 	{
 		m_next = nil;
-        /* UNCHECKED */ MCArrayCreateMutable(m_props);
 	}
 
-	~MCObjectPropertySet(void)
-	{
-		MCValueRelease(m_props);
-	}
-
-	bool hasname(MCNameRef p_name)
+	bool hasname(MCNameRef p_name) const
 	{
         return m_name.IsSet() &&
             MCNameIsEqualTo(*m_name, p_name, kMCCompareCaseless);
 	}
 
-	MCNameRef getname(void)
+	MCNameRef getname(void) const
 	{
 		return *m_name;
 	}
 
-	MCObjectPropertySet *getnext(void)
+	MCObjectPropertySet *getnext(void) const
 	{
 		return m_next;
 	}
@@ -59,14 +53,14 @@ public:
         m_name.Give(p_name);
 	}
 
-	/* CAN FAIL */ bool clone(MCObjectPropertySet*& r_set);
+	/* CAN FAIL */ bool clone(MCObjectPropertySet*& r_set) const;
 	/* CAN FAIL */ static bool createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set);
 	/* CAN FAIL */ static bool createwithname(MCNameRef p_name, MCObjectPropertySet*& r_set);
 
 	//////////
 
 	// List the props in the property set into the ep.
-    bool list(MCStringRef& r_keys);
+    bool list(MCStringRef& r_keys) const;
 
 	// Clear the contents of the propset.
 	bool clear(void);
@@ -75,12 +69,12 @@ public:
     /* WRAPPER */ bool restrict(MCStringRef p_string);
     
 	// Copy the prop set into the ep.
-    bool fetch(MCArrayRef& r_array);
+    bool fetch(MCArrayRef& r_array) const;
     
 	// Store the contents of the ep as the prop set.
     bool store(MCArrayRef p_array);
 
-    bool fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value);
+    bool fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value) const;
     bool storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value);
     
 	//////////
@@ -88,14 +82,14 @@ public:
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the non-unicode propset
 	//   pickle routines.
 	IO_stat loadprops_new(IO_handle stream);
-	IO_stat saveprops_new(IO_handle stream);
+	IO_stat saveprops_new(IO_handle stream) const;
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the non-unicode propset
 	//   pickle routines.
 
 	// Returns the (old-style) serialized size of the array. If 'nested_only'
 	// is true, then it only counts the size of the props containing arrays.
-	uint32_t measure_legacy(bool p_nested_only);
+	uint32_t measure_legacy(bool p_nested_only) const;
 	// Returns true if the prop set has nested arrays.
 	bool isnested_legacy(void) const;
 	// Load the props from the given stream - this merges the existing array
@@ -105,14 +99,18 @@ public:
 	// array with any we find.
 	IO_stat loadarrayprops_legacy(MCObjectInputStream& stream);
 	// Save the non-array props to the given stream.
-	IO_stat saveprops_legacy(IO_handle stream);
+	IO_stat saveprops_legacy(IO_handle stream) const;
 	// Save the array props to the given stream.
-	IO_stat savearrayprops_legacy(MCObjectOutputStream& stream);
+	IO_stat savearrayprops_legacy(MCObjectOutputStream& stream) const;
 
 private:
+    /* Always returns a valid array, even if m_props isn't set.  The
+     * returned array is _not_ owned by the caller */
+    MCArrayRef fetch_nocopy() const;
+
 	MCObjectPropertySet *m_next;
 	MCNewAutoNameRef m_name;
-	MCArrayRef m_props;
+	MCAutoArrayRef m_props;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

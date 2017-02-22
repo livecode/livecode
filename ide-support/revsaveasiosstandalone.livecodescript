@@ -603,7 +603,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
-         throw "extracting debug symbols failed with" && it
+         revStandaloneProgress "Extracting debug symbols failed"
       end if
       
       // Reinstate env var MallocNanoZone if it was set.

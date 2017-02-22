@@ -543,6 +543,8 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
+                
+                ctxt.SetTheResultToEmpty();
                 ctxt . SetItToValue(*t_string);
 			}
 			else
@@ -1472,10 +1474,12 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	return IO_NORMAL;
 }
 
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
+// In installer mode, the environment depends on the command line args
 MCNameRef MCModeGetEnvironment(void)
 {
+    if (MCnoui)
+        return MCN_installer_cmdline;
+    
 	return MCN_installer;
 }
 
@@ -1839,8 +1843,8 @@ static void *MCExecutableFindSection(const char *p_name)
 			if (MCMemoryEqual(t_segment -> segname, p_name, MCMin(16, strlen(p_name) + 1)))
 			{
 				const section *t_section;
-				t_section = (const section *)(t_segment + 1);
-				return (void *)t_section -> addr;
+                t_section = (const section *)(t_segment + 1);
+				return reinterpret_cast<char *>(t_section -> addr) + _dyld_get_image_vmaddr_slide(0);
 			}
 		}
 		

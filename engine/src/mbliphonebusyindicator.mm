@@ -184,7 +184,7 @@ bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int
                 [s_busy_indicator showBusy:@"" withOpacity:p_opacity];
             else
                 // TODO - update for unicode. Change false to the appropriate value.
-                [s_busy_indicator showBusy:[NSString stringWithMCStringRef: p_label] withOpacity:p_opacity];
+                [s_busy_indicator showBusy:MCStringConvertToAutoreleasedNSString(p_label) withOpacity:p_opacity];
                 
             return true;
         }

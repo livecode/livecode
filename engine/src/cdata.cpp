@@ -226,10 +226,12 @@ MCParagraph *MCCdata::getparagraphs()
 			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->appendto(paragraphs);
 			uint2 l = strlen(eptr) + 1;
-			char *sptr = new (nothrow) char[l];
-			memcpy(sptr, eptr, l);
+			/* UNCHECKED */ MCAutoPointer<char_t[]> sptr =
+				new (nothrow) char_t[l];
+			memcpy(sptr.Get(), eptr, l);
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
+			/* UNCHECKED */ MCStringCreateWithNativeChars(sptr.Get(), l,
+			                                              &t_string);
 			tpgptr->settext(*t_string);
 			eptr = NULL;
 		}

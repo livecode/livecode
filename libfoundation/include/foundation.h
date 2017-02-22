@@ -1113,6 +1113,10 @@ template<typename T> bool MCMemoryReallocate(T *p_block, size_t p_new_size, T*& 
 	return false;
 }
 
+template<typename T> void MCMemoryDeallocate(T* p_block) {
+    MCMemoryDeallocate (static_cast<void*>(p_block));
+}
+
 extern "C" {
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -1740,10 +1744,7 @@ struct MCRecordTypeFieldInfo
 };
 
 // Create a description of a record with the given fields.
-MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
-
-// Return the base type of the record.
-MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef& r_typeinfo);
 
 // Return the number of fields in the record.
 MC_DLLEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
@@ -1753,9 +1754,6 @@ MC_DLLEXPORT MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uind
 
 // Return the type of the field at the given index.
 MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
-
-// Return true if typeinfo is derived from p_base_typeinfo.
-MC_DLLEXPORT bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
 
 //////////
 
@@ -2820,12 +2818,6 @@ MC_DLLEXPORT bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_
 
 MC_DLLEXPORT bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
 MC_DLLEXPORT bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
-
-MC_DLLEXPORT bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
-MC_DLLEXPORT bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
-
-MC_DLLEXPORT bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
-MC_DLLEXPORT bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
 
 MC_DLLEXPORT bool MCRecordIsMutable(MCRecordRef self);
 

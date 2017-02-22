@@ -37,11 +37,10 @@ static bool make_tmp_fifo_pair(char*& r_name)
 	bool t_success;
 	t_success = true;
 
-	char *t_name;
-	t_name = strclone("/tmp/revtalk-XXXXXX");
+	MCAutoPointer<char[]> t_name = strclone("/tmp/revtalk-XXXXXX");
 
 	if (t_success &&
-		mkdtemp(t_name) == nil)
+		mkdtemp(*t_name) == nil)
 		t_success = false;
 
 	char t_input_fifo_name[64], t_output_fifo_name[64];
@@ -50,8 +49,8 @@ static bool make_tmp_fifo_pair(char*& r_name)
 	t_has_output_fifo = false;
 	if (t_success)
 	{
-		sprintf(t_input_fifo_name, "%s/input", t_name);
-		sprintf(t_output_fifo_name, "%s/output", t_name);
+		sprintf(t_input_fifo_name, "%s/input", *t_name);
+		sprintf(t_output_fifo_name, "%s/output", *t_name);
 
 		t_has_input_fifo = mkfifo(t_input_fifo_name, 0600) != -1;
 		t_has_output_fifo = mkfifo(t_output_fifo_name, 0600) != -1;
@@ -60,14 +59,13 @@ static bool make_tmp_fifo_pair(char*& r_name)
 	}
 
 	if (t_success)
-		r_name = t_name;
+		r_name = t_name.Release();
 	else
 	{
 		if (t_has_input_fifo)
 			unlink(t_input_fifo_name);
 		if (t_has_output_fifo)
 			unlink(t_output_fifo_name);
-		MCCStringFree(t_name);
 	}
 
 	return t_success;
@@ -207,7 +205,7 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 	if (t_success)
 		t_success = MCCStringTokenize(*t_command, t_argv, t_argc);
 
-	MCAutoPointer<char> t_fifo_name;
+	MCAutoPointer<char[]> t_fifo_name;
 	if (t_success)
 		t_success = make_tmp_fifo_pair(&t_fifo_name);
 		

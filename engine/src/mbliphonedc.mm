@@ -408,7 +408,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCS_resolvepath(env -> sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
+	t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(*t_sound_path)];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);

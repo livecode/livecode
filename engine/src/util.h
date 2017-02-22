@@ -57,7 +57,7 @@ struct MCSortnode
 	const void *data;
 	
 	MCSortnode()
-	: svalue(nil) {}
+	: svalue(nil), data(nullptr) {}
 	
 	~MCSortnode()
 	{
@@ -141,7 +141,7 @@ extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 
 // MDW-2014-07-06: [[ oval_points ]]
-extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
+extern bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags);
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uindex_t &n, MCStringRef p_data);
 extern Boolean MCU_parsepoint(MCPoint &r_point, MCStringRef);

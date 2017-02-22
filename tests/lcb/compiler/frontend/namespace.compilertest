@@ -69,7 +69,7 @@ variable ModuleVar as Number
 handler Shadow()
 	variable ModuleVar as String
 	put "a" into ModuleVar
-	
+
 	put 5 into compiler_test.ModuleVar
 end handler
 end module
@@ -87,6 +87,20 @@ end handler
 end module
 %EXPECT PASS
 %ERROR "Identifier 'nonexistent_module.DoNothing' not declared" AT AFTER_IDENTIFIER
+%ENDTEST
+
+%TEST UseUndeclaredIdentifier
+module compiler_test
+handler Foo()
+	variable tFoo as %{BEFORE_TYPE}UndeclaredType
+	%{BEFORE_HANDLER}UndeclaredHandler()
+	put %{BEFORE_VAR}UndeclaredVar into tFoo
+end handler
+end module
+%EXPECT PASS
+%ERROR "Identifier 'UndeclaredType' not declared" AT BEFORE_TYPE
+%ERROR "Identifier 'UndeclaredHandler' not declared" AT BEFORE_HANDLER
+%ERROR "Identifier 'UndeclaredVar' not declared" AT BEFORE_VAR
 %ENDTEST
 
 %TEST WarnOnInvalidNamespaceStartWithDigit

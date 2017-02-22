@@ -1,0 +1,12 @@
+library com.livecode.lcs_tests.core.widget_support
+
+use com.livecode.foreign
+
+private foreign handler MCErrorIsPending() returns CBool binds to "<builtin>"
+public handler TestWidget_MCErrorIsPending() returns Boolean
+	unsafe
+		return MCErrorIsPending()
+	end unsafe
+end handler
+
+end library

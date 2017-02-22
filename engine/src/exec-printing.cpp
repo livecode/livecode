@@ -349,26 +349,26 @@ static void MCPrintingPrinterPageRangeFormat(MCExecContext& ctxt, const MCPrinti
 		{
 			const MCInterval *t_ranges;
 			t_ranges = MCprinter -> GetJobRanges();
-			
-			bool t_success;
-			t_success = true;
-			
-			MCAutoStringRef t_output;
-			t_success = MCStringCreateMutable(0, &t_output);
-			for(index_t i = 0; i < p_input . count && t_success; i++)
-			{
-				if (t_success && i > 0)
-					t_success = MCStringAppendNativeChar(&t_output, ',');
-				
-				if (t_ranges[i] . from == t_ranges[i] . to)
-					t_success = MCStringAppendFormat(&t_output, "%d", t_ranges[i] . from);
-				else
-					t_success = MCStringAppendFormat(&t_output, "%d-%d", t_ranges[i] . from, t_ranges[i] . to);
-			}
-			
-			if (t_success &&
-				MCStringCopy(*t_output, r_output))
-				return;
+
+            MCAutoListRef t_list;
+            if (!MCListCreateMutable(',', &t_list))
+                break;
+            for (index_t i = 0; i < p_input . count; ++i)
+            {
+                if (t_ranges[i].from == t_ranges[i].to)
+                {
+                    if (!MCListAppendFormat(*t_list, "%d", t_ranges[i].from))
+                        break;
+                }
+                else
+                {
+                    if (!MCListAppendFormat(*t_list, "%d-%d",
+                                            t_ranges[i].from, t_ranges[i].to))
+                        break;
+                }
+            }
+            if (MCListCopyAsString(*t_list, r_output))
+                return;
 		}
 		break;
 	}

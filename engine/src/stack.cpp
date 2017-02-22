@@ -1388,12 +1388,12 @@ bool MCStack::isdeletable(bool p_check_flag)
 
 Boolean MCStack::del(bool p_check_flag)
 {
-    if (!isdeletable(true))
+    if (!isdeletable(p_check_flag))
 	   return False;
 
 	while (substacks)
 	{
-		if (!substacks -> del(p_check_flag))
+		if (!substacks -> del(false))
 			return False;
 	}
 	

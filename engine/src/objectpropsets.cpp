@@ -37,22 +37,15 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStri
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
+bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set) const
 {
-	MCObjectPropertySet *t_new_set;
-	if (createwithname(*m_name, t_new_set))
-	{
-		MCValueRelease(t_new_set -> m_props);
-		if (MCArrayMutableCopy(m_props, t_new_set -> m_props))
-		{
-			r_set = t_new_set;
-			return true;
-		}
-
-		delete t_new_set;
-	}
-
-	return false;
+    MCAutoPointer<MCObjectPropertySet> t_new_set;
+    if (!createwithname(*m_name, &t_new_set))
+        return false;
+    if (!t_new_set->store(fetch_nocopy()))
+        return false;
+    r_set = t_new_set.Release();
+    return true;
 }
 
 bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
@@ -89,39 +82,47 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
-bool MCObjectPropertySet::list(MCStringRef& r_keys)
+MCArrayRef MCObjectPropertySet::fetch_nocopy() const
 {
-    if (MCArrayListKeys(m_props, '\n', r_keys))
-		return true;
-    
-	return false;
+    return m_props.IsSet() ? *m_props : kMCEmptyArray;
+}
+
+bool MCObjectPropertySet::list(MCStringRef& r_keys) const
+{
+    return MCArrayListKeys(fetch_nocopy(), '\n', r_keys);
 }
 
 bool MCObjectPropertySet::clear(void)
 {
-	MCValueRelease(m_props);
-	return MCArrayCreateMutable(m_props);
+    m_props.Reset();
+    return true;
 }
 
-bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
+bool MCObjectPropertySet::fetch(MCArrayRef& r_array) const
 {
-    return MCArrayCopy(m_props, r_array);
+    return MCArrayCopy(fetch_nocopy(), r_array);
 }
 
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
-	MCValueRelease(m_props);
-    return MCArrayMutableCopy(p_array, m_props);
+    MCAutoArrayRef t_mutable;
+    if (!MCArrayMutableCopy(p_array, &t_mutable))
+        return false;
+    m_props.Give(t_mutable.Take());
+    return true;
 }
 
-bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
+bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value) const
 {
-	return MCArrayFetchValue(m_props, ctxt . GetCaseSensitive(), p_name, r_value);
+    return MCArrayFetchValue(fetch_nocopy(), ctxt . GetCaseSensitive(),
+                             p_name, r_value);
 }
 
 bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value)
 {
-	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
+    if (!m_props.IsSet() && !MCArrayCreateMutable(&m_props))
+        return false;
+    return MCArrayStoreValue(*m_props, ctxt . GetCaseSensitive(), p_name, p_value);
 }
 
 bool MCObjectPropertySet::restrict(MCStringRef p_string)
@@ -131,7 +132,8 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     MCAutoStringRefArray t_split;
     if (!MCStringsSplit(p_string, '\n', t_split . PtrRef(), t_split . CountRef()))
         return false;
-    
+
+    MCAutoArrayRef t_old_props(fetch_nocopy());
     MCAutoArrayRef t_new_props;
     MCArrayCreateMutable(&t_new_props);
     uinteger_t t_size;
@@ -142,12 +144,12 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
         if (t_success)
             t_success = MCNameCreate(t_split[i], &t_key_name);
         MCValueRef t_value;
-        if (!MCArrayFetchValue(m_props, false, *t_key_name, t_value))
+        if (!MCArrayFetchValue(*t_old_props, false, *t_key_name, t_value))
             t_value = kMCEmptyString;
         if (t_success)
             t_success = MCArrayStoreValue(*t_new_props, false, *t_key_name, t_value);
     }
-    MCValueAssign(m_props, *t_new_props);
+    m_props.Give(t_new_props.Take());
     return t_success;
 }
 
@@ -155,53 +157,66 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
 
 IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
 {
-    MCArrayRef t_new_props;
+    MCAutoArrayRef t_new_props;
 
     if (IO_read_valueref_new((MCValueRef&)t_new_props, p_stream) != IO_NORMAL)
 		return IO_ERROR;
-    if (!MCArrayMutableCopyAndRelease(t_new_props, t_new_props))
-		return IO_ERROR;
+    if (!t_new_props.MakeMutable())
+        return IO_ERROR;
+    m_props.Give(t_new_props.Take());
 
-    MCValueAssign(m_props, t_new_props);
-    MCValueRelease(t_new_props);
 	return IO_NORMAL;
 }
 
-IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream) const
 {
-	return IO_write_valueref_new(m_props, p_stream);
+	return IO_write_valueref_new(fetch_nocopy(), p_stream);
 }
 
 //////////
 
-uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only)
+uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only) const
 {
-	return MCArrayMeasureForStreamLegacy(m_props, p_nested_only);
+	return MCArrayMeasureForStreamLegacy(fetch_nocopy(), p_nested_only);
 }
 
 bool MCObjectPropertySet::isnested_legacy(void) const
 {
-	return MCArrayIsNestedLegacy(m_props);
+	return MCArrayIsNestedLegacy(fetch_nocopy());
 }
 
 IO_stat MCObjectPropertySet::loadprops_legacy(IO_handle p_stream)
 {
-	return MCArrayLoadFromHandleLegacy(m_props, p_stream);
+    MCAutoArrayRef t_new_props;
+    if (!MCArrayCreateMutable(&t_new_props))
+        return IO_ERROR;
+
+    IO_stat t_status = MCArrayLoadFromHandleLegacy(*t_new_props, p_stream);
+    if (t_status == IO_NORMAL)
+        m_props.Give(t_new_props.Take());
+    return t_status;
 }
 
 IO_stat MCObjectPropertySet::loadarrayprops_legacy(MCObjectInputStream& p_stream)
 {
-	return MCArrayLoadFromStreamLegacy(m_props, p_stream);
+    MCAutoArrayRef t_new_props;
+    if (!MCArrayCreateMutable(&t_new_props))
+        return IO_ERROR;
+
+    IO_stat t_status = MCArrayLoadFromStreamLegacy(*t_new_props, p_stream);
+    if (t_status == IO_NORMAL)
+        m_props.Give(t_new_props.Take());
+    return t_status;
 }
 
-IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream) const
 {
-	return MCArraySaveToHandleLegacy(m_props, p_stream);
+	return MCArraySaveToHandleLegacy(fetch_nocopy(), p_stream);
 }
 
-IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream)
+IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream) const
 {
-	return MCArraySaveToStreamLegacy(m_props, true, p_stream);
+	return MCArraySaveToStreamLegacy(fetch_nocopy(), true, p_stream);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

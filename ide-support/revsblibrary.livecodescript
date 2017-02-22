@@ -1167,7 +1167,7 @@ private function revSBPlatformToRuntimeFolderName pPlatform
 end revSBPlatformToRuntimeFolderName
 
 function revSBExternalsMapping
-   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip"
 end revSBExternalsMapping
 
 function revSBDatabaseDriversMapping
@@ -2282,6 +2282,22 @@ command revSBUpdateForDependencies @xSettings
          end if
       end repeat
    end repeat
+   
+   -- Update the settings with any additional extension dependencies
+   repeat for each line tExtension in xSettings["extensions"]
+      local tPermissions, tFeatures
+      put revIDEExtensionProperty(tExtension, "android.permissions") into tPermissions
+      put revIDEExtensionProperty(tExtension, "android.features") into tFeatures
+      repeat for each item tPermission in tPermissions
+         put true into xSettings["android,application permissions"][tPermission]
+      end repeat
+      repeat for each item tFeature in tFeatures
+         local tIsRequired, tRequiredMetadata
+         put "android." & tFeature & ".required" into tRequiredMetadata
+         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
+         put tIsRequired into xSettings["android,device capabilities"][tFeature]
+      end repeat
+   end repeat
 end revSBUpdateForDependencies
 
 command revSBSanitiseExternalsList pTarget, @xExternals
@@ -2374,10 +2390,6 @@ on initialiseSearchForInclusions
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
    put "scriptLibraries" into sPatternsA["Browser"]["Key"]
-   
-   # revFont
-   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
-   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
    
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
@@ -2713,3 +2725,35 @@ function revSBNoPlatforms pSettings
    
    return true
 end revSBNoPlatforms
+
+local sDeployInclusions
+
+command revSBAddDeployInclusion pInclusion, pKey
+   put empty into sDeployInclusions[pKey][pInclusion]
+end revSBAddDeployInclusion
+
+-- Standalone settings are always set on the mainstack
+function revSBGetSettings pStack, pDeploy
+   local tSettingsA
+   put the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) into tSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, tSettingsA
+   
+   if pDeploy then
+      local tKey, tInclusion
+      repeat for each key tKey in sDeployInclusions
+         repeat for each key tInclusion in sDeployInclusions[tKey]
+            revSBAddInclusion tInclusion, tKey, tSettingsA
+         end repeat
+      end repeat
+   end if
+   
+   return tSettingsA
+end revSBGetSettings
+
+command revSBSetSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end revSBSetSettings

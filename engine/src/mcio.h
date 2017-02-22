@@ -120,6 +120,8 @@ extern IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, I
 extern IO_stat IO_write_string_legacy_full(const MCString &string, IO_handle stream, uint1 size, bool p_write_null);
 extern IO_stat IO_read_cstring_legacy(char*& r_string, IO_handle stream, uint1 size);
 extern IO_stat IO_write_cstring_legacy(const char* string, IO_handle stream, uint1 size);
+// Read and immediately discard a legacy string
+extern IO_stat IO_discard_cstring_legacy(IO_handle string, uint1 size);
 
 // These methods are used by 5.5 -> 7.0 props which saved their value out in UTF-8.
 extern IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);

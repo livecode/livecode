@@ -35,6 +35,7 @@ MCCardnode::~MCCardnode()
 { }
 
 MCCardlist::MCCardlist()
+    : first(nullptr)
 {
 	cards = NULL;
 	interval = 0;

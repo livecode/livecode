@@ -77,18 +77,6 @@ end getWindowsMaxLength
 
 local sStubPath
 
-
--- Standalone settings are always set on the mainstack
-private function getSettings pStack
-   return the customProperties["cRevStandaloneSettings"] of stack \
-         (the mainstack of stack pStack)
-end getSettings
-
-private command setSettings pStack, pSettings
-   set the customProperties["cRevStandaloneSettings"] of stack \
-         (the mainstack of stack pStack) to pSettings
-end setSettings
-
 # OK-2009-05-22 : Added ability to remember default folder
 private function getBuildFolder pStack, pFolder, pSettings
    # If the standalone builder has been passed a folder to build in from outside, we just use this.
@@ -173,7 +161,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    local tSettings
-   put getSettings(pStack) into tSettings
+   put revSBGetSettings(pStack) into tSettings
    
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
    if tSettings["MacOSX"] then
@@ -230,13 +218,14 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
       revIDESetEdited pStack
-      setSettings pStack, tSettings
+      revSBSetSettings pStack, tSettings
    end if
    
    local tError
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
-      revDoSaveAsStandalone pStack, pFolder
+      local tStandalonePaths
+      revDoSaveAsStandalone pStack, pFolder, ,tStandalonePaths
       put the result into tError
    end if
    
@@ -255,7 +244,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    return tError
 end revSaveAsStandalone
 
-command revDoSaveAsStandalone pStack, pFolder
+command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
    lock cursor
@@ -267,7 +256,12 @@ command revDoSaveAsStandalone pStack, pFolder
    
    put the directory into sResetA["Directory"]
    put the fileType into sResetA["FileType"]
-   put getSettings(pStack) into sStandaloneSettingsA
+   
+   if pSettings is not an array then
+      put revSBGetSettings(pStack) into sStandaloneSettingsA
+   else
+      put pSettings into sStandaloneSettingsA
+   end if
    
    put the mainStack of stack pStack into pStack
    set the defaultStack to pStack
@@ -275,9 +269,6 @@ command revDoSaveAsStandalone pStack, pFolder
    revStandaloneResetWarnings
    
    local tError, tStandaloneFolder
-   
-   # Set empty values to defaults
-   revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
    
    -- Don't build for any platform we are not licensed for
    local tRemoved
@@ -361,25 +352,28 @@ command revDoSaveAsStandalone pStack, pFolder
                if not (the platform begins with "MacOS") then
                   next repeat
                end if
+               put tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app" into xStandalonePaths[tPlatform]
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device", sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], "Device", sStandaloneSettingsA
                break
             case "Android"
+               put tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk" into xStandalonePaths[tPlatform]
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build", sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], "Build", sStandaloneSettingsA, xStandalonePaths
                break
             case "Emscripten"
+               put tTargetFolder into xStandalonePaths[tPlatform]
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tTargetFolder, sStandaloneSettingsA
+                     pStack, xStandalonePaths[tPlatform], sStandaloneSettingsA, xStandalonePaths
                break
             case "MacOSX"
-               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
             case "Windows"
-               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
             case "Linux"
-               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder
+               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder, xStandalonePaths
                break
          end switch
       end repeat
@@ -387,7 +381,7 @@ command revDoSaveAsStandalone pStack, pFolder
       -- post build message
       if tHasDesktop then
          __ReloadOriginalStackFile tStackFileName, pStack
-         __SendStandaloneSavedMessage pStack, tTargetFolder
+         __SendStandaloneSavedMessage pStack, tOutputFolder
       end if
       
    catch tError
@@ -622,7 +616,7 @@ private command __SendStandaloneSavedMessage pStack, pFolder
    end try
 end __SendStandaloneSavedMessage
 
-command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
@@ -688,6 +682,9 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
       end if
       
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
+      
       put tDirectory & tStackName into tStackSourceFile
       
       revStandaloneCopyInclusions pStack, tStackFileList, tStackSourceFile, \ 
@@ -723,7 +720,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
    return empty
 end revSaveAsMacStandalone
 
-command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -789,6 +786,8 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
       -- add ".exe" to windows standalone file
       put ".exe" after tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
       
       put tDirectory & tStackName into tStackSourceFile
       
@@ -892,7 +891,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
    return empty
 end revSaveAsWindowsStandalone
 
-command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
+command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -932,6 +931,9 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
       end if
       
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
+      
+      put tStandalonePath into xStandalonePaths[tTarget]
+      
       put tDirectory & tStackName into tStackSourceFile
       
       revStandaloneCopyInclusions pStack, tStackFileList, tStackSourceFile, \ 
@@ -1456,6 +1458,8 @@ private command revCopyIcons pStack
       
       put "revGeneralIcons" & return & "revCompatibilityIcons1" & return & "revGeneralPatterns" & return & "revCompatibilityPatterns1" & return & "revCompatibilityPatterns2" & return & "revCustomCursors" into tStacksList
       set the itemDel to slash
+      local tIconA
+      put sIconA into tIconA
       repeat for each line tFile in tFiles
          if there is not a stack tFile then next repeat -- windows placeholder
          put return & the short name of stack tFile after tStacksList
@@ -1466,10 +1470,10 @@ private command revCopyIcons pStack
          repeat with tCard =1 to tCardNum
             put the number of images of cd tCard of stack tStack into tImageNum
             repeat with tImage =1 to tImageNum
-               if sIconA[the short id of image tImage of cd tCard of stack tStack] then
+               if tIconA[the short id of image tImage of cd tCard of stack tStack] then
                   copy image tImage of cd tCard of stack tStack to stack "revCopiedIcons"
                   set the id of the last image of stack "revCopiedIcons" to the short id of image tImage of cd tCard of stack tStack
-                  put false into sIconA[the short id of image tImage of cd tCard of stack tStack]
+                  put false into tIconA[the short id of image tImage of cd tCard of stack tStack]
                end if
             end repeat
          end repeat

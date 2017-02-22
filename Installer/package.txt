@@ -689,13 +689,11 @@ component Externals.Windows
 		executable windows:revxml.dll
 		executable windows:revbrowser.dll
 		executable windows:revzip.dll
-		executable windows:revfont.dll
 	declare external "Speech" using revspeech.dll
 	declare external "Video Grabber" using revvideograbber.dll
 	declare external "XML" using revxml.dll
 	declare external "Browser" using revbrowser.dll
 	declare external "Revolution Zip" using revzip.dll
-	declare external "Font Support" using revfont.dll
 
 //////////
 
@@ -705,12 +703,10 @@ component Externals.MacOSX
 		executable macosx:revxml.bundle
 		executable macosx:revbrowser.bundle
 		executable macosx:revzip.bundle
-		executable macosx:revfont.bundle
 	declare external "Speech" using revspeech.bundle
 	declare external "XML" using revxml.bundle
 	declare external "Browser" using revbrowser.bundle
 	declare external "Revolution Zip" using revzip.bundle
-	declare external "Font Support" using revfont.bundle
 
 //////////
 

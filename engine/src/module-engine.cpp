@@ -104,9 +104,14 @@ bool MCEngineThrowNoScriptContextError(void)
 
 static uint32_t s_script_object_access_lock_count;
 
-bool MCEngineScriptObjectAccessIsAllowed(void)
+bool MCEngineEnsureScriptObjectAccessIsAllowed(void)
 {
-    return s_script_object_access_lock_count == 0;
+    if (s_script_object_access_lock_count != 0)
+    {
+        return MCEngineThrowNoScriptContextError();
+    }
+    
+    return true;
 }
 
 void MCEngineScriptObjectPreventAccess(void)
@@ -142,8 +147,10 @@ MCEngineEvalScriptResult (MCExecContext& ctxt)
 
 extern "C" MC_DLLEXPORT_DEF MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+    {
         return nil;
+    }
     
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     
@@ -239,9 +246,6 @@ static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, 
 
 MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
-        return nil;
-    
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
 	
@@ -276,9 +280,8 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef& r_value)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
     {
-        r_value = MCValueRetain(kMCNull);
         return;
     }
     
@@ -286,7 +289,6 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringR
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
     {
-        r_value = MCValueRetain(kMCNull);
         return;
     }
 	
@@ -339,6 +341,11 @@ void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MC
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCScriptObjectRef p_object)
 {
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+    {
+        return;
+    }
+    
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
@@ -493,7 +500,7 @@ cleanup:
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
         return nil;
     
 	MCObject *t_object;
@@ -529,7 +536,7 @@ void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_obje
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObjectWithArguments(MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
         return;
     
 	MCObject *t_object;
@@ -561,7 +568,7 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
 {
-    if (!MCEngineScriptObjectAccessIsAllowed())
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
         return nil;
     
     MCStack *t_stack;
@@ -778,6 +785,46 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
 	// IM-2016-07-21: [[ Bug 17633 ]] Need to give notify dispatch something
 	//    to do as just pinging the queue doesn't break out of the wait loop.
 	MCNotifyPush(break_no_op, nil, false, true);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern MCExecContext *MCECptr;
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheColumnDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetColumnDelimiter() : MCSTR("\t");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheRowDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetRowDelimiter() : MCSTR("\n");
+    
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheLineDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetLineDelimiter() : MCSTR("\n");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheItemDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetItemDelimiter() : MCSTR(",");
+    
+    r_del = MCValueRetain(t_del);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

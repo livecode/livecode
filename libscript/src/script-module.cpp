@@ -74,7 +74,6 @@ MC_PICKLE_BEGIN_RECORD(MCScriptRecordTypeField)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptRecordType)
-    MC_PICKLE_UINDEX(base_type)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptRecordTypeField, fields, field_count)
 MC_PICKLE_END_RECORD()
 
@@ -751,7 +750,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 						goto error_cleanup; // oom
                 }
                 
-                if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
+                if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, &t_typeinfo))
 					goto error_cleanup; // oom
             }
             break;
@@ -1389,8 +1388,24 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                     }
                     break;
                     case kMCScriptTypeKindRecord:
-                        // TODO - Records not yet supported
-                        break;
+                    {
+                        auto t_record_type =
+                            static_cast<MCScriptRecordType *>(t_type);
+                        __enterln(stream, "record type %@", t_def_name);
+                        for (uindex_t t_field = 0;
+                             t_field < t_record_type->field_count;
+                             ++t_field)
+                        {
+                            MCAutoStringRef t_ftype_name;
+                            type_to_string(self, t_record_type->fields[t_field].type,
+                                           &t_ftype_name);
+                            __writeln(stream, "%@ as %@",
+                                      t_record_type->fields[t_field].name,
+                                      *t_ftype_name);
+                        }
+                        __leaveln(stream, "end type");
+                    }
+                    break;
                     default:
                     {
                         MCAutoStringRef t_sig;

@@ -129,6 +129,11 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     // If we failed then store the rep and destroy the imp.
     if (!t_success)
     {
+        // Make sure we swallow the error so that it doesn't affect
+        // future execution.
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        
         MCValueRelease(m_widget);
         m_widget = nil;
         
@@ -1001,12 +1006,19 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    MCWidgetOnSave(m_widget, &t_value);
+    if (!MCWidgetOnSave(m_widget,
+                        &t_value))
+    {
+        r_state = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
     {
         CatchError(ctxt);
         return;
     }
+    
     r_state = (MCArrayRef)t_value . Take();
 }
 

@@ -2476,6 +2476,7 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 		MCMemoryDeleteArray(t_color_chars);
 	}
 
+    MCCStringFree(t_name);
 	return t_success;
 }
 

@@ -933,9 +933,12 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
 		char t_derived_font_name[256];
-		if (macmatchfontname(t_font_name, t_derived_font_name))
+		if (*t_font_name != '\0' &&
+            macmatchfontname(t_font_name, t_derived_font_name))
+        {
 			t_font_name = t_derived_font_name;
-		
+        }
+        
 #endif
         
         MCAutoStringRef t_font_name_ref;

@@ -130,3 +130,50 @@ on TestMultiModuleExtensions
    TestAssert "can't load multi-module extensions with bad module names", \
          the result is not empty
 end TestMultiModuleExtensions
+
+//////////
+
+command CallLibraryHandlerWithString
+   get TestExtensionLibraryHandler("foobar")
+end CallLibraryHandlerWithString
+
+command CallLibraryHandlerWithTooFewParams
+   get TestExtensionLibraryHandler()
+end CallLibraryHandlerWithTooFewParams
+
+command CallLibraryHandlerWithTooManyParams
+   get TestExtensionLibraryHandler(1, 2)
+end CallLibraryHandlerWithTooManyParams
+
+on TestExtensionLibraryHandlerCallErrors
+   TestAssertThrow "library handler call throws correct error on type error", \
+         "CallLibraryHandlerWithString", \
+         the long id of me, \
+         896
+
+   TestAssertThrow "library handler call throws correct error on too few args error", \
+         "CallLibraryHandlerWithTooFewParams", \
+         the long id of me, \
+         885
+
+   TestAssertThrow "library handler call throws correct error on too many args error", \
+         "CallLibraryHandlerWithTooManyParams", \
+         the long id of me, \
+         886
+end TestExtensionLibraryHandlerCallErrors
+
+//////////
+
+on TestExtensionLibraryDelimiterAccess
+   set the itemDelimiter to "a"
+   set the lineDelimiter to "b"
+   set the columnDelimiter to "c"
+   set the rowDelimiter to "d"
+
+   local tDelimiters
+   put TestExtensionDelimiterAccess() into tDelimiters
+   combine tDelimiters with comma
+
+   TestDiagnostic tDelimiters
+   TestAssert "library handler can access delimiters", tDelimiters is "a,b,c,d"
+end TestExtensionLibraryDelimiterAccess

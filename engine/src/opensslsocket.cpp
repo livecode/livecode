@@ -761,6 +761,14 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 		return NULL;
 	}
 
+	// HH-2017-01-26: [[ Bug 18454 ]] Set the broadcast flagged base on property 'allowDatagramBroadcasts'
+	if(datagram)
+	{
+		int t_broadcast;
+		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
+		setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
+	}
+
 	unsigned long on = 1;
 
 	// set socket nonblocking
@@ -963,16 +971,10 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 {
 	if (s->datagram)
 	{
-		// MW-2012-11-13: [[ Bug 10516 ]] Set the 'broadcast' flag based on whether the
-		//   user has enabled broadcast addresses.
-		int t_broadcast;
-		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
-		setsockopt(s -> fd, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
-	
         MCAutoStringRefAsCString temp_d;
         /* UNCHECKED */ temp_d.Lock(d);
 
-		if (s->shared)
+        if (s->shared)
 		{
             MCAutoCustomPointer<char,MCMemoryDeleteArray> t_name_copy;
             /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name),

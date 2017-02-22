@@ -104,7 +104,7 @@ extern "C" void EmitDataType(long& r_new_index);
 extern "C" void EmitArrayType(long& r_new_index);
 extern "C" void EmitListType(long& r_new_index);
 extern "C" void EmitUndefinedType(long& r_new_index);
-extern "C" void EmitBeginRecordType(long base_type_index);
+extern "C" void EmitBeginRecordType(void);
 extern "C" void EmitRecordTypeField(NameRef name, long type_index);
 extern "C" void EmitEndRecordType(long& r_type_index);
 extern "C" void EmitBeginHandlerType(long return_type_index);
@@ -1275,11 +1275,11 @@ void EmitUndefinedType(long& r_new_index)
 
 //////////
 
-void EmitBeginRecordType(long p_base_type_index)
+void EmitBeginRecordType()
 {
-    MCScriptBeginRecordTypeInModule(s_builder, (uindex_t)p_base_type_index);
+    MCScriptBeginRecordTypeInModule(s_builder);
 
-    Debug_Emit("BeginRecordType(%ld)", p_base_type_index);
+    Debug_Emit("BeginRecordType()");
 }
 
 void EmitRecordTypeField(NameRef name, long type_index)
