@@ -20,6 +20,8 @@ module com.livecode.foreign.tests
 use com.livecode.foreign
 use com.livecode.__INTERNAL._testlib
 
+----------
+
 handler TestZStringNative_Null()
 	variable tList as ZStringNative
 	put "\u{0}" into tList
@@ -47,6 +49,125 @@ public handler TestZStringUTF16()
 	-- Check that strings containing embedded nuls can't be
 	-- bridged.
 	MCUnitTestHandlerThrowsBroken(TestZStringUTF16_Null, "ZStringUTF16 (nulls)", "bug 14829")
+end handler
+
+----------
+
+private foreign handler printf_int(in pFormat as ZStringNative, in pValue as LCInt) returns nothing binds to "printf"
+private foreign handler printf_uint(in pFormat as ZStringNative, in pValue as LCUInt) returns nothing binds to "printf"
+private foreign handler printf_intsize(in pFormat as ZStringNative, in pValue as IntSize) returns nothing binds to "printf"
+private foreign handler printf_uintsize(in pFormat as ZStringNative, in pValue as UIntSize) returns nothing binds to "printf"
+
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) returns optional any binds to "<builtin>"
+
+private handler __Is64Bit() returns nothing
+    variable tSize as UIntSize
+    put 4294967296.0 into tSize
+    unsafe
+        printf_uintsize("", tSize)
+    end unsafe
+end handler
+
+private handler Is64Bit()
+    variable tResult as optional any
+    variable tArguments as optional List
+    variable tError as optional any
+    put [] into tArguments
+    unsafe
+        put MCHandlerTryToInvokeWithList(__Is64Bit, tArguments, tResult) into tError
+    end unsafe
+    return tError is nothing
+end handler
+
+handler TestIntRange_Min()
+    variable tInt as LCInt
+    put -2147483649.0 into tInt
+    unsafe
+        printf_int("", tInt)
+    end unsafe
+end handler
+
+handler TestIntRange_Max()
+    variable tInt as LCInt
+    put 2147483648.0 into tInt
+    unsafe
+        printf_int("", tInt)
+    end unsafe
+end handler
+
+handler TestUIntRange_Min()
+    variable tUInt as LCUInt
+    put -1.0 into tUInt
+    unsafe
+        printf_uint("", tUInt)
+    end unsafe
+end handler
+
+handler TestUIntRange_Max()
+    variable tUInt as LCUInt
+    put 4294967296.0 into tUInt
+    unsafe
+        printf_uint("", tUInt)
+    end unsafe
+end handler
+
+handler TestIntSizeRange_Min()
+    variable tInt as IntSize
+    if Is64Bit() then
+        put -9007199254740994.0 into tInt
+    else
+        put -2147483649.0 into tInt
+    end if
+    unsafe
+        printf_intsize("", tInt)
+    end unsafe
+end handler
+
+handler TestIntSizeRange_Max()
+    variable tInt as IntSize
+    if Is64Bit() then
+        put 9007199254740994.0 into tInt
+    else
+        put 2147483648.0 into tInt
+    end if
+    unsafe
+        printf_intsize("", tInt)
+    end unsafe
+end handler
+
+handler TestUIntSizeRange_Min()
+    variable tUInt as UIntSize
+    put -1.0 into tUInt
+    unsafe
+        printf_uintsize("", tUInt)
+    end unsafe
+end handler
+
+handler TestUIntSizeRange_Max()
+    variable tUInt as UIntSize
+    if Is64Bit() then
+        test diagnostic "64-bit"
+        put 9007199254740994.0 into tUInt
+    else
+        put 4294967296.0 into tUInt
+    end if
+    unsafe
+        printf_uintsize("", tUInt)
+    end unsafe
+end handler
+
+public handler TestForeignIntRanges()
+    MCUnitTestHandlerThrows(TestIntRange_Min, "LCInt minimum value")
+    MCUnitTestHandlerThrows(TestIntRange_Max, "LCInt maximum value")
+
+    MCUnitTestHandlerThrows(TestUIntRange_Min, "LCUInt minimum value")
+    MCUnitTestHandlerThrows(TestUIntRange_Max, "LCUInt maximum value")
+
+    MCUnitTestHandlerThrows(TestIntSizeRange_Min, "IntSize minimum value")
+    MCUnitTestHandlerThrows(TestIntSizeRange_Max, "IntSize maximum value")
+
+    MCUnitTestHandlerThrows(TestUIntSizeRange_Min, "UIntSize minimum value")
+    MCUnitTestHandlerThrows(TestUIntSizeRange_Max, "UIntSize maximum value")
 end handler
 
 end module
