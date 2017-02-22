@@ -94,7 +94,7 @@ public:
         return true;
     }
     
-    bool CopyNativePath(MCStringRef & r_native_path)
+    bool CopyNativePath(MCStringRef & r_native_path) const
     {
         MCAutoArray<wchar_t> t_native_path;
         
