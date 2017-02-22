@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-module com.livecode.unittest.__IMPL
+module com.livecode.unittest.__impl
 -- DON'T USE THIS MODULE, USE com.livecode.unittest INSTEAD
 
 use com.livecode.foreign
