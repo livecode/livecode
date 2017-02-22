@@ -196,7 +196,7 @@ class __MCSLibraryHandleStatic
         }
         
         size_t t_section_size = 0;
-        char [[gnu::may_alias]] *t_section_ptr =
+        char *t_section_ptr [[gnu::may_alias]] =
                     getsectdata("__DATA",
                                 "__libs",
                                 &t_section_size);
@@ -205,7 +205,7 @@ class __MCSLibraryHandleStatic
         {
             t_section_ptr += (size_t)_dyld_get_image_vmaddr_slide(0);
             
-            MCSLibraryStaticLibInfo [[gnu::may_alias]] **t_libs =
+            MCSLibraryStaticLibInfo **t_libs [[gnu::may_alias]] =
                     reinterpret_cast<MCSLibraryStaticLibInfo **>(t_section_ptr);
             for(size_t t_lib_index = 0; t_lib_index < t_section_size / sizeof(*t_libs); t_lib_index++)
             {

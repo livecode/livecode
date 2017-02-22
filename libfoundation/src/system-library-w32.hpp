@@ -59,15 +59,51 @@ public:
         return MCHashPointer(static_cast<void *>(m_handle));
     }
     
-    bool
-    CopyNativePath(MCStringRef & r_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path)
+    {
+        MCAutoStringRefAsWString t_wstring_path;
+        if (!t_wstring_path.Lock(p_native_path))
+        {
+            return false;
+        }
+
+        m_handle = LoadLibraryExW(*t_wstring_path,
+                                  NULL,
+                                  LOAD_WITH_ALTERED_SEARCH_PATH);
+        
+        if (m_handle == NULL)
+        {
+            /* TODO: Use GetLastError() */
+            return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
+        }
+
+        return true;
+    }
+    
+    bool CreateWithAddress(void *p_address)
+    {
+        if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                               (LPCTSTR)p_address,
+                               &m_handle))
+        {
+            /* TODO: Use GetLastError() */
+            m_handle = nullptr;
+            return __MCSLibraryThrowCreateWithAddressFailed(p_address);
+        }
+        
+        return true;
+    }
+    
+    bool CopyNativePath(MCStringRef & r_native_path)
     {
         MCAutoArray<wchar_t> t_native_path;
         
         for (uindex_t i = 1; i < (UINDEX_MAX-1) / MAX_PATH; ++i)
         {
             if (!t_native_path.Extend(i*MAX_PATH + 1))
+            {
                 return false;
+            }
             
             // Make sure the last char in the buffer is NUL so that we can detect
             // failure on Windows XP
@@ -96,7 +132,7 @@ public:
             if (t_error_code != ERROR_SUCCESS)
             {
                 /* TODO[2017-02-21]: Use last error */
-                return __MCSLibraryThrowResolvePathFailed();
+                break;
             }
             
             // Make sure the string is NUL terminated, we already know MAX_PATH-1
@@ -110,75 +146,7 @@ public:
         }
         
         /* TODO[20170221] Oh dear, the path is too long to fit into a UINDEX_MAX!?! */
-    }
-    
-    bool CreateWithAddress(void *p_address)
-    {
-        HMODULE t_handle = nullptr;
-        if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                               (LPCTSTR)p_address,
-                               &t_handle))
-        {
-            /* TODO: Use GetLastError() */
-            return __MCSLibraryThrowCreateWithAddressFailed(p_address);
-        }
-        
-        m_handle = t_handle;
-        
-        return true;
-    }
-    
-    bool CopyNativePath(MCStringRef& r_native_path) const
-    {
-        for(unsigned int i = 1; i <= 1; i++)
-        {
-            size_t t_native_path_capacity = MAX_PATH * i;
-            wchar_t t_native_path[MAX_PATH + 1];
-            
-            // Make sure the last char in the buffer is NUL so that we can detect
-            // failure on Windows XP.
-            t_native_path[t_native_path_capacity - 1] = '\0';
-            
-            // On Windows XP, the returned path will be truncated if the buffer is
-            // too small and a NUL byte *will not* be added.
-            DWORD t_native_path_size =
-                    GetModuleFileNameW(m_handle,
-                                       t_native_path,
-                                     t_native_path_capacity);
-
-            DWORD t_error_code =
-                    GetLastError();
-            
-            // A too small buffer is indicated by a 0 return value and:
-            //   on XP: the buffer being filled without terminating NUL
-            //   others: GetLastError() returning ERROR_INSUFFICIENT_BUFFER
-            if (t_native_path_size == 0)
-            {
-                if ((t_error_code == ERROR_SUCCESS && t_native_path[t_native_path_capacity - 1] != '\0') ||
-                    t_error_code == ERROR_INSUFFICIENT_BUFFER)
-                {
-                    continue;
-                }
-            }
-            
-            // If we get an error other than insufficient buffer, then we return
-            // it.
-            if (t_error_code != ERROR_SUCCESS)
-            {
-                /* TODO: Use last error */
-                return __MCSLibraryThrowResolvePathFailed();
-            }
-            
-            // Make sure the string is NUL terminated, we already know MAX_PATH-1
-            // is NUL, on non-Windows XP char t_native_path_size will be NUL, on
-            // WindowsXP t_native_path_size will be the length of the filename
-            // without NUL.
-            t_native_path[t_native_path_size] = '\0';
-            
-            // We have success.
-            return MCStringCreateWithWString(t_native_path,
-                                             r_native_path);
-        }
+        return __MCSLibraryThrowResolvePathFailed();
     }
 
     void *LookupSymbol(MCStringRef p_symbol) const
