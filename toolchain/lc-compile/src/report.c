@@ -293,6 +293,7 @@ DEFINE_ERROR(InvalidDoubleLiteral, "Malformed real literal");
 DEFINE_ERROR(IntegerLiteralOutOfRange, "Integer literal too big");
 DEFINE_ERROR(DoubleLiteralOutOfRange, "Real literal too big");
 DEFINE_ERROR(IllegalNamespaceOperator, "Namespace operator invalid in declaration context");
+DEFINE_ERROR_I(InvalidNameForNamespace, "Namespace component '%s' must not begin with a digit")
 
 DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");
 DEFINE_ERROR_I(IdentifierNotDeclared, "Identifier '%s' not declared");
@@ -402,6 +403,7 @@ DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no ni
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
+DEFINE_WARNING_I(UnsuitableNameForNamespace, "Non-lowercase namespace component '%s' may cause future syntax error")
 DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 
 ////////////////////////////////////////////////////////////////////////////////

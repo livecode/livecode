@@ -48,6 +48,8 @@
     IsStringEqualToString
 
     IsNameSuitableForDefinition
+    IsNameSuitableForNamespace
+    IsNameValidForNamespace
     IsStringSuitableForKeyword
 
 	ConcatenateNameParts
@@ -356,10 +358,12 @@
     Error_IllegalNumberOfArgumentsForOpcode
     Error_BytecodeNotAllowedInSafeContext
     Error_UnsafeHandlerCallNotAllowedInSafeContext
+    Error_InvalidNameForNamespace
 
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
+    Warning_UnsuitableNameForNamespace
     Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
@@ -405,6 +409,8 @@
 'condition' IsNameNotEqualToName(NAME, NAME)
 
 'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsNameSuitableForNamespace(NAME)
+'condition' IsNameValidForNamespace(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
 
 'action' ConcatenateNameParts(NAME, NAME -> NAME)
@@ -695,6 +701,7 @@
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)
 'action' Error_SyntaxMarkVariableAlreadyDefined(Position: POS, Name: NAME)
+'action' Error_InvalidNameForNamespace(Position: POS, Identifier: NAME)
 
 'action' Error_ExpressionSyntaxCannotStartWithExpression(Position: POS)
 'action' Error_ExpressionSyntaxCannotFinishWithExpression(Position: POS)
@@ -788,6 +795,7 @@
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UnsuitableNameForNamespace(Position: POS, Identifier: NAME)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------
