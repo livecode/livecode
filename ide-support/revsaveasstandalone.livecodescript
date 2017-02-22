@@ -132,12 +132,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the short name of the topStack into pStack
    end if
    
-   -- Script only stacks can not store standalone settings so don't allow them as targets
-   if the scriptOnly of stack pStack then
-      answer error "Script only stacks are not currently supported as standalone mainstacks"
-      exit revSaveAsStandalone
-   end if
-   
    if the fileName of stack pStack = empty then
       put "edited" into gREVStackStatus[pStack]
    end if
