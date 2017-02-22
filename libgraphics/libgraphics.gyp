@@ -31,7 +31,7 @@
 				'src/blur.cpp',
 				'src/cachetable.cpp',
 				'src/context.cpp',
-				'src/coretext.cpp',
+				'src/coretext-skia.cpp',
 				'src/image.cpp',
 				'src/legacygradients.cpp',
 				'src/lnxtext.cpp',
