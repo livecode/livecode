@@ -599,7 +599,7 @@ MCEngineDoExecuteScriptInObjectWithArguments(MCStringRef p_script, MCObject *p_o
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptInScriptObjectWithArguments(MCStringRef p_script, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
-	if (!MCEngineScriptObjectAccessIsAllowed())
+	if (!MCEngineEnsureScriptObjectAccessIsAllowed())
 		return nil;
 	
 	MCObject *t_object = nil;
