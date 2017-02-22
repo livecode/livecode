@@ -66,5 +66,5 @@ public:
     }
 };
 
-typedef class __MCSLibraryHandleLinux __MCSLibraryHandle;
+typedef class __MCSLibraryHandleEmscripten __MCSLibraryHandle;
 
