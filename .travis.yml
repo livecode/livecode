@@ -67,6 +67,7 @@ script: |
       export XCODE_TARGET_SDK=macosx10.11
       export XCODEBUILD="set -o pipefail && xcodebuild"
       export XCODEBUILD_FILTER="| xcpretty"
+      export JAVA_HOME=$(/usr/libexec/java_home)
       ;;
   esac
 
