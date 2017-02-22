@@ -28,7 +28,6 @@
 			[
 				'src/cefbrowser.h',
 				'src/cefbrowser_msg.h',
-				'src/cefshared.h',
 				'src/osxbrowser.h',
 				'src/revbrowser.h',
 				'src/revbrowser.rc.h',
@@ -38,8 +37,6 @@
 				'src/cefbrowser.cpp',
 				'src/cefbrowser_lnx.cpp',
 				'src/cefbrowser_w32.cpp',
-				'src/cefshared_lnx.cpp',
-				'src/cefshared_w32.cpp',
 				'src/lnxbrowser.cpp',
 				'src/osxbrowser.mm',
 				'src/revbrowser.cpp',
@@ -76,13 +73,10 @@
 						[
 							'src/cefbrowser.h',
 							'src/cefbrowser_msg.h',
-							'src/cefshared.h',
 
 							'src/cefbrowser.cpp',
 							'src/cefbrowser_lnx.cpp',
 							'src/cefbrowser_w32.cpp',
-							'src/cefshared_lnx.cpp',
-							'src/cefshared_w32.cpp',
 						],
 					},
 				],
@@ -108,6 +102,17 @@
 				[
 					'OS == "win"',
 					{
+						'copies':
+						[
+							{
+								'destination':'<(PRODUCT_DIR)/CEF/',
+								'files':
+								[
+									'<(PRODUCT_DIR)/revbrowser-cefprocess.exe',
+								],
+							},
+						],
+						
 						'defines':
 						[
 							'__EXCEPTIONS',
@@ -125,11 +130,32 @@
 				[
 					'OS == "linux"',
 					{
+                        'copies':
+                        [
+                            {
+                                'destination':'<(PRODUCT_DIR)/CEF/',
+                                'files':
+                                [
+                                    '<(PRODUCT_DIR)/revbrowser-cefprocess',
+                                ],
+                            },
+                        ],
+                        
 						'libraries':
 						[
 							'-ldl',
 							'-lX11',
 						],
+						
+					    'library_dirs':
+					    [
+					        '../prebuilt/lib/linux/<(target_arch)/CEF/',
+					    ],
+		
+					    'libraries':
+					    [
+					        '-lcef',
+					    ],
 		
 						'all_dependent_settings':
 						{
@@ -178,6 +204,43 @@
 						'type': 'none',
 					},
 				],
+				
+				[
+					'OS == "win"',
+					{	
+						'library_dirs':
+						[
+							'../prebuilt/lib/win32/<(target_arch)/CEF/',
+						],
+
+						'libraries':
+						[
+							'-llibcef.lib',
+						],
+					},
+				],
+                
+                [
+                    'OS == "linux"',
+                    {
+                        'library_dirs':
+                        [
+                            '../prebuilt/lib/linux/<(target_arch)/CEF/',
+                        ],
+                        
+                        'libraries':
+                        [
+                            '-lcef',
+                        ],
+					   
+                        'ldflags':
+                        [
+                            '-Wl,--allow-shlib-undefined',
+                            '-Wl,-rpath=\\$$ORIGIN',
+                        ],
+                    },
+                ],
+                
 				[
 					'OS == "win" or OS == "linux"',
 					{
@@ -198,7 +261,7 @@
 				'../libcore/libcore.gyp:libCore',
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
-				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
+				'../prebuilt/libcef.gyp:libcef',
 			],
 			
 			'sources':
@@ -206,8 +269,6 @@
 				'src/cefprocess.cpp',
 				'src/cefprocess_lnx.cpp',
 				'src/cefprocess_w32.cpp',
-				'src/cefshared_lnx.cpp',
-				'src/cefshared_w32.cpp',
 			],
 		},
 	],

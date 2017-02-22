@@ -660,36 +660,6 @@
 				},
 			},
 		},
-		
-		{
-			'target_name': 'development-postprocess',
-			'type': 'none',
-
-			'dependencies':
-			[
-				'development',
-				'../thirdparty/libopenssl/libopenssl.gyp:revsecurity',
-			],
-
-			'conditions':
-			[
-				[
-					'OS == "mac"',
-					{
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
-								'files':
-								[
-									'<(PRODUCT_DIR)/revsecurity.dylib',
-								],
-							},
-						],
-					},
-				],
-			],
-		},
 
 		{
 			'target_name': 'development',
@@ -706,7 +676,9 @@
 			},
 			
 			'dependencies':
-			[
+            [
+                '../thirdparty/libopenssl/libopenssl.gyp:revsecurity_built',
+                '../revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
@@ -741,7 +713,19 @@
 						[
 							'rsrc/LiveCode.icns',
 							'rsrc/LiveCodeDoc.icns',
-						],
+                        ],
+                        
+                        'copies':
+                        [
+                            {
+                                'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
+                                'files':
+                                [
+                                    '<(PRODUCT_DIR)/revsecurity.dylib',
+                                    '<(PRODUCT_DIR)/revpdfprinter.bundle',
+                                ],
+                            },
+                        ],
 					},
 				],
 				[

@@ -219,20 +219,14 @@ bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowser
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define CEF_PATH_PREFIX "Externals/CEF"
-
-const char *MCCefPlatformGetExecutableFolder(void);
-bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
-
-const char *MCCefPlatformGetCefFolder(void)
+bool MCCefPlatformEnableHiDPI()
 {
-	static char *s_cef_path = nil;
-
-	if (s_cef_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), CEF_PATH_PREFIX, s_cef_path);
-	
-	MCLog("libbrowser cef folder: %s", s_cef_path);
-
-	return s_cef_path;
+    return true;
 }
 
+bool MCCefPlatformGetHiDPIEnabled()
+{
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////

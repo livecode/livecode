@@ -222,36 +222,3 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define CEF_PATH_PREFIX "CEF"
-
-const char *MCCefPlatformGetCefFolder(void)
-{
-	static char *s_cef_path = nil;
-
-	if (s_cef_path == nil)
-	{
-		bool t_success;
-		t_success = true;
-
-		Dl_info t_info;
-		if (t_success)
-			t_success = 0 != dladdr((const void*)MCCefPlatformGetCefFolder, &t_info);
-			
-		if (t_success)
-			t_success = MCCStringClone(t_info.dli_fname, s_cef_path);
-
-		if (t_success)
-		{
-			// remove library component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
-				s_cef_path[t_index] = '\0';
-            
-            // Append the name of the folder containing the CEF components
-            MCCStringAppend(s_cef_path, "/" CEF_PATH_PREFIX);
-		}
-	}
-
-	return s_cef_path;
-}
-
