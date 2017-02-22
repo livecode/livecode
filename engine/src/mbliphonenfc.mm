@@ -15,3 +15,27 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// NFC not supported on iOS
+bool MCSystemNFCIsAvailable(void)
+{
+	return false;
+}
+
+// NFC not supported on iOS
+bool MCSystemNFCIsEnabled(void)
+{
+	return false;
+}
+
+// NFC not supported on iOS
+void MCSystemEnableNFCDispatch(void)
+{
+}
+
+// NFC not supported on iOS
+void MCSystemDisableNFCDispatch(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
