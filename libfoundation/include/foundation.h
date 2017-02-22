@@ -691,6 +691,7 @@ typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
+typedef struct __MCJavaObject *MCJavaObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1822,7 +1823,41 @@ MC_DLLEXPORT bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef ba
 	
 // Create a named typeinfo bound to a foreign typeinfo.
 MC_DLLEXPORT bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo);
-	
+
+//////////
+
+MC_DLLEXPORT bool MCJavaInitialize();
+MC_DLLEXPORT void MCJavaFinalize();
+
+MC_DLLEXPORT MCTypeInfoRef MCJavaGetObjectTypeInfo();
+MC_DLLEXPORT bool MCJavaCreateJavaObjectTypeInfo();
+    
+MC_DLLEXPORT bool MCJavaObjectCreate(void *value, MCJavaObjectRef& r_obj);
+MC_DLLEXPORT void *MCJavaObjectGetObject(const MCJavaObjectRef p_obj);
+
+// Check that a Java param string is compatible with a handler signature typeinfo
+MC_DLLEXPORT bool MCJavaCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_params, MCStringRef p_return, int p_call_type);
+
+// Call a Java method using the JNI
+MC_DLLEXPORT bool MCJavaCallJNIMethod(MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+
+// Get a Java method pointer for a given method in a class
+MC_DLLEXPORT void *MCJavaGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type);
+
+// Get a Java type code corresponding to the param string
+MC_DLLEXPORT int MCJavaMapTypeCode(MCStringRef p_param_string);
+
+// Get the name of a Java class from an instance of that class
+MC_DLLEXPORT bool MCJavaGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
+// Convert a Java object wrapping a jstring to a String Ref
+MC_DLLEXPORT bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string);
+// Convert a String Ref to a Java object wrapping a jstring
+MC_DLLEXPORT bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);
+// Convert a Java object wrapping a jByteArray to a Data Ref
+MC_DLLEXPORT bool MCJavaConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_data);
+// Convert a Data Ref to a Java object wrapping a jByteArray
+MC_DLLEXPORT bool MCJavaConvertDataRefToJByteArray(MCDataRef p_data, MCJavaObjectRef &r_object);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BOOLEAN DEFINITIONS
