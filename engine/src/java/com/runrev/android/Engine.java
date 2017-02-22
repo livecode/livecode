@@ -119,6 +119,8 @@ public class Engine extends View implements EngineApi
     private NotificationModule m_notification_module;
     private RelativeLayout m_view_layout;
 
+    private ToastMessage m_toast_message_module;
+
     private PowerManager.WakeLock m_wake_lock;
     
     // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
@@ -175,6 +177,8 @@ public class Engine extends View implements EngineApi
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
         m_view_layout = null;
+
+        m_toast_message_module = new ToastMessage(this);
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
         PowerManager t_power_manager = (PowerManager) p_context.getSystemService(p_context.POWER_SERVICE);
@@ -2386,6 +2390,14 @@ public class Engine extends View implements EngineApi
     }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+	public void toastMessage(String p_msg, int p_duration)
+	{
+		m_toast_message_module.toast(p_msg, p_duration);
+	} 
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 	public boolean canSendTextMessage()
 	{
