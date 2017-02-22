@@ -3056,7 +3056,7 @@ MCSLibraryRef MCU_library_load(MCStringRef p_path)
         __MCU_library_load_adding_extension(*t_library_path,
                                             "dll",
                                             &t_library);
-#elif defined(__LINUX__) || defined(__ANDROID__)
+#elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
         __MCU_library_load_adding_extension(*t_library_path,
                                             "so",
                                             &t_library);
