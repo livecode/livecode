@@ -1,0 +1,21 @@
+module __VMTEST.foreign_invoke
+
+use com.livecode.foreign
+
+foreign handler MCStringGetNativeCharPtr(in pString as String) returns optional Pointer binds to "<builtin>"
+
+public handler TestForeignInvoke_OptionalPointerResult()
+   variable tNullNativeCharPtr as optional Pointer
+   unsafe
+      put MCStringGetNativeCharPtr("\u{1F4A9}") into tNullNativeCharPtr
+   end unsafe
+   test "nullptr maps to nothing for optional Pointer" when tNullNativeCharPtr is nothing
+
+   variable tNonNullNativeCharPtr as optional Pointer
+   unsafe
+      put MCStringGetNativeCharPtr("a") into tNonNullNativeCharPtr
+   end unsafe
+   test "non-nullptr maps to non-nothing for optional Pointer" when tNonNullNativeCharPtr is not nothing
+end handler
+
+end module

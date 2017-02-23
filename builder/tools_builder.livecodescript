@@ -408,15 +408,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
    end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
-   
-   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revsblibrary.livecodescript")
-   repeat for each line tStackFile in tAuxStackfiles
-      local tTempStackFile
-      put builderMakeTemporaryFile(tTempFolder, "stack") into tTempStackFile
-      revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-      put tTempStackFile & return after tParams["auxiliary_stackfiles"]
-   end repeat
-   delete the last char of tParams["auxiliary_stackfiles"]
+   put tAuxStackfiles into tParams["auxiliary_stackfiles"]
    
    // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
    put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]

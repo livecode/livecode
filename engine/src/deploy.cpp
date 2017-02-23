@@ -443,6 +443,48 @@ static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameter
 	return t_success;
 }
 
+static bool MCDeployCapsuleDefineFromStackFile(MCDeployCapsuleRef p_self, MCStringRef p_filename, MCDeployFileRef p_file, bool p_mainstack)
+{
+    MCAutoDataRef t_contents;
+    if (!MCS_loadbinaryfile(p_filename, &t_contents))
+        return false;
+    
+    IO_handle t_stream = nil;
+    t_stream = MCS_fakeopen(MCDataGetBytePtr(*t_contents),MCDataGetLength(*t_contents));
+    
+    if (t_stream == nil)
+        return false;
+    
+    bool t_script_only = MCdispatcher -> streamstackisscriptonly(t_stream);
+    MCS_close(t_stream);
+    
+    MCCapsuleSectionType t_type;
+    if (p_mainstack)
+    {
+        if (t_script_only)
+        {
+            t_type = kMCCapsuleSectionTypeScriptOnlyMainStack;
+        }
+        else
+        {
+            t_type = kMCCapsuleSectionTypeMainStack;
+        }
+    }
+    else
+    {
+        if (t_script_only)
+        {
+            t_type = kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack;
+        }
+        else
+        {
+            t_type = kMCCapsuleSectionTypeAuxiliaryStack;
+        }
+    }
+    
+    return MCDeployCapsuleDefineFromFile(p_self, t_type, p_file);
+}
+
 // This method constructs and then writes out a capsule to the given output file.
 // The capsule contents is derived from the deploy parameters structure.
 // The offset in the file after writing is returned in x_offset.
@@ -514,7 +556,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 
 	// Now we add the main stack
 	if (t_success)
-		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
+		t_success = MCDeployCapsuleDefineFromStackFile(t_capsule, p_params . stackfile, t_stackfile, true);
 
 	// Now we add the auxillary stackfiles, if any
 	MCAutoArray<MCDeployFileRef> t_aux_stackfiles;
@@ -528,7 +570,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
+                t_success = MCDeployCapsuleDefineFromStackFile(t_capsule, (MCStringRef)t_val, t_aux_stackfiles[i], false);
 		}
 	
     // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.

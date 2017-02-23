@@ -70,10 +70,14 @@ enum MCCapsuleSectionType
 	// including the digest section tag.
 	kMCCapsuleSectionTypeDigest,
 
-	// The stack section contains the principal stackfile to be loaded on
+	// The stack section contains the principal (binary) stackfile to be loaded on
 	// startup.
-	kMCCapsuleSectionTypeStack,
+	kMCCapsuleSectionTypeMainStack,
 
+    // The stack section contains the principal (script-only) stackfile to be loaded on
+    // startup.
+    kMCCapsuleSectionTypeScriptOnlyMainStack,
+    
 	// An external section contains a external that should be loaded into the
 	// environment on startup;.
 	kMCCapsuleSectionTypeExternal,
@@ -84,6 +88,10 @@ enum MCCapsuleSectionType
     // Auxiliary stack sections contain other mainstacks that should be loaded
 	// alongside the mainstack (but not opened initially).
 	kMCCapsuleSectionTypeAuxiliaryStack,
+    
+    // Script-only auxiliary stack sections contain other (script-only) mainstacks that should be loaded
+    // alongside the mainstack (but not opened initially).
+    kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack,
 	
 	// Simulator redirect sections contain mappings from engine relative
 	// paths to absolute paths on the host system.
