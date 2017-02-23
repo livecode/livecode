@@ -69,33 +69,6 @@ static void resolve_alias(NSString *p_path, NSString *&r_path_resolved)
 		r_path_resolved = [[NSString alloc] initWithString: p_path];
 }
 
-static bool folder_path_from_initial_path(MCStringRef p_path, MCStringRef &r_folderpath)
-{
-    MCAutoStringRef t_path;
-    uindex_t t_offset;
-    bool t_success;
-    
-    t_success = false;
-    
-    if (MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_offset))
-    {
-        if (t_offset != 0)
-            t_success = MCS_resolvepath(p_path, &t_path);
-        else
-            t_success = MCStringCopy(p_path, &t_path);
-    }
-	
-    if (t_success)
-	{
-        if (MCS_exists(*t_path, False))
-            t_success = MCStringCopy(*t_path, r_folderpath);
-        else if (MCStringLastIndexOfChar(*t_path, '/', UINT32_MAX, kMCStringOptionCompareExact, t_offset))
-            t_success = MCStringCopySubstring(*t_path, MCRangeMake(0, t_offset), r_folderpath);
-	}
-	
-    return t_success;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCOpenSaveDialogDelegate: NSObject
@@ -206,11 +179,6 @@ static MCPlatformDialogResult MCPlatformEndOpenSaveDialog(void)
 
 void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
 {
-    MCAutoStringRef t_initial_folder;
-    
-    if (p_initial != nil)
-    /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
-    
     NSOpenPanel *t_panel;
     t_panel = [NSOpenPanel openPanel];
     if (p_title != nil && MCStringGetLength(p_title) != 0)
@@ -228,7 +196,7 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
     // MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
     [t_panel setCanCreateDirectories: YES];
 	
-	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, nil);
+	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, p_initial, nil);
 }
 
 MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
@@ -589,23 +557,8 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial)
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file)
 {
-	MCAutoStringRef t_initial_folder;
-	if (p_initial != nil)
-		/* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
-	
-	MCAutoStringRef t_initial_file;
-	if ((p_kind == kMCPlatformFileDialogKindSave) && p_initial != nil && !MCS_exists(p_initial, false))
-	{
-		uindex_t t_last_slash;
-        if (MCStringLastIndexOfChar(p_initial, '/', UINT32_MAX, kMCStringOptionCompareExact, t_last_slash))
-            // SN-2014-08-11: [[ Bug 13143 ]] Take the right part: after the last slash, not before
-            MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - t_last_slash - 1), &t_initial_file);
-        else
-            t_initial_file = p_initial;
-	}
-	
 	NSSavePanel *t_panel;
 	t_panel = (p_kind == kMCPlatformFileDialogKindSave) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
 	
@@ -646,7 +599,7 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else 
 		[t_panel setCanCreateDirectories: YES];
 	
-	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
+	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, p_initial_folder, p_initial_file);
 }
 
 MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)

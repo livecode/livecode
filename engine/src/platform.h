@@ -945,7 +945,7 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title,
 MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file);
 MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
 
 void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);
