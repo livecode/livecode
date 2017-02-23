@@ -45,6 +45,13 @@ extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Return the module handle for the loadable module containing libscript - this
+// is used to resolve 'builtin' foreign functions.
+void *
+MCScriptGetModuleHandle(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,

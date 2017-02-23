@@ -652,31 +652,8 @@ __MCScriptLoadSharedLibrary(MCScriptModuleRef p_module,
 	// If there is no library name then we resolve to the executable module.
 	if (MCStringIsEmpty(p_library))
 	{
-#if defined(_WIN32)
-		r_handle = GetModuleHandle(NULL);
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
-		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
-		//    given, so first resolve the path to the library.
-		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library,
-												MCStringRef &r_path);
-		MCAutoStringRef t_path;
-		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"),
-										 &t_path))
-		{
-			return false;
-		}
-		
-		MCAutoStringRefAsCString t_cstring;
-		if (!t_cstring.Lock(*t_path))
-		{
-			return false;
-		}
-		
-		r_handle = dlopen(*t_cstring, 0);
-#else
-		r_handle = dlopen(NULL, 0);
-#endif
-		return true;
+        r_handle = MCScriptGetModuleHandle();
+        return true;
 	}
 	
 	// If there is no slash in the name, we try to resolve based on the module.
@@ -1116,7 +1093,7 @@ MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef p_instance,
 	{
 		return false;
 	}
-	
+    
 	// Now put the handler value into the instance's handler list. First we make
 	// space in the array, then insert the value at the index we computed at the
 	// start.

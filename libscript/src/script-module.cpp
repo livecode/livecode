@@ -711,15 +711,15 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptForeignType *t_type;
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
+                MCAutoStringRefAsCString t_binding;
+                if (!t_binding.Lock(t_type->binding))
+                    goto error_cleanup; // oom
+                
                 void *t_symbol;
 #ifdef _WIN32
-				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
-#elif defined(__EMSCRIPTEN__)
-				void *t_handle = dlopen(NULL, RTLD_LAZY);
-				t_symbol = dlsym(t_handle, MCStringGetCString(t_type->binding));
-				dlclose(t_handle);
+				t_symbol = GetProcAddress((HMODULE)MCScriptGetModuleHandle(), *t_binding);
 #else
-                t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
+                t_symbol = dlsym(MCScriptGetModuleHandle(), *t_binding);
 #endif
                 if (t_symbol == nil)
                 {
