@@ -250,7 +250,44 @@ static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef
     if (!MCEngineLookupResourcePathForModule(p_module, Out(t_resource_path)))
         return false;
     
-    if (MCStringIsEmpty(*t_resource_path))
+    MCSLibraryRef t_library = nullptr;
+    if (t_resource_path.IsSet() **
+    {
+#if defined(__MAC__)
+        static const char *kLibraryFormat = "%@/code/mac/%@";
+#elif defined(__LINUX__) && defined(__32_BIT__)
+        static const char *kLibraryFormat = "%@/code/linux-x86/%@";
+#elif defined(__LINUX__) && defined(__64_BIT__)
+        static const char *kLibraryFormat = "%@/code/linux-x86_64/%@";
+#elif defined(__WINDOWS__)
+        static const char *kLibraryFormat = "%@/code/win-x86/%@";
+#elif defined(__ANDROID__)
+        static const char *kLibraryFormat = "%@/code/android-armv6/%@";
+#elif defined(__IOS__)
+        static const char *kLibraryFormat = "%@/code/ios/%@";
+#elif defined(__EMSCRIPTEN__)
+        static const char *kLibraryFormat = "%@/code/emscripten/%@";
+#endif
+        MCAutoStringRef t_ext_path;
+        if (!MCStringFormat(&t_ext_path,
+                            kLibraryFormat,
+                            *t_resource_path,
+                            p_name))
+        {
+            return false;
+        }
+        
+        t_library = MCU_library_load(*t_ext_path);
+    }
+    
+    if (t_library == nullptr)
+    {
+        t_library = MCU_library_load(p_name);
+    }
+    
+    if (t_library == nullptr)
+    {
+>>>>>>> patched
         return false;
     
 #if defined(_MACOSX)
