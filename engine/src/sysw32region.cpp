@@ -70,50 +70,6 @@ bool MCWin32RegionIncludeRect(HRGN p_region, const MCRectangle& p_rect)
 	return true;
 }
 
-#ifdef OLD_GRAPHICS
-bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_height, MCBitmap*& r_mask)
-{
-	// Our src HDC
-	HDC t_src_dc;
-	t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
-
-	// Create a temporary 1-bit image
-	HBITMAP t_bitmap;
-	void *t_bits;
-	if (!create_temporary_mono_dib(t_src_dc, p_width, p_height, t_bitmap, t_bits))
-		return false;
-
-	// Select it into a context
-	HGDIOBJ t_old_bitmap;
-	t_old_bitmap = SelectObject(t_src_dc, t_bitmap);
-
-	// Fill it with black
-	SelectObject(t_src_dc, GetStockObject(BLACK_BRUSH));
-	SelectObject(t_src_dc, GetStockObject(NULL_PEN));
-	Rectangle(t_src_dc, 0, 0, p_width, p_height);
-
-	// Select the clip region, change the color to white and fill again
-	SelectClipRgn(t_src_dc, (HRGN)p_region);
-	SelectObject(t_src_dc, GetStockObject(WHITE_BRUSH));
-	Rectangle(t_src_dc, 0, 0, p_width, p_height);
-
-	// Unselect the bitmap
-	SelectObject(t_src_dc, t_old_bitmap);
-
-	// Now create an bitmap and copy the image data into it
-	MCBitmap *t_mask;
-	t_mask = MCscreen -> createimage(1, p_width, p_height, True, 0, False, False);
-	memcpy(t_mask -> data, t_bits, t_mask -> bytes_per_line * p_height);
-
-	// Delete the temporary image and return!
-	DeleteObject(t_bitmap);
-
-	r_mask = t_mask;
-
-	return true;
-}
-#endif
-
 bool MCWin32RegionForEachRect(HRGN p_region, MCRegionForEachRectCallback p_callback, void *p_context)
 {
 	DWORD t_size;

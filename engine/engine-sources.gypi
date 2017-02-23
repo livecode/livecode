@@ -507,7 +507,6 @@
 			'src/syscfdate.cpp',
 			'src/syslnxfs.cpp',
 			'src/syslnxregion.cpp',
-			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
 			'src/sysspec-url.cpp',
 			'src/sysunxdate.cpp',

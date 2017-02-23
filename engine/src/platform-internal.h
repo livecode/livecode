@@ -71,7 +71,7 @@ public:
 	void Update(void);
 	
 	// Add the given region to the window's dirty region.
-	void Invalidate(MCRegionRef region);
+	void Invalidate(MCGRegionRef region);
 	
 	// Make the window visible as the given class.
 	void Show(void);
@@ -217,7 +217,7 @@ protected:
 	};
 	
 	// Universal state.
-	MCRegionRef m_dirty_region;
+	MCGRegionRef m_dirty_region;
 	struct
 	{
 		bool m_is_visible : 1;

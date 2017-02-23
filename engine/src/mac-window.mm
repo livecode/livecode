@@ -2137,10 +2137,10 @@ void MCMacPlatformWindow::DoRaise(void)
 }
 
 static uint32_t s_rect_count = 0;
-bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
+bool MCMacDoUpdateRegionCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 {
 	MCWindowView *t_view = static_cast<MCWindowView*>(p_context);
-	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: p_rect]];
+	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: MCRectangleFromMCGIntegerRectangle(p_rect)]];
 	
 	return true;
 }
@@ -2158,7 +2158,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
 	s_rect_count = 0;
-	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
+	MCGRegionIterate(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.

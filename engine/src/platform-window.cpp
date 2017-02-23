@@ -58,7 +58,7 @@ MCPlatformWindow::MCPlatformWindow(void)
     // MW-2014-05-02: [[ Bug 12348 ]] Make sure we initialize this value appropriately.
     m_use_text_input = false;
     
-	/* UNCHECKED */ MCRegionCreate(m_dirty_region);
+	/* UNCHECKED */ MCGRegionCreate(m_dirty_region);
 	m_is_visible = false;
 	m_is_focused = false;
 	m_is_iconified = false;
@@ -74,7 +74,7 @@ MCPlatformWindow::~MCPlatformWindow(void)
 {
     //MCLog("Destroy window %p", this);
 	
-	MCRegionDestroy(m_dirty_region);
+	MCGRegionDestroy(m_dirty_region);
 	
 	MCPlatformWindowMaskRelease(m_mask);
     // SN-2014-06-23: Title updated to StringRef
@@ -105,16 +105,16 @@ void MCPlatformWindow::Update(void)
 		return;
 	
 	// If the window dirty region is empty, there is nothing to do.
-	if (MCRegionIsEmpty(m_dirty_region))
+	if (MCGRegionIsEmpty(m_dirty_region))
 		return;
 	
 	DoUpdate();
 
 	// Now that we have updated, make sure we empty the dirty region!
-	MCRegionSetEmpty(m_dirty_region);
+	MCGRegionSetEmpty(m_dirty_region);
 }
 
-void MCPlatformWindow::Invalidate(MCRegionRef p_region)
+void MCPlatformWindow::Invalidate(MCGRegionRef p_region)
 {
 	// If the window is not visible, there is nothing to do.
 	if (!m_is_visible)
@@ -122,9 +122,9 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
     
 	// Union the dirty region.
     if (p_region == nil)
-        MCRegionIncludeRect(m_dirty_region, m_content);
+        MCGRegionAddRect(m_dirty_region, MCRectangleToMCGIntegerRectangle(m_content));
     else
-        MCRegionAddRegion(m_dirty_region, p_region);
+        MCGRegionAddRegion(m_dirty_region, p_region);
 }
 
 void MCPlatformWindow::Show(void)
@@ -641,7 +641,7 @@ void MCPlatformUpdateWindow(MCPlatformWindowRef p_window)
 	p_window -> Update();
 }
 
-void MCPlatformInvalidateWindow(MCPlatformWindowRef p_window, MCRegionRef p_region)
+void MCPlatformInvalidateWindow(MCPlatformWindowRef p_window, MCGRegionRef p_region)
 {
 	p_window -> Invalidate(p_region);
 }

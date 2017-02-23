@@ -730,7 +730,7 @@ void MCPlatformCreateWindow(MCPlatformWindowRef& r_window);
 void MCPlatformRetainWindow(MCPlatformWindowRef window);
 void MCPlatformReleaseWindow(MCPlatformWindowRef window);
 
-void MCPlatformInvalidateWindow(MCPlatformWindowRef window, MCRegionRef region);
+void MCPlatformInvalidateWindow(MCPlatformWindowRef window, MCGRegionRef region);
 void MCPlatformUpdateWindow(MCPlatformWindowRef window);
 
 void MCPlatformShowWindow(MCPlatformWindowRef window);

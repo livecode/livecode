@@ -1236,7 +1236,8 @@ class MCExternalHandlerList;
 
 class MCObjptr;
 
-typedef struct __MCRegion *MCRegionRef;
+typedef struct __MCGRegion *MCRegionRef;
+
 typedef struct MCTileCache *MCTileCacheRef;
 class MCStackSurface;
 
