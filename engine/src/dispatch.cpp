@@ -568,15 +568,13 @@ IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
     
     // MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
     uint1 charset, type;
-    char* t_newsf = nullptr;
     if (IO_read_uint1(&charset, x_stream) != IO_NORMAL
         || IO_read_uint1(&type, x_stream) != IO_NORMAL
-        || IO_read_cstring_legacy(t_newsf, x_stream, 2) != IO_NORMAL)
+        || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
     {
         r_result = "stack is corrupted, check for ~ backup file";
         return checkloadstat(IO_ERROR);
     }
-    MCMemoryDeallocate(t_newsf);
 
     MCtranslatechars = charset != CHARSET;
 
@@ -600,17 +598,12 @@ IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
     {
         // MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
         //   legacy.
-        char* lstring = nullptr;
-        char* cstring = nullptr;
-        if (IO_read_cstring_legacy(lstring, x_stream, 2) != IO_NORMAL
-            || IO_read_cstring_legacy(cstring, x_stream, 2) != IO_NORMAL)
+        if (IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL
+            || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
         {
             r_result = "stack is corrupted, check for ~ backup file";
             return checkloadstat(IO_ERROR);
         }
-
-        MCMemoryDeallocate(lstring);
-        MCMemoryDeallocate(cstring);
     }
     
     if (IO_read_uint1(&type, x_stream) != IO_NORMAL
