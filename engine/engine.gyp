@@ -465,6 +465,7 @@
 									'<(PRODUCT_DIR)/Manifest.xml',
 									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
 									'<(PRODUCT_DIR)/notify_icon.png',
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
 								],
 							},
 						},
