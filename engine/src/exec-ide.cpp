@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Ide, PutIntoMessage, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Ide, EditScriptOfObject, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Ide, HideMessageBox, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Ide, ShowMessageBox, 0)
@@ -50,12 +49,6 @@ void MCIdeExecEditScriptOfObject(MCExecContext &ctxt, MCObject *p_object, MCStri
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
-{
-	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
-		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
-}
 
 void MCIdeExecHideMessageBox(MCExecContext& ctxt)
 {

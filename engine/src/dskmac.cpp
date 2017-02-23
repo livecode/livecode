@@ -769,6 +769,9 @@ extern "C"
 #include	<IOKit/IOKitLib.h>
 #include	<IOKit/serial/IOSerialKeys.h>
 #include	<IOKit/IOBSD.h>
+void NSLog(CFStringRef format, ...);
+void NSLogv(CFStringRef format, va_list args);
+
 }
 
 static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_port_t *masterPort)
@@ -2972,9 +2975,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     
 	virtual void Debug(MCStringRef p_string)
     {
-        
+		CFStringRef t_string;
+		if (MCStringConvertToCFStringRef(p_string, t_string))
+			NSLog(CFSTR("%@"), t_string);
     }
-    
+	
 	virtual real64_t GetCurrentTime(void)
     {
         struct timezone tz;

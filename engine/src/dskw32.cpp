@@ -1574,6 +1574,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual void Debug(MCStringRef p_string)
 	{
+		MCAutoStringRefAsWString t_string;
+		if (t_string.Lock(p_string))
+			OutputDebugStringW(*t_string);
 	}
 
 	virtual real64_t GetCurrentTime()

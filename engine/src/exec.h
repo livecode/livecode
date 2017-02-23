@@ -4867,12 +4867,10 @@ void MCLegacySetMultiSpace(MCExecContext& ctxt, uinteger_t p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCIdeExecPutIntoMessageMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecEditScriptOfObjectMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecHideMessageBoxMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecShowMessageBoxMethodInfo;
 
-void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_at);
 void MCIdeExecHideMessageBox(MCExecContext& ctxt);
@@ -5123,6 +5121,7 @@ extern MCExecMethodInfo *kMCDebuggingSetDebugContextMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
+extern MCExecMethodInfo *kMCDebuggingExecPutIntoMessageMethodInfo;
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
@@ -5148,6 +5147,7 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value);
 void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingGetWatchedVariables(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 ///////////
 
