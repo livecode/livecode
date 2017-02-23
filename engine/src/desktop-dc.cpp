@@ -964,7 +964,7 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
 
 bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *p_loaded_font_handle)
 {
-	return MCPlatformUnloadFont(p_path, p_globally, (MCPlatformLoadedFontRef)p_loaded_font_handle);
+	return MCPlatformUnloadFont((MCPlatformLoadedFontRef)p_loaded_font_handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

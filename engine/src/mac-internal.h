@@ -682,6 +682,15 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCMacPlatformLoadedFont: public MCPlatformLoadedFont
+{
+public:
+    MCMacPlatformLoadedFont(MCStringRef p_path, bool p_globally);
+    ~MCMacPlatformLoadedFont(void);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCMacPlatformSound: public MCPlatformSound
 {
 public:

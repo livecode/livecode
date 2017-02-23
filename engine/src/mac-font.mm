@@ -28,22 +28,20 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// TD-2013-07-01 [[ DynamicFonts ]]
-// MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
-bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
+MCMacPlatformLoadedFont::MCMacPlatformLoadedFont(MCStringRef p_path, bool p_globally)
+: MCPlatformLoadedFont(p_path,p_globally)
 {
-    if (coretext_font_load_from_path(p_utf8_path, p_globally))
-    {
-        r_loaded_font = NULL;
-        return true;
-    } else
-        return false;
+    coretext_font_load_from_path(p_path, p_globally);
 }
 
-// MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
-bool MCPlatformUnloadFont(MCStringRef utf8path, bool globally, MCPlatformLoadedFontRef p_loaded_font)
+MCMacPlatformLoadedFont::~MCMacPlatformLoadedFont(void)
 {
-    return coretext_font_unload(utf8path, globally);
+    coretext_font_unload(m_path, m_globally);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformLoadedFontRef MCMacPlatformCreateLoadedFont(MCStringRef p_path, bool p_globally)
+{
+    return new (nothrow) MCMacPlatformLoadedFont(p_path, p_globally);
+}

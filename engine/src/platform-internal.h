@@ -249,6 +249,25 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCPlatformLoadedFont
+{
+public:
+    MCPlatformLoadedFont(MCStringRef p_path, bool p_globally);
+    virtual ~MCPlatformLoadedFont(void);
+    
+    virtual void Retain(void);
+    virtual void Release(void);
+    
+protected:
+    MCStringRef m_path;
+    bool m_globally;
+    
+private:
+    uint32_t m_references;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCPlatformSound
 {
 public:

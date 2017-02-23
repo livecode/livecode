@@ -560,7 +560,7 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
 
 bool MCPlatformLoadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
-bool MCPlatformUnloadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef loaded_font);
+bool MCPlatformUnloadFont(MCPlatformLoadedFontRef loaded_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
