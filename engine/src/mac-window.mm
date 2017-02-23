@@ -2273,101 +2273,6 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
-{
-	bool t_success = true;
-	
-	CGImageRef t_image = nil;
-	CGColorSpaceRef t_colorspace = nil;
-	CFDataRef t_data = nil;
-	CGDataProviderRef t_dp = nil;
-	
-	if (t_success)
-		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_alpha.pixels, p_alpha.stride *  p_alpha.height, kCFAllocatorNull));
-	
-	if (t_success)
-		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
-	
-	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
-	
-	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_alpha.width, p_alpha.height, 8, 8, p_alpha.stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
-	
-	CGColorSpaceRelease(t_colorspace);
-	CGDataProviderRelease(t_dp);
-	CFRelease(t_data);
-	
-	if (t_success)
-		r_image = t_image;
-	
-	return t_success;
-}
-
-void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
-{
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = nil;
-	
-	bool t_success;
-	t_success = MCMemoryNew(t_mask);
-	
-	if (t_success)
-	{
-		t_mask->references = 1;
-		
-		t_mask->mask.pixels = p_bits;
-		t_mask->mask.stride = p_stride;
-		t_mask->mask.width = p_width;
-		t_mask->mask.height = p_height;
-		t_mask->mask.format = kMCGRasterFormat_A;
-		
-		t_success = MCAlphaToCGImageNoCopy(t_mask->mask, t_mask->cg_mask);
-	}
-	
-	if (t_success)
-		r_mask = (MCPlatformWindowMaskRef)t_mask;
-	else
-	{
-		MCPlatformWindowMaskRelease((MCPlatformWindowMaskRef)t_mask);
-		r_mask = nil;
-	}
-}
-
-void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
-{
-	if (p_mask == nil)
-		return;
-	
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = (MCMacPlatformWindowMask*)p_mask;
-	
-	t_mask->references++;
-}
-
-void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
-{
-	if (p_mask == nil)
-		return;
-
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = (MCMacPlatformWindowMask*)p_mask;
-	
-	if (t_mask->references > 1)
-	{
-        // PM-2015-02-13: [[ Bug 14588 ]] Decrease ref count
-		t_mask->references--;
-		return;
-	}
-	
-	CGImageRelease(t_mask->cg_mask);
-	MCMemoryDeallocate(t_mask->mask.pixels);
-	
-	MCMemoryDelete(t_mask);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id)
 {
 	MCMacPlatformWindow *t_window;
@@ -2569,9 +2474,79 @@ bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
+{
+	bool t_success = true;
+	
+	CGImageRef t_image = nil;
+	CGColorSpaceRef t_colorspace = nil;
+	CFDataRef t_data = nil;
+	CGDataProviderRef t_dp = nil;
+	
+	if (t_success)
+		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_alpha.pixels, p_alpha.stride *  p_alpha.height, kCFAllocatorNull));
+	
+	if (t_success)
+		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
+	
+	if (t_success)
+		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
+	
+	if (t_success)
+		t_success = nil != (t_image = CGImageCreate(p_alpha.width, p_alpha.height, 8, 8, p_alpha.stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
+	
+	CGColorSpaceRelease(t_colorspace);
+	CGDataProviderRelease(t_dp);
+	CFRelease(t_data);
+	
+	if (t_success)
+		r_image = t_image;
+	
+	return t_success;
+}
+
+MCMacPlatformWindowMask::MCMacPlatformWindowMask(void)
+    : m_cg_mask(nullptr)
+{
+    MCMemoryClear(m_mask);
+}
+
+MCMacPlatformWindowMask::~MCMacPlatformWindowMask(void)
+{
+    if (m_cg_mask != nullptr)
+    {
+        CGImageRelease(m_cg_mask);
+    }
+	MCMemoryDeallocate(m_mask.pixels);
+}
+
+bool MCMacPlatformWindowMask::IsValid(void) const
+{
+    return m_cg_mask != nullptr;
+}
+
+bool MCMacPlatformWindowMask::CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits)
+{
+    m_mask.pixels = p_bits;
+	m_mask.stride = p_stride;
+	m_mask.width = p_width;
+	m_mask.height = p_height;
+	m_mask.format = kMCGRasterFormat_A;
+    
+    return MCAlphaToCGImageNoCopy(m_mask,
+                                  m_cg_mask);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMacPlatformCreateWindow(MCPlatformWindowRef& r_window)
 {
-	r_window = new MCMacPlatformWindow;
+	r_window = new (nothrow) MCMacPlatformWindow;
+}
+
+void MCMacPlatformCreateWindowMask(MCPlatformWindowMaskRef& r_mask)
+{
+    r_mask = new (nothrow) MCMacPlatformWindowMask;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

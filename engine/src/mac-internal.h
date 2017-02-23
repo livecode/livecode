@@ -662,12 +662,21 @@ bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
-struct MCMacPlatformWindowMask
+class MCMacPlatformWindowMask: public MCPlatformWindowMask
 {
-	MCGRaster mask;
-	CGImageRef cg_mask;
-	
-	uint32_t references;
+public:
+    MCMacPlatformWindowMask(void);
+    ~MCMacPlatformWindowMask(void);
+    
+    bool IsValid(void) const;
+    
+    bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits);
+    
+private:
+	MCGRaster m_mask;
+	CGImageRef m_cg_mask;
+    
+    friend MCMacPlatformSurface;
 };
 
 // IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled

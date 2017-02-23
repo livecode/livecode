@@ -76,7 +76,9 @@ MCPlatformWindow::~MCPlatformWindow(void)
 	
 	MCGRegionDestroy(m_dirty_region);
 	
-	MCPlatformWindowMaskRelease(m_mask);
+    if (m_mask != nullptr)
+        m_mask->Release();
+    
     // SN-2014-06-23: Title updated to StringRef
 	MCValueRelease(m_title);
 	
@@ -305,10 +307,10 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 		case kMCPlatformWindowPropertyMask:
 			assert(p_type == kMCPlatformPropertyTypeWindowMask);
 			if (m_mask != nil)
-				MCPlatformWindowMaskRelease(m_mask);
+                m_mask->Release();
 			m_mask = *(MCPlatformWindowMaskRef *)p_value;
 			if (m_mask != nil)
-				MCPlatformWindowMaskRetain(m_mask);
+                m_mask->Retain();
 			m_changes . mask_changed = true;
 			break;
 		case kMCPlatformWindowPropertyIsOpaque:
@@ -751,3 +753,57 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+extern void MCMacPlatformCreateWindowMask(MCPlatformWindowMaskRef& r_mask);
+
+MCPlatformWindowMask::MCPlatformWindowMask(void)
+    : m_references(1)
+{
+}
+
+MCPlatformWindowMask::~MCPlatformWindowMask(void)
+{
+}
+
+void MCPlatformWindowMask::Retain(void)
+{
+    m_references += 1;
+}
+
+void MCPlatformWindowMask::Release(void)
+{
+    m_references -= 1;
+    if (m_references == 0)
+    {
+        delete this;
+    }
+}
+
+void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)
+{
+    MCPlatformWindowMaskRef t_mask;
+    MCMacPlatformCreateWindowMask(t_mask);
+    if (t_mask != nullptr &&
+        !t_mask->CreateWithAlphaAndRelease(width, height, stride, bits))
+    {
+        t_mask->Release();
+        t_mask = nullptr;
+    }
+    
+    r_mask = t_mask;
+}
+
+void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
+{
+    p_mask->Retain();
+}
+
+void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
+{
+    p_mask->Release();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+

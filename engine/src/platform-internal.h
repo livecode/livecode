@@ -43,6 +43,25 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCPlatformWindowMask
+{
+public:
+    MCPlatformWindowMask(void);
+    virtual ~MCPlatformWindowMask(void);
+    
+    virtual void Retain(void);
+    virtual void Release(void);
+
+    virtual bool IsValid(void) const = 0;
+
+    virtual bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits) = 0;
+    
+private:
+    uint32_t m_references;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef void (*MCPlatformWindowAttachmentCallback)(void *object, bool realized);
 
 struct MCPlatformWindowAttachment

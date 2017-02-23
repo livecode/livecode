@@ -576,7 +576,6 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef transform, MCImag
 
 typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 
-void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef mask);
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);

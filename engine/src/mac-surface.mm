@@ -254,7 +254,7 @@ void MCMacPlatformSurface::ApplyMaskToCGContext()
     CGImageRef t_mask;
 	t_mask = nil;
 	if (m_window -> m_mask != nil)
-		t_mask = ((MCMacPlatformWindowMask*)m_window -> m_mask) -> cg_mask;
+		t_mask = ((MCMacPlatformWindowMask*)m_window -> m_mask) -> m_cg_mask;
     
 	if (t_mask != nil)
 	{
@@ -310,7 +310,7 @@ void MCMacPlatformSurface::Unlock(void)
 			// IM-2014-10-03: [[ Bug 13432 ]] Set the buffer alpha directly from the mask raster.
 			MCMacPlatformWindowMask *t_mask;
 			t_mask = (MCMacPlatformWindowMask*)m_window->m_mask;
-			MCGRasterApplyAlpha(m_raster, t_mask->mask, MCGIntegerPointMake(-t_bounds.origin.x * t_scale, -t_bounds.origin.y * t_scale));
+			MCGRasterApplyAlpha(m_raster, t_mask->m_mask, MCGIntegerPointMake(-t_bounds.origin.x * t_scale, -t_bounds.origin.y * t_scale));
 		}
 			
         MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
