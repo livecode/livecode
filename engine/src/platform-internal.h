@@ -249,6 +249,35 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCPlatformSound
+{
+public:
+	MCPlatformSound(void);
+	virtual ~MCPlatformSound(void);
+	
+	virtual void Retain(void);
+	virtual void Release(void);
+    
+    virtual bool IsValid(void) const = 0;
+    
+    virtual bool CreateWithData(const void *data, size_t data_size) = 0;
+    
+    virtual bool IsPlaying(void) const = 0;
+    
+    virtual void Play(void) = 0;
+    virtual void Pause(void) = 0;
+    virtual void Resume(void) = 0;
+    virtual void Stop(void) = 0;
+    
+    virtual void SetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
+    virtual void GetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
+    
+private:
+    uint32_t m_references;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCPlatformPlayer
 {
 public:

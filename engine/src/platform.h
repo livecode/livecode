@@ -1095,7 +1095,7 @@ void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformSound *MCPlatformSoundRef;
+typedef class MCPlatformSound *MCPlatformSoundRef;
 
 enum MCPlatformSoundProperty
 {

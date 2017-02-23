@@ -1,6 +1,7 @@
 #ifndef __MC_MAC_PLATFORM__
 #define __MC_MAC_PLATFORM__
 
+#import <AppKit/NSSound.h>
 #import <AppKit/NSColorPanel.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -666,11 +667,11 @@ class MCMacPlatformWindowMask: public MCPlatformWindowMask
 {
 public:
     MCMacPlatformWindowMask(void);
-    ~MCMacPlatformWindowMask(void);
+    virtual ~MCMacPlatformWindowMask(void);
     
-    bool IsValid(void) const;
+    virtual bool IsValid(void) const;
     
-    bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits);
+    virtual bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits);
     
 private:
 	MCGRaster m_mask;
@@ -678,6 +679,34 @@ private:
     
     friend MCMacPlatformSurface;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformSound: public MCPlatformSound
+{
+public:
+    MCMacPlatformSound(void);
+    ~MCMacPlatformSound(void);
+    
+    virtual bool IsValid(void) const;
+    
+    virtual bool CreateWithData(const void *data, size_t data_size);
+    
+    virtual bool IsPlaying(void) const;
+    
+    virtual void Play(void);
+    virtual void Pause(void);
+    virtual void Resume(void);
+    virtual void Stop(void);
+    
+    virtual void SetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value);
+    virtual void GetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value);
+
+private:
+    NSSound *m_sound;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
 void MCMacPlatformEnableEventChecking(void);
