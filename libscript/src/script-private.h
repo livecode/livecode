@@ -45,6 +45,11 @@ extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCSLibraryRef MCScriptGetLibrary(void);
+bool MCScriptLoadLibrary(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_path);
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,

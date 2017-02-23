@@ -1314,7 +1314,7 @@ MC_DLLEXPORT hash_t MCHashUSize(size_t);
 MC_DLLEXPORT hash_t MCHashDouble(double d);
 
 // Returns a hash value for the given pointer.
-MC_DLLEXPORT hash_t MCHashPointer(void *p);
+MC_DLLEXPORT hash_t MCHashPointer(const void *p);
 
 // Returns a hash value for the given sequence of bytes.
 MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
@@ -2904,11 +2904,17 @@ MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 // Catch the current error code (on the current thread) if any and clear it.
 MC_DLLEXPORT bool MCErrorCatch(MCErrorRef& r_error);
 
+// Resets the error state on the current thread. This call is equivalent to:
+//     MCAutoErrorRef t_error;
+//     MCErrorCatach(&t_error);
+MC_DLLEXPORT void MCErrorReset(void);
+
 // Returns true if there is an error pending on the current thread.
 MC_DLLEXPORT bool MCErrorIsPending(void);
 
 // Returns any pending error (on the current thread) without clearing it.
 MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
+
 
 // Throw an out of memory error.
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);

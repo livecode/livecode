@@ -836,7 +836,8 @@ bool MCExternalV1::Prepare(void)
 	// Fetch the description callback - this symbol has to exist since a V1
 	// external is only created if it does!
 	MCExternalDescribeProc t_describe;
-	t_describe = (MCExternalDescribeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalDescribe"));
+	t_describe = (MCExternalDescribeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalDescribe"));
 	
 	// Update the current external var.
 	s_current_external = this;
@@ -846,18 +847,19 @@ bool MCExternalV1::Prepare(void)
 	
 	// Unset the current external var.
 	s_current_external = nil;
-	
+    
 	if (m_info == nil)
 		return false;
 
-	return true;
+    return true;
 }
 
 bool MCExternalV1::Initialize(void)
 {
 	// Fetch the initialize entry point.
 	MCExternalInitializeProc t_initialize;
-	t_initialize = (MCExternalInitializeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalInitialize"));
+	t_initialize = (MCExternalInitializeProc)MCU_library_lookup(*m_module,
+                                                                MCSTR("MCExternalInitialize"));
 	if (t_initialize == nil)
 		return true;
 	
@@ -889,7 +891,8 @@ void MCExternalV1::Finalize(void)
 {
 	// Fetch the finalize entry point.
 	MCExternalFinalizeProc t_finalize;
-	t_finalize = (MCExternalFinalizeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalFinalize"));
+	t_finalize = (MCExternalFinalizeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalFinalize"));
 	if (t_finalize == nil)
 		return;
 	

@@ -19,6 +19,7 @@ import sys
 import platform
 import re
 import os
+import subprocess
 
 KNOWN_PLATFORMS = (
     'linux-x86', 'linux-x86_64', 'android-armv6',
@@ -266,7 +267,7 @@ def validate_gyp_settings(opts):
 def guess_java_home(os):
     try:
         return subprocess.check_output('/usr/libexec/java_home')
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         pass
     for d in ('/usr/lib/jvm/default', '/usr/lib/jvm/default-java'):
         if os.path.isdir(d):
@@ -375,7 +376,7 @@ def guess_android_tooldir(name):
 # in the SDK's build-tools subdirectory.  This is pretty fragile if someone
 # has (potentially?) multiple sets of build tools installed.
 def guess_android_build_tools(sdkdir):
-    dirs = listdir(os.path.join(sdkdir, 'build-tools'))
+    dirs = os.listdir(os.path.join(sdkdir, 'build-tools'))
     if len(dirs) == 1:
         return dirs[0]
     return None
