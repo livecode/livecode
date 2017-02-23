@@ -7,6 +7,8 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_...
 
+**lc-compile** [_OPTION_ ...] --outputauxc _OUTFILE_ [--] _LCBFILE_
+
 **lc-compile** [_OPTION_ ...] --deps [_DEPSMODE_] [--] _LCBFILE_...
 
 ## DESCRIPTION
@@ -35,6 +37,12 @@ is not specified, then **lc-compile** may additionally generate an interface
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
 
+* --outputauxc _OUTFILE_:
+  Generate LiveCode bytecode as a static array embedded in C source code in
+  _OUTFILE_, which should be the path to a `.c` file.  This option differs from
+  `--outputc` in the name of the C arrays which are generated. If _OUTFILE_
+  already exists, it will be overwritten.
+  
 * --deps [_DEPSMODE_]:
   Generate dependency information on standard output.  _DEPSMODE_ may
   be `order`, `changed-order`, or `make`.  If _DEPSMODE_ is omitted,
@@ -56,7 +64,7 @@ is not specified, then **lc-compile** may additionally generate an interface
 * --:
   Stop processing options.  This is useful in case _LCBFILE_ begins with `--`.
 
-The `--output` and `--outputc` options cannot be used together.
+The `--output`, `--outputc` and `--outputauxc` options cannot be used together.
 
 ## DEPENDENCY INFORMATION
 

@@ -341,7 +341,7 @@ void AddFile(const char *p_filename)
         Fatal_OutOfMemory();
     
     t_new_file -> index = s_next_file_index++;
-
+	
 	t_new_file->line_text_initialized = 0;
 
     for(t_last_file_ptr = &s_files; *t_last_file_ptr != NULL; t_last_file_ptr = &((*t_last_file_ptr) -> next))

@@ -32,6 +32,7 @@ static int s_is_bootstrap = 0;
 extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
 extern int OutputFileAsBytecode;
+extern int OutputFileAsAuxC;
 
 int IsBootstrapCompile(void)
 {
@@ -75,7 +76,7 @@ void bootstrap_main(int argc, char *argv[])
             OutputFileAsC = 1;
             OutputFileAsBytecode = 0;
             SetOutputCodeFile(argv[++i]);
-        }
+		}
         else if (strcmp(argv[i], "--outputi") == 0 && i + 1 < argc)
             AddImportedModuleDir(argv[++i]);
         else
@@ -105,6 +106,7 @@ usage(int status)
 "      --modulepath PATH      Search PATH for module interface files.\n"
 "      --output OUTFILE       Filename for bytecode output.\n"
 "      --outputc OUTFILE      Filename for C source code output.\n"
+"      --outputauxc OUTFILE   Filename for C source code output (auxillary modules).\n"
 "      --deps make            Generate lci file dependencies in make format for\n"
 "                             the input source files.\n"
 "      --deps order           Generate the order the input source files should be\n"
@@ -187,7 +189,15 @@ static void full_main(int argc, char *argv[])
                 OutputFileAsBytecode = 0;
                 have_output_file = 1;
                 continue;
-            }
+			}
+			if (0 == strcmp(opt, "--outputauxc") && optarg)
+			{
+                SetOutputCodeFile(argv[++argi]);
+				OutputFileAsC = 1;
+				OutputFileAsAuxC = 1;
+				OutputFileAsBytecode = 0;
+				continue;
+			}
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
@@ -275,6 +285,8 @@ static void full_main(int argc, char *argv[])
 // No built-in modules for the compiler
 void* g_builtin_modules[1] = {NULL};
 unsigned int g_builtin_module_count = 0;
+void* g_builtin_aux_modules[1] = {NULL};
+unsigned int g_builtin_aux_module_count = 0;
 
 extern int yydebug;
 extern void InitializeFoundation(void);

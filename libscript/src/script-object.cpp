@@ -55,29 +55,43 @@ static uindex_t s_builtin_module_count = 0;
 static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
 
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
+static bool MCFetchBuiltinAuxModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
+
+static bool __MCScriptCreateBuiltinModules(MCBuiltinModule **p_modules, unsigned int p_module_count)
+{
+	uindex_t t_current_module_count;
+	t_current_module_count = s_builtin_module_count;
+	
+	if (!MCMemoryResizeArray(t_current_module_count + p_module_count, s_builtin_modules, s_builtin_module_count))
+		return false;
+	
+	for(uindex_t i = 0; i < p_module_count; i++)
+	{
+		MCStreamRef t_stream;
+		if (!MCMemoryInputStreamCreate(p_modules[i] -> data, p_modules[i] -> size, t_stream))
+			return false;
+		
+		if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[t_current_module_count + i]))
+			return false;
+		
+		MCValueRelease(t_stream);
+	}
+	
+	return true;
+}
 
 bool MCScriptInitialize(void)
 {
     MCBuiltinModule **t_modules;
     unsigned int t_module_count;
-    if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
+    if (!MCFetchBuiltinModuleSection(t_modules, t_module_count) ||
+		!__MCScriptCreateBuiltinModules(t_modules, t_module_count))
         return true;
-    
-    if (!MCMemoryNewArray(t_module_count, s_builtin_modules))
-        return false;
-    
-    for(uindex_t i = 0; i < t_module_count; i++)
-    {
-        MCStreamRef t_stream;
-        if (!MCMemoryInputStreamCreate(t_modules[i] -> data, t_modules[i] -> size, t_stream))
-            return false;
-        
-        if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[i]))
-            return false;
-        
-        MCValueRelease(t_stream);
-    }
-    
+	
+	if (!MCFetchBuiltinAuxModuleSection(t_modules, t_module_count) ||
+		!__MCScriptCreateBuiltinModules(t_modules, t_module_count))
+		return true;
+	
     s_builtin_module_count = t_module_count;
     
     // This block builds the builtin module - which isn't possible to compile from
@@ -409,7 +423,9 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
 extern "C"
 {
     extern MCBuiltinModule* g_builtin_modules[];
-    extern unsigned int g_builtin_module_count;
+	extern unsigned int g_builtin_module_count;
+	extern MCBuiltinModule* g_builtin_aux_modules[];
+	extern unsigned int g_builtin_aux_module_count;
 }
 
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count)
@@ -418,4 +434,12 @@ static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned i
     r_modules = g_builtin_modules;
     r_count = g_builtin_module_count;
     return true;
+}
+
+static bool MCFetchBuiltinAuxModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count)
+{
+	// Use the array defined in the module-helper.cpp file
+	r_modules = g_builtin_aux_modules;
+	r_count = g_builtin_aux_module_count;
+	return true;
 }
