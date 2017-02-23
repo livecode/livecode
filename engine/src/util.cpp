@@ -2901,45 +2901,7 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
 {
     MCSysModuleHandle t_handle;
     t_handle = nil;
-#if defined(_MACOSX)
-    MCAutoPointer<char> t_module_cstring;
-    // SN-2015-04-07: [[ Bug 15164 ]] NSAddImage understands UTF-8.
-    if (!MCStringConvertToUTF8String(p_module, &t_module_cstring))
-        return NULL;
-    t_handle = (MCSysModuleHandle)NSAddImage(*t_module_cstring, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
-    if (t_handle != nil)
-        return t_handle;
-    // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
-    uint32_t t_buffer_size;
-    t_buffer_size = 0;
-    _NSGetExecutablePath(NULL, &t_buffer_size);
-    char *t_module_path;
-    t_module_path = (char *) malloc(t_buffer_size + strlen(*t_module_cstring) + 1);
-    if (t_module_path != NULL)
-    {
-        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
-        {
-            char *t_last_slash;
-            t_last_slash = t_module_path + t_buffer_size;
-            for (uint32_t i = 0; i < t_buffer_size; i++)
-            {
-                if (*t_last_slash == '/')
-                {
-                    *(t_last_slash + 1) = '\0';
-                    break;
-                }
-                t_last_slash--;
-            }
-            strcat(t_module_path, *t_module_cstring);
-            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
-        }
-        free(t_module_path);
-        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
-        if (t_handle != nil)
-            return t_handle;
-    }
-#endif
-
+	
     MCAutoStringRef t_path;
     
     if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
@@ -2981,24 +2943,13 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
 void MCU_unloadmodule(void *p_module)
 {
-    // SN-2015-03-04: [[ Broken module unloading ]] NSAddImage, used on Mac in
-    //  MCU_loadmodule, does not need any unloading of the module -
-    //  but the other platforms do.
-#if !defined(_MACOSX)
     MCS_unloadmodule((MCSysModuleHandle)p_module);
-#endif
 }
 
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
 void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
 {
-#if defined(_MACOSX)
-    NSSymbol t_symbol;
-    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_symbol, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
-    if (t_symbol != NULL)
-        return NSAddressOfSymbol(t_symbol);
-#endif
     MCAutoStringRef t_symbol_str;
     if (!MCStringCreateWithCString(p_symbol, &t_symbol_str))
         return nil;

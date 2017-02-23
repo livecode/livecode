@@ -76,7 +76,7 @@ bool MCInitialize(void)
     
     if (!__MCStreamInitialize())
         return false;
-    
+
 	return true;
 }
 

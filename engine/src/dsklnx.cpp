@@ -1274,33 +1274,20 @@ public:
         return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
     }
 
-    virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
-    {
-        // dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
-        // spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
-        //
-        // Because converting to a sys string allocates memory, this alignment will always be satisfied.
-        // (malloc/new always return alignment >= int/pointer alignment)
-        MCAutoStringRefAsSysString t_filename_sys;
-        /* UNCHECKED */ t_filename_sys.Lock(p_path);
-
-        MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)dlopen(*t_filename_sys, (RTLD_NOW | RTLD_LOCAL));
-
-        return t_result ;
-    }
-
-    virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-        MCAutoStringRefAsSysString t_symbol_sys;
-        /* UNCHECKED */ t_symbol_sys.Lock(p_symbol);
-        return (MCSysModuleHandle)(dlsym(p_module, *t_symbol_sys));
-    }
-
-    virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-        dlclose(p_module);
-    }
+	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
+	{
+		return (MCSysModuleHandle)MCSDylibLoadModule(p_filename);
+	}
+	
+	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
+	{
+        return (MCSysModuleHandle)MCSDylibResolveModuleSymbol(p_module, p_symbol);
+	}
+	
+	virtual void UnloadModule(MCSysModuleHandle p_module)
+	{
+		MCSDylibUnloadModule((void *)p_module);
+	}
 
     virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {

@@ -2,9 +2,32 @@
 
 use warnings;
 use Text::ParseWords;
+use Getopt::Long;
 
+my $foundation = 0;
+GetOptions ('foundation|f' => \$foundation);
 my $inputFile = $ARGV[0];
 my $outputFile = $ARGV[1];
+
+my $load = '';
+my $unload = '';
+my $resolve = '';
+
+# MCU_loadmodule and friends have engine dependency - for example when
+# weak linking to the crypto library we rely on revsecurity living next
+# to the executable, which is resolved using MCcmd. We also rely on 
+# mappings from dynamic library names to paths which can be custom-
+# defined as deploy parameters. Hence we need to use special simplified 
+# implementations in libfoundation if we require no engine dependency.
+if ($foundation == 1) {
+    $load = "MCSDylibLoadModuleCString";
+    $unload = "MCSDylibUnloadModule";
+    $resolve = "MCSDylibResolveModuleSymbolCString";
+} else {
+    $load = "MCU_loadmodule";
+    $unload = "MCU_unloadmodule";
+    $resolve = "MCU_resolvemodulesymbol";
+}
 
 # Read all of the input data
 open INPUT, "<$inputFile"
@@ -23,6 +46,7 @@ my $currentModule = undef;
 
 # Predeclarations
 sub output;
+sub outputpart;
 sub generateModule;
 sub symbolIsReference;
 sub typeListToProto;
@@ -88,9 +112,15 @@ output ;
 output "typedef void *module_t;";
 output "typedef void *handler_t;";
 output ;
-output "extern \"C\" void *MCU_loadmodule(const char *);";
-output "extern \"C\" void MCU_unloadmodule(void *);";
-output "extern \"C\" void *MCU_resolvemodulesymbol(void *, const char *);";
+outputpart "extern \"C\" void *";
+outputpart $load;
+output "(const char *);";
+outputpart "extern \"C\" void ";
+outputpart $unload;
+output "(void *);";
+outputpart "extern \"C\" void *";
+outputpart $resolve;
+output "(void *, const char *);";
 output ;
 
 output "extern \"C\"";
@@ -99,7 +129,9 @@ output ;
 output "static int module_load(const char *p_source, module_t *r_module)";
 output "{";
 output "  module_t t_module;";
-output " 	t_module = (module_t)MCU_loadmodule(p_source);";
+outputpart " 	t_module = (module_t)";
+outputpart $load;
+output "(p_source);";
 output "  if (t_module == NULL)";
 output "    return 0;";
 output "  *r_module = t_module;";
@@ -110,14 +142,18 @@ output ;
 # MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Implemented module_unload for Android.
 output "static int module_unload(module_t p_module)";
 output "{";
-output "  MCU_unloadmodule(p_module);";
+outputpart "  ";
+outputpart $unload;
+output "(p_module);";
 output "  return 1;";
 output "}";
 output ;
 output "static int module_resolve(module_t p_module, const char *p_name, handler_t *r_handler)";
 output "{";
 output "  handler_t t_handler;";
-output "    t_handler = MCU_resolvemodulesymbol(p_module, p_name);";
+outputpart "    t_handler = ";
+outputpart $resolve;
+output "(p_module, p_name);";
 output "  if (t_handler == NULL)";
 output "    return 0;";
 output "  *r_handler = t_handler;";
@@ -488,6 +524,11 @@ sub output
 	{
 		$line = "";
 	}
-	
-	print OUTPUT "$line\n";
+	outputpart "$line\n"
+}
+
+sub outputpart
+{
+	my $line = $_[0];
+	print OUTPUT "$line";
 }

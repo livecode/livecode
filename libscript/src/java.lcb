@@ -1,0 +1,55 @@
+/* Copyright (C) 2016 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+ 
+module com.livecode.java
+
+use com.livecode.foreign
+
+public foreign type JObject binds to "MCJavaObjectTypeInfo"
+public type JString is JObject
+public type JArray is JObject 
+
+foreign handler MCJavaStringFromJString(in pString as JObject, out rString as String) returns nothing binds to "<builtin>"
+foreign handler MCJavaStringToJString(in pString as String, out rString as JObject) returns nothing binds to "<builtin>"
+
+foreign handler MCJavaNewObject(in pString as String, in pArgs as List, out rObj as JObject) returns CBool binds to "<builtin>"
+
+public handler GetObject(in pClassName as String, in pArgs as List) returns JObject
+	variable tObject as JObject
+	variable tResult as Boolean
+	unsafe
+		put MCJavaNewObject(pClassName, pArgs, tObject) into tResult
+	end unsafe
+	return tObject
+end handler
+
+public handler StringFromJString(in pObj as JString) returns String
+	variable tString as String
+    unsafe
+		MCJavaStringFromJString(pObj, tString)
+    end unsafe
+	return tString
+end handler
+
+public handler StringToJString(in pString as String) returns JString
+	variable tString as JString
+    unsafe
+		MCJavaStringToJString(pString, tString)
+    end unsafe
+	return tString
+end handler
+
+end module
