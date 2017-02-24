@@ -16,10 +16,9 @@
 
 #include "platform.h"
 #include "platform-internal.h"
+#include "mac-extern.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern MCPlatformSoundRef MCMacPlatformCreateSound(void);
 
 MCPlatformSound::MCPlatformSound(void)
 {
@@ -31,16 +30,13 @@ MCPlatformSound::~MCPlatformSound(void)
 
 void MCPlatformSoundCreateWithData(const void *p_data, size_t p_data_size, MCPlatformSoundRef& r_sound)
 {
-    MCPlatformSoundRef t_sound =
-            MCMacPlatformCreateSound();
-    if (t_sound != nullptr &&
+    auto t_sound = MCMacPlatformCreateSound();
+    if (t_sound &&
         !t_sound->CreateWithData(p_data, p_data_size))
     {
-        t_sound->Release();
-        t_sound = nullptr;
+        t_sound.reset();
     }
-    
-    r_sound = t_sound;
+    r_sound = t_sound.unsafeTake();
 }
 
 void MCPlatformSoundRetain(MCPlatformSoundRef p_sound)

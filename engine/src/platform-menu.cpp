@@ -16,13 +16,7 @@
 
 #include "platform.h"
 #include "platform-internal.h"
-
-extern MCPlatformMenuRef MCMacPlatformCreateMenu(void);
-extern void MCMacPlatformSetIconMenu(MCPlatformMenuRef p_menu);
-extern void MCMacPlatformSetMenubar(MCPlatformMenuRef p_menu);
-extern MCPlatformMenuRef MCMacPlatformGetMenubar(void);
-extern void MCMacPlatformHideMenubar(void);
-extern void MCMacPlatformShowMenubar(void);
+#include "mac-extern.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,10 +32,7 @@ MCPlatformMenu::~MCPlatformMenu(void)
 
 void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 {
-    MCPlatformMenuRef t_menu;
-    t_menu = MCMacPlatformCreateMenu();
-    
-    r_menu = t_menu;
+    r_menu = MCMacPlatformCreateMenu().unsafeTake();
 }
 
 void MCPlatformRetainMenu(MCPlatformMenuRef p_menu)
@@ -125,7 +116,7 @@ void MCPlatformSetMenubar(MCPlatformMenuRef p_menu)
 
 void MCPlatformGetMenubar(MCPlatformMenuRef& r_menu)
 {
-    r_menu = MCMacPlatformGetMenubar();
+    r_menu = MCMacPlatformGetMenubar().unsafeTake();
 }
 
 //////////
@@ -141,10 +132,8 @@ void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
 //   so that all apps get Quit / About items.
 bool MCPlatformInitializeMenu(void)
 {
-    MCPlatformMenuRef t_menubar;
-    t_menubar = MCMacPlatformCreateMenu();
-    MCMacPlatformSetMenubar(t_menubar);
-    t_menubar -> Release();
+    auto t_menubar = MCMacPlatformCreateMenu();
+    MCMacPlatformSetMenubar(t_menubar.get());
     return true;
 }
 

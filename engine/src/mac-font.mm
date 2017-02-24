@@ -41,7 +41,8 @@ MCMacPlatformLoadedFont::~MCMacPlatformLoadedFont(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformLoadedFontRef MCMacPlatformCreateLoadedFont(MCStringRef p_path, bool p_globally)
+MCPlatform::Ref<MCPlatformLoadedFont>
+MCMacPlatformCreateLoadedFont(MCStringRef p_path, bool p_globally)
 {
-    return new (nothrow) MCMacPlatformLoadedFont(p_path, p_globally);
+    return MCPlatform::makeRef<MCMacPlatformLoadedFont>(p_path, p_globally);
 }

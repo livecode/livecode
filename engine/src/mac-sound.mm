@@ -120,9 +120,9 @@ void MCMacPlatformSound::GetProperty(MCPlatformSoundProperty property, MCPlatfor
 {
 }
 
-MCPlatformSoundRef MCMacPlatformCreateSound(void)
+MCPlatform::Ref<MCPlatformSound> MCMacPlatformCreateSound(void)
 {
-    return new (nothrow) MCMacPlatformSound;
+    return MCPlatform::makeRef<MCMacPlatformSound>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

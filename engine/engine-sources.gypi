@@ -684,6 +684,7 @@
 			
 			# Group "Desktop - Mac"
 			'src/mac-internal.h',
+			'src/mac-extern.h',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',

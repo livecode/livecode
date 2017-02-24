@@ -1018,9 +1018,9 @@ MCPlatformMenuRef MCMacPlatformGetMenubar(void)
 	return s_menubar;
 }
 
-MCPlatformMenuRef MCMacPlatformCreateMenu(void)
+MCPlatform::Ref<MCPlatformMenu> MCMacPlatformCreateMenu(void)
 {
-    return new (nothrow) MCMacPlatformMenu();
+    return MCPlatform::makeRef<MCMacPlatformMenu>();
 }
 
 

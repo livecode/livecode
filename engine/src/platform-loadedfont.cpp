@@ -16,8 +16,7 @@
 
 #include "platform.h"
 #include "platform-internal.h"
-
-extern MCPlatformLoadedFontRef MCMacPlatformCreateLoadedFont(MCStringRef p_utf8_path, bool p_globally);
+#include "mac-extern.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,12 +32,11 @@ MCPlatformLoadedFont::~MCPlatformLoadedFont(void)
 
 bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
-    MCPlatformLoadedFontRef t_font =
-        MCMacPlatformCreateLoadedFont(p_utf8_path, p_globally);
-    
-    r_loaded_font = t_font;
-    
-    return t_font != nullptr;
+    auto t_font = MCMacPlatformCreateLoadedFont(p_utf8_path, p_globally);
+    if (!t_font)
+        return false;
+    r_loaded_font = t_font.unsafeTake();
+    return true;
 }
 
 bool MCPlatformUnloadFont(MCPlatformLoadedFontRef p_loaded_font)

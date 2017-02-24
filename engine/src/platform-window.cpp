@@ -16,6 +16,7 @@
 
 #include "platform.h"
 #include "platform-internal.h"
+#include "mac-extern.h"
 
 #include "region.h"
 
@@ -607,11 +608,9 @@ void MCPlatformWindow::HandleDragDrop(bool& r_accepted)
 //  Platform Window Procedural Wrappers
 //
 
-extern void MCMacPlatformCreateWindow(MCPlatformWindowRef& r_window);
-
 void MCPlatformCreateWindow(MCPlatformWindowRef& r_window)
 {
-	MCMacPlatformCreateWindow(r_window);
+    r_window = MCMacPlatformCreateWindow().unsafeTake();
 }
 
 void MCPlatformRetainWindow(MCPlatformWindowRef p_window)
@@ -740,8 +739,6 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCMacPlatformCreateWindowMask(MCPlatformWindowMaskRef& r_mask);
-
 MCPlatformWindowMask::MCPlatformWindowMask(void)
 {
 }
@@ -752,16 +749,13 @@ MCPlatformWindowMask::~MCPlatformWindowMask(void)
 
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)
 {
-    MCPlatformWindowMaskRef t_mask;
-    MCMacPlatformCreateWindowMask(t_mask);
-    if (t_mask != nullptr &&
+    auto t_mask = MCMacPlatformCreateWindowMask();
+    if (t_mask &&
         !t_mask->CreateWithAlphaAndRelease(width, height, stride, bits))
     {
-        t_mask->Release();
-        t_mask = nullptr;
+        t_mask.reset();
     }
-    
-    r_mask = t_mask;
+    r_mask = t_mask.unsafeTake();
 }
 
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)

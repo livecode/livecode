@@ -16,9 +16,7 @@
 
 #include "platform.h"
 #include "platform-internal.h"
-
-extern MCPlatformCursorRef MCMacPlatformCreateCursor(void);
-extern void MCMacPlatformHideCursorUntilMouseMoves(void);
+#include "mac-extern.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,22 +36,16 @@ void MCPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor
 
 void MCPlatformCreateStandardCursor(MCPlatformStandardCursor p_standard_cursor, MCPlatformCursorRef& r_cursor)
 {
-    MCPlatformCursorRef t_cursor;
-    t_cursor = MCMacPlatformCreateCursor();
-    
+    auto t_cursor = MCMacPlatformCreateCursor();
     t_cursor -> CreateStandard(p_standard_cursor);
-    
-    r_cursor = t_cursor;
+    r_cursor = t_cursor.unsafeTake();
 }
 
 void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCPlatformCursorRef& r_cursor)
 {
-    MCPlatformCursorRef t_cursor;
-    t_cursor = MCMacPlatformCreateCursor();
-    
+    auto t_cursor = MCMacPlatformCreateCursor();
     t_cursor -> CreateCustom(p_image, p_hotspot);
-    
-    r_cursor = t_cursor;
+    r_cursor = t_cursor.unsafeTake();
 }
 
 void MCPlatformRetainCursor(MCPlatformCursorRef p_cursor)

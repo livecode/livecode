@@ -2539,14 +2539,14 @@ bool MCMacPlatformWindowMask::CreateWithAlphaAndRelease(int32_t p_width, int32_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformCreateWindow(MCPlatformWindowRef& r_window)
+MCPlatform::Ref<MCPlatformWindow> MCMacPlatformCreateWindow()
 {
-	r_window = new (nothrow) MCMacPlatformWindow;
+    return MCPlatform::makeRef<MCMacPlatformWindow>();
 }
 
-void MCMacPlatformCreateWindowMask(MCPlatformWindowMaskRef& r_mask)
+MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask()
 {
-    r_mask = new (nothrow) MCMacPlatformWindowMask;
+    return MCPlatform::makeRef<MCMacPlatformWindowMask>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

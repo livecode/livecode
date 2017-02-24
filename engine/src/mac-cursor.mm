@@ -202,8 +202,8 @@ void MCMacPlatformResetCursor(void)
     [[NSCursor arrowCursor] set];
 }
 
-MCPlatformCursorRef MCMacPlatformCreateCursor(void)
+MCPlatform::Ref<MCPlatformCursor> MCMacPlatformCreateCursor(void)
 {
-    return new (nothrow) MCMacPlatformCursor;
+    return MCPlatform::makeRef<MCMacPlatformCursor>();
 }
 
