@@ -20,20 +20,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformLoadedFont::LoadedFont(MCStringRef p_path, bool p_globally)
-: m_path(p_path)
-, m_globally(p_globally)
-{
-}
-
-MCPlatformLoadedFont::~LoadedFont(void)
-{
-}
-
 bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
-    MCPlatform::LoadedFontRef t_font = MCMacPlatformCreateLoadedFont(p_utf8_path, p_globally);
+    MCPlatform::LoadedFontRef t_font = MCMacPlatformCreateLoadedFont();
     if (!t_font)
+        return false;
+    if (!t_font->CreateWithPath(p_utf8_path, p_globally))
         return false;
     r_loaded_font = t_font.unsafeTake();
     return true;

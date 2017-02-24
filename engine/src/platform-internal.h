@@ -269,15 +269,9 @@ typedef MCPlatform::ColorTransform MCPlatformColorTransform;
 
 namespace MCPlatform {
 
-class LoadedFont: public virtual Base
-{
+class LoadedFont: public virtual Base {
 public:
-    LoadedFont(MCStringRef p_path, bool p_globally);
-    virtual ~LoadedFont(void);
-    
-protected:
-    MCStringRef m_path;
-    bool m_globally;
+    virtual bool CreateWithPath(MCStringRef p_path, bool p_globally) = 0;
 };
 
 typedef Ref<LoadedFont> LoadedFontRef;

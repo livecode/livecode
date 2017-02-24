@@ -28,21 +28,28 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformLoadedFont::MCMacPlatformLoadedFont(MCStringRef p_path, bool p_globally)
-: MCPlatformLoadedFont(p_path,p_globally)
+MCMacPlatformLoadedFont::MCMacPlatformLoadedFont() : m_globally(false)
 {
-    coretext_font_load_from_path(p_path, p_globally);
 }
 
 MCMacPlatformLoadedFont::~MCMacPlatformLoadedFont(void)
 {
-    coretext_font_unload(m_path, m_globally);
+    coretext_font_unload(*m_path, m_globally);
 }
 
+
+bool
+MCMacPlatformLoadedFont::CreateWithPath(MCStringRef p_path, bool p_globally)
+{
+    m_path.Reset(p_path);
+    m_globally = p_globally;
+    coretext_font_load_from_path(*m_path, m_globally);
+    return true;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatform::Ref<MCPlatformLoadedFont>
-MCMacPlatformCreateLoadedFont(MCStringRef p_path, bool p_globally)
+MCMacPlatformCreateLoadedFont()
 {
-    return MCPlatform::makeRef<MCMacPlatformLoadedFont>(p_path, p_globally);
+    return MCPlatform::makeRef<MCMacPlatformLoadedFont>();
 }

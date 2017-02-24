@@ -686,8 +686,12 @@ private:
 class MCMacPlatformLoadedFont: public MCPlatformLoadedFont
 {
 public:
-    MCMacPlatformLoadedFont(MCStringRef p_path, bool p_globally);
+    MCMacPlatformLoadedFont();
     ~MCMacPlatformLoadedFont(void);
+    virtual bool CreateWithPath(MCStringRef p_path, bool p_globally);
+private:
+    MCAutoStringRef m_path;
+    bool m_globally;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
