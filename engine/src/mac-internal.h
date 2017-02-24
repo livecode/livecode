@@ -8,6 +8,7 @@
 
 class MCMacPlatformWindow;
 class MCMacPlatformSurface;
+class MCMacPlatformMenu;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -373,17 +374,17 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 @interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
 {
-	MCPlatformMenuRef m_menu;
+	MCMacPlatformMenu * m_menu;
 }
 
 //////////
 
-- (id)initWithPlatformMenuRef: (MCPlatformMenuRef)p_menu_ref;
+- (id)initWithPlatformMenuRef: (MCMacPlatformMenu *)p_menu_ref;
 - (void)dealloc;
 
 //////////
 
-- (MCPlatformMenuRef)platformMenuRef;
+- (MCMacPlatformMenu *)platformMenuRef;
 
 //////////
 
@@ -739,6 +740,54 @@ public:
 
 private:
     NSSound *m_sound;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformMenu: public MCPlatformMenu
+{
+public:
+    MCMacPlatformMenu(void);
+    virtual ~MCMacPlatformMenu(void);
+    
+    virtual void SetTitle(MCStringRef p_title);
+    virtual uindex_t CountItems(void);
+    virtual void AddItem(uindex_t p_where);
+    virtual void AddSeparatorItem(uindex_t p_where);
+    virtual void RemoveItem(uindex_t p_where);
+    virtual void RemoveAllItems(void);
+    virtual void GetParent(MCPlatformMenuRef& r_parent, uindex_t& r_index);
+    virtual void GetItemProperty(uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, void *r_value);
+    virtual void SetItemProperty(uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, const void *p_value);
+    virtual bool PopUp(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t p_item);
+    virtual void StartUsingAsMenubar(void);
+    virtual void StopUsingAsMenubar(void);
+
+    virtual NSMenu* GetMenu(){ return menu;}
+    virtual NSMenuItem* GetQuitItem(){ return quit_item;}
+ private:
+    void DestroyMenuItem(uindex_t p_index);
+    void MapMenuItemIndex(uindex_t& x_index);
+    void ClampMenuItemIndex(uindex_t& x_index);
+    
+    NSMenu *menu;
+    MCMenuDelegate *menu_delegate;
+    
+    // If the menu is being used as a menubar then this is true. When this
+    // is the case, some items will be hidden and a (API-wise) invisible
+    // menu will be inserted at the front (the application menu).
+    bool is_menubar : 1;
+    
+    // If the quit item in this menu has an accelerator, this is true.
+    // (Cocoa seems to 'hide' the quit menu item accelerator for some inexplicable
+    // reason - it returns 'empty').
+    NSMenuItem* quit_item;
+    
+    // SN-2014-11-06: [[ Bu 13940 ]] Add a flag for the presence of a Preferences shortcut
+    //  to allow the menu item to be disabled.
+    NSMenuItem* preferences_item;
+    
+    NSMenuItem* about_item;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
