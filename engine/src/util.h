@@ -211,15 +211,6 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
-// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-// SN-2015-04-07: [[ Bug 15164 ]] Added StringRef version of MCU_loadmodule
-extern "C" void* MCU_loadmodule(const char *p_module);
-extern "C" void* MCU_loadmodule_stringref(MCStringRef p_module);
-extern "C" void MCU_unloadmodule(void* p_module);
-extern "C" void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol);
-
 // 
 
 struct MCInterval
@@ -261,5 +252,37 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 
 // Test whether p_string is a valid LiveCode script token
 extern bool MCU_is_token(MCStringRef p_string);
+
+// Load a library. If loading succeeds, then a non-nullptr value is returned;
+// otherwise nullptr is returned.
+//
+// If the library parameter does not have an extension, then:
+//    - mac/ios: tries framework, bundle or dylib
+//    - linux/android: uses so
+//    - windows: uses dll
+//
+// If the library parameter is absolute, then that exact location is used.
+//
+// If the library parameter has the prefix './', then the mapped location
+// relative to the engine is used.
+//
+// Otherwise, the path is passed through to the system to use its search
+// order.
+//
+MCSLibraryRef
+MCU_library_load(MCStringRef p_library);
+
+void
+MCU_library_unload(MCSLibraryRef handle);
+
+void*
+MCU_library_lookup(MCSLibraryRef handle,
+                   MCStringRef p_symbol);
+
+extern "C" void *MCSupportLibraryLoad(const char *name);
+extern "C" void MCSupportLibraryUnload(void *handle);
+extern "C" char *MCSupportLibraryCopyNativePath(void *handle);
+extern "C" void *MCSupportLibraryLookupSymbol(void *handle,
+                                              const char *symbol);
 
 #endif

@@ -146,10 +146,6 @@ extern void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_lengt
 extern void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *&p_utf8, uint4& p_utf16_length);
 extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *&p_native, uint4& p_native_length);
 
-extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
-extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
-extern void MCS_unloadmodule(MCSysModuleHandle p_module);
-
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
 extern bool MCS_datetimetouniversal(MCDateTime& x_datetime);
 extern bool MCS_datetimetolocal(MCDateTime& x_datetime);

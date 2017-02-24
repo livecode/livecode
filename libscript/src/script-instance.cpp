@@ -14,19 +14,14 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "libscript/script.h"
-#include "script-private.h"
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-system.h>
 
 #include "ffi.h"
 
-#include "foundation-auto.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
-
+#include "libscript/script.h"
+#include "script-private.h"
 #include "script-bytecode.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -582,136 +577,6 @@ __MCScriptSplitForeignBindingString(MCStringRef& x_string,
 }
 
 static bool
-__MCScriptPlatformLoadSharedLibrary(MCStringRef p_path,
-									void*& r_handle)
-{
-#if defined(_WIN32)
-	HMODULE t_module;
-	MCAutoStringRefAsWString t_library_wstr;
-	if (!t_library_wstr.Lock(p_path))
-	{
-		return false;
-	}
-
-	t_module = LoadLibraryW(*t_library_wstr);
-	if (t_module == NULL)
-	{
-		return false;
-	}
-	
-	r_handle = (void *)t_module;
-#else
-	MCAutoStringRefAsUTF8String t_utf8_library;
-	if (!t_utf8_library.Lock(p_path))
-	{
-		return false;
-	}
-	
-	void *t_module;
-	t_module = dlopen(*t_utf8_library, RTLD_LAZY);
-	if (t_module == NULL)
-	{
-		return false;
-	}
-	
-	r_handle = (void *)t_module;
-#endif
-	return true;
-}
-
-static bool
-__MCScriptPlatformLoadSharedLibraryFunction(void *p_module,
-											MCStringRef p_function,
-											void*& r_pointer)
-{
-	MCAutoStringRefAsCString t_function_name;
-	if (!t_function_name.Lock(p_function))
-	{
-		return false;
-	}
-	
-	void *t_pointer;
-#if defined(_WIN32)
-	t_pointer = GetProcAddress((HMODULE)p_module,
-							   *t_function_name);
-#else
-	t_pointer = dlsym(p_module,
-					  *t_function_name);
-#endif
-	
-	r_pointer = t_pointer;
-	
-	return true;
-}
-
-static bool
-__MCScriptLoadSharedLibrary(MCScriptModuleRef p_module,
-							MCStringRef p_library,
-							void*& r_handle)
-{
-	// If there is no library name then we resolve to the executable module.
-	if (MCStringIsEmpty(p_library))
-	{
-#if defined(_WIN32)
-		r_handle = GetModuleHandle(NULL);
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
-		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
-		//    given, so first resolve the path to the library.
-		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library,
-												MCStringRef &r_path);
-		MCAutoStringRef t_path;
-		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"),
-										 &t_path))
-		{
-			return false;
-		}
-		
-		MCAutoStringRefAsCString t_cstring;
-		if (!t_cstring.Lock(*t_path))
-		{
-			return false;
-		}
-		
-		r_handle = dlopen(*t_cstring, 0);
-#else
-		r_handle = dlopen(NULL, 0);
-#endif
-		return true;
-	}
-	
-	// If there is no slash in the name, we try to resolve based on the module.
-	uindex_t t_offset;
-	if (!MCStringFirstIndexOfChar(p_library,
-								  '/',
-								  0,
-								  kMCStringOptionCompareExact,
-								  t_offset))
-	{
-		MCAutoStringRef t_mapped_library;
-		if (MCScriptResolveSharedLibrary(p_module,
-										 p_library,
-										 Out(t_mapped_library)))
-		{
-			if (__MCScriptPlatformLoadSharedLibrary(*t_mapped_library,
-													r_handle))
-			{
-				return true;
-			}
-		}
-	}
-	
-	// If the previous two things failed, then just try to load the library as written.
-	if (__MCScriptPlatformLoadSharedLibrary(p_library,
-											r_handle))
-	{
-		return true;
-	}
-	
-	// Oh dear - no native code library for us!
-	return false;
-}
-
-static bool
 __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 										MCScriptForeignHandlerDefinition *p_handler,
 										ffi_abi& r_abi,
@@ -792,10 +657,11 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return MCScriptThrowClassNotAllowedInCBindingError();
 		}
 		
-		void *t_module;
-		if (!__MCScriptLoadSharedLibrary(MCScriptGetModuleOfInstance(p_instance),
-										 *t_library,
-										 t_module))
+        /* TODO: This leaks a module handle! */
+        MCSLibraryRef t_module;
+		if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                 *t_library,
+                                 t_module))
 		{
 			if (r_bound == nil)
 			{
@@ -807,10 +673,10 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return true;
 		}
 		
-		void *t_pointer;
-		if (!__MCScriptPlatformLoadSharedLibraryFunction(t_module,
-														 *t_function,
-														 t_pointer))
+		void *t_pointer =
+                MCSLibraryLookupSymbol(t_module,
+                                       *t_function);
+		if (t_pointer == nullptr)
 		{
 			return false;
 		}
