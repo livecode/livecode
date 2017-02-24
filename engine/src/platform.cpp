@@ -20,31 +20,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformBase::MCPlatformBase(void)
-: m_references(1)
-{
-}
-
-MCPlatformBase::~MCPlatformBase(void)
-{
-}
-
-void MCPlatformBase::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformBase::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef& r_error_message);
 void MCPlatformHandleApplicationShutdown(int& r_exit_code);
 void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate);

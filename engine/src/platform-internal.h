@@ -25,18 +25,6 @@
 #include "platform-internal-base.h"
 #undef MC_PLATFORM_INTERNAL_INSIDE
 
-class MCPlatformBase
-{
-public:
-    MCPlatformBase(void);
-    virtual ~MCPlatformBase(void);
-    
-    virtual void Retain(void);
-    virtual void Release(void);
-private:
-    uint32_t m_references;
-};
-
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to match the new stack surface API.
 //  You can now lock/unlock multiple areas of the surface, but need to store the context and raster for those areas locally.
 class MCPlatformSurface
@@ -61,7 +49,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformWindowMask: public MCPlatformBase
+class MCPlatformWindowMask: public MCPlatform::Base
 {
 public:
     MCPlatformWindowMask(void);
@@ -82,7 +70,7 @@ struct MCPlatformWindowAttachment
 	MCPlatformWindowAttachmentCallback callback;
 };
 
-class MCPlatformWindow: public MCPlatformBase
+class MCPlatformWindow: public MCPlatform::Base
 {
 public:
 	MCPlatformWindow(void);
@@ -252,7 +240,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformColorTransform: public MCPlatformBase
+class MCPlatformColorTransform: public virtual MCPlatform::Base
 {
 public:
     MCPlatformColorTransform(const MCColorSpaceInfo& p_info);
@@ -263,7 +251,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformLoadedFont: public MCPlatformBase
+class MCPlatformLoadedFont: public virtual MCPlatform::Base
 {
 public:
     MCPlatformLoadedFont(MCStringRef p_path, bool p_globally);
@@ -277,7 +265,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformCursor: public MCPlatformBase
+class MCPlatformCursor: public virtual MCPlatform::Base
 {
 public:
     MCPlatformCursor(void);
@@ -294,7 +282,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformMenu: public MCPlatformBase
+class MCPlatformMenu: public MCPlatform::Base
 {
 public:
     MCPlatformMenu(void);
@@ -316,7 +304,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSound: public MCPlatformBase
+class MCPlatformSound: public MCPlatform::Base
 {
 public:
 	MCPlatformSound(void);
@@ -339,7 +327,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformPlayer: public MCPlatformBase
+class MCPlatformPlayer: public MCPlatform::Base
 {
 public:
 	MCPlatformPlayer(void);
@@ -373,7 +361,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSoundRecorder: public MCPlatformBase
+class MCPlatformSoundRecorder: public MCPlatform::Base
 {
 public:
 	MCPlatformSoundRecorder(void);
