@@ -285,16 +285,9 @@ namespace MCPlatform {
 class Cursor: public virtual Base
 {
 public:
-    Cursor(void);
-    virtual ~Cursor(void);
-
-    virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
+    virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor) = 0;
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot) = 0;
     virtual void Set(void) = 0;
-    
-protected:
-    bool is_standard : 1;
-    MCPlatformStandardCursor standard;
 };
 
 typedef Ref<Cursor> CursorRef;

@@ -108,14 +108,21 @@ static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
 }
 
 MCMacPlatformCursor::MCMacPlatformCursor(void)
+: is_standard(false),
+  standard(kMCPlatformStandardCursorNone)
 {
-    
 }
 
 MCMacPlatformCursor::~MCMacPlatformCursor(void)
 {
     if (!is_standard)
         [custom release];
+}
+
+void MCMacPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor)
+{
+    is_standard = true;
+    standard = p_standard_cursor;
 }
 
 void MCMacPlatformCursor::CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot)

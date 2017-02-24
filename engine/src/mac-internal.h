@@ -701,9 +701,12 @@ class MCMacPlatformCursor: public MCPlatformCursor
 public:
     MCMacPlatformCursor(void);
     ~MCMacPlatformCursor(void);
+    virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot);
     virtual void Set(void);
 private:
+    bool is_standard;
+    MCPlatformStandardCursor standard;
     NSCursor *custom;
 };
 

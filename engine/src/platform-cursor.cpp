@@ -20,20 +20,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformCursor::Cursor(void)
-{
-}
-
-MCPlatformCursor::~Cursor(void)
-{
-}
-
-void MCPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor)
-{
-    is_standard = true;
-    standard = p_standard_cursor;
-}
-
 void MCPlatformCreateStandardCursor(MCPlatformStandardCursor p_standard_cursor, MCPlatformCursorRef& r_cursor)
 {
     MCPlatform::CursorRef t_cursor = MCMacPlatformCreateCursor();
