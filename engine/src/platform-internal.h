@@ -336,9 +336,6 @@ namespace MCPlatform {
 class Sound: public Base
 {
 public:
-	Sound(void);
-	virtual ~Sound(void);
-	
     virtual bool IsValid(void) const = 0;
     
     virtual bool CreateWithData(const void *data, size_t data_size) = 0;
