@@ -379,6 +379,8 @@
 
      -- strings require conversion
     'rule' RequiresConversion(string):
+    
+    'rule' RequiresConversion(jarray(_, byte, _)):
 
 'action' OutputForeignCallParams(PARAMETERLIST)
 
@@ -613,10 +615,10 @@
         ResolveIdName(Id -> SymbolName)
         OutputWriteI("", SymbolName, "")
 
-    -- byte array special case as data
+    -- byte array special case
     'rule' GenerateJavaType(jarray(_, byte, Dimension)):
         eq(Dimension, 1)
-    	OutputWrite("Data")
+    	OutputWrite("JByteArray")
 
     -- output java array
     'rule' GenerateJavaType(jarray(_, Type, Dimension)):
