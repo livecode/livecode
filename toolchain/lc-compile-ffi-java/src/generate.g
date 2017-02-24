@@ -98,14 +98,32 @@
     	(|
             where(Alias -> id(AliasName))
             ResolveIdName(AliasName -> MethodName)
+            ResolveIdName(Id -> RealName)
         ||
             ResolveIdName(Id -> MethodName)
+            ResolveIdName(Id -> RealName)
         |)
         
         OutputWrite("foreign handler ")
         OutputForeignHandlerName(Type, MethodName)
         OutputForeignSignatureWithParameter(Type, Signature)
-        OutputBindingString(Type, MethodName, Signature)
+        OutputBindingString(Type, RealName, Signature)
+        OutputWrite("\n")
+
+    'rule' GenerateForeignHandlerOfClass(Type, constructor(_, _, Id, Signature, Alias)):
+    	(|
+            where(Alias -> id(AliasName))
+            ResolveIdName(AliasName -> MethodName)
+            ResolveIdName(Id -> RealName)
+        ||
+            ResolveIdName(Id -> MethodName)
+            ResolveIdName(Id -> RealName)
+        |)
+        
+        OutputWrite("foreign handler ")
+        OutputForeignHandlerName(Type, MethodName)
+        OutputForeignSignatureWithReturnType(Type, Signature)
+        OutputConstructorBindingString(Type, RealName, Signature)
         OutputWrite("\n")
 
     'rule' GenerateForeignHandlerOfClass(Type, Definition):
@@ -136,12 +154,29 @@
         OutputWrite(")")
         GenerateJavaReturns(ReturnType)
         
+'action' OutputForeignSignatureWithReturnType(TYPE, SIGNATURE)
+
+    'rule' OutputForeignSignatureWithReturnType(ReturnType, signature(Params, nil)):
+        OutputWrite("(")
+        GenerateJavaParams(Params)
+        OutputWrite(")")
+        GenerateJavaReturns(ReturnType)
+        
 'action' OutputBindingString(TYPE, NAME, SIGNATURE)
 
 	'rule' OutputBindingString(ClassType, MethodName, Signature):
         TypeToQualifiedName(ClassType -> QualifiedClass)
 		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
 		OutputWriteI("", MethodName, "")
+		OutputJavaSignature(Signature)
+		OutputWrite("\"")
+		
+'action' OutputConstructorBindingString(TYPE, NAME, SIGNATURE)
+
+	'rule' OutputConstructorBindingString(ClassType, MethodName, Signature):
+        TypeToQualifiedName(ClassType -> QualifiedClass)
+		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWrite("new")
 		OutputJavaSignature(Signature)
 		OutputWrite("\"")
 		
@@ -233,19 +268,28 @@
         ||
             ResolveIdName(Id -> Name)
         |)
-        TypeToQualifiedName(ObjType -> ClassName)
-        OutputWriteI("public handler ", Name, "_Constructor(in pArgs as List)")
+        OutputWriteI("public handler ", Name, "_Constructor")
+        GenerateSignatureWithReturnType(ObjType, Signature)
         OutputWrite("\n")
-        OutputWrite("\tvariable tObject as JObject\n")
-        OutputWrite("\tunsafe\n")
-        OutputWriteI("\t\tput GetObject(\"", ClassName, "\", pArgs) into tObject\n")
-        OutputWrite("\tend unsafe\n")
-        OutputWrite("\treturn tObject\n")
+
+        OutputCallForeignConstructor(ObjType, Name, Signature)
         OutputWrite("end handler")
         OutputWrite("\n\n")
 
     'rule' GenerateClassDefinitions(ObjType, nil):
         -- do nothing
+
+'action' OutputCallForeignConstructor(TYPE, NAME, SIGNATURE)
+
+    'rule' OutputCallForeignConstructor(ObjType, Name, signature(Params, nil))
+     	OutputConvertToForeignParams(Params)
+		OutputWrite("\tunsafe\n\t\t")
+		OutputWrite("return ")
+		OutputForeignHandlerName(ObjType, Name)	
+		OutputWrite("(")
+		OutputForeignCallParams(Params)
+		OutputWrite(")\n")
+		OutputWrite("\tend unsafe\n")
 
 'action' OutputCallForeignHandler(TYPE, NAME, SIGNATURE)
 
