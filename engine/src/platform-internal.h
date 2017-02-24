@@ -303,16 +303,19 @@ namespace MCPlatform {
 class Menu: public Base
 {
 public:
-    Menu(void);
-    virtual ~Menu(void);
-    
     virtual void SetTitle(MCStringRef p_title) = 0;
     virtual uindex_t CountItems(void) = 0;
     virtual void AddItem(uindex_t p_where) = 0;
     virtual void AddSeparatorItem(uindex_t p_where) = 0;
     virtual void RemoveItem(uindex_t p_where) = 0;
     virtual void RemoveAllItems(void) = 0;
+
+    /* Warning: the pointer returned into r_parent is _not_ owned by the
+     * caller. */
+    /* TODO [2017-02-24] Maybe this should return a
+     * std::tuple<Ref<Menu>, uindex_t> */
     virtual void GetParent(MCPlatformMenuRef& r_parent, uindex_t& r_index) = 0;
+
     virtual void GetItemProperty(uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, void *r_value) = 0;
     virtual void SetItemProperty(uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, const void *p_value) = 0;
     virtual bool PopUp(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t p_item) = 0;
