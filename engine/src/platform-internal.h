@@ -253,9 +253,7 @@ namespace MCPlatform {
 class ColorTransform: public virtual Base
 {
 public:
-    ColorTransform(const MCColorSpaceInfo& p_info);
-    virtual ~ColorTransform(void);
-    
+    virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info) = 0;
     virtual bool Apply(MCImageBitmap *p_image) = 0;
 };
 

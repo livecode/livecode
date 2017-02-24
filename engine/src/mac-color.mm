@@ -49,8 +49,13 @@ inline void MCColorMatrix3x3GetElements(const MCColorMatrix3x3 &p_matrix, CGFloa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformColorTransform::MCMacPlatformColorTransform(const MCColorSpaceInfo& p_info)
-: MCPlatformColorTransform(p_info)
+MCMacPlatformColorTransform::MCMacPlatformColorTransform()
+: m_colorspace(nullptr)
+{
+}
+
+bool
+MCMacPlatformColorTransform::CreateWithColorSpace(const MCColorSpaceInfo& p_info)
 {
 	bool t_success;
 	t_success = true;
@@ -120,6 +125,7 @@ MCMacPlatformColorTransform::MCMacPlatformColorTransform(const MCColorSpaceInfo&
 		if (t_colorspace != nil)
 			CFRelease(t_colorspace);
 	}
+    return t_success;
 }
 
 MCMacPlatformColorTransform::~MCMacPlatformColorTransform(void)
@@ -239,8 +245,8 @@ bool MCMacPlatformColorTransform::Apply( MCImageBitmap *p_image)
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatform::Ref<MCPlatformColorTransform>
-MCMacPlatformCreateColorTransform(const MCColorSpaceInfo& p_info)
+MCMacPlatformCreateColorTransform()
 {
-    return MCPlatform::makeRef<MCMacPlatformColorTransform>(p_info);
+    return MCPlatform::makeRef<MCMacPlatformColorTransform>();
 }
 

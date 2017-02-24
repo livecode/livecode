@@ -713,9 +713,10 @@ private:
 class MCMacPlatformColorTransform: public MCPlatformColorTransform
 {
 public:
-    MCMacPlatformColorTransform(const MCColorSpaceInfo& p_info);
+    MCMacPlatformColorTransform();
     virtual ~MCMacPlatformColorTransform(void);
     virtual bool Apply(MCImageBitmap *p_image);
+    virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info);
 private:
     CGColorSpaceRef m_colorspace;
 };

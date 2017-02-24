@@ -20,19 +20,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformColorTransform::ColorTransform(const MCColorSpaceInfo& p_info)
-{
-}
-
-MCPlatformColorTransform::~ColorTransform(void)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCPlatformCreateColorTransform(const MCColorSpaceInfo& p_info, MCPlatformColorTransformRef& r_transform)
 {
-    r_transform = MCMacPlatformCreateColorTransform(p_info).unsafeTake();
+    MCPlatform::ColorTransformRef t_transform =
+        MCMacPlatformCreateColorTransform();
+    if (t_transform &&
+        t_transform->CreateWithColorSpace(p_info))
+    {
+        r_transform = t_transform.unsafeTake();
+    }
+    else
+    {
+        r_transform = nullptr;
+    }
 }
 
 void MCPlatformRetainColorTransform(MCPlatformColorTransformRef p_transform)
