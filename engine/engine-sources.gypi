@@ -624,6 +624,7 @@
 			'src/platform.h',
 			'src/platform.cpp',
 			'src/platform-internal.h',
+			'src/platform-internal-base.h',
 			'src/platform-player.cpp',
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',

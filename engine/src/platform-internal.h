@@ -21,6 +21,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define MC_PLATFORM_INTERNAL_INSIDE
+#include "platform-internal-base.h"
+#undef MC_PLATFORM_INTERNAL_INSIDE
+
 class MCPlatformBase
 {
 public:
