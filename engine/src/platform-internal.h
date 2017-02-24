@@ -249,6 +249,22 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCPlatformColorTransform
+{
+public:
+    MCPlatformColorTransform(const MCColorSpaceInfo& p_info);
+    virtual ~MCPlatformColorTransform(void);
+    
+    virtual void Retain(void);
+    virtual void Release(void);
+    
+    virtual bool Apply(MCImageBitmap *p_image) = 0;
+private:
+    uint32_t m_references;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCPlatformLoadedFont
 {
 public:

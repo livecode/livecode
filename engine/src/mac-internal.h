@@ -705,6 +705,18 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCMacPlatformColorTransform: public MCPlatformColorTransform
+{
+public:
+    MCMacPlatformColorTransform(const MCColorSpaceInfo& p_info);
+    virtual ~MCMacPlatformColorTransform(void);
+    virtual bool Apply(MCImageBitmap *p_image);
+private:
+    CGColorSpaceRef m_colorspace;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCMacPlatformSound: public MCPlatformSound
 {
 public:
