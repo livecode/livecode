@@ -25,8 +25,9 @@
 
 void JavaQualifiedNameToClassPath(NameRef p_input, NameRef *r_output)
 {
-    const char* t_input;
-    char *t_output;
+    const char* t_input = NULL;
+    char *t_output = NULL;
+    unsigned long i = 0;
     
     GetStringOfNameLiteral(p_input, &t_input);
     
@@ -34,7 +35,7 @@ void JavaQualifiedNameToClassPath(NameRef p_input, NameRef *r_output)
     if (t_output == NULL)
         Fatal_OutOfMemory();
     
-    for (unsigned long i = 0; i < strlen(t_input); i++) {
+    for (i = 0; i < strlen(t_input); i++) {
         if (t_input[i] == '.')
             t_output[i] = '/';
         else
