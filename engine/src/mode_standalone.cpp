@@ -286,13 +286,17 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeExternal:
 	{
 		MCAutoStringRef t_external_str;
-		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str))
+        MCAutoStringRef t_resolved_external_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str) ||
+            !MCStringFormat(&t_resolved_external_str,
+                            "./%@",
+                            *t_external_str))
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(*t_external_str))
+		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
 			MCresult -> sets("failed to load external");
 			return false;

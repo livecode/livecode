@@ -256,7 +256,7 @@ MCHashUSize (size_t i)
 }
 
 MC_DLLEXPORT_DEF
-hash_t MCHashPointer(void *p)
+hash_t MCHashPointer(const void *p)
 {
 	return MCHashUInt((uintptr_t) p);
 }

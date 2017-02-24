@@ -409,6 +409,13 @@ bool MCErrorCatch(MCErrorRef& r_error)
 }
 
 MC_DLLEXPORT_DEF
+void MCErrorReset(void)
+{
+    MCAutoErrorRef t_error;
+    MCErrorCatch(&t_error);
+}
+
+MC_DLLEXPORT_DEF
 MCErrorRef MCErrorPeek(void)
 {
     return s_last_error;

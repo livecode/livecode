@@ -16,12 +16,12 @@
 
 #include <foundation.h>
 #include <foundation-auto.h>
+#include <foundation-system.h>
 
 #include <libscript/script.h>
 #include <libscript/script-auto.h>
 
 #include "script-private.h"
-
 #include "script-bytecode.hpp"
 
 #include <stddef.h>
@@ -711,17 +711,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptForeignType *t_type;
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
-                void *t_symbol;
-#ifdef _WIN32
-				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
-#elif defined(__EMSCRIPTEN__)
-				void *t_handle = dlopen(NULL, RTLD_LAZY);
-				t_symbol = dlsym(t_handle, MCStringGetCString(t_type->binding));
-				dlclose(t_handle);
-#else
-                t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
-#endif
-                if (t_symbol == nil)
+                void *t_symbol = nullptr;
+                t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
+                                                  t_type->binding);
+                
+                if (t_symbol == nullptr)
                 {
                     MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type '%{type}'"),
 												   "name", self -> name,
