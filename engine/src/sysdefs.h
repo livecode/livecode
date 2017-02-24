@@ -195,12 +195,22 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+/* Pre-declare "new-style" MCPlatform classes */
+namespace MCPlatform {
+    class ColorTransform;
+    class Cursor;
+    class LoadedFont;
+    class Menu;
+    class Sound;
+    class WindowMask;
+} /* namespace MCPlatform */
+
 typedef class MCPlatformWindow *MCPlatformWindowRef;
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
-typedef class MCPlatformCursor *MCPlatformCursorRef;
 typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
-typedef class MCPlatformMenu *MCPlatformMenuRef;
 typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+typedef class MCPlatform::Cursor *MCPlatformCursorRef;
+typedef class MCPlatform::Menu *MCPlatformMenuRef;
 
 typedef void *MCColorTransformRef;
 

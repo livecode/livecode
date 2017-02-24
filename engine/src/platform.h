@@ -557,14 +557,14 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
+typedef MCPlatform::LoadedFont *MCPlatformLoadedFontRef;
 
 bool MCPlatformLoadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
 bool MCPlatformUnloadFont(MCPlatformLoadedFontRef loaded_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformColorTransform *MCPlatformColorTransformRef;
+typedef class MCPlatform::ColorTransform *MCPlatformColorTransformRef;
 
 void MCPlatformCreateColorTransform(const MCColorSpaceInfo& info, MCPlatformColorTransformRef& r_transform);
 void MCPlatformRetainColorTransform(MCPlatformColorTransformRef transform);
@@ -574,7 +574,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef transform, MCImag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
+typedef MCPlatform::WindowMask *MCPlatformWindowMaskRef;
 
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef mask);
@@ -582,7 +582,7 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformMenu *MCPlatformMenuRef;
+typedef MCPlatform::Menu *MCPlatformMenuRef;
 
 enum MCPlatformMenuItemProperty
 {
@@ -658,7 +658,7 @@ void MCPlatformGetMenubar(MCPlatformMenuRef menu);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformCursor *MCPlatformCursorRef;
+typedef MCPlatform::Cursor *MCPlatformCursorRef;
 
 // SN-2015-06-16: [[ Bug 14056 ]] Add hidden cursor as part of the standard ones
 enum MCPlatformStandardCursor
@@ -1095,7 +1095,7 @@ void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformSound *MCPlatformSoundRef;
+typedef MCPlatform::Sound *MCPlatformSoundRef;
 
 enum MCPlatformSoundProperty
 {

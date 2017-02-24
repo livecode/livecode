@@ -739,17 +739,17 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformWindowMask::MCPlatformWindowMask(void)
+MCPlatformWindowMask::WindowMask(void)
 {
 }
 
-MCPlatformWindowMask::~MCPlatformWindowMask(void)
+MCPlatformWindowMask::~WindowMask(void)
 {
 }
 
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)
 {
-    auto t_mask = MCMacPlatformCreateWindowMask();
+    MCPlatform::WindowMaskRef t_mask = MCMacPlatformCreateWindowMask();
     if (t_mask &&
         !t_mask->CreateWithAlphaAndRelease(width, height, stride, bits))
     {

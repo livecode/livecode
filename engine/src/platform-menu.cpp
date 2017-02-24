@@ -20,11 +20,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformMenu::MCPlatformMenu(void)
+MCPlatformMenu::Menu(void)
 {
 }
 
-MCPlatformMenu::~MCPlatformMenu(void)
+MCPlatformMenu::~Menu(void)
 {
 }
 
@@ -132,7 +132,7 @@ void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
 //   so that all apps get Quit / About items.
 bool MCPlatformInitializeMenu(void)
 {
-    auto t_menubar = MCMacPlatformCreateMenu();
+    MCPlatform::MenuRef t_menubar = MCMacPlatformCreateMenu();
     MCMacPlatformSetMenubar(t_menubar.get());
     return true;
 }

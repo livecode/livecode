@@ -49,16 +49,24 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformWindowMask: public MCPlatform::Base
+namespace MCPlatform {
+
+class WindowMask: public Base
 {
 public:
-    MCPlatformWindowMask(void);
-    virtual ~MCPlatformWindowMask(void);
+    WindowMask(void);
+    virtual ~WindowMask(void);
     
     virtual bool IsValid(void) const = 0;
 
     virtual bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits) = 0;
 };
+
+typedef Ref<WindowMask> WindowMaskRef;
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::WindowMask MCPlatformWindowMask;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -240,36 +248,53 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformColorTransform: public virtual MCPlatform::Base
+namespace MCPlatform {
+
+class ColorTransform: public virtual Base
 {
 public:
-    MCPlatformColorTransform(const MCColorSpaceInfo& p_info);
-    virtual ~MCPlatformColorTransform(void);
+    ColorTransform(const MCColorSpaceInfo& p_info);
+    virtual ~ColorTransform(void);
     
     virtual bool Apply(MCImageBitmap *p_image) = 0;
 };
 
+typedef Ref<ColorTransform> ColorTransformRef;
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::ColorTransform MCPlatformColorTransform;
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformLoadedFont: public virtual MCPlatform::Base
+namespace MCPlatform {
+
+class LoadedFont: public virtual Base
 {
 public:
-    MCPlatformLoadedFont(MCStringRef p_path, bool p_globally);
-    virtual ~MCPlatformLoadedFont(void);
+    LoadedFont(MCStringRef p_path, bool p_globally);
+    virtual ~LoadedFont(void);
     
 protected:
     MCStringRef m_path;
     bool m_globally;
 };
 
+typedef Ref<LoadedFont> LoadedFontRef;
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::LoadedFont MCPlatformLoadedFont;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformCursor: public virtual MCPlatform::Base
+namespace MCPlatform {
+
+class Cursor: public virtual Base
 {
 public:
-    MCPlatformCursor(void);
-    virtual ~MCPlatformCursor(void);
+    Cursor(void);
+    virtual ~Cursor(void);
 
     virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot) = 0;
@@ -280,13 +305,21 @@ protected:
     MCPlatformStandardCursor standard;
 };
 
+typedef Ref<Cursor> CursorRef;
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::Cursor MCPlatformCursor;
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformMenu: public MCPlatform::Base
+namespace MCPlatform {
+
+class Menu: public Base
 {
 public:
-    MCPlatformMenu(void);
-    virtual ~MCPlatformMenu(void);
+    Menu(void);
+    virtual ~Menu(void);
     
     virtual void SetTitle(MCStringRef p_title) = 0;
     virtual uindex_t CountItems(void) = 0;
@@ -302,13 +335,21 @@ public:
     virtual void StopUsingAsMenubar(void) = 0;
 };
 
+typedef Ref<Menu> MenuRef;
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::Menu MCPlatformMenu;
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSound: public MCPlatform::Base
+namespace MCPlatform {
+
+class Sound: public Base
 {
 public:
-	MCPlatformSound(void);
-	virtual ~MCPlatformSound(void);
+	Sound(void);
+	virtual ~Sound(void);
 	
     virtual bool IsValid(void) const = 0;
     
@@ -324,6 +365,11 @@ public:
     virtual void SetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
     virtual void GetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
 };
+
+typedef Ref<Sound> SoundRef;
+}
+
+typedef MCPlatform::Sound MCPlatformSound;
 
 ////////////////////////////////////////////////////////////////////////////////
 

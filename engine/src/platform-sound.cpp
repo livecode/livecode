@@ -20,17 +20,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformSound::MCPlatformSound(void)
+MCPlatformSound::Sound(void)
 {
 }
 
-MCPlatformSound::~MCPlatformSound(void)
+MCPlatformSound::~Sound(void)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformSoundCreateWithData(const void *p_data, size_t p_data_size, MCPlatformSoundRef& r_sound)
 {
-    auto t_sound = MCMacPlatformCreateSound();
+    MCPlatform::SoundRef t_sound = MCMacPlatformCreateSound();
     if (t_sound &&
         !t_sound->CreateWithData(p_data, p_data_size))
     {

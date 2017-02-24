@@ -20,11 +20,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformCursor::MCPlatformCursor(void)
+MCPlatformCursor::Cursor(void)
 {
 }
 
-MCPlatformCursor::~MCPlatformCursor(void)
+MCPlatformCursor::~Cursor(void)
 {
 }
 
@@ -36,14 +36,14 @@ void MCPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor
 
 void MCPlatformCreateStandardCursor(MCPlatformStandardCursor p_standard_cursor, MCPlatformCursorRef& r_cursor)
 {
-    auto t_cursor = MCMacPlatformCreateCursor();
+    MCPlatform::CursorRef t_cursor = MCMacPlatformCreateCursor();
     t_cursor -> CreateStandard(p_standard_cursor);
     r_cursor = t_cursor.unsafeTake();
 }
 
 void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCPlatformCursorRef& r_cursor)
 {
-    auto t_cursor = MCMacPlatformCreateCursor();
+    MCPlatform::CursorRef t_cursor = MCMacPlatformCreateCursor();
     t_cursor -> CreateCustom(p_image, p_hotspot);
     r_cursor = t_cursor.unsafeTake();
 }

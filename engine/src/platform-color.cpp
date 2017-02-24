@@ -20,11 +20,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformColorTransform::MCPlatformColorTransform(const MCColorSpaceInfo& p_info)
+MCPlatformColorTransform::ColorTransform(const MCColorSpaceInfo& p_info)
 {
 }
 
-MCPlatformColorTransform::~MCPlatformColorTransform(void)
+MCPlatformColorTransform::~ColorTransform(void)
 {
 }
 
