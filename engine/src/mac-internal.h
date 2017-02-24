@@ -691,6 +691,20 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCMacPlatformCursor: public MCPlatformCursor
+{
+public:
+    MCMacPlatformCursor(void);
+    ~MCMacPlatformCursor(void);
+    virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot);
+    virtual void Set(void);
+private:
+    NSCursor *custom;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCMacPlatformSound: public MCPlatformSound
 {
 public:

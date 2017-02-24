@@ -266,6 +266,29 @@ private:
     uint32_t m_references;
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformCursor
+{
+public:
+    MCPlatformCursor(void);
+    virtual ~MCPlatformCursor(void);
+
+    virtual void Retain(void);
+    virtual void Release(void);
+    
+    virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
+    virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot) = 0;
+    virtual void Set(void) = 0;
+    
+protected:
+    bool is_standard : 1;
+    MCPlatformStandardCursor standard;
+private:
+    uint32_t m_references;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCPlatformSound
