@@ -1441,7 +1441,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalProcessIdMethodInfo; }
 };
 
-class MCPlatform : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalPlatform>
+class MCPlatformString : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalPlatform>
 {
 public:
 	// virtual Exec_stat eval(MCExecPoint &);
