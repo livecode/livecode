@@ -18,6 +18,30 @@
 #include "platform.h"
 #include "platform-internal.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformBase::MCPlatformBase(void)
+: m_references(1)
+{
+}
+
+MCPlatformBase::~MCPlatformBase(void)
+{
+}
+
+void MCPlatformBase::Retain(void)
+{
+    m_references += 1;
+}
+
+void MCPlatformBase::Release(void)
+{
+    m_references -= 1;
+    if (m_references == 0)
+    {
+        delete this;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

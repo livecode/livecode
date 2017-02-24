@@ -30,9 +30,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 {
     //MCLog("Create window %p", this);
 	
-	m_references = 1;
-	
-	m_attachments = nil;
+    m_attachments = nil;
 	m_attachment_count = 0;
 	
 	MCMemoryClear(&m_changes, sizeof(m_changes));
@@ -86,18 +84,6 @@ MCPlatformWindow::~MCPlatformWindow(void)
     MCValueRelease(m_document_filename);
     
 	free(m_attachments);
-}
-
-void MCPlatformWindow::Retain(void)
-{
-	m_references += 1;
-}
-
-void MCPlatformWindow::Release(void)
-{
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
 }
 
 void MCPlatformWindow::Update(void)
@@ -757,26 +743,11 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 extern void MCMacPlatformCreateWindowMask(MCPlatformWindowMaskRef& r_mask);
 
 MCPlatformWindowMask::MCPlatformWindowMask(void)
-    : m_references(1)
 {
 }
 
 MCPlatformWindowMask::~MCPlatformWindowMask(void)
 {
-}
-
-void MCPlatformWindowMask::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformWindowMask::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
 }
 
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)

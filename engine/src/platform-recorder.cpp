@@ -38,8 +38,6 @@
 
 MCPlatformSoundRecorder::MCPlatformSoundRecorder(void)
 {
-    m_references = 1;
-
     m_recording = false;
     m_filename = nil;
     
@@ -60,18 +58,6 @@ MCPlatformSoundRecorder::~MCPlatformSoundRecorder(void)
     
     if (m_filename != nil)
         MCMemoryDelete(m_filename);
-}
-
-void MCPlatformSoundRecorder::Retain(void)
-{
-	m_references += 1;
-}
-
-void MCPlatformSoundRecorder::Release(void)
-{
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
 }
 
 bool MCPlatformSoundRecorder::IsRecording()

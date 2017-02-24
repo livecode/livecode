@@ -25,24 +25,11 @@
 
 MCPlatformPlayer::MCPlatformPlayer(void)
 {
-	m_references = 1;
 }
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
 {
 	// PM-2014-08-11: [[ Bug 13109 ]] Moved code to MCPlatformPlayer::Release
-}
-
-void MCPlatformPlayer::Retain(void)
-{
-	m_references += 1;
-}
-
-void MCPlatformPlayer::Release(void)
-{
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

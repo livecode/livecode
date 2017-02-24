@@ -23,26 +23,11 @@ extern void MCMacPlatformHideCursorUntilMouseMoves(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformCursor::MCPlatformCursor(void)
-: m_references(1)
 {
 }
 
 MCPlatformCursor::~MCPlatformCursor(void)
 {
-}
-
-void MCPlatformCursor::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformCursor::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
 }
 
 void MCPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor)

@@ -24,26 +24,11 @@ extern MCPlatformLoadedFontRef MCMacPlatformCreateLoadedFont(MCStringRef p_utf8_
 MCPlatformLoadedFont::MCPlatformLoadedFont(MCStringRef p_path, bool p_globally)
 : m_path(p_path)
 , m_globally(p_globally)
-, m_references(1)
 {
 }
 
 MCPlatformLoadedFont::~MCPlatformLoadedFont(void)
 {
-}
-
-void MCPlatformLoadedFont::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformLoadedFont::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
 }
 
 bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)

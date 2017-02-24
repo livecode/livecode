@@ -22,26 +22,11 @@
 extern MCPlatformSoundRef MCMacPlatformCreateSound(void);
 
 MCPlatformSound::MCPlatformSound(void)
-    : m_references(1)
 {
 }
 
 MCPlatformSound::~MCPlatformSound(void)
 {
-}
-
-void MCPlatformSound::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformSound::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
 }
 
 void MCPlatformSoundCreateWithData(const void *p_data, size_t p_data_size, MCPlatformSoundRef& r_sound)

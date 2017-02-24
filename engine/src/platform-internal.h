@@ -19,6 +19,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformBase
+{
+public:
+    MCPlatformBase(void);
+    virtual ~MCPlatformBase(void);
+    
+    virtual void Retain(void);
+    virtual void Release(void);
+private:
+    uint32_t m_references;
+};
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to match the new stack surface API.
 //  You can now lock/unlock multiple areas of the surface, but need to store the context and raster for those areas locally.
 class MCPlatformSurface
@@ -43,21 +57,15 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformWindowMask
+class MCPlatformWindowMask: public MCPlatformBase
 {
 public:
     MCPlatformWindowMask(void);
     virtual ~MCPlatformWindowMask(void);
     
-    virtual void Retain(void);
-    virtual void Release(void);
-
     virtual bool IsValid(void) const = 0;
 
     virtual bool CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits) = 0;
-    
-private:
-    uint32_t m_references;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,17 +78,11 @@ struct MCPlatformWindowAttachment
 	MCPlatformWindowAttachmentCallback callback;
 };
 
-class MCPlatformWindow
+class MCPlatformWindow: public MCPlatformBase
 {
 public:
 	MCPlatformWindow(void);
 	virtual ~MCPlatformWindow(void);
-	
-	// Increase the reference count on the window.
-	void Retain(void);
-	
-	// Decrease the reference count on the window.
-	void Release(void);
 	
 	// Returns true if the window is being shown.
 	bool IsVisible(void);
@@ -175,9 +177,6 @@ public:
 	
 protected:
 	
-	// The window's reference count.
-	uint32_t m_references;
-	
 	// Any attachments the window has.
 	MCPlatformWindowAttachment *m_attachments;
 	uindex_t m_attachment_count;
@@ -249,51 +248,37 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformColorTransform
+class MCPlatformColorTransform: public MCPlatformBase
 {
 public:
     MCPlatformColorTransform(const MCColorSpaceInfo& p_info);
     virtual ~MCPlatformColorTransform(void);
     
-    virtual void Retain(void);
-    virtual void Release(void);
-    
     virtual bool Apply(MCImageBitmap *p_image) = 0;
-private:
-    uint32_t m_references;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformLoadedFont
+class MCPlatformLoadedFont: public MCPlatformBase
 {
 public:
     MCPlatformLoadedFont(MCStringRef p_path, bool p_globally);
     virtual ~MCPlatformLoadedFont(void);
     
-    virtual void Retain(void);
-    virtual void Release(void);
-    
 protected:
     MCStringRef m_path;
     bool m_globally;
-    
-private:
-    uint32_t m_references;
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformCursor
+class MCPlatformCursor: public MCPlatformBase
 {
 public:
     MCPlatformCursor(void);
     virtual ~MCPlatformCursor(void);
 
-    virtual void Retain(void);
-    virtual void Release(void);
-    
     virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot) = 0;
     virtual void Set(void) = 0;
@@ -301,21 +286,16 @@ public:
 protected:
     bool is_standard : 1;
     MCPlatformStandardCursor standard;
-private:
-    uint32_t m_references;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSound
+class MCPlatformSound: public MCPlatformBase
 {
 public:
 	MCPlatformSound(void);
 	virtual ~MCPlatformSound(void);
 	
-	virtual void Retain(void);
-	virtual void Release(void);
-    
     virtual bool IsValid(void) const = 0;
     
     virtual bool CreateWithData(const void *data, size_t data_size) = 0;
@@ -329,21 +309,15 @@ public:
     
     virtual void SetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
     virtual void GetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value) = 0;
-    
-private:
-    uint32_t m_references;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformPlayer
+class MCPlatformPlayer: public MCPlatformBase
 {
 public:
 	MCPlatformPlayer(void);
 	virtual ~MCPlatformPlayer(void);
-	
-	void Retain(void);
-	void Release(void);
 	
 	virtual bool GetNativeView(void *&r_view) = 0;
 	virtual bool SetNativeParentView(void *p_parent_view) = 0;
@@ -369,21 +343,15 @@ protected:
 	virtual void Realize(void) = 0;
 	virtual void Unrealize(void) = 0;
 	
-protected:
-	uint32_t m_references;
-	
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSoundRecorder
+class MCPlatformSoundRecorder: public MCPlatformBase
 {
 public:
 	MCPlatformSoundRecorder(void);
 	virtual ~MCPlatformSoundRecorder(void);
-    
-	void Retain(void);
-	void Release(void);
     
 	virtual bool IsRecording(void);
     
@@ -411,9 +379,6 @@ protected:
     
     // The recorder's current configuration settings.
      MCPlatformSoundRecorderConfiguration m_configuration;
-    
-    // The recorder's reference count.
-	uint32_t m_references;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

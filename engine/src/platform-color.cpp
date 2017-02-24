@@ -22,26 +22,11 @@ extern MCPlatformColorTransformRef MCMacPlatformCreateColorTransform(const MCCol
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformColorTransform::MCPlatformColorTransform(const MCColorSpaceInfo& p_info)
-: m_references(1)
 {
 }
 
 MCPlatformColorTransform::~MCPlatformColorTransform(void)
 {
-}
-
-void MCPlatformColorTransform::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformColorTransform::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-    {
-        delete this;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
