@@ -94,7 +94,7 @@
 
 'action' GenerateForeignHandlerOfClass(TYPE, DEFINITION)
 
-    'rule' GenerateForeignHandlerOfClass(Type, method(_, _, Id, Signature, Alias, _)):
+    'rule' GenerateForeignHandlerOfClass(Type, method(_, Modifiers, Id, Signature, Alias, _)):
     	(|
             where(Alias -> id(AliasName))
             ResolveIdName(AliasName -> MethodName)
@@ -106,8 +106,8 @@
         
         OutputWrite("foreign handler ")
         OutputForeignHandlerName(Type, MethodName)
-        OutputForeignSignatureWithParameter(Type, Signature)
-        OutputBindingString(Type, RealName, Signature)
+        OutputForeignHandlerSignatureWithParameter(Type, Signature, Modifiers)
+        OutputMethodBindingString(Type, RealName, Signature, Modifiers)
         OutputWrite("\n")
 
     'rule' GenerateForeignHandlerOfClass(Type, constructor(_, _, Id, Signature, Alias)):
@@ -125,9 +125,55 @@
         OutputForeignSignatureWithReturnType(Type, Signature)
         OutputConstructorBindingString(Type, RealName, Signature)
         OutputWrite("\n")
+        
+    'rule' GenerateForeignHandlerOfClass(Type, variable(_, variablemodifiers(_, _, Modify, Instance), Id, VarType)):
+		ResolveIdName(Id -> RealName)
+		
+		GenerateForeignGetterOfClass(Type, RealName, VarType, Instance)
+		(|
+			where(Modify -> final)
+		||
+			GenerateForeignSetterOfClass(Type, RealName, VarType, Instance)
+		|)
+		
+    'rule' GenerateForeignHandlerOfClass(Type, constant(_, Id, VarType, nil)):
+		ResolveIdName(Id -> RealName)
+		GenerateForeignGetterOfClass(Type, RealName, VarType, class)
 
     'rule' GenerateForeignHandlerOfClass(Type, Definition):
         -- nothing yet
+
+'action' GenerateForeignGetterOfClass(TYPE, NAME, TYPE, MODIFIER)
+	
+	'rule' GenerateForeignGetterOfClass(ClassType, Name, VarType, InstanceModifier)        
+		OutputWrite("foreign handler ")
+        OutputForeignGetterName(ClassType, Name)
+        OutputForeignGetterSignature(ClassType, Name, VarType, InstanceModifier)
+        OutputGetVariableBindingString(ClassType, Name, VarType, InstanceModifier)
+        OutputWrite("\n")
+        
+'action' GenerateForeignSetterOfClass(TYPE, NAME, TYPE, MODIFIER)
+	
+	'rule' GenerateForeignSetterOfClass(ClassType, Name, VarType, InstanceModifier)        
+		OutputWrite("foreign handler ")
+        OutputForeignSetterName(ClassType, Name)
+        OutputForeignSetterSignature(ClassType, Name, VarType, InstanceModifier)
+        OutputSetVariableBindingString(ClassType, Name, VarType, InstanceModifier)
+        OutputWrite("\n")
+
+'action' OutputForeignGetterName(TYPE, NAME)
+
+	'rule' OutputForeignGetterName(Type, FieldName):
+	    TypeToUnqualifiedName(Type -> ClassName)
+		OutputWriteI("_JNI_", ClassName, "")
+		OutputWriteI("_Get_", FieldName, "")
+
+'action' OutputForeignSetterName(TYPE, NAME)
+
+	'rule' OutputForeignSetterName(Type, FieldName):
+	    TypeToUnqualifiedName(Type -> ClassName)
+		OutputWriteI("_JNI_", ClassName, "")
+		OutputWriteI("_Set_", FieldName, "")
 
 'action' OutputForeignHandlerName(TYPE, NAME)
 
@@ -139,16 +185,63 @@
     'rule' OutputForeignHandlerName(Type, MethodName):
     	print("fail")
     	print(MethodName)
-		
-'action' OutputForeignSignatureWithParameter(TYPE, SIGNATURE)
+    	
+'action' OutputForeignGetterSignature(TYPE, NAME, TYPE, MODIFIER)
 
-    'rule' OutputForeignSignatureWithParameter(ObjType, signature(Params, ReturnType)):
-        OutputWrite("(in pObj as ")
-        GenerateType(ObjType)
+    'rule' OutputForeignGetterSignature(ObjType, Name, VarType, InstanceModifier):
+    	OutputWrite("(")
+    	(|
+    		where(InstanceModifier -> class)
+    	||
+    	    OutputWrite("in pObj as ")
+        	GenerateType(ObjType)
+    	|)
+        OutputWrite(")")
+        GenerateJavaReturns(VarType)
+        
+'action' OutputForeignSetterSignature(TYPE, NAME, TYPE, MODIFIER)
+
+    'rule' OutputForeignSetterSignature(ObjType, Name, VarType, InstanceModifier):
+    	OutputWrite("(")
+    	(|
+    		where(InstanceModifier -> class)
+    	||
+    	    OutputWrite("in pObj as ")
+        	GenerateType(ObjType)
+        	OutputWrite(", ")
+    	|)
+        OutputWriteI("in pParam_", Name, "")
+        OutputWrite(" as ")
+        GenerateJavaType(VarType)
+        OutputWrite(") returns nothing\n")
+
+'action' OutputForeignHandlerSignatureWithParameter(TYPE, SIGNATURE, MODIFIER)
+
+    'rule' OutputForeignHandlerSignatureWithParameter(ObjType, Signature, methodmodifiers(_, _, _, _, _, InstanceModifier)):
+    	OutputForeignSignatureWithParameter(ObjType, Signature, InstanceModifier)
+    	
+    'rule' OutputForeignHandlerSignatureWithParameter(ObjType, Signature, interfacemethodmodifiers(InstanceModifier)):
+    	OutputForeignSignatureWithParameter(ObjType, Signature, InstanceModifier)
+		
+'action' OutputForeignSignatureWithParameter(TYPE, SIGNATURE, MODIFIER)
+
+    'rule' OutputForeignSignatureWithParameter(ObjType, signature(Params, ReturnType), InstanceModifier):
+        OutputWrite("(")
+        (|
+        	where(InstanceModifier -> class)
+        ||
+        	OutputWrite("in pObj as ")
+        	GenerateType(ObjType)
+        	
+        	(|
+        		where(Params -> nil)
+        	||
+        		OutputWrite(", ")
+        	|)
+        |)
         (|
             where(Params -> nil)
         ||
-            OutputWrite(", ")
             GenerateJavaParams(Params)
         |)
         OutputWrite(")")
@@ -162,13 +255,26 @@
         OutputWrite(")")
         GenerateJavaReturns(ReturnType)
         
-'action' OutputBindingString(TYPE, NAME, SIGNATURE)
+'action' OutputMethodBindingString(TYPE, NAME, SIGNATURE, MODIFIER)
 
-	'rule' OutputBindingString(ClassType, MethodName, Signature):
+	'rule' OutputMethodBindingString(ClassType, MethodName, Signature, methodmodifiers(_, _, _, _, _, InstanceModifier)):
+        OutputMethodBindingStringInstance(ClassType, MethodName, Signature, InstanceModifier)
+
+    'rule' OutputMethodBindingString(ClassType, MethodName, Signature, interfacemethodmodifiers(InstanceModifier)):
+        OutputMethodBindingStringInstance(ClassType, MethodName, Signature, InstanceModifier)
+
+'action' OutputMethodBindingStringInstance(TYPE, NAME, SIGNATURE, MODIFIER)
+
+'rule' OutputMethodBindingStringInstance(ClassType, MethodName, Signature, InstanceModifier):
         TypeToQualifiedName(ClassType -> QualifiedClass)
 		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
 		OutputWriteI("", MethodName, "")
 		OutputJavaSignature(Signature)
+        (|
+            where(InstanceModifier -> class)
+            OutputWrite("!static")
+        ||
+        |)
 		OutputWrite("\"")
 		
 'action' OutputConstructorBindingString(TYPE, NAME, SIGNATURE)
@@ -178,6 +284,38 @@
 		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
 		OutputWrite("new")
 		OutputJavaSignature(Signature)
+		OutputWrite("\"")
+		
+'action' OutputSetVariableBindingString(TYPE, NAME, TYPE, MODIFIER)
+
+	'rule' OutputSetVariableBindingString(ClassType, FieldName, VarType, InstanceModifier):
+        TypeToQualifiedName(ClassType -> QualifiedClass)
+		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI("set.", FieldName, "")
+		OutputWrite("(")
+        OutputJavaTypeCode(VarType)
+        OutputWrite(")")
+		(|
+            where(InstanceModifier -> class)
+            OutputWrite("!static")
+        ||
+        |)
+		OutputWrite("\"")
+		
+'action' OutputGetVariableBindingString(TYPE, NAME, TYPE, MODIFIER)
+
+	'rule' OutputGetVariableBindingString(ClassType, FieldName, VarType, InstanceModifier):
+        TypeToQualifiedName(ClassType -> QualifiedClass)
+		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI("get.", FieldName, "")
+		OutputWrite("(")
+        OutputWrite(")")
+        OutputJavaTypeCode(VarType)
+		(|
+            where(InstanceModifier -> class)
+            OutputWrite("!static")
+        ||
+        |)
 		OutputWrite("\"")
 		
 'action' OutputJavaSignature(SIGNATURE)
@@ -221,28 +359,55 @@
         (|
             where(Value -> nil)
             OutputWriteI("handler ", ObjName, "_")
-            OutputWriteI("Get", SymbolName, "(in pObj as ")
-            GenerateType(ObjType)
-            OutputWrite(")")
+            OutputWriteI("Get_", SymbolName, "()")
             GenerateReturns(Type)
             OutputWrite("\n")
-            OutputWrite("end handler")
+            OutputCallForeignGetter(ObjType, SymbolName, Type, class)
+            OutputWrite("\nend handler")
         ||
             OutputWriteI("public constant ", SymbolName, "")
             OutputWrite(" is ")
             GenerateValue(Value)
         |)
-        OutputWrite("\n")
+        OutputWrite("\n\n")
 
-    'rule' GenerateClassDefinitions(ObjType, variable(_, Modifiers, Id, Type)):
+    'rule' GenerateClassDefinitions(ObjType, variable(_, variablemodifiers(_, _, Modify, Instance), Id, Type)):
         ResolveIdName(Id -> SymbolName)
         TypeToUnqualifiedName(ObjType -> ObjName)
         OutputWriteI("public handler ", ObjName, "_")
-        OutputWriteI("Get_", SymbolName, "(in pObj as ")
-        GenerateReturns(Type)
+        OutputWriteI("Get_", SymbolName, "(")
+        (|
+			where(Instance -> class)
+		||
+			OutputWrite("in pObj as ")
+			GenerateType(ObjType)
+		|)
+		OutputWrite(")")
+		GenerateReturns(Type)
+		OutputWrite("\n")
+        OutputCallForeignGetter(ObjType, SymbolName, Type, Instance)
         OutputWrite("\n")
         OutputWrite("end handler")
         OutputWrite("\n\n")
+        (|
+        	where(Modify -> final)
+        ||
+        	OutputWriteI("public handler ", ObjName, "_")
+			OutputWriteI("Set_", SymbolName, "(")
+			(|
+				where(Instance -> class)
+			||
+				OutputWrite("in pObj as ")
+				GenerateType(ObjType)
+				OutputWrite(", ")
+			|)
+			OutputWriteI("in pParam_", SymbolName, " as ")
+			GenerateType(Type)
+			OutputWrite(") returns nothing\n")
+			OutputCallForeignSetter(ObjType, SymbolName, Type, Instance)
+			OutputWrite("end handler")
+			OutputWrite("\n\n")
+        |)
 
     'rule' GenerateClassDefinitions(ObjType, method(_, Modifiers, Id, Signature, Alias, Throws)):
         (|
@@ -254,10 +419,9 @@
         TypeToUnqualifiedName(ObjType -> ObjName)
         OutputWriteI("public handler ", ObjName, "_")
         OutputWriteI("", Name, "")
-        GenerateSignatureWithParameter(ObjType, Signature)
-
+        GenerateMethodSignatureWithParameter(ObjType, Signature, Modifiers)
         OutputWrite("\n")
-        OutputCallForeignHandler(ObjType, Name, Signature)
+        OutputCallForeignHandler(ObjType, Name, Signature, Modifiers)
         OutputWrite("end handler")
         OutputWrite("\n\n")
 
@@ -291,59 +455,104 @@
 		OutputWrite(")\n")
 		OutputWrite("\tend unsafe\n")
 
-'action' OutputCallForeignHandler(TYPE, NAME, SIGNATURE)
+'action' OutputCallForeignHandlerParams(TYPE, NAME, PARAMETERLIST, MODIFIER)
 
-	'rule' OutputCallForeignHandler(ObjType, Name, signature(Params, ReturnType))
+	'rule' OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
+            OutputForeignHandlerName(ObjType, Name)	
+            OutputWrite("(")
+            (|
+            	where(InstanceModifier -> class)
+            	OutputForeignCallParams(Params)
+            ||
+				OutputWrite("pObj")
+				(|
+					where(Params -> nil)
+				||
+					OutputWrite(", ")
+					OutputForeignCallParams(Params)
+				|)
+			|)
+			OutputWrite(")")		
+
+'action' OutputCallForeignHandler(TYPE, NAME, SIGNATURE, MODIFIER)
+
+	'rule' OutputCallForeignHandler(ObjType, Name, Signature, methodmodifiers(_, _, _, _, _, InstanceModifier))
+        OutputCallForeignHandlerModifier(ObjType, Name, Signature, InstanceModifier)
+
+    'rule' OutputCallForeignHandler(ObjType, Name, Signature, interfacemethodmodifiers(InstanceModifier))
+        OutputCallForeignHandlerModifier(ObjType, Name, Signature, InstanceModifier)
+
+'action' OutputCallForeignHandlerModifier(TYPE, NAME, SIGNATURE, MODIFIER)
+
+    'rule' OutputCallForeignHandlerModifier(ObjType, Name, signature(Params, ReturnType), InstanceModifier)
 		OutputConvertToForeignParams(Params)
         (|
             where(ReturnType -> nil)
             OutputWrite("\tunsafe\n\t\t")
-            OutputForeignHandlerName(ObjType, Name)	
-            OutputWrite("(pObj")
-            (|
-                where(Params -> nil)
-            ||
-                OutputWrite(", ")
-                OutputForeignCallParams(Params)
-            |)
-            OutputWrite(")\n")
+            OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
+			OutputWrite("\n")
             OutputWrite("\tend unsafe\n")
         ||
-            RequiresConversion(ReturnType)
             OutputWrite("\tvariable tJNIResult as ")
-            GenerateJavaType(ReturnType)
+            (|
+                RequiresConversion(ReturnType)
+                GenerateJavaType(ReturnType)
+            ||
+                GenerateType(ReturnType)
+            |)
             OutputWrite("\n\tunsafe\n")
             OutputWrite("\t\tput ")
-            OutputForeignHandlerName(ObjType, Name)	
-            OutputWrite("(pObj")
-            (|
-                where(Params -> nil)
-            ||
-                OutputWrite(", ")
-                OutputForeignCallParams(Params)
-            |)
-            OutputWrite(") into tJNIResult\n")
+            OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
+            OutputWrite(" into tJNIResult\n")
             OutputWrite("\tend unsafe\n")
-
 			OutputWrapperReturn(ReturnType)
-        ||
+			OutputWrite("\n")
+        |)
+
+'action' OutputCallForeignGetter(TYPE, NAME, TYPE, MODIFIER)
+
+	'rule' OutputCallForeignGetter(ObjType, Name, Type, InstanceModifier)
             OutputWrite("\tvariable tJNIResult as ")
-            GenerateType(ReturnType)
+            (|
+                RequiresConversion(Type)
+                GenerateJavaType(Type)
+            ||
+                GenerateType(Type)
+            |)
             OutputWrite("\n\tunsafe\n")
             OutputWrite("\t\tput ")
-            OutputForeignHandlerName(ObjType, Name)	
-            OutputWrite("(pObj")
+            OutputForeignGetterName(ObjType, Name)
+            OutputWrite("(")
             (|
-                where(Params -> nil)
+            	where(InstanceModifier -> class)
             ||
-                OutputWrite(", ")
-                OutputForeignCallParams(Params)
+            	OutputWrite("pObj")            
             |)
-            OutputWrite(") into tJNIResult\n")
+            OutputWrite(")")
+            OutputWrite(" into tJNIResult\n")
             OutputWrite("\tend unsafe\n")
+			OutputWrapperReturn(Type)
+			
+'action' OutputCallForeignSetter(TYPE, NAME, TYPE, MODIFIER)
 
-			OutputWrapperReturn(ReturnType)
-        |)	
+	'rule' OutputCallForeignSetter(ObjType, Name, Type, InstanceModifier)
+			OutputConvertToForeignParameter(Name, Type)
+            OutputWrite("\tunsafe\n\t\t")
+            OutputForeignSetterName(ObjType, Name)
+            OutputWrite("(")
+            (|
+            	where(InstanceModifier -> class)
+            ||
+            	OutputWrite("pObj, ")
+            |)
+            (|
+				RequiresConversion(Type)
+	            OutputWriteI("tParam_", Name, "")
+			||
+        	    OutputWriteI("pParam_", Name, "")
+	        |)
+            OutputWrite(")")            
+            OutputWrite("\n\tend unsafe\n")
 
 'action' OutputConvertToForeignParams(PARAMETERLIST)
 
@@ -352,13 +561,11 @@
     'rule' OutputConvertToForeignParams(parameterlist(Head, Tail)):
         OutputConvertToForeignParam(Head)
         OutputConvertToForeignParams(Tail)	
-        
-'action' OutputConvertToForeignParam(PARAMETER)
 
-    'rule' OutputConvertToForeignParam(parameter(_, Id, Type)):
-    	(|
+'action' OutputConvertToForeignParameter(NAME, TYPE)
+
+    'rule' OutputConvertToForeignParameter(SymbolName, Type):
 			RequiresConversion(Type)
-			ResolveIdName(Id -> SymbolName)
 			OutputWriteI("\tvariable tParam_", SymbolName, "")
 			OutputWrite(" as ")
 			GenerateJavaType(Type) 
@@ -369,8 +576,15 @@
 			GenerateJavaType(Type)
 			OutputWriteI("(pParam_", SymbolName, ") into ")
 			OutputWriteI("tParam_", SymbolName, "\n\n")
-        ||
-		|)
+
+    'rule' OutputConvertToForeignParameter(SymbolName, Type):
+        -- Do nothing if Type does not require conversion
+
+'action' OutputConvertToForeignParam(PARAMETER)
+
+    'rule' OutputConvertToForeignParam(parameter(_, Id, Type)):
+        ResolveIdName(Id -> SymbolName)
+        OutputConvertToForeignParameter(SymbolName, Type)
 
     'rule' OutputConvertToForeignParam(variadic(_)):
         -- TODO: Deal with variadic args
@@ -415,10 +629,10 @@
         RequiresConversion(Type)
         OutputWrite("\treturn ")
         OutputConvertJava(Type)
-        OutputWrite("(tJNIResult)\n")
+        OutputWrite("(tJNIResult)")
 
     'rule' OutputWrapperReturn(Type)
-		OutputWrite("\treturn tJNIResult\n")
+		OutputWrite("\treturn tJNIResult")
 
 'action' OutputConvertJava(TYPE)
 
@@ -427,15 +641,33 @@
 		OutputWrite("From")
 		GenerateJavaType(Type)
 
-'action' GenerateSignatureWithParameter(TYPE, SIGNATURE)
+'action' GenerateMethodSignatureWithParameter(TYPE, SIGNATURE, MODIFIER)
 
-    'rule' GenerateSignatureWithParameter(ObjType, signature(Params, ReturnType)):
-        OutputWrite("(in pObj as ")
-        GenerateType(ObjType)
+	'rule' GenerateMethodSignatureWithParameter(ObjType, Signature, methodmodifiers(_, _, _, _, _, InstanceMod))
+		GenerateSignatureWithParameter(ObjType, Signature, InstanceMod)
+		
+	'rule' GenerateMethodSignatureWithParameter(ObjType, Signature, interfacemethodmodifiers(InstanceMod))
+		GenerateSignatureWithParameter(ObjType, Signature, InstanceMod)
+
+'action' GenerateSignatureWithParameter(TYPE, SIGNATURE, MODIFIER)
+
+    'rule' GenerateSignatureWithParameter(ObjType, signature(Params, ReturnType), InstanceModifier):
+        OutputWrite("(")
+        (|
+        	where(InstanceModifier -> class)
+        ||
+        	OutputWrite("in pObj as ")
+        	GenerateType(ObjType)
+        	
+        	(|
+        		where(Params -> nil)
+        	||
+        		OutputWrite(", ")
+        	|)
+        |)
         (|
             where(Params -> nil)
         ||
-            OutputWrite(", ")
             GenerateParams(Params)
         |)
         OutputWrite(")")
