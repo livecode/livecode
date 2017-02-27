@@ -1043,14 +1043,20 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
     
     switch (p_call_type)
     {
+        // JavaJNI...Result functions only return false due to memory
+        // allocation failures. If they succeed, fall through the switch
+        // statement and check the JNIEnv for exceptions.
         case MCJavaCallTypeConstructor:
         {
             MCAssert(t_return_type == kMCJavaTypeObject);
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
-            return __JavaJNIConstructorResult(t_target_class,
-                                              static_cast<jmethodID>(p_method_id),
-                                              &t_params[0],
-                                              r_return);
+            if (!__JavaJNIConstructorResult(t_target_class,
+                                            static_cast<jmethodID>(p_method_id),
+                                            &t_params[0],
+                                            r_return))
+                return false;
+            
+            break;
         }
         case MCJavaCallTypeInstance:
         {
@@ -1058,25 +1064,35 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
             MCAssert(t_param_count > 0);
             jobject t_instance = t_params[0].l;
             if (t_param_count > 1)
-                return __JavaJNIInstanceMethodResult(t_instance,
-                                                     static_cast<jmethodID>(p_method_id),
-                                                     &t_params[1],
-                                                     t_return_type,
-                                                     r_return);
-                else
-                    return __JavaJNIInstanceMethodResult(t_instance,
-                                                         static_cast<jmethodID>(p_method_id),
-                                                         nullptr,
-                                                         t_return_type,
-                                                         r_return);
+            {
+                if (!__JavaJNIInstanceMethodResult(t_instance,
+                                                   static_cast<jmethodID>(p_method_id),
+                                                   &t_params[1],
+                                                   t_return_type,
+                                                   r_return))
+                    return false;
+            }
+            else
+            {
+                if (!__JavaJNIInstanceMethodResult(t_instance,
+                                                   static_cast<jmethodID>(p_method_id),
+                                                   nullptr,
+                                                   t_return_type,
+                                                   r_return))
+                    return false;
+            }
+            break;
         }
         case MCJavaCallTypeStatic:
         {
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
-            return __JavaJNIStaticMethodResult(t_target_class,
-                                               static_cast<jmethodID>(p_method_id),
-                                               t_params, t_return_type,
-                                               r_return);
+            if (! __JavaJNIStaticMethodResult(t_target_class,
+                                              static_cast<jmethodID>(p_method_id),
+                                              t_params, t_return_type,
+                                              r_return))
+                return false;
+            
+            break;
         }
         case MCJavaCallTypeNonVirtual:
         {
@@ -1084,19 +1100,26 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
             jobject t_instance = t_params[0].l;
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
             if (t_param_count > 1)
-                return __JavaJNINonVirtualMethodResult(t_instance,
-                                                       t_target_class,
-                                                       static_cast<jmethodID>(p_method_id),
-                                                       &t_params[1],
-                                                       t_return_type,
-                                                       r_return);
-                else
-                    return __JavaJNINonVirtualMethodResult(t_instance,
-                                                           t_target_class,
-                                                           static_cast<jmethodID>(p_method_id),
-                                                           nullptr,
-                                                           t_return_type,
-                                                           r_return);
+            {
+                if (!__JavaJNINonVirtualMethodResult(t_instance,
+                                                    t_target_class,
+                                                    static_cast<jmethodID>(p_method_id),
+                                                    &t_params[1],
+                                                    t_return_type,
+                                                    r_return))
+                    return false;
+            }
+            else
+            {
+                if (!__JavaJNINonVirtualMethodResult(t_instance,
+                                                     t_target_class,
+                                                     static_cast<jmethodID>(p_method_id),
+                                                     nullptr,
+                                                     t_return_type,
+                                                     r_return))
+                    return false;
+            }
+            break;
         }
         case MCJavaCallTypeGetter:
         case MCJavaCallTypeSetter:
@@ -1105,10 +1128,15 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
             jobject t_instance = t_params[0].l;
             
             if (p_call_type == MCJavaCallTypeGetter)
-                return __JavaJNIGetFieldResult(t_instance,
-                                               static_cast<jfieldID>(p_method_id),
-                                               t_return_type,
-                                               r_return);
+            {
+                if (!__JavaJNIGetFieldResult(t_instance,
+                                             static_cast<jfieldID>(p_method_id),
+                                             t_return_type,
+                                             r_return))
+                    return false;
+
+                break;
+            }
             
             MCJavaType t_field_type;
             if (!__GetExpectedTypeCode(MCHandlerTypeInfoGetParameterType(p_signature, 1),
@@ -1119,16 +1147,22 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
                                     static_cast<jfieldID>(p_method_id),
                                     &t_params[1],
                                     t_field_type);
+            break;
         }
         case MCJavaCallTypeStaticGetter:
         case MCJavaCallTypeStaticSetter:
         {
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
             if (p_call_type == MCJavaCallTypeStaticGetter)
-                return __JavaJNIGetStaticFieldResult(t_target_class,
-                                                     static_cast<jfieldID>(p_method_id),
-                                                     t_return_type,
-                                                     r_return);
+            {
+                if (!__JavaJNIGetStaticFieldResult(t_target_class,
+                                                   static_cast<jfieldID>(p_method_id),
+                                                   t_return_type,
+                                                   r_return))
+                    return false;
+                
+                break;
+            }
             
             MCJavaType t_field_type;
             if (!__GetExpectedTypeCode(MCHandlerTypeInfoGetParameterType(p_signature, 1),
@@ -1139,10 +1173,24 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
                                           static_cast<jfieldID>(p_method_id),
                                           &t_params[0],
                                           t_field_type);
+            break;
         }
+        default:
+            MCUnreachableReturn(false);
     }
     
-    return false;
+    // If we got here there were no memory errors. Check the JNI Env for
+    // exceptions
+    if (s_env -> ExceptionCheck() == JNI_TRUE)
+    {
+        s_env -> ExceptionDescribe();
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                     "reason",
+                                     MCSTR("JNI exeception thrown when calling native method"),
+                                     nullptr);
+    }
+    
+    return true;
 }
 
 bool MCJavaPrivateObjectDescribe(MCValueRef p_value, MCStringRef &r_desc)
@@ -1281,7 +1329,17 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
         }
     }
  
-    s_env -> ExceptionDescribe();
+    // If we got here there were no memory errors. Check the JNI Env for
+    // exceptions
+    if (s_env -> ExceptionCheck() == JNI_TRUE)
+    {
+        s_env -> ExceptionDescribe();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                              "reason",
+                              MCSTR("JNI exeception thrown when getting native method id"),
+                              nullptr);
+        return nullptr;
+    }
     return t_id;
 }
 
