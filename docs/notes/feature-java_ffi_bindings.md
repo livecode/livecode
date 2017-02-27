@@ -22,12 +22,12 @@ when calling the JNI.
 
 *calling* specifies the calling convention which can be one of:
 
- - instance
- - static
- - nonvirtual
+ - `instance`
+ - `static`
+ - `nonvirtual`
  
- Instance and nonvirtual calling conventions require instances of the given
-java class, so the foreign handler declaration will always require a Java
+Instance and nonvirtual calling conventions require instances of the given
+Java class, so the foreign handler declaration will always require a Java
 object parameter.
 
 ### Examples
