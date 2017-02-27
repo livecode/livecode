@@ -62,4 +62,15 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
 void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object);
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type);
 bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
+
+bool MCJavaPrivateErrorThrow(MCTypeInfoRef p_error);
+bool MCJavaPrivateErrorsInitialize();
+void MCJavaPrivateErrorsFinalize();
+
+extern MCTypeInfoRef kMCJavaNativeMethodIdErrorTypeInfo;
+extern MCTypeInfoRef kMCJavaNativeMethodCallErrorTypeInfo;
+extern MCTypeInfoRef kMCJavaBindingStringSignatureErrorTypeInfo;
+extern MCTypeInfoRef kMCJavaCouldNotInitialiseJREErrorTypeInfo;
+extern MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
+
 #endif

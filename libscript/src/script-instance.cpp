@@ -800,20 +800,10 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		                          *t_arguments,
 		                          *t_return,
 		                          p_handler -> java . call_type))
-		{
-			return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-			                             "reason",
-			                             MCSTR("java binding string does not match foreign handler signature"),
-			                             nullptr);
-		}
+            return false;
         
         if (!MCJavaInitialize())
-        {
-            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-                                         "reason",
-                                         MCSTR("could not initialize java"),
-                                         nullptr);
-        }
+            return false;
 		
         void *t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_arguments, *t_return, p_handler -> java . call_type);
         
@@ -825,11 +815,8 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		{
 			if (r_bound == nullptr)
 			{
-				return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-				                             "reason",
-				                             MCSTR("java method not found"),
-				                             nullptr);
-			}
+                return false;
+            }
 			*r_bound = false;
 			
 			return true;

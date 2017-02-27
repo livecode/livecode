@@ -191,6 +191,50 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
     }
 }
 
+MCTypeInfoRef kMCJavaNativeMethodIdErrorTypeInfo;
+MCTypeInfoRef kMCJavaNativeMethodCallErrorTypeInfo;
+MCTypeInfoRef kMCJavaBindingStringSignatureErrorTypeInfo;
+MCTypeInfoRef kMCJavaCouldNotInitialiseJREErrorTypeInfo;
+MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
+
+bool MCJavaPrivateErrorsInitialize()
+{
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodIdError"), MCNAME("java"), MCSTR("JNI exeception thrown when getting native method id"), kMCJavaNativeMethodIdErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodCallError"), MCNAME("java"), MCSTR("JNI exeception thrown when calling native method"), kMCJavaNativeMethodCallErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature"), kMCJavaBindingStringSignatureErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.CouldNotInitialiseJREError"), MCNAME("java"), MCSTR("Could not initialise Java Runtime Environment"), kMCJavaCouldNotInitialiseJREErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.JRENotSupported"), MCNAME("java"), MCSTR("Java Runtime Environment no supported with current configuration"), kMCJavaJRENotSupportedErrorTypeInfo))
+        return false;
+    
+    return true;
+}
+
+void MCJavaPrivateErrorsFinalize()
+{
+    MCValueRelease(kMCJavaNativeMethodIdErrorTypeInfo);
+    MCValueRelease(kMCJavaNativeMethodCallErrorTypeInfo);
+    MCValueRelease(kMCJavaBindingStringSignatureErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotInitialiseJREErrorTypeInfo);
+    MCValueRelease(kMCJavaJRENotSupportedErrorTypeInfo);
+}
+
+bool MCJavaPrivateErrorThrow(MCTypeInfoRef p_error_type)
+{
+    MCAutoErrorRef t_error;
+    if (!MCErrorCreate(p_error_type, nil, &t_error))
+        return false;
+    
+    return MCErrorThrow(*t_error);
+}
+
 #ifdef TARGET_SUPPORTS_JAVA
 #include <jni.h>
 
@@ -1213,10 +1257,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
         s_env -> ExceptionDescribe();
-        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-                                     "reason",
-                                     MCSTR("JNI exeception thrown when calling native method"),
-                                     nullptr);
+        return MCJavaPrivateErrorThrow(kMCJavaNativeMethodCallErrorTypeInfo);
     }
     
     return true;
@@ -1363,10 +1404,7 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
         s_env -> ExceptionDescribe();
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-                              "reason",
-                              MCSTR("JNI exeception thrown when getting native method id"),
-                              nullptr);
+        MCJavaPrivateErrorThrow(kMCJavaNativeMethodCallErrorTypeInfo);
         return nullptr;
     }
     return t_id;
