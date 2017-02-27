@@ -2973,7 +2973,7 @@ MC_DLLEXPORT_DEF
 bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
 {
     return MCStringSubstringIsEqualToNativeChars(self,
-                                                 MCRangeMake(0, MCStringGetLength(self)),
+                                                 MCRangeMake(0, UINDEX_MAX),
                                                  p_chars,
                                                  p_char_count,
                                                  p_options);
