@@ -1,0 +1,25 @@
+module com.livecode.iterator.tests
+
+handler GenerateFibonacci(inout xState as optional any, \
+		inout xValue as optional any) returns Boolean
+	if xState is nothing then
+		put [0.0, 1.0] into xState
+		put 1.0 into xValue
+	else
+		put xState[1] + xState[2] into xValue
+		put [xState[2], xValue] into xState
+	end if
+	return true
+end handler
+
+public handler TestGenericIterator()
+	variable tValue
+	repeat for each value tValue generated in GenerateFibonacci
+		if tValue > 100 then
+			exit repeat
+		end if
+	end repeat
+	test "generic iterator" when tValue is 144
+end handler
+
+end module
