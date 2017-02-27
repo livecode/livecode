@@ -689,7 +689,6 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
             break;
         }
         case kMCJavaTypeVoid:
-            break;
         default:
             MCUnreachableReturn(false);
     }
