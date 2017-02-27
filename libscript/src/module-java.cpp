@@ -29,6 +29,21 @@ static bool TryToInitializeJava()
 
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCJavaObjectTypeInfo() { return MCJavaGetObjectTypeInfo(); }
 
+bool MCJavaErrorThrow(MCTypeInfoRef p_error_type)
+{
+    MCAutoErrorRef t_error;
+    if (!MCErrorCreate(p_error_type, nil, &t_error))
+        return false;
+    
+    return MCErrorThrow(*t_error);
+}
+
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertStringToJStringErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJStringToStringErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotGetObjectClassNameErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaStringFromJString(MCJavaObjectRef p_object, MCStringRef &r_string)
@@ -37,9 +52,7 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaStringFromJString(MCJavaObjectRef p_objec
 		return;
 	
     if (!MCJavaConvertJStringToStringRef(p_object, r_string))
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
-                              MCSTR("couldn't convert java object to string"),
-                              nullptr);
+        MCJavaErrorThrow(kMCJavaCouldNotConvertJStringToStringErrorTypeInfo);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaStringToJString(MCStringRef p_string, MCJavaObjectRef &r_object)
@@ -48,9 +61,7 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaStringToJString(MCStringRef p_string, MCJ
 		return;
 	
     if (!MCJavaConvertStringRefToJString(p_string, r_object))
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
-                              MCSTR("couldn't convert string to java object"),
-                              nullptr);
+        MCJavaErrorThrow(kMCJavaCouldNotConvertStringToJStringErrorTypeInfo);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaDataFromJByteArray(MCJavaObjectRef p_object, MCDataRef &r_data)
@@ -59,9 +70,7 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaDataFromJByteArray(MCJavaObjectRef p_obje
         return;
     
     if (!MCJavaConvertJByteArrayToDataRef(p_object, r_data))
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
-                              MCSTR("couldn't convert java object to data"),
-                              nullptr);
+        MCJavaErrorThrow(kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaDataToJByteArray(MCDataRef p_data, MCJavaObjectRef &r_object)
@@ -70,9 +79,7 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaDataToJByteArray(MCDataRef p_data, MCJava
         return;
     
     if (!MCJavaConvertDataRefToJByteArray(p_data, r_object))
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
-                              MCSTR("couldn't convert data to java object"),
-                              nullptr);
+        MCJavaErrorThrow(kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCJavaGetClassName(MCJavaObjectRef p_obj, MCStringRef &r_string)
@@ -81,15 +88,45 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaGetClassName(MCJavaObjectRef p_obj, MCStr
         return;
     
     if (!MCJavaGetJObjectClassName(p_obj, r_string))
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
-                              MCSTR("couldn't get java object class name"),
-                              nullptr);
+        MCJavaErrorThrow(kMCJavaCouldNotGetObjectClassNameErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool MCJavaErrorsInitialize()
+{
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertFromStringError"), MCNAME("java"), MCSTR("Could not convert String to Java string"), kMCJavaCouldNotConvertStringToJStringErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertToStringError"), MCNAME("java"), MCSTR("Could not convert Java byte array to Data"), kMCJavaCouldNotConvertJStringToStringErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertFromDataError"), MCNAME("java"), MCSTR("Could not convert Java byte array to Data"), kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertToDataError"), MCNAME("java"), MCSTR("Could not convert Java byte array to Data"), kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo))
+        return false;
+        
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.FetchJavaClassNameError"), MCNAME("java"), MCSTR("Could not get Java object class name"), kMCJavaCouldNotGetObjectClassNameErrorTypeInfo))
+        return false;
+    
+    return true;
+}
+
+void MCJavaErrorsFinalize()
+{
+    MCValueRelease(kMCJavaCouldNotConvertStringToJStringErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotConvertJStringToStringErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotGetObjectClassNameErrorTypeInfo);
+}
+
 extern "C" bool com_livecode_java_Initialize(void)
 {
+    if (!MCJavaErrorsInitialize())
+        return false;
+    
     if (!MCJavaCreateJavaObjectTypeInfo())
         return false;
     
@@ -99,6 +136,8 @@ extern "C" bool com_livecode_java_Initialize(void)
 extern "C" void com_livecode_java_Finalize(void)
 {
     MCJavaFinalize();
+    
+    MCJavaErrorsFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
