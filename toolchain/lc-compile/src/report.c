@@ -228,50 +228,63 @@ static void _Warning(long p_position, const char *p_message)
     }
 }
 
-static void _ErrorS(long p_position, const char *p_message, const char *p_string)
+void _ErrorVV(long p_position, const char *p_message, va_list args)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
     fprintf(stderr, "error: ");
-    fprintf(stderr, p_message, p_string);
+    vfprintf(stderr, p_message, args);
     fprintf(stderr, "\n");
     _PrintContext(p_position);
     s_error_count += 1;
 }
 
-static void _WarningS(long p_position, const char *p_message, const char *p_string)
+void _ErrorV(long p_position, const char *p_message, ...)
+{
+    va_list args;
+    va_start(args, p_message);
+    _ErrorVV(p_position, p_message, args);
+    va_end(args);
+}
+
+void _WarningV(long p_position, const char *p_message, ...)
 {
     if (IsDependencyCompile())
         return;
 
-    if (s_is_werror_enabled)
+    va_list args;
+    va_start(args, p_message);
+    
+    if (0 && s_is_werror_enabled)
     {
-       _ErrorS(p_position, p_message, p_string);
+       _ErrorVV(p_position, p_message, args);
     }
     else
     {
         _PrintPosition(p_position);
         fprintf(stderr, "warning: ");
-        fprintf(stderr, p_message, p_string);
+        vfprintf(stderr, p_message, args);
         fprintf(stderr, "\n");
         _PrintContext(p_position);
     }
+    
+    va_end(args);
 }
 
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
 {
     const char *t_string;
     GetStringOfNameLiteral(p_name, &t_string);
-    _ErrorS(p_position, p_message, t_string);
+    _ErrorV(p_position, p_message, t_string);
 }
 
 static void _WarningI(long p_position, const char *p_message, NameRef p_name)
 {
 	const char *t_string;
 	GetStringOfNameLiteral(p_name, &t_string);
-	_WarningS(p_position, p_message, t_string);
+	_WarningV(p_position, p_message, t_string);
 }
 
 #define DEFINE_ERROR(Name, Message) \
@@ -281,7 +294,10 @@ static void _WarningI(long p_position, const char *p_message, NameRef p_name)
     void Error_##Name(long p_position, NameRef p_id) { _ErrorI(p_position, Message, p_id); }
 
 #define DEFINE_ERROR_S(Name, Message) \
-void Error_##Name(long p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
+void Error_##Name(long p_position, const char *p_string) { _ErrorV(p_position, Message, p_string); }
+
+#define DEFINE_ERROR_SS(Name, Message) \
+void Error_##Name(long p_position, const char *p_one, const char *p_two) { _ErrorV(p_position, Message, p_one, p_two); }
 
 DEFINE_ERROR_I(UnableToFindImportedModule, "Unable to find imported module '%s'");
 
@@ -391,18 +407,23 @@ DEFINE_ERROR(IllegalNumberOfArgumentsForOpcode, "Wrong number of arguments for o
 DEFINE_ERROR(BytecodeNotAllowedInSafeContext, "Bytecode blocks can only be present in unsafe context")
 DEFINE_ERROR_I(UnsafeHandlerCallNotAllowedInSafeContext, "Unsafe handler '%s' can only be called in unsafe context")
 
+DEFINE_ERROR_SS(IncompatibleTypes, "Incompatible types: cannot assign %s to %s")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
     void Warning_##Name(long p_position, NameRef p_id) { _WarningI(p_position, Message, p_id); }
 #define DEFINE_WARNING_S(Name, Message) \
-	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
+	void Warning_##Name(long p_position, const char *p_string) { _WarningV(p_position, Message, p_string); }
+#define DEFINE_WARNING_SS(Name, Message) \
+void Warning_##Name(long p_position, const char *p_one, const char *p_two) { _WarningV(p_position, Message, p_one, p_two); }
 
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
 DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
+DEFINE_WARNING_SS(ImplicitTypeConversion, "Implicit type conversion from %s to %s will be removed")
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -410,7 +431,7 @@ void yyerror(const char *p_text)
 {
     long t_position;
     GetCurrentPosition(&t_position);
-    _ErrorS(t_position, "Parsing error: %s", p_text);
+    _ErrorV(t_position, "Parsing error: %s", p_text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,12 +22,17 @@
 'use'
     support
     types
+    generate
 
 --------------------------------------------------------------------------------
 
-'action' Check(MODULE)
+'var' AllModules : MODULELIST
 
-    'rule' Check(Module):
+'action' Check(MODULELIST, MODULE)
+
+    'rule' Check(ModuleList, Module):
+        AllModules <- ModuleList
+
         -- Check that all the ids bind to the correct type of thing. Any ids
         -- which aren't bound correctly get assigned a meaning of 'error'.
         CheckBindings(Module)
@@ -53,6 +58,9 @@
 
         -- Check that safe / unsafe boundaries are respected
         CheckSafety(Module)
+
+        -- Check that statically-checkable types are sensible
+        CheckTypes(Module)
 
 --------------------------------------------------------------------------------
 
@@ -2061,6 +2069,749 @@
 
 --------------------------------------------------------------------------------
 
+'action' PartResolveType(TYPE -> TYPE)
+
+    'rule' PartResolveType(Type:named(_, Id) -> Resolved):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> UnderlyingType
+        (|
+            where(UnderlyingType -> foreign(_, _))
+            where(Type -> Resolved)
+        ||
+            PartResolveType(UnderlyingType -> Resolved)
+        |)
+
+    'rule' PartResolveType(optional(_, Type) -> Resolved):
+        PartResolveType(Type -> Resolved)
+
+    'rule' PartResolveType(Type -> Resolved):
+        where(Type -> Resolved)
+
+'condition' TypesAreCompatible(TYPE, TYPE)
+
+    -- Remove 'optional' status and find the underlying types
+    'rule' TypesAreCompatible(From, To):
+        PartResolveType(From -> FromResolved)
+        PartResolveType(To -> ToResolved)
+        TypesAreCompatible_(FromResolved, ToResolved)
+
+
+'condition' TypesAreBridgeable(TYPE, TYPE)
+
+    -- Remove 'optional' status but keep named foreign types
+    'rule' TypesAreBridgeable(From, To):
+        PartResolveType(From -> FromResolved)
+        PartResolveType(To -> ToResolved)
+        TypesAreBridgeable_(FromResolved, ToResolved)
+
+'condition' AreParameterListsEqual(PARAMETERLIST, PARAMETERLIST)
+
+    'rule' AreParameterListsEqual(nil, nil)
+        -- End of the lists
+
+    'rule' AreParameterListsEqual(parameterlist(OneParam, OneTail), parameterlist(TwoParam, TwoTail)):
+        -- Not quite right, but close enough for now
+        where(OneParam -> parameter(_, _, _, OneType))
+        where(TwoParam -> parameter(_, _, _, TwoType))
+        TypesAreCompatible(OneType, TwoType)
+        AreParameterListsEqual(OneTail, TwoTail)
+
+'condition' AreSignaturesEqual(SIGNATURE, SIGNATURE)
+
+    'rule' AreSignaturesEqual(From, To):
+        -- Not quite right, but close enough for now
+        From'ReturnType -> FromRetType
+        From'Parameters -> FromParams
+        To'ReturnType -> ToRetType
+        To'Parameters -> ToParams
+        TypesAreCompatible(FromRetType, ToRetType)
+        AreParameterListsEqual(FromParams, ToParams)
+
+'condition' TypesAreCompatible_(TYPE, TYPE)
+
+    -- Compare the built-in types without pos parameters
+    'rule' TypesAreCompatible_(From, To):
+        (|
+            where(From -> any(_))
+            where(To -> any(_))
+        ||
+            where(From -> boolean(_))
+            where(To -> boolean(_))
+        ||
+            where(From -> integer(_))
+            where(To -> integer(_))
+        ||
+            where(From -> real(_))
+            where(To -> real(_))
+        ||
+            where(From -> number(_))
+            where(To -> number(_))
+        ||
+            where(From -> string(_))
+            where(To -> string(_))
+        ||
+            where(From -> data(_))
+            where(To -> data(_))
+        ||
+            where(From -> array(_))
+            where(To -> array(_))
+        ||
+            where(From -> list(_, _))
+            where(To -> list(_, _))
+        |)
+
+    -- Handlers are compatible if they have the same signature
+    'rule' TypesAreCompatible_(handler(_, _, FromSignature), handler(_, _, ToSignature)):
+        AreSignaturesEqual(FromSignature, ToSignature)
+
+    -- Two foreign types are compatible if they use the same non-empty binding
+    'rule' TypesAreCompatible_(foreign(_, FromBinding), foreign(_, ToBinding)):
+        ne(FromBinding, "")
+        eq(FromBinding, ToBinding)
+
+    -- Two named (foreign) types are compatible if they use the same ID
+    'rule' TypesAreCompatible_(named(_, FromId), named(_, ToId)):
+        QuerySymbolId(FromId -> FromInfo)
+        QuerySymbolId(ToId -> ToInfo)
+        FromInfo'Type -> FromType
+        ToInfo'Type -> ToType
+        where(FromType -> foreign(_,_))
+        where(ToType -> foreign(_,_))
+        FromId'Name -> FromName
+        ToId'Name -> ToName
+        eq(FromName, ToName)
+
+    -- Any is compatible with the built-in types only
+    'rule' TypesAreCompatible_(From, any(_)):
+        (|
+            where(From -> record(_,_,_))
+        ||
+            where(From -> enum(_,_,_))
+        ||
+            where(From -> handler(_,_,_))
+        ||
+            where(From -> boolean(_))
+        ||
+            where(From -> integer(_))
+        ||
+            where(From -> real(_))
+        ||
+            where(From -> number(_))
+        ||
+            where(From -> string(_))
+        ||
+            where(From -> data(_))
+        ||
+            where(From -> array(_))
+        ||
+            where(From -> list(_,_))
+        ||
+            IsCustomValueRefType(From)
+        |)
+
+    -- The rule for 'any' above applies in both directions
+    'rule' TypesAreCompatible_(From:any(_), To):
+        TypesAreCompatible_(To, From)
+
+    -- The unspecified type is equivalent to optional any
+    'rule' TypesAreCompatible_(unspecified, To):
+        GetUndefinedPosition(-> Pos)
+        TypesAreCompatible(any(Pos), To)
+
+    'rule' TypesAreCompatible_(From, unspecified):
+        GetUndefinedPosition(-> Pos)
+        TypesAreCompatible(From, any(Pos))
+
+    -- Allow assigning 'nothing' anywhere an assignment from 'any' would be allowed
+    'rule' TypesAreCompatible_(TYPE'undefined(Pos), To):
+        TypesAreCompatible_(TYPE'any(Pos), To)
+
+    -- Special casing for assignments of nothing to Pointer (this should be
+    -- handled more generally for all optional types)
+    'rule' TypesAreCompatible_(TYPE'undefined(_), To):
+        IsForeignPointerType(To)
+
+'condition' IsCustomValueRefType(TYPE)
+
+    'rule' IsCustomValueRefType(Type)
+        where(Type -> named(_, Id))
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> NameString)
+        (|
+            eq(NameString, "Canvas")
+        ||
+            eq(NameString, "Color")
+        ||
+            eq(NameString, "Effect")
+        ||
+            eq(NameString, "Font")
+        ||
+            eq(NameString, "Gradient")
+        ||
+            eq(NameString, "GradientStop")
+        ||
+            eq(NameString, "Paint")
+        ||
+            eq(NameString, "Path")
+        ||
+            eq(NameString, "Point")
+        ||
+            eq(NameString, "Rectangle")
+        ||
+            eq(NameString, "ScriptObject")
+        ||
+            eq(NameString, "Stream")
+        ||
+            eq(NameString, "Transform")
+        |)
+
+'condition' IsForeignNumberType(TYPE)
+
+    'rule' IsForeignNumberType(foreign(_, Binding)):
+        (|
+            eq(Binding, "MCForeignUIntTypeInfo")
+        ||
+            eq(Binding, "MCForeignIntTypeInfo")
+        ||
+            eq(Binding, "MCForeignSizeTypeInfo")
+        ||
+            eq(Binding, "MCForeignSSizeTypeInfo")
+        ||
+            eq(Binding, "MCForeignFloatTypeInfo")
+        ||
+            eq(Binding, "MCForeignDoubleTypeInfo")
+        |)
+
+    'rule' IsForeignNumberType(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> UnderlyingType
+        where(UnderlyingType -> foreign(_, _))
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> TypeName)
+        (|
+            eq(TypeName, "UInt32")
+        ||
+            eq(TypeName, "Int32")
+        ||
+            eq(TypeName, "UIntSize")
+        ||
+            eq(TypeName, "IntSize")
+        ||
+            eq(TypeName, "Float32")
+        ||
+            eq(TypeName, "Float64")
+        ||
+            eq(TypeName, "CInt")
+        ||
+            eq(TypeName, "CUInt")
+        ||
+            eq(TypeName, "CFloat")
+        ||
+            eq(TypeName, "CDouble")
+        ||
+            eq(TypeName, "LCInt")
+        ||
+            eq(TypeName, "LCUint")
+        ||
+            eq(TypeName, "LCIndex")
+        ||
+            eq(TypeName, "LCUIndex")
+        |)
+
+'condition' IsForeignStringType(TYPE)
+
+    'rule' IsForeignStringType(foreign(_, Binding)):
+        (|
+            eq(Binding, "MCForeignZStringNativeTypeInfo")
+        ||
+            eq(Binding, "MCForeignZStringUTF8TypeInfo")
+        ||
+            eq(Binding, "MCForeignZStringUTF16TypeInfo")
+        |)
+
+    'rule' IsForeignStringType(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> UnderlyingType
+        where(UnderlyingType -> foreign(_, _))
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> TypeName)
+        (|
+            eq(TypeName, "ZStringNative")
+        ||
+            eq(TypeName, "ZStringUTF8")
+        ||
+            eq(TypeName, "ZStringUTF16")
+        |)
+
+'condition' IsForeignBooleanType(TYPE)
+
+    'rule' IsForeignBooleanType(foreign(_, Binding)):
+        eq(Binding, "MCForeignBoolTypeInfo")
+
+    'rule' IsForeignBooleanType(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> UnderlyingType
+        where(UnderlyingType -> foreign(_, _))
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> TypeName)
+        eq(TypeName, "CBool")
+
+'condition' IsForeignPointerType(TYPE)
+
+    'rule' IsForeignPointerType(foreign(_, Binding)):
+        eq(Binding, "MCForeignPointerTypeInfo")
+
+    'rule' IsForeignPointerType(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> UnderlyingType
+        where(UnderlyingType -> foreign(_, _))
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> TypeName)
+        eq(TypeName, "Pointer")
+
+'condition' IsNumberBridgeable(TYPE)
+
+    'rule' IsNumberBridgeable(Type):
+        (|
+            IsForeignNumberType(Type)
+        ||
+            where(Type -> integer(_))
+        ||
+            where(Type -> real(_))
+        |)
+
+'condition' IsStringBridgeable(TYPE)
+
+    'rule' IsStringBridgeable(Type):
+        IsForeignStringType(Type)
+
+'condition' IsBooleanBridgeable(TYPE)
+
+    'rule' IsBooleanBridgeable(Type):
+        IsForeignBooleanType(Type)
+
+'condition' IsAnyBridgeable(TYPE)
+
+    'rule' IsAnyBridgeable(Type):
+        (|
+            IsNumberBridgeable(Type)
+        ||
+            IsStringBridgeable(Type)
+        ||
+            IsBooleanBridgeable(Type)
+        |)
+
+'condition' TypesAreBridgeable_(TYPE, TYPE)
+
+    -- NOTE: this rule makes wild assumptions about the VM implementation!
+
+    -- Types are bridgeable if they are compatible
+    'rule' TypesAreBridgeable_(From, To):
+        TypesAreCompatible_(From, To)
+
+    -- Bridging to the 'Number' type
+    'rule' TypesAreBridgeable_(From, number(_)):
+        IsNumberBridgeable(From)
+
+    -- Bridging from the 'Number' type
+    'rule' TypesAreBridgeable_(number(_), To):
+        IsNumberBridgeable(To)
+
+    -- Bridging between foreign number types
+    'rule' TypesAreBridgeable_(From, To):
+        IsNumberBridgeable(From)
+        IsNumberBridgeable(To)
+
+    -- Bridging to the 'String' type
+    'rule' TypesAreBridgeable_(From, string(_)):
+        IsStringBridgeable(From)
+
+    -- Bridging from the 'String' type
+    'rule' TypesAreBridgeable_(string(_), To):
+        IsStringBridgeable(To)
+
+    -- Bridging between foreign string types
+    'rule' TypesAreBridgeable_(From, To)
+        IsStringBridgeable(From)
+        IsStringBridgeable(To)
+
+    -- Bridging to the 'Boolean' type
+    'rule' TypesAreBridgeable_(From, boolean(_)):
+        IsBooleanBridgeable(From)
+
+    -- Bridging from the 'Boolean' type
+    'rule' TypesAreBridgeable_(boolean(_), To):
+        IsBooleanBridgeable(To)
+
+    -- Bridging to the 'any' type
+    'rule' TypesAreBridgeable_(From, any(_)):
+        IsAnyBridgeable(From)
+
+    -- Bridging from the 'any' type
+    'rule' TypesAreBridgeable_(any(_), To):
+        IsAnyBridgeable(To)
+
+'action' NameForType(TYPE -> STRING)
+
+    'rule' NameForType(any(_) -> "any")
+
+    'rule' NameForType(undefined(_) -> "nothing")
+
+    'rule' NameForType(named(_, Id) -> NameString):
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> NameString)
+
+    'rule' NameForType(foreign(_, Binding) -> Binding)
+
+    'rule' NameForType(optional(_, Type) -> Name):
+        NameForType(Type -> Name)
+
+    'rule' NameForType(handler(_,_,_) -> "<handler>")
+
+    'rule' NameForType(boolean(_) -> "Boolean")
+
+    'rule' NameForType(integer(_) -> "Integer")
+
+    'rule' NameForType(real(_) -> "Real")
+
+    'rule' NameForType(number(_) -> "Number")
+
+    'rule' NameForType(string(_) -> "String")
+
+    'rule' NameForType(data(_) -> "Data")
+
+    'rule' NameForType(array(_) -> "Array")
+
+    'rule' NameForType(list(_, _) -> "List")
+
+    'rule' NameForType(unspecified -> "<implicit optional any>")
+
+    'rule' NameForType(nil -> "<invalid type>")
+
+'action' CheckTypeCompatibility(POS, TYPE, TYPE)
+
+    'rule' CheckTypeCompatibility(Position, FromType, ToType):
+        (|
+            TypesAreCompatible(FromType, ToType)
+        ||
+            NameForType(FromType -> FromName)
+            NameForType(ToType -> ToName)
+            TypesAreBridgeable(FromType, ToType)
+            Warning_ImplicitTypeConversion(Position, FromName, ToName)
+        ||
+            NameForType(FromType -> FromName)
+            NameForType(ToType -> ToName)
+            Error_IncompatibleTypes(Position, FromName, ToName)
+        |)
+
+
+'action' TypeOfHandler(TYPE -> TYPE)
+
+    'rule' TypeOfHandler(TYPE'handler(Pos, _, Signature:signature(_, ReturnType)) -> ExprType):
+        (|
+            where(ReturnType -> TYPE'unspecified)
+            where(TYPE'optional(Pos, TYPE'any(Pos)) -> ExprType)
+        ||
+            where(ReturnType -> ExprType)
+        |)
+
+'action' TypeOfExpression(EXPRESSION -> TYPE)
+
+    'rule' TypeOfExpression(EXPRESSION'undefined(Pos) -> ExprType):
+        where(TYPE'undefined(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'true(Pos) -> ExprType):
+        where(TYPE'boolean(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'false(Pos) -> ExprType):
+        where(TYPE'boolean(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'logicaland(Pos, _, _) -> ExprType):
+        where(TYPE'boolean(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'logicalor(Pos, _, _) -> ExprType):
+        where(TYPE'boolean(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'integer(Pos, _) -> ExprType):
+        where(TYPE'boolean(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'unsignedinteger(Pos, _) -> ExprType):
+        where(TYPE'integer(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'real(Pos, _) -> ExprType):
+        where(TYPE'real(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'string(Pos, _) -> ExprType):
+        where(TYPE'string(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'slot(Pos, Id) -> ActualExprType):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> ExprType
+        (|
+            -- Unspecified types are equivalent to "optional any"
+            where(ExprType -> TYPE'unspecified)
+            where(TYPE'optional(Pos, TYPE'any(Pos)) -> ActualExprType)
+        ||
+            -- Undefined slots can occur with constants
+            where(ExprType -> TYPE'undefined(_))
+            where(TYPE'optional(Pos, TYPE'any(Pos)) -> ActualExprType)
+        ||
+            where(ExprType -> ActualExprType)
+        |)
+
+    'rule' TypeOfExpression(EXPRESSION'result(Pos) -> ExprType):
+        where(TYPE'any(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'as(_, _, Type) -> ExprType):
+        where(Type -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'list(Pos, _) -> ExprType):
+        where(TYPE'list(Pos, TYPE'any(Pos)) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'call(_, HandlerId, _) -> ExprType):
+        QuerySymbolId(HandlerId -> Info)
+        (|
+            Info'Type -> Handler:handler(_,_,_)
+            TypeOfHandler(Handler -> ExprType)
+        ||
+            -- If the type isn't a handler type, it must be a variable holding
+            -- a pointer to a handler.
+            Info'Type -> HandlerType
+            FullyResolveType(HandlerType -> ResolvedType)
+            TypeOfHandler(ResolvedType -> ExprType)
+        |)
+
+    'rule' TypeOfExpression(EXPRESSION'invoke(Pos, Info, Arguments) -> ExprType):
+        -- Invokes are multi-dispatch which means the real return type isn't
+        -- available at compile time. A little bit of analysis could be done to
+        -- determine if all signatures return the same type but that's not done
+        -- here (yet...)
+        where(TYPE'any(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'array(Pos, _) -> ExprType):
+        where(TYPE'array(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(pair(Pos, _, _) -> ExprType):
+        where(TYPE'array(Pos) -> ExprType)
+
+    'rule' TypeOfExpression(EXPRESSION'nil -> TYPE'nil)
+
+'action' CheckCallArgumentTypes(POS, PARAMETERLIST, EXPRESSIONLIST)
+
+    'rule' CheckCallArgumentTypes(_, nil, nil):
+    -- done!
+
+    'rule' CheckCallArgumentTypes(Position, parameterlist(parameter(_, Mode, _, ParamType), ParamRest), expressionlist(Expr, ArgRest)):
+        CheckTypes(Expr)
+        [|
+            ne(Mode, out)
+            TypeOfExpression(Expr -> ExprType)
+            CheckTypeCompatibility(Position, ExprType, ParamType)
+        |]
+        [|
+            ne(Mode, in)
+            TypeOfExpression(Expr -> ExprType)
+            CheckTypeCompatibility(Position, ParamType, ExprType)
+        |]
+        CheckCallArgumentTypes(Position, ParamRest, ArgRest)
+
+'condition' IdWithName(NAME, DEFINITION -> ID)
+
+    -- TODO: support for non-handler definitions
+
+    'rule' IdWithName(Name, DEFINITION'sequence(Left, Right) -> Result):
+        (|
+            ne(Left, DEFINITION'nil)
+            IdWithName(Name, Left -> Result)
+        ||
+            ne(Right, DEFINITION'nil)
+            IdWithName(Name, Right -> Result)
+        |)
+
+    'rule' IdWithName(Name, Definition -> Result):
+        (|
+            where(Definition -> handler(_, _, HandlerId, _, _, _))
+            HandlerId'Name -> HandlerName
+            GetStringOfNameLiteral(HandlerName -> NameString)
+            IsNameEqualToName(Name, HandlerName)
+            where(HandlerId -> Result)
+        ||
+            where(Definition -> foreignhandler(_, _, HandlerId, _, _))
+            HandlerId'Name -> HandlerName
+            GetStringOfNameLiteral(HandlerName -> NameString)
+            IsNameEqualToName(Name, HandlerName)
+            where(HandlerId -> Result)
+        |)
+
+'condition' FindModuleInList(NAME, MODULELIST -> MODULE)
+
+'condition' ModuleWithName(NAME -> MODULE)
+
+    'rule' ModuleWithName(Name -> TheModule):
+        AllModules -> ModuleList
+        FindModuleInList(Name, ModuleList -> TheModule)
+
+'condition' SignatureForInvokeMethod(STRING, STRING -> SIGNATURE)
+
+    'rule' SignatureForInvokeMethod(ModuleNameString, MethodNameString -> Signature):
+        MakeNameLiteral(ModuleNameString -> ModuleName)
+        MakeNameLiteral(MethodNameString -> MethodName)
+        ModuleWithName(ModuleName -> MODULE'module(_, _, _, ModuleDefs))
+        IdWithName(MethodName, ModuleDefs -> Id)
+        Id'Meaning -> Meaning
+        where(Meaning -> symbol(SymbolInfo))
+        SymbolInfo'Type -> SymbolType
+        where(SymbolType -> handler(_, _, Signature))
+
+'condition' SignatureMatchesArguments(PARAMETERLIST, EXPRESSIONLIST)
+
+    'rule' SignatureMatchesArguments(nil, nil):
+        -- Done
+
+    'rule' SignatureMatchesArguments(parameterlist(parameter(_, Mode, _, ParamType), ParamRest), expressionlist(Expr, ArgRest)):
+        TypeOfExpression(Expr -> ExprType)
+        GetExpressionPosition(Expr -> Pos)
+        (|
+            eq(Mode, in)
+            TypesAreBridgeable(ExprType, ParamType)
+            --CheckTypeCompatibility(Pos, ExprType, ParamType)
+        ||
+            eq(Mode, out)
+            TypesAreBridgeable(ParamType, ExprType)
+            --CheckTypeCompatibility(Pos, ParamType, ExprType)
+        ||
+            eq(Mode, inout)
+            TypesAreBridgeable(ExprType, ParamType)
+            TypesAreBridgeable(ParamType, ExprType)
+            --CheckTypeCompatibility(Pos, ExprType, ParamType)
+            --CheckTypeCompatibility(Pos, ParamType, ExprType)
+        |)
+
+-- Implemented in typecheck.cpp
+'condition' IsInvokeMethodCandidate(STRING, STRING, INVOKESIGNATURE, EXPRESSIONLIST)
+
+'action' CountInvokeMethods(INVOKEMETHODLIST, INT -> INT)
+
+    'rule' CountInvokeMethods(methodlist(_,_,_,TailMethods), In -> Out):
+        CountInvokeMethods(TailMethods, In + 1 -> Out)
+
+    'rule' CountInvokeMethods(INVOKEMETHODLIST'nil, In -> Out):
+        where(In -> Out)
+
+--'action' PruneInvokeMethods(STRING, INVOKEMETHODLIST, EXPRESSIONLIST -> INVOKEMETHODLIST)
+--
+--    'rule' PruneInvokeMethods(ModuleName, methodlist(Name, Type, InvokeSignature, TailMethods), ExprList -> PrunedList):
+--        PruneInvokeMethods(ModuleName, TailMethods, ExprList -> TailPruned)
+--        (|
+--            IsInvokeMethodCandidate(ModuleName, Name, InvokeSignature, ExprList)
+--            where(INVOKEMETHODLIST'methodlist(Name, Type, InvokeSignature, TailPruned) -> PrunedList)
+--        ||
+--            where(TailPruned -> PrunedList)
+--        |)
+--
+--    'rule' PruneInvokeMethods(_, INVOKEMETHODLIST'nil, _ -> PrunedList):
+--        where(INVOKEMETHODLIST'nil -> PrunedList)
+
+-- Implemented in typecheck.cpp
+--'condition' IsInvokeCandidate(INVOKEINFO, EXPRESSIONLIST -> INVOKEINFO)
+'condition' IsInvokeCandidate(INVOKEINFO, EXPRESSIONLIST)
+
+--'action' GenerateInvokeCandidateSet(INVOKELIST, EXPRESSIONLIST -> INVOKELIST)
+--
+--    'rule' GenerateInvokeCandidateSet(invokelist(Info, Tail), ExprList -> Candidates):
+--        GenerateInvokeCandidateSet(Tail, ExprList -> TailCandidates)
+--        (|
+--            IsInvokeCandidate(Info, ExprList-> PrunedInfo)
+--            where(invokelist(PrunedInfo, TailCandidates) -> Candidates)
+--        ||
+--            where(TailCandidates -> Candidates)
+--        |)
+--
+--    'rule' GenerateInvokeCandidateSet(INVOKELIST'nil, ExprList -> Candidates):
+--        where(INVOKELIST'nil -> Candidates)
+--
+--'action' CountInvokeList(INVOKELIST -> INT)
+--
+--    'rule' CountInvokeList(INVOKELIST'nil -> 0):
+--
+--    'rule' CountInvokeList(invokelist(_, Tail) -> Count):
+--        CountInvokeList(Tail -> TailCount)
+--        where(TailCount + 1 -> Count)
+
+-- Implemented in typecheck.cpp
+'condition' AreAnyInvokesCandidates(INVOKELIST, EXPRESSIONLIST)
+
+-- Implemented in typecheck.cpp
+'action' ExplainInvokeRejections(INVOKELIST, EXPRESSIONLIST -> MCSTRINGREF)
+
+'action' CheckInvokeArgumentTypes(POS, INVOKELIST, EXPRESSIONLIST)
+
+    'rule' CheckInvokeArgumentTypes(Pos, InvokeList, ExprList):
+        CheckTypes(ExprList)
+        (|
+            AreAnyInvokesCandidates(InvokeList, ExprList)
+        ||
+            ExplainInvokeRejections(InvokeList, ExprList -> Reasons)
+            Error_NoInvokeCandidates(Pos, Reasons)
+        |)
+
+-- Used tohold the return type for checking 'return' statements in handlers
+'var' ExpectedReturnType : TYPE
+
+'sweep' CheckTypes(ANY)
+
+    'rule' CheckTypes(STATEMENT'put(Position, Source, Target)):
+        TypeOfExpression(Source -> SourceType)
+        TypeOfExpression(Target -> TargetType)
+        CheckTypeCompatibility(Position, SourceType, TargetType)
+
+    'rule' CheckTypes(STATEMENT'return(Position, Value)):
+        TypeOfExpression(Value -> ExprType)
+        ExpectedReturnType -> ReturnType
+        (|
+            -- "return" is the same as "return nothing"
+            where(ExprType -> TYPE'nil)
+            where(TYPE'undefined(Position) -> ActualExprType)
+        ||
+            where(ExprType -> ActualExprType)
+        |)
+        (|
+            where(ReturnType -> TYPE'unspecified)
+            where(TYPE'optional(Position, TYPE'any(Position)) -> ActualReturnType)
+        ||
+            where(ReturnType -> ActualReturnType)
+        |)
+        CheckTypeCompatibility(Position, ActualExprType, ActualReturnType)
+
+    'rule' CheckTypes(STATEMENT'call(Position, HandlerId, Arguments)):
+        QuerySymbolId(HandlerId -> Info)
+        Info'Type -> TYPE'handler(_, _, Signature:signature(Parameters, _))
+        CheckCallArgumentTypes(Position, Parameters, Arguments)
+
+    'rule' CheckTypes(EXPRESSION'call(Position, HandlerId, Arguments)):
+        QuerySymbolId(HandlerId -> Info)
+        Info'Type -> TYPE'handler(_, _, Signature:signature(Parameters, _))
+        CheckCallArgumentTypes(Position, Parameters, Arguments)
+
+    'rule' CheckTypes(STATEMENT'invoke(Position, InvokeList, ExprList)):
+        CheckInvokeArgumentTypes(Position, InvokeList, ExprList)
+
+    'rule' CheckTypes(EXPRESSION'invoke(Position, InvokeList, ExprList)):
+        CheckInvokeArgumentTypes(Position, InvokeList, ExprList)
+
+    'rule' CheckTypes(DEFINITION'handler(_, _, _, Signature:signature(_, ReturnType), _, Body)):
+        ExpectedReturnType -> SavedReturnType
+        ExpectedReturnType <- ReturnType
+        CheckTypes(Body)
+        ExpectedReturnType <- SavedReturnType
+
+    'rule' CheckTypes(MODULE'module(_, _, _, Definitions)):
+        -- Ensure that the ExpectedReturnType var is initialised
+        ExpectedReturnType <- TYPE'unspecified
+        CheckTypes(Definitions)
+
+--------------------------------------------------------------------------------
+
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 
     'rule' QueryHandlerIdSignature(Id -> Signature)
@@ -2136,5 +2887,59 @@
 
     'rule' QueryExpressionListLength(nil -> 0)
         -- nothing
+
+--------------------------------------------------------------------------------
+
+-- These methods are provided as useful hooks for the C/C++ code
+
+'action' ExpressionListGetHead(EXPRESSIONLIST -> EXPRESSION)
+    'rule' ExpressionListGetHead(expressionlist(Expr, _) -> Expr)
+
+'condition' ExpressionListGetTail(EXPRESSIONLIST -> EXPRESSIONLIST)
+    'rule' ExpressionListGetTail(expressionlist(_, Tail:expressionlist(_,_)) -> Tail)
+
+'action' InvokeSignatureGetIndex(INVOKESIGNATURE -> INT)
+    'rule' InvokeSignatureGetIndex(invokesignature(_, Index, _) -> Index)
+
+'condition' InvokeSignatureGetNext(INVOKESIGNATURE -> INVOKESIGNATURE)
+    'rule' InvokeSignatureGetNext(invokesignature(_, _, Next:invokesignature(_,_,_)) -> Next)
+
+'action' ParameterGetType(PARAMETER -> TYPE)
+    'rule' ParameterGetType(parameter(_, _, _, Type) -> Type)
+
+'action' ParameterListGetHead(PARAMETERLIST -> PARAMETER)
+    'rule' ParameterListGetHead(parameterlist(Param, _) -> Param)
+
+'condition' ParameterListGetTail(PARAMETERLIST -> PARAMETERLIST)
+    'rule' ParameterListGetTail(parameterlist(_, Tail:parameterlist(_,_)) -> Tail)
+
+'action' SignatureGetParameterList(SIGNATURE -> PARAMETERLIST)
+    'rule' SignatureGetParameterList(signature(Params, _) -> Params)
+
+'action' InvokeInfoGetInvokeMethodList(INVOKEINFO -> INVOKEMETHODLIST)
+    'rule' InvokeInfoGetInvokeMethodList(Info -> Methods):
+        Info'Methods -> Methods
+
+'action' InvokeInfoGetModuleName(INVOKEINFO -> STRING)
+    'rule' InvokeInfoGetModuleName(Info -> ModuleName)
+        Info'ModuleName -> ModuleName
+
+'action' InvokeListGetInfo(INVOKELIST -> INVOKEINFO)
+    'rule' InvokeListGetInfo(invokelist(Info, _) -> Info)
+
+'condition' InvokeListGetRest(INVOKELIST -> INVOKELIST)
+    'rule' InvokeListGetRest(invokelist(_, Rest:invokelist(_,_)) -> Rest)
+
+'action' InvokeMethodListGetName(INVOKEMETHODLIST -> STRING)
+    'rule' InvokeMethodListGetName(methodlist(Name, _, _, _) -> Name)
+
+'condition' InvokeMethodListIsIterator(INVOKEMETHODLIST)
+    'rule' InvokeMethodListIsIterator(methodlist(_, iterate, _, _))
+
+'action' InvokeMethodListGetSignature(INVOKEMETHODLIST -> INVOKESIGNATURE)
+    'rule' InvokeMethodListGetSignature(methodlist(_, _, Signature, _) -> Signature)
+
+'condition' InvokeMethodListGetNext(INVOKEMETHODLIST -> INVOKEMETHODLIST)
+    'rule' InvokeMethodListGetNext(methodlist(_, _, _, Tail:methodlist(_,_,_,_)) -> Tail)
 
 --------------------------------------------------------------------------------

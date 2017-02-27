@@ -60,6 +60,7 @@
 			'set.c',
 			'syntax-gen.c',
 			'emit.cpp',
+            'typecheck.cpp'
 		],
 	},
 }

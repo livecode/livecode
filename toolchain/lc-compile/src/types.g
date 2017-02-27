@@ -39,6 +39,7 @@
     NAME DOUBLE
     SYNTAXPRECEDENCE
     BYTECODE
+    MCSTRINGREF
 
 --------------------------------------------------------------------------------
 
@@ -327,8 +328,6 @@
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)
 
-'table' TYPEINFO(Position: POS)
-
 --------------------------------------------------------------------------------
 
 -- All operators are classified as particular types representing their syntactic
@@ -375,5 +374,6 @@
 
 'type' NAME
 'type' DOUBLE
+'type' MCSTRINGREF
 
 --------------------------------------------------------------------------------

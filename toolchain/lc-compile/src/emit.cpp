@@ -166,6 +166,7 @@ extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 extern "C" void EmitPosition(PositionRef position);
+extern "C" void EmitCast(long type_idx, long out_reg, long in_reg);
 
 extern "C" void OutputBeginManifest(void);
 extern "C" void OutputEnd(void);
@@ -1801,6 +1802,19 @@ void EmitReset(long reg)
     MCScriptEmitBytecodeInModule(s_builder, kResetOpcodeIndex, reg, UINDEX_MAX);
     
     Debug_Emit("Reset(%ld)", reg);
+}
+
+////////
+
+void EmitCast(long type_idx, long out_reg, long in_reg)
+{
+    //static const __opcode_index kCastOpcodeIndex("cast");
+    //MCScriptEmitBytecodeInModule(s_builder, kCastOpcodeIndex, type_idx, out_reg, in_reg, UINDEX_MAX);
+    //
+    //Debug_Emit("Cast(%ld, %ld, %ld)", type_idx, out_reg, in_reg);
+    
+    // Behave as an assign for now
+    EmitAssign(out_reg, in_reg);
 }
 
 ////////

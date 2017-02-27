@@ -125,17 +125,23 @@
     'rule' BindModules(nil, _):
         -- empty
 
+
 'action' CheckModules(MODULELIST)
 
-    'rule' CheckModules(modulelist(Head, Tail)):
+    'rule' CheckModules(Modules):
+        DoCheckModules(Modules, Modules)
+
+'action' DoCheckModules(MODULELIST, MODULELIST)
+
+    'rule' DoCheckModules(AllModules, modulelist(Head, Tail)):
         (|
             Head'Kind -> import
         ||
-            Check(Head)
+            Check(AllModules, Head)
         |)
-        CheckModules(Tail)
+        DoCheckModules(AllModules, Tail)
         
-    'rule' CheckModules(nil):
+    'rule' DoCheckModules(_, nil):
         -- empty
         
 'action' GenerateSyntaxForModules(MODULELIST)
@@ -1022,8 +1028,8 @@
     'rule' TermExpression(-> result(Position)):
         "the" @(-> Position) "result"
 
-    --'rule' TermExpression(-> as(Position, Value, Type)):
-    --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+    'rule' TermExpression(-> as(Position, Value, Type)):
+        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         QualifiedId(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
