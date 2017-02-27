@@ -16,6 +16,19 @@
 
 /**
 This module provides utility handlers for converting to and from Java types.
+
+Description:
+
+> **Important:** This library is currently supported on Android, Mac and
+> Linux. Binding to java classes requires the availability of a Java 
+> runtime and access to the appropriate libraries. On Mac, 
+> the `JAVA_HOME` environment variable must be set to the path to your 
+> Java installation (usually at 
+> `/Library/Java/JavaVirtualMachines/jdk1.7.0_55.jdk/Contents/Home`). 
+> On Linux, your `LD_LIBRARY_PATH` must be set to the folder containing 
+> the `libjvm.so` library (usually at ${JAVA_HOME}/jre/lib/amd64/server)
+> on 64-bit Linux.
+
 */
 module com.livecode.java
 
