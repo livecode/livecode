@@ -324,18 +324,23 @@ static bool __MCJavaDataFromJByteArray(jbyteArray p_byte_array, MCDataRef& r_dat
 {
     MCJavaDoAttachCurrentThread();
     
-    jbyte *t_bytes = nullptr;
-    uint32_t t_length = 0;
-    
+    jbyte *t_jbytes = nullptr;
     if (p_byte_array != nullptr)
-        t_bytes = s_env -> GetByteArrayElements(p_byte_array, nullptr);
+        t_jbytes = s_env -> GetByteArrayElements(p_byte_array, nullptr);
     
-    if (t_bytes == nullptr)
+    if (t_jbytes == nullptr)
         return false;
 
-    t_length = s_env -> GetArrayLength(p_byte_array);
-    bool t_success = MCDataCreateWithBytes((const byte_t *)t_bytes, t_length, r_data);
-    s_env -> ReleaseByteArrayElements(p_byte_array, t_bytes, 0);
+    jsize t_length = s_env -> GetArrayLength(p_byte_array);
+    
+    MCAssert(t_length >= 0);
+    
+    if (size_t(t_length) > size_t(UINDEX_MAX))
+        return false;
+    
+    auto t_bytes = reinterpret_cast<const byte_t *>(t_jbytes);
+    bool t_success = MCDataCreateWithBytes(t_bytes, t_length, r_data);
+    s_env -> ReleaseByteArrayElements(p_byte_array, t_jbytes, 0);
 
     return t_success;
 }
@@ -356,9 +361,9 @@ static bool __MCJavaDataToJByteArray(MCDataRef p_data, jbyteArray& r_byte_array)
     if (t_bytes == nullptr)
         return false;
     
-    const byte_t* t_data = MCDataGetBytePtr(p_data);
-    s_env -> SetByteArrayRegion(t_bytes, 0, t_length,
-                                reinterpret_cast<const jbyte*>(t_data));
+    auto t_data = reinterpret_cast<const jbyte*>(MCDataGetBytePtr(p_data));
+    s_env->SetByteArrayRegion(t_bytes, 0, t_length, t_data);
+    
     r_byte_array = t_bytes;
     return true;
 }
