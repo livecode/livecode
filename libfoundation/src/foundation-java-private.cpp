@@ -133,6 +133,8 @@ static bool __MCJavaCallNeedsClassInstance(MCJavaCallType p_type)
         case MCJavaCallTypeSetter:
             return true;
     }
+    
+    MCUnreachableReturn(false);
 }
 
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
