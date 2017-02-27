@@ -74,7 +74,7 @@ static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
     return true;
 }
 
-static bool MCJavaTypeConforms(MCTypeInfoRef p_type, MCJavaType p_code)
+static bool __MCTypeInfoConformsToJavaType(MCTypeInfoRef p_type, MCJavaType p_code)
 {
     MCJavaType t_code;
     if (!__GetExpectedTypeCode(p_type, t_code))
@@ -164,7 +164,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
         MCJavaType t_jtype;
         t_jtype = MCJavaMapTypeCodeSubstring(*t_args, t_range);
         
-        if (!MCJavaTypeConforms(t_type, t_jtype))
+        if (!__MCTypeInfoConformsToJavaType(t_type, t_jtype))
             return false;
     }
     
@@ -172,14 +172,14 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
     switch (p_call_type)
     {
         case MCJavaCallTypeConstructor:
-            return MCJavaTypeConforms(t_return_type, kMCJavaTypeObject);
+            return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeObject);
         case MCJavaCallTypeSetter:
         case MCJavaCallTypeStaticSetter:
-            return MCJavaTypeConforms(t_return_type, kMCJavaTypeVoid);
+            return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeVoid);
         default:
         {
             auto t_return_code = static_cast<MCJavaType>(MCJavaMapTypeCode(p_return));
-            return MCJavaTypeConforms(t_return_type, t_return_code);
+            return __MCTypeInfoConformsToJavaType(t_return_type, t_return_code);
         }
     }
 }
