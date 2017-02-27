@@ -1223,7 +1223,9 @@ bool MCJavaPrivateObjectDescribe(MCValueRef p_value, MCStringRef &r_desc)
     if (!MCJavaPrivateGetJObjectClassName(t_obj, &t_class_name))
         return false;
     
-    return MCStringFormat(r_desc, "<java: %@>", *t_class_name);
+    void *t_object = MCJavaObjectGetObject(t_obj);
+    
+    return MCStringFormat(r_desc, "<java: %@ - address: %p>", *t_class_name, t_object);
 }
 
 bool MCJavaPrivateConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object)
