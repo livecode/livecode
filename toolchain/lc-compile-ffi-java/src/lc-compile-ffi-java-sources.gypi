@@ -2,30 +2,25 @@
 	'includes':
 	[
 		'../../../engine/engine-sources.gypi',
-		'../../../libscript/stdscript-sources.gypi',
 	],
 	
 	'variables':
 	{
 		'all_syntax_files':
 		[
-			'<@(engine_syntax_lcb_files)',
-			'<@(stdscript_syntax_lcb_files)',
 		],
 		
 		'gentle_auxiliary_grammar_files':
 		[
 			'bind.g',
 			'check.g',
+			'output.g',
 			'generate.g',
 			'support.g',
-			'syntax.g',
 			'types.g',
 		],
 		
-		'gentle_bootstrap_grammar_file': 'grammar.g',
-		
-		'template_grammar_file': 'grammar.g',
+		'gentle_grammar_file': 'grammar.g',
 		
 		'reflex_source_files':
 		[
@@ -47,15 +42,13 @@
 			'YYWRAP.b',
 		],
 		
-		'lc-compile_source_files':
+		'lc-compile-ffi-java_source_files':
 		[
+			'literal.c',
 			'main.c',
-			'operator.c',
 			'outputfile.c',
             'outputfile.h',
-			'set.c',
-			'syntax-gen.c',
-			'emit.cpp',
+			'output.cpp',
 		],
 	},
 }

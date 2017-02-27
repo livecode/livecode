@@ -14,8 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __POSITION__
-#define __POSITION__
+#ifndef __OUTPUTFILE__
+#define __OUTPUTFILE__
 
 #include <stdio.h>
 
@@ -34,38 +34,10 @@ enum DependencyModeType
     kDependencyModeMake
 };
     
-void InitializePosition(void);
-void FinalizePosition(void);
-
-void AdvanceCurrentPosition(long delta);
-void AdvanceCurrentPositionToNextRow(void);
-void AdvanceCurrentPositionToFile(FileRef file);
-
-void GetColumnOfPosition(PositionRef position, long *r_column);
-void GetRowOfPosition(PositionRef position, long *r_row);
-void GetFileOfPosition(PositionRef position, FileRef *r_file);
-void GetFilenameOfPosition(PositionRef position, const char **r_filename);
-void GetRowTextOfPosition(PositionRef position, const char **r_text);
-
-void GetCurrentPosition(PositionRef *r_result);
-void yyGetPos(PositionRef *r_result);
-
-void InitializeFiles(void);
-void FinalizeFiles(void);
-
 void AddImportedModuleDir(const char *dir);
 void AddImportedModuleName(const char *name);
 int AddImportedModuleFile(const char *name);
     
-void AddFile(const char *filename);
-int MoveToNextFile(void);
-void GetFilePath(FileRef file, const char **r_path);
-void GetFileName(FileRef file, const char **r_name);
-void GetFileIndex(FileRef file, long *r_index);
-const char *GetFileLineText(FileRef file, long p_row);
-int GetFileWithIndex(long index, FileRef *r_file);
-int GetCurrentFile(FileRef *r_file);
-
 void SetOutputBytecodeFile(const char *filename);
 void SetOutputCodeFile(const char *filename);
 void SetOutputGrammarFile(const char *filename);

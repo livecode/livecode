@@ -19,9 +19,12 @@
 #include "libscript/script.h"
 #include "libscript/script-auto.h"
 
-#include "report.h"
-#include "literal.h"
-#include "position.h"
+#include <output.h>
+#include <allocate.h>
+#include <position.h>
+#include <report.h>
+#include <literal.h>
+#include "outputfile.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -168,11 +171,6 @@ extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 extern "C" void EmitPosition(PositionRef position);
 
 extern "C" void OutputBeginManifest(void);
-extern "C" void OutputEnd(void);
-extern "C" void OutputWrite(const char *msg);
-extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
-extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
-extern "C" void OutputWriteXmlS(const char *left, const char *string, const char *right);
 
 extern "C" int IsBootstrapCompile(void);
 
@@ -253,9 +251,6 @@ static NameRef nameref_from_mcstringref(MCStringRef p_string)
 }
 
 //////////
-
-extern "C" void *Allocate(size_t p_size);
-extern "C" void *Reallocate(void *p_ptr, size_t p_new_size);
 
 static MCScriptModuleBuilderRef s_builder;
 static NameRef s_module_name;
@@ -1896,109 +1891,9 @@ void EmitPosition(PositionRef p_position)
 
 //////////
 
-static FILE *s_output = NULL;
-
 void OutputBeginManifest(void)
 {
-    s_output = OpenManifestOutputFile();
-}
-
-void OutputWrite(const char *p_string)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s", p_string);
-}
-
-void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
-}
-
-void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    const char *t_name_string;
-    GetStringOfNameLiteral(p_name, &t_name_string);
-    OutputWriteS(p_left, t_name_string, p_right);
-}
-
-/* This is the same as OutputWriteS, but escapes special XML
- * characters (&, ", ', <, >) found in p_string */
-void
-OutputWriteXmlS(const char *p_left,
-                const char *p_string,
-                const char *p_right)
-{
-	struct xml_replacement_t {
-		const char *from, *to;
-	};
-
-	static const struct xml_replacement_t k_replacements[] = {
-		{"&", "&amp;"},
-		{"<", "&lt;"},
-		{">", "&gt;"},
-		{"\"", "&quot;"},
-		{"\'", "&apos;"},
-		{NULL, NULL},
-	};
-
-	if (s_output == NULL)
-	{
-		return;
-	}
-
-	bool t_success = true;
-	MCAutoStringRef t_string;
-	if (t_success)
-	{
-		t_success =
-			MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
-			                        (uindex_t)strlen(p_string), kMCStringEncodingUTF8,
-			                        false, &t_string);
-	}
-
-	MCAutoStringRef t_xml_string;
-	if (t_success)
-	{
-		t_success = MCStringMutableCopy(*t_string, &t_xml_string);
-	}
-	for (int i = 0; t_success && k_replacements[i].from != nil; ++i)
-	{
-		t_success = MCStringFindAndReplace(*t_xml_string,
-		                                   MCSTR(k_replacements[i].from),
-		                                   MCSTR(k_replacements[i].to),
-		                                   kMCStringOptionCompareExact);
-	}
-
-	MCAutoStringRefAsUTF8String t_xml_utf8string;
-	if (t_success)
-	{
-		t_success = t_xml_utf8string.Lock(*t_xml_string);
-	}
-
-	if (t_success)
-	{
-		OutputWriteS(p_left, *t_xml_utf8string, p_right);
-	}
-	else
-	{
-		/* UNCHECKED */ abort();
-	}
-}
-
-void OutputEnd(void)
-{
-    if (s_output == NULL)
-        return;
-    
-    fclose(s_output);
+	OutputFileBegin(OpenManifestOutputFile());
 }
 
 //////////
