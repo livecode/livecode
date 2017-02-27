@@ -670,8 +670,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
       -- Externals to reference (on Android we include drivers in this list)
+      put "revsecurity:./librevsecurity" into tDeploy["library"]
       repeat for each line tEntry in tExternals
-         put tEntry & return after tDeploy["externals"]
+         if not (tEntry begins with "db") then
+            put tEntry & return after tDeploy["externals"]
+         end if
+         put return & tEntry & ":" & "./lib" & tEntry after tDeploy["library"]
       end repeat
       delete the last char of tDeploy["externals"]
       
@@ -1319,6 +1323,12 @@ function mapFilePath pPath
          break
       case "dbmysql"
          put merge("[[tBinariesFolder]]/DbMysql") into tPath
+         break
+      case "revsecurity"
+         put merge("[[tBinariesFolder]]/RevSecurity") into tPath
+         break
+      case "revpdfprinter"
+         put merge("[[tBinariesFolder]]/RevPdfPrinter") into tPath
          break
       default
          put pPath into tPath

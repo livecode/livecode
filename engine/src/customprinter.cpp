@@ -2120,51 +2120,18 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 	{
 		// To generalize/improve in the future if we open up the custom printing
 		// device interface :o)
-		static bool s_revpdfprinter_loaded = false;
 		static MCCustomPrinterCreateProc s_revpdfprinter_create = nil;
-		if (!s_revpdfprinter_loaded)
+        
+        static MCSAutoLibraryRef s_revpdfprinter;
+		if (!s_revpdfprinter.IsSet())
 		{
-			MCSysModuleHandle t_module;
-#if defined(_WINDOWS)
-			t_module = MCS_loadmodule(MCSTR("revpdfprinter.dll"));
-#elif defined(_MACOSX)
-            MCAutoStringRef t_module_path_str1;
-
-			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%@/../revpdfprinter.bundle", MCcmd);
-			t_module = MCS_loadmodule(*t_module_path_str1);
-			
-			if (t_module == nil)
-			{
-                MCAutoStringRef t_module_path_str2;
-				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%@/../../../../revpdfprinter.bundle", MCcmd);
-				t_module = MCS_loadmodule(*t_module_path_str2);
-			}
-#elif defined(_LINUX)
+            &s_revpdfprinter = MCU_library_load(MCSTR("./revpdfprinter"));
             
-			uindex_t t_engine_dir_end;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
-			MCAutoStringRef t_module_path;
-            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
-            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%*@/revpdfprinter.so", &t_range, MCcmd);
-			t_module = MCS_loadmodule(*t_module_path);
-#elif defined(TARGET_SUBPLATFORM_IPHONE)
-			uindex_t t_engine_dir_end;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
-			MCAutoStringRef t_module_path;
-            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
-            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
-			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
-			t_module = MCS_loadmodule(*t_module_path);
-#else
-			// Neither servers nor Android have an implementation
-			t_module = nil;
-#endif
-			if (t_module != nil)
+			if (s_revpdfprinter.IsSet())
 			{
-				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, MCSTR("MCCustomPrinterCreate"));
+				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCU_library_lookup(*s_revpdfprinter,
+                                                                                       MCSTR("MCCustomPrinterCreate"));
 			}
-			s_revpdfprinter_loaded = true;
 		}
 
 		if (s_revpdfprinter_create != nil)

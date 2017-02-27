@@ -26,31 +26,8 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 
 #define VXCMD_STRING "VXCMD_macho"
 
-struct DATABASEREC
-{
-	char dbname[255];
-	idcounterrefptr idcounterptr;
-	new_connectionrefptr  newconnectionptr;
-	release_connectionrefptr releaseconnectionptr;
-    set_callbacksrefptr setcallbacksptr;
-#ifndef _MAC_SERVER
-	CFBundleRef driverref;
-#else
-	void *driverref;
-#endif
-};
-
-void UnloadDBBundle(CFBundleRef p_bundle);
-bool FolderExists(const char *p_path);
-char *GetBundleFolder(CFBundleRef p_bundle);
-const char *GetExternalFolder(void);
-const char *GetApplicationFolder(void);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path);
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec);
 void MCU_path2std(char *p_path);
 void MCU_path2native(char *p_path);
-
-
 void MCU_fix_path(char *cstr);
 
 extern "C" 

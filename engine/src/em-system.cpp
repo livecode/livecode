@@ -215,13 +215,6 @@ MCEmscriptenSystem::GetProcessId()
 	return getpid();
 }
 
-bool
-MCEmscriptenSystem::GetExecutablePath(MCStringRef & r_path)
-{
-	MCEmscriptenNotImplemented();
-	return false;
-}
-
 /* ----------------------------------------------------------------
  * Scheduling
  * ---------------------------------------------------------------- */
@@ -1017,33 +1010,6 @@ MCEmscriptenSystem::TextConvertToUnicode(uint32_t p_input_encoding,
 {
 	MCEmscriptenNotImplemented();
 	return false;
-}
-
-/* ----------------------------------------------------------------
- * Loadable modules
- * ---------------------------------------------------------------- */
-
-/* Emscripten doesn't support dynamic linking */
-
-MCSysModuleHandle
-MCEmscriptenSystem::LoadModule(MCStringRef p_path)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-MCSysModuleHandle
-MCEmscriptenSystem::ResolveModuleSymbol(MCSysModuleHandle p_module,
-                                        MCStringRef p_symbol)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-void
-MCEmscriptenSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	/* Successfully do nothing */
 }
 
 /* ----------------------------------------------------------------

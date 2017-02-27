@@ -2265,6 +2265,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          if the result is not empty then
             revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
          end if
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
@@ -2313,7 +2314,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
                revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
             end if
          end repeat
-         
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       default
          break

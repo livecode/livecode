@@ -448,11 +448,6 @@ bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_pat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on Android
-bool MCAndroidSystem::GetExecutablePath(MCStringRef& r_path)
-{
-    return false;
-}
 
 bool MCAndroidSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {
