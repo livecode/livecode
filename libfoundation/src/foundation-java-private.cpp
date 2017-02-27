@@ -137,6 +137,13 @@ static bool __MCJavaCallNeedsClassInstance(MCJavaCallType p_type)
     MCUnreachableReturn(false);
 }
 
+static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
+{
+    return MCStringCopySubstring(p_in,
+                                 MCRangeMake(1, MCStringGetLength(p_in) - 2),
+                                 r_out);
+}
+
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
     uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
@@ -149,7 +156,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
     
     // Remove brackets from arg string
     MCAutoStringRef t_args;
-    if (!MCStringCopySubstring(p_args, MCRangeMake(1, MCStringGetLength(p_args) - 2), &t_args))
+    if (!__RemoveSurroundingParentheses(p_args, &t_args))
         return false;
     
     MCRange t_range = MCRangeMake(0, 0);
@@ -1290,7 +1297,7 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
             case MCJavaCallTypeStatic:
             {
                 MCAutoStringRef t_sig;
-                if (!MCStringFormat(&t_sig, "%@%@", p_arguments, p_return))
+                if (!MCStringCreateWithStrings(&t_sig, p_arguments, p_return))
                     return nullptr;
                 
                 MCAutoStringRefAsCString t_signature_cstring;
@@ -1333,9 +1340,7 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
             {
                 // Remove brackets from arg string to find field type
                 MCAutoStringRef t_args;
-                if (!MCStringCopySubstring(p_arguments,
-                                           MCRangeMake(1, MCStringGetLength(p_arguments) - 2),
-                                           &t_args))
+                if (!__RemoveSurroundingParentheses(p_arguments, &t_args))
                     return nullptr;
                 
                 MCAutoStringRefAsCString t_signature_cstring;
