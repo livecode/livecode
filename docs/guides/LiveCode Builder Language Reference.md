@@ -520,17 +520,17 @@ by listing it in a DEF module).
 
 Here *calling* specifies the calling convention which can be one of:
 
- - default
- - stdcall
- - thiscall
- - fastcall
- - cdecl
- - pascal
- - register
+ - `default`
+ - `stdcall`
+ - `thiscall`
+ - `fastcall`
+ - `cdecl`
+ - `pascal`
+ - `register`
 
-All but 'default' are Win32-only, and on Win32 'default' maps to
-'cdecl'. If a Win32-only calling convention is specified on a
-non-Windows platform then it is taken to be 'default'.
+All but `default` are Win32-only, and on Win32 `default` maps to
+`cdecl`. If a Win32-only calling convention is specified on a
+non-Windows platform then it is taken to be `default`.
 
 #### The Java binding string
 
@@ -540,7 +540,7 @@ The Java binding string has the following form:
     
 Here *className* is the qualified name of the Java class to bind to.
 
-Here *functionType* is either empty, or 'get' or 'set', which are 
+Here *functionType* is either empty, or `get` or `set`, which are 
 currently used for getting and setting member fields of a Java class.
 
 For example
@@ -552,19 +552,19 @@ are binding strings for setting and getting the `time` field of a
 Calendar object.
 
 Here *function* specifies the name of the method or field to bind to. The
-function 'new' may be used to call a class constructor. *function* also
+function `new` may be used to call a class constructor. *function* also
 includes the specification of function signature, according to the 
 [standard rules for forming these](http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/method.html) 
 when calling the JNI.
 
 Here *calling* specifies the calling convention which can be one of:
 
- - instance
- - static
- - nonvirtual
+ - `instance`
+ - `static`
+ - `nonvirtual`
 
 Instance and nonvirtual calling conventions require instances of the given
-java class, so the foreign handler declaration will always require a Java
+Java class, so the foreign handler declaration will always require a Java
 object parameter.
 
 ### Properties
