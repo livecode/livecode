@@ -454,7 +454,7 @@ Foreign types map to high-level types as follows:
 This mapping means that a foreign handler with a bool parameter say,
 will accept a boolean from LiveCode Builder code when called.
 
-At present, only C binding is allowed and follow these rules:
+At present, only C and Java binding is allowed and follow these rules:
 
  - any type passes an MCValueRef
  - nothing type passes as the null pointer
@@ -486,11 +486,28 @@ If an out parameter is of a Ref type, then it must be a copy (on exit)
 If an inout parameter is of a Ref type, then its existing value must be
 released, and replaced by a copy (on exit).
 
-The binding string for foreign handlers has the following form:
+The binding string for foreign handlers is prefixed by a language, 
+currently either C or Java.
 
-    [lang:][library>][class.]function[!calling]
+Foreign handlers' bound symbols are resolved on first use and an error
+is thrown if the symbol cannot be found.
 
-Here *lang* specifies the language (must be 'c' at the moment)
+Foreign handlers are always considered unsafe, and thus may only be called
+from unsafe context - i.e. from within an unsafe handler, or unsafe statement
+block.
+
+> **Note:** The current foreign handler definition is an initial
+> version, mainly existing to allow binding to implementation of the
+> syntax present in the standard language modules. It will be expanded
+> and improved in a subsequent version to make it very easy to import
+> and use functions (and types) from other languages including
+> Objective-C (on Mac and iOS) and Java (on Android).
+
+#### The C binding string
+
+The C binding string has the following form:
+
+    "c:[library>][class.]function[!calling]"
 
 Here *library* specifies the name of the library to bind to (if no
 library is specified a symbol from the engine executable is assumed).
@@ -515,19 +532,40 @@ All but 'default' are Win32-only, and on Win32 'default' maps to
 'cdecl'. If a Win32-only calling convention is specified on a
 non-Windows platform then it is taken to be 'default'.
 
-Foreign handler's bound symbols are resolved on first use and an error
-is thrown if the symbol cannot be found.
+#### The Java binding string
 
-Foreign handlers are always considered unsafe, and thus may only be called
-from unsafe context - i.e. from within an unsafe handler, or unsafe statement
-block.
+The Java binding string has the following form:
 
-> **Note:** The current foreign handler definition is an initial
-> version, mainly existing to allow binding to implementation of the
-> syntax present in the standard language modules. It will be expanded
-> and improved in a subsequent version to make it very easy to import
-> and use functions (and types) from other languages including
-> Objective-C (on Mac and iOS) and Java (on Android).
+    "java:[className>][functionType.]function[!calling]"
+    
+Here *className* is the qualified name of the Java class to bind to.
+
+Here *functionType* is either empty, or 'get' or 'set', which are 
+currently used for getting and setting member fields of a Java class.
+
+For example
+
+	"java:java.util.Calendar>set.time(J)"
+	"java:java.util.Calendar>get.time()J"
+
+are binding strings for setting and getting the `time` field of a 
+Calendar object.
+
+Here *function* specifies the name of the method or field to bind to. The
+function 'new' may be used to call a class constructor. *function* also
+includes the specification of function signature, according to the 
+[standard rules for forming these](http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/method.html) 
+when calling the JNI.
+
+Here *calling* specifies the calling convention which can be one of:
+
+ - instance
+ - static
+ - nonvirtual
+
+Instance and nonvirtual calling conventions require instances of the given
+java class, so the foreign handler declaration will always require a Java
+object parameter.
 
 ### Properties
 
