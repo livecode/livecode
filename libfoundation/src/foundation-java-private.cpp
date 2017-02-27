@@ -399,56 +399,56 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
             jboolean t_result =
                 s_env -> CallBooleanMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jboolean *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeByte:
         {
             jbyte t_result =
                 s_env -> CallByteMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jbyte *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeChar:
         {
             jchar t_result =
                 s_env -> CallCharMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jchar *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeShort:
         {
             jshort t_result =
                 s_env -> CallShortMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jshort *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeInt:
         {
             jint t_result =
                 s_env -> CallIntMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jint *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeLong:
         {
             jlong t_result =
                 s_env -> CallLongMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jlong *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeFloat:
         {
             jfloat t_result =
                 s_env -> CallFloatMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jfloat *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeDouble:
         {
             jdouble t_result =
                 s_env -> CallDoubleMethodA(p_instance, p_method_id, p_params);
             *(static_cast<jdouble *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -460,15 +460,14 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
             if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-            break;
+            return true;
         }
         case kMCJavaTypeVoid:
             s_env -> CallVoidMethodA(p_instance, p_method_id, p_params);
-            break;
-        default:
-            MCUnreachableReturn(false);
+            return true;
     }
-    return true;
+    
+    MCUnreachableReturn(false);
 }
 
 static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
@@ -482,56 +481,56 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
             jboolean t_result =
                 s_env -> CallStaticBooleanMethodA(p_class, p_method_id, p_params);
             *(static_cast<jboolean *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeByte:
         {
             jbyte t_result =
                 s_env -> CallStaticByteMethodA(p_class, p_method_id, p_params);
             *(static_cast<jbyte *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeChar:
         {
             jchar t_result =
                 s_env -> CallStaticCharMethodA(p_class, p_method_id, p_params);
             *(static_cast<jchar *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeShort:
         {
             jshort t_result =
                 s_env -> CallStaticShortMethodA(p_class, p_method_id, p_params);
             *(static_cast<jshort *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeInt:
         {
             jint t_result =
                 s_env -> CallStaticIntMethodA(p_class, p_method_id, p_params);
             *(static_cast<jint *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeLong:
         {
             jlong t_result =
                 s_env -> CallStaticLongMethodA(p_class, p_method_id, p_params);
             *(static_cast<jlong *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeFloat:
         {
             jfloat t_result =
                 s_env -> CallStaticFloatMethodA(p_class, p_method_id, p_params);
             *(static_cast<jfloat *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeDouble:
         {
             jdouble t_result =
                 s_env -> CallStaticDoubleMethodA(p_class, p_method_id, p_params);
             *(static_cast<jdouble *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -543,15 +542,14 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
             if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-            break;
+            return true;
         }
         case kMCJavaTypeVoid:
             s_env -> CallStaticVoidMethodA(p_class, p_method_id, p_params);
-            break;
-        default:
-            MCUnreachableReturn(false);
+            return true;
     }
-    return true;
+    
+    MCUnreachableReturn(false);
 }
 
 static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
@@ -565,56 +563,56 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
             jboolean t_result =
                 s_env -> CallNonvirtualBooleanMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jboolean *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeByte:
         {
             jbyte t_result =
                 s_env -> CallNonvirtualByteMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jbyte *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeChar:
         {
             jchar t_result =
                 s_env -> CallNonvirtualCharMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jchar *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeShort:
         {
             jshort t_result =
                 s_env -> CallNonvirtualShortMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jshort *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeInt:
         {
             jint t_result =
                 s_env -> CallNonvirtualIntMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jint *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeLong:
         {
             jlong t_result =
                 s_env -> CallNonvirtualLongMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jlong *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeFloat:
         {
             jfloat t_result =
                 s_env -> CallNonvirtualFloatMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jfloat *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeDouble:
         {
             jdouble t_result =
                 s_env -> CallNonvirtualDoubleMethodA(p_instance, p_class, p_method_id, p_params);
             *(static_cast<jdouble *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -626,15 +624,14 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
             if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-            break;
+            return true;
         }
         case kMCJavaTypeVoid:
             s_env -> CallNonvirtualVoidMethodA(p_instance, p_class, p_method_id, p_params);
-            break;
-        default:
-            MCUnreachableReturn(false);
+            return true;
     }
-    return true;
+    
+    MCUnreachableReturn(false);
 }
 
 static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int p_return_type, void *r_result)
@@ -648,56 +645,56 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
             jboolean t_result =
                 s_env -> GetBooleanField(p_instance, p_field_id);
             *(static_cast<jboolean *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeByte:
         {
             jbyte t_result =
                 s_env -> GetByteField(p_instance, p_field_id);
             *(static_cast<jbyte *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeChar:
         {
             jchar t_result =
                 s_env -> GetCharField(p_instance, p_field_id);
             *(static_cast<jchar *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeShort:
         {
             jshort t_result =
                 s_env -> GetShortField(p_instance, p_field_id);
             *(static_cast<jshort *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeInt:
         {
             jint t_result =
                 s_env -> GetIntField(p_instance, p_field_id);
             *(static_cast<jint *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeLong:
         {
             jlong t_result =
                 s_env -> GetLongField(p_instance, p_field_id);
             *(static_cast<jlong *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeFloat:
         {
             jfloat t_result =
                 s_env -> GetFloatField(p_instance, p_field_id);
             *(static_cast<jfloat *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeDouble:
         {
             jdouble t_result =
                 s_env -> GetDoubleField(p_instance, p_field_id);
             *(static_cast<jdouble *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -709,13 +706,13 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
             if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-            break;
+            return true;
         }
         case kMCJavaTypeVoid:
-        default:
-            MCUnreachableReturn(false);
+            break;
     }
-    return true;
+    
+    MCUnreachableReturn(false);
 }
 
 static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, int p_field_type, void *r_result)
@@ -729,56 +726,56 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
             jboolean t_result =
                 s_env -> GetStaticBooleanField(p_class, p_field_id);
             *(static_cast<jboolean *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeByte:
         {
             jbyte t_result =
                 s_env -> GetStaticByteField(p_class, p_field_id);
             *(static_cast<jbyte *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeChar:
         {
             jchar t_result =
                 s_env -> GetStaticCharField(p_class, p_field_id);
             *(static_cast<jchar *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeShort:
         {
             jshort t_result =
                 s_env -> GetStaticShortField(p_class, p_field_id);
             *(static_cast<jshort *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeInt:
         {
             jint t_result =
                 s_env -> GetStaticIntField(p_class, p_field_id);
             *(static_cast<jint *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeLong:
         {
             jlong t_result =
                 s_env -> GetStaticLongField(p_class, p_field_id);
             *(static_cast<jlong *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeFloat:
         {
             jfloat t_result =
                    s_env -> GetStaticFloatField(p_class, p_field_id);
             *(static_cast<jfloat *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeDouble:
         {
             jdouble t_result =
                 s_env -> GetStaticDoubleField(p_class, p_field_id);
             *(static_cast<jdouble *>(r_result)) = t_result;
-            break;
+            return true;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -790,13 +787,13 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
             if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-            break;
+            return true;
         }
         case kMCJavaTypeVoid:
-        default:
-            MCUnreachableReturn(false);
+            break;
     }
-    return true;
+    
+    MCUnreachableReturn(false);
 }
 
 static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, int p_field_type)
@@ -811,56 +808,56 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
             s_env -> SetBooleanField(p_instance,
                                      p_field_id,
                                      *(static_cast<const jboolean *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeByte:
         {
             s_env -> SetByteField(p_instance,
                                   p_field_id,
                                   *(static_cast<const jbyte *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeChar:
         {
             s_env -> SetCharField(p_instance,
                                   p_field_id,
                                   *(static_cast<const jchar *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeShort:
         {
             s_env -> SetShortField(p_instance,
                                    p_field_id,
                                    *(static_cast<const jshort *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeInt:
         {
             s_env -> SetIntField(p_instance,
                                  p_field_id,
                                  *(static_cast<const jint *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeLong:
         {
             s_env -> SetLongField(p_instance,
                                   p_field_id,
                                   *(static_cast<const jlong *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeFloat:
         {
             s_env -> SetFloatField(p_instance,
                                    p_field_id,
                                    *(static_cast<const jfloat *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeDouble:
         {
             s_env -> SetDoubleField(p_instance,
                                     p_field_id,
                                     *(static_cast<const jdouble *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -871,12 +868,13 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
             s_env -> SetObjectField(p_instance,
                                     p_field_id,
                                     static_cast<jobject>(MCJavaObjectGetObject(t_param)));
-            break;
+            return;
         }
         case kMCJavaTypeVoid:
-        default:
-            MCUnreachable();
+            break;
     }
+    
+    MCUnreachable();
 }
 
 static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, int p_field_type)
@@ -891,56 +889,56 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
             s_env -> SetStaticBooleanField(p_class,
                                      p_field_id,
                                      *(static_cast<const jboolean *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeByte:
         {
             s_env -> SetStaticByteField(p_class,
                                   p_field_id,
                                   *(static_cast<const jbyte *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeChar:
         {
             s_env -> SetStaticCharField(p_class,
                                   p_field_id,
                                   *(static_cast<const jchar *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeShort:
         {
             s_env -> SetStaticShortField(p_class,
                                    p_field_id,
                                    *(static_cast<const jshort *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeInt:
         {
             s_env -> SetStaticIntField(p_class,
                                  p_field_id,
                                  *(static_cast<const jint *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeLong:
         {
             s_env -> SetStaticLongField(p_class,
                                   p_field_id,
                                   *(static_cast<const jlong *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeFloat:
         {
             s_env -> SetStaticFloatField(p_class,
                                    p_field_id,
                                    *(static_cast<const jfloat *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeDouble:
         {
             s_env -> SetStaticDoubleField(p_class,
                                     p_field_id,
                                     *(static_cast<const jdouble *>(p_param)));
-            break;
+            return;
         }
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
@@ -951,12 +949,13 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
             s_env -> SetStaticObjectField(p_class,
                                     p_field_id,
                                     static_cast<jobject>(MCJavaObjectGetObject(t_param)));
-            break;
+            return;
         }
         case kMCJavaTypeVoid:
-        default:
-            MCUnreachable();
+            break;
     }
+    
+    MCUnreachable();
 }
 
 static bool __JavaJNIConstructorResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, void *r_result)
