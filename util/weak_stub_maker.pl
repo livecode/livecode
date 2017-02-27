@@ -2,7 +2,10 @@
 
 use warnings;
 use Text::ParseWords;
+use Getopt::Long;
 
+my $foundation = 0;
+GetOptions ('foundation|f' => \$foundation);
 my $inputFile = $ARGV[0];
 my $outputFile = $ARGV[1];
 
@@ -83,9 +86,62 @@ output ;
 output "typedef void *module_t;";
 output "typedef void *handler_t;";
 output ;
-output "extern \"C\" void *MCSupportLibraryLoad(const char *);";
-output "extern \"C\" void MCSupportLibraryUnload(void *);";
-output "extern \"C\" void *MCSupportLibraryLookupSymbol(void *, const char *);";
+
+
+# MCSupportLibraryLoad and friends have engine dependency - for example 
+# when weak linking to the crypto library we rely on revsecurity living 
+# next to the executable, which is resolved using MCcmd. We also rely on 
+# mappings from dynamic library names to paths which can be custom-
+# defined as deploy parameters. Hence we need to use special 
+# implementations for access to the libfoundation system library API 
+# if we require no engine dependency.
+if ($foundation == 1) 
+{
+	output "#define kMCStringEncodingUTF8 4";
+	output "extern \"C\" bool MCStringCreateWithBytes(const char *, unsigned int, int, bool, void*&);";
+	output "extern \"C\" void MCValueRelease(void *);";
+	output "extern \"C\" bool MCSLibraryCreateWithPath(void *, void*&);";
+	output "extern \"C\" void *MCSLibraryLookupSymbol(void *, void *);";
+	output ;
+	output "static void *MCSupportLibraryLoad(const char *p_name_cstr)";
+	output "{";
+	output "  void *t_name;";
+	output "  if (!MCStringCreateWithBytes(p_name_cstr, strlen(p_name_cstr), kMCStringEncodingUTF8, false, t_name))";
+	output "    return NULL;";
+	output "  void *t_handle;";
+	output "  if (!MCSLibraryCreateWithPath(t_name, t_handle))";
+	output "  {";
+	output "    t_handle = NULL;";
+	output "  }";
+	output "  MCValueRelease(t_name);";
+	output "  return t_handle;";
+	output "}";
+	
+	output ;
+	output "static void MCSupportLibraryUnload(void *p_handle)";
+	output "{";
+	output "  if (p_handle != NULL)";
+	output "    MCValueRelease(p_handle);";
+	output "}";
+
+	output ;
+	output "static void *MCSupportLibraryLookupSymbol(void *p_handle, const char *p_name_cstr)";
+	output "{";
+	output "  void *t_symbol_name;";
+	output "  if (!MCStringCreateWithBytes(p_name_cstr, strlen(p_name_cstr), kMCStringEncodingUTF8, false, t_symbol_name))";
+	output "    return NULL;";
+	output "  void *t_symbol;";
+	output "  t_symbol = MCSLibraryLookupSymbol(p_handle, t_symbol_name);";
+	output "  MCValueRelease(t_symbol_name);";
+	output "  return t_symbol;";
+	output "}";
+}
+else
+{
+	output "extern \"C\" void *MCSupportLibraryLoad(const char *);";
+	output "extern \"C\" void MCSupportLibraryUnload(void *);";
+	output "extern \"C\" void *MCSupportLibraryLookupSymbol(void *, const char *);";
+}
 output ;
 
 output "extern \"C\"";
