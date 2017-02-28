@@ -21,6 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "md5.h"
 #include "sha1.h"
+#include "sha256.h"
+#include "sha512.h"
+#include "sha3.h"
 
 /* ----------------------------------------------------------------
  * Helper functions
@@ -76,6 +79,27 @@ static MCAutoDataRef sha1_digest(MCDataRef p_data)
                      sha1_init, sha1_append, sha1_finish>(p_data);
 }
 
+template <unsigned bits, void (*Init)(sha256_ctx*)>
+static MCAutoDataRef sha256_digest(MCDataRef p_data)
+{
+    return do_digest<sha256_ctx, bits / 8, byte_t, size_t,
+                     Init, rhash_sha256_update, rhash_sha256_final>(p_data);
+}
+
+template <unsigned bits, void (*Init)(sha512_ctx*)>
+static MCAutoDataRef sha512_digest(MCDataRef p_data)
+{
+    return do_digest<sha512_ctx, bits / 8, byte_t, size_t,
+                     Init, rhash_sha512_update, rhash_sha512_final>(p_data);
+}
+
+template <unsigned bits, void (*Init)(sha3_ctx*)>
+static MCAutoDataRef sha3_digest(MCDataRef p_data)
+{
+    return do_digest<sha3_ctx, bits / 8, byte_t, size_t,
+                     Init, rhash_sha3_update, rhash_sha3_final>(p_data);
+}
+
 /* ----------------------------------------------------------------
  * Generalised message digest function
  * ---------------------------------------------------------------- */
@@ -92,6 +116,14 @@ static const digest_mapping_t k_digest_map[] =
 {
     { "md5",      md5_digest  },
     { "sha-1",    sha1_digest },
+    { "sha-224",  sha256_digest<224, rhash_sha224_init> },
+    { "sha-256",  sha256_digest<256, rhash_sha256_init> },
+    { "sha-384",  sha512_digest<384, rhash_sha384_init> },
+    { "sha-512",  sha512_digest<512, rhash_sha512_init> },
+    { "sha3-224", sha3_digest<224, rhash_sha3_224_init> },
+    { "sha3-256", sha3_digest<256, rhash_sha3_256_init> },
+    { "sha3-384", sha3_digest<384, rhash_sha3_384_init> },
+    { "sha3-512", sha3_digest<512, rhash_sha3_512_init> },
 };
 
 /* Normalize a message digest name.  Currently, this is limited to
