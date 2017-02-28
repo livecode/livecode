@@ -15,8 +15,9 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
+#include "shacommon.h"
+
 #include <string.h>
-#include "byte_order.h"
 #include "sha512.h"
 
 /* SHA-384 and SHA-512 constants for 80 rounds. These qwords represent

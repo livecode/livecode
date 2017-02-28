@@ -1,7 +1,6 @@
 /* sha.h sha512 and sha384 hash functions */
 #ifndef SHA512_H
 #define SHA512_H
-#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

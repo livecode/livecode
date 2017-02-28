@@ -15,8 +15,9 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
+#include "shacommon.h"
+
 #include <string.h>
-#include "byte_order.h"
 #include "sha256.h"
 
 /* SHA-224 and SHA-256 constants for 64 rounds. These words represent

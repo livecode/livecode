@@ -17,9 +17,10 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
+#include "shacommon.h"
+
 #include <assert.h>
 #include <string.h>
-#include "byte_order.h"
 #include "sha3.h"
 
 /* constants */
