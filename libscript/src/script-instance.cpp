@@ -802,7 +802,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		                          p_handler -> java . call_type))
             return false;
         
-        if (!MCJavaInitialize())
+        if (!MCJavaVMInitialize())
             return false;
 		
         void *t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_arguments, *t_return, p_handler -> java . call_type);

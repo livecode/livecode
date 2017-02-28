@@ -573,6 +573,9 @@ bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_description);
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
 
+bool __MCJavaInitialize(void);
+void __MCJavaFinalize(void);
+
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
 MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value);

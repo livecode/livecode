@@ -213,7 +213,7 @@ bool MCJavaPrivateErrorsInitialize()
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.JRENotSupported"), MCNAME("java"), MCSTR("Java Runtime Environment no supported with current configuration"), kMCJavaJRENotSupportedErrorTypeInfo))
         return false;
-    
+
     return true;
 }
 
