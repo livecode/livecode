@@ -47,6 +47,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniEncode, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniDecode, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, MD5Digest, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, SHA1Digest, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Filters, MessageDigest, 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -3162,6 +3162,50 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+Parse_stat
+MCMessageDigestFunc::parse(MCScriptPoint &sp,
+                           Boolean the)
+{
+    MCExpression *t_params[MAX_EXP];
+    uint2 t_param_count = 0;
+
+    if (getexps(sp, t_params, t_param_count) != PS_NORMAL ||
+        (t_param_count != 2))
+    {
+        /* Wrong number of parameters or some other probleem */
+        freeexps(t_params, t_param_count);
+
+        MCperror->add(PE_MESSAGEDIGEST_BADPARAM, sp);
+    }
+
+    m_data.Reset(t_params[0]);
+    m_type.Reset(t_params[1]);
+    return PS_NORMAL;
+}
+
+void
+MCMessageDigestFunc::eval_ctxt(MCExecContext &ctxt,
+                               MCExecValue &r_value)
+{
+    MCNewAutoNameRef t_name;
+    if (!ctxt.EvalExprAsNameRef(m_type.Get(), EE_MESSAGEDIGEST_BADTYPE, &t_name))
+        return;
+    MCAutoDataRef t_data;
+    if (!ctxt.EvalExprAsDataRef(m_data.Get(), EE_MESSAGEDIGEST_BADDATA, &t_data))
+        return;
+    MCAutoDataRef t_digest;
+    MCFiltersEvalMessageDigest(ctxt, *t_data, *t_name, &t_digest);
+    if (!ctxt.HasError())
+    {
+        r_value.dataref_value = t_digest.Take();
+        r_value.type = kMCExecValueTypeDataRef;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 #include "test.h"
 
