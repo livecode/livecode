@@ -102,6 +102,7 @@
 			'src/keywords.cpp',
 			'src/literal.cpp',
 			'src/keywords.cpp',
+			'src/mcmessagedigest.cpp',
 			'src/newobj.cpp',
 			'src/operator.cpp',
 			'src/param.cpp',
