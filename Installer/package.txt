@@ -486,6 +486,8 @@ component Mobile.MacOSX
 
 component Engine.MacOSX
 	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
+	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
+	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 
 ////////////////////////////////////////////////////////////////////////////////
 
