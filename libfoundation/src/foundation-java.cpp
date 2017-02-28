@@ -105,7 +105,7 @@ bool __MCJavaObjectDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 static MCValueCustomCallbacks kMCJavaObjectCustomValueCallbacks =
 {
-    true,
+    false,
     __MCJavaObjectDestroy,
     __MCJavaObjectCopy,
     __MCJavaObjectEqual,

@@ -421,8 +421,19 @@ static bool __MCJavaDataToJByteArray(MCDataRef p_data, jbyteArray& r_byte_array)
 
 bool MCJavaObjectCreateGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
 {
+    MCAssert(p_object != nullptr);
     void *t_obj_ptr = s_env -> NewGlobalRef(p_object);
     return MCJavaObjectCreate(t_obj_ptr, r_object);
+}
+
+bool MCJavaObjectCreateNullableGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
+{
+    if (p_object == nullptr)
+    {
+        r_object = nullptr;
+        return true;
+    }
+    return MCJavaObjectCreateGlobalRef(p_object, r_object);
 }
 
 static jstring MCJavaGetJObjectClassName(jobject p_obj)
@@ -508,7 +519,7 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
                 s_env -> CallObjectMethodA(p_instance, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -590,7 +601,7 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
                 s_env -> CallStaticObjectMethodA(p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -672,7 +683,7 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
                 s_env -> CallNonvirtualObjectMethodA(p_instance, p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -754,7 +765,7 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
                 s_env -> GetObjectField(p_instance, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -835,7 +846,7 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
                 s_env -> GetStaticObjectField(p_class, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -913,13 +924,17 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
         {
-            MCJavaObjectRef t_param =
+            jobject t_obj = nullptr;
+            if (p_param != nullptr)
+            {
+                MCJavaObjectRef t_param =
                 *(static_cast<const MCJavaObjectRef *>(p_param));
-            
+                
+                t_obj = static_cast<jobject>(MCJavaObjectGetObject(t_param));
+            }
             s_env -> SetObjectField(p_instance,
                                     p_field_id,
-                                    static_cast<jobject>(MCJavaObjectGetObject(t_param)));
-            return;
+                                    t_obj);
         }
         case kMCJavaTypeVoid:
             break;
@@ -994,12 +1009,17 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
         case kMCJavaTypeObject:
         case kMCJavaTypeArray:
         {
-            MCJavaObjectRef t_param =
-            *(static_cast<const MCJavaObjectRef *>(p_param));
+            jobject t_obj = nullptr;
+            if (p_param != nullptr)
+            {
+                MCJavaObjectRef t_param =
+                    *(static_cast<const MCJavaObjectRef *>(p_param));
             
+                t_obj = static_cast<jobject>(MCJavaObjectGetObject(t_param));
+            }
             s_env -> SetStaticObjectField(p_class,
-                                    p_field_id,
-                                    static_cast<jobject>(MCJavaObjectGetObject(t_param)));
+                                          p_field_id,
+                                          t_obj);
             return;
         }
         case kMCJavaTypeVoid:
@@ -1043,9 +1063,19 @@ static bool __JavaJNIGetParams(void **args, MCTypeInfoRef p_signature, jvalue *&
         {
             case kMCJavaTypeArray:
             case kMCJavaTypeObject:
-                t_args[i] . l =
-                    static_cast<jobject>(MCJavaObjectGetObject(*(static_cast<MCJavaObjectRef *>(args[i]))));
+            {
+                MCJavaObjectRef t_obj = *(static_cast<MCJavaObjectRef *>(args[i]));
+                if (t_obj == nullptr)
+                {
+                    t_args[i] . l = nullptr;
+                }
+                else
+                {
+                    t_args[i] . l =
+                        static_cast<jobject>(MCJavaObjectGetObject(t_obj));
+                }
                 break;
+            }
             case kMCJavaTypeBoolean:
                 t_args[i].z = *(static_cast<jboolean *>(args[i]));
                 break;

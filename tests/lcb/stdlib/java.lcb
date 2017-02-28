@@ -180,4 +180,57 @@ public handler TestCreateCurrencyWithCode()
 	
 end handler
 
+foreign handler JavaCreateEmptyList() returns JObject binds to "java:java.util.LinkedList>new()"
+foreign handler JavaPeekList(in pList as JObject) returns JObject binds to "java:java.util.LinkedList>peek()Ljava/lang/Object;"
+foreign handler JavaAddList(in pList as JObject, in pToAdd as JObject) returns CBool binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+foreign handler JavaAddListOptional(in pList as JObject, in pToAdd as optional JObject) returns CBool binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+
+public handler NullIntoOptionalJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		variable tElt as optional JObject
+		put JavaPeekList(tList) into tElt
+	end unsafe
+end handler
+
+public handler NullIntoJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		variable tElt as JObject
+		put JavaPeekList(tList) into tElt
+	end unsafe
+end handler
+
+public handler TestNullJObjectReturn()
+	MCUnitTestHandlerDoesntThrow(NullIntoOptionalJObject, "no error when putting NULL into optional JObject")
+	MCUnitTestHandlerThrows(NullIntoJObject, "type mismatch when putting NULL into non-optional JObject")
+end handler
+
+public handler NullParamOptionalJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		JavaAddListOptional(tList, nothing)
+	end unsafe
+end handler
+
+public handler NullParamJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		JavaAddList(tList, nothing)
+	end unsafe
+end handler
+
+public handler TestNullJObjectParam()
+	MCUnitTestHandlerDoesntThrow(NullParamOptionalJObject, "no error when passing NULL as optional JObject")
+	MCUnitTestHandlerThrows(NullParamJObject, "type mismatch when passing NULL as non-optional JObject")
+end handler
+
 end module
