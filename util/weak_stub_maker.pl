@@ -228,6 +228,10 @@ sub generateModule
 	my $darwinLibrary = $libraries[1];
 	my $windowsLibrary = $libraries[2];
 	
+	if (@libraries < 1)
+	{
+		$unixLibrary = "";
+	}
 	if (@libraries < 2)
 	{
 		$darwinLibrary = "";
