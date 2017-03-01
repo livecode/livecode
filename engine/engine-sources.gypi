@@ -50,6 +50,7 @@
 			'src/tilecachegl.cpp',
 			'src/tilecachesw.cpp',
 			'src/mcsemaphore.h',
+			'src/mctristate.h',
 			
 			# Group "Core - Language"
 			'src/ans.h',
