@@ -234,9 +234,9 @@ static MCStringRef to_mcstringref(long p_string)
     MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
                             (uindex_t)strlen(reinterpret_cast<const char *>(p_string)),
                             kMCStringEncodingUTF8, false, &t_string);
-    MCStringRef t_uniq_string;
-    MCValueInter(*t_string, t_uniq_string);
-    return t_uniq_string;
+    MCAutoStringRef t_uniq_string;
+    MCValueInter(*t_string, &t_uniq_string);
+    return t_uniq_string.Take();
 }
 
 static NameRef nameref_from_mcstringref(MCStringRef p_string)
