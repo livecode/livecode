@@ -63,7 +63,7 @@ class MCTristate {
         return *this;
     }
 
-    MCTristateValue value = kMCTristateFalse;
+    MCTristateValue value;
 };
 
 #endif /* !MC_TRISTATE_H */
