@@ -580,6 +580,24 @@ inline codepoint_t MCUnicodeCombineSurrogates(unichar_t p_leading, unichar_t p_t
 	return 0x10000U + (((p_leading - 0xD800U) << 10) | (p_trailing - 0xDC00U));
 }
 
+inline bool MCUnicodeSplitIntoSurrogates(codepoint_t p_codepoint,
+                                         unichar_t& r_leading,
+                                         unichar_t& r_trailing)
+{
+    if (p_codepoint <= UNICHAR_MAX)
+    {
+        r_leading = p_codepoint & 0xFFFF;
+        r_trailing = 0;
+        return false;
+    }
+    
+    p_codepoint -= 0x10000;
+    r_leading = 0xD800 + (p_codepoint >> 10);
+    r_trailing = 0xDC00 + (p_codepoint & 0x3FF);
+    
+    return true;
+}
+
 // Compute and advance the current surrogate pair (used by MCUnicodeCodepointAdvance to
 // help the compiler make good choices about inlining - effectively a 'trap' to a very
 // rare case).

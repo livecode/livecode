@@ -982,11 +982,6 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 
-	MCVarref *t_src_ref, *t_dst_ref;
-	t_src_ref = source -> getrootvarref();
-	t_dst_ref = dest -> getrootvarref();
-	overlap = t_src_ref != NULL && t_dst_ref != NULL && t_src_ref -> rootmatches(t_dst_ref);
-
 	return PS_NORMAL;
 }
 

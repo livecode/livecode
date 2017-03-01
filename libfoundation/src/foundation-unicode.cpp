@@ -25,6 +25,7 @@
 
 #include "foundation-auto.h"
 #include "foundation-text.h"
+#include "foundation-hash.h"
 
 #include <limits>
 
@@ -1277,55 +1278,27 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
     MCAutoPointer<MCTextFilter> t_filter =
 			MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
     
-    // Fowler-Noll-Vo 1a hash function
-    if (sizeof(hash_t) == sizeof(uint64_t))
-    {
-        // 64-bit variant
-        const uint64_t kPrime = 1099511628211ULL;
-        const uint64_t kOffset = 14695981039346656037ULL;
-        uint64_t t_hash = kOffset;
-        
-        while (t_filter->HasData())
-        {
-            unichar_t t_char;
-            t_char = t_filter->GetNextCodepoint();
-            t_filter->AdvanceCursor();
-            
-            // Hash the first byte of the codeunit
-            t_hash ^= t_char & 0xFF;
-            t_hash *= kPrime;
-            
-            // Hash the second byte of the codeunit
-            t_hash ^= t_char >> 8;
-            t_hash *= kPrime;
-        }
-        
-        return t_hash;
-    }
-    else
-    {
-        // 32-bit variant
-        const uint32_t kPrime = 16777619UL;
-        const uint32_t kOffset = 2166136261UL;
-        uint32_t t_hash = kOffset;
-        
-        while (t_filter->HasData())
-        {
-            unichar_t t_char;
-            t_char = t_filter->GetNextCodepoint();
-            t_filter->AdvanceCursor();
-            
-            // Hash the first byte of the codeunit
-            t_hash ^= t_char & 0xFF;
-            t_hash *= kPrime;
-            
-            // Hash the second byte of the codeunit
-            t_hash ^= t_char >> 8;
-            t_hash *= kPrime;
-        }
+    __MCHashCharContext t_hasher;
 
-        return t_hash;
+    while (t_filter->HasData())
+    {
+        codepoint_t t_char;
+        t_char = t_filter->GetNextCodepoint();
+        t_filter->AdvanceCursor();
+        
+        t_hasher.ConsumeCodepoint(t_char);
     }
+    
+    return t_hasher.Current();
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashChars(const unichar_t *p_chars,
+                   size_t p_length)
+{
+    return MCUnicodeHash(p_chars,
+                         p_length,
+                         kMCUnicodeCompareOptionCaseless);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

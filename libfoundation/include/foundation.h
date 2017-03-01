@@ -1319,11 +1319,21 @@ MC_DLLEXPORT hash_t MCHashPointer(const void *p);
 
 // Returns a hash value for the given sequence of bytes.
 MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
-
+    
 // Returns a hash value for the given sequence of bytes, continuing a previous
 // hashing sequence (byte_count should be a multiple of 4).
 MC_DLLEXPORT hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
 
+// Returns a hash value for the given sequence of native chars. The chars are
+// folded before being processed.
+MC_DLLEXPORT hash_t MCHashNativeChars(const char_t *chars,
+                                      size_t char_count);
+    
+// Returns a hash value for the given sequence of code units. The chars are
+// normalized and folded before being processed.
+MC_DLLEXPORT hash_t MCHashChars(const unichar_t *chars,
+                                size_t char_count);
+    
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1890,6 +1900,9 @@ MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
 MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
 MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
+    
+MC_DLLEXPORT bool MCNumberStrictFetchAsIndex(MCNumberRef number,
+                                             index_t& r_index);
 
 MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number);
 
@@ -1920,12 +1933,17 @@ MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
 MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
-
+// Create a name using an integral index.
+MC_DLLEXPORT bool MCNameCreateWithIndex(index_t index, MCNameRef& r_name);
+    
 // Create a name using the given string, releasing the original.
 MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
 
 // Looks for an existing name matching the given string.
-MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
+MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
+
+// Looks for an existing name matching the given index.
+MC_DLLEXPORT MCNameRef MCNameLookupIndex(index_t index);
 
 // Returns a unsigned integer which can be used to order a table for a binary
 // search.
@@ -2346,6 +2364,7 @@ MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // Returns true if the two strings are equal, processing as appropriate according
 // to options.
 MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
+MC_DLLEXPORT bool MCStringIsEqualToChars(MCStringRef string, const unichar_t *chars, uindex_t char_count, MCStringOptions options);
 MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
 MC_DLLEXPORT bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options);
 
@@ -2724,6 +2743,11 @@ MC_DLLEXPORT bool MCArrayFetchValue(MCArrayRef array, bool case_sensitive, MCNam
 MC_DLLEXPORT bool MCArrayStoreValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef value);
 // Remove the given key from the array.
 MC_DLLEXPORT bool MCArrayRemoveValue(MCArrayRef array, bool case_sensitive, MCNameRef key);
+// Ensure that the given key is present in array, and return the pointer to its
+// slot. If the key was not present, the value in the slot will be kMCNull.
+// The returned pointer is only valid up until the next operation on array and
+// should be MCValueAssign'd to.
+MC_DLLEXPORT bool MCArrayMutateValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef*& r_value);
 
 // Fetches index i in the given (sequence) array.
 MC_DLLEXPORT bool MCArrayFetchValueAtIndex(MCArrayRef array, index_t index, MCValueRef& r_value);

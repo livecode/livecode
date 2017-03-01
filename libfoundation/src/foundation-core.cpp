@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-stdlib.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -212,131 +213,69 @@ void MCMemoryDeleteArray(void *p_array)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// These hash functions are taken from CoreFoundation - if they are good enough
-// for Apple, they should be good enough for us :)
-
-#define HASHFACTOR 2654435761U
-
-/* Templates for hashing arbitrary-sized integers */
-template <typename T>
-static inline hash_t
-MCHashUInt(T i)
-{
-	hash_t h = 0;
-	for (unsigned int o = 0; o < sizeof(T); o += sizeof(hash_t))
-		h += HASHFACTOR * (hash_t) (i >> (o << 3));
-	return h;
-}
-
-template <typename T>
-static inline hash_t
-MCHashInt(T i)
-{
-	return MCHashUInt((i >= 0) ? i : (-i));
-}
-
 MC_DLLEXPORT_DEF
 hash_t MCHashInteger(integer_t i)
 {
-	return MCHashInt (i);
+	return __MCHashInt (i);
 }
 
 MC_DLLEXPORT_DEF
 hash_t
 MCHashUInteger (uinteger_t i)
 {
-	return MCHashUInt(i);
+	return __MCHashUInt(i);
 }
 
 MC_DLLEXPORT_DEF
 hash_t
 MCHashSize (ssize_t i)
 {
-	return MCHashInt (i);
+	return __MCHashInt (i);
 }
 
 hash_t
 MCHashUSize (size_t i)
 {
-	return MCHashUInt (i);
+	return __MCHashUInt (i);
 }
 
 MC_DLLEXPORT_DEF
 hash_t MCHashPointer(const void *p)
 {
-	return MCHashUInt((uintptr_t) p);
+	return __MCHashUInt((uintptr_t) p);
 }
 
 MC_DLLEXPORT_DEF
 hash_t MCHashDouble(double d)
 {
-	double i;
-	if (d < 0)
-		d = -d;
-	i = floor(d + 0.5);
-	
-	hash_t t_integral_hash;
-	t_integral_hash = HASHFACTOR * (hash_t)fmod(i, (double)UINT32_MAX);
-
-	return (hash_t)(t_integral_hash + (hash_t)((d - i) * UINT32_MAX));
-}
-
-#define ELF_STEP(B) T1 = (H << 4) + B; T2 = T1 & 0xF0000000; if (T2) T1 ^= (T2 >> 24); T1 &= (~T2); H = T1;
-
-MC_DLLEXPORT_DEF
-hash_t MCHashBytes(const void *p_bytes, size_t length)
-{
-	MCAssert(nil != p_bytes || 0 == length);
-
-	uint8_t *bytes = (uint8_t *)p_bytes;
-
-    /* The ELF hash algorithm, used in the ELF object file format */
-    uint32_t H = 0, T1, T2;
-    int32_t rem = length;
-
-    while (3 < rem)
-	{
-		ELF_STEP(bytes[length - rem]);
-		ELF_STEP(bytes[length - rem + 1]);
-		ELF_STEP(bytes[length - rem + 2]);
-		ELF_STEP(bytes[length - rem + 3]);
-		rem -= 4;
-    }
-
-    switch (rem)
-	{
-    case 3:  ELF_STEP(bytes[length - 3]);
-    case 2:  ELF_STEP(bytes[length - 2]);
-    case 1:  ELF_STEP(bytes[length - 1]);
-    case 0:  ;
-    }
-
-    return H;
+    return __MCHashFlt(d);
 }
 
 MC_DLLEXPORT_DEF
-hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
+hash_t MCHashBytes(const void *p_bytes, size_t p_length)
 {
-	MCAssert(p_bytes != nil || length == 0);
-    MCAssert((length % 4) == 0);
-    uint8_t *bytes = (uint8_t *)p_bytes;
+    MCAssert(nil != p_bytes || 0 == p_length);
+
+    __MCHashBytesContext t_hash;
+    t_hash.Consume(reinterpret_cast<const byte_t *>(p_bytes),
+                   p_length);
     
-    /* The ELF hash algorithm, used in the ELF object file format */
-    uint32_t H = p_start, T1, T2;
-    int32_t rem = length;
-    
-    while (3 < rem)
-	{
-		ELF_STEP(bytes[length - rem]);
-		ELF_STEP(bytes[length - rem + 1]);
-		ELF_STEP(bytes[length - rem + 2]);
-		ELF_STEP(bytes[length - rem + 3]);
-		rem -= 4;
-    }
-    
-    return H;
+    return t_hash.Current();
 }
 
-#undef ELF_STEP
+MC_DLLEXPORT_DEF
+hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t p_length)
+{
+	MCAssert(p_bytes != nil || 0 == p_length);
+    
+    __MCHashBytesContext t_hash(p_start);
+    t_hash.Consume(reinterpret_cast<const byte_t *>(p_bytes),
+                   p_length);
+    
+    return t_hash.Current();
+}
+
+// Note: MCHashNativeChars is implemented in foundation-string-native.cpp.h
+// Note: MCHashChars is implemented in foundation-unicode.cpp
 
 ////////////////////////////////////////////////////////////////////////////////

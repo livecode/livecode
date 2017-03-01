@@ -1220,27 +1220,14 @@ bool MCNameIsEqualToOldString(MCNameRef p_left, const MCString& p_oldstring, MCC
 	return MCStringIsEqualToOldString(MCNameGetString(p_left), p_oldstring, p_options);
 }
 
-MCNameRef MCNameLookupWithCString(const char *cstring, MCCompareOptions options)
+MCNameRef MCNameLookupWithCStringCaseless(const char *cstring)
 {
 	MCStringRef t_string;
 	if (!MCStringCreateWithNativeChars((const char_t *)cstring, strlen(cstring), t_string))
 		return nil;
 
 	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
-	MCValueRelease(t_string);
-
-	return t_name;
-}
-
-MCNameRef MCNameLookupWithOldString(const MCString& string, MCCompareOptions options)
-{	
-	MCStringRef t_string;
-	if (!MCStringCreateWithNativeChars((const char_t *)string . getstring(), string . getlength(), t_string))
-		return nil;
-
-	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
+	t_name = MCNameLookupCaseless(t_string);
 	MCValueRelease(t_string);
 
 	return t_name;

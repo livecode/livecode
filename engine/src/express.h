@@ -40,15 +40,13 @@ public:
 	MCExpression();
 	virtual ~MCExpression();
 	
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-
-	
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    
 	// Evaluate the expression as its natural type basic type (note that
 	// execvalue's cannot be set/enum/custom, they should all be resolved
 	// to the appropriate basic type first!). This form should be used for
 	// descendents of MCExpression which are an umbrella for many syntax forms
 	// and thus have variant return type (such as MCProperty).
-
 	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 	
 	// Compile the syntax into the (new) tree for use by the new evaluator.
@@ -58,9 +56,12 @@ public:
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
     // EP-less version of evaluation functions
-    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
-
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
+    
+    // Returns true if evaluating this expression has no side-effects. This
+    // allows certain operations to be performed much more efficiently.
+    virtual bool is_pure(void) const;
+    
 	// Return the var-ref which lies at the root of this expression. 
 	// A return value of NULL means that there is no root variable.
 	// The purpose of this call is to analyze (after parsing) whether the

@@ -435,6 +435,46 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 //////////////////////
 
+MC_DLLEXPORT_DEF bool
+MCArrayMutateValue(MCArrayRef self,
+                   bool p_case_sensitive,
+                   MCNameRef p_key,
+                   MCValueRef*& r_slot_ptr)
+{
+    // The array must be mutable.
+    MCAssert(MCArrayIsMutable(self));
+    __MCAssertIsName(p_key);
+    
+    // Ensure it is not indirect.
+    if (__MCArrayIsIndirect(self))
+        if (!__MCArrayResolveIndirect(self))
+            return false;
+    
+    // Lookup the slot for the key
+    bool t_found;
+    uindex_t t_slot;
+    t_found = __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_key, t_slot);
+    if (!t_found)
+    {
+        // AL-2014-07-15: [[ Bug 12532 ]] Rehash according to hash table capacities rather than sizes
+        if (t_slot == UINDEX_MAX || self -> key_value_count >= __MCArrayGetTableCapacity(self))
+        {
+            if (!__MCArrayRehash(self, 1))
+                return false;
+            
+            __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_key, t_slot);
+        }
+        
+        self -> key_values[t_slot] . key = MCValueRetain(p_key);
+        self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(kMCNull);
+        self -> key_value_count += 1;
+    }
+    
+    r_slot_ptr = (MCValueRef*)&self -> key_values[t_slot] . value;
+
+    return true;
+}
+
 MC_DLLEXPORT_DEF
 bool MCArrayStoreValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef p_value)
 {
@@ -612,14 +652,15 @@ bool MCArrayFetchValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef& r_va
 {
 	__MCAssertIsArray(self);
 
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
+    MCNameRef t_key =
+            MCNameLookupIndex(p_index);
+    
+    if (t_key == nil)
+    {
+        return false;
+    }
 
-	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str, strlen(t_index_str), &t_key))
-		return false;
-
-	return MCArrayFetchValue(self, true, *t_key, r_value);
+	return MCArrayFetchValue(self, true, t_key, r_value);
 }
 
 MC_DLLEXPORT_DEF
@@ -627,27 +668,30 @@ bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_val
 {
 	__MCAssertIsArray(self);
 
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
-
 	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str, strlen(t_index_str), &t_key))
+	if (!MCNameCreateWithIndex(p_index,
+                               &t_key))
+    {
 		return false;
-
+    }
+    
 	return MCArrayStoreValue(self, true, *t_key, p_value);
 }
 
 bool
 MCArrayRemoveValueAtIndex(MCArrayRef self, index_t p_index)
 {
-	char t_index_str[16];
-	sprintf(t_index_str, "%d", p_index);
-	MCNewAutoNameRef t_key;
-	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str,
-									 strlen(t_index_str),
-									 &t_key))
-		return false;
-	return MCArrayRemoveValue(self, true, *t_key);
+    __MCAssertIsArray(self);
+    
+    MCNameRef t_key =
+            MCNameLookupIndex(p_index);
+    
+    if (t_key == nil)
+    {
+        return true;
+    }
+
+	return MCArrayRemoveValue(self, true, t_key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

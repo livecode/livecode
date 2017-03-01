@@ -281,14 +281,33 @@ public:
 class MCContainer
 {
 public:
+    MCContainer(void)
+        : m_variable(nullptr),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
+    MCContainer(MCVariable *var)
+        : m_variable(var),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
 	~MCContainer(void);
 
 	//
 
+    bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-	bool remove(MCExecContext& ctxt);
+    bool eval_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
+    
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool set_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef p_value);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -308,9 +327,9 @@ public:
         r_length = m_length;
     }
 
-	static bool createwithvariable(MCVariable *var, MCContainer*& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer*& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container);
+	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
+	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
+    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
     
     MCVariable *getvar()
     {
@@ -348,6 +367,9 @@ protected:
 	//   a plain var and doesn't require synching.
 	bool isplain : 1;
 
+    // If this is true, then none of the index expressions have side-effects.
+    bool m_is_pure : 1;
+    
 public:
 	MCVarref(MCVariable *var)
 	{
@@ -359,6 +381,10 @@ public:
 		isscriptlocal = False;
 		handler = NULL;
 		isplain = var -> isplain();
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
 
 	// MW-2008-10-28: [[ ParentScripts ]] A new constructor to handle the case
@@ -372,7 +398,11 @@ public:
 		isparam = False;
 		isscriptlocal = True;
 		handler = NULL;
-		isplain = true;
+        isplain = true;
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
 
 	MCVarref(MCHandler *hptr, uint2 i, Boolean param)
@@ -384,28 +414,26 @@ public:
 		exp = NULL;
 		dimensions = 0;
 		isscriptlocal = False;
-		isplain = true;
+        isplain = true;
+        
+        // Varref's become impure if a non-pure index expression is parsed
+        // into it.
+        m_is_pure = true;
 	}
     virtual ~MCVarref();
     
-    bool needsContainer(void) const {return dimensions != 0;}
-    
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-    bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
+    virtual bool evalcontainer(MCExecContext &ctxt, MCContainer& r_container);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_in(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);
 	virtual void compile_inout(MCSyntaxFactoryRef);
 
-	//virtual MCVariable *getvar();
 	virtual MCVarref *getrootvarref(void);
 
-	// This method returns true if p_other refers to the same root
-	// variable as self.
-	bool rootmatches(MCVarref *p_other) const;
-
+    virtual bool is_pure(void) const { return m_is_pure; }
+    
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -421,10 +449,14 @@ public:
 	bool getisplain(void) const { return isplain; }
 	
 private:
+    template<typename T>
+    void action(MCExecContext& ctxt,
+                T& actor);
+    
     MCVariable *fetchvar(MCExecContext& ctxt);
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
-    bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
+    bool resolve(MCExecContext& ctxt, MCContainer& r_container);
     
     void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
 };
@@ -461,8 +493,7 @@ public:
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

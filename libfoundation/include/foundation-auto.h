@@ -218,6 +218,7 @@ public:
 	{
 		m_values = nil;
         m_value_count = 0;
+        m_capacity = 0;
 	}
     
 	~MCAutoValueRefArrayBase(void)
@@ -230,9 +231,31 @@ public:
 	bool New(uindex_t p_size)
 	{
 		MCAssert(m_values == nil);
-		return MCMemoryNewArray(p_size, m_values, m_value_count);
+		if (!MCMemoryNewArray(p_size, m_values, m_value_count))
+        {
+            return false;
+        }
+        
+        m_capacity = m_value_count;
+        
+        return true;
 	}
 
+    bool Ensure(uindex_t p_extra)
+    {
+        if (m_value_count + p_extra > m_capacity)
+        {
+            if (!MCMemoryResizeArray(m_value_count + p_extra,
+                                     m_values,
+                                     m_capacity))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
 	//////////
 
 	void Give(T* p_array, uindex_t p_size)
@@ -244,11 +267,19 @@ public:
 
 	void Take(T*& r_array, uindex_t& r_count)
 	{
+        if (m_value_count < m_capacity)
+        {
+            MCMemoryResizeArray(m_value_count,
+                                m_values,
+                                m_capacity);
+        }
+        
 		r_array = m_values;
 		r_count = m_value_count;
 
 		m_values = nil;
-		m_value_count = 0;
+        m_value_count = 0;
+        m_capacity = 0;
 	}
 
 	/* Take the contents of the array as an immutable MCProperList.
@@ -263,6 +294,7 @@ public:
 
 		m_values = nil;
 		m_value_count = 0;
+        m_capacity = 0;
 
 		r_list = t_list;
 		return true;
@@ -277,6 +309,9 @@ public:
             for (uindex_t i = 0; i < m_value_count; i++)
                 MCValueRelease(m_values[i]);
             MCMemoryDeleteArray(m_values);
+            
+            m_value_count = 0;
+            m_capacity = 0;
         }
 	}
 
@@ -308,7 +343,17 @@ public:
 
 	bool Resize(uindex_t p_new_size)
 	{
-		return MCMemoryResizeArray(p_new_size, m_values, m_value_count);
+        if (p_new_size > m_capacity)
+        {
+            if (!MCMemoryResizeArray(p_new_size, m_values, m_value_count))
+            {
+                return false;
+            }
+            
+            m_capacity = m_value_count;
+        }
+        
+        return true;
 	}
 
 	bool Extend(uindex_t p_new_size)
@@ -327,21 +372,20 @@ public:
 
 	bool Append(MCAutoValueRefArrayBase<T> &p_array)
 	{
-		uindex_t t_index = Count();
-		if (!Extend(t_index + p_array.Count()))
+		if (!Ensure(p_array.Count()))
 			return false;
 
-		for (uindex_t i = 0; i < p_array.m_value_count; i++)
-			m_values[t_index + i] = MCValueRetain(p_array.m_values[i]);
+		for (uindex_t i = 0; i < p_array.Count(); i++)
+			m_values[m_value_count++] = MCValueRetain(p_array.m_values[i]);
 
 		return true;
 	}
     
     bool Push(T p_value)
     {
-        if (!Extend(m_value_count + 1))
+        if (!Ensure(1))
             return false;
-        m_values[m_value_count - 1] = MCValueRetain(p_value);
+        m_values[m_value_count++] = MCValueRetain(p_value);
         return true;
     }
 
@@ -373,6 +417,7 @@ public:
 private:
 	T* m_values;
     uindex_t m_value_count;
+    uindex_t m_capacity;
 };
 
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;

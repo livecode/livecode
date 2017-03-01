@@ -3008,6 +3008,32 @@ bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, co
 }
 
 MC_DLLEXPORT_DEF
+bool MCStringIsEqualToChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
+{
+    __MCAssertIsString(self);
+    MCAssert(nil != p_chars);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    bool self_native = __MCStringIsNative(self);
+    
+    const void *self_chars;
+    if (self_native)
+        self_chars = self -> native_chars;
+    else
+        self_chars = self -> chars;
+    
+    return MCUnicodeCompare(self_chars,
+                            self->char_count,
+                            self_native,
+                            p_chars,
+                            p_char_count,
+                            false,
+                            (MCUnicodeCompareOption)p_options) == 0;
+}
+
+MC_DLLEXPORT_DEF
 compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_options)
 {
 	__MCAssertIsString(self);

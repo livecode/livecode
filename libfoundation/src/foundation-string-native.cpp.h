@@ -19,6 +19,7 @@
 #include <foundation-unicode.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -449,47 +450,14 @@ static inline hash_t
 __MCNativeStr_Hash(const char_t *p_chars,
                    size_t p_char_count)
 {
-#ifdef __LARGE__
-    // 64-bit variant
-    const uint64_t kPrime = 1099511628211ULL;
-    const uint64_t kOffset = 14695981039346656037ULL;
-    uint64_t t_hash = kOffset;
-    
-    while (p_char_count--)
+    __MCHashCharContext t_hash;
+    while(p_char_count--)
     {
-        uint16_t t_char;
-        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
-        
-        // Hash the byte
-        t_hash ^= t_char & 0xFF;
-        t_hash *= kPrime;
-        
-        // Hash the second byte of the unichar
-        t_hash ^= t_char >> 8;
-        t_hash *= kPrime;
+        unichar_t t_char =
+                MCUnicodeCharMapFromNative(CharFold(*p_chars++));
+        t_hash.ConsumeChar(t_char);
     }
-    return t_hash;
-#else
-    // 32-bit variant
-    const uint32_t kPrime = 16777619UL;
-    const uint32_t kOffset = 2166136261UL;
-    uint32_t t_hash = kOffset;
-    
-    while (p_char_count--)
-    {
-        uint16_t t_char;
-        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
-        
-        // Hash the byte
-        t_hash ^= t_char & 0xFF;
-        t_hash *= kPrime;
-        
-        // Hash the second byte of the unichar
-        t_hash ^= t_char >> 8;
-        t_hash *= kPrime;
-    }
-    return t_hash;
-#endif
+    return t_hash.Current();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1172,6 +1140,16 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_for
 	r_string = t_new_string;
     
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF hash_t
+MCHashNativeChars(const char_t *p_chars,
+                  size_t p_char_count)
+{
+    return __MCNativeStr_Hash<__MCNativeChar_Fold>(p_chars,
+                                                   p_char_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

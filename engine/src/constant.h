@@ -37,6 +37,11 @@ public:
 
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	
+    virtual bool is_pure(void) const
+    {
+        return true;
+    }
+    
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 #endif

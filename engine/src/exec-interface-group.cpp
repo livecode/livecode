@@ -259,7 +259,7 @@ void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringR
                 // Clicking on the button attemps to hilite the option "title,menu,maximize,minimise,close"
                 // but only "title,menu,minimize,maximise,close" exists, returning a nil NameRef
                 MCNameRef t_nameref;
-                t_nameref = MCNameLookup(p_name);
+                t_nameref = MCNameLookupCaseless(p_name);
                 if (t_nameref != nil)
                     bptr->resethilite(part, bptr->hasname(t_nameref));
                 else

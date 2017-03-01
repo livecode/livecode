@@ -60,12 +60,12 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
-MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
+bool MCExpression::is_pure(void) const
 {
-    return NULL;
+    return false;
 }
 
-bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return false;
 }
