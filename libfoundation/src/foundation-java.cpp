@@ -20,15 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation-private.h"
 #include "foundation-java-private.h"
 
-static bool s_java_initialised = false;
-
-MC_DLLEXPORT_DEF
-bool MCJavaInitialize()
+bool __MCJavaInitialize()
 {
-	if (s_java_initialised)
-		return true;
-    
-    MCJavaPrivateErrorsInitialize();
+    return MCJavaPrivateErrorsInitialize();
+}
+
+void __MCJavaFinalize()
+{
+    MCJavaPrivateErrorsFinalize();
+}
+
+static bool s_java_initialised = false;
+MC_DLLEXPORT_DEF
+bool MCJavaVMInitialize()
+{
+    if (s_java_initialised)
+        return true;
     
     s_java_initialised = initialise_jvm();
     
@@ -39,11 +46,9 @@ bool MCJavaInitialize()
 }
 
 MC_DLLEXPORT_DEF
-void MCJavaFinalize()
+void MCJavaVMFinalize()
 {
     finalise_jvm();
-    
-    MCJavaPrivateErrorsFinalize();
 }
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCJavaObjectTypeInfo;

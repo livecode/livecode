@@ -213,7 +213,7 @@ bool MCJavaPrivateErrorsInitialize()
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.JRENotSupported"), MCNAME("java"), MCSTR("Java Runtime Environment no supported with current configuration"), kMCJavaJRENotSupportedErrorTypeInfo))
         return false;
-    
+
     return true;
 }
 
@@ -1287,6 +1287,10 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
         s_env -> ExceptionDescribe();
+        
+        // Failure to clear the exception causes a crash when the JNI is
+        // next used.
+        s_env -> ExceptionClear();
         return MCJavaPrivateErrorThrow(kMCJavaNativeMethodCallErrorTypeInfo);
     }
     
@@ -1434,6 +1438,10 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
         s_env -> ExceptionDescribe();
+        
+        // Failure to clear the exception causes a crash when the JNI is
+        // next used.
+        s_env -> ExceptionClear();
         MCJavaPrivateErrorThrow(kMCJavaNativeMethodCallErrorTypeInfo);
         return nullptr;
     }

@@ -19,7 +19,7 @@
 
 static bool TryToInitializeJava()
 {
-	if (!MCJavaInitialize())
+	if (!MCJavaVMInitialize())
 		return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason",
                                      MCSTR("could not initialize java"),
                                      nullptr);
@@ -135,8 +135,6 @@ extern "C" bool com_livecode_java_Initialize(void)
 
 extern "C" void com_livecode_java_Finalize(void)
 {
-    MCJavaFinalize();
-    
     MCJavaErrorsFinalize();
 }
 
