@@ -270,7 +270,8 @@ def guess_java_home(platform):
             javac_str = '/bin/javac'
             javac_path = subprocess.check_output(['/usr/bin/env', 
                          'readlink', '-f', '/usr' + javac_str]).strip()
-            if javac_path.endswith(javac_str):
+            if (os.path.isfile(javac_path) and
+                javac_path.endswith(javac_str)):
                 return javac_path[:-len(javac_str)]
         except subprocess.CalledProcessError as e:
             print(e)
