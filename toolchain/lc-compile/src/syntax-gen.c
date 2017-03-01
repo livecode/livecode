@@ -578,7 +578,7 @@ static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
 
 static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
 {
-    long t_index;
+    long t_index = 0;
     switch(p_node -> kind)
     {
         case kSyntaxNodeKindEmpty:

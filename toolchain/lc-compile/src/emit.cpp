@@ -234,9 +234,9 @@ static MCStringRef to_mcstringref(long p_string)
     MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
                             (uindex_t)strlen(reinterpret_cast<const char *>(p_string)),
                             kMCStringEncodingUTF8, false, &t_string);
-    MCStringRef t_uniq_string;
-    MCValueInter(*t_string, t_uniq_string);
-    return t_uniq_string;
+    MCAutoStringRef t_uniq_string;
+    MCValueInter(*t_string, &t_uniq_string);
+    return t_uniq_string.Take();
 }
 
 static NameRef nameref_from_mcstringref(MCStringRef p_string)
@@ -1428,8 +1428,8 @@ static RepeatLabels *s_repeat_labels = nil;
 
 void EmitPushRepeatLabels(long next, long exit)
 {
-    RepeatLabels *t_labels;
-    MCMemoryNew(t_labels);
+    RepeatLabels *t_labels = nullptr;
+    /* UNCHECKED */ MCMemoryNew(t_labels);
     t_labels -> head = next;
     t_labels -> tail = exit;
     t_labels -> next = s_repeat_labels;
@@ -1814,11 +1814,11 @@ static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
 
 void EmitAttachRegisterToExpression(long reg, long expr)
 {
-    AttachedReg *t_attach;
+    AttachedReg *t_attach = nullptr;
     if (FindAttachedReg(expr, t_attach))
         Fatal_InternalInconsistency("Register attached to expression which is already attached");
     
-    MCMemoryNew(t_attach);
+    /* UNCHECKED */ MCMemoryNew(t_attach);
     t_attach -> next = s_attached_regs;
     t_attach -> expr = expr;
     t_attach -> reg = reg;

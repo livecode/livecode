@@ -95,7 +95,7 @@ void GetFileOfPosition(long p_position, FileRef *r_file)
 
 void GetFilenameOfPosition(long p_position, const char **r_filename)
 {
-    FileRef t_file;
+    FileRef t_file = NULL;
     GetFileOfPosition(p_position, &t_file);
     GetFilePath(t_file, r_filename);
 }
