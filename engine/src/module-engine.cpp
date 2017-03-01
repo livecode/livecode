@@ -417,7 +417,10 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalChildrenOfScriptObject(MCScriptObje
 	MCProperListCopy(*t_list, r_controls);
 }
 
-static void MCEngineFreeScriptParameters(MCParameter* p_params)
+/* TODO[C++11] This should be "static" but MSVC2010 doesn't support
+ * using objects with internal linkage as non-type template
+ * arguments. */
+void MCEngineFreeScriptParameters(MCParameter* p_params)
 {
 	while(p_params != nil)
 	{
