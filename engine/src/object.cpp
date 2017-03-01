@@ -2874,7 +2874,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr)
+Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
@@ -2898,7 +2898,7 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ctxt, NULL);
+	Exec_stat stat = hptr->exec(ctxt, p_args);
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
