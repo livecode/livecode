@@ -56,8 +56,6 @@ enum MCSVGPathCommand
     kMCSVGPathClose,
 };
 
-#define kMCSVGPathCommandCount (kMCSVGPathClose + 1)
-
 typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
 
 bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context);
@@ -6720,7 +6718,7 @@ static MCSVGPathCommandMap s_svg_command_map[] = {
 
 bool MCSVGLookupPathCommand(char p_char, MCSVGPathCommand &r_command)
 {
-	for (uint32_t i = 0; i < kMCSVGPathCommandCount; i++)
+	for (uint32_t i = 0; i < sizeof(s_svg_command_map) / sizeof(s_svg_command_map[0]); i++)
 		if (p_char == s_svg_command_map[i].letter)
 		{
 			r_command = s_svg_command_map[i].command;
