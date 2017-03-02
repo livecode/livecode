@@ -287,7 +287,9 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
 	put pProperties["flip vertically"] into mFlipVertically
 	put pProperties["angle"] into mAngle
-	put pProperties["iconPresetName"] into mPathName
+	if "iconPresetName" is among the keys of pProperties then
+		put pProperties["iconPresetName"] into mPathName
+	end if
 	// Older SVG widgets do not have this property
 	if "fillRule" is among the keys of pProperties then
 		put pProperties["fillRule"] into mFillRule
