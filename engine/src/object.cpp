@@ -978,7 +978,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
@@ -1005,7 +1004,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1077,6 +1075,8 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 {	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
+
+	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
 	parsescript(True);
