@@ -343,9 +343,14 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
+        
+        lockforexecution();
+        
 		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
 		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
 			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+        
+        unlockforexecution();
         
         if (t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
@@ -434,9 +439,13 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 			added = True;
 		}
         
+        lockforexecution();
+        
 		t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
 		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
 			t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+        
+        unlockforexecution();
         
 		if (added)
 			MCnexecutioncontexts--;
