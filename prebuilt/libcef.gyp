@@ -149,7 +149,7 @@
                             },
                             
                             {
-                                'destination': '<(PRODUCT_DIR)/',
+                                'destination': '<(PRODUCT_DIR)/CEF/',
                                 'files':
                                 [
                                     'lib/linux/<(target_arch)/CEF/icudtl.dat',

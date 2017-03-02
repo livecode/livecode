@@ -147,16 +147,6 @@
 							'-lX11',
 						],
 						
-					    'library_dirs':
-					    [
-					        '../prebuilt/lib/linux/<(target_arch)/CEF/',
-					    ],
-		
-					    'libraries':
-					    [
-					        '-lcef',
-					    ],
-		
 						'all_dependent_settings':
 						{
 							'variables':
