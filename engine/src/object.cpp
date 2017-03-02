@@ -2068,6 +2068,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCtargetptr . object = this;
     MCtargetptr . part_id = 0;
 
+    MCObjectExecutionLock t_self_lock(this);
+
 	// Dispatch the message
 	Exec_stat t_stat;
 	t_stat = MCU_dofrontscripts(p_type, p_message, p_params);
@@ -2130,6 +2132,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
@@ -2897,6 +2900,7 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
+    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
@@ -2935,6 +2939,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    MCObjectExecutionLock t_self_lock(this);
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
