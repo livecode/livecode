@@ -1,9 +1,6 @@
 {
 	'variables':
 	{
-		# Path to the Windows SDK for Apple QuickTime
-		'quicktime_sdk%': '$(foo)C:/Program Files/QuickTime SDK',
-		
 		# Path to versions 4 and 5 of the Microsoft Speech SDK
 		'ms_speech_sdk4%': '$(foo)C:/Program Files/Microsoft Speech SDK',
 		'ms_speech_sdk5%': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',
@@ -49,8 +46,6 @@
 					
 					'VCLinkerTool':
 					{
-						'AdditionalOptions': '/NODEFAULTLIB:LIBCMT',
-						'LinkIncremental': '2',
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
 						'EnableCOMDATFolding': '2',
@@ -170,6 +165,11 @@
 						{
 							'WarningLevel': '0',
 						},
+
+						'MASM':
+						{
+							'WarningLevel': '0',
+						}
 					},
 				},
 			],
@@ -183,12 +183,31 @@
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
 				'Detect64BitPortabilityProblems': 'false',
+
+				# Silence abundent warnings to speed up build:
+				#   4577: exception handling mode mismatch
+				#   4800: performance warning about cast to bool
+				#   4244: possible loss of data due to int-like truncation
+				'DisableSpecificWarnings': '4577;4800;4244',
 			},
 			
+			'VCLibrarianTool':
+			{
+				'AdditionalOptions':
+				[
+					'/MACHINE:<(target_arch)',
+				],
+			},
+
 			'VCLinkerTool':
 			{
 				'SubSystem': '2',
 				'RandomizedBaseAddress': '1',	# /DYNAMICBASE:NO - disable ASLR
+				'ImageHasSafeExceptionHandlers': 'false',
+				'AdditionalOptions':
+				[
+					'/MACHINE:<(target_arch)',
+				],
 			},
 		},
 	},
