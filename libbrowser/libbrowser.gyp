@@ -168,6 +168,7 @@
 						[
 							'libbrowser-cefprocess',
 							'../prebuilt/libcef.gyp:libcef',
+							'../prebuilt/libicu.gyp:libicu',
 							'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 							'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 						],
