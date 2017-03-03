@@ -252,6 +252,7 @@
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../prebuilt/libcef.gyp:libcef',
+				'../prebuilt/libicu.gyp:libicu',
 			],
 			
 			'sources':
