@@ -1,1 +1,1 @@
-# Prevent crash when using mobilePickMedia without 'Write External Storage' permission and correct the return value of it.
+# Prevent mobilePickMedia crash without 'Write External Storage' permission
