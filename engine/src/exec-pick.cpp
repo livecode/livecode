@@ -387,11 +387,11 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
 void MCPickExecPickMedia(MCExecContext &ctxt, intset_t p_allowed_types, bool p_multiple)
 {
     MCAutoStringRef t_result;
+
+    ctxt . SetTheResultToEmpty();
+
     if (MCSystemPickMedia((MCMediaType)p_allowed_types, p_multiple, &t_result))
         ctxt . SetTheResultToValue(*t_result);
-    
-    ctxt . SetTheResultToEmpty();
-    
 }
 
 void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features)
