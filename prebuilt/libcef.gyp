@@ -147,7 +147,16 @@
                                     'lib/linux/<(target_arch)/CEF/libcef.so',
                                 ],
                             },
-                            
+                            {
+                                'destination': '<(PRODUCT_DIR)/',
+                                'files':
+                                [
+                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
+
+                                    'lib/linux/<(target_arch)/CEF/natives_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
+                                ],
+                            },
                             {
                                 'destination': '<(PRODUCT_DIR)/CEF/',
                                 'files':
