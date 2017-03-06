@@ -143,9 +143,21 @@ static void MCPlatformBeginPrintDialog(MCPlatformWindowRef p_owner, void *p_sess
 	/* UNCHECKED */ MCMemoryNew(t_nest);
     
     t_nest -> info = t_info;
-    t_nest -> session = p_session;
-    t_nest -> settings = p_settings;
-    t_nest -> page_format = p_page_format;
+    
+    PMPrintSession t_session;
+    t_session = (PMPrintSession) p_session;
+    PMRetain(t_session);
+    t_nest -> session = t_session;
+    
+    PMPrintSettings t_settings;
+    t_settings = (PMPrintSettings) p_settings;
+    PMRetain(t_settings);
+    t_nest -> settings = t_settings;
+    
+    PMPageFormat t_page_format;
+    t_page_format = (PMPageFormat) p_page_format;
+    PMRetain(t_page_format);
+    t_nest -> page_format = t_page_format;
     
 	t_nest -> next = s_print_dialog_nesting;
 	t_nest -> result = kMCPlatformPrintDialogResultContinue;
@@ -216,7 +228,19 @@ MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void)
     // MW-2014-07-29: [[ Bug 12961 ]] Write back the print settings.
 	MCPlatformEndPrintInfo(t_nest -> info, t_nest -> session, t_nest -> settings, t_nest -> page_format);
     
-	MCMemoryDelete(t_nest);
+    PMPrintSession t_session;
+    t_session = (PMPrintSession) t_nest -> session;
+    PMRelease(t_session);
+
+    PMPrintSettings t_settings;
+    t_settings = (PMPrintSettings) t_nest -> settings;
+    PMRelease(t_settings);
+    
+    PMPageFormat t_page_format;
+    t_page_format = (PMPageFormat) t_nest -> page_format;
+    PMRelease(t_page_format);
+    
+    MCMemoryDelete(t_nest);
 	
 	return t_result;
 }
