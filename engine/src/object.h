@@ -1677,4 +1677,28 @@ inline MCObject* MCObjectCast<MCObject>(MCObject* p_object)
     return p_object;
 }
 
+/* Helper class for locking an object for execution during a block.
+ * Always allocate this on the stack, e.g.:
+ *
+ *    {
+ *        MCObjectExecutionLock obj_lock {obj};
+ *        // ... do stuff
+ *    }
+ */
+class MCObjectExecutionLock
+{
+    MCObjectHandle m_handle;
+public:
+    MCObjectExecutionLock(MCObject* obj) : m_handle(obj)
+    {
+        if (m_handle.IsValid())
+            m_handle->lockforexecution();
+    }
+    ~MCObjectExecutionLock()
+    {
+        if (m_handle.IsValid())
+            m_handle->unlockforexecution();
+    }
+};
+
 #endif

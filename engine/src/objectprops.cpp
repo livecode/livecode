@@ -329,6 +329,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
@@ -416,6 +417,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler()->hasname(t_setprop_name)))
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1, p2;
 		p1.setnext(&p2);
         

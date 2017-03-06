@@ -1223,6 +1223,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 
 	// Dispatch the message
+	MCObjectExecutionLock t_object_lock(t_object.object);
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();

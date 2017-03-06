@@ -16,15 +16,37 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestDeleteTargetInFrontScript
-   create button "frontscript"
-   set the script of button "frontscript" to "on doSomething; delete the target; pass doSomething; end doSomething"
-   
-   insert the script of button "frontscript" into front
+on TestSetup
+   create button "script"
+   set the script of button "script" to "on doSomething; delete the target; end doSomething"
    
    create button "test"
-   set the script of button "test" to "on doSomething; end doSomething"
-   send "doSomething" to button "test"
    
-   TestAssert "Object is deleted", there is no button "test"
+end TestSetup
+
+on TestDeleteTargetInFrontScript
+   insert the script of button "script" into front
+   TestAssertThrow "Delete target in frontscript", "__TestDeleteTarget", the long id me, 347
+   remove the script of button "script" from front
 end TestDeleteTargetInFrontScript
+
+on TestDeleteTargetInBackScript
+   insert the script of button "script" into back
+   TestAssertThrow "Delete target in backscript", "__TestDeleteTarget", the long id me, 347
+   remove the script of button "script" from back
+end TestDeleteTargetInBackScript
+
+on TestDeleteTargetInBehavior
+   set the behavior of button "test" to the long id of button "script"
+   TestAssertThrow "Delete target in behavior", "__TestDeleteTarget", the long id me, 347
+   set the behavior of button "test" to empty
+end TestDeleteTargetInBehavior
+
+on TestDeleteTargetInOwner
+   set the script of the owner of btn "test" to "on doSomething; delete the target; end doSomething"
+   TestAssertThrow "Delete target in owner", "__TestDeleteTarget", the long id me, 347
+end TestDeleteTargetInOwner
+
+on __TestDeleteTarget
+   send "doSomething" to button "test"
+end __TestDeleteTarget
