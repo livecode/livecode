@@ -15,7 +15,9 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
-#include <QTKit/QTKit.h>
+#if defined(FEATURE_QUICKTIME)
+#   include <QTKit/QTKit.h>
+#endif
 
 #include "globdefs.h"
 #include "imagebitmap.h"
