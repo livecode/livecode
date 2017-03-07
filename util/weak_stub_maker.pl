@@ -286,7 +286,7 @@ sub generateModule
     output "  if (!module_load(p_path, &module_$module))";
     output "  {";
     output "  #ifdef _DEBUG";
-    output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
+    output "    fprintf(stderr, \"Unable to load library: %s\\n\", p_path);";
     output "  #endif";
     output "    goto err;";
     output "  }";
