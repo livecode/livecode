@@ -12,8 +12,6 @@
 		'unix_configure%': '0',
 		
 		'output_dir': '../win-<(target_arch)-bin',
-        
-        'target_platform': 'win32',
 	},
 	
 	'target_defaults':

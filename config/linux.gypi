@@ -7,8 +7,6 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
-		
-		'target_platform': 'linux',
 	},
 	
 	'target_defaults':
