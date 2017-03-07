@@ -3,6 +3,7 @@
 
 #import <AppKit/NSSound.h>
 #import <AppKit/NSColorPanel.h>
+#import <AppKit/NSPrintInfo.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -722,6 +723,31 @@ public:
     virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info);
 private:
     CGColorSpaceRef m_colorspace;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformPrintDialogSession: public MCPlatformPrintDialogSession
+{
+public:
+    MCMacPlatformPrintDialogSession();
+    virtual ~MCMacPlatformPrintDialogSession(void);
+    virtual void BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
+    virtual void BeginSettings(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
+    virtual void CopyInfo(void *&r_session, void *&r_settings, void *&r_page_format);
+    virtual void SetResult(MCPlatformPrintDialogResult p_result);
+    virtual MCPlatformPrintDialogResult GetResult(void);
+private:
+    virtual void Begin(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format, id p_panel);
+    
+    MCPlatformPrintDialogResult m_result;
+    MCPlatformWindowRef m_owner;
+    
+    NSPrintInfo *m_info;
+    PMPrintSession m_session;
+    PMPrintSettings m_settings;
+    PMPageFormat m_page_format;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

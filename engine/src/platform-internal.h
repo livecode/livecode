@@ -332,6 +332,26 @@ typedef MCPlatform::Menu MCPlatformMenu;
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace MCPlatform {
+    
+class PrintDialogSession: public Base
+{
+public:
+    virtual void BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format) = 0;
+    virtual void BeginSettings(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format) = 0;
+    virtual void CopyInfo(void *&r_session, void *&r_settings, void *&r_page_format) = 0;
+    virtual void SetResult(MCPlatformPrintDialogResult p_result) = 0;
+    virtual MCPlatformPrintDialogResult GetResult(void) = 0;
+};
+
+typedef Ref<PrintDialogSession> PrintDialogSessionRef;
+    
+} /* namespace MCPlatform */
+
+typedef MCPlatform::PrintDialogSession MCPlatformPrintDialogSession;
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace MCPlatform {
 
 class Sound: public Base
 {

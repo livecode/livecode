@@ -1014,18 +1014,23 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         PDEBUG(stderr, "DoDialog: Showing dialog\n");
         
         MCPlatformPrintDialogResult t_result;
+        MCPlatformPrintDialogSessionRef t_dialog_session;
         if (p_is_settings)
-            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format, t_dialog_session);
         else
-            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format, t_dialog_session);
         
         PDEBUG(stderr, "DoDialog: Dialog shown\n");
         
         for(;;)
         {
-            t_result = MCPlatformEndPrintDialog();
+            t_result = MCPlatformPrintDialogSessionResult(t_dialog_session);
             if (t_result != kMCPlatformPrintDialogResultContinue)
+            {
+                MCPlatformPrintDialogSessionCopyInfo(t_dialog_session, (void *&)m_session, (void *&)m_settings, (void *&)m_page_format);
+                MCPlatformPrintDialogSessionRelease(t_dialog_session);
                 break;
+            }
             
             MCscreen -> wait(REFRESH_INTERVAL, True, True);
         }

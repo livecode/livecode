@@ -39,3 +39,5 @@ extern MCPlatform::Ref<MCPlatformWindow> MCMacPlatformCreateWindow();
 extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask();
 
 extern void MCMacPlatformHideCursorUntilMouseMoves(void);
+
+extern MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession();

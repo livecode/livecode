@@ -909,7 +909,7 @@ bool MCPlatformSurfaceComposite(MCPlatformSurfaceRef surface, MCGRectangle dst_r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef class MCPlatformPrintSession *MCPlatformPrintSessionRef;
+typedef MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
 
 enum MCPlatformPrintDialogResult
 {
@@ -919,9 +919,11 @@ enum MCPlatformPrintDialogResult
 	kMCPlatformPrintDialogResultCancel
 };
 
-void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef owner, void *session, void *settings, void *page_format);
-void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef owner, void *session, void *settings, void *page_format);
-MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void);
+void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, MCPlatformPrintDialogSessionRef &r_dialog_session);
+void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, MCPlatformPrintDialogSessionRef &r_dialog_session);
+MCPlatformPrintDialogResult MCPlatformPrintDialogSessionResult(MCPlatformPrintDialogSessionRef p_dialog_session);
+void MCPlatformPrintDialogSessionCopyInfo(MCPlatformPrintDialogSessionRef p_dialog_session, void *&r_session, void *&r_settings, void *&r_page_format);
+void MCPlatformPrintDialogSessionRelease(MCPlatformPrintDialogSessionRef p_dialog_session);
 
 ////////////////////////////////////////////////////////////////////////////////
 
