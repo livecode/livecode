@@ -18,7 +18,7 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "6.1,7.1,8.2,9.2,10.2"
+   return "8.2,9.2,10.2"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
@@ -46,7 +46,7 @@ function deployGetIphoneOSes
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2"
+   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
