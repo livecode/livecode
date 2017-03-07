@@ -207,10 +207,7 @@ def guess_xcode_arch(target_sdk):
         else:
             return 'armv7 arm64'
     if sdk == 'iphonesimulator':
-        if int(ver) < 8:
-            return 'i386'
-        else:
-            return 'i386 x86_64'
+        return 'i386 x86_64'
 
 def validate_target_arch(opts):
     if opts['TARGET_ARCH'] is None:
