@@ -18,15 +18,13 @@ Example:
 get messageDigest("LiveCode", "SHA3-256")
 
 Example:
--- Compute a simplified hash-based message authentication
--- code (HMAC) for a message using SHA3-256.
-put "secretKey" into tKey
+-- Compute a simplified hash-based message authentication code (HMAC)
+-- for a message using SHA3-256.  Consider using the full RFC 2104
+-- HMAC algorithm.
+put randomBytes(32) into tKey -- Save this key for later!
 put textEncode("Try my LiveCode app", "UTF-8") into tMessage
 get messageDigest(tKey & messageDigest(tKey & tMessage, \
             "SHA3-256"), "SHA3-256")
--- Implementing the full HMAC algorithm specified in
--- FIPS-198-1 and RFC2104 is left as an exercise for the
--- reader
 
 Example:
 -- You can use a message digest to detect changes in data.
@@ -97,6 +95,12 @@ When generating a <messageDigest> for a string, it is a good idea to
 encode it to binary data using the <textEncode> function.  Otherwise,
 the <messageDigest> could be different, depending on the <platform> on
 which your application is running.
+
+In some cases you may wish to use a irreversible, keyed one-way
+transform of data, for example in a password storage scheme.  You can
+use the <messageDigest> function to implement a keyed-hash message
+authentication code, as described in [RFC
+2014](https://tools.ietf.org/html/rfc2104).
 
 References: md5digest (function), sha1digest (function),
 	textEncode (function), binary data (glossary), checksum (glossary),
