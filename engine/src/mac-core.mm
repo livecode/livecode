@@ -1983,7 +1983,7 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformShowMessageDialog(MCStringRef p_title,
+void MCMacPlatformCore::ShowMessageDialog(MCStringRef p_title,
                                     MCStringRef p_message)
 {
     NSAlert *t_alert = [[NSAlert alloc] init];

@@ -4862,10 +4862,7 @@ delete last char of it; return it"
                                    MCStringRef p_message)
     {
 #ifndef _SERVER
-        extern void MCMacPlatformShowMessageDialog(MCStringRef p_title,
-                                                   MCStringRef p_message);
-        MCMacPlatformShowMessageDialog(p_title,
-                                       p_message);
+        MCPlatformShowMessageDialog(p_title, p_message);
 #endif
     }
 };

@@ -794,6 +794,8 @@ public:
     // Menus
     virtual bool InitializeMenu(void);
     virtual void FinalizeMenu(void);
+    
+    virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message);
 private:
     // Abort key
     MCAbortKeyThread *m_abort_key_thread;

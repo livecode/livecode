@@ -39,6 +39,11 @@ bool MCPlatformGetAbortKeyPressed(void)
     return MCplatform -> GetAbortKeyPressed();
 }
 
+void MCPlatformShowMessageDialog(MCStringRef p_title, MCStringRef p_message)
+{
+    MCplatform -> ShowMessageDialog(p_title, p_message);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int platform_main(int argc, char *argv[], char *envp[])

@@ -467,6 +467,8 @@ namespace MCPlatform {
         // Menus
         virtual bool InitializeMenu(void) = 0;
         virtual void FinalizeMenu(void) = 0;
+        
+        virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message) = 0;
     };
     
     typedef Ref<Core> CoreRef;

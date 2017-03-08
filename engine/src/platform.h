@@ -475,6 +475,10 @@ void MCPlatformFinalize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformShowMessageDialog(MCStringRef p_title, MCStringRef p_message);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // System properties are settings that can be queried from the system.
 //
 // TODO-REVIEW: Perhaps these would be better classed as metrics?
