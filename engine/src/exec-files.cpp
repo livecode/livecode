@@ -1746,8 +1746,8 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                     doingspace = True;
                 }
         }
-        else
-        {            
+        else if (!MCStringIsEmpty(*t_norm_sent))
+        {
             // Normalise the character read and append it to the normalised buffer
             unichar_t *t_norm_chunk;
             uint4 t_norm_chunk_size;
