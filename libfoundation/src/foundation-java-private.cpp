@@ -112,6 +112,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
     {
         if (!MCStringFirstIndexOfChar(p_arguments, ';', x_range . offset, kMCStringOptionCompareExact, t_length))
             return false;
+        
+        // Consume the ;
+        t_length++;
     }
     
     x_range . length = t_length;
