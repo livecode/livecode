@@ -681,17 +681,6 @@ void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPlatformInitializeMenu(void);
-void MCPlatformFinalizeMenu(void);
-
-bool MCPlatformInitializeAbortKey(void);
-void MCPlatformFinalizeAbortKey(void);
-
-bool MCPlatformInitializeColorTransform(void);
-void MCPlatformFinalizeColorTransform(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
 // IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
 bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
 
@@ -797,6 +786,14 @@ public:
     virtual bool InitializeAbortKey(void);
     virtual void FinalizeAbortKey(void);
     virtual bool GetAbortKeyPressed(void);
+    
+    // Color transform
+    virtual bool InitializeColorTransform(void);
+    virtual void FinalizeColorTransform(void);
+    
+    // Menus
+    virtual bool InitializeMenu(void);
+    virtual void FinalizeMenu(void);
 private:
     // Abort key
     MCAbortKeyThread *m_abort_key_thread;

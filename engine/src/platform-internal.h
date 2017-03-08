@@ -459,6 +459,14 @@ namespace MCPlatform {
         virtual bool InitializeAbortKey(void) = 0;
         virtual void FinalizeAbortKey(void) = 0;
         virtual bool GetAbortKeyPressed(void) = 0;
+        
+        // Color transform
+        virtual bool InitializeColorTransform(void) = 0;
+        virtual void FinalizeColorTransform(void) = 0;
+        
+        // Menus
+        virtual bool InitializeMenu(void) = 0;
+        virtual void FinalizeMenu(void) = 0;
     };
     
     typedef Ref<Core> CoreRef;

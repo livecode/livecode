@@ -117,19 +117,3 @@ void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// MW-2014-04-11: [[ Bug 12068 ]] On startup setup an empty default menubar
-//   so that all apps get Quit / About items.
-bool MCPlatformInitializeMenu(void)
-{
-    MCPlatform::MenuRef t_menubar = MCMacPlatformCreateMenu();
-    MCMacPlatformSetMenubar(t_menubar.get());
-    return true;
-}
-
-void MCPlatformFinalizeMenu(void)
-{
-    
-}
-
-////////////////////////////////////////////////////////////////////////////////

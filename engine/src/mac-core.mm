@@ -207,16 +207,16 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 
 - (void)initializeModules
 {
-	MCPlatformInitializeColorTransform();
+	m_platform->InitializeColorTransform();
 	m_platform->InitializeAbortKey();
-    MCPlatformInitializeMenu();
+    m_platform->InitializeMenu();
 }
 
 - (void)finalizeModules
 {
-    MCPlatformFinalizeMenu();
+    m_platform->FinalizeMenu();
 	m_platform->FinalizeAbortKey();
-	MCPlatformFinalizeColorTransform();
+	m_platform->FinalizeColorTransform();
 }
 
 //////////

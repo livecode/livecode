@@ -250,3 +250,15 @@ MCMacPlatformCreateColorTransform()
     return MCPlatform::makeRef<MCMacPlatformColorTransform>();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCMacPlatformCore::InitializeColorTransform(void)
+{
+    return true;
+}
+
+void MCMacPlatformCore::FinalizeColorTransform(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
