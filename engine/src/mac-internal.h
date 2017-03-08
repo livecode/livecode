@@ -610,8 +610,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformScheduleCallback(void (*)(void*), void *);
-
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
 
@@ -757,6 +755,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+struct MCCallback
+{
+    void (*method)(void *);
+    void *context;
+};
+
 class MCMacPlatformCore: public MCPlatformCore
 {
 public:
@@ -764,6 +769,14 @@ public:
     virtual ~MCMacPlatformCore(void);
     
     virtual int Run(int argc, char *argv[], char *envp[]);
+    
+    // Wait
+    virtual bool WaitForEvent(double p_duration, bool p_blocking);
+    virtual void BreakWait(void);
+    virtual bool InBlockingWait(void);
+    
+    // Callbacks
+    virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context);
     
     // Abort key
     virtual bool InitializeAbortKey(void);
@@ -809,14 +822,37 @@ public:
     // System Properties
     virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value);
     virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value);
+
+    // Event checking
+    virtual void EnableEventChecking(void);
+    virtual void DisableEventChecking(void);
+    virtual bool IsEventCheckingEnabled(void);
+    
+    // Player
+    virtual MCPlatformPlayerRef CreatePlayer(void);
 private:
     // Sound
-    virtual void GetGlobalVolume(double& r_volume);
-    virtual void SetGlobalVolume(double p_volume);
+    void GetGlobalVolume(double& r_volume);
+    void SetGlobalVolume(double p_volume);
     
+    uindex_t m_event_checking_enabled;
+    
+    // Abort key
     MCAbortKeyThread *m_abort_key_thread;
+    
+    // Windows
     MCPlatformWindowRef m_moving_window;
     NSWindow *m_pseudo_modal_for;
+    
+    // Wait
+    bool m_in_blocking_wait : 1;
+    CFRunLoopObserverRef m_observer;
+    bool m_wait_broken : 1;
+
+    // Callbacks
+    NSLock *m_callback_lock;
+    MCCallback *m_callbacks;
+    uindex_t m_callback_count;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -892,13 +928,6 @@ public:
     
     NSMenuItem* about_item;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-// IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
-void MCMacPlatformEnableEventChecking(void);
-void MCMacPlatformDisableEventChecking(void);
-bool MCMacPlatformIsEventCheckingEnabled(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

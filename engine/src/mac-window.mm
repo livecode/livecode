@@ -1590,10 +1590,10 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 	{
 		// IM-2014-09-30: [[ Bug 13501 ]] Prevent system event checking which can cause re-entrant calls to drawRect
-		MCMacPlatformDisableEventChecking();
+		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> DisableEventChecking();
         MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
         t_window -> HandleRedraw(&t_surface, t_update_region);
-		MCMacPlatformEnableEventChecking();
+		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> EnableEventChecking();
     }
     
     // Restore the context state
@@ -1771,12 +1771,12 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	// Make sure we don't tickle the event queue whilst resizing, otherwise
 	// redraws can be done by the OS during the process resulting in tearing
 	// as the window resizes.
-	MCMacPlatformDisableEventChecking();
+	static_cast<MCMacPlatformCore *>(m_platform) -> DisableEventChecking();
 	
 	// And get the super class to deal with it.
 	HandleReshape(t_content);
 	
-	MCMacPlatformEnableEventChecking();
+	static_cast<MCMacPlatformCore *>(m_platform) -> EnableEventChecking();
 }
 
 void MCMacPlatformWindow::ProcessDidResize(void)

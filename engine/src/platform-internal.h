@@ -378,7 +378,7 @@ typedef MCPlatform::Sound MCPlatformSound;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformPlayer: public MCPlatform::Base
+class MCPlatformPlayer: public MCPlatform::CoreReference
 {
 public:
 	MCPlatformPlayer(void);
@@ -454,6 +454,13 @@ namespace MCPlatform {
     {
     public:
         virtual int Run(int argc, char *argv[], char *envp[]) = 0;
+        
+        // Wait
+        virtual bool WaitForEvent(double p_duration, bool p_blocking) = 0;
+        virtual void BreakWait(void) = 0;
+        
+        // Callbacks
+        virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context) = 0;
     
         // Abort key
         virtual bool InitializeAbortKey(void) = 0;
@@ -492,6 +499,9 @@ namespace MCPlatform {
         // System Properties
         virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value) = 0;
         virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value) = 0;
+        
+        // Player
+        virtual MCPlatformPlayerRef CreatePlayer(void) = 0;
     };
     
     typedef Ref<Core> CoreRef;

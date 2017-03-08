@@ -70,6 +70,18 @@ void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
+{
+    return MCplatform -> WaitForEvent(p_duration, p_blocking);
+}
+
+void MCPlatformBreakWait(void)
+{
+    MCplatform -> BreakWait();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

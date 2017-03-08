@@ -34,8 +34,6 @@
 static bool s_have_desktop_height = false;
 static CGFloat s_desktop_height = 0.0f;
 
-static NSLock *s_callback_lock = nil;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -280,7 +278,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     }
     
     if (t_err != errAEEventNotHandled)
-        MCPlatformBreakWait();
+        m_platform -> BreakWait();
     
     return t_err;
 }
@@ -637,10 +635,6 @@ void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, M
 
 static NSEvent *s_last_mouse_event = nil;
 
-static CFRunLoopObserverRef s_observer = nil;
-static bool s_in_blocking_wait = false;
-static bool s_wait_broken = false;
-
 struct MCModalSession
 {
 	NSModalSession session;
@@ -651,25 +645,16 @@ struct MCModalSession
 static MCModalSession *s_modal_sessions = nil;
 static uindex_t s_modal_session_count = 0;
 
-struct MCCallback
+void MCMacPlatformCore::BreakWait(void)
 {
-	void (*method)(void *);
-	void *context;
-};
-
-static MCCallback *s_callbacks = nil;
-static uindex_t s_callback_count;
-
-void MCPlatformBreakWait(void)
-{
-    [s_callback_lock lock];
-	if (s_wait_broken)
+    [m_callback_lock lock];
+	if (m_wait_broken)
     {
-        [s_callback_lock unlock];
+        [m_callback_lock unlock];
         return;
     }
-    s_wait_broken = true;
-	[s_callback_lock unlock];
+    m_wait_broken = true;
+	[m_callback_lock unlock];
     
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -693,42 +678,48 @@ void MCPlatformBreakWait(void)
 
 static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
- 	if (s_in_blocking_wait)
-		MCPlatformBreakWait();
+    MCMacPlatformCore * t_platform = (MCMacPlatformCore *) info;
+    if (t_platform -> InBlockingWait())
+    {
+        t_platform -> BreakWait();
+    }
 }
 
-static uindex_t s_event_checking_enabled = 0;
-
-void MCMacPlatformEnableEventChecking(void)
+bool MCMacPlatformCore::InBlockingWait(void)
 {
-	s_event_checking_enabled += 1;
+    return m_in_blocking_wait;
 }
 
-void MCMacPlatformDisableEventChecking(void)
+void MCMacPlatformCore::EnableEventChecking(void)
 {
-	s_event_checking_enabled -= 1;
+	m_event_checking_enabled += 1;
 }
 
-bool MCMacPlatformIsEventCheckingEnabled(void)
+void MCMacPlatformCore::DisableEventChecking(void)
 {
-	return s_event_checking_enabled == 0;
+	m_event_checking_enabled -= 1;
 }
 
-bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
+bool MCMacPlatformCore::IsEventCheckingEnabled(void)
 {
-	if (!MCMacPlatformIsEventCheckingEnabled())
+	return m_event_checking_enabled == 0;
+}
+
+bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
+{
+	if (!IsEventCheckingEnabled())
 		return false;
 	
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
-    [s_callback_lock lock];
-	s_wait_broken = false;
-    t_callbacks = s_callbacks;
-    t_callback_count = s_callback_count;
-    s_callbacks = nil;
-    s_callback_count = 0;
-    [s_callback_lock unlock];
+    [m_callback_lock lock];
+	m_wait_broken = false;
+    t_callbacks = m_callbacks;
+    t_callback_count = m_callback_count;
+    m_callbacks = nil;
+    m_callback_count = 0;
+    [m_callback_lock unlock];
     
 	for(uindex_t i = 0; i < t_callback_count; i++)
 		t_callbacks[i] . method(t_callbacks[i] . context);
@@ -739,13 +730,14 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	// Make sure we have our observer and install it. This is used when we are
 	// blocking and should break the event loop whenever a new event is added
 	// to the queue.
-	if (s_observer == nil)
+	if (m_observer == nil)
 	{
-		s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, NULL);
-		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+        CFRunLoopObserverContext t_context = {0, this, nil, nil, nil};
+		m_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, &t_context);
+		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], m_observer, (CFStringRef)NSEventTrackingRunLoopMode);
 	}
 	
-	s_in_blocking_wait = true;
+	m_in_blocking_wait = true;
 	
 	bool t_modal;
 	t_modal = s_modal_session_count > 0;
@@ -772,7 +764,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
     
-	s_in_blocking_wait = false;
+	m_in_blocking_wait = false;
 
 	if (t_event != nil)
 	{
@@ -842,15 +834,15 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 	}
 }
 
-void MCMacPlatformScheduleCallback(void (*p_callback)(void *), void *p_context)
+void MCMacPlatformCore::ScheduleCallback(void (*p_callback)(void *), void *p_context)
 {
-    [s_callback_lock lock];
-	/* UNCHECKED */ MCMemoryResizeArray(s_callback_count + 1, s_callbacks, s_callback_count);
-	s_callbacks[s_callback_count - 1] . method = p_callback;
-	s_callbacks[s_callback_count - 1] . context = p_context;
-    [s_callback_lock unlock];
+    [m_callback_lock lock];
+	/* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
+	m_callbacks[m_callback_count - 1] . method = p_callback;
+	m_callbacks[m_callback_count - 1] . context = p_context;
+    [m_callback_lock unlock];
     
-    MCPlatformBreakWait();
+    BreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2005,9 +1997,16 @@ extern "C" void MCModulesFinalize(void);
 
 
 MCMacPlatformCore::MCMacPlatformCore()
-: m_abort_key_thread(nil)
-, m_moving_window(nil)
-, m_pseudo_modal_for(nil)
+: m_event_checking_enabled(0),
+m_abort_key_thread(nil),
+m_moving_window(nil),
+m_pseudo_modal_for(nil),
+m_in_blocking_wait(false),
+m_observer(nil),
+m_wait_broken(false),
+m_callback_lock(nil),
+m_callbacks(nil),
+m_callback_count(0)
 {
     
 }
@@ -2029,7 +2028,7 @@ int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
     NSAutoreleasePool *t_pool;
     t_pool = [[NSAutoreleasePool alloc] init];
     
-    s_callback_lock = [[NSLock alloc] init];
+    m_callback_lock = [[NSLock alloc] init];
     
     // Create the normal NSApplication object.
     NSApplication *t_application;

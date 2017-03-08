@@ -194,7 +194,7 @@ private:
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if ([keyPath isEqualToString: @"status"])
-        MCPlatformBreakWait();
+        m_av_player -> GetPlatform() -> BreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
     {
         // PM-2014-10-14: [[ Bug 13650 ]] Do this check to prevent a crash
@@ -511,7 +511,7 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 		return;
     
 	Retain();
-	MCMacPlatformScheduleCallback(DoSwitch, this);
+	m_platform -> ScheduleCallback(DoSwitch, this);
     
 	m_switch_scheduled = true;
 }
@@ -525,10 +525,10 @@ void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
     __block bool t_is_finished = false;
     [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
         t_is_finished = true;
-        MCPlatformBreakWait();
+        m_platform -> BreakWait();
     }];
     while(!t_is_finished)
-        MCPlatformWaitForEvent(60.0, true);
+        m_platform -> WaitForEvent(60.0, true);
 }
 
 CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
@@ -903,7 +903,7 @@ void MCAVFoundationPlayer::Start(double rate)
                                                                            [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                                                                            // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true
                                                                            MovieFinished();
-                                                                           MCPlatformBreakWait();
+                                                                           m_platform -> BreakWait();
                                                                 
                                                                        }];
     }
@@ -1369,9 +1369,12 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 
 ////////////////////////////////////////////////////////
 
-MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void)
+MCPlatformPlayerRef MCMacPlatformCore::CreatePlayer()
 {
-    return new MCAVFoundationPlayer;
+    MCPlatform::Ref<MCPlatformPlayer> t_ref = MCPlatform::makeRef<MCAVFoundationPlayer>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////
