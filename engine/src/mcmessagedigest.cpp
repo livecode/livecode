@@ -133,9 +133,9 @@ normalize_digest_name(MCNameRef p_digest_name)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(MCNameGetString(p_digest_name), &t_string))
-        return MCAutoStringRef();
+        return {};
     if (!MCStringLowercase(*t_string, kMCSystemLocale))
-        return MCAutoStringRef();
+        return {};
     return t_string;
 }
 
@@ -148,10 +148,10 @@ MCFiltersMessageDigest(MCDataRef p_data,
                        MCNameRef p_digest_name)
 {
     MCAutoStringRef t_digest_normalized = normalize_digest_name(p_digest_name);
-    if (!t_digest_normalized.IsSet()) return MCAutoDataRef();
+    if (!t_digest_normalized.IsSet()) return {};
 
     MCAutoStringRefAsCString t_digest_chars;
-    if (!t_digest_chars.Lock(*t_digest_normalized)) return MCAutoDataRef();
+    if (!t_digest_chars.Lock(*t_digest_normalized)) return {};
 
     auto t_mapping =
         std::find_if(std::begin(k_digest_map), std::end(k_digest_map),
@@ -163,7 +163,7 @@ MCFiltersMessageDigest(MCDataRef p_data,
         /* No known message digest algorithm of this name */
         /* TODO[2017-02-28] Failing to find a matching algorithm should
          * throw a helpful error. */
-        return MCAutoDataRef();
+        return {};
     }
 
     return t_mapping->m_digest_func(p_data);
