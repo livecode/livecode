@@ -878,7 +878,7 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
+void MCMacPlatformCore::BeginColorDialog(MCStringRef p_title, const MCColor& p_color)
 {
     // SN-2014-10-20: [[ Bug 13628 ]] Update to use the Cocoa picker
     NSColorPanel *t_colorPicker;
@@ -912,10 +912,10 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
     // as modal mode breaks the color picker
     //[NSApp runModalForWindow: t_colorPicker];
     [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
-	MCMacPlatformApplicationBecomePseudoModalFor(t_colorPicker);
+	ApplicationBecomePseudoModalFor(t_colorPicker);
 }
 
-MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
+MCPlatformDialogResult MCMacPlatformCore::EndColorDialog(MCColor& r_color)
 {
     // SN-2014-10-20: [[ Bug 13628 ]] Deallocate the delegate in case we don't continue
     if (s_color_dialog_result != kMCPlatformDialogResultContinue)
@@ -923,7 +923,7 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
         if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
             r_color = s_color_dialog_color;
 		
-		MCMacPlatformApplicationBecomePseudoModalFor(nil);
+		ApplicationBecomePseudoModalFor(nil);
         [s_color_dialog_delegate dealloc];
         s_color_dialog_delegate = NULL;
     }

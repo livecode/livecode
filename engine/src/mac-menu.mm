@@ -157,7 +157,8 @@ enum MCShadowedItemTags
 
 - (void)menuItemSelected: (id)sender
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    
+    if (static_cast<MCMacPlatformCore *>(m_menu -> GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     NSMenuItem *t_item;
@@ -291,7 +292,7 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(s_menubar -> GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
@@ -1018,9 +1019,12 @@ MCPlatformMenuRef MCMacPlatformGetMenubar(void)
 	return s_menubar;
 }
 
-MCPlatform::Ref<MCPlatformMenu> MCMacPlatformCreateMenu(void)
+MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 {
-    return MCPlatform::makeRef<MCMacPlatformMenu>();
+    MCPlatform::Ref<MCPlatformMenu> t_ref = MCPlatform::makeRef<MCMacPlatformMenu>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
 
 
@@ -1080,8 +1084,8 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 //   so that all apps get Quit / About items.
 bool MCMacPlatformCore::InitializeMenu(void)
 {
-    MCPlatform::MenuRef t_menubar = MCMacPlatformCreateMenu();
-    MCMacPlatformSetMenubar(t_menubar.get());
+    MCPlatformMenuRef t_menubar = CreateMenu();
+    MCMacPlatformSetMenubar(t_menubar);
     return true;
 }
 

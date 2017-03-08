@@ -46,6 +46,18 @@ void MCPlatformShowMessageDialog(MCStringRef p_title, MCStringRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
+{
+    return MCplatform -> BeginColorDialog(p_title, p_color);
+}
+
+MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color)
+{
+    return MCplatform -> EndColorDialog(r_new_color);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

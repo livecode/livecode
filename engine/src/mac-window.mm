@@ -66,7 +66,8 @@ static bool s_lock_responder_change = false;
 
 - (NSRect)movingFrame
 {
-    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationWindowIsMoving(t_window))
         return m_moving_frame;
     else
         return [self frame];
@@ -85,7 +86,8 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -93,7 +95,8 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -172,7 +175,8 @@ static bool s_lock_responder_change = false;
 
 - (NSRect)movingFrame
 {
-    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationWindowIsMoving(t_window))
         return m_moving_frame;
     else
         return [self frame];
@@ -198,7 +202,8 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -206,7 +211,8 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -428,7 +434,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
         
         // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
         //   messages.
-		MCMacPlatformApplicationWindowStartedMoving(m_window);
+		static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> ApplicationWindowStartedMoving(m_window);
     }
 }
 
@@ -595,7 +601,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)canBecomeKeyView
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -603,7 +609,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
@@ -614,7 +620,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)acceptsFirstResponder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -622,7 +628,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)becomeFirstResponder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     //MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
@@ -651,7 +657,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -663,7 +669,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -675,7 +681,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -683,7 +689,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -695,7 +701,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseDown: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -707,8 +713,8 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
-    return;
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+        return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
@@ -719,7 +725,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -727,7 +733,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -735,7 +741,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseDown: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -747,7 +753,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -759,7 +765,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -767,7 +773,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -783,7 +789,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseExited: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -2539,9 +2545,12 @@ bool MCMacPlatformWindowMask::CreateWithAlphaAndRelease(int32_t p_width, int32_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformWindow> MCMacPlatformCreateWindow()
+MCPlatformWindowRef MCMacPlatformCore::CreateWindow()
 {
-    return MCPlatform::makeRef<MCMacPlatformWindow>();
+    MCPlatform::Ref<MCPlatformWindow> t_ref = MCPlatform::makeRef<MCMacPlatformWindow>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
 
 MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask()

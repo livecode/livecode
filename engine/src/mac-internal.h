@@ -147,11 +147,6 @@ void MCMacPlatformWindowWindowMoved(NSWindow *p_self, MCPlatformWindowRef p_wind
 @end
 
 bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
-bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window);
-void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
-void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
-void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window);
-NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -792,14 +787,29 @@ public:
     virtual void FinalizeColorTransform(void);
     
     // Menus
+    virtual MCPlatformMenuRef CreateMenu(void);
     virtual bool InitializeMenu(void);
     virtual void FinalizeMenu(void);
     
     virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message);
+    
+    // Windows
+    virtual MCPlatformWindowRef CreateWindow(void);
+    virtual bool ApplicationWindowIsMoving(MCPlatformWindowRef p_window);
+    virtual void ApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
+    virtual void ApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
+    virtual void ApplicationBecomePseudoModalFor(NSWindow *p_window);
+    virtual NSWindow *ApplicationPseudoModalFor(void);
+    virtual bool ApplicationSendEvent(NSEvent *p_event);
+    
+    // Color dialog
+    virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
+    virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color);
+    
 private:
-    // Abort key
     MCAbortKeyThread *m_abort_key_thread;
-
+    MCPlatformWindowRef m_moving_window;
+    NSWindow *m_pseudo_modal_for;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -17,12 +17,13 @@
 #include "platform.h"
 #include "platform-internal.h"
 #include "mac-extern.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 {
-    r_menu = MCMacPlatformCreateMenu().unsafeTake();
+    r_menu = MCplatform -> CreateMenu();
 }
 
 void MCPlatformRetainMenu(MCPlatformMenuRef p_menu)

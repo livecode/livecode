@@ -51,6 +51,21 @@ public:
 private:
     mutable int64_t m_references = 1;
 };
+    
+class CoreReference: public Base
+{
+public:
+    virtual void SetPlatform(MCPlatformCoreRef p_platform) const
+    {
+        m_platform = p_platform;
+    }
+    virtual MCPlatformCoreRef GetPlatform(void) const
+    {
+        return m_platform;
+    }
+protected:
+    mutable MCPlatformCoreRef m_platform;
+};
 
 /* MCPlatform::Ref is an automatic reference counting smart pointer template.
  * It's only enabled for types that derive from MCPlatform::Base. */

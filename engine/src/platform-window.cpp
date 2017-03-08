@@ -22,6 +22,8 @@
 
 #include "graphics_util.h"
 
+#include "globals.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Platform Window Class Implementation
@@ -67,6 +69,8 @@ MCPlatformWindow::MCPlatformWindow(void)
     
     // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
     m_document_filename = MCValueRetain(kMCEmptyString);
+    
+    m_platform = nil;
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
@@ -610,7 +614,7 @@ void MCPlatformWindow::HandleDragDrop(bool& r_accepted)
 
 void MCPlatformCreateWindow(MCPlatformWindowRef& r_window)
 {
-    r_window = MCMacPlatformCreateWindow().unsafeTake();
+    r_window = MCplatform -> CreateWindow();
 }
 
 void MCPlatformRetainWindow(MCPlatformWindowRef p_window)

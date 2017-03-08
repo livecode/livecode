@@ -78,7 +78,7 @@ struct MCPlatformWindowAttachment
 	MCPlatformWindowAttachmentCallback callback;
 };
 
-class MCPlatformWindow: public MCPlatform::Base
+class MCPlatformWindow: public MCPlatform::CoreReference
 {
 public:
 	MCPlatformWindow(void);
@@ -300,7 +300,7 @@ typedef MCPlatform::Cursor MCPlatformCursor;
 
 namespace MCPlatform {
 
-class Menu: public Base
+class Menu: public CoreReference
 {
 public:
     virtual void SetTitle(MCStringRef p_title) = 0;
@@ -465,10 +465,18 @@ namespace MCPlatform {
         virtual void FinalizeColorTransform(void) = 0;
         
         // Menus
+        virtual MCPlatformMenuRef CreateMenu(void) = 0;
         virtual bool InitializeMenu(void) = 0;
         virtual void FinalizeMenu(void) = 0;
         
         virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message) = 0;
+    
+        // Windows
+        virtual MCPlatformWindowRef CreateWindow(void) = 0;
+        
+        // Color dialog
+        virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color) = 0;
+        virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color) = 0;
     };
     
     typedef Ref<Core> CoreRef;
