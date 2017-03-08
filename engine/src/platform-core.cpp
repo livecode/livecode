@@ -58,6 +58,18 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
+{
+    MCplatform -> GetSystemProperty(p_property, p_type, r_value);
+}
+
+void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+{
+    MCplatform -> SetSystemProperty(p_property, p_type, p_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

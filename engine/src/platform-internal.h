@@ -488,6 +488,10 @@ namespace MCPlatform {
         // Color dialog
         virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color) = 0;
         virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color) = 0;
+        
+        // System Properties
+        virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value) = 0;
+        virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value) = 0;
     };
     
     typedef Ref<Core> CoreRef;

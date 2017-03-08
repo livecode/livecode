@@ -648,9 +648,6 @@ NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
 void MCMacPlatformResetCursor(void);
 
-void MCMacPlatformGetGlobalVolume(double& r_volume);
-void MCMacPlatformSetGlobalVolume(double volume);
-
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
 void MCMacPlatformSyncBackdrop(void);
 
@@ -809,7 +806,14 @@ public:
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
     virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color);
     
+    // System Properties
+    virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value);
+    virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value);
 private:
+    // Sound
+    virtual void GetGlobalVolume(double& r_volume);
+    virtual void SetGlobalVolume(double p_volume);
+    
     MCAbortKeyThread *m_abort_key_thread;
     MCPlatformWindowRef m_moving_window;
     NSWindow *m_pseudo_modal_for;

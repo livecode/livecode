@@ -562,7 +562,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
+void MCMacPlatformCore::GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
 	switch(p_property)
 	{
@@ -610,7 +610,7 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			break;
 			
         case kMCPlatformSystemPropertyVolume:
-            MCMacPlatformGetGlobalVolume(*(double *)r_value);
+            GetGlobalVolume(*(double *)r_value);
             break;
             
 		default:
@@ -619,12 +619,12 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	}
 }
 
-void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
     switch(p_property)
     {
         case kMCPlatformSystemPropertyVolume:
-            MCMacPlatformSetGlobalVolume(*(double *)p_value);
+            SetGlobalVolume(*(double *)p_value);
             break;
         
         default:
