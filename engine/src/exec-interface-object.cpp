@@ -1121,13 +1121,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 {
     if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
     {
-        r_output . mixed = Mixed;
-        r_output . type = kMCInterfaceTriStateMixed;
+        r_output . value = kMCTristateMixed;
+        return;
     }
-    
-    if (MCTypeConvertStringToBool(p_input, r_output . state))
+
+    bool t_bool = false;
+    if (MCTypeConvertStringToBool(p_input, t_bool))
     {
-        r_output . type = kMCInterfaceTriStateBoolean;
+        r_output . value = t_bool;
         return;
     }
     
@@ -1136,16 +1137,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 
 void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
 {
-    if (p_input . type == kMCInterfaceTriStateBoolean)
+    if (p_input.value.isMixed())
     {
-        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        if (!MCStringCreateWithCString("mixed", r_output))
+            ctxt.Throw();
         return;
     }
-    
-    if (MCStringCreateWithCString("mixed", r_output))
-        return;
-    
-    ctxt . Throw();
+
+    r_output = MCValueRetain(p_input.value.isFalse() ? kMCFalseString : kMCTrueString);
 }
 
 void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)

@@ -126,13 +126,6 @@ bool MCModeShouldCheckCantStandalone(void);
 //
 uint4 MCModeComputeObjectOrigin(uint4 extraflags);
 
-// This hook is used to implement message box redirection. If it
-// returns 'false' the default message box behavior is observed.
-//
-// This hook is called by MCB_setmsg.
-//
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string);
-
 // This hook is used to work out the parameters for the 'relaunch'
 // feature.
 //
@@ -231,9 +224,6 @@ bool MCModeHasHomeStack(void);
 // Property getters & setters
 
 #ifdef MODE_DEVELOPMENT
-void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object);
-void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id);
-void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target);
 void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
 void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
 void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings);

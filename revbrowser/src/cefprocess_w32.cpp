@@ -24,14 +24,8 @@ extern bool MCCefCreateApp(CefRefPtr<CefApp> &r_app);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" int initialise_weak_link_cef(void);
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
-	if (!initialise_weak_link_cef())
-		return -1;
-
 	CefMainArgs t_args(hInstance);
 	
 	CefRefPtr<CefApp> t_app;

@@ -69,6 +69,7 @@ class BrowserControl extends NativeControl
     
     class JSInterface
     {
+    	@JavascriptInterface
         public void storeResult(String p_tag, String p_result)
         {
             doJSExecutionResult(p_tag, p_result);

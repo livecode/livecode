@@ -229,7 +229,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    
    try
       ------- Create the build folder
-      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder, tClassesBuildFolder, tLibsBuildFolder, tArmLibsBuildFolder
+      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder, tClassesBuildFolder, tLibsBuildFolder, tArmLibsBuildFolder, tXMLResBuildFolder
       put tempName() into tBuildFolder
       create folder tBuildFolder
       if the platform is "win32" then
@@ -244,16 +244,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tBuildFolder & slash & "res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
+      put tResBuildFolder & slash & "xml" into tXMLResBuildFolder
       create folder tClassesBuildFolder
       create folder tLibsBuildFolder
       create folder tArmLibsBuildFolder
       create folder tResBuildFolder
       create folder tDrawableResBuildFolder
       create folder tLayoutResBuildFolder
+      create folder tXMLResBuildFolder
       if there is no folder tBuildFolder or there is no folder tClassesBuildFolder or \
             there is no folder tLibsBuildFolder or there is no folder tArmLibsBuildFolder or \
             there is no folder tResBuildFolder or there is no folder tDrawableResBuildFolder  or \
-            there is no folder tLayoutResBuildFolder then
+            there is no folder tLayoutResBuildFolder or there is no folder tXMLResBuildFolder then
          throw "could not create build folders"
       end if
       
@@ -396,6 +398,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put tAmazonReceiver after tReceiver
          end if
       end if
+      
+      local tNFCIntentFilter
+      if pSettings["android,nfc"] then
+         put "<intent-filter>" & return & \
+               "<action android:name=" & quote & "android.nfc.action.TECH_DISCOVERED" & quote & " />" & return & \
+               "</intent-filter>" & return & \
+               "<meta-data android:name=" & quote & "android.nfc.action.TECH_DISCOVERED" & quote & \
+               " android:resource=" & quote & "@xml/nfc_tech_filter" & quote & " />" & return into tNFCIntentFilter
+               
+         put "<uses-permission android:name=" & quote & "android.permission.NFC" & quote & " />" & return after tPermissions
+      end if
+      replace "${NFC_FILTER}" with tNFCIntentFilter in tManifest
       
       replace "${SERVICE}" with tService in tManifest
       replace "${RECEIVER}" with tReceiver in tManifest
@@ -656,8 +670,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
       -- Externals to reference (on Android we include drivers in this list)
+      put "revsecurity:./librevsecurity" into tDeploy["library"]
       repeat for each line tEntry in tExternals
-         put tEntry & return after tDeploy["externals"]
+         if not (tEntry begins with "db") then
+            put tEntry & return after tDeploy["externals"]
+         end if
+         put return & tEntry & ":" & "./lib" & tEntry after tDeploy["library"]
       end repeat
       delete the last char of tDeploy["externals"]
       
@@ -699,6 +717,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          throw "could not copy layout file '" & tLayoutXML & "'"
       end if
       put tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml" & return after tAssetFiles
+      
+      local tNFCTechFilter
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "nfc_tech_filter.xml") into tNFCTechFilter
+      put url ("binfile:" & tNFCTechFilter) into url ("binfile:" & tXMLResBuildFolder & slash & "nfc_tech_filter.xml")
+      if the result is not empty then
+         throw "could not copy NFC tech filter file '" & tNFCTechFilter & "'"
+      end if
+      put tXMLResBuildFolder & slash & "nfc_tech_filter.xml" & return after tAssetFiles
       
       if there is a file tIcon then
          put url ("binfile:" & tIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "icon.png")
@@ -1271,6 +1297,9 @@ function mapFilePath pPath
       case "Manifest.xml"
          put merge("[[tBinariesFolder]]/Manifest.xml") into tPath
          break
+      case "nfc_tech_filter.xml"
+         put merge("[[tBinariesFolder]]/nfc_tech_filter.xml") into tPath
+         break
       case "livecode_inputcontrol.xml"
          put merge("[[tBinariesFolder]]/livecode_inputcontrol.xml") into tPath
          break
@@ -1294,6 +1323,12 @@ function mapFilePath pPath
          break
       case "dbmysql"
          put merge("[[tBinariesFolder]]/DbMysql") into tPath
+         break
+      case "revsecurity"
+         put merge("[[tBinariesFolder]]/RevSecurity") into tPath
+         break
+      case "revpdfprinter"
+         put merge("[[tBinariesFolder]]/RevPdfPrinter") into tPath
          break
       default
          put pPath into tPath

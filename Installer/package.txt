@@ -421,18 +421,21 @@ component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
 		executable macosx:lc-compile as lc-compile
 		executable macosx:lc-run as lc-run
+		executable macosx:lc-compile-ffi-java as lc-compile-ffi-java
 		rfolder macosx:modules
 
 component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
 		executable windows:lc-run.exe as lc-run.exe
+		executable windows:lc-compile-ffi-java.exe as lc-compile-ffi-java.exe
 		rfolder windows:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
 		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
 		executable linux-[[TargetArchitecture]]:lc-run as lc-run
+		executable linux-[[TargetArchitecture]]:lc-compile-ffi-java as lc-compile-ffi-java
 		rfolder linux-[[TargetArchitecture]]:modules
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -539,6 +542,7 @@ component Runtime.Android
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
+		file android:nfc_tech_filter.xml
 		executable android:Standalone[[BaseEditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml

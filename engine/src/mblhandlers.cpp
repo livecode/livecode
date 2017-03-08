@@ -4194,6 +4194,58 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
         return ES_ERROR;
 }
 
+Exec_stat MCHandleIsNFCAvailable(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCGetIsNFCAvailable(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleIsNFCEnabled(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCGetIsNFCEnabled(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleEnableNFCDispatch(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCExecEnableNFCDispatch(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleDisableNFCDispatch(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCExecDisableNFCDispatch(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -4517,6 +4569,11 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
     {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
     {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
+	
+	{false, "mobileIsNFCAvailable", MCHandleIsNFCAvailable, nil},
+	{false, "mobileIsNFCEnabled", MCHandleIsNFCEnabled, nil},
+	{false, "mobileEnableNFCDispatch", MCHandleEnableNFCDispatch, nil},
+	{false, "mobileDisableNFCDispatch", MCHandleDisableNFCDispatch, nil},
     
 	{nil, nil, nil}    
 };

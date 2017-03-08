@@ -1,0 +1,93 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST BindMissingImport
+foreign package java.test
+use %{BEFORE_IMPORT}java.import.SomeClass
+end package
+%EXPECT PASS
+%ERROR "Unable to find imported package" AT BEFORE_IMPORT
+%ENDTEST
+
+%TEST BindMissingImportedDefinition
+foreign package java.import
+end package
+foreign package java.test
+use %{BEFORE_IMPORTED_DEFINITION}java.import.SomeClass
+end package
+%EXPECT PASS
+%ERROR "Unable to find imported definition" AT BEFORE_IMPORTED_DEFINITION
+%ENDTEST
+
+%TEST BindIdentifierPreviouslyDeclared
+foreign package java.test
+class A
+end class
+
+class %{BEFORE_CLASS_ID}A
+end class
+end package
+%EXPECT PASS
+%ERROR "already declared" AT BEFORE_CLASS_ID
+%ENDTEST
+
+%TEST BindIdentifierNotDeclared
+foreign package java.test
+class A %{BEFORE_INHERITS}inherits B
+end class
+end package
+%EXPECT PASS
+%ERROR "not declared" AT BEFORE_INHERITS
+%ENDTEST
+
+%TEST BindConstructorPreviouslyDeclared
+foreign package java.test
+class A
+	constructor A()
+	constructor %{BEFORE_CONSTRUCTOR_ID}A(param as String)
+end class
+end package
+%EXPECT PASS
+%ERROR "already declared" AT BEFORE_CONSTRUCTOR_ID
+%ENDTEST
+
+%TEST BindConstructorPreviouslyDeclaredAlias
+foreign package java.test
+class A
+	constructor A()
+	constructor A(param as String) named AVariant
+end class
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST BindCircularReferences
+foreign package java.testA
+use java.testB.B
+class A
+	method getB() returns B
+end class
+end package
+foreign package java.testB
+use java.testA.A
+class B
+	method getA() returns A
+end class
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

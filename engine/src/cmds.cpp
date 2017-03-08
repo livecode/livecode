@@ -1061,7 +1061,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 				MCEngineExecPutOutput(ctxt, t_string);
 		}
 		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
-			MCIdeExecPutIntoMessage(ctxt, t_string, prep);
+			MCDebuggingExecPutIntoMessage(ctxt, t_string, prep);
 		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
 			MCServerExecPutHeader(ctxt, t_string, prep == PT_NEW_HEADER);
 		else if (prep == PT_CONTENT)
@@ -1138,7 +1138,7 @@ void MCPut::compile(MCSyntaxFactoryRef ctxt)
 		case PT_AFTER:
 		case PT_BEFORE:
 			MCSyntaxFactoryEvalConstantInt(ctxt, prep);
-			MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecPutIntoMessageMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCDebuggingExecPutIntoMessageMethodInfo);
 			break;
 		case PT_HEADER:
 		case PT_NEW_HEADER:

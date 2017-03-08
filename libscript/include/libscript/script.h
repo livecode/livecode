@@ -20,7 +20,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __MC_FOUNDATION__
-#include "foundation.h"
+#include <foundation.h>
+#endif
+
+#ifndef __MC_FOUNDATION_SYSTEM__
+#include <foundation-system.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,14 +39,12 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCScriptResolveSharedLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
 
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
 
-void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback callback);
-
-bool MCScriptResolveSharedLibrary(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
 
 ////////////////////////////////////////////////////////////////////////////////
 

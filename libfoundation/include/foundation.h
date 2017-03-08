@@ -693,6 +693,7 @@ typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
+typedef struct __MCJavaObject *MCJavaObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1316,7 +1317,7 @@ MC_DLLEXPORT hash_t MCHashUSize(size_t);
 MC_DLLEXPORT hash_t MCHashDouble(double d);
 
 // Returns a hash value for the given pointer.
-MC_DLLEXPORT hash_t MCHashPointer(void *p);
+MC_DLLEXPORT hash_t MCHashPointer(const void *p);
 
 // Returns a hash value for the given sequence of bytes.
 MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
@@ -1824,7 +1825,41 @@ MC_DLLEXPORT bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef ba
 	
 // Create a named typeinfo bound to a foreign typeinfo.
 MC_DLLEXPORT bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo);
-	
+
+//////////
+    
+MC_DLLEXPORT bool MCJavaVMInitialize();
+MC_DLLEXPORT void MCJavaVMFinalize();
+
+MC_DLLEXPORT MCTypeInfoRef MCJavaGetObjectTypeInfo();
+MC_DLLEXPORT bool MCJavaCreateJavaObjectTypeInfo();
+    
+MC_DLLEXPORT bool MCJavaObjectCreate(void *value, MCJavaObjectRef& r_obj);
+MC_DLLEXPORT void *MCJavaObjectGetObject(const MCJavaObjectRef p_obj);
+
+// Check that a Java param string is compatible with a handler signature typeinfo
+MC_DLLEXPORT bool MCJavaCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_params, MCStringRef p_return, int p_call_type);
+
+// Call a Java method using the JNI
+MC_DLLEXPORT bool MCJavaCallJNIMethod(MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+
+// Get a Java method pointer for a given method in a class
+MC_DLLEXPORT void *MCJavaGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type);
+
+// Get a Java type code corresponding to the param string
+MC_DLLEXPORT int MCJavaMapTypeCode(MCStringRef p_param_string);
+
+// Get the name of a Java class from an instance of that class
+MC_DLLEXPORT bool MCJavaGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
+// Convert a Java object wrapping a jstring to a String Ref
+MC_DLLEXPORT bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string);
+// Convert a String Ref to a Java object wrapping a jstring
+MC_DLLEXPORT bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);
+// Convert a Java object wrapping a jByteArray to a Data Ref
+MC_DLLEXPORT bool MCJavaConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_data);
+// Convert a Data Ref to a Java object wrapping a jByteArray
+MC_DLLEXPORT bool MCJavaConvertDataRefToJByteArray(MCDataRef p_data, MCJavaObjectRef &r_object);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BOOLEAN DEFINITIONS
@@ -2015,7 +2050,8 @@ MC_DLLEXPORT MCStringRef MCSTR(const char *string);
 
 MC_DLLEXPORT const char *MCStringGetCString(MCStringRef p_string);
 MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
-
+MC_DLLEXPORT bool MCStringSubstringIsEqualToCString(MCStringRef string, MCRange p_range, const char *cstring, MCStringOptions options);
+    
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 MC_DLLEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
@@ -2313,6 +2349,7 @@ MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options);
 
 // Returns true if the substring is equal to the other, according to options
 MC_DLLEXPORT bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
@@ -2906,11 +2943,17 @@ MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 // Catch the current error code (on the current thread) if any and clear it.
 MC_DLLEXPORT bool MCErrorCatch(MCErrorRef& r_error);
 
+// Resets the error state on the current thread. This call is equivalent to:
+//     MCAutoErrorRef t_error;
+//     MCErrorCatach(&t_error);
+MC_DLLEXPORT void MCErrorReset(void);
+
 // Returns true if there is an error pending on the current thread.
 MC_DLLEXPORT bool MCErrorIsPending(void);
 
 // Returns any pending error (on the current thread) without clearing it.
 MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
+
 
 // Throw an out of memory error.
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);

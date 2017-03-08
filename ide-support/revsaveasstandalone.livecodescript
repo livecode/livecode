@@ -132,12 +132,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the short name of the topStack into pStack
    end if
    
-   -- Script only stacks can not store standalone settings so don't allow them as targets
-   if the scriptOnly of stack pStack then
-      answer error "Script only stacks are not currently supported as standalone mainstacks"
-      exit revSaveAsStandalone
-   end if
-   
    if the fileName of stack pStack = empty then
       put "edited" into gREVStackStatus[pStack]
    end if
@@ -2271,6 +2265,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          if the result is not empty then
             revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
          end if
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
@@ -2319,7 +2314,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
                revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
             end if
          end repeat
-         
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       default
          break

@@ -4440,9 +4440,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url);
 
@@ -4867,12 +4867,10 @@ void MCLegacySetMultiSpace(MCExecContext& ctxt, uinteger_t p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCIdeExecPutIntoMessageMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecEditScriptOfObjectMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecHideMessageBoxMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecShowMessageBoxMethodInfo;
 
-void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_at);
 void MCIdeExecHideMessageBox(MCExecContext& ctxt);
@@ -5123,6 +5121,7 @@ extern MCExecMethodInfo *kMCDebuggingSetDebugContextMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
+extern MCExecMethodInfo *kMCDebuggingExecPutIntoMessageMethodInfo;
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
@@ -5148,6 +5147,7 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value);
 void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingGetWatchedVariables(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 ///////////
 
@@ -5577,6 +5577,18 @@ void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled);
 void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props);
 
 void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern MCExecMethodInfo* kMCNFCGetIsNFCAvailable;
+extern MCExecMethodInfo* kMCNFCGetIsNFCEnabled;
+extern MCExecMethodInfo* kMCNFCExecEnableNFCDispatch;
+extern MCExecMethodInfo* kMCNFCExecDisableNFCDispatch;
+
+void MCNFCGetIsNFCAvailable(MCExecContext& ctxt);
+void MCNFCGetIsNFCEnabled(MCExecContext& ctxt);
+void MCNFCExecEnableNFCDispatch(MCExecContext& ctxt);
+void MCNFCExecDisableNFCDispatch(MCExecContext& ctxt);
 
 ////////////////////////////////////////////////////////////////////////////////
 
