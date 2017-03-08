@@ -505,6 +505,8 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+MCPlatformCoreRef MCplatform = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);

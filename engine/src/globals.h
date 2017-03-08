@@ -434,6 +434,9 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
+// Platform API
+extern MCPlatformCoreRef MCplatform;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HOOK REGISTRATION

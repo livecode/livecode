@@ -4,6 +4,7 @@
 #import <AppKit/NSSound.h>
 #import <AppKit/NSColorPanel.h>
 #import <AppKit/NSPrintInfo.h>
+#include <Carbon/Carbon.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +38,11 @@ class MCMacPlatformMenu;
     bool m_running : 1;
     
     NSMutableArray *m_pending_apple_events;
+    
+    MCPlatformCoreRef m_platform;
 }
+
+@property (nonatomic, assign) MCPlatformCoreRef platform;
 
 // Platform init / finit.
 - (void)initializeModules;
@@ -429,6 +434,34 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCAbortKeyThread: NSThread<NSPortDelegate>
+{
+    NSPort *m_termination_port;
+    BOOL m_is_running;
+    BOOL m_abort_key_pressed;
+    BOOL m_abort_key_checked;
+    BOOL m_current_period_needs_shift; // = false;
+    TISInputSourceRef m_current_input_source;
+    CGKeyCode m_current_period_keycode; // = 0xffff;
+}
+
+@property (nonatomic, assign) BOOL abortKeyChecked;
+@property (nonatomic, assign) BOOL abortKeyPressed;
+@property (nonatomic, assign) BOOL currentPeriodNeedsShift;
+@property (nonatomic, assign) TISInputSourceRef currentInputSource;
+@property (nonatomic, assign) CGKeyCode currentPeriodKeycode;
+
+- (void)main;
+- (void)terminate;
+
+- (void)handlePortMessage: (NSPortMessage *)message;
+
+@end;
+
+@compatibility_alias MCAbortKeyThread com_runrev_livecode_MCAbortKeyThread;
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 class MCMacPlatformSurface: public MCPlatformSurface
 {
@@ -748,6 +781,26 @@ private:
     PMPrintSession m_session;
     PMPrintSettings m_settings;
     PMPageFormat m_page_format;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformCore: public MCPlatformCore
+{
+public:
+    MCMacPlatformCore();
+    virtual ~MCMacPlatformCore(void);
+    
+    virtual int Run(int argc, char *argv[], char *envp[]);
+    
+    // Abort key
+    virtual bool InitializeAbortKey(void);
+    virtual void FinalizeAbortKey(void);
+    virtual bool GetAbortKeyPressed(void);
+private:
+    // Abort key
+    MCAbortKeyThread *m_abort_key_thread;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

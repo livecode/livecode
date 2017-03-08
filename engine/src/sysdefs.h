@@ -204,6 +204,7 @@ namespace MCPlatform {
     class Sound;
     class WindowMask;
     class PrintDialogSession;
+    class Core;
 } /* namespace MCPlatform */
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
@@ -213,6 +214,7 @@ typedef class MCPlatformPlayer *MCPlatformPlayerRef;
 typedef class MCPlatform::Cursor *MCPlatformCursorRef;
 typedef class MCPlatform::Menu *MCPlatformMenuRef;
 typedef class MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
+typedef class MCPlatform::Core *MCPlatformCoreRef;
 
 typedef void *MCColorTransformRef;
 

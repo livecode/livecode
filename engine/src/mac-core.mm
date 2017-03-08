@@ -178,6 +178,8 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 
 @implementation com_runrev_livecode_MCApplicationDelegate
 
+@synthesize platform=m_platform;
+
 //////////
 
 - (id)initWithArgc:(int)argc argv:(MCStringRef *)argv envp:(MCStringRef*)envp
@@ -196,6 +198,8 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
     
     m_pending_apple_events = [[NSMutableArray alloc] initWithCapacity: 0];
     
+    m_platform = nil;
+    
 	return self;
 }
 
@@ -204,14 +208,14 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 - (void)initializeModules
 {
 	MCPlatformInitializeColorTransform();
-	MCPlatformInitializeAbortKey();
+	m_platform->InitializeAbortKey();
     MCPlatformInitializeMenu();
 }
 
 - (void)finalizeModules
 {
     MCPlatformFinalizeMenu();
-	MCPlatformFinalizeAbortKey();
+	m_platform->FinalizeAbortKey();
 	MCPlatformFinalizeColorTransform();
 }
 
@@ -2001,89 +2005,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
-int platform_main(int argc, char *argv[], char *envp[])
-{
-	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
-	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
-		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
-			return -1;
-	
-	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
-	
-    s_callback_lock = [[NSLock alloc] init];
-    
-	// Create the normal NSApplication object.
-	NSApplication *t_application;
-	t_application = [com_runrev_livecode_MCApplication sharedApplication];
-	
-	// Register for reconfigurations.
-	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
-    
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
-		exit(-1);
-    
-	// On OSX, argv and envp are encoded as UTF8
-	MCStringRef *t_new_argv;
-	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
-	
-	for (int i = 0; i < argc; i++)
-	{
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
-	}
-	
-	MCStringRef *t_new_envp;
-	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
-	
-	int i = 0;
-	uindex_t t_envp_count = 0;
-	
-	while (envp[i] != NULL)
-	{
-		t_envp_count++;
-		uindex_t t_count = i;
-		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
-		i++;
-	}
-	
-	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
-	t_new_envp[i] = nil;
-	
-	// Setup our delegate
-	com_runrev_livecode_MCApplicationDelegate *t_delegate;
-	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
-	
-	// Assign our delegate
-	[t_application setDelegate: t_delegate];
-	
-	// Run the application - this never returns!
-	[t_application run];    
-	
-	for (i = 0; i < argc; i++)
-		MCValueRelease(t_new_argv[i]);
-	for (i = 0; i < t_envp_count; i++)
-		MCValueRelease(t_new_envp[i]);    
-	
-	MCMemoryDeleteArray(t_new_argv);
-	MCMemoryDeleteArray(t_new_envp);
-	
-	// Drain the autorelease pool.
-	[t_pool release];
-	
-    MCScriptFinalize();
-    MCModulesFinalize();
-	MCFinalize();
-	
-	return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 // MM-2014-07-31: [[ ThreadedRendering ]] Helper functions used to create an auto-release pool for each new thread.
 void *MCMacPlatfromCreateAutoReleasePool()
 {
@@ -2098,4 +2019,110 @@ void MCMacPlatformReleaseAutoReleasePool(void *p_pool)
     t_pool = (NSAutoreleasePool *) p_pool;
     [t_pool release];
 }
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
+
+
+MCMacPlatformCore::MCMacPlatformCore()
+: m_abort_key_thread(nil)
+{
+    
+}
+
+MCMacPlatformCore::~MCMacPlatformCore()
+{
+    if (m_abort_key_thread != nil)
+        [m_abort_key_thread release];
+}
+
+
+int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
+{
+    extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
+    if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
+        if (!MCS_mac_elevation_bootstrap_main(argc, argv))
+            return -1;
+    
+    NSAutoreleasePool *t_pool;
+    t_pool = [[NSAutoreleasePool alloc] init];
+    
+    s_callback_lock = [[NSLock alloc] init];
+    
+    // Create the normal NSApplication object.
+    NSApplication *t_application;
+    t_application = [com_runrev_livecode_MCApplication sharedApplication];
+    
+    // Register for reconfigurations.
+    CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
+    
+    if (!MCInitialize() || !MCSInitialize() ||
+        !MCModulesInitialize() || !MCScriptInitialize())
+        exit(-1);
+    
+    // On OSX, argv and envp are encoded as UTF8
+    MCStringRef *t_new_argv;
+    /* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
+    
+    for (int i = 0; i < argc; i++)
+    {
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+    }
+    
+    MCStringRef *t_new_envp;
+    /* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
+    
+    int i = 0;
+    uindex_t t_envp_count = 0;
+    
+    while (envp[i] != NULL)
+    {
+        t_envp_count++;
+        uindex_t t_count = i;
+        /* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
+        i++;
+    }
+    
+    /* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
+    t_new_envp[i] = nil;
+    
+    // Setup our delegate
+    com_runrev_livecode_MCApplicationDelegate *t_delegate;
+    t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
+    
+    [t_delegate setPlatform:this];
+    
+    // Assign our delegate
+    [t_application setDelegate: t_delegate];
+    
+    // Run the application - this never returns!
+    [t_application run];
+    
+    for (i = 0; i < argc; i++)
+        MCValueRelease(t_new_argv[i]);
+    for (i = 0; i < t_envp_count; i++)
+        MCValueRelease(t_new_envp[i]);
+    
+    MCMemoryDeleteArray(t_new_argv);
+    MCMemoryDeleteArray(t_new_envp);
+    
+    // Drain the autorelease pool.
+    [t_pool release];
+    
+    MCScriptFinalize();
+    MCModulesFinalize();
+    MCFinalize();
+    
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void)
+{
+    return MCPlatform::makeRef<MCMacPlatformCore>();
+}
+
 ////////////////////////////////////////////////////////////////////////////////

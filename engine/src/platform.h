@@ -468,6 +468,13 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef MCPlatform::Core *MCPlatformCoreRef;
+
+bool MCPlatformInitialize(void);
+void MCPlatformFinalize(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // System properties are settings that can be queried from the system.
 //
 // TODO-REVIEW: Perhaps these would be better classed as metrics?

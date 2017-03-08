@@ -34,10 +34,12 @@ extern void MCMacPlatformShowMenubar(void);
 
 extern MCPlatform::Ref<MCPlatformSound> MCMacPlatformCreateSound(void);
 
-extern MCPlatform::Ref<MCPlatformWindow> MCMacPlatformCreateWindow();
+extern MCPlatform::Ref<MCPlatformWindow> MCMacPlatformCreateWindow(void);
 
-extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask();
+extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask(void);
 
 extern void MCMacPlatformHideCursorUntilMouseMoves(void);
 
-extern MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession();
+extern MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession(void);
+
+extern MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void);

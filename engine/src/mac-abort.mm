@@ -66,32 +66,9 @@
 // keys being down it also sets the 's_abort_key_checked' flag to false. This can
 // then be picked up on the main thread to cause a tickle.
 
-static volatile bool s_abort_key_pressed = false;
-static volatile bool s_abort_key_checked = false;
-
-////////////////////////////////////////////////////////////////////////////////
-
-@interface com_runrev_livecode_MCAbortKeyThread: NSThread<NSPortDelegate>
-{
-	NSPort *m_termination_port;
-	BOOL m_is_running;
-}
-
-- (void)main;
-- (void)terminate;
-
-- (void)handlePortMessage: (NSPortMessage *)message;
-
-@end;
-
-@compatibility_alias MCAbortKeyThread com_runrev_livecode_MCAbortKeyThread;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef USE_EVENTTAP
-static TISInputSourceRef s_current_input_source = nil;
-static CGKeyCode s_current_period_keycode = 0xffff;
-static bool s_current_period_needs_shift = false;
 
 static unichar map_keycode_to_char(TISInputSourceRef p_input_source, CGKeyCode p_key_code, bool p_with_shift)
 {
@@ -134,7 +111,9 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 	if ((CGEventGetFlags(p_event) & kCGEventFlagMaskCommand) == 0)
 		return p_event;
 	
-	UniChar t_string[1];
+    MCAbortKeyThread * t_thread = (MCAbortKeyThread *)p_refcon;
+    
+    UniChar t_string[1];
 	UniCharCount t_length;
 	CGEventKeyboardGetUnicodeString(p_event, 1, &t_length, t_string);
 	if (t_length != 1)
@@ -143,7 +122,7 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 	if (t_string[0] != '.')
 		return p_event;
 	
-	s_abort_key_pressed = true;
+    [t_thread setAbortKeyPressed:true];
 	
 	return p_event;
 }
@@ -151,23 +130,25 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 
 static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
-	s_abort_key_checked = false;
-
+    MCAbortKeyThread * t_thread = (MCAbortKeyThread *)p_info;
+    
+    [t_thread setAbortKeyChecked:false];
+    
 	// Update our period key mapping if the input source has changed / hasn't
 	// been initialized.
 	TISInputSourceRef t_input_source;
 	t_input_source = TISCopyCurrentKeyboardInputSource();
-	if (t_input_source != s_current_input_source || s_current_input_source == nil)
+	if (t_input_source != t_thread.currentInputSource || t_thread.currentInputSource == nil)
 	{
-		if (s_current_input_source != nil)
-			CFRelease(s_current_input_source);
+		if (t_thread.currentInputSource != nil)
+			CFRelease(t_thread.currentInputSource);
 		
-		s_current_input_source = t_input_source;
-		s_current_period_keycode = 0xffff;
-		s_current_period_needs_shift = false;
-		
+        [t_thread setCurrentInputSource:t_input_source];
+        [t_thread setCurrentPeriodKeycode:0xffff];
+        [t_thread setCurrentPeriodNeedsShift:false];
+        
 		// If we have a valid keyboard input source then resolve '.'.
-		if (s_current_input_source != nil)
+		if (t_thread.currentInputSource != nil)
 		{
 			// Loop through all possible keycodes and map with no-shift and shift
 			// to see if we can find our '.' key.
@@ -177,26 +158,26 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 				t_char = map_keycode_to_char(t_input_source, i, false);
 				if (t_char == '.')
 				{
-					s_current_period_keycode = i;
-					s_current_period_needs_shift = false;
+					[t_thread setCurrentPeriodKeycode:i];
+					[t_thread setCurrentPeriodNeedsShift:false];
 					break;
 				}
 				
 				t_char = map_keycode_to_char(t_input_source, i, true);
 				if (t_char == '.')
 				{
-					s_current_period_keycode = i;
-					s_current_period_needs_shift = true;
-					break;
+                    [t_thread setCurrentPeriodKeycode:i];
+                    [t_thread setCurrentPeriodNeedsShift:true];
+                    break;
 				}
 			}
 		}
 	}
 	
 	// If we successfully found period - we must now check the state of the keys.
-	if (s_current_period_keycode != 0xffff)
+	if (t_thread.currentPeriodKeycode != 0xffff)
 	{
-		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, s_current_period_keycode))
+		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, t_thread.currentPeriodKeycode))
 			return;
 		
 		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x37 /* LeftCommand */) &&
@@ -207,10 +188,10 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		t_has_shift =
 				CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x38 /* LeftShift */) ||
 				CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x3C /* RightShift */);
-		if (s_current_period_needs_shift &&
+		if (t_thread.currentPeriodNeedsShift &&
 			!t_has_shift)
 			return;
-		if (!s_current_period_needs_shift &&
+		if (!t_thread.currentPeriodNeedsShift &&
 			t_has_shift)
 			return;
 		
@@ -220,11 +201,30 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		//   if the period keycode needs shift, then left shift or right shift is down
 		// i.e. We have detected Cmd-'.'
 		//
-		s_abort_key_pressed = true;
+        [t_thread setAbortKeyPressed:true];
 	}
 }
 
 @implementation com_runrev_livecode_MCAbortKeyThread
+
+@synthesize abortKeyChecked=m_abort_key_checked;
+@synthesize abortKeyPressed=m_abort_key_pressed;
+@synthesize currentPeriodNeedsShift=m_current_period_needs_shift;
+@synthesize currentInputSource=m_current_input_source;
+@synthesize currentPeriodKeycode=m_current_period_keycode;
+
+- (id) init
+{
+    if (self = [super init])
+    {
+        m_abort_key_pressed = false;
+        m_abort_key_checked = false;
+        m_current_period_needs_shift = false;
+        m_current_input_source = nil;
+        m_current_period_keycode = 0xffff;
+    }
+    return self;
+}
 
 - (void)main
 {
@@ -243,7 +243,7 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 	GetCurrentProcess(&t_psn);
 	
 	CFMachPortRef t_event_tap_port;
-	t_event_tap_port = CGEventTapCreateForPSN(&t_psn, kCGHeadInsertEventTap, kCGEventTapOptionDefault, CGEventMaskBit(kCGEventKeyDown), abort_key_callback, nil);
+	t_event_tap_port = CGEventTapCreateForPSN(&t_psn, kCGHeadInsertEventTap, kCGEventTapOptionDefault, CGEventMaskBit(kCGEventKeyDown), abort_key_callback, (void *)self);
 	
 	CFRunLoopSourceRef t_event_tap_source;
 	t_event_tap_source = CFMachPortCreateRunLoopSource(NULL, t_event_tap_port, 0);
@@ -251,7 +251,8 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 #endif
 	
 	CFRunLoopTimerRef t_runloop_timer;
-	t_runloop_timer = CFRunLoopTimerCreate(NULL, CFAbsoluteTimeGetCurrent(), 0.25, 0, 0, abort_key_timer_callback, nil);
+    CFRunLoopTimerContext context = { 0, self, NULL, NULL, NULL };
+    t_runloop_timer = CFRunLoopTimerCreate(NULL, CFAbsoluteTimeGetCurrent(), 0.25, 0, 0, abort_key_timer_callback, &context);
 	CFRunLoopAddTimer([t_loop getCFRunLoop], t_runloop_timer, kCFRunLoopDefaultMode);
 	
 	m_is_running = true;
@@ -291,11 +292,11 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPlatformGetAbortKeyPressed(void)
+bool MCMacPlatformCore::GetAbortKeyPressed(void)
 {
     // MW-2014-04-23: [[ Bug 12163 ]] If the abortKey hasn't been checked
     //   recently, then tickle the event queue so that we suppress the SPOD.
-	if (!s_abort_key_checked && MCMacPlatformIsEventCheckingEnabled())
+	if (!m_abort_key_thread.abortKeyChecked && MCMacPlatformIsEventCheckingEnabled())
 	{
 		NSDisableScreenUpdates();
 		[NSApp nextEventMatchingMask: 0
@@ -303,38 +304,36 @@ bool MCPlatformGetAbortKeyPressed(void)
 							  inMode: NSEventTrackingRunLoopMode
 							 dequeue: NO];
 		NSEnableScreenUpdates();
-		s_abort_key_checked = true;
+        [m_abort_key_thread setAbortKeyChecked:true];
 	}
 	
-	if (!s_abort_key_pressed)
+	if (!m_abort_key_thread.abortKeyPressed)
 		return false;
 	
-	s_abort_key_pressed = false;
+    [m_abort_key_thread setAbortKeyPressed:false];
 	
 	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCAbortKeyThread *s_abort_key_thread = nil;
-
-bool MCPlatformInitializeAbortKey(void)
+bool MCMacPlatformCore::InitializeAbortKey(void)
 {
 #ifdef USE_EVENTTAP
 	if (!AXAPIEnabled())
 		return true;
 #endif
 	
-	s_abort_key_thread = [[MCAbortKeyThread alloc] init];
-	[s_abort_key_thread start];
+	m_abort_key_thread = [[MCAbortKeyThread alloc] init];
+	[m_abort_key_thread start];
 	return true;
 }
 
-void MCPlatformFinalizeAbortKey(void)
+void MCMacPlatformCore::FinalizeAbortKey(void)
 {
-	[s_abort_key_thread terminate];
-	[s_abort_key_thread release];
-	s_abort_key_thread = nil;
+	[m_abort_key_thread terminate];
+	[m_abort_key_thread release];
+	m_abort_key_thread = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

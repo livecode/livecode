@@ -448,6 +448,27 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace MCPlatform {
+    
+    class Core: public Base
+    {
+    public:
+        virtual int Run(int argc, char *argv[], char *envp[]) = 0;
+    
+        // Abort key
+        virtual bool InitializeAbortKey(void) = 0;
+        virtual void FinalizeAbortKey(void) = 0;
+        virtual bool GetAbortKeyPressed(void) = 0;
+    };
+    
+    typedef Ref<Core> CoreRef;
+    
+} /* namespace MCPlatform */
+
+typedef MCPlatform::Core MCPlatformCore;
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 
 ////////////////////////////////////////////////////////////////////////////////
