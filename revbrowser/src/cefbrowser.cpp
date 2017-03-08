@@ -143,9 +143,20 @@ static bool __MCCefGetLibraryPath(char*& r_path)
     int t_retval = EXTERNAL_SUCCESS;
 
     void *t_module = nullptr;
-    LoadModuleByName("./CEF/libcef", &t_module, &t_retval);
-    if (t_retval != EXTERNAL_SUCCESS)
-        t_module = nullptr;
+    if (t_module == nullptr)
+    {
+        LoadModuleByName("./CEF/libcef", &t_module, &t_retval);
+        if (t_retval != EXTERNAL_SUCCESS)
+            t_module = nullptr;
+    }
+#if defined(WIN32) || defined(TARGET_PLATFORM_LINUX)
+    if (t_module == nullptr)
+    {
+        LoadModuleByName("./Externals/CEF/libcef", &t_module, &t_retval);
+        if (t_retval != EXTERNAL_SUCCESS)
+            t_module = nullptr;
+    }
+#endif
 
     char *t_module_path =
         t_module != nullptr ? CopyNativePathOfModule(t_module, &t_retval)
