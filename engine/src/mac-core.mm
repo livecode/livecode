@@ -2005,22 +2005,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Helper functions used to create an auto-release pool for each new thread.
-void *MCMacPlatfromCreateAutoReleasePool()
-{
-    NSAutoreleasePool *t_pool;
-    t_pool = [[NSAutoreleasePool alloc] init];
-    return (void *) t_pool;
-}
-
-void MCMacPlatformReleaseAutoReleasePool(void *p_pool)
-{
-    NSAutoreleasePool *t_pool;
-    t_pool = (NSAutoreleasePool *) p_pool;
-    [t_pool release];
-}
-////////////////////////////////////////////////////////////////////////////////
-
 extern "C" bool MCModulesInitialize(void);
 extern "C" void MCModulesFinalize(void);
 
