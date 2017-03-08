@@ -646,15 +646,6 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
-NSMenu *MCMacPlatformGetIconMenu(void);
-
-void MCMacPlatformLockMenuSelect(void);
-void MCMacPlatformUnlockMenuSelect(void);
-// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
-bool MCMacPlatformWasShadowItemSelected(void);
-
-bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
-
 void MCMacPlatformResetCursor(void);
 
 void MCMacPlatformGetGlobalVolume(double& r_volume);
@@ -790,6 +781,18 @@ public:
     virtual MCPlatformMenuRef CreateMenu(void);
     virtual bool InitializeMenu(void);
     virtual void FinalizeMenu(void);
+    virtual void ShowMenubar(void);
+    virtual void HideMenubar(void);
+    virtual void SetMenubar(MCPlatformMenuRef p_menu);
+    virtual MCPlatformMenuRef GetMenubar(void);
+    virtual void SetIconMenu(MCPlatformMenuRef p_menu);
+    virtual void SaveQuittingState();
+    virtual void PopQuittingState();
+    virtual bool IsInQuittingState(void);
+    virtual void LockMenuSelect(void);
+    virtual void UnlockMenuSelect(void);
+    virtual NSMenu *GetIconMenu(void);
+    virtual bool MapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
     
     virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message);
     

@@ -468,7 +468,18 @@ namespace MCPlatform {
         virtual MCPlatformMenuRef CreateMenu(void) = 0;
         virtual bool InitializeMenu(void) = 0;
         virtual void FinalizeMenu(void) = 0;
+        virtual void ShowMenubar(void) = 0;
+        virtual void HideMenubar(void) = 0;
+        virtual void SetMenubar(MCPlatformMenuRef p_menu) = 0;
+        virtual MCPlatformMenuRef GetMenubar(void) = 0;
+        virtual void SetIconMenu(MCPlatformMenuRef p_menu) = 0;
+        virtual void SaveQuittingState() = 0;
+        virtual void PopQuittingState() = 0;
+        virtual bool IsInQuittingState(void) = 0;
+        virtual void LockMenuSelect(void) = 0;
+        virtual void UnlockMenuSelect(void) = 0;
         
+        // Dialogs
         virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message) = 0;
     
         // Windows

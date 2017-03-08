@@ -424,7 +424,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 // Dock menu handling.
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
-	return MCMacPlatformGetIconMenu();
+	return static_cast<MCMacPlatformCore *>(m_platform) -> GetIconMenu();
 }
 
 //////////

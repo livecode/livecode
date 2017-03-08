@@ -357,7 +357,7 @@ enum MCShadowedItemTags
 uint32_t s_quitting_state_count = 0;
 uint8_t *s_quitting_states;
 
-void MCMacPlatformSaveQuittingState()
+void MCMacPlatformCore::SaveQuittingState()
 {
     MCMemoryReallocate(s_quitting_states, s_quitting_state_count + 1, s_quitting_states);
     s_quitting_states[s_quitting_state_count] = s_quit_selected;
@@ -366,7 +366,7 @@ void MCMacPlatformSaveQuittingState()
     s_quit_selected = false;
 }
 
-void MCMacPlatformPopQuittingState()
+void MCMacPlatformCore::PopQuittingState()
 {
     s_quit_selected = s_quitting_states[s_quitting_state_count - 1];
     
@@ -377,7 +377,7 @@ void MCMacPlatformPopQuittingState()
 // SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item clicked was a shadowed item.
 // SN-2014-12-16: [[ Bug 14185 ]] Name changed as it only returns whether a 'Quit' item
 // has been selected.
-bool MCMacPlatformIsInQuittingState(void)
+bool MCMacPlatformCore::IsInQuittingState(void)
 {
 	bool t_occured;
 	t_occured = s_quit_selected;
@@ -385,12 +385,12 @@ bool MCMacPlatformIsInQuittingState(void)
 	return t_occured;
 }
 
-void MCMacPlatformLockMenuSelect(void)
+void MCMacPlatformCore::LockMenuSelect(void)
 {
 	s_menu_select_lock += 1;
 }
 
-void MCMacPlatformUnlockMenuSelect(void)
+void MCMacPlatformCore::UnlockMenuSelect(void)
 {
 	s_menu_select_lock -= 1;
 }
@@ -409,15 +409,18 @@ void MCMacPlatformUnlockMenuSelect(void)
 	if (![[[event window] delegate] isKindOfClass: [MCWindowDelegate class]])
         return [super performKeyEquivalent: event];
     
+    MCMacPlatformCore * t_platform =
+        static_cast<MCMacPlatformCore *>([((MCMenuDelegate*)[self delegate]) platformMenuRef] -> GetPlatform());
+    
     // SN-2014-12-16; [[ Bug 14185 ]] We want to store the previous state, as when using answer
     //  for example, we still want the key event to be processed.
-    MCMacPlatformSaveQuittingState();
+    t_platform -> SaveQuittingState();
     
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
-	MCMacPlatformLockMenuSelect();
+	t_platform -> LockMenuSelect();
 	t_key_equiv = [super performKeyEquivalent: event];
-	MCMacPlatformUnlockMenuSelect();
+	t_platform -> UnlockMenuSelect();
 
     BOOL t_force_keypress;
     t_force_keypress = NO;
@@ -435,14 +438,14 @@ void MCMacPlatformUnlockMenuSelect(void)
     //  and that Cocoa will stop looking for key equivalent amongst the application's menus
     //  Calling MCMacPlatformWasShadowItemSelected here ensure that the state is reset for each event.
     // SN-2014-12-16; [[ Bug 14185 ]] Name changed as we only check whether a 'Quit' item was selected.
-    if (MCMacPlatformIsInQuittingState())
+    if (t_platform -> IsInQuittingState())
     {
-        MCMacPlatformPopQuittingState();
+        t_platform -> PopQuittingState();
         return YES;
     }
     
     // SN-2014-12-16: [[ Bug 14185 ]] Pop the last state saved.
-    MCMacPlatformPopQuittingState();
+    t_platform -> PopQuittingState();
     
     // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
     //   a keypress so the engine can handle it. Otherwise we return NO and the
@@ -717,7 +720,7 @@ void MCMacPlatformMenu::SetItemProperty(uindex_t p_index, MCPlatformMenuItemProp
                 }
                 
 				SEL t_selector;
-				if (MCMacPlatformMapMenuItemActionToSelector(t_action, t_selector))
+				if (static_cast<MCMacPlatformCore *>(m_platform) -> MapMenuItemActionToSelector(t_action, t_selector))
 				{
 					[t_item setAction: t_selector];
 					[t_item setTarget: nil];
@@ -978,17 +981,17 @@ void MCMacPlatformMenu::StopUsingAsMenubar(void)
 	is_menubar = false;
 }
 
-void MCMacPlatformShowMenubar(void)
+void MCMacPlatformCore::ShowMenubar(void)
 {
     [NSMenu setMenuBarVisible:YES];
 }
 
-void MCMacPlatformHideMenubar(void)
+void MCMacPlatformCore::HideMenubar(void)
 {
     [NSMenu setMenuBarVisible:NO];
 }
 
-void MCMacPlatformSetMenubar(MCPlatformMenuRef p_menu)
+void MCMacPlatformCore::SetMenubar(MCPlatformMenuRef p_menu)
 {
 	if (p_menu == s_menubar)
 		return;
@@ -1014,7 +1017,7 @@ void MCMacPlatformSetMenubar(MCPlatformMenuRef p_menu)
 	}
 }
 
-MCPlatformMenuRef MCMacPlatformGetMenubar(void)
+MCPlatformMenuRef MCMacPlatformCore::GetMenubar(void)
 {
 	return s_menubar;
 }
@@ -1032,7 +1035,7 @@ MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 
 static MCMacPlatformMenu * s_icon_menu = nil;
 
-NSMenu *MCMacPlatformGetIconMenu(void)
+NSMenu *MCMacPlatformCore::GetIconMenu(void)
 {
 	if (s_icon_menu != nil)
 		MCPlatformCallbackSendMenuUpdate(s_icon_menu);
@@ -1043,7 +1046,7 @@ NSMenu *MCMacPlatformGetIconMenu(void)
 	return nil;
 }
 
-void MCMacPlatformSetIconMenu(MCPlatformMenuRef p_menu)
+void MCMacPlatformCore::SetIconMenu(MCPlatformMenuRef p_menu)
 {
 	if (s_icon_menu != nil)
         s_icon_menu->Release();
@@ -1066,7 +1069,7 @@ static struct { MCPlatformMenuItemAction action; SEL selector; } s_menu_item_act
 	{ kMCPlatformMenuItemActionSelectAll, @selector(selectAll:) },
 };
 
-bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector)
+bool MCMacPlatformCore::MapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector)
 {
 	for(uindex_t i = 0; i < sizeof(s_menu_item_action_map) / sizeof(s_menu_item_action_map[0]); i++)
 		if (action == s_menu_item_action_map[i] . action)
@@ -1085,7 +1088,7 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 bool MCMacPlatformCore::InitializeMenu(void)
 {
     MCPlatformMenuRef t_menubar = CreateMenu();
-    MCMacPlatformSetMenubar(t_menubar);
+    SetMenubar(t_menubar);
     return true;
 }
 

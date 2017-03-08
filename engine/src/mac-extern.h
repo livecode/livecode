@@ -25,12 +25,6 @@ extern MCPlatform::Ref<MCPlatformCursor> MCMacPlatformCreateCursor(void);
 extern MCPlatform::Ref<MCPlatformLoadedFont>
 MCMacPlatformCreateLoadedFont();
 
-extern void MCMacPlatformSetIconMenu(MCPlatformMenuRef p_menu);
-extern void MCMacPlatformSetMenubar(MCPlatformMenuRef p_menu);
-extern MCPlatform::Ref<MCPlatformMenu> MCMacPlatformGetMenubar(void);
-extern void MCMacPlatformHideMenubar(void);
-extern void MCMacPlatformShowMenubar(void);
-
 extern MCPlatform::Ref<MCPlatformSound> MCMacPlatformCreateSound(void);
 
 extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask(void);

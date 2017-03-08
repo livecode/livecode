@@ -92,29 +92,29 @@ bool MCPlatformPopUpMenu(MCPlatformMenuRef p_menu, MCPlatformWindowRef p_window,
 
 void MCPlatformShowMenubar(void)
 {
-    MCMacPlatformShowMenubar();
+    MCplatform -> ShowMenubar();
 }
 
 void MCPlatformHideMenubar(void)
 {
-    MCMacPlatformHideMenubar();
+    MCplatform -> HideMenubar();
 }
 
 void MCPlatformSetMenubar(MCPlatformMenuRef p_menu)
 {
-    MCMacPlatformSetMenubar(p_menu);
+    MCplatform -> SetMenubar(p_menu);
 }
 
 void MCPlatformGetMenubar(MCPlatformMenuRef& r_menu)
 {
-    r_menu = MCMacPlatformGetMenubar().unsafeTake();
+    r_menu = MCplatform -> GetMenubar();
 }
 
 //////////
 
 void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
 {
-    MCMacPlatformSetIconMenu(p_menu);
+    MCplatform -> SetIconMenu(p_menu);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
