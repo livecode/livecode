@@ -14,14 +14,14 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "globdefs.h"
+#include "imagebitmap.h"
+#include "region.h"
+
 #include <Cocoa/Cocoa.h>
 #if defined(FEATURE_QUICKTIME)
 #   include <QTKit/QTKit.h>
 #endif
-
-#include "globdefs.h"
-#include "imagebitmap.h"
-#include "region.h"
 
 #include "platform.h"
 #include "platform-internal.h"
