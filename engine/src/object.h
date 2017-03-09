@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
+#include <algorithm>
+
 // Disabled until C++11 support is available on all platforms
 #if 0
 #include <type_traits>
@@ -292,9 +294,7 @@ public:
     
     Handle(Handle&& p_handle) : m_proxy(nullptr)
     {
-        /* TODO[C++11] std::swap */
-        m_proxy = p_handle.m_proxy;
-        p_handle.m_proxy = nullptr;
+        std::swap(m_proxy, p_handle.m_proxy);
     }
 
     Handle(decltype(nullptr)) :
@@ -323,9 +323,7 @@ public:
     Handle& operator=(Handle&& p_handle)
     {
         Set(nullptr);
-        /* TODO[C++11] std::swap */
-        m_proxy = p_handle.m_proxy;
-        p_handle.m_proxy = nullptr;
+        std::swap(m_proxy, p_handle.m_proxy);
         return *this;
     }
 
