@@ -582,6 +582,7 @@ enum Functions {
 	F_ARRAY_DECODE,
 	F_RANDOM_BYTES,
 	F_SHA1_DIGEST,
+    F_MESSAGE_DIGEST,
 	
 	// MW-2012-10-08: [[ HitTest ]] New functions for returning control at a point.
 	F_CONTROL_AT_LOC,
