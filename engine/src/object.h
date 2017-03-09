@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
-#include <algorithm>
+#include <utility>
 
 // Disabled until C++11 support is available on all platforms
 #if 0
@@ -269,38 +269,29 @@ class MCObjectProxy<T>::Handle
 {
 public:
     
-    Handle() :
-      m_proxy(nullptr)
-    {
-    }
+	constexpr Handle() = default;
     
-    Handle(MCObjectProxy* p_proxy) :
-      m_proxy(nullptr)
+    Handle(MCObjectProxy* p_proxy)
     {
         Set(p_proxy);
     }
     
-    explicit Handle(const T* p_object) :
-      m_proxy(nullptr)
+    explicit Handle(const T* p_object)
     {
         Set(p_object);
     }
     
-    Handle(const Handle& p_handle) :
-      m_proxy(nullptr)
+    Handle(const Handle& p_handle)
     {
         Set(p_handle.m_proxy);
     }
     
-    Handle(Handle&& p_handle) : m_proxy(nullptr)
+    Handle(Handle&& p_handle)
     {
         std::swap(m_proxy, p_handle.m_proxy);
     }
 
-    Handle(decltype(nullptr)) :
-      m_proxy(nullptr)
-    {
-    }
+    constexpr Handle(decltype(nullptr)) {}
     
     Handle& operator= (MCObjectProxy* p_proxy)
     {
@@ -452,7 +443,7 @@ public:
 private:
     
     // The proxy for the object this is a handle to
-    MCObjectProxy*  m_proxy;
+    MCObjectProxy*  m_proxy = nullptr;
     
     void Set(MCObjectProxy* p_proxy)
     {
