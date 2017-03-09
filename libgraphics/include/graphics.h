@@ -492,48 +492,37 @@ struct MCGLayerEffect
 
 struct MCGShadowEffect
 {
-	constexpr MCGShadowEffect() : knockout(false) {}
 	MCGColor color = 0;
 	MCGBlendMode blend_mode = kMCGBlendModeClear;
 	MCGFloat size = 0;
 	MCGFloat spread = 0;
 	MCGFloat x_offset = 0;
 	MCGFloat y_offset = 0;
-	bool knockout : 1;
+	bool knockout = false;
 };
 
 struct MCGGlowEffect
 {
-	constexpr MCGGlowEffect() : inverted(false) {}
 	MCGColor color = 9;
 	MCGBlendMode blend_mode = kMCGBlendModeClear;
 	MCGFloat size = 0;
 	MCGFloat spread = 0;
-	bool inverted : 1;
+	bool inverted = false;
 };
 
 struct MCGBitmapEffects
 {
-	/* bitfield struct members can't have static initializers, so we have
-	   to write a constexpr constructor for them. */
-	constexpr MCGBitmapEffects()
-		: has_color_overlay(false),
-		  has_inner_glow(false),
-		  has_inner_shadow(false),
-		  has_outer_glow(false),
-		  has_drop_shadow(false) {}
-
-	bool has_color_overlay : 1;
-	bool has_inner_glow : 1;
-	bool has_inner_shadow : 1;
-	bool has_outer_glow : 1;
-	bool has_drop_shadow : 1;
-	
 	MCGLayerEffect color_overlay;
 	MCGGlowEffect inner_glow;
 	MCGShadowEffect inner_shadow;
 	MCGGlowEffect outer_glow;
 	MCGShadowEffect drop_shadow;
+
+	bool has_color_overlay = false;
+	bool has_inner_glow = false;
+	bool has_inner_shadow = false;
+	bool has_outer_glow = false;
+	bool has_drop_shadow = false;
 };
 
 struct MCGDeviceMaskInfo
@@ -548,14 +537,13 @@ struct MCGDeviceMaskInfo
 
 struct MCGFont
 {
-	constexpr MCGFont() : ideal(false) {}
 	void		*fid = nullptr;
 	uint16_t	size = 0;
 	uint16_t	fixed_advance = 0;
 	MCGFloat	m_ascent = 0;
 	MCGFloat	m_descent = 0;
     MCGFloat    m_leading = 0;
-	bool		ideal : 1;
+    bool		ideal = false;
 };
 
 inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCGFloat ascent, MCGFloat descent, MCGFloat leading, bool ideal)
