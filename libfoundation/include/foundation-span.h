@@ -211,8 +211,7 @@ MCMakeSpan(ElementType *p_ptr,
 	return MCSpan<ElementType>(p_ptr, p_count);
 }
 
-/* TODO[C++11] The default value for ElementType should be byte_t */
-template <typename ElementType>
+template <typename ElementType = byte_t>
 MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
 {
 	MCAssert(MCDataGetLength(p_data) % sizeof(ElementType) == 0);
