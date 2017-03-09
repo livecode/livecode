@@ -97,13 +97,13 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     }
 	
 	MCExecValue t_dst;
-    MCAutoPointer<MCContainer> t_dst_container;
+    MCContainer t_dst_container;
 	if (destvar != nil)
 	{
         bool t_success;
         if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
+                            && t_dst_container.eval_ctxt(ctxt, t_dst);
         else
         {
             destvar -> eval_ctxt(ctxt, t_dst);
@@ -164,7 +164,7 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 		{
             bool t_success;
             if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
+                t_success = t_dst_container.give_value(ctxt, t_result);
             else
                 t_success = destvar -> give_value(ctxt, t_result);
             
@@ -259,13 +259,13 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
     }
 	
 	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
+	MCContainer t_dst_container;
 	if (destvar != nil)
 	{
         bool t_success;
         if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
+                            && t_dst_container.eval_ctxt(ctxt, t_dst);
         else
         {
             destvar -> eval_ctxt(ctxt, t_dst);
@@ -326,7 +326,7 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
             bool t_success;
             
             if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
+                t_success = t_dst_container.give_value(ctxt, t_result);
             else
                 t_success = destvar -> give_value(ctxt, t_result);
             
@@ -425,13 +425,13 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
     }
 	
 	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
+	MCContainer t_dst_container;
 	if (destvar != nil)
 	{
         bool t_success;
         if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
+                            && t_dst_container.eval_ctxt(ctxt, t_dst);
         else
         {
             destvar -> eval_ctxt(ctxt, t_dst);
@@ -492,7 +492,7 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
             bool t_success;
             
             if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
+                t_success = t_dst_container.give_value(ctxt, t_result);
             else
                 t_success = destvar -> give_value(ctxt, t_result);
             
@@ -591,13 +591,13 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
     }
 	
 	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
+	MCContainer t_dst_container;
 	if (destvar != nil)
 	{
         bool t_success;
         if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
+                            && t_dst_container.eval_ctxt(ctxt, t_dst);
         else
         {
             destvar -> eval_ctxt(ctxt, t_dst);
@@ -658,7 +658,7 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
             bool t_success;
             
             if (destvar -> needsContainer())
-                t_success =  t_dst_container -> give_value(ctxt, t_result);
+                t_success =  t_dst_container.give_value(ctxt, t_result);
             else
                 t_success = destvar -> give_value(ctxt, t_result);
             
@@ -805,15 +805,15 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
             return;
 	}
 
-	MCAutoPointer<MCContainer> t_container;
+	MCContainer t_container;
     MCAutoValueRef t_container_value;
-    if (!destvar -> evalcontainer(ctxt, &t_container))
+    if (!destvar -> evalcontainer(ctxt, t_container))
 	{
         ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
         return;
     }
 
-    if (!t_container -> eval(ctxt, &t_container_value))
+    if (!t_container.eval(ctxt, &t_container_value))
     {
         ctxt . Throw();
         return;
@@ -841,7 +841,7 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 			MCArraysExecCombineAsSet(ctxt, *t_array, *t_element_del, &t_string);
 
         if (!ctxt . HasError())
-            t_container -> set(ctxt, *t_string);
+            t_container.set(ctxt, *t_string);
 	}
 	else
 	{
@@ -861,7 +861,7 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 			MCArraysExecSplitAsSet(ctxt, *t_string, *t_element_del, &t_array);
 
 		if (!ctxt . HasError())
-            t_container -> set(ctxt, *t_array);
+            t_container.set(ctxt, *t_array);
     }
 }
 
@@ -960,15 +960,15 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . EvalExprAsValueRef(source, EE_ARRAYOP_BADEXP, &t_src))
         return;
     
-	MCAutoPointer<MCContainer> t_container;
-    if (!destvar -> evalcontainer(ctxt, &t_container))
+	MCContainer t_container;
+    if (!destvar -> evalcontainer(ctxt, t_container))
 	{
         ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
         return;
 	}
 
     MCAutoValueRef t_dst;
-    if (!t_container -> eval(ctxt, &t_dst))
+    if (!t_container.eval(ctxt, &t_dst))
         return;
 
     MCAutoValueRef t_dst_value;
@@ -990,7 +990,7 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     }
 
 	if (!ctxt . HasError())
-        t_container -> set(ctxt, *t_dst_value);
+        t_container.set(ctxt, *t_dst_value);
 }
 
 void MCSetOp::compile(MCSyntaxFactoryRef ctxt)

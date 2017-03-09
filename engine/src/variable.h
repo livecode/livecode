@@ -281,6 +281,14 @@ public:
 class MCContainer
 {
 public:
+    MCContainer(void)
+        : m_variable(nullptr),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
 	~MCContainer(void);
 
 	//
@@ -308,9 +316,9 @@ public:
         r_length = m_length;
     }
 
-	static bool createwithvariable(MCVariable *var, MCContainer*& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer*& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container);
+	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
+	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
+    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
     
     MCVariable *getvar()
     {
@@ -391,7 +399,7 @@ public:
     bool needsContainer(void) const {return dimensions != 0;}
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-    bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
+    virtual bool evalcontainer(MCExecContext &ctxt, MCContainer& r_container);
     virtual MCVariable *evalvar(MCExecContext& ctxt);
 	
 	virtual void compile(MCSyntaxFactoryRef);
@@ -419,7 +427,7 @@ private:
     MCVariable *fetchvar(MCExecContext& ctxt);
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
-    bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
+    bool resolve(MCExecContext& ctxt, MCContainer& r_container);
     
     void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
 };
@@ -456,7 +464,7 @@ public:
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
     virtual MCVariable *evalvar(MCExecContext& ctxt);
 };
 

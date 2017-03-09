@@ -149,9 +149,9 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	while (tptr != NULL)
 	{
         // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCContainer *t_container;
-        if (tptr -> evalcontainer(ctxt, t_container))
-            tptr -> set_argument_container(t_container);
+        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+        if (tptr -> evalcontainer(ctxt, **t_container))
+            tptr -> set_argument_container(t_container.Release());
         else
         {
             tptr -> clear_argument();

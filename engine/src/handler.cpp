@@ -358,8 +358,9 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 				}
                 
                 MCVariable *t_new_var;
+                /* UNCHECKED */ newparams[i] = new(nothrow) MCContainer;
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
-                /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
+                /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, *newparams[i]);
                 
 				newparams[i]->give_value(ctxt, t_value);
 			}
@@ -379,8 +380,9 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 				break;
 			}
             MCVariable *t_new_var;
+            /* UNCHECKED */ newparams[i] = new(nothrow) MCContainer;
             /* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
-            /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
+            /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, *newparams[i]);
 		}
 	}
 	if (err)

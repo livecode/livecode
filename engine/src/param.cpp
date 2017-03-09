@@ -144,7 +144,7 @@ bool MCParameter::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     return true;
 }
 
-bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
+bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer& r_container)
 {
     if (exp == NULL)
         return false;

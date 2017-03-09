@@ -339,14 +339,14 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             {
                 // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
                 // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-                MCAutoPointer<MCContainer> t_container;
-                if (!t_params->evalcontainer(ctxt, &t_container))
+                MCContainer t_container;
+                if (!t_params->evalcontainer(ctxt, t_container))
                 {
                     ctxt . LegacyThrow(EE_BINARYD_BADDEST);
                     return;
                 }
                 
-                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+                /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             }
             else
             {
@@ -1363,14 +1363,14 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         {
             // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
             // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-            MCAutoPointer<MCContainer> t_container;
-            if (!t_result_params->evalcontainer(ctxt, &t_container))
+            MCContainer t_container;
+            if (!t_result_params->evalcontainer(ctxt, t_container))
             {
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
 
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+            /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             
             t_result_params = t_result_params->getnext();
         }
@@ -2518,11 +2518,11 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(key, EE_QUERYREGISTRY_BADEXP, &t_key))
         return;
 
-	MCAutoPointer<MCContainer> t_container;
+    MCContainer t_container;
     MCAutoStringRef t_type;
 	if (type != NULL)
 	{
-		if (!type -> evalcontainer(ctxt, &t_container))
+		if (!type -> evalcontainer(ctxt, t_container))
 		{
 			ctxt . LegacyThrow(EE_QUERYREGISTRY_BADDEST);
 			return;
@@ -2539,8 +2539,8 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	if (!ctxt.HasError())
 	{
-		if (*t_container != nil)
-			/* UNCHECKED */ t_container->set_valueref(*t_type);
+        if (type != NULL)
+            /* UNCHECKED */ t_container.set_valueref(*t_type);
 	}
 }
 

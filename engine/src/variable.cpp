@@ -1186,27 +1186,25 @@ bool MCContainer::set_real(double p_real)
 	return set_valueref(*t_number);
 }
 
-bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer*& r_container)
+bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer& r_container)
 {
-	r_container = new (nothrow) MCContainer;
-	r_container -> m_variable = p_var;
-	r_container -> m_length = 0;
-    r_container -> m_path = nil;
-	r_container -> m_case_sensitive = false;
+	r_container.m_variable = p_var;
+	r_container.m_length = 0;
+    r_container.m_path = nil;
+	r_container.m_case_sensitive = false;
 	return true;
 }
 
-bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container)
+bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container)
 {
-	r_container = new (nothrow) MCContainer;
-	r_container -> m_variable = p_var;
-	r_container -> m_path = p_path;
-	r_container -> m_length = p_length;
-	r_container -> m_case_sensitive = false;
+	r_container.m_variable = p_var;
+	r_container.m_path = p_path;
+	r_container.m_length = p_length;
+	r_container.m_case_sensitive = false;
 	return true;
 }
 
-bool MCContainer::copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container)
+bool MCContainer::copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container)
 {
 	return createwithpath(p_container -> m_variable, p_path, p_length, r_container);
 }
@@ -1280,16 +1278,16 @@ void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
     else
     {
-        MCAutoPointer<MCContainer> t_container;
-        if (resolve(ctxt, &t_container)
-                && t_container -> eval_ctxt(ctxt, r_value))
+        MCContainer t_container;
+        if (resolve(ctxt, t_container)
+                && t_container.eval_ctxt(ctxt, r_value))
             return;
     }
     
     ctxt . Throw();
 }
 
-bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
 	if (dimensions == 0 && !isparam)
         return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
@@ -1341,11 +1339,11 @@ bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingSty
         return t_resolved_ref -> set(ctxt, p_value, p_setting);
 	}
     
-	MCAutoPointer<MCContainer> t_container;
-    if (!resolve(ctxt, &t_container))
+	MCContainer t_container;
+    if (!resolve(ctxt, t_container))
 		return false;
 	
-	return t_container -> set(ctxt, p_value, p_setting);
+	return t_container.set(ctxt, p_value, p_setting);
 }
 
 bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
@@ -1359,11 +1357,11 @@ bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSe
         return t_resolved_ref -> give_value(ctxt, p_value, p_setting);
 	}
     
-	MCAutoPointer<MCContainer> t_container;
-    if (!resolve(ctxt, &t_container))
+    MCContainer t_container;
+    if (!resolve(ctxt, t_container))
 		return false;
 	
-    return t_container -> give_value(ctxt, p_value, p_setting);
+    return t_container.give_value(ctxt, p_value, p_setting);
 }
 
 bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
@@ -1377,11 +1375,11 @@ bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_
         return t_resolved_ref -> replace(ctxt, p_replacement, p_range);
     }
     
-    MCAutoPointer<MCContainer> t_container;
-    if (!resolve(ctxt, &t_container))
+    MCContainer t_container;
+    if (!resolve(ctxt, t_container))
         return false;
     
-    return t_container -> replace(ctxt, p_replacement, p_range);
+    return t_container.replace(ctxt, p_replacement, p_range);
 }
 
 bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
@@ -1395,11 +1393,11 @@ bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
         return t_resolved_ref -> deleterange(ctxt, p_range);
     }
     
-    MCAutoPointer<MCContainer> t_container;
-    if (!resolve(ctxt, &t_container))
+    MCContainer t_container;
+    if (!resolve(ctxt, t_container))
         return false;
     
-    return t_container -> deleterange(ctxt, p_range);
+    return t_container.deleterange(ctxt, p_range);
 }
 
 Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
@@ -1497,15 +1495,15 @@ bool MCVarref::dofree(MCExecContext& ctxt)
 		return t_var -> remove(ctxt);
 	}
 	
-	MCAutoPointer<MCContainer> t_container;
-    if (!resolve(ctxt, &t_container))
+	MCContainer t_container;
+    if (!resolve(ctxt, t_container))
         return false;
     
-	return t_container -> remove(ctxt);
+	return t_container.remove(ctxt);
 }
 
 // Resolve references to the appropriate element refered to by this Varref.
-bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
 {
     if (dimensions == 0 && !isparam)
         return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
@@ -1651,7 +1649,7 @@ void MCDeferredVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         ctxt . Throw();
 }
 
-bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
+bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer& r_container)
 {
     bool t_error = false;
     if (ref -> isdeferred())

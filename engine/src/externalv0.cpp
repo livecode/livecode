@@ -411,10 +411,10 @@ static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable
 	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
     {
         // SN-2014-10-21: [[ Bug 13728 ]] The variable might be held in a container.
-        MCAutoPointer<MCContainer> t_container;
+        MCContainer t_container;
         
-        if (!newvar->evalcontainer(*MCECptr, &t_container) ||
-                (*tvar = t_container->getvar()) == NULL)
+        if (!newvar->evalcontainer(*MCECptr, t_container) ||
+                (*tvar = t_container.getvar()) == NULL)
         {
             delete newvar;
             return ES_ERROR;
