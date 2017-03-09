@@ -635,16 +635,6 @@ void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, M
 
 static NSEvent *s_last_mouse_event = nil;
 
-struct MCModalSession
-{
-	NSModalSession session;
-	MCMacPlatformWindow *window;
-	bool is_done;
-};
-
-static MCModalSession *s_modal_sessions = nil;
-static uindex_t s_modal_session_count = 0;
-
 void MCMacPlatformCore::BreakWait(void)
 {
     [m_callback_lock lock];
@@ -740,7 +730,7 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 	m_in_blocking_wait = true;
 	
 	bool t_modal;
-	t_modal = s_modal_session_count > 0;
+	t_modal = m_modal_session_count > 0;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -761,8 +751,8 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
     // Run the modal session, if it has been created yet (it might not if this
     // wait was triggered by reacting to an event caused as part of creating
     // the modal session, e.g. when losing window focus).
-	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
-		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+	if (t_modal && m_modal_sessions[m_modal_session_count - 1].session != nil)
+		[NSApp runModalSession: m_modal_sessions[m_modal_session_count - 1] . session];
     
 	m_in_blocking_wait = false;
 
@@ -792,45 +782,45 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 }
 
 
-void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
+void MCMacPlatformCore::BeginModalSession(MCMacPlatformWindow *p_window)
 {
     // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
     //   mouse state - i.e. send a mouse release if in mouseDown and send a mouseLeave for the
     //   current mouse window.
 	MCMacPlatformSyncMouseBeforeDragging();
     
-	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
+	/* UNCHECKED */ MCMemoryResizeArray(m_modal_session_count + 1, m_modal_sessions, m_modal_session_count);
 	
-	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
-	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
+	m_modal_sessions[m_modal_session_count - 1] . is_done = false;
+	m_modal_sessions[m_modal_session_count - 1] . window = p_window;
 	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
-	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	m_modal_sessions[m_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
 	p_window->SetFrameLocked(false);
 }
 
-void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
+void MCMacPlatformCore::EndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
-	for(t_index = 0; t_index < s_modal_session_count; t_index++)
-		if (s_modal_sessions[t_index] . window == p_window)
+	for(t_index = 0; t_index < m_modal_session_count; t_index++)
+		if (m_modal_sessions[t_index] . window == p_window)
 			break;
 	
-	if (t_index == s_modal_session_count)
+	if (t_index == m_modal_session_count)
 		return;
 	
-	s_modal_sessions[t_index] . is_done = true;
+	m_modal_sessions[t_index] . is_done = true;
 	
-	for(uindex_t t_final_index = s_modal_session_count; t_final_index > 0; t_final_index--)
+	for(uindex_t t_final_index = m_modal_session_count; t_final_index > 0; t_final_index--)
 	{
-		if (!s_modal_sessions[t_final_index - 1] . is_done)
+		if (!m_modal_sessions[t_final_index - 1] . is_done)
 			return;
 		
-		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
-		s_modal_sessions[t_final_index - 1] . window -> Release();
-		s_modal_session_count -= 1;
+		[NSApp endModalSession: m_modal_sessions[t_final_index - 1] . session];
+		[m_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
+		m_modal_sessions[t_final_index - 1] . window -> Release();
+		m_modal_session_count -= 1;
 	}
 }
 
@@ -2001,6 +1991,8 @@ MCMacPlatformCore::MCMacPlatformCore()
 m_abort_key_thread(nil),
 m_moving_window(nil),
 m_pseudo_modal_for(nil),
+m_modal_sessions(nil),
+m_modal_session_count(0),
 m_in_blocking_wait(false),
 m_observer(nil),
 m_wait_broken(false),

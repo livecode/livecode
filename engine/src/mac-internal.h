@@ -610,9 +610,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
-void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
-
 void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
@@ -762,6 +759,13 @@ struct MCCallback
     void *context;
 };
 
+struct MCModalSession
+{
+    NSModalSession session;
+    MCMacPlatformWindow *window;
+    bool is_done;
+};
+
 class MCMacPlatformCore: public MCPlatformCore
 {
 public:
@@ -814,6 +818,8 @@ public:
     virtual void ApplicationBecomePseudoModalFor(NSWindow *p_window);
     virtual NSWindow *ApplicationPseudoModalFor(void);
     virtual bool ApplicationSendEvent(NSEvent *p_event);
+    virtual void BeginModalSession(MCMacPlatformWindow *p_window);
+    virtual void EndModalSession(MCMacPlatformWindow *p_window);
     
     // Color dialog
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
@@ -851,6 +857,8 @@ private:
     // Windows
     MCPlatformWindowRef m_moving_window;
     NSWindow *m_pseudo_modal_for;
+    MCModalSession *m_modal_sessions;
+    uindex_t m_modal_session_count;
     
     // Wait
     bool m_in_blocking_wait : 1;

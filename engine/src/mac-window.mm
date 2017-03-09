@@ -2057,7 +2057,7 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 void MCMacPlatformWindow::DoShow(void)
 {
 	if (m_style == kMCPlatformWindowStyleDialog)
-		MCMacPlatformBeginModalSession(this);
+		static_cast<MCMacPlatformCore *>(m_platform) -> BeginModalSession(this);
 	else if (m_style == kMCPlatformWindowStylePopUp)
     {
         [m_window_handle popupAndMonitor];
@@ -2108,7 +2108,7 @@ void MCMacPlatformWindow::DoHide(void)
 	}
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
-		MCMacPlatformEndModalSession(this);
+		static_cast<MCMacPlatformCore *>(m_platform) -> EndModalSession(this);
 	}
     else if (m_style == kMCPlatformWindowStylePopUp)
     {
