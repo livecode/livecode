@@ -502,6 +502,13 @@ namespace MCPlatform {
         
         // Player
         virtual MCPlatformPlayerRef CreatePlayer(void) = 0;
+        
+        // Snapshots
+        virtual void ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap) = 0;
+        virtual void ScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap) = 0;
+        virtual void ScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap) = 0;
+        virtual void ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap) = 0;
+        
     };
     
     typedef Ref<Core> CoreRef;

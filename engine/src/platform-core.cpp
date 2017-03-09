@@ -82,6 +82,28 @@ void MCPlatformBreakWait(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+    MCplatform -> ScreenSnapshotOfUserArea(p_size, r_bitmap);
+}
+
+void MCPlatformScreenSnapshot(MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+    MCplatform -> ScreenSnapshot(p_area, p_size, r_bitmap);
+}
+
+void MCPlatformScreenSnapshotOfWindow(uint32_t window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+    MCplatform -> ScreenSnapshotOfWindow(window_id, p_size, r_bitmap);
+}
+
+void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+    MCplatform -> ScreenSnapshotOfWindowArea(window_id, p_area, p_size, r_bitmap);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

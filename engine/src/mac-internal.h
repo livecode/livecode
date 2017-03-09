@@ -830,6 +830,14 @@ public:
     
     // Player
     virtual MCPlatformPlayerRef CreatePlayer(void);
+    
+    // Snapshots
+    virtual void ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap);
+    virtual void ScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap);
+    virtual void ScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap);
+    virtual void ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap);
+    virtual void SetSnapshotPoints(CGPoint p_start_point, CGPoint p_end_point);
+    virtual void SetDisplayLinkFired(bool p_fired);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -853,6 +861,15 @@ private:
     NSLock *m_callback_lock;
     MCCallback *m_callbacks;
     uindex_t m_callback_count;
+    
+    // Snapshots
+    void ScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap);
+    void WaitForDisplayRefresh(void);
+    CGPoint m_snapshot_start_point;
+    CGPoint m_snapshot_end_point;
+    bool m_snapshot_done : 1;
+    bool m_display_link_fired : 1;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

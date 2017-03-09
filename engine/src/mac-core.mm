@@ -2006,7 +2006,9 @@ m_observer(nil),
 m_wait_broken(false),
 m_callback_lock(nil),
 m_callbacks(nil),
-m_callback_count(0)
+m_callback_count(0),
+m_snapshot_done(false),
+m_display_link_fired(false)
 {
     
 }
