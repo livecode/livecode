@@ -1128,7 +1128,7 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 	}
 }
 
-void MCPlatformBeep(void)
+void MCMacPlatformCore::Beep(void)
 {
     NSBeep();
 }

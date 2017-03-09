@@ -844,6 +844,8 @@ public:
     virtual void ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap);
     virtual void SetSnapshotPoints(CGPoint p_start_point, CGPoint p_end_point);
     virtual void SetDisplayLinkFired(bool p_fired);
+    
+    virtual void Beep(void);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);

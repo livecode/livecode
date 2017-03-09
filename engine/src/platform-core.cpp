@@ -104,6 +104,13 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformBeep(void)
+{
+    MCplatform -> Beep();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())
