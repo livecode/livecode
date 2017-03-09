@@ -476,7 +476,13 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
     {
         return IO_ERROR;
     }
-
+    
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list. This must happen prior to resolving parent scripts
+    // because otherwise there are no mainstacks, which can cause a
+    // crash when searching substacks.
+    stacks = t_stack;
+    
 #ifndef _MOBILE
 	// Make sure parent script references are up to date.
 	if (s_loaded_parent_script_reference)
@@ -487,10 +493,6 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	if (s_loaded_parent_script_reference)
 		t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
 #endif
-    
-    // We are reading the startup stack, so this becomes the root of the
-    // stack list.
-    stacks = t_stack;
     
     r_stack = t_stack;
 	return IO_NORMAL;
