@@ -1933,41 +1933,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 extern "C" bool MCModulesInitialize(void);
 extern "C" void MCModulesFinalize(void);
 
-
-MCMacPlatformCore::MCMacPlatformCore()
-: m_event_checking_enabled(0),
-m_abort_key_thread(nil),
-m_moving_window(nil),
-m_pseudo_modal_for(nil),
-m_modal_sessions(nil),
-m_modal_session_count(0),
-m_in_blocking_wait(false),
-m_observer(nil),
-m_wait_broken(false),
-m_callback_lock(nil),
-m_callbacks(nil),
-m_callback_count(0),
-m_snapshot_done(false),
-m_display_link_fired(false),
-m_last_mouse_event(nil),
-m_mouse_grabbed(false),
-m_mouse_grabbed_explicit(false),
-m_mouse_window(nil),
-m_mouse_buttons(0),
-m_mouse_drag_button(0xffffffff),
-m_mouse_click_count(0),
-m_mouse_last_click_button(0),
-m_mouse_last_click_time(0),
-m_mouse_last_click_screen_position({ 0, 0 }),
-m_mouse_position({ INT16_MIN, INT16_MAX }),
-m_mouse_modifiers(0),
-m_mouse_was_control_click(false),
-m_have_desktop_height(false),
-m_desktop_height(0.0f)
-{
-    
-}
-
 MCMacPlatformCore::~MCMacPlatformCore()
 {
     if (m_abort_key_thread != nil)

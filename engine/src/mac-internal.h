@@ -741,7 +741,7 @@ struct MCModalSession
 class MCMacPlatformCore: public MCPlatformCore
 {
 public:
-    MCMacPlatformCore();
+    constexpr MCMacPlatformCore() = default;
     virtual ~MCMacPlatformCore(void);
     
     virtual int Run(int argc, char *argv[], char *envp[]);
@@ -876,86 +876,86 @@ private:
     void GetGlobalVolume(double& r_volume);
     void SetGlobalVolume(double p_volume);
     
-    uindex_t m_event_checking_enabled;
+    uindex_t m_event_checking_enabled = 0;
     
     // Abort key
-    MCAbortKeyThread *m_abort_key_thread;
+    MCAbortKeyThread *m_abort_key_thread = nil;
     
     // Windows
-    MCPlatformWindowRef m_moving_window;
-    NSWindow *m_pseudo_modal_for;
-    MCModalSession *m_modal_sessions;
-    uindex_t m_modal_session_count;
+    MCPlatformWindowRef m_moving_window = nil;
+    NSWindow *m_pseudo_modal_for = nil;
+    MCModalSession *m_modal_sessions = nil;
+    uindex_t m_modal_session_count = 0;
     
     // Wait
-    bool m_in_blocking_wait : 1;
-    CFRunLoopObserverRef m_observer;
-    bool m_wait_broken : 1;
+    bool m_in_blocking_wait = false;
+    CFRunLoopObserverRef m_observer = nil;
+    bool m_wait_broken = false;
 
     // Callbacks
-    NSLock *m_callback_lock;
-    MCCallback *m_callbacks;
-    uindex_t m_callback_count;
+    NSLock *m_callback_lock = nil;
+    MCCallback *m_callbacks = nil;
+    uindex_t m_callback_count = 0;
     
     // Snapshots
     void ScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap);
     void WaitForDisplayRefresh(void);
-    CGPoint m_snapshot_start_point;
-    CGPoint m_snapshot_end_point;
-    bool m_snapshot_done : 1;
-    bool m_display_link_fired : 1;
+    CGPoint m_snapshot_start_point = CGPointZero;
+    CGPoint m_snapshot_end_point = CGPointZero;
+    bool m_snapshot_done = false;
+    bool m_display_link_fired = false;
 
     // Mice
-    NSEvent *m_last_mouse_event;
+    NSEvent *m_last_mouse_event = nil;
     
     // If this is true, then the mouse is currently grabbed so we should defer
     // switching active window until ungrabbed.
-    bool m_mouse_grabbed : 1;
+    bool m_mouse_grabbed = false;
     
     // If this is true there was an explicit request for grabbing.
-    bool m_mouse_grabbed_explicit;
+    bool m_mouse_grabbed_explicit = false;
     
     // This is the currently active window (the one receiving mouse events).
-    MCPlatformWindowRef m_mouse_window;
+    MCPlatformWindowRef m_mouse_window = nil;
     
     // This is the current mask of buttons that are pressed.
-    uint32_t m_mouse_buttons;
+    uint32_t m_mouse_buttons = 0;
     
     // This is the button that is being dragged (if not 0xffffffff).
-    uint32_t m_mouse_drag_button;
+    uint32_t m_mouse_drag_button = 0xffffffff;
     
     // This is the number of successive clicks detected on the primary button.
-    uint32_t m_mouse_click_count;
+    uint32_t m_mouse_click_count = 0;
     
     // This is the button of the last click (mouseDown then mouseUp) that was
     // detected.
-    uint32_t m_mouse_last_click_button;
+    uint32_t m_mouse_last_click_button = 0;
     
     // This is the time of the last mouseUp, used to detect multiple clicks.
-    uint32_t m_mouse_last_click_time;
+    uint32_t m_mouse_last_click_time = 0;
     
     // This is the screen position of the last click, used to detect multiple
     // clicks.
-    MCPoint m_mouse_last_click_screen_position;
+    MCPoint m_mouse_last_click_screen_position = { 0, 0 };
     
     // This is the window location in the mouse window that we last posted
     // a position event for.
-    MCPoint m_mouse_position;
+    MCPoint m_mouse_position = { INT16_MIN, INT16_MAX };
     
     // This is the last screen location we received a mouse move message for.
-    MCPoint m_mouse_screen_position;
+    MCPoint m_mouse_screen_position = { 0, 0 };
     
     // This is the current modifier state, and whether the control key was down
     // for a button 0 press.
-    MCPlatformModifiers m_mouse_modifiers;
-    bool m_mouse_was_control_click : 1;
+    MCPlatformModifiers m_mouse_modifiers = 0;
+    bool m_mouse_was_control_click = false;
     
     // MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
     //   when doing an user-import snapshot.
-    bool m_mouse_cursor_locked : 1;
+    bool m_mouse_cursor_locked = false;
     
-    bool m_have_desktop_height;
-    CGFloat m_desktop_height;
+    bool m_have_desktop_height = false;
+    CGFloat m_desktop_height = 0.0f;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
