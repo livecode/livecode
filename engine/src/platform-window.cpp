@@ -743,6 +743,13 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
+{
+    p_window -> SwitchFocusToView(p_id);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
 {
     MCplatform -> DeathGrip(p_window);

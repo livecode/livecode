@@ -125,8 +125,6 @@ class MCMacPlatformCore;
 
 @end
 
-void MCMacPlatformWindowWindowMoved(NSWindow *p_self, MCPlatformWindowRef p_window);
-
 @interface com_runrev_livecode_MCPanel: NSPanel  <com_runrev_livecode_MCMovingFrame>
 {
 	bool m_can_become_key : 1;
@@ -537,7 +535,9 @@ public:
 	
 	// IM-2015-01-30: [[ Bug 14140 ]] Locking the frame will prevent the window from being moved or resized
 	void SetFrameLocked(bool p_locked);
-	
+    void WindowMoved(NSWindow *p_window);
+    
+    void SwitchFocusToView(uint32_t p_id);
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -602,7 +602,7 @@ private:
 		NSWindow *m_window_handle;
 		NSPanel *m_panel_handle;
 	};
-	
+    
 	// The parent pointer for sheets and drawers.
 	MCPlatformWindowRef m_parent;
 	
@@ -790,6 +790,8 @@ public:
     virtual void ApplicationBecomePseudoModalFor(NSWindow *p_window);
     virtual NSWindow *ApplicationPseudoModalFor(void);
     virtual bool ApplicationSendEvent(NSEvent *p_event);
+    bool GetResponderChangeLock(void) {return m_lock_responder_change; }
+    void SetResponderChangeLock(bool p_lock_responder_change) { m_lock_responder_change = p_lock_responder_change; }
     
     // Color dialog
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
@@ -822,6 +824,8 @@ public:
     // Events
     virtual void FlushEvents(MCPlatformEventMask p_mask);
     virtual uint32_t GetEventTime(void);
+    bool GetInsideFocusEvent(void) {return m_inside_focus_event; }
+    void SetInsideFocusEvent(bool p_inside_focus_event) { m_inside_focus_event = p_inside_focus_event; }
     
     // Mice
     virtual void HideCursorUntilMouseMoves(void);
@@ -887,7 +891,9 @@ private:
     NSWindow *m_pseudo_modal_for = nil;
     MCModalSession *m_modal_sessions = nil;
     uindex_t m_modal_session_count = 0;
-    
+    bool m_lock_responder_change = false;
+    bool m_inside_focus_event = false;
+
     // Wait
     bool m_in_blocking_wait = false;
     CFRunLoopObserverRef m_observer = nil;

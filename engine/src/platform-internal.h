@@ -152,10 +152,12 @@ public:
 	void HandleDragDrop(bool& r_accepted);
     // Called to tell attachments there is a handle.
     void RealizeAndNotify(void);
+    
+    //////////
 	
-	//////////
-	
-	virtual void DoRealize(void) = 0;
+    virtual void SwitchFocusToView(uint32_t p_id) = 0;
+    
+    virtual void DoRealize(void) = 0;
 	virtual void DoSynchronize(void) = 0;
 	
 	virtual bool DoSetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value) = 0;

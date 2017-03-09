@@ -35,12 +35,6 @@
 
 #include "osspec.h"
 
-///////////////////////////////////////////////////////////////////////////
-
-static bool s_inside_focus_event = false;
-
-//static MCMacPlatformWindow *s_focused_window = nil;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
@@ -49,8 +43,6 @@ static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
 
@@ -95,8 +87,10 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
-    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+    MCMacPlatformWindow * t_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window->GetPlatform());
+    
+    if (t_platform -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -105,7 +99,7 @@ static bool s_lock_responder_change = false;
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
-	if (s_lock_responder_change)
+	if (t_platform->GetResponderChangeLock())
 		return YES;
 	
 	if ([p_responder isKindOfClass: [NSView class]])
@@ -211,7 +205,8 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    MCMacPlatformWindow * t_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window->GetPlatform());
     if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
@@ -221,7 +216,7 @@ static bool s_lock_responder_change = false;
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
-	if (s_lock_responder_change)
+    if (t_platform -> GetResponderChangeLock())
 		return YES;
 	
 	if ([p_responder isKindOfClass: [NSView class]])
@@ -286,8 +281,10 @@ static bool s_lock_responder_change = false;
     
     // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
     //   as it seems to confuse Cocoa.
-    if (s_inside_focus_event)
-        [self orderFront: nil];
+    MCMacPlatformWindow * t_platform_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_platform_window->GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
+       [self orderFront: nil];
     else
         [self makeKeyAndOrderFront: nil];
     
@@ -319,7 +316,7 @@ static bool s_lock_responder_change = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window)
+void MCMacPlatformWindow::WindowMoved(NSWindow *self)
 {
     // The NSWindow's frame isn't updated whilst a window is being moved. However,
     // the window server's bounds *are*. Thus we ask for the updated bounds from
@@ -348,7 +345,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
         
         [(NSWindow <com_runrev_livecode_MCMovingFrame> *)self setMovingFrame:NSRectFromCGRect(t_rect)];
         
-        ((MCMacPlatformWindow *)p_window) -> ProcessDidMove();
+        ProcessDidMove();
     }
     
     [t_info_array release];
@@ -487,26 +484,28 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
         m_window -> ProcessDidBecomeKey();
     else
     {
-        s_inside_focus_event = true;
+        t_platform -> SetInsideFocusEvent(true);
         m_window -> ProcessDidBecomeKey();
-        s_inside_focus_event = false;
+        t_platform -> SetInsideFocusEvent(false);
     }
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
         m_window -> ProcessDidResignKey();
     else
     {
-        s_inside_focus_event = true;
+        t_platform -> SetInsideFocusEvent(true);
         m_window -> ProcessDidResignKey();
-        s_inside_focus_event = false;
+        t_platform -> SetInsideFocusEvent(false);
     }
 }
 
@@ -2065,8 +2064,9 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 
 void MCMacPlatformWindow::DoShow(void)
 {
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
 	if (m_style == kMCPlatformWindowStyleDialog)
-		static_cast<MCMacPlatformCore *>(m_platform) -> BeginModalSession(this);
+		t_platform -> BeginModalSession(this);
 	else if (m_style == kMCPlatformWindowStylePopUp)
     {
         [m_window_handle popupAndMonitor];
@@ -2076,7 +2076,7 @@ void MCMacPlatformWindow::DoShow(void)
 		[m_view setNeedsDisplay: YES];
         // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
         //   as it seems to confuse Cocoa.
-        if (s_inside_focus_event)
+        if (t_platform -> GetInsideFocusEvent())
             [m_window_handle orderFront: nil];
         else
             [m_window_handle makeKeyAndOrderFront: nil];
@@ -2142,7 +2142,8 @@ void MCMacPlatformWindow::DoFocus(void)
 {
     // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
     //   as it seems to confuse Cocoa.
-    if (!s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    if (!t_platform -> GetInsideFocusEvent())
         [m_window_handle makeKeyWindow];
 }
 
@@ -2151,7 +2152,6 @@ void MCMacPlatformWindow::DoRaise(void)
 	[m_window_handle orderFront: nil];
 }
 
-static uint32_t s_rect_count = 0;
 bool MCMacDoUpdateRegionCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 {
 	MCWindowView *t_view = static_cast<MCWindowView*>(p_context);
@@ -2172,7 +2172,6 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
-	s_rect_count = 0;
 	MCGRegionIterate(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
@@ -2318,16 +2317,15 @@ static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id
 	return t_parent_view;
 }
 
-void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
+void MCMacPlatformWindow::SwitchFocusToView(uint32_t p_id)
 {
 	NSView *t_view;
-	t_view = MCMacPlatformFindView(p_window, p_id);
+	t_view = MCMacPlatformFindView(this, p_id);
 	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)p_window;
-	
-	s_lock_responder_change = true;
-	if ([t_view nextValidKeyView] != nil &&
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+    t_platform -> SetResponderChangeLock(true);
+    if ([t_view nextValidKeyView] != nil &&
 		[[t_view nextValidKeyView] previousValidKeyView] != t_view)
 		t_view = [t_view nextValidKeyView];
 	
@@ -2338,8 +2336,8 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
 		if (t_next_view != nil)
 			t_view = t_next_view;
 	}*/
-	[(com_runrev_livecode_MCWindow *)(t_window -> GetHandle()) makeFirstResponder: t_view];
-	s_lock_responder_change = false;
+	[m_handle makeFirstResponder: t_view];
+    t_platform -> SetResponderChangeLock(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

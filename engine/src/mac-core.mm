@@ -65,11 +65,14 @@ bool MCMacPlatformCore::ApplicationSendEvent(NSEvent *p_event)
 	//   we intercept mouseDragged events so we can keep script informed.
 	NSWindow *t_window;
 	t_window = [p_event window];
+    
+    MCMacPlatformWindow * t_platform_window = static_cast<MCMacPlatformWindow *>(m_moving_window);
+    
 	if (m_moving_window != nil &&
-		t_window == ((MCMacPlatformWindow *)m_moving_window) -> GetHandle())
+		t_window == t_platform_window -> GetHandle())
 	{
 		if ([p_event type] == NSLeftMouseDragged)
-			MCMacPlatformWindowWindowMoved(t_window, m_moving_window);
+			t_platform_window -> WindowMoved(t_window);
 		else if ([p_event type] == NSLeftMouseUp)
 			ApplicationWindowStoppedMoving(m_moving_window);
 	}
@@ -1620,11 +1623,11 @@ void MCMacPlatformCore::HandleMouseCursorChange(MCPlatformWindowRef p_window)
     {
         // Show the cursor attached to the window.
         MCPlatformCursorRef t_cursor;
-        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+        p_window -> GetProperty(kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
         
         // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
         if (t_cursor != nil)
-            MCPlatformSetCursor(t_cursor);
+            t_cursor -> Set();
         // SN-2014-10-01: [[ Bug 13516 ]] Hiding a cursor here is not what we want to happen if a cursor hasn't been found
         else
             ResetCursor();
@@ -1662,7 +1665,7 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 	{
 		// If the mouse is not grabbed, then we must determine which of our
 		// window views we are now over.
-		MCPlatformGetWindowAtPoint(p_screen_loc, t_new_mouse_window);
+		GetWindowAtPoint(p_screen_loc, t_new_mouse_window);
 	}
 	
 	// If the mouse window has changed, then we must exit/enter.
@@ -1685,12 +1688,12 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
         }
 			
 		if (m_mouse_window != nil)
-			MCPlatformReleaseWindow(m_mouse_window);
+			m_mouse_window -> Release();
 		
 		m_mouse_window = t_new_mouse_window;
 		
 		if (m_mouse_window != nil)
-			MCPlatformRetainWindow(m_mouse_window);
+			m_mouse_window -> Retain();
 			
 		t_window_changed = true;
 	}
