@@ -199,7 +199,7 @@ void MCMacPlatformCursor::Set(void)
 		[custom set];
 }
 
-void MCMacPlatformHideCursorUntilMouseMoves(void)
+void MCMacPlatformCore::HideCursorUntilMouseMoves(void)
 {
     [NSCursor setHiddenUntilMouseMoves: YES];
 }

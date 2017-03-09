@@ -850,6 +850,9 @@ public:
     virtual void DeathGrip(MCPlatform::Base * p_pointer);
     
     virtual void FlushEvents(MCPlatformEventMask p_mask);
+    
+    // Mice
+    virtual void HideCursorUntilMouseMoves(void);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);

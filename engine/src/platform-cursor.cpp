@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "platform-internal.h"
 #include "mac-extern.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,5 +54,5 @@ void MCPlatformSetCursor(MCPlatformCursorRef p_cursor)
 
 void MCPlatformHideCursorUntilMouseMoves(void)
 {
-    MCMacPlatformHideCursorUntilMouseMoves();
+    MCplatform -> HideCursorUntilMouseMoves();
 }

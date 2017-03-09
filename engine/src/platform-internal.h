@@ -514,6 +514,9 @@ namespace MCPlatform {
         virtual void DeathGrip(MCPlatform::Base * p_window) = 0;
         
         virtual void FlushEvents(MCPlatformEventMask p_mask) = 0;
+        
+        // Mice
+        virtual void HideCursorUntilMouseMoves(void) = 0;
     };
     
     typedef Ref<Core> CoreRef;

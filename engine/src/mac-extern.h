@@ -29,8 +29,6 @@ extern MCPlatform::Ref<MCPlatformSound> MCMacPlatformCreateSound(void);
 
 extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask(void);
 
-extern void MCMacPlatformHideCursorUntilMouseMoves(void);
-
 extern MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession(void);
 
 extern MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void);
