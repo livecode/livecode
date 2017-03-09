@@ -639,8 +639,6 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
-NSEvent *MCMacPlatformGetLastMouseEvent(void);
-
 void MCMacPlatformResetCursor(void);
 
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
@@ -853,6 +851,7 @@ public:
     
     // Mice
     virtual void HideCursorUntilMouseMoves(void);
+    virtual NSEvent *GetLastMouseEvent(void);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -887,6 +886,8 @@ private:
     bool m_snapshot_done : 1;
     bool m_display_link_fired : 1;
 
+    // Mice
+    NSEvent *m_last_mouse_event;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

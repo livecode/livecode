@@ -633,8 +633,6 @@ void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSEvent *s_last_mouse_event = nil;
-
 void MCMacPlatformCore::BreakWait(void)
 {
     [m_callback_lock lock];
@@ -760,7 +758,7 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 	{
 		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
 		{
-			s_last_mouse_event = t_event;
+			m_last_mouse_event = t_event;
 			[t_event retain];
 			[NSApp sendEvent: t_event];
 		}
@@ -768,8 +766,8 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 		{
 			if ([t_event type] == NSLeftMouseUp)
 			{
-				[s_last_mouse_event release];
-				s_last_mouse_event = nil;
+				[m_last_mouse_event release];
+				m_last_mouse_event = nil;
 			}
 			
 			[NSApp sendEvent: t_event];
@@ -1093,9 +1091,9 @@ uint32_t MCPlatformGetEventTime(void)
 	return [[NSApp currentEvent] timestamp] * 1000.0;
 }
 
-NSEvent *MCMacPlatformGetLastMouseEvent(void)
+NSEvent *MCMacPlatformCore::GetLastMouseEvent(void)
 {
-	return s_last_mouse_event;
+	return m_last_mouse_event;
 }
 
 void MCMacPlatformCore::FlushEvents(MCPlatformEventMask p_mask)
@@ -1996,7 +1994,8 @@ m_callback_lock(nil),
 m_callbacks(nil),
 m_callback_count(0),
 m_snapshot_done(false),
-m_display_link_fired(false)
+m_display_link_fired(false),
+m_last_mouse_event(nil)
 {
     
 }

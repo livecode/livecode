@@ -1341,7 +1341,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 - (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard
 {
 	NSEvent *t_mouse_event;
-	t_mouse_event = MCMacPlatformGetLastMouseEvent();
+	t_mouse_event = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> GetLastMouseEvent();
 	if (t_mouse_event == nil)
 		return NSDragOperationNone;
 		
