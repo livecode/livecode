@@ -26,8 +26,8 @@ Description:
 > Java installation (usually at 
 > `/Library/Java/JavaVirtualMachines/jdk1.7.0_55.jdk/Contents/Home`). 
 > On Linux, your `LD_LIBRARY_PATH` must be set to the folder containing 
-> the `libjvm.so` library (usually at ${JAVA_HOME}/jre/lib/amd64/server)
-> on 64-bit Linux.
+> the `libjvm.so` library (usually at `${JAVA_HOME}/jre/lib/amd64/server`
+> on 64-bit Linux).
 
 */
 module com.livecode.java
@@ -47,7 +47,7 @@ foreign handler MCJavaGetClassName(in pObject as JObject, out rName as String) r
 
 
 /**
-Sumary:    Get Java class name of a Java object
+Summary:    Get Java class name of a Java object
 
 Parameters:
 pObj: A JObject
@@ -83,7 +83,7 @@ public handler GetJavaClassName(in pObj as JObject) returns String
 end handler
 
 /**
-Sumary:    Convert a java string into a String
+Summary:    Convert a java string into a String
 
 Parameters:
 pObj: The JString to convert
@@ -120,7 +120,7 @@ public handler StringFromJString(in pObj as JString) returns String
 end handler
 
 /**
-Sumary:    Convert a String into a java string
+Summary:    Convert a String into a java string
 
 Parameters:
 pString: The String to convert
