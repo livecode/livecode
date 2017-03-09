@@ -74,7 +74,7 @@ public:
 	constexpr MCSpan(ElementType (&arr)[N])
 		: m_data(&arr[0]), m_length(N) {}
 
-	constexpr MCSpan(MCSpan& other) = default;
+	constexpr MCSpan(const MCSpan& other) = default;
 
 	constexpr MCSpan(MCSpan&& other) = default;
 
