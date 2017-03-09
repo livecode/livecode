@@ -43,6 +43,17 @@ static MCAutoDataRef data_new_from_bytes(MCSpan<byte_t> p_bytes)
  * Specific hash implementations
  * ---------------------------------------------------------------- */
 
+/* Some hash functions copy data into their output buffer in
+ * 64-bit chunks, even if the digest length isn't a multiple of 16
+ * bytes.  Make sure the digest buffer is always extended to hold
+ * a round number of 64-bit chunks. */
+constexpr size_t
+align_buffer_length(size_t p_digest_length)
+{
+    return ((p_digest_length + (sizeof(uint64_t) - 1)) &
+            ~(sizeof(uint64_t) - 1));
+}
+
 /* All message digest hash implementations use the same API, varying
  * only in a few type definitions.  This template generates a function
  * that calls the necessary functions in the correct order. */
@@ -54,12 +65,7 @@ template <typename State, size_t DigestLength,
 static MCAutoDataRef do_digest(MCDataRef p_data)
 {
     State state;
-    /* Some hash functions copy data into their output buffer in
-     * 64-bit chunks, even if the digest length isn't a multiple of 16
-     * bytes.  Make sure the digest buffer is always extended to hold
-     * a round number of 64-bit chunks. */
-    int align_bits = sizeof(uint64_t) - 1;
-    byte_t digest[(DigestLength + align_bits) & ~align_bits];
+    byte_t digest[align_buffer_length(DigestLength)];
     Init(&state);
     Update(&state, MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
     Finish(&state, digest);
