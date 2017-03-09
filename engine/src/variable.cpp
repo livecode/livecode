@@ -1114,6 +1114,24 @@ MCVarref *MCVariable::newvarref(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCAutoPointer<MCNameRef[]>
+__join_paths(MCSpan<MCNameRef> p_base,
+             MCSpan<MCNameRef> p_extra)
+{
+    MCAutoPointer<MCNameRef[]> t_result =
+            new (nothrow) MCNameRef[p_base.size() + p_extra.size()];
+    if (t_result)
+    {
+        for(int i = 0; i < p_base.size(); i++)
+            t_result[i] = p_base[i];
+    
+        for(int i = 0; i < p_extra.size(); i++)
+            t_result[i + p_base.size()] = p_extra[i];
+    }
+    
+    return std::move(t_result);
+}
+
 MCContainer::~MCContainer(void)
 {
     // AL-2014-09-17: [[ Bug 13465 ]] Delete path array regardless of length
@@ -1127,9 +1145,33 @@ bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
     return m_variable -> eval(ctxt, m_path, m_length, r_value);
 }
 
+bool MCContainer::eval_on_path(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_path_length, MCValueRef& r_value)
+{
+    MCAutoPointer<MCNameRef[]> t_full_path =
+            __join_paths(MCMakeSpan(m_path, m_length),
+                         MCMakeSpan(p_path, p_path_length));
+    
+    if (!t_full_path)
+        return false;
+    
+    return m_variable->eval(ctxt, *t_full_path, p_path_length + m_length, r_value);
+}
+
 bool MCContainer::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
 	return m_variable -> set(ctxt, p_value, m_path, m_length, p_setting);
+}
+
+bool MCContainer::set_on_path(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_path_length, MCValueRef p_value)
+{
+    MCAutoPointer<MCNameRef[]> t_full_path =
+            __join_paths(MCMakeSpan(m_path, m_length),
+                         MCMakeSpan(p_path, p_path_length));
+    
+    if (!t_full_path)
+        return false;
+    
+    return m_variable->set(ctxt, p_value, *t_full_path, p_path_length + m_length);
 }
 
 bool MCContainer::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -1254,44 +1296,18 @@ MCContainer *MCVarref::fetchcontainer(MCExecContext& ctxt)
     return nil;
 }
 
-MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
-{
-    if (dimensions != 0 || isparam)
-        return NULL;
-
-    return fetchvar(ctxt);
-}
-
 void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    if (dimensions == 0 && !isparam)
-	{
-        MCVariable *t_resolved_ref;
-            
-        t_resolved_ref = fetchvar(ctxt);
-        
-        if (t_resolved_ref != nil)
-        {
-            if (t_resolved_ref -> copyasexecvalue(r_value))
-                return;
-        }
-	}
-    else
-    {
-        MCContainer t_container;
-        if (resolve(ctxt, t_container)
-                && t_container.eval_ctxt(ctxt, r_value))
-            return;
-    }
+    MCContainer t_container;
+    if (evalcontainer(ctxt, t_container)
+            && t_container.eval_ctxt(ctxt, r_value))
+        return;
     
     ctxt . Throw();
 }
 
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
-	if (dimensions == 0 && !isparam)
-        return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
-
     return resolve(ctxt, r_container);
 }
 
@@ -1330,17 +1346,8 @@ MCVarref *MCVarref::getrootvarref(void)
 
 bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
-	if (dimensions == 0 && !isparam)
-	{
-		MCVariable *t_resolved_ref;
-        
-		t_resolved_ref = fetchvar(ctxt);
-        
-        return t_resolved_ref -> set(ctxt, p_value, p_setting);
-	}
-    
 	MCContainer t_container;
-    if (!resolve(ctxt, t_container))
+    if (!evalcontainer(ctxt, t_container))
 		return false;
 	
 	return t_container.set(ctxt, p_value, p_setting);
@@ -1348,17 +1355,8 @@ bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingSty
 
 bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
 {
-	if (dimensions == 0 && !isparam)
-	{
-		MCVariable *t_resolved_ref;
-        
-		t_resolved_ref = fetchvar(ctxt);
-        
-        return t_resolved_ref -> give_value(ctxt, p_value, p_setting);
-	}
-    
     MCContainer t_container;
-    if (!resolve(ctxt, t_container))
+    if (!evalcontainer(ctxt, t_container))
 		return false;
 	
     return t_container.give_value(ctxt, p_value, p_setting);
@@ -1366,17 +1364,8 @@ bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSe
 
 bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-	if (dimensions == 0 && !isparam)
-    {
-        MCVariable *t_resolved_ref;
-        
-        t_resolved_ref = fetchvar(ctxt);
-        
-        return t_resolved_ref -> replace(ctxt, p_replacement, p_range);
-    }
-    
     MCContainer t_container;
-    if (!resolve(ctxt, t_container))
+    if (!evalcontainer(ctxt, t_container))
         return false;
     
     return t_container.replace(ctxt, p_replacement, p_range);
@@ -1384,17 +1373,8 @@ bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_
 
 bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
 {
-	if (dimensions == 0 && !isparam)
-    {
-        MCVariable *t_resolved_ref;
-        
-        t_resolved_ref = fetchvar(ctxt);
-        
-        return t_resolved_ref -> deleterange(ctxt, p_range);
-    }
-    
     MCContainer t_container;
-    if (!resolve(ctxt, t_container))
+    if (!evalcontainer(ctxt, t_container))
         return false;
     
     return t_container.deleterange(ctxt, p_range);
@@ -1486,15 +1466,6 @@ void MCVarref::clearuql()
 // MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
 bool MCVarref::dofree(MCExecContext& ctxt)
 {
-	if (dimensions == 0 && !isparam)
-	{
-		MCVariable *t_var;
-		
-		t_var = fetchvar(ctxt);
-        
-		return t_var -> remove(ctxt);
-	}
-	
 	MCContainer t_container;
     if (!resolve(ctxt, t_container))
         return false;
@@ -1659,14 +1630,6 @@ bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer& r_contain
         t_error = MCVarref::evalcontainer(ctxt, r_container);
 
     return t_error;
-}
-
-MCVariable *MCDeferredVarref::evalvar(MCExecContext &ctxt)
-{
-    if (ref -> isdeferred())
-        static_cast<MCDeferredVariable *>(ref) -> compute();
-
-    return MCVarref::evalvar(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

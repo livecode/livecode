@@ -609,19 +609,19 @@ public:
         if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
 		
-
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr . object -> GetHandle();
 			t_context . name = *t_item;
-            t_context . var = ctxt . GetIt() -> evalvar(ctxt);
+            if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
+                return;
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
 				t_context . stream = MCS_open(*t_file, kMCOpenFileModeWrite, False, False, 0);
 
-			t_context . var -> clear();
+			t_context.var.clear();
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
@@ -645,7 +645,7 @@ private:
 		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
-		MCVariable *var;
+		MCContainer var;
 	};
 
 	static bool extract_item(void *p_context, const void *p_data, uint32_t p_data_length, uint32_t p_data_offset, uint32_t p_data_total)
@@ -663,15 +663,7 @@ private:
 			MCExecContext ctxt;
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCStringRef t_value;
-            MCAutoValueRef t_valueref;
-            context -> var -> copyasvalueref(&t_valueref);
-			/* UNCHECKED */ ctxt . ConvertToString(*t_valueref, t_value);
-			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			if (!MCStringAppend(t_value, *t_data))
-				return false;
-            context -> var ->setvalueref(t_value);
-			MCValueRelease(t_value);
+            context->var.set(ctxt, *t_data, kMCVariableSetAfter);
 		}
         
 		if (context->target.IsValid())

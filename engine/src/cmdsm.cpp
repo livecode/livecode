@@ -100,17 +100,8 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     MCContainer t_dst_container;
 	if (destvar != nil)
 	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
-                            && t_dst_container.eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
             MCExecTypeRelease(t_src);
@@ -162,13 +153,7 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-            bool t_success;
-            if (destvar -> needsContainer())
-                t_success = t_dst_container.give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
 		}
 		else
@@ -257,22 +242,13 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_DIVIDE_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCContainer t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
-                            && t_dst_container.eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt.HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
             MCExecTypeRelease(t_src);
@@ -320,19 +296,12 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success = t_dst_container.give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{
             if (dest->set(ctxt, PT_INTO, t_result))
@@ -423,22 +392,13 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_MULTIPLY_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCContainer t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
-                            && t_dst_container.eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
             MCExecTypeRelease(t_src);
@@ -486,19 +446,12 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success = t_dst_container.give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{            
 			if (dest->set(ctxt, PT_INTO, t_result))
@@ -589,22 +542,13 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_SUBTRACT_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCContainer t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, t_dst_container)
-                            && t_dst_container.eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
             MCExecTypeRelease(t_src);
@@ -652,19 +596,12 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success =  t_dst_container.give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{
 			if (dest->set(ctxt, PT_INTO, t_result))
