@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "variable.h"
 
+#include <utility>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCVariable::create(MCVariable*& r_var)
