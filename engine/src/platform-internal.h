@@ -534,6 +534,12 @@ namespace MCPlatform {
         
         // Drag and drop
         virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation) = 0;
+    
+        // Screens
+        virtual void GetScreenCount(uindex_t& r_count) = 0;
+        virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport) = 0;
+        virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea) = 0;
+        virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale) = 0;
     };
     
     typedef Ref<Core> CoreRef;

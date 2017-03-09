@@ -31,11 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool s_have_desktop_height = false;
-static CGFloat s_desktop_height = 0.0f;
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum
 {
 	kMCMacPlatformBreakEvent = 0,
@@ -390,7 +385,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-    if (static_cast<MCMacPlatformCore *>(m_platform) -> ApplicationPseudoModalFor() != nil)
+    if (m_platform -> ApplicationPseudoModalFor() != nil)
         return NSTerminateCancel;
     
     // There is an NSApplicationTerminateReplyLater result code which will place
@@ -509,8 +504,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 - (void)applicationDidChangeScreenParameters:(NSNotification *)notification
 {
 	// Make sure we refetch the primary screen height.
-	s_have_desktop_height = false;
-	
+    m_platform -> SetHasDesktopHeight(false);
 	// Dispatch the notification.
 	MCPlatformCallbackSendScreenParametersChanged();
 }
@@ -1013,7 +1007,7 @@ bool MCMacPlatformCore::GetMouseClick(uindex_t p_button, MCPoint& r_location)
 	else
 		t_screen_loc = [t_up_event locationInWindow];
 	
-	MCMacPlatformMapScreenNSPointToMCPoint(t_screen_loc, r_location);
+	MapScreenNSPointToMCPoint(t_screen_loc, r_location);
 	
 	[t_pool release];
 	
@@ -1022,7 +1016,7 @@ bool MCMacPlatformCore::GetMouseClick(uindex_t p_button, MCPoint& r_location)
 
 void MCMacPlatformCore::GetMousePosition(MCPoint& r_location)
 {
-	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], r_location);
+	MapScreenNSPointToMCPoint([NSEvent mouseLocation], r_location);
 }
 
 void MCMacPlatformCore::SetMousePosition(MCPoint p_location)
@@ -1036,7 +1030,7 @@ void MCMacPlatformCore::SetMousePosition(MCPoint p_location)
 void MCMacPlatformCore::GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 {
 	NSPoint t_loc_cocoa;
-	MCMacPlatformMapScreenMCPointToNSPoint(p_loc, t_loc_cocoa);
+	MapScreenMCPointToNSPoint(p_loc, t_loc_cocoa);
 	
 	NSInteger t_number;
 	t_number = [NSWindow windowNumberAtPoint: t_loc_cocoa belowWindowWithWindowNumber: 0];
@@ -1129,24 +1123,24 @@ void MCMacPlatformCore::Beep(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetScreenCount(uindex_t& r_count)
+void MCMacPlatformCore::GetScreenCount(uindex_t& r_count)
 {
 	r_count = [[NSScreen screens] count];
 }
 
-void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
+void MCMacPlatformCore::GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
 {
 	NSRect t_viewport;
 	t_viewport = [[[NSScreen screens] objectAtIndex: p_index] frame];
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_viewport, r_viewport);
+	MapScreenNSRectToMCRectangle(t_viewport, r_viewport);
 }
 
-void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
+void MCMacPlatformCore::GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
 {
-	MCMacPlatformMapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
+	MapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
 }
 
-void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
+void MCMacPlatformCore::GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 {
 	NSScreen *t_screen;
 	t_screen = [[NSScreen screens] objectAtIndex: p_index];
@@ -1710,7 +1704,7 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 	if (m_mouse_window != nil)
 	{
 		MCPoint t_window_loc;
-		MCPlatformMapPointFromScreenToWindow(m_mouse_window, p_screen_loc, t_window_loc);
+		m_mouse_window -> MapPointFromScreenToWindow(p_screen_loc, t_window_loc);
 		
 		if (t_window_changed ||
 			t_window_loc . x != m_mouse_position . x ||
@@ -1772,7 +1766,7 @@ void MCMacPlatformCore::HandleMouseSync(void)
 	m_mouse_was_control_click = false;
 
 	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
+	MapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
 	
 	HandleMouseMove(t_location);
 }
@@ -1866,44 +1860,49 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CGFloat get_desktop_height()
+CGFloat MCMacPlatformCore::GetDesktopHeight()
 {
-	if (!s_have_desktop_height)
+	if (!m_have_desktop_height)
 	{
-		s_desktop_height = 0.0f;
+		m_desktop_height = 0.0f;
 		
 		for (NSScreen * t_screen in [NSScreen screens])
 		{
 			NSRect t_rect = [t_screen frame];
-			if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
-				s_desktop_height = t_rect.origin.y + t_rect.size.height;
+			if (t_rect.origin.y + t_rect.size.height > m_desktop_height)
+				m_desktop_height = t_rect.origin.y + t_rect.size.height;
 		}
 		
-		s_have_desktop_height = true;
+		m_have_desktop_height = true;
 	}
 	
-	return s_desktop_height;
+	return m_desktop_height;
 }
 
-void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+void MCMacPlatformCore::SetHasDesktopHeight(bool p_have_desktop_height)
 {
-	r_point = NSMakePoint(p . x, get_desktop_height() - p . y);
+    m_have_desktop_height = p_have_desktop_height;
 }
 
-void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
+void MCMacPlatformCore::MapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+{
+	r_point = NSMakePoint(p . x, GetDesktopHeight() - p . y);
+}
+
+void MCMacPlatformCore::MapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
 	r_point . x = int16_t(p . x);
-	r_point . y = int16_t(get_desktop_height() - p . y);
+	r_point . y = int16_t(GetDesktopHeight() - p . y);
 }
 
-void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
+void MCMacPlatformCore::MapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	r_rect = NSMakeRect(CGFloat(r . x), get_desktop_height() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
+	r_rect = NSMakeRect(CGFloat(r . x), GetDesktopHeight() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
 }
 
-void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
+void MCMacPlatformCore::MapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(get_desktop_height() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
+	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(GetDesktopHeight() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1925,7 +1924,8 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 {
 	// COCOA-TODO: Make this is a little more discerning (only need to reset if
 	//   primary geometry changes).
-	s_have_desktop_height = false;
+    MCMacPlatformCore * t_platform = (MCMacPlatformCore *) userInfo;
+    t_platform -> SetHasDesktopHeight(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1961,7 +1961,9 @@ m_mouse_last_click_time(0),
 m_mouse_last_click_screen_position({ 0, 0 }),
 m_mouse_position({ INT16_MIN, INT16_MAX }),
 m_mouse_modifiers(0),
-m_mouse_was_control_click(false)
+m_mouse_was_control_click(false),
+m_have_desktop_height(false),
+m_desktop_height(0.0f)
 {
     
 }
@@ -1990,7 +1992,7 @@ int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
     t_application = [com_runrev_livecode_MCApplication sharedApplication];
     
     // Register for reconfigurations.
-    CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
+    CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, this);
     
     if (!MCInitialize() || !MCSInitialize() ||
         !MCModulesInitialize() || !MCScriptInitialize())

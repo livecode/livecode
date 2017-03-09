@@ -175,6 +175,29 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
     MCplatform -> DoDragDrop(p_window, p_allowed_operations, p_image, p_image_loc, r_operation);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformGetScreenCount(uindex_t& r_count)
+{
+    MCplatform -> GetScreenCount(r_count);
+}
+
+void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
+{
+    MCplatform -> GetScreenViewport(p_index, r_viewport);
+}
+
+void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
+{
+    MCplatform -> GetScreenWorkarea(p_index, r_workarea);
+}
+
+void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
+{
+    MCplatform -> GetScreenPixelScale(p_index, r_scale);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int platform_main(int argc, char *argv[], char *envp[])

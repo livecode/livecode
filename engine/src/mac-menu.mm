@@ -833,11 +833,11 @@ bool MCMacPlatformMenu::PopUp(MCPlatformWindowRef p_window, MCPoint p_location, 
 	NSPoint t_location;
 	if (t_view != nil)
 	{
-		MCPlatformMapPointFromScreenToWindow(p_window, p_location, p_location);
+		p_window -> MapPointFromScreenToWindow(p_location, p_location);
 		((MCMacPlatformWindow *)p_window) -> MapMCPointToNSPoint(p_location, t_location);
 	}
 	else
-		MCMacPlatformMapScreenMCPointToNSPoint(p_location, t_location);
+		static_cast<MCMacPlatformCore *>(m_platform) -> MapScreenMCPointToNSPoint(p_location, t_location);
     
     // MW-2014-07-29: [[ Bug 12990 ]] If item is UINDEX_MAX then don't specify an item, thus preventing
     //   one from being highlighted.

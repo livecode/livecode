@@ -11,6 +11,7 @@
 class MCMacPlatformWindow;
 class MCMacPlatformSurface;
 class MCMacPlatformMenu;
+class MCMacPlatformCore;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,10 +40,10 @@ class MCMacPlatformMenu;
     
     NSMutableArray *m_pending_apple_events;
     
-    MCPlatformCoreRef m_platform;
+    MCMacPlatformCore * m_platform;
 }
 
-@property (nonatomic, assign) MCPlatformCoreRef platform;
+@property (nonatomic, assign) MCMacPlatformCore * platform;
 
 // Platform init / finit.
 - (void)initializeModules;
@@ -616,12 +617,6 @@ bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
 bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action);
 
-void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint point, NSPoint& r_point);
-void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);
-
-void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect);
-void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
-
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
@@ -862,6 +857,20 @@ public:
     
     // Drag and drop
     virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation);
+    
+    // Point translation
+    virtual void SetHasDesktopHeight(bool p_has_desktop_height);
+    virtual CGFloat GetDesktopHeight();
+    virtual void MapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point);
+    virtual void MapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point);
+    virtual void MapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect);
+    virtual void MapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect);
+    
+    // Screens
+    virtual void GetScreenCount(uindex_t& r_count);
+    virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport);
+    virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea);
+    virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -944,6 +953,9 @@ private:
     // MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
     //   when doing an user-import snapshot.
     bool m_mouse_cursor_locked : 1;
+    
+    bool m_have_desktop_height;
+    CGFloat m_desktop_height;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

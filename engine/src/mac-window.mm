@@ -1418,18 +1418,20 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender
 {
-	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
 		return NSDragOperationNone;
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window -> GetPlatform());
 	
-	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
+    MCPoint t_location;
+    t_platform -> MapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
+    
+    t_window -> MapPointFromScreenToWindow(t_location, t_location);
 	
 	// Update the modifier key state.
-	static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
+	t_platform -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
 	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragMove(t_location, t_operation);
@@ -1766,17 +1768,20 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	
 	// Map from cocoa coords.
 	MCRectangle t_content;
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, t_content);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenNSRectToMCRectangle(t_new_cocoa_content, t_content);
 	
 	// Make sure we don't tickle the event queue whilst resizing, otherwise
 	// redraws can be done by the OS during the process resulting in tearing
 	// as the window resizes.
-	static_cast<MCMacPlatformCore *>(m_platform) -> DisableEventChecking();
+	t_platform -> DisableEventChecking();
 	
 	// And get the super class to deal with it.
 	HandleReshape(t_content);
 	
-	static_cast<MCMacPlatformCore *>(m_platform) -> EnableEventChecking();
+	t_platform -> EnableEventChecking();
 }
 
 void MCMacPlatformWindow::ProcessDidResize(void)
@@ -1814,8 +1819,11 @@ void MCMacPlatformWindow::ProcessDidResignKey(void)
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
 {
 	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint(p_location_cocoa, t_location);
-	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseMove(t_location);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenNSPointToMCPoint(p_location_cocoa, t_location);
+	t_platform -> HandleMouseMove(t_location);
 }
 
 void MCMacPlatformWindow::ProcessMousePress(NSInteger p_button, bool p_is_down)
@@ -1889,7 +1897,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	
 	// Compute the cocoa-oriented content rect.
 	NSRect t_cocoa_content;
-	MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
+	static_cast<MCMacPlatformCore *>(m_platform) -> MapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
 	
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
@@ -1984,7 +1992,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . content_changed && ![m_delegate inUserReshape])
 	{
 		NSRect t_cocoa_content;
-		MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
+		static_cast<MCMacPlatformCore *>(m_platform) -> MapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
 		
 		NSRect t_cocoa_frame;
 		t_cocoa_frame = [m_window_handle frameRectForContentRect: t_cocoa_content];
@@ -2211,14 +2219,17 @@ void MCMacPlatformWindow::DoMapContentRectToFrameRect(MCRectangle p_content, MCR
 	
 	// Map the content rect to cocoa coord system.
 	NSRect t_cocoa_content;
-	MCMacPlatformMapScreenMCRectangleToNSRect(p_content, t_cocoa_content);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenMCRectangleToNSRect(p_content, t_cocoa_content);
 	
 	// Consult the window class to transform the rect.
 	NSRect t_cocoa_frame;
 	t_cocoa_frame = [NSWindow frameRectForContentRect: t_cocoa_content styleMask: t_window_style];
 	
 	// Map the rect from the cocoa coord system.
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_cocoa_frame, r_frame);
+	t_platform -> MapScreenNSRectToMCRectangle(t_cocoa_frame, r_frame);
 }
 
 void MCMacPlatformWindow::DoMapFrameRectToContentRect(MCRectangle p_frame, MCRectangle& r_content)
@@ -2231,12 +2242,14 @@ void MCMacPlatformWindow::DoMapFrameRectToContentRect(MCRectangle p_frame, MCRec
 	ComputeCocoaStyle(t_window_style);
 	
 	NSRect t_cocoa_frame;
-	MCMacPlatformMapScreenMCRectangleToNSRect(p_frame, t_cocoa_frame);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+    t_platform -> MapScreenMCRectangleToNSRect(p_frame, t_cocoa_frame);
 	
 	NSRect t_cocoa_content;
 	t_cocoa_content = [NSWindow contentRectForFrameRect: t_cocoa_frame styleMask: t_window_style];
 	
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_cocoa_content, r_content);
+	t_platform -> MapScreenNSRectToMCRectangle(t_cocoa_content, r_content);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
