@@ -520,6 +520,20 @@ namespace MCPlatform {
         
         // Mice
         virtual void HideCursorUntilMouseMoves(void) = 0;
+        virtual bool GetMouseButtonState(uindex_t p_button) = 0;
+        virtual bool GetMouseClick(uindex_t p_button, MCPoint& r_location) = 0;
+        virtual void GetMousePosition(MCPoint& r_location) = 0;
+        virtual void SetMousePosition(MCPoint p_location) = 0;
+        virtual void GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window) = 0;
+        virtual void GrabPointer(MCPlatformWindowRef p_window) = 0;
+        virtual void UngrabPointer(void) = 0;
+        
+        // Modifier Keys
+        virtual MCPlatformModifiers GetModifiersState(void) = 0;
+        virtual bool GetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count) = 0;
+        
+        // Drag and drop
+        virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation) = 0;
     };
     
     typedef Ref<Core> CoreRef;

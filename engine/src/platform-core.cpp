@@ -123,6 +123,60 @@ uint32_t MCPlatformGetEventTime(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCPlatformGetMouseButtonState(uindex_t button)
+{
+    return MCplatform -> GetMouseButtonState(button);
+}
+
+bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
+{
+    return MCplatform -> GetKeyState(r_codes, r_code_count);
+}
+
+MCPlatformModifiers MCPlatformGetModifiersState(void)
+{
+    return MCplatform -> GetModifiersState();
+}
+
+bool MCPlatformGetMouseClick(uindex_t button, MCPoint& r_location)
+{
+    return MCplatform -> GetMouseClick(button, r_location);
+}
+
+void MCPlatformGetMousePosition(MCPoint& r_location)
+{
+    MCplatform -> GetMousePosition(r_location);
+}
+
+void MCPlatformSetMousePosition(MCPoint location)
+{
+    MCplatform -> SetMousePosition(location);
+}
+
+void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window)
+{
+    MCplatform -> GetWindowAtPoint(location, r_window);
+}
+
+void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
+{
+    MCplatform -> GrabPointer(p_window);
+}
+
+void MCPlatformUngrabPointer(void)
+{
+    MCplatform -> UngrabPointer();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)
+{
+    MCplatform -> DoDragDrop(p_window, p_allowed_operations, p_image, p_image_loc, r_operation);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

@@ -610,21 +610,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
-void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
-void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
-void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
-void MCMacPlatformHandleMouseSync(void);
-void MCMacPlatformHandleMouseAfterWindowHidden(void);
-
-void MCMacPlatformHandleMouseForResizeStart(void);
-void MCMacPlatformHandleMouseForResizeEnd(void);
-
-void MCMacPlatformSyncMouseBeforeDragging(void);
-void MCMacPlatformSyncMouseAfterTracking(void);
-
-void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
-
 bool MCMacPlatformMapKeyCode(uint32_t mac_key_code, uint32_t modifier_flags, MCPlatformKeyCode& r_key_code);
 
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
@@ -639,14 +624,8 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
-void MCMacPlatformResetCursor(void);
-
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
 void MCMacPlatformSyncBackdrop(void);
-
-// MW-2014-06-11: [[ Bug 12436 ]] These are used to ensure that the cursor doesn't get clobbered whilst in an user area snapshot.
-void MCMacPlatformLockCursor(void);
-void MCMacPlatformUnlockCursor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -854,7 +833,35 @@ public:
     
     // Mice
     virtual void HideCursorUntilMouseMoves(void);
+    virtual void ResetCursor(void);
     virtual NSEvent *GetLastMouseEvent(void);
+    virtual bool GetMouseButtonState(uindex_t p_button);
+    virtual bool GetMouseClick(uindex_t p_button, MCPoint& r_location);
+    virtual void GetMousePosition(MCPoint& r_location);
+    virtual void SetMousePosition(MCPoint p_location);
+    virtual void GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window);
+    virtual void LockCursor(void);
+    virtual void UnlockCursor(void);
+    virtual void GrabPointer(MCPlatformWindowRef p_window);
+    virtual void UngrabPointer(void);
+    virtual void HandleMousePress(uint32_t p_button, bool p_new_state);
+    virtual void HandleMouseCursorChange(MCPlatformWindowRef p_window);
+    virtual void HandleMouseAfterWindowHidden(void);
+    virtual void HandleMouseForResizeStart(void);
+    virtual void HandleMouseForResizeEnd(void);
+    virtual void HandleMouseMove(MCPoint p_screen_loc);
+    virtual void HandleMouseScroll(CGFloat dx, CGFloat dy);
+    virtual void HandleMouseSync(void);
+    virtual void SyncMouseBeforeDragging(void);
+    virtual void SyncMouseAfterTracking(void);
+    virtual void HandleModifiersChanged(MCPlatformModifiers p_modifiers);
+    
+    // Modifier Keys
+    virtual MCPlatformModifiers GetModifiersState(void);
+    virtual bool GetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count);
+    
+    // Drag and drop
+    virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -891,6 +898,52 @@ private:
 
     // Mice
     NSEvent *m_last_mouse_event;
+    
+    // If this is true, then the mouse is currently grabbed so we should defer
+    // switching active window until ungrabbed.
+    bool m_mouse_grabbed : 1;
+    
+    // If this is true there was an explicit request for grabbing.
+    bool m_mouse_grabbed_explicit;
+    
+    // This is the currently active window (the one receiving mouse events).
+    MCPlatformWindowRef m_mouse_window;
+    
+    // This is the current mask of buttons that are pressed.
+    uint32_t m_mouse_buttons;
+    
+    // This is the button that is being dragged (if not 0xffffffff).
+    uint32_t m_mouse_drag_button;
+    
+    // This is the number of successive clicks detected on the primary button.
+    uint32_t m_mouse_click_count;
+    
+    // This is the button of the last click (mouseDown then mouseUp) that was
+    // detected.
+    uint32_t m_mouse_last_click_button;
+    
+    // This is the time of the last mouseUp, used to detect multiple clicks.
+    uint32_t m_mouse_last_click_time;
+    
+    // This is the screen position of the last click, used to detect multiple
+    // clicks.
+    MCPoint m_mouse_last_click_screen_position;
+    
+    // This is the window location in the mouse window that we last posted
+    // a position event for.
+    MCPoint m_mouse_position;
+    
+    // This is the last screen location we received a mouse move message for.
+    MCPoint m_mouse_screen_position;
+    
+    // This is the current modifier state, and whether the control key was down
+    // for a button 0 press.
+    MCPlatformModifiers m_mouse_modifiers;
+    bool m_mouse_was_control_click : 1;
+    
+    // MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
+    //   when doing an user-import snapshot.
+    bool m_mouse_cursor_locked : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

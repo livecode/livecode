@@ -204,7 +204,7 @@ void MCMacPlatformCore::HideCursorUntilMouseMoves(void)
     [NSCursor setHiddenUntilMouseMoves: YES];
 }
 
-void MCMacPlatformResetCursor(void)
+void MCMacPlatformCore::ResetCursor(void)
 {
     [[NSCursor arrowCursor] set];
 }

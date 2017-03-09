@@ -456,13 +456,13 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     m_user_reshape = true;
     
     // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse temporarily leaves the window.
-    MCMacPlatformHandleMouseForResizeStart();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleMouseForResizeStart();
 }
 
 - (void)windowDidEndLiveResize:(NSNotification *)notification
 {
     // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse returns to the window.
-    MCMacPlatformHandleMouseForResizeEnd();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleMouseForResizeEnd();
     
     // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped sizing the window
     //   so unset us as reshape by user.
@@ -797,7 +797,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)flagsChanged: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 }
 
 // MW-2014-06-25: [[ Bug 12370 ]] Factor out key mapping code so it can be used by both
@@ -867,7 +867,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)keyDown: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
     // Make the event key code to a platform keycode and codepoints.
     MCPlatformKeyCode t_key_code;
@@ -896,7 +896,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)keyUp: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
     // SN-2014-10-31: [[ Bug 13832 ]] We want the rawKeyUp and keyUp messages to be sent in their due course when
     //  useTextInput is true, since the key messages have been enqueued appropriately
@@ -1299,7 +1299,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)scrollWheel: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1429,7 +1429,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
 	
 	// Update the modifier key state.
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
+	static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
 	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragMove(t_location, t_operation);
@@ -1464,14 +1464,14 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
 {
     // MW-2014-07-15: [[ Bug 12773 ]] Make sure mouseMove is sent after end of drag operation.
-    MCMacPlatformSyncMouseAfterTracking();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> SyncMouseAfterTracking();
 }
 
 //////////
 
 - (void)handleMouseMove: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1815,17 +1815,17 @@ void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
 {
 	MCPoint t_location;
 	MCMacPlatformMapScreenNSPointToMCPoint(p_location_cocoa, t_location);
-	MCMacPlatformHandleMouseMove(t_location);
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseMove(t_location);
 }
 
 void MCMacPlatformWindow::ProcessMousePress(NSInteger p_button, bool p_is_down)
 {
-	MCMacPlatformHandleMousePress(p_button, p_is_down);
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMousePress(p_button, p_is_down);
 }
 
 void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
 {
-	MCMacPlatformHandleMouseScroll(dx, dy);
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseScroll(dx, dy);
 }
 
 // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
@@ -2006,7 +2006,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
     // MW-2014-04-08: [[ Bug 12073 ]] If the cursor has changed, make sure we try to
     //   update it - should this window be the mouse window.
     if (m_changes . cursor_changed)
-        MCMacPlatformHandleMouseCursorChange(this);
+        static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseCursorChange(this);
     
     // MW-2014-04-23: [[ Bug 12080 ]] Sync hidesOnSuspend.
     if (m_changes . hides_on_suspend_changed)
@@ -2126,7 +2126,7 @@ void MCMacPlatformWindow::DoHide(void)
 		[m_window_handle close];
 	}
 	
-	MCMacPlatformHandleMouseAfterWindowHidden();
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)

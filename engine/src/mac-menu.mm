@@ -458,7 +458,7 @@ void MCMacPlatformCore::UnlockMenuSelect(void)
         //   an 'external' view and thus the event will not have gone through any
         //   of our view code - so make sure modifiers are up to date (otherwise command
         //   key shortcuts don't work!).
-        MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+        t_platform -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
         
         // SN-2014-11-06: [[ Bug 13836 ]] We don't want to recreate every menu existing for each keyEvent
         // MW-2014-10-29: [[ Bug 13847 ]] Make sure we only update menus once per accelerator.
@@ -849,7 +849,7 @@ bool MCMacPlatformMenu::PopUp(MCPlatformWindowRef p_window, MCPoint p_location, 
     s_menu_item_selected = false;
 	[menu popUpMenuPositioningItem: p_item == UINDEX_MAX ? nil : [menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
 	
-	MCMacPlatformSyncMouseAfterTracking();
+	static_cast<MCMacPlatformCore *>(m_platform) -> SyncMouseAfterTracking();
 	
 	return s_menu_item_selected;
 }

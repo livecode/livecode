@@ -310,7 +310,7 @@ void MCMacPlatformCore::ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*
 	t_window = [[MCSnapshotWindow alloc] initWithPlatform:this];
 	[t_window orderFront: nil];
 	
-    MCMacPlatformLockCursor();
+    LockCursor();
     
 	// Set the cursor to cross.
 	[[NSCursor crosshairCursor] push];
@@ -327,7 +327,7 @@ void MCMacPlatformCore::ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*
 	// Return the cursor to arrow.
 	[NSCursor pop];
     
-    MCMacPlatformUnlockCursor();
+    UnlockCursor();
     
 	// Compute the selected rectangle.
 	t_screen_rect = mcrect_from_points(m_snapshot_start_point, m_snapshot_end_point);
