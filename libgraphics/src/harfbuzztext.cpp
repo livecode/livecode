@@ -25,7 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <hb-icu.h>
 
 #include <SkTypeface.h>
-#include <SkTypeface_android.h>
 #include <SkPoint.h>
 #include <SkTypes.h>
 
@@ -41,7 +40,7 @@ extern void MCCStringFree(char *p_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void skia_get_replacement_glyph(uint16_t p_size, SkTypeface *p_typeface, uint16_t& glyph, uindex_t& advance)
+static void skia_get_replacement_glyph(uint16_t p_size, sk_sp<SkTypeface> p_typeface, uint16_t& glyph, uindex_t& advance)
 {
     SkPaint paint;
     paint . setTextEncoding(SkPaint::kUTF16_TextEncoding);
@@ -63,14 +62,18 @@ struct MCGlyphRun
     uindex_t count;
     SkPoint *positions;
     uint16_t *glyphs;
-    SkTypeface *typeface;
+    sk_sp<SkTypeface> typeface;
 };
 
 void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, MCGPoint* x_location, uindex_t p_start, uindex_t p_end, const MCGFont &p_font, MCGlyphRun& r_run)
 {
+    // Skia APIs expect typefaces to be passed as shared pointers
+    sk_sp<SkTypeface> t_typeface((SkTypeface*)p_font.fid);
+    t_typeface->ref();
+    
     uindex_t t_count = p_end - p_start;
-    MCMemoryAllocate(sizeof(uint16_t) * t_count, r_run . glyphs);
-    MCMemoryAllocate(sizeof(MCGPoint) * t_count, r_run . positions);
+    MCMemoryNewArray(t_count, r_run.glyphs);
+    MCMemoryNewArray(t_count, r_run.positions);
     
 	// IM-2016-03-31: [[ Bug 17281 ]] positions may have negative values, so we need to use signed offsets.
 	index_t x_offset, y_offset;
@@ -96,7 +99,7 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
         else
         {
             uindex_t advance;
-            skia_get_replacement_glyph(p_font . size, (SkTypeface *)p_font . fid, r_run . glyphs[run_index], advance);
+            skia_get_replacement_glyph(p_font . size, t_typeface, r_run . glyphs[run_index], advance);
             advance_x += advance;
         }
             
@@ -106,17 +109,16 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
     x_location -> x += advance_x;
     x_location -> y += advance_y;
     
-    r_run . typeface = (SkTypeface *)p_font . fid;
-    r_run . typeface -> ref();
+    r_run.typeface = t_typeface;
     
     r_run . count = t_count;
 }
 
 void MCGlyphRunDestroy(MCGlyphRun& p_run)
 {
-    MCMemoryDeallocate(p_run . glyphs);
-    MCMemoryDeallocate(p_run . positions);
-    p_run . typeface -> unref();
+    MCMemoryDeleteArray(p_run.glyphs);
+    MCMemoryDeleteArray(p_run.positions);
+    p_run.typeface.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,35 +311,10 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
         if (t_start != t_end)
         {
             // Need to get a fallback font here.
-	        SkTypeface *t_fallback = nil;
-#if defined(__ANDROID__)
-	        SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
-#endif /* __ANDROID__ */
+            // For now, just fail to display the glyphs. Should display 'missing character' glyph.
+            MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
+            t_runs . Push(t_run);
 
-            // TODO: This currently seems to return nil all the time.
-            if (t_fallback != nil)
-            {
-                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . m_ascent, p_font . m_descent, p_font . m_leading, p_font . ideal);
-                
-                MCGlyphRun *t_fallback_runs;
-                uindex_t t_fallback_run_count;
-
-                shape(p_text + t_char_index, t_end - t_start, p_location, p_rtl, t_font, t_fallback_runs, t_fallback_run_count);
-            
-                for (uindex_t i = 0; i < t_fallback_run_count; i++)
-                    t_runs . Push(t_fallback_runs[i]);
-                
-                t_fallback -> unref();
-                
-                MCMemoryDeleteArray(t_fallback_runs);
-            }
-            else
-            {
-                // For now, just fail to display the glyphs. Should display 'missing character' glyph.
-                MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
-                t_runs . Push(t_run);
-            }
-            
             t_start = t_cur_glyph;
             t_end = t_cur_glyph;
         }
@@ -363,11 +340,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     t_paint . setTextSize(p_font . size);
     t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
     
-    SkXfermode *t_blend_mode;
-    t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-    t_paint . setXfermode(t_blend_mode);
-    if (t_blend_mode != NULL)
-        t_blend_mode -> unref();
+    SkBlendMode t_blend_mode = MCGBlendModeToSkBlendMode(self -> state -> blend_mode);
+    t_paint.setBlendMode(t_blend_mode);
     
     MCGlyphRun *t_glyph_runs;
     uindex_t t_count;
