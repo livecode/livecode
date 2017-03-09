@@ -812,14 +812,14 @@ public:
     
     // Windows
     virtual MCPlatformWindowRef CreateWindow(void);
+    virtual void BeginModalSession(MCMacPlatformWindow *p_window);
+    virtual void EndModalSession(MCMacPlatformWindow *p_window);
     virtual bool ApplicationWindowIsMoving(MCPlatformWindowRef p_window);
     virtual void ApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
     virtual void ApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
     virtual void ApplicationBecomePseudoModalFor(NSWindow *p_window);
     virtual NSWindow *ApplicationPseudoModalFor(void);
     virtual bool ApplicationSendEvent(NSEvent *p_event);
-    virtual void BeginModalSession(MCMacPlatformWindow *p_window);
-    virtual void EndModalSession(MCMacPlatformWindow *p_window);
     
     // Color dialog
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
@@ -846,6 +846,8 @@ public:
     virtual void SetDisplayLinkFired(bool p_fired);
     
     virtual void Beep(void);
+    
+    virtual void DeathGrip(MCPlatform::Base * p_pointer);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);

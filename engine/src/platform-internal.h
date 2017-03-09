@@ -510,6 +510,8 @@ namespace MCPlatform {
         virtual void ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap) = 0;
         
         virtual void Beep(void) = 0;
+        
+        virtual void DeathGrip(MCPlatform::Base * p_window) = 0;
     };
     
     typedef Ref<Core> CoreRef;

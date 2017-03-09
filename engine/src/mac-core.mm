@@ -837,36 +837,32 @@ void MCMacPlatformCore::ScheduleCallback(void (*p_callback)(void *), void *p_con
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef void (*MCPlatformDeathGripFreeCallback)(void *);
-
-@interface com_runrev_livecode_MCPlatformDeathGrip: NSObject
+@interface com_runrev_livecode_MCPlatformBaseDeathGrip: NSObject
 {
-	void *m_pointer;
-	MCPlatformDeathGripFreeCallback m_free;
+	MCPlatform::Base *m_pointer;
 }
 
-- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free;
+- (id)initWithPointer: (MCPlatform::Base *)pointer;
 - (void)dealloc;
 
 @end
 
-@implementation com_runrev_livecode_MCPlatformDeathGrip
+@implementation com_runrev_livecode_MCPlatformBaseDeathGrip
 
-- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free
+- (id)initWithPointer: (MCPlatform::Base *)pointer
 {
 	self = [super init];
 	if (self == nil)
 		return nil;
 	
 	m_pointer = pointer;
-	m_free = free;
 
 	return self;
 }
 
 - (void)dealloc
 {
-	m_free(m_pointer);
+	m_pointer -> Release();
 	[super dealloc];
 }
 
@@ -877,14 +873,14 @@ typedef void (*MCPlatformDeathGripFreeCallback)(void *);
 // handling chain. A deathgrip lasts for the scope of the current autorelease
 // pool - so means such objects won't get completely destroyed until after event
 // handling has completed.
-void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::DeathGrip(MCPlatform::Base * p_pointer)
 {
-	// Retain the window.
-	MCPlatformRetainWindow(p_window);
+	// Retain the pointer.
+	p_pointer -> Retain();
 	
 	// Now push an autorelease object onto the stack that will release the object
 	// after event dispatch.
-	[[[com_runrev_livecode_MCPlatformDeathGrip alloc] initWithPointer: p_window freeWith: (MCPlatformDeathGripFreeCallback)MCPlatformReleaseWindow] autorelease];
+	[[[com_runrev_livecode_MCPlatformBaseDeathGrip alloc] initWithPointer: p_pointer] autorelease];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

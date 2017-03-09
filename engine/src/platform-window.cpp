@@ -743,6 +743,13 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef p_window, MCPlatformWi
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
+{
+    MCplatform -> DeathGrip(p_window);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCPlatformWindowMask::WindowMask(void)
 {
 }
