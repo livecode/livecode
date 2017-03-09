@@ -358,14 +358,15 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 					s_click_count += 1;
 				else
 					s_click_count = 0;
+                
+                MCclicklocx = MCmousex;
+                MCclicklocy = MCmousey;
 			}
 			else
 				s_click_time = t_event -> mouse . time;
 
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . press . modifiers;
-			MCclicklocx = MCmousex;
-			MCclicklocy = MCmousey;
 			MCclickstackptr = MCmousestackptr;
 
 			MCObject *t_target;
