@@ -748,6 +748,11 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
     MCplatform -> DeathGrip(p_window);
 }
 
+bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
+{
+    return MCplatform -> GetWindowWithId(p_id, r_window);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformWindowMask::WindowMask(void)

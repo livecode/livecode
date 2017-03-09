@@ -810,6 +810,7 @@ public:
     
     // Windows
     virtual MCPlatformWindowRef CreateWindow(void);
+    virtual bool GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window);
     virtual void BeginModalSession(MCMacPlatformWindow *p_window);
     virtual void EndModalSession(MCMacPlatformWindow *p_window);
     virtual bool ApplicationWindowIsMoving(MCPlatformWindowRef p_window);

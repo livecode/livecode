@@ -1066,7 +1066,7 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 }
 
 // MW-2014-07-15: [[ Bug 12800 ]] Map a window number to a platform window - if there is one.
-bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
+bool MCMacPlatformCore::GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
 {
     NSWindow *t_ns_window;
     t_ns_window = [NSApp windowWithWindowNumber: p_id];

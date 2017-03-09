@@ -491,6 +491,7 @@ namespace MCPlatform {
     
         // Windows
         virtual MCPlatformWindowRef CreateWindow(void) = 0;
+        virtual bool GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window) = 0;
         
         // Color dialog
         virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color) = 0;
