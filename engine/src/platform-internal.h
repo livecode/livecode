@@ -512,6 +512,8 @@ namespace MCPlatform {
         virtual void Beep(void) = 0;
         
         virtual void DeathGrip(MCPlatform::Base * p_window) = 0;
+        
+        virtual void FlushEvents(MCPlatformEventMask p_mask) = 0;
     };
     
     typedef Ref<Core> CoreRef;

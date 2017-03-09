@@ -111,6 +111,13 @@ void MCPlatformBeep(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
+{
+    MCplatform -> FlushEvents(p_mask);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

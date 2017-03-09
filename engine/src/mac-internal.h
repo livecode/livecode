@@ -848,6 +848,8 @@ public:
     virtual void Beep(void);
     
     virtual void DeathGrip(MCPlatform::Base * p_pointer);
+    
+    virtual void FlushEvents(MCPlatformEventMask p_mask);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
