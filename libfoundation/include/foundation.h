@@ -779,8 +779,6 @@ inline T MCClamp(T value, U min, V max) {
 //  BYTE ORDER FUNCTIONS
 //
 
-// TODO[C++11] All of the functions in this section should be constexpr
-
 enum MCByteOrder
 {
 	kMCByteOrderUnknown,
@@ -794,81 +792,81 @@ const MCByteOrder kMCByteOrderHost = kMCByteOrderLittleEndian;
 const MCByteOrder kMCByteOrderHost = kMCByteOrderBigEndian;
 #endif
 
-inline MCByteOrder MCByteOrderGetCurrent(void)
+constexpr MCByteOrder MCByteOrderGetCurrent(void)
 {
 	return kMCByteOrderHost;
 }
 
-inline uint8_t MCSwapInt(uint8_t x) { return x; }
-inline int8_t MCSwapInt(int8_t x) { return x; }
+constexpr uint8_t MCSwapInt(uint8_t x) { return x; }
+constexpr int8_t MCSwapInt(int8_t x) { return x; }
 
-inline uint16_t MCSwapInt(uint16_t x)
+constexpr uint16_t MCSwapInt(uint16_t x)
 {
 	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
-inline int16_t MCSwapInt(int16_t x) { return int16_t(MCSwapInt(uint16_t(x))); }
+constexpr int16_t MCSwapInt(int16_t x) { return int16_t(MCSwapInt(uint16_t(x))); }
 
-inline uint32_t MCSwapInt(uint32_t x)
+constexpr uint32_t MCSwapInt(uint32_t x)
 {
 	return (x >> 24) | ((x >> 8) & 0xff00) | ((x & 0xff00) << 8) | (x << 24);
 }
-inline int32_t MCSwapInt(int32_t x) { return int32_t(MCSwapInt(uint32_t(x))); }
+constexpr int32_t MCSwapInt(int32_t x) { return int32_t(MCSwapInt(uint32_t(x))); }
 
-inline uint64_t MCSwapInt(uint64_t x)
+constexpr uint64_t MCSwapInt(uint64_t x)
 {
 	return (x >> 56) | ((x >> 40) & 0xff00) | ((x >> 24) & 0xff0000) | ((x >> 8) & 0xff000000) |
 			((x & 0xff000000) << 8) | ((x & 0xff0000) << 24) | ((x & 0xff00) << 40) | (x << 56);
 }
-inline int64_t MCSwapInt(int64_t x) { return int16_t(MCSwapInt(uint64_t(x))); }
+constexpr int64_t MCSwapInt(int64_t x) { return int16_t(MCSwapInt(uint64_t(x))); }
 
-inline uint16_t MCSwapInt16(uint16_t x) { return MCSwapInt(x); }
-inline uint32_t MCSwapInt32(uint32_t x) { return MCSwapInt(x); }
-inline uint64_t MCSwapInt64(uint64_t x) { return MCSwapInt(x); }
+constexpr uint16_t MCSwapInt16(uint16_t x) { return MCSwapInt(x); }
+constexpr uint32_t MCSwapInt32(uint32_t x) { return MCSwapInt(x); }
+constexpr uint64_t MCSwapInt64(uint64_t x) { return MCSwapInt(x); }
 
 template <typename T>
-inline T MCSwapIntBigToHost(T x)
+constexpr T MCSwapIntBigToHost(T x)
 {
 	return (kMCByteOrderHost == kMCByteOrderBigEndian) ? x : MCSwapInt(x);
 }
 template <typename T>
-inline T MCSwapIntHostToBig(T x) { return MCSwapIntBigToHost(x); }
+constexpr T MCSwapIntHostToBig(T x) { return MCSwapIntBigToHost(x); }
 
 template <typename T>
-inline T MCSwapIntNetworkToHost(T x) { return MCSwapIntBigToHost(x); }
+constexpr T MCSwapIntNetworkToHost(T x) { return MCSwapIntBigToHost(x); }
 template <typename T>
-inline T MCSwapIntHostToNetwork(T x) { return MCSwapIntHostToBig(x); }
+constexpr T MCSwapIntHostToNetwork(T x) { return MCSwapIntHostToBig(x); }
 
 template <typename T>
-inline T MCSwapIntLittleToHost(T x)
+constexpr T MCSwapIntLittleToHost(T x)
 {
 	return (kMCByteOrderHost == kMCByteOrderLittleEndian) ? x : MCSwapInt(x);
 }
 template <typename T>
-inline T MCSwapIntHostToLittle(T x) { return MCSwapIntLittleToHost(x); }
+constexpr T MCSwapIntHostToLittle(T x) { return MCSwapIntLittleToHost(x); }
 
-inline uint16_t MCSwapInt16BigToHost(uint16_t x) {return MCSwapIntBigToHost(x);}
-inline uint32_t MCSwapInt32BigToHost(uint32_t x) {return MCSwapIntBigToHost(x);}
-inline uint64_t MCSwapInt64BigToHost(uint64_t x) {return MCSwapIntBigToHost(x);}
+constexpr uint16_t MCSwapInt16BigToHost(uint16_t x) {return MCSwapIntBigToHost(x);}
+constexpr uint32_t MCSwapInt32BigToHost(uint32_t x) {return MCSwapIntBigToHost(x);}
+constexpr uint64_t MCSwapInt64BigToHost(uint64_t x) {return MCSwapIntBigToHost(x);}
 
-inline uint16_t MCSwapInt16HostToBig(uint16_t x) {return MCSwapIntHostToBig(x);}
-inline uint32_t MCSwapInt32HostToBig(uint32_t x) {return MCSwapIntHostToBig(x);}
-inline uint64_t MCSwapInt64HostToBig(uint64_t x) {return MCSwapIntHostToBig(x);}
+constexpr uint16_t MCSwapInt16HostToBig(uint16_t x) {return MCSwapIntHostToBig(x);}
+constexpr uint32_t MCSwapInt32HostToBig(uint32_t x) {return MCSwapIntHostToBig(x);}
+constexpr uint64_t MCSwapInt64HostToBig(uint64_t x) {return MCSwapIntHostToBig(x);}
 
-inline uint16_t MCSwapInt16LittleToHost(uint16_t x) {return MCSwapIntLittleToHost(x);}
-inline uint32_t MCSwapInt32LittleToHost(uint32_t x) {return MCSwapIntLittleToHost(x);}
-inline uint64_t MCSwapInt64LittleToHost(uint64_t x) {return MCSwapIntLittleToHost(x);}
+constexpr uint16_t MCSwapInt16LittleToHost(uint16_t x) {return MCSwapIntLittleToHost(x);}
+constexpr uint32_t MCSwapInt32LittleToHost(uint32_t x) {return MCSwapIntLittleToHost(x);}
+constexpr uint64_t MCSwapInt64LittleToHost(uint64_t x) {return MCSwapIntLittleToHost(x);}
 
-inline uint16_t MCSwapInt16HostToLittle(uint16_t x) {return MCSwapIntHostToLittle(x);}
-inline uint32_t MCSwapInt32HostToLittle(uint32_t x) {return MCSwapIntHostToLittle(x);}
-inline uint64_t MCSwapInt64HostToLittle(uint64_t x) {return MCSwapIntHostToLittle(x);}
+constexpr uint16_t MCSwapInt16HostToLittle(uint16_t x) {return MCSwapIntHostToLittle(x);}
+constexpr uint32_t MCSwapInt32HostToLittle(uint32_t x) {return MCSwapIntHostToLittle(x);}
+constexpr uint64_t MCSwapInt64HostToLittle(uint64_t x) {return MCSwapIntHostToLittle(x);}
 
-inline uint16_t MCSwapInt16NetworkToHost(uint16_t x) {return MCSwapIntNetworkToHost(x);}
-inline uint32_t MCSwapInt32NetworkToHost(uint32_t x) {return MCSwapIntNetworkToHost(x);}
-inline uint64_t MCSwapInt64NetworkToHost(uint64_t x) {return MCSwapIntNetworkToHost(x);}
+constexpr uint16_t MCSwapInt16NetworkToHost(uint16_t x) {return MCSwapIntNetworkToHost(x);}
+constexpr uint32_t MCSwapInt32NetworkToHost(uint32_t x) {return MCSwapIntNetworkToHost(x);}
+constexpr uint64_t MCSwapInt64NetworkToHost(uint64_t x) {return MCSwapIntNetworkToHost(x);}
 
-inline uint16_t MCSwapInt16HostToNetwork(uint16_t x) {return MCSwapIntHostToNetwork(x);}
-inline uint32_t MCSwapInt32HostToNetwork(uint32_t x) {return MCSwapIntHostToNetwork(x);}
-inline uint64_t MCSwapInt64HostToNetwork(uint64_t x) {return MCSwapIntHostToNetwork(x);}
+constexpr uint16_t MCSwapInt16HostToNetwork(uint16_t x) {return MCSwapIntHostToNetwork(x);}
+constexpr uint32_t MCSwapInt32HostToNetwork(uint32_t x) {return MCSwapIntHostToNetwork(x);}
+constexpr uint64_t MCSwapInt64HostToNetwork(uint64_t x) {return MCSwapIntHostToNetwork(x);}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
