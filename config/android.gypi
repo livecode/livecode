@@ -27,6 +27,8 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
+
+		'android_ndk_path%': '<(android_ndk_path)',
 	},
 	
 	'target_defaults':
