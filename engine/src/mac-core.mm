@@ -1086,7 +1086,7 @@ bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
     return true;
 }
 
-uint32_t MCPlatformGetEventTime(void)
+uint32_t MCMacPlatformCore::GetEventTime(void)
 {
 	return [[NSApp currentEvent] timestamp] * 1000.0;
 }

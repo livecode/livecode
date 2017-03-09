@@ -513,7 +513,9 @@ namespace MCPlatform {
         
         virtual void DeathGrip(MCPlatform::Base * p_window) = 0;
         
+        // Events
         virtual void FlushEvents(MCPlatformEventMask p_mask) = 0;
+        virtual uint32_t GetEventTime(void) = 0;
         
         // Mice
         virtual void HideCursorUntilMouseMoves(void) = 0;

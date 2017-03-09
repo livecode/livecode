@@ -116,6 +116,11 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
     MCplatform -> FlushEvents(p_mask);
 }
 
+uint32_t MCPlatformGetEventTime(void)
+{
+    return MCplatform -> GetEventTime();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int platform_main(int argc, char *argv[], char *envp[])

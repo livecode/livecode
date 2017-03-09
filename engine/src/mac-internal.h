@@ -847,7 +847,9 @@ public:
     
     virtual void DeathGrip(MCPlatform::Base * p_pointer);
     
+    // Events
     virtual void FlushEvents(MCPlatformEventMask p_mask);
+    virtual uint32_t GetEventTime(void);
     
     // Mice
     virtual void HideCursorUntilMouseMoves(void);
