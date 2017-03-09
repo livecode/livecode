@@ -200,6 +200,13 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
+{
+    MCplatform -> ConfigureBackdrop(p_backdrop_window);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

@@ -619,9 +619,6 @@ bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
-// MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
-void MCMacPlatformSyncBackdrop(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
@@ -871,6 +868,10 @@ public:
     virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport);
     virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea);
     virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale);
+    
+    // Backdrop
+    virtual void SyncBackdrop(void);
+    virtual void ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -956,6 +957,9 @@ private:
     
     bool m_have_desktop_height = false;
     CGFloat m_desktop_height = 0.0f;
+    
+    // Backdrop
+    MCPlatformWindowRef m_backdrop_window = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

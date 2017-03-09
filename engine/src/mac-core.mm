@@ -1152,15 +1152,13 @@ void MCMacPlatformCore::GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCPlatformWindowRef s_backdrop_window = nil;
-
-void MCMacPlatformSyncBackdrop(void)
+void MCMacPlatformCore::SyncBackdrop(void)
 {
-    if (s_backdrop_window == nil)
+    if (m_backdrop_window == nil)
         return;
     
     NSWindow *t_backdrop;
-    t_backdrop = ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle();
+    t_backdrop = ((MCMacPlatformWindow *)m_backdrop_window) -> GetHandle();
     
     NSDisableScreenUpdates();
     [t_backdrop orderOut: nil];
@@ -1188,20 +1186,20 @@ void MCMacPlatformSyncBackdrop(void)
     NSEnableScreenUpdates();
 }
 
-void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
+void MCMacPlatformCore::ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 {
-	if (s_backdrop_window != nil)
+	if (m_backdrop_window != nil)
 	{
-		MCPlatformReleaseWindow(s_backdrop_window);
-		s_backdrop_window = nil;
+		m_backdrop_window -> Release();
+		m_backdrop_window = nil;
 	}
 	
-	s_backdrop_window = p_backdrop_window;
+	m_backdrop_window = p_backdrop_window;
 	
-	if (s_backdrop_window != nil)
-		MCPlatformRetainWindow(s_backdrop_window);
+	if (m_backdrop_window != nil)
+		m_backdrop_window -> Retain();
 	
-	MCMacPlatformSyncBackdrop();
+	SyncBackdrop();
 }
 
 

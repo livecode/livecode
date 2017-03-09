@@ -609,12 +609,13 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
-    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window->GetPlatform());
+    if (t_platform -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
     //   been re-ordered but before anything else - an ideal time to sync the backdrop.
-    MCMacPlatformSyncBackdrop();
+    t_platform -> SyncBackdrop();
 	return YES;
 }
 
