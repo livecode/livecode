@@ -280,36 +280,26 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 		r_path_effect = NULL;
 		return true;
 	}
-	
-	bool t_success;
-	t_success = true;
-	
+
     // Skia won't except odd numbers of dashes, so we must replicate in that case.
-    uint32_t t_dash_count;
-    if (t_success)
-        t_dash_count = (self -> count % 2) == 0 ? self -> count : self -> count * 2;
-        
-	SkScalar *t_dashes;
-	if (t_success)
-		t_success = MCMemoryNewArray(t_dash_count, t_dashes);
-	
-	SkDashPathEffect *t_dash_effect;
-	t_dash_effect = NULL;
-	if (t_success)
-	{
-		for (uint32_t i = 0; i < t_dash_count; i++)
-			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
-	
-		t_dash_effect = new (nothrow) SkDashPathEffect(t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
-		t_success = t_dash_effect != NULL;
-	}
-	
-	if (t_success)
-		r_path_effect = t_dash_effect;
-	
-	MCMemoryDeleteArray(t_dashes);
-	
-	return t_success;	
+    uint32_t t_dash_count =
+        (self -> count % 2) == 0 ? self -> count : self -> count * 2;
+
+    MCAutoPointer<SkScalar[]> t_dashes = new (nothrow) SkScalar[t_dash_count];
+    if (!t_dashes)
+        return false;
+
+    for (uint32_t i = 0; i < t_dash_count; i++)
+        t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
+
+    SkDashPathEffect *t_dash_effect =
+        new (nothrow) SkDashPathEffect(t_dashes.Get(), (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
+
+    if (!t_dash_effect)
+        return false;
+
+    r_path_effect = t_dash_effect;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
