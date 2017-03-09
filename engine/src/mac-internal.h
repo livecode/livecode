@@ -872,6 +872,8 @@ public:
     virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport);
     virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea);
     virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale);
+    virtual void DisableScreenUpdates(void);
+    virtual void EnableScreenUpdates(void);
     
     // Backdrop
     virtual void SyncBackdrop(void);

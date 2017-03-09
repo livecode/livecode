@@ -198,6 +198,17 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
     MCplatform -> GetScreenPixelScale(p_index, r_scale);
 }
 
+void MCPlatformDisableScreenUpdates(void)
+{
+    MCplatform -> DisableScreenUpdates();
+}
+
+void MCPlatformEnableScreenUpdates(void)
+{
+    MCplatform -> EnableScreenUpdates();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)

@@ -76,9 +76,6 @@ extern bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, M
 extern bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time);
 extern void MCCoreImageEffectEnd(void);
 
-extern void MCMacDisableScreenUpdates(void);
-extern void MCMacEnableScreenUpdates(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCStackEffectContext

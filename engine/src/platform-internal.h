@@ -542,7 +542,9 @@ namespace MCPlatform {
         virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport) = 0;
         virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea) = 0;
         virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale) = 0;
-        
+        virtual void DisableScreenUpdates(void) = 0;
+        virtual void EnableScreenUpdates(void) = 0;
+
         // Backdrop
         virtual void ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window) = 0;
     };

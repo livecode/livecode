@@ -2021,6 +2021,17 @@ int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
     return 0;
 }
 
+
+void MCMacPlatformCore::DisableScreenUpdates(void)
+{
+    NSDisableScreenUpdates();
+}
+
+void MCMacPlatformCore::EnableScreenUpdates(void)
+{
+    NSEnableScreenUpdates();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void)
