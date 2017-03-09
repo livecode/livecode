@@ -37,28 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////
 
-//
-
-inline bool MCMathOpCommandComputeOverlap(MCExpression *p_source, MCExpression *p_dest, MCVarref *p_destvar)
-{
-	MCVarref *t_src_ref;
-	t_src_ref = p_source -> getrootvarref();
-	if (t_src_ref == NULL)
-		return false;
-
-	if (p_destvar != NULL)
-		return t_src_ref -> rootmatches(p_destvar);
-
-	MCVarref *t_dst_ref;
-	t_dst_ref = p_dest -> getrootvarref();
-	if (t_dst_ref == NULL)
-		 return false;
-
-	return t_src_ref -> rootmatches(t_dst_ref);
-}
-
-//
-
 MCAdd::~MCAdd()
 {
 	delete source;
@@ -101,8 +79,6 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -265,8 +241,6 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -433,8 +407,6 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -601,8 +573,6 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }

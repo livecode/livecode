@@ -1330,17 +1330,6 @@ MCVarref *MCVarref::getrootvarref(void)
 	return this;
 }
 
-bool MCVarref::rootmatches(MCVarref *p_other) const
-{
-	if (this == p_other)
-		return true;
-
-	if (p_other -> ref != NULL)
-		return ref == p_other -> ref;
-
-	return handler == p_other -> handler && index == p_other -> index && isparam == p_other -> isparam;
-}
-
 bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
 	if (dimensions == 0 && !isparam)
