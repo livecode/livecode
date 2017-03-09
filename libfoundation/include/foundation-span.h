@@ -44,11 +44,6 @@
  * order to make sure that there is as much commonality as possible
  * between the behaviour of an MCSpan and an array pointer. */
 
-/* TODO[C++11] Many of the constructors & methods in MCSpan are
- * declared constexpr.  However, some of our compilers don't support
- * constexpr, and for those compilers constexpr is defined to
- * empty. */
-
 /* TODO[C++14] Some of the constexpr methods in MCSpan use assertions,
  * and have to do ugly chaining using the comma operator in a return
  * statement in order to comply with the C++11 restrictions on

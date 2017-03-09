@@ -447,29 +447,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  endif
 #endif
 
-// Ensure we have constexpr keyword defined
-#if defined(__cplusplus) && (!defined(__cpp_constexpr) || (__cpp_constexpr < 200704))
-// Testing __cplusplus isn't sufficient as some compilers changed the
-// value before being fully-conforming
-#  if defined(__clang__)
-     // clang defines __cpp_constexpr appropriately
-#    define constexpr /*constexpr*/
-#  elif defined(__GNUC__)
-     // GCC added C++11 constexpr in GCC 4.6
-#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#      define constexpr /*constexpr*/
-#    endif
-#  elif defined(_MSC_VER)
-     // MSVC added C++11 constexpr in Visual Studio 2015 (compiler
-     // version 14.0, _MSC_VER 1900)
-#    if _MSC_VER < 1900
-#      define constexpr /*constexpr*/
-#    endif
-#  else
-#    error Do not know whether this compiler provides C++11 constexpr
-#  endif
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FIXED WIDTH INTEGER TYPES
