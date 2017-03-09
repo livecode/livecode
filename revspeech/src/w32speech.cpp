@@ -18,7 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "revspeech.h"
 
-#include "w32sapi4speech.h"
 #include "w32sapi5speech.h"
 
 INarrator *InstantiateNarrator(NarratorProvider p_provider)
