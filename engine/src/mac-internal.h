@@ -930,6 +930,10 @@ public:
     
     // Sound
     virtual MCPlatformSoundRef CreateSound(void);
+    
+    // Callbacks
+    MCPlatformCallbackRef GetCallback(void) { return m_callback;}
+    void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;};
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1027,6 +1031,7 @@ private:
     // Color dialog
     MCColorPanelDelegate* m_color_dialog_delegate = nil;
 
+    MCPlatformCallbackRef m_callback = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

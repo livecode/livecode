@@ -57,56 +57,56 @@ inline bool MCPlatformArrayCopy(const array_t<T> &p_src, array_t<T> &p_dst)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum MCPlatformCallbackType
-{
-	kMCPlatformCallbackApplicationStartup,
-	kMCPlatformCallbackApplicationShutdown,
-	kMCPlatformCallbackApplicationShutdownRequest,
-	kMCPlatformCallbackApplicationSuspend,
-	kMCPlatformCallbackApplicationResume,
-	kMCPlatformCallbackApplicationRun,
-};
-
-struct MCPlatformCallback
-{
-	MCPlatformCallbackType type;
-	union
-	{
-		union
-		{
-			struct
-			{
-				// Incoming fields
-				uindex_t argc;
-				char **argv;
-				char **envp;
-				
-				// Outgoing fields
-				int error_code;
-				char *error_message;
-			} startup;
-			
-			struct
-			{
-				// Incoming fields
-				
-				// Outgoing fields
-				int exit_code;
-			} shutdown;
-			
-			struct
-			{
-				// Incoming fields
-				
-				// Outgoing fields
-				bool terminate;
-			} shutdown_request;
-			
-		} application;
-	};
-};
-
-void MCPlatformProcess(MCPlatformCallback& event);
+//enum MCPlatformCallbackType
+//{
+//	kMCPlatformCallbackApplicationStartup,
+//	kMCPlatformCallbackApplicationShutdown,
+//	kMCPlatformCallbackApplicationShutdownRequest,
+//	kMCPlatformCallbackApplicationSuspend,
+//	kMCPlatformCallbackApplicationResume,
+//	kMCPlatformCallbackApplicationRun,
+//};
+//
+//struct MCPlatformCallback
+//{
+//	MCPlatformCallbackType type;
+//	union
+//	{
+//		union
+//		{
+//			struct
+//			{
+//				// Incoming fields
+//				uindex_t argc;
+//				char **argv;
+//				char **envp;
+//				
+//				// Outgoing fields
+//				int error_code;
+//				char *error_message;
+//			} startup;
+//			
+//			struct
+//			{
+//				// Incoming fields
+//				
+//				// Outgoing fields
+//				int exit_code;
+//			} shutdown;
+//			
+//			struct
+//			{
+//				// Incoming fields
+//				
+//				// Outgoing fields
+//				bool terminate;
+//			} shutdown_request;
+//			
+//		} application;
+//	};
+//};
+//
+//void MCPlatformProcess(MCPlatformCallback& event);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1321,6 +1321,10 @@ bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatfor
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef MCPlatform::Callback *MCPlatformCallbackRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -578,6 +578,10 @@ namespace MCPlatform {
         
         // Sound
         virtual MCPlatformSoundRef CreateSound(void) = 0;
+        
+        // Callbacks
+        virtual MCPlatformCallbackRef GetCallback(void) = 0;
+        virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
     };
     
     typedef Ref<Core> CoreRef;
@@ -610,66 +614,90 @@ typedef MCPlatform::ScriptEnvironment MCPlatformScriptEnvironment;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformCallbackSendApplicationStartup(int argc, MCStringRef *argv, MCStringRef *envp, int& r_error_code, MCStringRef& r_error_message);
-void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
-void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
-void MCPlatformCallbackSendApplicationRun(bool& r_continue);
-void MCPlatformCallbackSendApplicationSuspend(void);
-void MCPlatformCallbackSendApplicationResume(void);
 
-void MCPlatformCallbackSendScreenParametersChanged(void);
+namespace MCPlatform
+{
+    class Callback: public Base
+    {
+    public:
+        constexpr Callback() = default;
+        ~Callback() {}
+        
+#if defined(FEATURE_PLATFORM_APPLICATION)
+        virtual void SendApplicationStartup(int argc, MCStringRef *argv, MCStringRef *envp, int& r_error_code, MCStringRef& r_error_message);
+        virtual void SendApplicationShutdown(int& r_exit_code);
+        virtual void SendApplicationShutdownRequest(bool& r_terminate);
+        virtual void SendApplicationRun(bool& r_continue);
+        virtual void SendApplicationSuspend(void);
+        virtual void SendApplicationResume(void);
+#endif // FEATURE_PLATFORM_APPLICATION
+        
+        virtual void SendScreenParametersChanged(void);
+        
+#if defined(FEATURE_PLATFORM_WINDOW)
+        virtual void SendWindowCloseRequest(MCPlatformWindowRef window);
+        virtual void SendWindowClose(MCPlatformWindowRef window);
+        virtual void SendWindowCancel(MCPlatformWindowRef window);
+        virtual void SendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
+        virtual void SendWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
+        virtual void SendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
+        virtual void SendWindowIconify(MCPlatformWindowRef window);
+        virtual void SendWindowUniconify(MCPlatformWindowRef window);
+        virtual void SendWindowFocus(MCPlatformWindowRef window);
+        virtual void SendWindowUnfocus(MCPlatformWindowRef window);
+        
+        virtual void SendModifiersChanged(MCPlatformModifiers modifiers);
+        
+        virtual void SendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
+        virtual void SendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
+        virtual void SendMouseDrag(MCPlatformWindowRef window, uint32_t button);
+        virtual void SendMouseRelease(MCPlatformWindowRef window, uint32_t button, bool was_menu);
+        virtual void SendMouseEnter(MCPlatformWindowRef window);
+        virtual void SendMouseLeave(MCPlatformWindowRef window);
+        virtual void SendMouseMove(MCPlatformWindowRef window, MCPoint location);
+        virtual void SendMouseScroll(MCPlatformWindowRef window, int32_t dx, int32_t dy);
+        
+        virtual void SendDragEnter(MCPlatformWindowRef window, class MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation);
+        virtual void SendDragLeave(MCPlatformWindowRef window);
+        virtual void SendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
+        virtual void SendDragDrop(MCPlatformWindowRef window, bool& r_accepted);
+        
+        virtual void SendRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+        
+        virtual void SendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+        virtual void SendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+        
+        virtual void SendTextInputQueryTextRanges(MCPlatformWindowRef window, MCRange& r_marked_range, MCRange& r_selected_range);
+        virtual void SendTextInputQueryTextIndex(MCPlatformWindowRef window, MCPoint location, uindex_t& r_index);
+        virtual void SendTextInputQueryTextRect(MCPlatformWindowRef window, MCRange range, MCRectangle& first_line_rect, MCRange& r_actual_range);
+        virtual void SendTextInputQueryText(MCPlatformWindowRef window, MCRange range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range);
+        virtual void SendTextInputInsertText(MCPlatformWindowRef window, unichar_t *chars, uindex_t char_count, MCRange replace_range, MCRange selection_range, bool mark);
+        virtual void SendTextInputAction(MCPlatformWindowRef window, MCPlatformTextInputAction action);
+        
+        virtual void SendMenuUpdate(MCPlatformMenuRef menu);
+        virtual void SendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
+        
+        virtual void SendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
+#endif // FEATURE_PLATFORM_WINDOW
+        
+#if defined(FEATURE_PLATFORM_PLAYER)
+        virtual void SendPlayerFrameChanged(MCPlatformPlayerRef player);
+        virtual void SendPlayerMarkerChanged(MCPlatformPlayerRef player, MCPlatformPlayerDuration time);
+        virtual void SendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
+        virtual void SendPlayerFinished(MCPlatformPlayerRef player);
+        virtual void SendPlayerBufferUpdated(MCPlatformPlayerRef player);
+#endif // FEATURE_PLATFORM_PLAYER
+        
+#if defined(FEATURE_PLATFORM_AUDIO)
+        virtual void SendSoundFinished(MCPlatformSoundRef sound);
+#endif // FEATURE_PLATFORM_AUDIO
+    };
+    
+    typedef Ref<Callback> CallbackRef;
+    
+} /* namespace MCPlatform */
 
-void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowCancel(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
-void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
-void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
-void MCPlatformCallbackSendWindowIconify(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowUniconify(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowFocus(MCPlatformWindowRef window);
-void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef window);
-
-void MCPlatformCallbackSendModifiersChanged(MCPlatformModifiers modifiers);
-											
-void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
-void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
-void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef window, uint32_t button);
-void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t button, bool was_menu);
-void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
-void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
-void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
-void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef window, int32_t dx, int32_t dy);
-
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, class MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation);
-void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
-void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
-void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window, bool& r_accepted);
-
-void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
-
-void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
-void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
-
-void MCPlatformCallbackSendTextInputQueryTextRanges(MCPlatformWindowRef window, MCRange& r_marked_range, MCRange& r_selected_range);
-void MCPlatformCallbackSendTextInputQueryTextIndex(MCPlatformWindowRef window, MCPoint location, uindex_t& r_index);
-void MCPlatformCallbackSendTextInputQueryTextRect(MCPlatformWindowRef window, MCRange range, MCRectangle& first_line_rect, MCRange& r_actual_range);
-void MCPlatformCallbackSendTextInputQueryText(MCPlatformWindowRef window, MCRange range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range);
-void MCPlatformCallbackSendTextInputInsertText(MCPlatformWindowRef window, unichar_t *chars, uindex_t char_count, MCRange replace_range, MCRange selection_range, bool mark);
-void MCPlatformCallbackSendTextInputAction(MCPlatformWindowRef window, MCPlatformTextInputAction action);
-
-void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
-void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
-
-void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
-
-void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, MCPlatformPlayerDuration time);
-void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef player);
-
-void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
+typedef MCPlatform::Callback MCPlatformCallback;
 
 ////////////////////////////////////////////////////////////////////////////////
 

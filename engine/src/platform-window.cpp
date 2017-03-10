@@ -151,7 +151,7 @@ void MCPlatformWindow::ShowAsSheet(MCPlatformWindowRef p_parent)
 		 p_parent -> m_style != kMCPlatformWindowStylePalette &&
 		 p_parent -> m_style != kMCPlatformWindowStyleUtility))
 	{
-		MCPlatformCallbackSendWindowClose(this);
+		m_platform -> GetCallback() -> SendWindowClose(this);
 		return;
 	}
 		
@@ -523,12 +523,12 @@ void MCPlatformWindow::RealizeAndNotify(void)
 
 void MCPlatformWindow::HandleCloseRequest(void)
 {
-	MCPlatformCallbackSendWindowCloseRequest(this);
+	m_platform -> GetCallback() -> SendWindowCloseRequest(this);
 }
 
 void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
-	MCPlatformCallbackSendWindowRedraw(this, p_surface, p_region);
+	m_platform -> GetCallback() -> SendWindowRedraw(this, p_surface, p_region);
 }
 
 void MCPlatformWindow::HandleReshape(MCRectangle p_new_content)
@@ -538,7 +538,7 @@ void MCPlatformWindow::HandleReshape(MCRectangle p_new_content)
 	m_changes . content_changed = false;
 	
 	// Dispatch the callback.
-	MCPlatformCallbackSendWindowReshape(this, m_content);
+	m_platform -> GetCallback() -> SendWindowReshape(this, m_content);
 }
 
 void MCPlatformWindow::HandleIconify(void)
@@ -547,7 +547,7 @@ void MCPlatformWindow::HandleIconify(void)
 	m_is_iconified = true;
 	
 	// Dispatch the callback.
-	MCPlatformCallbackSendWindowIconify(this);
+	m_platform -> GetCallback() -> SendWindowIconify(this);
 }
 
 void MCPlatformWindow::HandleUniconify(void)
@@ -556,7 +556,7 @@ void MCPlatformWindow::HandleUniconify(void)
 	m_is_iconified = false;
 	
 	// Dispatch the callback.
-	MCPlatformCallbackSendWindowUniconify(this);
+	m_platform -> GetCallback() -> SendWindowUniconify(this);
 }
 
 void MCPlatformWindow::HandleFocus(void)
@@ -565,7 +565,7 @@ void MCPlatformWindow::HandleFocus(void)
 	m_is_focused = true;
 	
 	// Dispatch the callback.
-	MCPlatformCallbackSendWindowFocus(this);
+	m_platform -> GetCallback() -> SendWindowFocus(this);
 }
 
 void MCPlatformWindow::HandleUnfocus(void)
@@ -574,37 +574,37 @@ void MCPlatformWindow::HandleUnfocus(void)
 	m_is_focused = false;
 	
 	// Dispatch the callback.
-	MCPlatformCallbackSendWindowUnfocus(this);
+	m_platform -> GetCallback() -> SendWindowUnfocus(this);
 }
 
 void MCPlatformWindow::HandleKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	MCPlatformCallbackSendKeyDown(this, p_key_code, p_mapped_char, p_unmapped_char);
+	m_platform -> GetCallback() -> SendKeyDown(this, p_key_code, p_mapped_char, p_unmapped_char);
 }
 
 void MCPlatformWindow::HandleKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	MCPlatformCallbackSendKeyUp(this, p_key_code, p_mapped_char, p_unmapped_char);
+	m_platform -> GetCallback() -> SendKeyUp(this, p_key_code, p_mapped_char, p_unmapped_char);
 }
 
 void MCPlatformWindow::HandleDragEnter(MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCPlatformCallbackSendDragEnter(this, p_dragboard, r_operation);
+	m_platform -> GetCallback() -> SendDragEnter(this, p_dragboard, r_operation);
 }
 
 void MCPlatformWindow::HandleDragMove(MCPoint p_location, MCPlatformDragOperation& r_operation)
 {
-	MCPlatformCallbackSendDragMove(this, p_location, r_operation);
+	m_platform -> GetCallback() -> SendDragMove(this, p_location, r_operation);
 }
 
 void MCPlatformWindow::HandleDragLeave(void)
 {
-	MCPlatformCallbackSendDragLeave(this);
+	m_platform -> GetCallback() -> SendDragLeave(this);
 }
 
 void MCPlatformWindow::HandleDragDrop(bool& r_accepted)
 {
-	MCPlatformCallbackSendDragDrop(this, r_accepted);
+	m_platform -> GetCallback() -> SendDragDrop(this, r_accepted);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

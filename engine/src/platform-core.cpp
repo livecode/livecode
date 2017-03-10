@@ -270,7 +270,11 @@ bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatfor
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())
+    {
+        MCPlatform::Ref<MCPlatformCallback> t_callback = MCPlatform::makeRef<MCPlatformCallback>();
+        MCplatform -> SetCallback(t_callback.unsafeTake());
         return MCplatform -> Run(argc, argv, envp);
+    }
     
     return -1;
 }

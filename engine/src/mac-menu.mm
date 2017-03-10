@@ -142,7 +142,7 @@ enum MCShadowedItemTags
     // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to the menubar
     if ([menu supermenu] == nil || !s_open_menubar_items)
     {
-        MCPlatformCallbackSendMenuUpdate(m_menu);
+        m_menu -> GetPlatform() -> GetCallback() -> SendMenuUpdate(m_menu);
     }
     
     // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
@@ -176,7 +176,7 @@ enum MCShadowedItemTags
     
 	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
     {
-		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+		m_menu -> GetPlatform() -> GetCallback() -> SendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
         s_menu_item_selected = true;
     }
     
@@ -298,14 +298,14 @@ enum MCShadowedItemTags
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
 	//    to allow shutdown in orderly fashion.
 	bool t_shutdown;
-	MCPlatformCallbackSendApplicationShutdownRequest(t_shutdown);
+	s_menubar -> GetPlatform() -> GetCallback() -> SendApplicationShutdownRequest(t_shutdown);
 }
 
 // SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
     if (!s_open_menubar_items)
-        MCPlatformCallbackSendMenuUpdate(s_menubar);
+        s_menubar -> GetPlatform() -> GetCallback() -> SendMenuUpdate(s_menubar);
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -1038,7 +1038,7 @@ static MCMacPlatformMenu * s_icon_menu = nil;
 NSMenu *MCMacPlatformCore::GetIconMenu(void)
 {
 	if (s_icon_menu != nil)
-		MCPlatformCallbackSendMenuUpdate(s_icon_menu);
+		m_callback -> SendMenuUpdate(s_icon_menu);
 	
 	if (s_icon_menu != nil)
 		return s_icon_menu -> GetMenu();

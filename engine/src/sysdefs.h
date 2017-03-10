@@ -206,6 +206,7 @@ namespace MCPlatform {
     class PrintDialogSession;
     class Core;
     class ScriptEnvironment;
+    class Callback;
 } /* namespace MCPlatform */
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
@@ -217,6 +218,7 @@ typedef class MCPlatform::Menu *MCPlatformMenuRef;
 typedef class MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
 typedef class MCPlatform::Core *MCPlatformCoreRef;
 typedef class MCPlatform::ScriptEnvironment *MCPlatformScriptEnvironmentRef;
+typedef class MCPlatform::Callback *MCPlatformCallbackRef;
 
 typedef void *MCColorTransformRef;
 

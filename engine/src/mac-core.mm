@@ -304,7 +304,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// Dispatch the startup callback.
 	int t_error_code;
 	MCAutoStringRef t_error_message;
-	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
+	m_platform -> GetCallback() -> SendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
 	
 	[t_pool release];
 	
@@ -357,7 +357,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
         NSAutoreleasePool *t_pool;
         t_pool = [[NSAutoreleasePool alloc] init];
     
-        MCPlatformCallbackSendApplicationRun(t_continue);
+        m_platform -> GetCallback() -> SendApplicationRun(t_continue);
         
         [t_pool release];
         
@@ -396,7 +396,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// option for now of just sending the callback and seeing what AppKit does
 	// with the (eventual) event loop that will result...
 	bool t_terminate;
-	MCPlatformCallbackSendApplicationShutdownRequest(t_terminate);
+	m_platform -> GetCallback() -> SendApplicationShutdownRequest(t_terminate);
 	
 	if (t_terminate)
 		return NSTerminateNow;
@@ -408,7 +408,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 {
 	// Dispatch the shutdown callback.
 	int t_exit_code;
-	MCPlatformCallbackSendApplicationShutdown(t_exit_code);
+	m_platform -> GetCallback() -> SendApplicationShutdown(t_exit_code);
 	
 	// Finalize everything
 	[self finalizeModules];
@@ -463,7 +463,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationResume();
+	m_platform -> GetCallback() -> SendApplicationResume();
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
@@ -489,7 +489,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidResignActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationSuspend();
+	m_platform -> GetCallback() -> SendApplicationSuspend();
 }
 
 //////////
@@ -509,7 +509,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// Make sure we refetch the primary screen height.
     m_platform -> SetHasDesktopHeight(false);
 	// Dispatch the notification.
-	MCPlatformCallbackSendScreenParametersChanged();
+	m_platform -> GetCallback() -> SendScreenParametersChanged();
 }
 
 //////////
@@ -1544,7 +1544,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 		m_mouse_last_click_button = p_button;
 		m_mouse_last_click_screen_position = m_mouse_screen_position;
 		
-		MCPlatformCallbackSendMouseDown(m_mouse_window, p_button, m_mouse_click_count);
+		m_callback -> SendMouseDown(m_mouse_window, p_button, m_mouse_click_count);
 	}
 	else
 	{
@@ -1564,7 +1564,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 			if (p_button == m_mouse_last_click_button)
 				m_mouse_last_click_time = MCPlatformGetEventTime();
 			
-			MCPlatformCallbackSendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
+			m_callback -> SendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
 		}
 		else
 		{
@@ -1573,7 +1573,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 			m_mouse_last_click_time = 0;
 			
             // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
-			MCPlatformCallbackSendMouseRelease(m_mouse_window, p_button, false);
+			m_callback -> SendMouseRelease(m_mouse_window, p_button, false);
 		}
 	}
 }
@@ -1643,13 +1643,13 @@ void MCMacPlatformCore::HandleMouseAfterWindowHidden(void)
 void MCMacPlatformCore::HandleMouseForResizeStart(void)
 {
     if (m_mouse_window != nil)
-        MCPlatformCallbackSendMouseLeave(m_mouse_window);
+        m_callback -> SendMouseLeave(m_mouse_window);
 }
 
 void MCMacPlatformCore::HandleMouseForResizeEnd(void)
 {
     if (m_mouse_window != nil)
-        MCPlatformCallbackSendMouseEnter(m_mouse_window);
+        m_callback -> SendMouseEnter(m_mouse_window);
 }
 
 void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
@@ -1674,10 +1674,10 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 	if (t_new_mouse_window != m_mouse_window)
 	{
 		if (m_mouse_window != nil)
-			MCPlatformCallbackSendMouseLeave(m_mouse_window);
+			m_callback -> SendMouseLeave(m_mouse_window);
 		
 		if (t_new_mouse_window != nil)
-			MCPlatformCallbackSendMouseEnter(t_new_mouse_window);
+			m_callback -> SendMouseEnter(t_new_mouse_window);
 		
 		// If there is no mouse window, reset the cursor to default.
 		if (t_new_mouse_window == nil)
@@ -1714,7 +1714,7 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 			m_mouse_position = t_window_loc;
 			
 			// Send the mouse move.
-			MCPlatformCallbackSendMouseMove(m_mouse_window, t_window_loc);
+			m_callback -> SendMouseMove(m_mouse_window, t_window_loc);
 			
 			// If this is the start of a drag, then send a mouse drag.
 			if (m_mouse_buttons != 0 && m_mouse_drag_button == 0xffffffff &&
@@ -1722,7 +1722,7 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 				 MCU_abs(p_screen_loc . y - m_mouse_last_click_screen_position . y) >= MCdragdelta))
 			{
 				m_mouse_drag_button = m_mouse_last_click_button;
-				MCPlatformCallbackSendMouseDrag(m_mouse_window, m_mouse_drag_button);
+				m_callback -> SendMouseDrag(m_mouse_window, m_mouse_drag_button);
 			}
 		}
         
@@ -1739,7 +1739,7 @@ void MCMacPlatformCore::HandleMouseScroll(CGFloat dx, CGFloat dy)
 		return;
 	
 	if (dx != 0.0 || dy != 0.0)
-		MCPlatformCallbackSendMouseScroll(m_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
+		m_callback -> SendMouseScroll(m_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
 }
 
 void MCMacPlatformCore::HandleMouseSync(void)
@@ -1754,9 +1754,9 @@ void MCMacPlatformCore::HandleMouseSync(void)
                 // MW-2014-06-11: [[ Bug 12339 ]] Don't send a mouseRelease message in this case.
 				if (m_mouse_was_control_click &&
 					i == 0)
-					MCPlatformCallbackSendMouseRelease(m_mouse_window, 2, true);
+					m_callback -> SendMouseRelease(m_mouse_window, 2, true);
 				else
-					MCPlatformCallbackSendMouseRelease(m_mouse_window, i, true);
+					m_callback -> SendMouseRelease(m_mouse_window, i, true);
 			}
 	}
 	
@@ -1796,8 +1796,8 @@ void MCMacPlatformCore::SyncMouseBeforeDragging(void)
 	{
         // MW-2014-06-11: [[ Bug 12339 ]] Ensure mouseRelease is sent if drag is starting.
 		if (t_button_to_release != 0xffffffff)
-			MCPlatformCallbackSendMouseRelease(m_mouse_window, t_button_to_release, false);
-		MCPlatformCallbackSendMouseLeave(m_mouse_window);
+			m_callback -> SendMouseRelease(m_mouse_window, t_button_to_release, false);
+		m_callback -> SendMouseLeave(m_mouse_window);
 		
         // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
         //  a mouseLeave handler
@@ -1831,7 +1831,7 @@ void MCMacPlatformCore::HandleModifiersChanged(MCPlatformModifiers p_modifiers)
 	if (m_mouse_modifiers != p_modifiers)
 	{
 		m_mouse_modifiers = p_modifiers;
-		MCPlatformCallbackSendModifiersChanged(p_modifiers);
+		m_callback -> SendModifiersChanged(p_modifiers);
 	}
 }
 	

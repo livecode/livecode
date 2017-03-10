@@ -26,16 +26,28 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCSoundDelegate: NSObject<NSSoundDelegate>
-
+{
+    MCMacPlatformSound * m_sound;
+}
+- (id) initWithSound:(MCMacPlatformSound *) p_sound;
 - (void)sound: (NSSound *)sound didFinishPlaying:(BOOL)finishedPlaying;
 
 @end
 
 @implementation com_runrev_livecode_MCSoundDelegate
 
+- (id) initWithSound:(MCMacPlatformSound *) p_sound
+{
+    if (self = [super init])
+    {
+        m_sound = p_sound;
+    }
+    return self;
+}
+
 - (void)sound:(NSSound *)sound didFinishPlaying:(BOOL)finishedPlaying
 {
-    MCPlatformCallbackSendSoundFinished((MCPlatformSoundRef)sound);
+     m_sound -> GetPlatform() -> GetCallback() -> SendSoundFinished((MCPlatformSoundRef)sound);
 }
 
 @end
@@ -67,7 +79,7 @@ bool MCMacPlatformSound::CreateWithData(const void *p_data, size_t p_data_size)
     m_sound = [[NSSound alloc] initWithData: [NSData dataWithBytes: p_data length: p_data_size]];
 
     if (s_delegate == nil)
-        s_delegate = [[com_runrev_livecode_MCSoundDelegate alloc] init];
+        s_delegate = [[com_runrev_livecode_MCSoundDelegate alloc] initWithSound:this];
     
     [m_sound setDelegate: s_delegate];
     

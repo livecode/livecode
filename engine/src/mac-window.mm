@@ -269,7 +269,9 @@ static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
 - (void)popupWindowShouldClose: (NSNotification *)notification
 {
     [self close];
-    MCPlatformCallbackSendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCPlatformCoreRef t_platform = [(MCWindowDelegate *)[self delegate] platformWindow]->GetPlatform();
+    
+    t_platform -> GetCallback() -> SendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
 }
 
 - (void)popupAndMonitor
@@ -406,7 +408,7 @@ void MCMacPlatformWindow::WindowMoved(NSWindow *self)
     t_size . y = t_content . height;
 	
 	MCPoint t_new_size;
-	MCPlatformCallbackSendWindowConstrain(m_window, t_size, t_new_size);
+	m_window -> GetPlatform() -> GetCallback() -> SendWindowConstrain(m_window, t_size, t_new_size);
     
     t_content . width = t_new_size . x;
     t_content . height = t_new_size . y;
@@ -522,7 +524,7 @@ void MCMacPlatformWindow::WindowMoved(NSWindow *self)
 
 - (void)viewFocusSwitched:(uint32_t)p_id
 {
-	MCPlatformCallbackSendViewFocusSwitched(m_window, p_id);
+	m_window -> GetPlatform() -> GetCallback() -> SendViewFocusSwitched(m_window, p_id);
 }
 
 @end
@@ -877,7 +879,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     // Notify the host that a keyDown event has been received - this is to work around the
     // issue with IME not playing nice with rawKey messages. Eventually this should work
     // by completely separating rawKey messages from text input messages.
-    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+    m_window -> GetPlatform() -> GetCallback() -> SendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
 	if ([self useTextInput])
 	{
@@ -927,7 +929,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (replacementRange . location == NSNotFound)
 	{
 		MCRange t_marked_range, t_selected_range;
-		MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+		m_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
 		if (t_marked_range . offset != UINDEX_MAX)
 			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
 		else
@@ -950,7 +952,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	// Insert the text replacing the given range and setting the selection after
 	// it... (It isn't clear what should - if anything - be selected after insert!).
-	MCPlatformCallbackSendTextInputInsertText(t_window,
+	m_window -> GetPlatform() -> GetCallback() -> SendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + t_length, 0),
@@ -989,7 +991,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		MCPlatformTextInputAction t_action;
 		if (MCMacMapSelectorToTextInputAction(aSelector, t_action))
 		{
-			MCPlatformCallbackSendTextInputAction([self platformWindow], t_action);
+			m_window -> GetPlatform() -> GetCallback() -> SendTextInputAction([self platformWindow], t_action);
 			return;
 		}
 		
@@ -1009,7 +1011,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (replacementRange . location == NSNotFound)
 	{
 		MCRange t_marked_range, t_selected_range;
-		MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+		m_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 		if (t_marked_range . offset != UINDEX_MAX)
 			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
 		else
@@ -1030,7 +1032,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
 
-	MCPlatformCallbackSendTextInputInsertText(t_window,
+	m_window -> GetPlatform() -> GetCallback() -> SendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + newSelection . location, newSelection . length),
@@ -1060,9 +1062,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	// We do this by inserting an empty string, leaving the current selection untouched.
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	
-	MCPlatformCallbackSendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
 	
 	[[self inputContext] discardMarkedText];
 }
@@ -1075,7 +1077,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NSMakeRange(NSNotFound, 0);
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
 }
@@ -1088,7 +1090,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NSMakeRange(NSNotFound, 0);
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
 	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
 }
@@ -1101,7 +1103,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NO;
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
 	return t_marked_range . offset != UINDEX_MAX;
 }
@@ -1116,7 +1118,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	unichar_t *t_chars;
 	uindex_t t_char_count;
 	MCRange t_actual_range;
-	MCPlatformCallbackSendTextInputQueryText(t_window,
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryText(t_window,
 											 MCRangeMake(aRange . location, aRange . length),
 											 t_chars, t_char_count,
 											 t_actual_range);
@@ -1148,7 +1150,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_actual_range;
 	MCRectangle t_rect;
-	MCPlatformCallbackSendTextInputQueryTextRect(t_window,
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextRect(t_window,
 												 MCRangeMake(aRange . location, aRange . length),
 												 t_rect,
 												 t_actual_range);
@@ -1179,7 +1181,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return 0;
 	
 	uindex_t t_index;
-	MCPlatformCallbackSendTextInputQueryTextIndex(t_window, t_location, t_index);
+	t_window -> GetPlatform() -> GetCallback() -> SendTextInputQueryTextIndex(t_window, t_location, t_index);
 	
     //MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
 	
@@ -2094,7 +2096,7 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 	if (t_parent -> m_has_sheet)
 	{
 		m_is_visible = false;
-		MCPlatformCallbackSendWindowClose(this);
+		m_platform -> GetCallback() -> SendWindowClose(this);
 		return;
 	}
 

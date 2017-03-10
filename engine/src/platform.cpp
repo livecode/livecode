@@ -82,353 +82,357 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace MCPlatform {
 #if defined(FEATURE_PLATFORM_APPLICATION)
-
-void MCPlatformCallbackSendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
-{
-	MCPlatformHandleApplicationStartup(p_argc, p_argv, p_envp, r_error_code, r_error_message);
-}
-
-void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code)
-{
-	MCPlatformHandleApplicationShutdown(r_exit_code);
-}
-
-void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate)
-{
-	MCPlatformHandleApplicationShutdownRequest(r_terminate);
-}
-
-void MCPlatformCallbackSendApplicationRun(bool& r_continue)
-{
-	MCPlatformHandleApplicationRun(r_continue);
-}
-
-void MCPlatformCallbackSendApplicationSuspend(void)
-{
-    //MCLog("Application -> Suspend()", 0);
-	MCPlatformHandleApplicationSuspend();
-}
-
-void MCPlatformCallbackSendApplicationResume(void)
-{
-    //MCLog("Application -> Resume()", 0);
-	MCPlatformHandleApplicationResume();
-}
-
+    
+    void Callback::SendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
+    {
+        MCPlatformHandleApplicationStartup(p_argc, p_argv, p_envp, r_error_code, r_error_message);
+    }
+    
+    void Callback::SendApplicationShutdown(int& r_exit_code)
+    {
+        MCPlatformHandleApplicationShutdown(r_exit_code);
+    }
+    
+    void Callback::SendApplicationShutdownRequest(bool& r_terminate)
+    {
+        MCPlatformHandleApplicationShutdownRequest(r_terminate);
+    }
+    
+    void Callback::SendApplicationRun(bool& r_continue)
+    {
+        MCPlatformHandleApplicationRun(r_continue);
+    }
+    
+    void Callback::SendApplicationSuspend(void)
+    {
+        //MCLog("Application -> Suspend()", 0);
+        MCPlatformHandleApplicationSuspend();
+    }
+    
+    void Callback::SendApplicationResume(void)
+    {
+        //MCLog("Application -> Resume()", 0);
+        MCPlatformHandleApplicationResume();
+    }
+    
 #endif // FEATURE_PLATFORM_APPLICATION
-
-//////////
-
-void MCPlatformCallbackSendScreenParametersChanged(void)
-{
-    //MCLog("Application -> ScreenParametersChanged()", 0);
-	MCPlatformHandleScreenParametersChanged();
-}
-
-//////////
-
+    
+    //////////
+    
+    void Callback::SendScreenParametersChanged(void)
+    {
+        //MCLog("Application -> ScreenParametersChanged()", 0);
+        MCPlatformHandleScreenParametersChanged();
+    }
+    
+    //////////
+    
 #if defined(FEATURE_PLATFORM_WINDOW)
-
-void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> CloseRequest()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowCloseRequest(p_window);
-}
-
-void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> Close()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowClose(p_window);
-}
-
-void MCPlatformCallbackSendWindowCancel(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> Cancel()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowCancel(p_window);
-}
-
-void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)
-{
-    //MCLog("Window(%p) -> WindowReshape([%d, %d, %d, %d])", p_window, p_new_content . x, p_new_content . y, p_new_content . width, p_new_content . height);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowReshape(p_window);
-}
-
-void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
-{
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowConstrain(p_window, p_proposed_size, r_wanted_size);
-}
-
-void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
-{
-	//MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowRedraw(p_window, p_surface, p_dirty_rgn);
-}
-
-void MCPlatformCallbackSendWindowIconify(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> WindowIconify()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowIconify(p_window);
-}
-
-void MCPlatformCallbackSendWindowUniconify(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> WindowUniconify()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowUniconify(p_window);
-}
-
-void MCPlatformCallbackSendWindowFocus(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> WindowFocus()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowFocus(p_window);
-}
-
-void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> WindowUnfocus()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleWindowUnfocus(p_window);
-}
-
-//////////
-
-void MCPlatformCallbackSendModifiersChanged(MCPlatformModifiers p_modifiers)
-{
-    //MCLog("ModifiersChanged()", 0);
-	MCPlatformHandleModifiersChanged(p_modifiers);
-}
-
-//////////
-
-void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> MouseEnter()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseEnter(p_window);
-}
-
-void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> MouseLeave()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseLeave(p_window);
-}
-
-void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
-{
-    //MCLog("Window(%p) -> MouseDown(%d, %d)", p_window, p_button, p_count);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseDown(p_window, p_button, p_count);
-}
-
-void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
-{
-    //MCLog("Window(%p) -> MouseUp(%d, %d)", p_window, p_button, p_count);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseUp(p_window, p_button, p_count);
-}
-
-void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
-{
-    //MCLog("Window(%p) -> MouseDrag(%d)", p_window, p_button);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseDrag(p_window, p_button);
-}
-									 
-void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
-{
-    //MCLog("Window(%p) -> MouseRelease(%d, %d)", p_window, p_button, p_was_menu);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseRelease(p_window, p_button, p_was_menu);
-}
-
-void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
-{
-    //MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseMove(p_window, p_location);
-}
-
-void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef p_window, int dx, int dy)
-{
-    //MCLog("Window(%p) -> MouseScroll(%d, %d)", p_window, dx, dy);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseScroll(p_window, dx, dy);
-}
-
-//////////
-
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
-{
-    //MCLog("Window(%p) -> DragEnter(%p)", p_window, p_dragboard);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleDragEnter(p_window, p_dragboard, r_operation);
-}
-
-void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef p_window)
-{
-    //MCLog("Window(%p) -> DragLeave()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleDragLeave(p_window);
-}
-
-void MCPlatformCallbackSendDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
-{
-    //MCLog("Window(%p) -> DragMove([%d, %d])", p_window, p_location . x, p_location . y);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleDragMove(p_window, p_location, r_operation);
-}
-
-void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
-{
-    //MCLog("Window(%p) -> DragDrop()", p_window);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleDragDrop(p_window, r_accepted);
-}
-
-//////////
-
-void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
-{
-    //MCLog("Window(%p) -> RawKeyDown(%d)", p_window, p_key_code);
-    MCPlatformWindowDeathGrip(p_window);
-    MCPlatformHandleRawKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
-}
-
-void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
-{
-    //MCLog("Window(%p) -> KeyDown(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
-}
-
-void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
-{
-    //MCLog("Window(%p) -> KeyUp(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleKeyUp(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
-}
-
-//////////
-
-void MCPlatformCallbackSendTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
-{
-	MCPlatformHandleTextInputQueryTextRanges(p_window, r_marked_range, r_selected_range);
-	MCPlatformWindowDeathGrip(p_window);
-    //MCLog("Window(%p) -> QueryTextRanges(-> [%u, %u], [%u, %u])", p_window, r_marked_range . offset, r_marked_range . length, r_selected_range . offset, r_selected_range . length);
-}
- 
-void MCPlatformCallbackSendTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
-{
-	MCPlatformHandleTextInputQueryTextIndex(p_window, p_location, r_index);
-	MCPlatformWindowDeathGrip(p_window);
-    //MCLog("Window(%p) -> QueryTextIndex([%d, %d] -> %d)", p_window, p_location . x, p_location . y, r_index);
-}
-
-void MCPlatformCallbackSendTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
-{
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleTextInputQueryTextRect(p_window, p_range, r_first_line_rect, r_actual_range);
-}
-
-void MCPlatformCallbackSendTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
-{
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleTextInputQueryText(p_window, p_range, r_chars, r_char_count, r_actual_range);
-}
-
-void MCPlatformCallbackSendTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
-{
-    //MCLog("Window(%p) -> InsertText('', [%u, %u], [%u, %u], %d)", p_window, p_replace_range . offset, p_replace_range . length, p_selection_range . offset, p_selection_range . length, p_mark);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleTextInputInsertText(p_window, p_chars, p_char_count, p_replace_range, p_selection_range, p_mark);
-}
-
-void MCPlatformCallbackSendTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
-{
-    //MCLog("Window(%p) -> Action(%d)", p_window, p_action);
-	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleTextInputAction(p_window, p_action);
-}
-
-//////////
-
-void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef p_menu)
-{
-    //MCLog("Menu(%p) -> Update()", p_menu);
-	MCPlatformHandleMenuUpdate(p_menu);
-}
-
-void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index)
-{
-    //MCLog("Menu(%p) -> Select(%d)", p_menu, p_index);
-	MCPlatformHandleMenuSelect(p_menu, p_index);
-}
-
-//////////
-
-void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
-{
-    //MCLog("Window(%p) -> ViewFocusSwitched(%d)", p_window, p_view_id);
-	MCPlatformHandleViewFocusSwitched(p_window, p_view_id);
-}
-
+    
+    void Callback::SendWindowCloseRequest(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> CloseRequest()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowCloseRequest(p_window);
+    }
+    
+    void Callback::SendWindowClose(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> Close()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowClose(p_window);
+    }
+    
+    void Callback::SendWindowCancel(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> Cancel()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowCancel(p_window);
+    }
+    
+    void Callback::SendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)
+    {
+        //MCLog("Window(%p) -> WindowReshape([%d, %d, %d, %d])", p_window, p_new_content . x, p_new_content . y, p_new_content . width, p_new_content . height);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowReshape(p_window);
+    }
+    
+    void Callback::SendWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
+    {
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowConstrain(p_window, p_proposed_size, r_wanted_size);
+    }
+    
+    void Callback::SendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
+    {
+        //MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowRedraw(p_window, p_surface, p_dirty_rgn);
+    }
+    
+    void Callback::SendWindowIconify(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> WindowIconify()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowIconify(p_window);
+    }
+    
+    void Callback::SendWindowUniconify(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> WindowUniconify()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowUniconify(p_window);
+    }
+    
+    void Callback::SendWindowFocus(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> WindowFocus()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowFocus(p_window);
+    }
+    
+    void Callback::SendWindowUnfocus(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> WindowUnfocus()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleWindowUnfocus(p_window);
+    }
+    
+    //////////
+    
+    void Callback::SendModifiersChanged(MCPlatformModifiers p_modifiers)
+    {
+        //MCLog("ModifiersChanged()", 0);
+        MCPlatformHandleModifiersChanged(p_modifiers);
+    }
+    
+    //////////
+    
+    void Callback::SendMouseEnter(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> MouseEnter()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseEnter(p_window);
+    }
+    
+    void Callback::SendMouseLeave(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> MouseLeave()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseLeave(p_window);
+    }
+    
+    void Callback::SendMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
+    {
+        //MCLog("Window(%p) -> MouseDown(%d, %d)", p_window, p_button, p_count);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseDown(p_window, p_button, p_count);
+    }
+    
+    void Callback::SendMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
+    {
+        //MCLog("Window(%p) -> MouseUp(%d, %d)", p_window, p_button, p_count);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseUp(p_window, p_button, p_count);
+    }
+    
+    void Callback::SendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
+    {
+        //MCLog("Window(%p) -> MouseDrag(%d)", p_window, p_button);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseDrag(p_window, p_button);
+    }
+    
+    void Callback::SendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
+    {
+        //MCLog("Window(%p) -> MouseRelease(%d, %d)", p_window, p_button, p_was_menu);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseRelease(p_window, p_button, p_was_menu);
+    }
+    
+    void Callback::SendMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
+    {
+        //MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseMove(p_window, p_location);
+    }
+    
+    void Callback::SendMouseScroll(MCPlatformWindowRef p_window, int dx, int dy)
+    {
+        //MCLog("Window(%p) -> MouseScroll(%d, %d)", p_window, dx, dy);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleMouseScroll(p_window, dx, dy);
+    }
+    
+    //////////
+    
+    void Callback::SendDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
+    {
+        //MCLog("Window(%p) -> DragEnter(%p)", p_window, p_dragboard);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleDragEnter(p_window, p_dragboard, r_operation);
+    }
+    
+    void Callback::SendDragLeave(MCPlatformWindowRef p_window)
+    {
+        //MCLog("Window(%p) -> DragLeave()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleDragLeave(p_window);
+    }
+    
+    void Callback::SendDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
+    {
+        //MCLog("Window(%p) -> DragMove([%d, %d])", p_window, p_location . x, p_location . y);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleDragMove(p_window, p_location, r_operation);
+    }
+    
+    void Callback::SendDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
+    {
+        //MCLog("Window(%p) -> DragDrop()", p_window);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleDragDrop(p_window, r_accepted);
+    }
+    
+    //////////
+    
+    void Callback::SendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    {
+        //MCLog("Window(%p) -> RawKeyDown(%d)", p_window, p_key_code);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleRawKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+    }
+    
+    void Callback::SendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    {
+        //MCLog("Window(%p) -> KeyDown(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+    }
+    
+    void Callback::SendKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    {
+        //MCLog("Window(%p) -> KeyUp(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleKeyUp(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+    }
+    
+    //////////
+    
+    void Callback::SendTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
+    {
+        MCPlatformHandleTextInputQueryTextRanges(p_window, r_marked_range, r_selected_range);
+        MCPlatformWindowDeathGrip(p_window);
+        //MCLog("Window(%p) -> QueryTextRanges(-> [%u, %u], [%u, %u])", p_window, r_marked_range . offset, r_marked_range . length, r_selected_range . offset, r_selected_range . length);
+    }
+    
+    void Callback::SendTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
+    {
+        MCPlatformHandleTextInputQueryTextIndex(p_window, p_location, r_index);
+        MCPlatformWindowDeathGrip(p_window);
+        //MCLog("Window(%p) -> QueryTextIndex([%d, %d] -> %d)", p_window, p_location . x, p_location . y, r_index);
+    }
+    
+    void Callback::SendTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
+    {
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleTextInputQueryTextRect(p_window, p_range, r_first_line_rect, r_actual_range);
+    }
+    
+    void Callback::SendTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
+    {
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleTextInputQueryText(p_window, p_range, r_chars, r_char_count, r_actual_range);
+    }
+    
+    void Callback::SendTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
+    {
+        //MCLog("Window(%p) -> InsertText('', [%u, %u], [%u, %u], %d)", p_window, p_replace_range . offset, p_replace_range . length, p_selection_range . offset, p_selection_range . length, p_mark);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleTextInputInsertText(p_window, p_chars, p_char_count, p_replace_range, p_selection_range, p_mark);
+    }
+    
+    void Callback::SendTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
+    {
+        //MCLog("Window(%p) -> Action(%d)", p_window, p_action);
+        MCPlatformWindowDeathGrip(p_window);
+        MCPlatformHandleTextInputAction(p_window, p_action);
+    }
+    
+    //////////
+    
+    void Callback::SendMenuUpdate(MCPlatformMenuRef p_menu)
+    {
+        //MCLog("Menu(%p) -> Update()", p_menu);
+        MCPlatformHandleMenuUpdate(p_menu);
+    }
+    
+    void Callback::SendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index)
+    {
+        //MCLog("Menu(%p) -> Select(%d)", p_menu, p_index);
+        MCPlatformHandleMenuSelect(p_menu, p_index);
+    }
+    
+    //////////
+    
+    void Callback::SendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
+    {
+        //MCLog("Window(%p) -> ViewFocusSwitched(%d)", p_window, p_view_id);
+        MCPlatformHandleViewFocusSwitched(p_window, p_view_id);
+    }
+    
 #endif // FEATURE_PLATFORM_WINDOW
-
-//////////
-
+    
+    //////////
+    
 #if defined(FEATURE_PLATFORM_PLAYER)
-
-void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
-{
-	MCPlatformHandlePlayerFrameChanged(p_player);
-}
-
-void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
-{
-    //MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
-    MCPlatformHandlePlayerMarkerChanged(p_player, p_time);
-}
-
-void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
-{
-    //MCLog("Player(%p) -> CurrentTimeChanged()", p_player);
-    MCPlatformHandlePlayerCurrentTimeChanged(p_player);
-}
-
-void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef p_player)
-{
-    //MCLog("Player(%p) -> Finished()", p_player);
-    MCPlatformHandlePlayerFinished(p_player);
-}
-
-void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
-{
-    // MCLog("Player(%p) -> BufferUpdated()", p_player);
-    MCPlatformHandlePlayerBufferUpdated(p_player);
-}
-
+    
+    void Callback::SendPlayerFrameChanged(MCPlatformPlayerRef p_player)
+    {
+        MCPlatformHandlePlayerFrameChanged(p_player);
+    }
+    
+    void Callback::SendPlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
+    {
+        //MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
+        MCPlatformHandlePlayerMarkerChanged(p_player, p_time);
+    }
+    
+    void Callback::SendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+    {
+        //MCLog("Player(%p) -> CurrentTimeChanged()", p_player);
+        MCPlatformHandlePlayerCurrentTimeChanged(p_player);
+    }
+    
+    void Callback::SendPlayerFinished(MCPlatformPlayerRef p_player)
+    {
+        //MCLog("Player(%p) -> Finished()", p_player);
+        MCPlatformHandlePlayerFinished(p_player);
+    }
+    
+    void Callback::SendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
+    {
+        // MCLog("Player(%p) -> BufferUpdated()", p_player);
+        MCPlatformHandlePlayerBufferUpdated(p_player);
+    }
+    
 #endif // FEATURE_PLATFORM_PLAYER
-
-//////////
-
+    
+    //////////
+    
 #if defined(FEATURE_PLATFORM_AUDIO)
-
-void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
-{
-    //MCLog("Sound(%p) -> Finished()", p_sound);
-    MCPlatformHandleSoundFinished(p_sound);
-}
-
+    
+    void Callback::SendSoundFinished(MCPlatformSoundRef p_sound)
+    {
+        //MCLog("Sound(%p) -> Finished()", p_sound);
+        MCPlatformHandleSoundFinished(p_sound);
+    }
+    
 #endif // FEATURE_PLATFORM_AUDIO
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
+}  /* namespace MCPlatform */
 
-////////////////////////////////////////////////////////////////////////////////

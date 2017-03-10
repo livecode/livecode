@@ -363,7 +363,7 @@ void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
     uint32_t t_buffered_time;
     t_buffered_time = CMTimeToLCTime(p_timerange.duration);
     m_buffered_time = t_buffered_time;
-    MCPlatformCallbackSendPlayerBufferUpdated(this);
+    m_platform -> GetCallback() -> SendPlayerBufferUpdated(this);
     /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);
@@ -384,7 +384,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     if (!m_looping)
     {
         m_playing = false;
-        MCPlatformCallbackSendPlayerFinished(this);
+        m_platform -> GetCallback() -> SendPlayerFinished(this);
     }
     else
     {
@@ -467,7 +467,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
             if (m_markers[t_index - 1] != m_last_marker)
             {
                 m_last_marker = m_markers[t_index - 1];
-                MCPlatformCallbackSendPlayerMarkerChanged(this, m_last_marker);
+                m_platform -> GetCallback() -> SendPlayerMarkerChanged(this, m_last_marker);
                 m_synchronizing = true;
             }
         }
@@ -475,7 +475,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     
     // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
     if (!m_synchronizing && IsPlaying())
-        MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+        m_platform -> GetCallback() -> SendPlayerCurrentTimeChanged(this);
     
     m_synchronizing = false;
     
@@ -604,7 +604,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
         t_player -> m_current_frame = t_image;
     }
 
-	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+	t_player -> GetPlatform() -> GetCallback() -> SendPlayerFrameChanged(t_player);
     
     if (t_player -> IsPlaying())
         t_player -> HandleCurrentTimeChanged();
