@@ -772,13 +772,13 @@ MCPlatformWindowMask::~WindowMask(void)
 
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)
 {
-    MCPlatform::WindowMaskRef t_mask = MCMacPlatformCreateWindowMask();
-    if (t_mask &&
-        !t_mask->CreateWithAlphaAndRelease(width, height, stride, bits))
+    MCPlatformWindowMaskRef t_mask = MCplatform -> CreateWindowMask();
+    if (t_mask && !t_mask->CreateWithAlphaAndRelease(width, height, stride, bits))
     {
-        t_mask.reset();
+        t_mask -> Release();
+        t_mask = nil;
     }
-    r_mask = t_mask.unsafeTake();
+    r_mask = t_mask;
 }
 
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)

@@ -17,17 +17,21 @@
 #include "platform.h"
 #include "platform-internal.h"
 #include "mac-extern.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
-    MCPlatform::LoadedFontRef t_font = MCMacPlatformCreateLoadedFont();
+    MCPlatformLoadedFontRef t_font = MCplatform -> CreateLoadedFont();
     if (!t_font)
         return false;
     if (!t_font->CreateWithPath(p_utf8_path, p_globally))
+    {
+        t_font -> Release();
         return false;
-    r_loaded_font = t_font.unsafeTake();
+    }
+    r_loaded_font = t_font;
     return true;
 }
 

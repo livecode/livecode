@@ -2565,9 +2565,12 @@ MCPlatformWindowRef MCMacPlatformCore::CreateWindow()
     return t_ref.unsafeTake();
 }
 
-MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask()
+MCPlatformWindowMaskRef MCMacPlatformCore::CreateWindowMask()
 {
-    return MCPlatform::makeRef<MCMacPlatformWindowMask>();
+    MCPlatform::Ref<MCPlatformWindowMask> t_ref = MCPlatform::makeRef<MCMacPlatformWindowMask>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -777,6 +777,7 @@ public:
     virtual bool GetAbortKeyPressed(void);
     
     // Color transform
+    virtual MCPlatformColorTransformRef CreateColorTransform(void);
     virtual bool InitializeColorTransform(void);
     virtual void FinalizeColorTransform(void);
     
@@ -813,6 +814,9 @@ public:
     bool GetResponderChangeLock(void) {return m_lock_responder_change; }
     void SetResponderChangeLock(bool p_lock_responder_change) { m_lock_responder_change = p_lock_responder_change; }
     
+    // Window mask
+    virtual MCPlatformWindowMaskRef CreateWindowMask(void);
+    
     // Color dialog
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
     virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color);
@@ -825,6 +829,8 @@ public:
     void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
     MCPlatformDialogResult EndOpenSaveDialog(void);
     
+    // Print dialog
+    virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void);
     
     // System Properties
     virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value);
@@ -857,6 +863,7 @@ public:
     void SetInsideFocusEvent(bool p_inside_focus_event) { m_inside_focus_event = p_inside_focus_event; }
     
     // Mice
+    virtual MCPlatformCursorRef CreateCursor(void);
     virtual void HideCursorUntilMouseMoves(void);
     virtual void ResetCursor(void);
     virtual NSEvent *GetLastMouseEvent(void);
@@ -917,6 +924,12 @@ public:
     
     // Scripting
     virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void);
+    
+    // Fonts
+    virtual MCPlatformLoadedFontRef CreateLoadedFont(void);
+    
+    // Sound
+    virtual MCPlatformSoundRef CreateSound(void);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);

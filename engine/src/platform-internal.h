@@ -51,7 +51,7 @@ public:
 
 namespace MCPlatform {
 
-class WindowMask: public Base
+class WindowMask: public CoreReference
 {
 public:
     WindowMask(void);
@@ -252,7 +252,7 @@ protected:
 
 namespace MCPlatform {
 
-class ColorTransform: public virtual Base
+class ColorTransform: public virtual CoreReference
 {
 public:
     virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info) = 0;
@@ -269,7 +269,8 @@ typedef MCPlatform::ColorTransform MCPlatformColorTransform;
 
 namespace MCPlatform {
 
-class LoadedFont: public virtual Base {
+class LoadedFont: public virtual CoreReference
+{
 public:
     virtual bool CreateWithPath(MCStringRef p_path, bool p_globally) = 0;
 };
@@ -284,7 +285,7 @@ typedef MCPlatform::LoadedFont MCPlatformLoadedFont;
 
 namespace MCPlatform {
 
-class Cursor: public virtual Base
+class Cursor: public virtual CoreReference
 {
 public:
     virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor) = 0;
@@ -335,7 +336,7 @@ typedef MCPlatform::Menu MCPlatformMenu;
 
 namespace MCPlatform {
     
-class PrintDialogSession: public Base
+class PrintDialogSession: public CoreReference
 {
 public:
     virtual void BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format) = 0;
@@ -355,7 +356,7 @@ typedef MCPlatform::PrintDialogSession MCPlatformPrintDialogSession;
 
 namespace MCPlatform {
 
-class Sound: public Base
+class Sound: public CoreReference
 {
 public:
     virtual bool IsValid(void) const = 0;
@@ -414,7 +415,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCPlatformSoundRecorder: public MCPlatform::Base
+class MCPlatformSoundRecorder: public MCPlatform::CoreReference
 {
 public:
 	MCPlatformSoundRecorder(void);
@@ -470,6 +471,7 @@ namespace MCPlatform {
         virtual bool GetAbortKeyPressed(void) = 0;
         
         // Color transform
+        virtual MCPlatformColorTransformRef CreateColorTransform(void) = 0;
         virtual bool InitializeColorTransform(void) = 0;
         virtual void FinalizeColorTransform(void) = 0;
         
@@ -495,10 +497,15 @@ namespace MCPlatform {
         virtual MCPlatformWindowRef CreateWindow(void) = 0;
         virtual bool GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window) = 0;
         
+        // Window mask
+        virtual MCPlatformWindowMaskRef CreateWindowMask(void) = 0;
+        
+        // Print dialog
+        virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void) = 0;
+        
         // Color dialog
         virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color) = 0;
-        virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color) = 0;
-        
+        virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color) = 0;        
         
         // File & folder dialog
         virtual void BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file) = 0;
@@ -528,6 +535,7 @@ namespace MCPlatform {
         virtual uint32_t GetEventTime(void) = 0;
         
         // Mice
+        virtual MCPlatformCursorRef CreateCursor(void) = 0;
         virtual void HideCursorUntilMouseMoves(void) = 0;
         virtual bool GetMouseButtonState(uindex_t p_button) = 0;
         virtual bool GetMouseClick(uindex_t p_button, MCPoint& r_location) = 0;
@@ -562,8 +570,14 @@ namespace MCPlatform {
         virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font) = 0;
         virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string) = 0;
         
-        // Scripting
+        // Script Environment
         virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void) = 0;
+        
+        // Fonts
+        virtual MCPlatformLoadedFontRef CreateLoadedFont(void) = 0;
+        
+        // Sound
+        virtual MCPlatformSoundRef CreateSound(void) = 0;
     };
     
     typedef Ref<Core> CoreRef;

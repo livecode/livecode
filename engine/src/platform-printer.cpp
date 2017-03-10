@@ -17,23 +17,24 @@
 #include "platform.h"
 #include "platform-internal.h"
 #include "mac-extern.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, MCPlatformPrintDialogSessionRef &r_dialog_session)
 {
-    MCPlatform::PrintDialogSessionRef t_dialog_session = MCMacPlatformCreatePrintDialogSession();
+    MCPlatformPrintDialogSessionRef t_dialog_session = MCplatform -> CreatePrintDialogSession();
     t_dialog_session -> BeginPageSetup(p_owner, p_session, p_settings, p_page_format);
     
-    r_dialog_session = t_dialog_session.unsafeTake();
+    r_dialog_session = t_dialog_session;
 }
 
 void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, MCPlatformPrintDialogSessionRef &r_dialog_session)
 {
-    MCPlatform::PrintDialogSessionRef t_dialog_session = MCMacPlatformCreatePrintDialogSession();
+    MCPlatformPrintDialogSessionRef t_dialog_session = MCplatform -> CreatePrintDialogSession();
     t_dialog_session -> BeginSettings(p_owner, p_session, p_settings, p_page_format);
     
-    r_dialog_session = t_dialog_session.unsafeTake();
+    r_dialog_session = t_dialog_session;
 }
 
 MCPlatformPrintDialogResult MCPlatformPrintDialogSessionResult(MCPlatformPrintDialogSessionRef p_dialog_session)

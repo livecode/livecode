@@ -197,7 +197,12 @@ MCPlatformPrintDialogResult MCMacPlatformPrintDialogSession::GetResult(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession()
+MCPlatformPrintDialogSessionRef MCMacPlatformCore::CreatePrintDialogSession()
 {
-    return MCPlatform::makeRef<MCMacPlatformPrintDialogSession>();
+    MCPlatform::Ref<MCPlatformPrintDialogSession> t_ref = MCPlatform::makeRef<MCMacPlatformPrintDialogSession>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
+
+////////////////////////////////////////////////////////////////////////////////

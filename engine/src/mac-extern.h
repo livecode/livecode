@@ -17,18 +17,4 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /* Compatibility functions for instantiating Mac platform implementations. */
 
-extern MCPlatform::Ref<MCPlatformColorTransform>
-    MCMacPlatformCreateColorTransform();
-
-extern MCPlatform::Ref<MCPlatformCursor> MCMacPlatformCreateCursor(void);
-
-extern MCPlatform::Ref<MCPlatformLoadedFont>
-MCMacPlatformCreateLoadedFont();
-
-extern MCPlatform::Ref<MCPlatformSound> MCMacPlatformCreateSound(void);
-
-extern MCPlatform::Ref<MCPlatformWindowMask> MCMacPlatformCreateWindowMask(void);
-
-extern MCPlatform::Ref<MCPlatformPrintDialogSession> MCMacPlatformCreatePrintDialogSession(void);
-
 extern MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void);

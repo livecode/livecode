@@ -17,20 +17,21 @@
 #include "platform.h"
 #include "platform-internal.h"
 #include "mac-extern.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformCreateColorTransform(const MCColorSpaceInfo& p_info, MCPlatformColorTransformRef& r_transform)
 {
-    MCPlatform::ColorTransformRef t_transform =
-        MCMacPlatformCreateColorTransform();
+    MCPlatformColorTransformRef t_transform = MCplatform -> CreateColorTransform();
     if (t_transform &&
         t_transform->CreateWithColorSpace(p_info))
     {
-        r_transform = t_transform.unsafeTake();
+        r_transform = t_transform;
     }
     else
     {
+        t_transform -> Release();
         r_transform = nullptr;
     }
 }

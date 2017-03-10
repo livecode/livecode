@@ -48,8 +48,10 @@ MCMacPlatformLoadedFont::CreateWithPath(MCStringRef p_path, bool p_globally)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformLoadedFont>
-MCMacPlatformCreateLoadedFont()
+MCPlatformLoadedFontRef MCMacPlatformCore::CreateLoadedFont()
 {
-    return MCPlatform::makeRef<MCMacPlatformLoadedFont>();
+    MCPlatform::Ref<MCPlatformLoadedFont> t_ref = MCPlatform::makeRef<MCMacPlatformLoadedFont>();
+    t_ref -> SetPlatform(this);
+    
+    return t_ref.unsafeTake();
 }
