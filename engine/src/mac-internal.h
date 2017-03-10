@@ -167,6 +167,11 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
 	id eventMonitor;
 }
 
+@property (readonly) MCPlatformDialogResult result;
+@property (readonly) MCColor color;
+
+
+
 -(id)   initWithColorPanel: (NSColorPanel*)p_panel
                contentView: (NSView*) p_view;
 -(void) dealloc;
@@ -999,6 +1004,10 @@ private:
     
     MCMacPlatformDialogNest *m_dialog_nesting = nil;
     MCOpenSaveDialogDelegate *m_dialog_delegate = nil;
+    
+    // Color dialog
+    MCColorPanelDelegate* m_color_dialog_delegate = nil;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
