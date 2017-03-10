@@ -298,6 +298,9 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 
 bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 {
+    if (MCStringIsEmpty(p_sound))
+        return true;
+
 	if (s_sound_player_delegate != nil)
 	{
 		[s_sound_player_delegate dealloc];
@@ -305,9 +308,6 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 	}
 	
 	MCValueRelease(s_sound_file);
-	
-	if (MCStringIsEmpty(p_sound))
-		return true;
 	
     bool t_success;
     t_success = true;
