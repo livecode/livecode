@@ -271,7 +271,8 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
         if (m_StateLength == 0)
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+            if (MCUnicodeCodepointToSurrogates(t_cp, m_State[m_StateLength],
+                                               m_State[m_StateLength + 1]))
                 m_StateLength++;
             
             m_StateLength++;
@@ -287,7 +288,8 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
         else
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+            if (MCUnicodeCodepointToSurrogates(t_cp, m_State[m_StateLength],
+                                               m_State[m_StateLength+1]))
                 m_StateLength++;
             
             m_StateLength++;
@@ -353,7 +355,9 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
         if (m_StateLength == 0)
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[kMCTextFilterMaxNormLength - 2])))
+            if (MCUnicodeCodepointToSurrogates(t_cp,
+                                               m_State[kMCTextFilterMaxNormLength - 2],
+                                               m_State[kMCTextFilterMaxNormLength - 1]))
                 m_StateLength++;
             else
                 m_State[kMCTextFilterMaxNormLength - 1] = m_State[kMCTextFilterMaxNormLength - 2];
@@ -366,7 +370,10 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
         else
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[kMCTextFilterMaxNormLength - m_StateLength - 2])))
+            if (MCUnicodeCodepointToSurrogates(t_cp,
+                                               m_State[kMCTextFilterMaxNormLength - m_StateLength - 2],
+                                               m_State[kMCTextFilterMaxNormLength - m_StateLength - 1]))
+                
                 m_StateLength++;
             else
                 m_State[kMCTextFilterMaxNormLength - m_StateLength - 1] = m_State[kMCTextFilterMaxNormLength - m_StateLength - 2];

@@ -151,28 +151,6 @@ void __MCUnicodeFinalize()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t p_lead, uint16_t p_trail)
-{
-    return 0x10000 + ((p_lead & 0x3FF) << 10) + (p_trail & 0x3FF);
-}
-
-bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates)
-{
-    if (t_codepoint < 0x10000)
-    {
-        *r_surrogates = (unichar_t)t_codepoint;
-        return false;
-    }
-    else
-    {
-        r_surrogates[0] = (((t_codepoint - 0x10000) & 0xFFC00) >> 10) + 0xD800;
-        r_surrogates[1] = (t_codepoint & 0x3FF) + 0xDC00;
-        return true;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCUnicodeGetBinaryProperty(codepoint_t p_codepoint, MCUnicodeProperty p_property)
 {
     return !!u_hasBinaryProperty(p_codepoint, MCUnicodePropToICUProp[p_property]);
