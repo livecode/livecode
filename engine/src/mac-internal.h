@@ -1,11 +1,7 @@
 #ifndef __MC_MAC_PLATFORM__
 #define __MC_MAC_PLATFORM__
 
-#import <AppKit/NSSound.h>
-#import <AppKit/NSColorPanel.h>
-#import <AppKit/NSPrintInfo.h>
-#import <AppKit/NSSavePanel.h>
-
+#import <AppKit/AppKit.h>
 #include <Carbon/Carbon.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -918,6 +914,9 @@ public:
     virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
     virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
     virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
+    
+    // Scripting
+    virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1092,6 +1091,174 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+typedef const struct OpaqueJSContext* JSContextRef;
+typedef struct OpaqueJSContext* JSGlobalContextRef;
+typedef struct OpaqueJSString* JSStringRef;
+typedef struct OpaqueJSClass* JSClassRef;
+typedef struct OpaqueJSPropertyNameArray* JSPropertyNameArrayRef;
+typedef struct OpaqueJSPropertyNameAccumulator* JSPropertyNameAccumulatorRef;
+typedef const struct OpaqueJSValue* JSValueRef;
+typedef struct OpaqueJSValue* JSObjectRef;
+
+typedef enum {
+    kJSTypeUndefined,
+    kJSTypeNull,
+    kJSTypeBoolean,
+    kJSTypeNumber,
+    kJSTypeString,
+    kJSTypeObject
+} JSType;
+
+enum {
+    kJSPropertyAttributeNone         = 0,
+    kJSPropertyAttributeReadOnly     = 1 << 1,
+    kJSPropertyAttributeDontEnum     = 1 << 2,
+    kJSPropertyAttributeDontDelete   = 1 << 3
+};
+typedef unsigned JSPropertyAttributes;
+
+enum {
+    kJSClassAttributeNone = 0,
+    kJSClassAttributeNoAutomaticPrototype = 1 << 1
+};
+typedef unsigned JSClassAttributes;
+
+typedef void
+(*JSObjectInitializeCallback) (JSContextRef ctx, JSObjectRef object);
+typedef void
+(*JSObjectFinalizeCallback) (JSObjectRef object);
+typedef bool
+(*JSObjectHasPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName);
+typedef JSValueRef
+(*JSObjectGetPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
+typedef bool
+(*JSObjectSetPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception);
+typedef bool
+(*JSObjectDeletePropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
+typedef void
+(*JSObjectGetPropertyNamesCallback) (JSContextRef ctx, JSObjectRef object, JSPropertyNameAccumulatorRef propertyNames);
+typedef JSValueRef
+(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef JSObjectRef
+(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef bool
+(*JSObjectHasInstanceCallback)  (JSContextRef ctx, JSObjectRef constructor, JSValueRef possibleInstance, JSValueRef* exception);
+typedef JSValueRef
+(*JSObjectConvertToTypeCallback) (JSContextRef ctx, JSObjectRef object, JSType type, JSValueRef* exception);
+typedef struct {
+    const char* const name;
+    JSObjectCallAsFunctionCallback callAsFunction;
+    JSPropertyAttributes attributes;
+} JSStaticFunction;
+
+typedef struct {
+    const char* const name;
+    JSObjectGetPropertyCallback getProperty;
+    JSObjectSetPropertyCallback setProperty;
+    JSPropertyAttributes attributes;
+} JSStaticValue;
+
+typedef struct {
+    int                                 version; // current (and only) version is 0
+    JSClassAttributes                   attributes;
+    
+    const char*                         className;
+    JSClassRef                          parentClass;
+    
+    const JSStaticValue*                staticValues;
+    const JSStaticFunction*             staticFunctions;
+    
+    JSObjectInitializeCallback          initialize;
+    JSObjectFinalizeCallback            finalize;
+    JSObjectHasPropertyCallback         hasProperty;
+    JSObjectGetPropertyCallback         getProperty;
+    JSObjectSetPropertyCallback         setProperty;
+    JSObjectDeletePropertyCallback      deleteProperty;
+    JSObjectGetPropertyNamesCallback    getPropertyNames;
+    JSObjectCallAsFunctionCallback      callAsFunction;
+    JSObjectCallAsConstructorCallback   callAsConstructor;
+    JSObjectHasInstanceCallback         hasInstance;
+    JSObjectConvertToTypeCallback       convertToType;
+} JSClassDefinition;
+
+typedef JSGlobalContextRef (*JSGlobalContextCreatePtr)(JSClassRef globalObjectClass);
+typedef void (*JSGlobalContextReleasePtr)(JSGlobalContextRef ctx);
+typedef JSObjectRef (*JSContextGetGlobalObjectPtr)(JSContextRef ctx);
+typedef JSValueRef (*JSEvaluateScriptPtr)(JSContextRef ctx, JSStringRef script, JSObjectRef thisObject, JSStringRef sourceURL, int startingLineNumber, JSValueRef* exception);
+typedef bool (*JSCheckScriptSyntaxPtr)(JSContextRef ctx, JSStringRef script, JSStringRef sourceURL, int startingLineNumber, JSValueRef* exception);
+typedef JSStringRef (*JSStringCreateWithCFStringPtr)(CFStringRef string);
+typedef CFStringRef (*JSStringCopyCFStringPtr)(CFAllocatorRef alloc, JSStringRef string);
+typedef JSValueRef (*JSValueMakeStringPtr)(JSContextRef ctx, JSStringRef string);
+typedef JSStringRef (*JSValueToStringCopyPtr)(JSContextRef ctx, JSValueRef value, JSValueRef* exception);
+typedef JSObjectRef (*JSValueToObjectPtr)(JSContextRef ctx, JSValueRef value, JSValueRef* exception);
+typedef void (*JSValueProtectPtr)(JSContextRef ctx, JSValueRef value);
+typedef void (*JSValueUnprotectPtr)(JSContextRef ctx, JSValueRef value);
+typedef void (*JSStringReleasePtr)(JSStringRef string);
+typedef JSClassRef (*JSClassCreatePtr)(const JSClassDefinition* definition);
+typedef void (*JSClassReleasePtr)(JSClassRef jsClass);
+typedef JSObjectRef (*JSObjectMakePtr)(JSContextRef ctx, JSClassRef jsClass, void* data);
+typedef void* (*JSObjectGetPrivatePtr)(JSObjectRef object);
+typedef JSValueRef (*JSObjectGetPropertyPtr)(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
+typedef void (*JSObjectSetPropertyPtr)(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSPropertyAttributes attributes, JSValueRef* exception);
+typedef JSValueRef (*JSObjectCallAsFunctionPtr)(JSContextRef ctx, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+
+static const char kJavaScriptCoreLibraryPath[] = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore";
+
+static const void *JavaScriptCoreLibrary = NULL;
+
+static JSGlobalContextCreatePtr JSGlobalContextCreate;
+static JSGlobalContextReleasePtr JSGlobalContextRelease;
+static JSContextGetGlobalObjectPtr JSContextGetGlobalObject;
+static JSEvaluateScriptPtr JSEvaluateScript;
+static JSCheckScriptSyntaxPtr JSCheckScriptSyntax;
+static JSStringCreateWithCFStringPtr JSStringCreateWithCFString;
+static JSStringCopyCFStringPtr JSStringCopyCFString;
+static JSValueMakeStringPtr JSValueMakeString;
+static JSValueToStringCopyPtr JSValueToStringCopy;
+static JSValueToObjectPtr JSValueToObject;
+static JSValueProtectPtr JSValueProtect;
+static JSValueUnprotectPtr JSValueUnprotect;
+static JSStringReleasePtr JSStringRelease;
+static JSClassCreatePtr JSClassCreate;
+static JSClassReleasePtr JSClassRelease;
+static JSObjectMakePtr JSObjectMake;
+static JSObjectGetPrivatePtr JSObjectGetPrivate;
+static JSObjectGetPropertyPtr JSObjectGetProperty;
+static JSObjectSetPropertyPtr JSObjectSetProperty;
+static JSObjectCallAsFunctionPtr JSObjectCallAsFunction;
+
+///////////////////////////////////////////////////////////////////////////////
+
+#define GET_JSC_SYMBOL(sym) \
+sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
+
+class MCMacPlatformScriptEnvironment: public MCPlatformScriptEnvironment
+{
+public:
+    MCMacPlatformScriptEnvironment(void);
+    ~MCMacPlatformScriptEnvironment(void);
+    
+    virtual bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
+    
+    virtual void Run(MCStringRef p_script, MCStringRef &r_result);
+    
+    virtual char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
+    
+private:
+    struct Function
+    {
+        char *name;
+        MCPlatformScriptEnvironmentCallback callback;
+    };
+    
+    JSGlobalContextRef m_runtime;
+    
+    Function *m_functions;
+    uint4 m_function_count;
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 // The function pointer for objc_msgSend_fpret needs to be cast in order
 // to get the correct return type, otherwise we can get strange results

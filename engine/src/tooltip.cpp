@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 
+#include "platform.h"
+
 MCTooltip::MCTooltip()
 {
 	setname_cstring("Tool Tip");

@@ -561,6 +561,9 @@ namespace MCPlatform {
         virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color) = 0;
         virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font) = 0;
         virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string) = 0;
+        
+        // Scripting
+        virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void) = 0;
     };
     
     typedef Ref<Core> CoreRef;
@@ -568,6 +571,28 @@ namespace MCPlatform {
 } /* namespace MCPlatform */
 
 typedef MCPlatform::Core MCPlatformCore;
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+namespace MCPlatform
+{
+    
+    class ScriptEnvironment: public CoreReference
+    {
+    public:
+        virtual bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback) = 0;
+        
+        virtual void Run(MCStringRef p_script, MCStringRef &r_result) = 0;
+        
+        virtual char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count) = 0;
+    };
+    
+    typedef Ref<ScriptEnvironment> ScriptEnvironmentRef;
+   
+} /* namespace MCPlatform */
+
+typedef MCPlatform::ScriptEnvironment MCPlatformScriptEnvironment;
 
 ////////////////////////////////////////////////////////////////////////////////
 

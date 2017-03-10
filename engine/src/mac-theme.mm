@@ -16,8 +16,10 @@
 
 
 #include "platform.h"
+#include "platform-internal.h"
 
 #include "osxprefix.h"
+#include "mac-internal.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -30,8 +32,6 @@
 #include "object.h"
 #include "stack.h"
 #include "font.h"
-
-#include "mac-internal.h"
 
 #import <AppKit/NSColor.h>
 #import <AppKit/NSFont.h>

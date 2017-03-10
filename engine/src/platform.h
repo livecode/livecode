@@ -1095,7 +1095,7 @@ void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformScriptEnvironment *MCPlatformScriptEnvironmentRef;
+typedef MCPlatform::ScriptEnvironment *MCPlatformScriptEnvironmentRef;
 
 typedef char *(*MCPlatformScriptEnvironmentCallback)(const char * const *arguments, uindex_t argument_count);
 
