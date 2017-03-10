@@ -31,6 +31,8 @@
 #include "stack.h"
 #include "font.h"
 
+#include "mac-internal.h"
+
 #import <AppKit/NSColor.h>
 #import <AppKit/NSFont.h>
 #import <AppKit/NSImageRep.h>
@@ -132,12 +134,17 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
 }
 
 
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
+bool MCMacPlatformCore::GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
 {
     return false;
 }
 
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)
+bool MCMacPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
+{
+    return false;
+}
+
+bool MCMacPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)
 {
     bool t_found;
     t_found = false;
@@ -161,7 +168,7 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     return t_found;
 }
 
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)
+bool MCMacPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)
 {
     bool t_found;
     t_found = false;
@@ -372,7 +379,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
     return t_found;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
+bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
     // Get the font for the given control type
 	MCNewAutoNameRef t_font_name;

@@ -238,7 +238,32 @@ MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
     return MCplatform -> EndFolderDialog(r_selected_folder);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
+{
+    return MCplatform -> GetControlThemePropBool(p_type, p_part, p_state, p_which, r_bool);
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)
+{
+    return MCplatform -> GetControlThemePropInteger(p_type, p_part, p_state, p_which, r_int);
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)
+{
+    return MCplatform -> GetControlThemePropColor(p_type, p_part, p_state, p_which, r_color);
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
+{
+    return MCplatform -> GetControlThemePropFont(p_type, p_part, p_state, p_which, r_font);
+}
+
+bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
+{
+    return MCplatform -> GetControlThemePropString(p_type, p_part, p_state, p_which, r_string);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
