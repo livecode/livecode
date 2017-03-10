@@ -499,6 +499,13 @@ namespace MCPlatform {
         virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color) = 0;
         virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color) = 0;
         
+        
+        // File & folder dialog
+        virtual void BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file) = 0;
+        virtual MCPlatformDialogResult EndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type) = 0;
+        virtual void BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial) = 0;
+        virtual MCPlatformDialogResult EndFolderDialog(MCStringRef& r_selected_folder) = 0;
+    
         // System Properties
         virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value) = 0;
         virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value) = 0;

@@ -4,6 +4,8 @@
 #import <AppKit/NSSound.h>
 #import <AppKit/NSColorPanel.h>
 #import <AppKit/NSPrintInfo.h>
+#import <AppKit/NSSavePanel.h>
+
 #include <Carbon/Carbon.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -721,6 +723,25 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCOpenSaveDialogDelegate: NSObject
+
+- (void)panelDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
+
+@end
+
+@compatibility_alias MCOpenSaveDialogDelegate com_runrev_livecode_MCOpenSaveDialogDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCMacPlatformDialogNest
+{
+    MCMacPlatformDialogNest *next;
+    MCPlatformDialogResult result;
+    MCPlatformWindowRef owner;
+    NSSavePanel *panel;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 struct MCCallback
 {
@@ -796,6 +817,15 @@ public:
     // Color dialog
     virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color);
     virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color);
+    
+    // File & folder dialog
+    virtual void BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file);
+    virtual MCPlatformDialogResult EndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type);
+    virtual void BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
+    virtual MCPlatformDialogResult EndFolderDialog(MCStringRef& r_selected_folder);
+    void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
+    MCPlatformDialogResult EndOpenSaveDialog(void);
+    
     
     // System Properties
     virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value);
@@ -968,6 +998,9 @@ private:
     
     // Backdrop
     MCPlatformWindowRef m_backdrop_window = nil;
+    
+    MCMacPlatformDialogNest *m_dialog_nesting = nil;
+    MCOpenSaveDialogDelegate *m_dialog_delegate = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -218,6 +218,30 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file)
+{
+    MCplatform -> BeginFileDialog(p_kind, p_owner, p_title, p_prompt, p_types, p_type_count, p_initial_folder, p_initial_file);
+}
+
+MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)
+{
+    return MCplatform -> EndFileDialog(p_kind, r_paths, r_type);
+}
+
+void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
+{
+    MCplatform -> BeginFolderDialog(p_owner, p_title, p_prompt, p_initial);
+}
+
+MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
+{
+    return MCplatform -> EndFolderDialog(r_selected_folder);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 int platform_main(int argc, char *argv[], char *envp[])
 {
     if (MCPlatformInitialize())

@@ -71,26 +71,6 @@ static void resolve_alias(NSString *p_path, NSString *&r_path_resolved)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface com_runrev_livecode_MCOpenSaveDialogDelegate: NSObject
-
-- (void)panelDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
-
-@end
-
-@compatibility_alias MCOpenSaveDialogDelegate com_runrev_livecode_MCOpenSaveDialogDelegate;
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct MCMacPlatformDialogNest
-{
-	MCMacPlatformDialogNest *next;
-	MCPlatformDialogResult result;
-	MCPlatformWindowRef owner;
-	NSSavePanel *panel;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 @implementation com_runrev_livecode_MCOpenSaveDialogDelegate
 
 - (void)panelDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
@@ -108,20 +88,17 @@ struct MCMacPlatformDialogNest
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCMacPlatformDialogNest *s_dialog_nesting = nil;
-static MCOpenSaveDialogDelegate *s_dialog_delegate = nil;
-
-static void MCMacPlatformBeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file)
+void MCMacPlatformCore::BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file)
 {
-	if (s_dialog_delegate == nil)
-		s_dialog_delegate = [[MCOpenSaveDialogDelegate alloc] init];
+	if (m_dialog_delegate == nil)
+		m_dialog_delegate = [[MCOpenSaveDialogDelegate alloc] init];
 	
 	MCMacPlatformDialogNest *t_nest;
 	/* UNCHECKED */ MCMemoryNew(t_nest);
-	t_nest -> next = s_dialog_nesting;
+	t_nest -> next = m_dialog_nesting;
 	t_nest -> result = kMCPlatformDialogResultContinue;
 	t_nest -> panel = p_panel;
-	s_dialog_nesting = t_nest;
+	m_dialog_nesting = t_nest;
 	
 	/////////
 	
@@ -151,24 +128,24 @@ static void MCMacPlatformBeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSave
 		[p_panel beginSheetForDirectory: t_initial_folder
 								   file: t_initial_file
 						 modalForWindow: ((MCMacPlatformWindow *)p_owner) -> GetHandle()
-						  modalDelegate: s_dialog_delegate
+						  modalDelegate: m_dialog_delegate
 						 didEndSelector: @selector(panelDidEnd:returnCode:contextInfo:)
 							contextInfo: t_nest];
 	}
 }
 
-static MCPlatformDialogResult MCPlatformEndOpenSaveDialog(void)
+MCPlatformDialogResult MCMacPlatformCore::EndOpenSaveDialog(void)
 {
 	MCMacPlatformDialogNest *t_nest;
-	t_nest = s_dialog_nesting;
+	t_nest = m_dialog_nesting;
 	
-	s_dialog_nesting = s_dialog_nesting -> next;
+	m_dialog_nesting = m_dialog_nesting -> next;
 	
 	MCPlatformDialogResult t_result;
 	t_result = t_nest -> result;
 	
 	if (t_nest -> owner != nil)
-		MCPlatformReleaseWindow(t_nest -> owner);
+		t_nest -> owner -> Release();
 	
 	MCMemoryDelete(t_nest);
 	
@@ -177,7 +154,7 @@ static MCPlatformDialogResult MCPlatformEndOpenSaveDialog(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
+void MCMacPlatformCore::BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
 {
     NSOpenPanel *t_panel;
     t_panel = [NSOpenPanel openPanel];
@@ -196,25 +173,25 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
     // MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
     [t_panel setCanCreateDirectories: YES];
 	
-	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, p_initial, nil);
+	BeginOpenSaveDialog(p_owner, t_panel, p_initial, nil);
 }
 
-MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
+MCPlatformDialogResult MCMacPlatformCore::EndFolderDialog(MCStringRef& r_selected_folder)
 {	
-	if (s_dialog_nesting -> result == kMCPlatformDialogResultContinue)
+	if (m_dialog_nesting -> result == kMCPlatformDialogResultContinue)
 		return kMCPlatformDialogResultContinue;
 	
-	if (s_dialog_nesting -> result == kMCPlatformDialogResultSuccess)
+	if (m_dialog_nesting -> result == kMCPlatformDialogResultSuccess)
 	{
 		NSString *t_alias;
-		resolve_alias([s_dialog_nesting -> panel filename], t_alias);
+		resolve_alias([m_dialog_nesting -> panel filename], t_alias);
         /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_alias, r_selected_folder);
 		[t_alias release];
 	}
 	else
 		r_selected_folder = nil;
 	
-	return MCPlatformEndOpenSaveDialog();
+	return EndOpenSaveDialog();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -557,7 +534,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file)
+void MCMacPlatformCore::BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file)
 {
 	NSSavePanel *t_panel;
 	t_panel = (p_kind == kMCPlatformFileDialogKindSave) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
@@ -599,22 +576,22 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else 
 		[t_panel setCanCreateDirectories: YES];
 	
-	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, p_initial_folder, p_initial_file);
+	BeginOpenSaveDialog(p_owner, t_panel, p_initial_folder, p_initial_file);
 }
 
-MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)
+MCPlatformDialogResult MCMacPlatformCore::EndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)
 {
-	if (s_dialog_nesting -> result == kMCPlatformDialogResultContinue)
+	if (m_dialog_nesting -> result == kMCPlatformDialogResultContinue)
 		return kMCPlatformDialogResultContinue;
 	
-	if (s_dialog_nesting -> result == kMCPlatformDialogResultSuccess)
+	if (m_dialog_nesting -> result == kMCPlatformDialogResultSuccess)
 	{
 		MCFileDialogAccessoryView *t_accessory;
-		t_accessory = (MCFileDialogAccessoryView *)[s_dialog_nesting -> panel accessoryView];
+		t_accessory = (MCFileDialogAccessoryView *)[m_dialog_nesting -> panel accessoryView];
 		
 		if (p_kind == kMCPlatformFileDialogKindSave)
 		{
-            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
+            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_dialog_nesting -> panel filename], r_paths);
 			if (t_accessory != nil && [t_accessory currentType] != nil)
 				r_type = MCValueRetain([t_accessory currentType]);
 			else
@@ -624,11 +601,11 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 		{
 			MCStringCreateMutable(0, r_paths);
             
-			for(uint32_t i = 0; i < [[(NSOpenPanel *)s_dialog_nesting -> panel filenames] count ]; i++)
+			for(uint32_t i = 0; i < [[(NSOpenPanel *)m_dialog_nesting -> panel filenames] count ]; i++)
 			{
 				// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned files.
 				NSString *t_alias;
-				resolve_alias([[(NSOpenPanel *)s_dialog_nesting -> panel filenames] objectAtIndex: i], t_alias);
+				resolve_alias([[(NSOpenPanel *)m_dialog_nesting -> panel filenames] objectAtIndex: i], t_alias);
                 
 				MCAutoStringRef t_conv_filename;			
 				if (MCStringCreateWithCFString((CFStringRef)t_alias, &t_conv_filename))
@@ -648,11 +625,11 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
     // MW-2014-07-17: [[ Bug 12826 ]] Make sure we release the delegate (might be nil, but no
     //   problem here with that).
     id t_delegate;
-    t_delegate = [s_dialog_nesting -> panel delegate];
-    [s_dialog_nesting -> panel setDelegate: nil];
+    t_delegate = [m_dialog_nesting -> panel delegate];
+    [m_dialog_nesting -> panel setDelegate: nil];
     [t_delegate release];
 	
-	return MCPlatformEndOpenSaveDialog();
+	return EndOpenSaveDialog();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
