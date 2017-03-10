@@ -87,6 +87,9 @@
 				{
 					'xcode_settings':
 					{
+						# Always use libc++ standard library
+						'CLANG_CXX_LIBRARY': 'libc++',
+
 						'GCC_WARN_CHECK_SWITCH_STATEMENTS': 'YES',
 						'CLANG_WARN_EMPTY_BODY': 'YES',
 						'GCC_WARN_SHADOW': 'YES',

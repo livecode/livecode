@@ -47,14 +47,12 @@ typedef struct __MCGRegion *MCGRegionRef;
 
 typedef uint32_t MCGPixelFormat;
 
-// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX) || defined(__EMSCRIPTEN__)
-#define kMCGPixelFormatNative kMCGPixelFormatRGBA
-// IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
-#elif defined(__ppc__)
-#define kMCGPixelFormatNative kMCGPixelFormatARGB
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX) || defined(__EMSCRIPTEN__) || defined(__MAC__)
+#  define kMCGPixelFormatNative kMCGPixelFormatRGBA
+#elif defined(WIN32)
+#  define kMCGPixelFormatNative kMCGPixelFormatBGRA
 #else
-#define kMCGPixelFormatNative kMCGPixelFormatBGRA
+#  error "Unknown pixel format for this platform"
 #endif
 
 // IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures

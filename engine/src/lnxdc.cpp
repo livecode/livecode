@@ -56,8 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static Boolean pserror;
 Bool debugtest = False;
 
-extern "C" int initialise_weak_link_fontconfig(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGFloat MCResGetSystemScale(void)
@@ -477,23 +475,6 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
     // We can't load fonts globally with fontconfig
     if (p_globally)
         return false;
-    
-    // If it has already been determined that the weak link to the fontconfig library
-    //  cannot be resolved then just return false, as we cannot load a font otherwise.
-    if (!s_can_use_fontconfig)
-        return false;
-    
-    // Try to resolve the weak link
-    if (!s_fontconfig_resolved)
-    {
-        if (initialise_weak_link_fontconfig() == 0)
-        {
-            s_can_use_fontconfig = false;
-            return false;
-        }
-        
-        s_fontconfig_resolved = true;
-    }
     
     if (!FcInit())
         return false;
