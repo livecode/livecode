@@ -626,8 +626,6 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
 MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOperation);
 
-void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
