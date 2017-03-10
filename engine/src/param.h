@@ -30,7 +30,7 @@ public:
 	{
 		exp = nil;
 		next = nil;
-		var = nil;
+		//var = nil;
         container = nil;
 		value . type = kMCExecValueTypeNone;
         value . valueref_value = nil;
@@ -65,7 +65,6 @@ public:
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
     // the callee in a function/command invocation.
-    MCVariable *eval_argument_var(void);
     MCContainer *eval_argument_container(void);
     
     bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
@@ -74,16 +73,13 @@ public:
 	// Set the value of the parameter to be used by the callee.
     void set_argument(MCExecContext &ctxt, MCValueRef p_value);
     void set_exec_argument(MCExecContext& ctxt, MCExecValue p_value);
-	void set_argument_var(MCVariable* var);
     void set_argument_container(MCContainer* container);
 
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
     bool eval(MCExecContext& ctxt, MCValueRef &r_value);
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
-    bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
-    MCVariable *evalvar(MCExecContext& ctxt);
-
+    bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 	Parse_stat parse(MCScriptPoint &);
 
 	void compile(MCSyntaxFactoryRef);
@@ -102,7 +98,6 @@ private:
 
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
-	MCVariable *var;
     MCContainer *container;
 	MCExecValue value;
 };

@@ -503,13 +503,12 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             
             if (t_mode != kMCHandlerTypeFieldModeIn)
             {
-                MCContainer *t_container;
+                MCContainer t_container;
                 if (t_param -> evalcontainer(*MCECptr, t_container))
                 {
                     if (!MCExtensionConvertToScriptType(*MCECptr, t_arguments[i]) ||
-                        !t_container -> set(*MCECptr, t_arguments[i]))
+                        !t_container.set(*MCECptr, t_arguments[i]))
                         t_success = false;
-                    delete t_container;
                 }
                 else
                     t_param -> set_argument(*MCECptr, t_arguments[i]);
