@@ -32,7 +32,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static const hash_t kMCHashFactor = 2654435761U;
 
 template<typename ValueType, typename Enable = void>
-struct MCHashIntImpl { static_assert(sizeof(ValueType) == 0); };
+struct MCHashIntImpl {
+    static_assert(sizeof(ValueType) == 0,
+                  "Missing MCHashImpl specialization"); };
 
 // Hash an arbitrary sized Int - the hash code generated is
 // independent on the number of bytes representing the integer or the
