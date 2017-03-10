@@ -250,40 +250,65 @@ typedef uint32_t MCGColor;
 
 struct MCGPoint
 {
-public:
-    /* TODO[C++11] Use member initialisers and remove these constructors */
-    MCGPoint() : x(0), y(0) {}
-    MCGPoint(MCGFloat p_x, MCGFloat p_y) : x(p_x), y(p_y) {}
-	MCGFloat x, y;
+    /* TODO[C++14] In C++11, aggregate initialisation of object types
+     * with member variables that have static initialisers is
+     * forbidden.  In C++14, this restriction is relaxed (so these
+     * constructors can be removed). */
+    constexpr MCGPoint() = default;
+    constexpr MCGPoint(MCGFloat p_x, MCGFloat p_y) : x(p_x), y(p_y) {}
+
+    MCGFloat x = 0;
+    MCGFloat y = 0;
 };
 
 struct MCGSize
 {
-	MCGFloat width, height;
+    /* TODO[C++14] In C++11, aggregate initialisation of object types
+     * with member variables that have static initialisers is
+     * forbidden.  In C++14, this restriction is relaxed (so these
+     * constructors can be removed). */
+    constexpr MCGSize() = default;
+    constexpr MCGSize(MCGFloat p_width, MCGFloat p_height)
+        : width(p_width), height(p_height) {}
+
+    MCGFloat width = 0;
+    MCGFloat height = 0;
 };
 
 struct MCGRectangle
 {
-	MCGPoint origin;
-	MCGSize size;
+    /* TODO[C++14] In C++11, aggregate initialisation of object types
+     * with member variables that have static initialisers is
+     * forbidden.  In C++14, this restriction is relaxed (so these
+     * constructors can be removed). */
+    constexpr MCGRectangle() = default;
+    constexpr MCGRectangle(MCGPoint p_origin, MCGSize p_size)
+        : origin(p_origin), size(p_size) {}
+
+    MCGPoint origin;
+    MCGSize size;
 };
 
 struct MCGAffineTransform
 {
-	MCGFloat a, b, c, d;
-	MCGFloat tx, ty;
+	MCGFloat a = 0;
+	MCGFloat b = 0;
+	MCGFloat c = 0;
+	MCGFloat d = 0;
+	MCGFloat tx = 0;
+	MCGFloat ty = 0;
 };
 
 struct MCGIntegerPoint
 {
-	int32_t x;
-	int32_t y;
+	int32_t x = 0;
+	int32_t y = 0;
 };
 
 struct MCGIntegerSize
 {
-	uint32_t width;
-	uint32_t height;
+	uint32_t width = 0;
+	uint32_t height = 0;
 };
 
 struct MCGIntegerRectangle
@@ -443,83 +468,82 @@ enum MCGMaskFormat
 
 struct MCGRaster
 {
-	MCGRasterFormat format;
-	uint32_t width;
-	uint32_t height;
-	uint32_t stride;
-	void *pixels;
+	MCGRasterFormat format = kMCGRasterFormat_xRGB;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t stride = 0;
+	void *pixels = nullptr;
 };
 
 struct MCGStrokeAttr
 {
-	MCGFloat width;
-	MCGJoinStyle join_style;
-	MCGCapStyle cap_style;
-	MCGFloat miter_limit;
-	MCGDashesRef dashes;
+	MCGFloat width = 0;
+	MCGJoinStyle join_style = kMCGJoinStyleBevel;
+	MCGCapStyle cap_style = kMCGCapStyleButt;
+	MCGFloat miter_limit = 0;
+	MCGDashesRef dashes = nullptr;
 };
 
 struct MCGLayerEffect
 {
-	MCGColor color;
-	MCGBlendMode blend_mode;
+	MCGColor color = 0;
+	MCGBlendMode blend_mode = kMCGBlendModeClear;
 };
 
 struct MCGShadowEffect
 {
-	MCGColor color;
-	MCGBlendMode blend_mode;
-	MCGFloat size;
-	MCGFloat spread;
-	MCGFloat x_offset;
-	MCGFloat y_offset;
-	bool knockout : 1;
+	MCGColor color = 0;
+	MCGBlendMode blend_mode = kMCGBlendModeClear;
+	MCGFloat size = 0;
+	MCGFloat spread = 0;
+	MCGFloat x_offset = 0;
+	MCGFloat y_offset = 0;
+	bool knockout = false;
 };
 
 struct MCGGlowEffect
 {
-	MCGColor color;
-	MCGBlendMode blend_mode;
-	MCGFloat size;
-	MCGFloat spread;
-	bool inverted : 1;
+	MCGColor color = 9;
+	MCGBlendMode blend_mode = kMCGBlendModeClear;
+	MCGFloat size = 0;
+	MCGFloat spread = 0;
+	bool inverted = false;
 };
 
 struct MCGBitmapEffects
 {
-	bool has_color_overlay : 1;
-	bool has_inner_glow : 1;
-	bool has_inner_shadow : 1;
-	bool has_outer_glow : 1;
-	bool has_drop_shadow : 1;
-	
 	MCGLayerEffect color_overlay;
 	MCGGlowEffect inner_glow;
 	MCGShadowEffect inner_shadow;
 	MCGGlowEffect outer_glow;
 	MCGShadowEffect drop_shadow;
+
+	bool has_color_overlay = false;
+	bool has_inner_glow = false;
+	bool has_inner_shadow = false;
+	bool has_outer_glow = false;
+	bool has_drop_shadow = false;
 };
 
 struct MCGDeviceMaskInfo
 {
-	MCGMaskFormat format;
-	int32_t x, y, width, height;
-	void *data;
+	MCGMaskFormat format = kMCGMaskFormat_A1;
+	int32_t x = 0;
+	int32_t y = 0;
+	int32_t width = 0;
+	int32_t height = 0;
+	void *data = nullptr;
 };
 
 struct MCGFont
 {
-  MCGFont()
-	: fid(nullptr), size(0), fixed_advance(0),
-	  m_ascent(0), m_descent(0), m_leading(0), ideal(false) {}
-
-	void		*fid;
-	uint16_t	size;
-	uint16_t	fixed_advance;
-	MCGFloat	m_ascent;
-	MCGFloat	m_descent;
-    MCGFloat    m_leading;
-	bool		ideal : 1;
+	void		*fid = nullptr;
+	uint16_t	size = 0;
+	uint16_t	fixed_advance = 0;
+	MCGFloat	m_ascent = 0;
+	MCGFloat	m_descent = 0;
+    MCGFloat    m_leading = 0;
+    bool		ideal = false;
 };
 
 inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCGFloat ascent, MCGFloat descent, MCGFloat leading, bool ideal)

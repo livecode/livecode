@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "express.h"
 #include "regex.h"
 #include "util.h"
 #include "uidc.h"
