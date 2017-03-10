@@ -34,7 +34,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
 
 template <typename T> struct ForeignTypeTraits {
-    static_assert(sizeof(T) == 0); /* Fails compile if instantiated */
+    /* Fails compile if instantiated */
+    static_assert(sizeof(T) == 0, "Missing foreign type trait specialization");
 };
 template <> struct ForeignTypeTraits<bool> {
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
@@ -98,7 +99,8 @@ template <> struct ForeignTypeTraits<void *> {
     static constexpr auto& hash_func = MCHashPointer;
 };
 template <> struct ForeignTypeTraits<size_t> {
-    static_assert(SIZE_MAX == UINT64_MAX || SIZE_MAX == UINT32_MAX);
+    static_assert(SIZE_MAX == UINT64_MAX || SIZE_MAX == UINT32_MAX,
+                  "Unsupported size for size_t");
     static constexpr auto primitive_type =
         ((SIZE_MAX == UINT64_MAX) ?
          kMCForeignPrimitiveTypeUInt64 :
@@ -113,7 +115,8 @@ template <> struct ForeignTypeTraits<size_t> {
     static constexpr auto& hash_func = MCHashUSize;
 };
 template <> struct ForeignTypeTraits<ssize_t> {
-    static_assert(SSIZE_MAX == INT64_MAX || SSIZE_MAX == INT32_MAX);
+    static_assert(SSIZE_MAX == INT64_MAX || SSIZE_MAX == INT32_MAX,
+                  "Unsupported size for ssize_t");
     static constexpr auto primitive_type =
         ((SSIZE_MAX == INT64_MAX) ?
          kMCForeignPrimitiveTypeSInt64 :
