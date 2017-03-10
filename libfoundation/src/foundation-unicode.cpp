@@ -25,6 +25,7 @@
 
 #include "foundation-auto.h"
 #include "foundation-text.h"
+#include "foundation-string-hash.h"
 
 #include <limits>
 
@@ -1254,56 +1255,14 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
     // Create a filter for the string
     MCAutoPointer<MCTextFilter> t_filter =
 			MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
-    
-    // Fowler-Noll-Vo 1a hash function
-    if (sizeof(hash_t) == sizeof(uint64_t))
-    {
-        // 64-bit variant
-        const uint64_t kPrime = 1099511628211ULL;
-        const uint64_t kOffset = 14695981039346656037ULL;
-        uint64_t t_hash = kOffset;
-        
-        while (t_filter->HasData())
-        {
-            unichar_t t_char;
-            t_char = t_filter->GetNextCodepoint();
-            t_filter->AdvanceCursor();
-            
-            // Hash the first byte of the codeunit
-            t_hash ^= t_char & 0xFF;
-            t_hash *= kPrime;
-            
-            // Hash the second byte of the codeunit
-            t_hash ^= t_char >> 8;
-            t_hash *= kPrime;
-        }
-        
-        return t_hash;
-    }
-    else
-    {
-        // 32-bit variant
-        const uint32_t kPrime = 16777619UL;
-        const uint32_t kOffset = 2166136261UL;
-        uint32_t t_hash = kOffset;
-        
-        while (t_filter->HasData())
-        {
-            unichar_t t_char;
-            t_char = t_filter->GetNextCodepoint();
-            t_filter->AdvanceCursor();
-            
-            // Hash the first byte of the codeunit
-            t_hash ^= t_char & 0xFF;
-            t_hash *= kPrime;
-            
-            // Hash the second byte of the codeunit
-            t_hash ^= t_char >> 8;
-            t_hash *= kPrime;
-        }
 
-        return t_hash;
+    MCHashCharsContext t_context;
+    while (t_filter->HasData())
+    {
+        t_context.consume(t_filter->GetNextCodepoint());
+        t_filter->AdvanceCursor();
     }
+    return t_context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
