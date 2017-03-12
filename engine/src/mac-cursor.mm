@@ -29,7 +29,6 @@
 
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 
-static bool s_cursor_is_hidden = false;
 static NSCursor *s_watch_cursor = nil;
 
 static unsigned char s_watch_cursor_bits[] =
@@ -158,18 +157,19 @@ void MCMacPlatformCursor::Set(void)
 {
 	if (is_standard)
     {
+        MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
         // By default, we want the cursor to be visible.
-        if (s_cursor_is_hidden)
+        if (t_platform -> GetCursorIsHidden())
         {
             [NSCursor unhide];
-            s_cursor_is_hidden = false;
+            t_platform -> SetCursorIsHidden(false);
         }
 		switch(standard)
 		{
         // SN-2015-06-16: [[ Bug 14056 ]] Hidden cursor is part of the cursors
         case kMCPlatformStandardCursorNone:
             [NSCursor hide];
-            s_cursor_is_hidden = true;
+            t_platform -> SetCursorIsHidden(true);
             break;
 		case kMCPlatformStandardCursorArrow:
             [[NSCursor arrowCursor] set];

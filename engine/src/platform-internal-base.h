@@ -64,7 +64,7 @@ public:
         return m_platform;
     }
 protected:
-    mutable MCPlatformCoreRef m_platform;
+    mutable MCPlatformCoreRef m_platform = nil;
 };
 
 /* MCPlatform::Ref is an automatic reference counting smart pointer template.

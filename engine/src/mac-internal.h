@@ -887,6 +887,8 @@ public:
     virtual void SyncMouseBeforeDragging(void);
     virtual void SyncMouseAfterTracking(void);
     virtual void HandleModifiersChanged(MCPlatformModifiers p_modifiers);
+    bool GetCursorIsHidden(void) { return m_cursor_is_hidden; }
+    void SetCursorIsHidden(bool p_hidden) { m_cursor_is_hidden = p_hidden; }
     
     // Modifier Keys
     virtual MCPlatformModifiers GetModifiersState(void);
@@ -1021,6 +1023,8 @@ private:
     
     bool m_have_desktop_height = false;
     CGFloat m_desktop_height = 0.0f;
+    
+    bool m_cursor_is_hidden = false;
     
     // Backdrop
     MCPlatformWindowRef m_backdrop_window = nil;
