@@ -34,25 +34,6 @@
 // platform that uses native menus - we will probably want to abstract in a
 // similar way to the MCPlatformWindow at a later date though.
 
-static uint32_t s_menu_select_lock = 0;
-// SN-2014-11-06: [[ Bug 13836 ]] Stores whether a quit item got selected
-static bool s_quit_selected = false;
-// SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
-static uint32_t s_open_menubar_items = 0;
-
-// SN-2015-11-02: [[ Bug 16218 ]] We can't trust popUpMenuPositioningItem on
-//  returning whether an item has been selected.
-static bool s_menu_item_selected = false;
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-// The menuref currently set as the menubar.
-static MCMacPlatformMenu * s_menubar = nil;
-
-// The delegate for the app menu.
-static com_runrev_livecode_MCAppMenuDelegate *s_app_menu_delegate = nil;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCShadowedItemTags
@@ -140,7 +121,7 @@ enum MCShadowedItemTags
     //  it is the first click on the menubar (otherwise, clicking and sliding would refresh
     //  the menubar each the item hovered changes)...
     // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to the menubar
-    if ([menu supermenu] == nil || !s_open_menubar_items)
+    if ([menu supermenu] == nil || m_menu -> GetOpenMenuItems() == 0)
     {
         m_menu -> GetPlatform() -> GetCallback() -> SendMenuUpdate(m_menu);
     }
@@ -158,7 +139,8 @@ enum MCShadowedItemTags
 - (void)menuItemSelected: (id)sender
 {
     
-    if (static_cast<MCMacPlatformCore *>(m_menu -> GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_menu -> GetPlatform());
+    if (t_platform -> ApplicationPseudoModalFor() != nil)
         return;
     
     NSMenuItem *t_item;
@@ -174,10 +156,10 @@ enum MCShadowedItemTags
     if ([[t_item keyEquivalent] isEqualToString: @"q"])
         t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> GetQuitItem() != nil;
     
-	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
+	if (t_platform -> GetMenuSelectLock() == 0 || t_quit_accelerator_present)
     {
-		m_menu -> GetPlatform() -> GetCallback() -> SendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
-        s_menu_item_selected = true;
+		t_platform -> GetCallback() -> SendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+        m_menu -> SetMenuItemSelected(true);
     }
     
     // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occured was not used.
@@ -209,26 +191,28 @@ enum MCShadowedItemTags
 //  before the other one receives menuWillClose.
 - (void)menuWillOpen:(NSMenu *)menu
 {
-    if ([s_menubar -> GetMenu() isEqualTo: [menu supermenu]])
-        s_open_menubar_items++;
+    if ([m_menu -> GetMenu() isEqualTo: [menu supermenu]])
+        m_menu -> SetOpenMenuItems(m_menu -> GetOpenMenuItems() + 1);
 }
 
 - (void)menuDidClose:(NSMenu *)menu
 {
-    if ([s_menubar -> GetMenu() isEqualTo: [menu supermenu]])
-        s_open_menubar_items--;
+    if ([m_menu -> GetMenu() isEqualTo: [menu supermenu]])
+        m_menu -> SetOpenMenuItems(m_menu -> GetOpenMenuItems() - 1);
 }
 
 @end
 
 @implementation com_runrev_livecode_MCAppMenuDelegate
 
-- (id)init
+- (id)initWithPlatform:(MCMacPlatformCore *)platform
 {
 	self = [super init];
 	if (self == nil)
 		return nil;
 	
+    m_platform = platform;
+    
 	return self;
 }
 
@@ -245,17 +229,16 @@ enum MCShadowedItemTags
     {
         // MW-2014-10-29: [[ Bug 13847 ]] Dispatch default accelerators from app menu.
         uint32_t t_old_menu_select_lock;
-        t_old_menu_select_lock = s_menu_select_lock;
-        s_menu_select_lock = 0;
+        t_old_menu_select_lock = m_platform -> GetMenuSelectLock();
+        m_platform -> SetMenuSelectLock(0);
 		[(MCMenuDelegate *)[[t_shadow menu] delegate] menuItemSelected: t_shadow];
-        s_menu_select_lock = t_old_menu_select_lock;
-    }
+        m_platform -> SetMenuSelectLock(t_old_menu_select_lock);    }
 }
 
 - (NSMenuItem *)findShadowedMenuItem: (NSString *)tag
 {
 	NSMenu *t_menubar;
-	t_menubar = s_menubar -> GetMenu();
+	t_menubar =  static_cast<MCMacPlatformMenu *>(m_platform -> GetMenubar()) -> GetMenu();
 	for(uindex_t i = 1; i < [t_menubar numberOfItems]; i++)
 	{
 		NSMenu *t_menu;
@@ -284,7 +267,7 @@ enum MCShadowedItemTags
 {
     // SN-2014-12-16: [[ Bug 14185 ]] Only flag the the quitting state (that's the only state
     //  which causes issues.
-    s_quit_selected = true;
+    m_platform -> SetQuitSelected(true);
 	[self shadowedMenuItemSelected: @"Quit"];
 }
 
@@ -292,20 +275,20 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    if (static_cast<MCMacPlatformCore *>(s_menubar -> GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+    if (m_platform -> ApplicationPseudoModalFor() != nil)
         return;
     
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
 	//    to allow shutdown in orderly fashion.
 	bool t_shutdown;
-	s_menubar -> GetPlatform() -> GetCallback() -> SendApplicationShutdownRequest(t_shutdown);
+	m_platform -> GetCallback() -> SendApplicationShutdownRequest(t_shutdown);
 }
 
 // SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
-    if (!s_open_menubar_items)
-        s_menubar -> GetPlatform() -> GetCallback() -> SendMenuUpdate(s_menubar);
+    if (static_cast<MCMacPlatformMenu*>(m_platform -> GetMenubar()) -> GetOpenMenuItems() != 0)
+       m_platform -> GetCallback() -> SendMenuUpdate(m_platform -> GetMenubar());
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -329,12 +312,14 @@ enum MCShadowedItemTags
 
 - (void)menuWillOpen:(NSMenu *)menu
 {
-    s_open_menubar_items++;
+    MCMacPlatformMenu * t_menubar = static_cast<MCMacPlatformMenu*>(m_platform -> GetMenubar());
+    t_menubar -> SetOpenMenuItems(t_menubar -> GetOpenMenuItems() + 1);
 }
 
 - (void)menuDidClose:(NSMenu *)menu
 {
-    s_open_menubar_items--;
+    MCMacPlatformMenu * t_menubar = static_cast<MCMacPlatformMenu*>(m_platform -> GetMenubar());
+    t_menubar -> SetOpenMenuItems(t_menubar -> GetOpenMenuItems() - 1);
 }
 
 @end
@@ -354,24 +339,21 @@ enum MCShadowedItemTags
 @compatibility_alias MCMenuHandlingKeys com_runrev_livecode_MCMenuHandlingKeys;
 
 // SN-2014-12-16: [[ Bug 14185 ]] Functions to save and restore the selected quit state
-uint32_t s_quitting_state_count = 0;
-uint8_t *s_quitting_states;
-
 void MCMacPlatformCore::SaveQuittingState()
 {
-    MCMemoryReallocate(s_quitting_states, s_quitting_state_count + 1, s_quitting_states);
-    s_quitting_states[s_quitting_state_count] = s_quit_selected;
+    MCMemoryReallocate(m_quitting_states, m_quitting_state_count + 1, m_quitting_states);
+    m_quitting_states[m_quitting_state_count] = m_quit_selected;
     
-    ++s_quitting_state_count;
-    s_quit_selected = false;
+    ++m_quitting_state_count;
+    m_quit_selected = false;
 }
 
 void MCMacPlatformCore::PopQuittingState()
 {
-    s_quit_selected = s_quitting_states[s_quitting_state_count - 1];
+    m_quit_selected = m_quitting_states[m_quitting_state_count - 1];
     
-    --s_quitting_state_count;
-    MCMemoryReallocate(s_quitting_states, s_quitting_state_count, s_quitting_states);
+    --m_quitting_state_count;
+    MCMemoryReallocate(m_quitting_states, m_quitting_state_count, m_quitting_states);
 }
 
 // SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item clicked was a shadowed item.
@@ -380,19 +362,19 @@ void MCMacPlatformCore::PopQuittingState()
 bool MCMacPlatformCore::IsInQuittingState(void)
 {
 	bool t_occured;
-	t_occured = s_quit_selected;
-	s_quit_selected = false;
+	t_occured = m_quit_selected;
+	m_quit_selected = false;
 	return t_occured;
 }
 
 void MCMacPlatformCore::LockMenuSelect(void)
 {
-	s_menu_select_lock += 1;
+	m_menu_select_lock += 1;
 }
 
 void MCMacPlatformCore::UnlockMenuSelect(void)
 {
-	s_menu_select_lock -= 1;
+	m_menu_select_lock -= 1;
 }
 
 @implementation com_runrev_livecode_MCMenuHandlingKeys
@@ -465,10 +447,10 @@ void MCMacPlatformCore::UnlockMenuSelect(void)
 //        if (s_update_menubar_menus)
 //        {
 //            s_update_menubar_menus = false;
-//            for(int i = 1; i < [s_menubar -> menu numberOfItems]; i++)
+//            for(int i = 1; i < [m_menubar -> menu numberOfItems]; i++)
 //            {
 //                NSMenu *t_submenu;
-//                t_submenu = [[s_menubar -> menu itemAtIndex: i] submenu];
+//                t_submenu = [[m_menubar -> menu itemAtIndex: i] submenu];
 //                if (t_submenu != nil)
 //                    MCPlatformCallbackSendMenuUpdate([(MCMenuDelegate *)[t_submenu delegate] platformMenuRef]);
 //            }
@@ -515,6 +497,9 @@ MCMacPlatformMenu::~MCMacPlatformMenu(void)
     [about_item release];
     [preferences_item release];
     [quit_item release];
+    
+    if (m_app_menu_delegate != nil)
+        [m_app_menu_delegate release];
 }
 
 // Helper method that frees anything associated with an NSMenuItem in an NSMenu
@@ -845,13 +830,13 @@ bool MCMacPlatformMenu::PopUp(MCPlatformWindowRef p_window, MCPoint p_location, 
     // SN-2015-11-02: [[ Bug 16218 ]] popUpMenuPositioningItem always returns
     // true if the menu is open by keeping the mouse down, even if the mouse is
     // released outside of the menu list.
-    // We will set s_menu_item_selected in menuItemSelected if selection occurs.
-    s_menu_item_selected = false;
+    // We will set m_menu_item_selected in menuItemSelected if selection occurs.
+    m_menu_item_selected = false;
 	[menu popUpMenuPositioningItem: p_item == UINDEX_MAX ? nil : [menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
 	
 	static_cast<MCMacPlatformCore *>(m_platform) -> SyncMouseAfterTracking();
 	
-	return s_menu_item_selected;
+	return m_menu_item_selected;
 }
 
 //////////
@@ -861,8 +846,8 @@ void MCMacPlatformMenu::StartUsingAsMenubar(void)
 	if (is_menubar)
 		return;
 	
-	if (s_app_menu_delegate == nil)
-		s_app_menu_delegate = [[com_runrev_livecode_MCAppMenuDelegate alloc] init];
+	if (m_app_menu_delegate == nil)
+        m_app_menu_delegate = [[MCAppMenuDelegate alloc] initWithPlatform:static_cast<MCMacPlatformCore*>(m_platform)];
 	
 	// Initialize the application menu (which is always index 0). The application
 	// menu has structure:
@@ -906,7 +891,7 @@ void MCMacPlatformMenu::StartUsingAsMenubar(void)
 				   keyEquivalent: @""];
     if (about_item == nil)
         [[t_app_menu itemAtIndex: 0] setEnabled:NO];
-    [[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 0] setTarget: m_app_menu_delegate];
     [[t_app_menu itemAtIndex: 0] setTag: kMCShadowedItemAbout];
         
     [t_app_menu addItem: [NSMenuItem separatorItem]];
@@ -918,7 +903,7 @@ void MCMacPlatformMenu::StartUsingAsMenubar(void)
 						  action: @selector(preferencesMenuItemSelected:)
 				   keyEquivalent: @","];
     // SN-2014-11-06: [[ Bug 13940 ]] Only enable the Preference menu if the shortcut exists in the menubar
-    [[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 2] setTarget: m_app_menu_delegate];
     if (preferences_item == nil)
         [[t_app_menu itemAtIndex: 2] setEnabled: NO];
     
@@ -956,9 +941,9 @@ void MCMacPlatformMenu::StartUsingAsMenubar(void)
     else
         [[t_app_menu itemAtIndex: 10] setAction:@selector(quitApplicationSelected:)];
     
-    [[t_app_menu itemAtIndex: 10] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 10] setTarget: m_app_menu_delegate];
     [[t_app_menu itemAtIndex: 10] setTag: kMCShadowedItemQuit];
-	[t_app_menu setDelegate: s_app_menu_delegate];
+	[t_app_menu setDelegate: m_app_menu_delegate];
 	
 	NSMenuItem *t_app_menu_item;
 	t_app_menu_item = [[NSMenuItem alloc] initWithTitle: t_app_name action: nil keyEquivalent: @""];
@@ -993,19 +978,19 @@ void MCMacPlatformCore::HideMenubar(void)
 
 void MCMacPlatformCore::SetMenubar(MCPlatformMenuRef p_menu)
 {
-	if (p_menu == s_menubar)
+	if (p_menu == m_menubar)
 		return;
 	
 	MCPlatformMenuRef t_old_menubar;
-	t_old_menubar = s_menubar;
-	s_menubar = nil;
+	t_old_menubar = m_menubar;
+	m_menubar = nil;
 	
 	if (p_menu != nil)
 	{
 		p_menu->StartUsingAsMenubar();
 		[NSApp setMainMenu: static_cast<MCMacPlatformMenu*>(p_menu) -> GetMenu()];
 		p_menu->Retain();
-		s_menubar = static_cast<MCMacPlatformMenu*>(p_menu);
+		m_menubar = static_cast<MCMacPlatformMenu*>(p_menu);
 	}
 	else
 		[NSApp setMainMenu: nil];
@@ -1019,7 +1004,7 @@ void MCMacPlatformCore::SetMenubar(MCPlatformMenuRef p_menu)
 
 MCPlatformMenuRef MCMacPlatformCore::GetMenubar(void)
 {
-	return s_menubar;
+	return m_menubar;
 }
 
 MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
@@ -1033,26 +1018,24 @@ MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 
 //////////
 
-static MCMacPlatformMenu * s_icon_menu = nil;
-
 NSMenu *MCMacPlatformCore::GetIconMenu(void)
 {
-	if (s_icon_menu != nil)
-		m_callback -> SendMenuUpdate(s_icon_menu);
+	if (m_icon_menu != nil)
+		m_callback -> SendMenuUpdate(m_icon_menu);
 	
-	if (s_icon_menu != nil)
-		return s_icon_menu -> GetMenu();
+	if (m_icon_menu != nil)
+		return m_icon_menu -> GetMenu();
 	
 	return nil;
 }
 
 void MCMacPlatformCore::SetIconMenu(MCPlatformMenuRef p_menu)
 {
-	if (s_icon_menu != nil)
-        s_icon_menu->Release();
-	s_icon_menu = static_cast<MCMacPlatformMenu *>(p_menu);
-	if (s_icon_menu != nil)
-		s_icon_menu->Retain();
+	if (m_icon_menu != nil)
+       m_icon_menu->Release();
+	m_icon_menu = static_cast<MCMacPlatformMenu *>(p_menu);
+	if (m_icon_menu != nil)
+		m_icon_menu->Retain();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

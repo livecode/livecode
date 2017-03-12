@@ -405,8 +405,11 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
 @compatibility_alias MCMenuDelegate com_runrev_livecode_MCMenuDelegate;
 
 @interface com_runrev_livecode_MCAppMenuDelegate: NSObject<NSMenuDelegate>
+{
+    MCMacPlatformCore * m_platform;
+}
 
-- (id)init;
+- (id)initWithPlatform:(MCMacPlatformCore *) platform;
 - (void)dealloc;
 
 - (void)shadowedMenuItemSelected:(NSString*)tag;
@@ -795,8 +798,12 @@ public:
     virtual bool IsInQuittingState(void);
     virtual void LockMenuSelect(void);
     virtual void UnlockMenuSelect(void);
+    virtual uint32_t GetMenuSelectLock(void) { return m_menu_select_lock;}
+    virtual void SetMenuSelectLock(uint32_t p_lock) { m_menu_select_lock = p_lock;}
+    
     virtual NSMenu *GetIconMenu(void);
     virtual bool MapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
+    virtual void SetQuitSelected(bool p_selected) {m_quit_selected = p_selected;}
     
     virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message);
     
@@ -1034,7 +1041,18 @@ private:
     
     // Color dialog
     MCColorPanelDelegate* m_color_dialog_delegate = nil;
+    
+    // Menus
+    uint32_t m_menu_select_lock = 0;
+    // SN-2014-11-06: [[ Bug 13836 ]] Stores whether a quit item got selected
+    bool m_quit_selected = false;
+    // The menuref currently set as the menubar.
+    MCMacPlatformMenu * m_menubar = nil;
+    uint32_t m_quitting_state_count = 0;
+    uint8_t *m_quitting_states = nil;
+    MCMacPlatformMenu *m_icon_menu = nil;    
 
+    // Engine callbacks
     MCPlatformCallbackRef m_callback = nil;
 };
 
@@ -1087,29 +1105,42 @@ public:
 
     virtual NSMenu* GetMenu(){ return menu;}
     virtual NSMenuItem* GetQuitItem(){ return quit_item;}
+    
+    virtual uint32_t GetOpenMenuItems(void) { return m_open_menu_items ;}
+    virtual void SetOpenMenuItems(uint32_t p_open_menu_items) {m_open_menu_items = p_open_menu_items;}
+    
+    virtual void SetMenuItemSelected(bool p_selected) {m_menu_item_selected = p_selected;}
  private:
     void DestroyMenuItem(uindex_t p_index);
     void MapMenuItemIndex(uindex_t& x_index);
     void ClampMenuItemIndex(uindex_t& x_index);
     
-    NSMenu *menu;
-    MCMenuDelegate *menu_delegate;
+    NSMenu *menu = nil;
+    MCMenuDelegate *menu_delegate = nil;
     
     // If the menu is being used as a menubar then this is true. When this
     // is the case, some items will be hidden and a (API-wise) invisible
     // menu will be inserted at the front (the application menu).
-    bool is_menubar : 1;
+    bool is_menubar = false;
     
     // If the quit item in this menu has an accelerator, this is true.
     // (Cocoa seems to 'hide' the quit menu item accelerator for some inexplicable
     // reason - it returns 'empty').
-    NSMenuItem* quit_item;
+    NSMenuItem* quit_item = nil;
     
     // SN-2014-11-06: [[ Bu 13940 ]] Add a flag for the presence of a Preferences shortcut
     //  to allow the menu item to be disabled.
-    NSMenuItem* preferences_item;
+    NSMenuItem* preferences_item = nil;
     
-    NSMenuItem* about_item;
+    NSMenuItem* about_item = nil;
+    
+    // SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
+    uint32_t m_open_menu_items = 0;
+    
+    bool m_menu_item_selected = false;
+    
+    // The delegate for the app menu.
+    MCAppMenuDelegate *m_app_menu_delegate = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
