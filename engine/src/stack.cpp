@@ -604,17 +604,6 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(externalfiles);
 
-	uint2 i = 0;
-	while (i < MCnusing)
-		if (MCusing[i] == this)
-		{
-			MCnusing--;
-			uint2 j;
-			for (j = i ; j < MCnusing ; j++)
-				MCusing[j] = MCusing[j + 1];
-		}
-		else
-			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
 	if (MCmbstackptr.IsBoundTo(this))
 		MCmbstackptr = nil;
@@ -1463,6 +1452,18 @@ Boolean MCStack::del(bool p_check_flag)
         delete needs;
         needs = NULL;
     }
+    
+    uint2 i = 0;
+    while (i < MCnusing)
+        if (MCusing[i] == this)
+        {
+            MCnusing--;
+            uint2 j;
+            for (j = i ; j < MCnusing ; j++)
+                MCusing[j] = MCusing[j + 1];
+        }
+        else
+            i++;
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.

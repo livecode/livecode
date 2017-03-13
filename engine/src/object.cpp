@@ -300,9 +300,6 @@ MCObject::~MCObject()
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
-	MCscreen->cancelmessageobject(this, NULL);
-	removefrom(MCfrontscripts);
-	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
 	delete[] colors; /* Allocated with new[] */
@@ -875,6 +872,10 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
+    
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
 	if (m_is_parent_script)
@@ -979,7 +980,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
@@ -1006,7 +1006,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1078,6 +1077,8 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 {	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
+
+	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
 	parsescript(True);
@@ -2068,6 +2069,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCtargetptr . object = this;
     MCtargetptr . part_id = 0;
 
+    MCObjectExecutionLock t_self_lock(this);
+
 	// Dispatch the message
 	Exec_stat t_stat;
 	t_stat = MCU_dofrontscripts(p_type, p_message, p_params);
@@ -2130,6 +2133,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
@@ -2898,7 +2902,10 @@ Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
+
+    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, p_args);
+
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2936,6 +2943,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    MCObjectExecutionLock t_self_lock(this);
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");

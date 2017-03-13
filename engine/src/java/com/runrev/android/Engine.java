@@ -3187,15 +3187,24 @@ public class Engine extends View implements EngineApi
         if (resultCode == Activity.RESULT_OK)
 		{
             Uri t_data = data.getData();
-            String t_path = null;
+            String t_path = "";
             if (t_data != null)
             {
-                Cursor t_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_cursor = null;
+                try
+                {
+                    t_cursor = ((LiveCodeActivity) getContext())
+                        .getContentResolver()
+                        .query(t_data, null, null, null, null);
+                }
+                catch (SecurityException e) {}
+
                 if (t_cursor != null)
                 {
                     t_cursor.moveToFirst();
-                    int t_index = t_cursor.getColumnIndex (MediaStore.Images.ImageColumns.DATA);
-                    t_path = t_cursor.getString(t_index);
+                    int t_index = t_cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                    if (t_index > 0)
+                        t_path = t_cursor.getString(t_index);
                 }
                 Log.i("revandroid", "onMediaResult picked path: " + t_path);
             }

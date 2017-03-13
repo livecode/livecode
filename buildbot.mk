@@ -168,7 +168,7 @@ dist-tools: dist-tools-commercial
 distmac-disk: distmac-disk-indy distmac-disk-business
 endif
 
-dist-tools: dist-tools-community
+dist-tools: dist-tools-community dist-tools-version-check
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
@@ -179,6 +179,19 @@ dist-tools-commercial:
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+# Ensure that the version for which we're trying to build installers
+# hasn't already been tagged.
+dist-tools-version-check:
+	@if git rev-parse refs/tags/$(BUILD_SHORT_VERSION) \
+	        >/dev/null 2>&1 ; then \
+	  echo; \
+	  echo "$(BUILD_SHORT_VERSION) has already been released."; \
+	  echo "You probably need to update the 'version' file."; \
+	  echo; \
+	  exit 1; \
+	fi
+
+.PHONY: dist-tools-version-check
 
 distmac-bundle-community:
 	$(buildtool_command) --platform mac --stage bundle --edition community

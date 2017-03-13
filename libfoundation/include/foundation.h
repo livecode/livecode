@@ -186,7 +186,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __CR__ 1
 
 // Presence of CoreFoundation
-#define __HAS_CORE_FOUNDATION__
+#define __HAS_CORE_FOUNDATION__ (1)
 
 #endif
 
@@ -285,7 +285,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __CR__ 1
 
 // Presence of CoreFoundation
-#define __HAS_CORE_FOUNDATION__
+#define __HAS_CORE_FOUNDATION__ (1)
 
 #endif
 
@@ -297,37 +297,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__GNUC__) && !defined(__APPLE__) && defined(__PLATFORM_IS_ANDROID__)
 
 // Compiler
-#define __GCC__
+#define __GCC__ (1)
 
 // Platform
-#define __ANDROID__
+#define __ANDROID__ (1)
 
 // Architecture
 #if defined(__i386)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __I386__
-#define __LP32__ 1
-#define __SMALL__
+#define __32_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __I386__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
 #elif defined(__x86_64__)
-#define __64_BIT__
-#define __LITTLE_ENDIAN__
-#define __X86_64__
-#define __LP64__ 1
-#define __MEDIUM__ 1
+#define __64_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __X86_64__ (1)
+#define __LP64__ (1)
+#define __MEDIUM__ (1)
 #elif defined(__arm__)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __ARM__
-#define __LP32__ 1
-#define __SMALL__
+#define __32_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __ARM__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
 #endif
 
 // Native char set
-#define __ISO_8859_1__
+#define __ISO_8859_1__ (1)
 
 // Native line endings
-#define __LF__
+#define __LF__ (1)
 
 #endif
 
@@ -341,18 +341,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 
 // Compiler
-#define __GCC__
+#define __GCC__ (1)
 
 // Architecture
-#define __32_BIT__
-#define __LP32__
-#define __SMALL__
+#define __32_BIT__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
 
 // Native char set
-#define __ISO_8859_1__
+#define __ISO_8859_1__ (1)
 
 // Native line endings
-#define __LF__
+#define __LF__ (1)
 
 #endif
 
