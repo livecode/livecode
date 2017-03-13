@@ -146,6 +146,7 @@ Function names:
 * Whenever adding a function, add a comment that explains precisely:
   * What the function does, under what conditions it succeeds, and how it behaves when it fails
   * What the function expects as inputs, and what outputs it generates
+* When using preprocessor macros, ensure that the `#define`d identifier has a value, eg `#define FEATURE_PLATFORM_PLAYER (1)` rather than `#define FEATURE_PLATFORM_PLAYER`
 
 #### Layout and style
 
