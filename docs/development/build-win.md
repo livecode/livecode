@@ -2,7 +2,7 @@
 
 ![LiveCode Community Logo](http://livecode.com/wp-content/uploads/2015/02/livecode-logo.png)
 
-Copyright © 2015 LiveCode Ltd., Edinburgh, UK
+Copyright © 2015-2017 LiveCode Ltd., Edinburgh, UK
 
 ## Dependencies
 
@@ -14,12 +14,19 @@ You will need to install [git for Windows](https://git-scm.com/download/win) in 
 
 ### Microsoft Visual Studio
 
-You will need to download & install [Microsoft Visual Studio 2010 Express](http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso) (or Professional, if available).
+You need a set of Visual Studio build tools and SDKS.  You can use either:
 
-In addition, you should install:
+- [Microsoft Visual Studio 2015 Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools),
+  which contains _only_ the compilers and libraries, without any user
+  interface; select everything in the installer
 
-* [Microsoft Speech SDK 5.1](https://www.microsoft.com/en-gb/download/details.aspx?id=10121)
-* Microsoft Speech SDK 4.0 - this can be harder to find, but [this link](ftp://ftp.boulder.ibm.com/software/viavoicesdk/sapi4sdk.exe) may work
+
+- An appropriate edition of the
+  [Microsoft Visual Studio 2015](https://visualstudio.com/downloads/) IDE
+
+In addition, you should install
+[Microsoft Speech SDK 5.1](https://www.microsoft.com/en-gb/download/details.aspx?id=10121)
+in order to allow you to compile the `revspeech` external.
 
 ### Cygwin
 
@@ -56,11 +63,14 @@ This will generate a set of Visual Studio project files in the `build-win-x86/li
 
 ## Compiling LiveCode
 
-To compile LiveCode, you can either open the `build-win-x86/livecode/livecode.sln` solution file in Visual Studio, or you can run:
+If you installed the Visual Studio IDE, you can open the
+`build-win-x86/livecode/livecode.sln` solution file in Visual Studio,
+and build LiveCode from there.
+
+If you installed the Visual Studio build tools, you can run:
 
 ````
 cd build-win-x86
+set BUILD_PLATFORM=win-x86
 cmd /C ..\make.cmd
 ````
-
-Note that if you are using Visual Studio 2010 Express you won't be able to compile the revbrowser extension.

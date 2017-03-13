@@ -103,7 +103,7 @@ def process_env_options(opts):
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
         'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION',
-        'MS_SPEECH_SDK4', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
+        'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
         )
     for v in vars:
         opts[v] = os.getenv(v)
@@ -149,7 +149,6 @@ def process_arg_options(opts, args):
             '-Dtarget_arch': 'TARGET_ARCH',
             '-DOS': 'OS',
             '-Dperl': 'PERL',
-            '-Dms_speech_sdk4': 'MS_SPEECH_SDK4',
             '-Dms_speech_sdk5': 'MS_SPEECH_SDK5',
             '-Dquicktime_sdk': 'QUICKTIME_SDK',
             '-Gmsvs_version': 'WIN_MSVS_VERSION',
@@ -207,10 +206,7 @@ def guess_xcode_arch(target_sdk):
         else:
             return 'armv7 arm64'
     if sdk == 'iphonesimulator':
-        if int(ver) < 8:
-            return 'i386'
-        else:
-            return 'i386 x86_64'
+        return 'x86_64'
 
 def validate_target_arch(opts):
     if opts['TARGET_ARCH'] is None:
@@ -219,6 +215,11 @@ def validate_target_arch(opts):
         platform = opts['PLATFORM']
         if platform == 'emscripten':
             opts['TARGET_ARCH'] = 'js'
+            return
+
+        # Windows builds don't understand 'x86_64'
+        if platform == 'win-x86_64':
+            opts['TARGET_ARCH'] = 'x64'
             return
 
         platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
@@ -322,12 +323,6 @@ def guess_windows_perl():
 
     error('Perl not found; set $PERL')
 
-def guess_ms_speech_sdk4():
-    d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK')
-    if not os.path.isdir(d):
-        return None
-    return d
-
 def guess_ms_speech_sdk5():
     d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK 5.1')
     if not os.path.isdir(d):
@@ -344,9 +339,6 @@ def validate_windows_tools(opts):
     if opts['PERL'] is None:
         opts['PERL'] = guess_windows_perl()
 
-    if opts['MS_SPEECH_SDK4'] is None:
-        opts['MS_SPEECH_SDK4'] = guess_ms_speech_sdk4()
-
     if opts['MS_SPEECH_SDK5'] is None:
         opts['MS_SPEECH_SDK5'] = guess_ms_speech_sdk5()
 
@@ -354,7 +346,7 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
-        opts['WIN_MSVS_VERSION'] = '2010'
+        opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
 # Mac & iOS-specific options
@@ -523,10 +515,11 @@ def configure_android(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_win(opts):
+    validate_target_arch(opts)
     validate_windows_tools(opts)
 
     args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
-    args += gyp_define_args(opts, {'ms_speech_sdk4': 'MS_SPEECH_SDK4',
+    args += gyp_define_args(opts, {'target_arch':    'TARGET_ARCH',
                                    'ms_speech_sdk5': 'MS_SPEECH_SDK5',
                                    'quicktime_sdk':  'QUICKTIME_SDK', })
 

@@ -233,4 +233,15 @@ public handler TestNullJObjectParam()
 	MCUnitTestHandlerThrows(NullParamJObject, "type mismatch when passing NULL as non-optional JObject")
 end handler
 
+foreign handler StringCodepointAt(in pSequence as JObject, in pIndex as CInt) returns CInt binds to "java:java.lang.Character>codePointAt(Ljava/lang/CharSequence;I)I!static"
+
+public handler TestNativeTypeAfterObjectType()
+	unsafe
+		variable tCodepoint as Integer
+		put StringCodepointAt(StringToJString("a"), 0) into tCodepoint
+	
+		test "called foreign handler with signature Ljava/lang/CharSequence;I" when tCodepoint is 97
+	end unsafe
+end handler
+
 end module

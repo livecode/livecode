@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "express.h"
 #include "regex.h"
 #include "util.h"
 #include "uidc.h"
@@ -256,7 +257,6 @@ class MCPut : public MCStatement
 	// MW-2012-02-23: [[ UnicodePut ]] Indicates if the 'unicode' adjective
 	//   was present.
 	bool is_unicode : 1;
-	bool overlap : 1;
 
 	//cookie
 	MCExpression *name;
@@ -272,7 +272,6 @@ public:
 		// MW-2011-06-22: [[ SERVER ]] Make a distinction between 'put' and 'put .. into msg'
 		prep = PT_UNDEFINED;
 		dest = NULL;
-		overlap = false;
 		// cookie
 		name = NULL;
 		path = NULL;
@@ -1627,14 +1626,12 @@ class MCAdd : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCAdd()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCAdd();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1647,14 +1644,12 @@ class MCDivide : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCDivide()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCDivide();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1667,14 +1662,12 @@ class MCMultiply : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCMultiply()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCMultiply();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1687,14 +1680,12 @@ class MCSubtract : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCSubtract()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCSubtract();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1769,7 +1760,6 @@ class MCSetOp : public MCStatement
 	MCExpression *source;
 protected:
 	bool intersect : 1;
-	bool overlap : 1;
     // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     bool recursive : 1;
 public:

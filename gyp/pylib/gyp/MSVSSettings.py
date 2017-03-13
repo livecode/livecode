@@ -1097,3 +1097,8 @@ _MSBuildOnly(_manifest, 'TrackerLogDirectory', _folder_name)
 
 # Options that have the same name in MSVS and MSBuild.
 _Same(_masm, 'UseSafeExceptionHandlers', _boolean)  # /safeseh
+_Same(_masm, 'WarningLevel',
+      _Enumeration(['0',  # /W0
+                    '1',  # /W1
+                    '2',  # /W2
+                    '3']))  # /W3

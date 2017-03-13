@@ -20,9 +20,32 @@
 			# Needs to be all dependents as used by the HarfBuzz public headers
 			'all_dependent_settings':
 			{
-				'include_dirs':
+				'defines':
 				[
-					'include',
+					# Ensure that symbols are referenced in the right way for a static lib
+					'U_STATIC_IMPLEMENTATION=1',
+				],
+
+				'conditions':
+				[
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 			
@@ -42,8 +65,6 @@
 										[
 											'lib/mac/libicui18n.a',
 											'lib/mac/libicuio.a',
-											'lib/mac/libicule.a',
-											'lib/mac/libiculx.a',
 											'lib/mac/libicutu.a',
 											'lib/mac/libicuuc.a',
 											'lib/mac/libicudata.a',
@@ -59,8 +80,6 @@
 										[
 											'-licui18n',
 											'-licuio',
-											'-licule',
-											'-liculx',
 											'-licutu',
 											'-licuuc',
 											'-licudata',
@@ -77,8 +96,6 @@
 							[
 								'lib/ios/$(SDK_NAME)/libicui18n.a',
 								'lib/ios/$(SDK_NAME)/libicuio.a',
-								'lib/ios/$(SDK_NAME)/libicule.a',
-								'lib/ios/$(SDK_NAME)/libiculx.a',
 								'lib/ios/$(SDK_NAME)/libicuuc.a',
 								'lib/ios/$(SDK_NAME)/libicudata.a',
 							],
@@ -97,8 +114,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licutu',
 								'-licuuc',
 								'-licudata',
@@ -119,8 +134,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licuuc',
 								'-licudata',
 								'-lstdc++',
@@ -133,15 +146,13 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':
 							[
 								'-lsicuin',
 								'-lsicuio',
-								'-lsicule',
-								'-lsiculx',
 								'-lsicutu',
 								'-lsicuuc',
 								'-lsicudt',
@@ -163,8 +174,6 @@
 							[
 								'-licui18n',
 								'-licuio',
-								'-licule',
-								'-liculx',
 								'-licutu',
 								'-licuuc',
 								'-licudata',

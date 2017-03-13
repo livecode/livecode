@@ -2122,6 +2122,7 @@ extern MCExecMethodInfo *kMCFiltersEvalUniEncodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalUniDecodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalMD5DigestMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalSHA1DigestMethodInfo;
+extern MCExecMethodInfo *kMCFiltersEvalMessageDigestMethodInfo;
 
 void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result);
 void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result);
@@ -2137,6 +2138,7 @@ void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, 
 void MCFiltersEvalUniDecodeToNative(MCExecContext& ctxt, MCDataRef p_input, MCStringRef &r_output);
 void MCFiltersEvalUniEncodeFromEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
 void MCFiltersEvalUniDecodeToEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
+void MCFiltersEvalMessageDigest(MCExecContext& ctxt, MCDataRef p_data, MCNameRef p_digest_name, MCDataRef &r_digest);
 void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 

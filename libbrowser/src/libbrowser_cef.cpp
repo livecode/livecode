@@ -318,8 +318,16 @@ static const char kCefPathSeparator = '/';
 
 static bool __MCCefGetLibraryPath(char*& r_path)
 {
-    void *t_module =
-            MCSupportLibraryLoad("./CEF/libcef");
+    void *t_module = nullptr;
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./CEF/libcef");
+    /* TODO[Bug 19381] On Linux and Windows, the in-git-checkout
+     * location of CEF is "./CEF" but once LiveCode is installed it's
+     * in "./Externals/CEF". */
+#if defined(WIN32) || defined(TARGET_PLATFORM_LINUX)
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./Externals/CEF/libcef");
+#endif
 
     char *t_module_path =
             t_module != nullptr ? MCSupportLibraryCopyNativePath(t_module)

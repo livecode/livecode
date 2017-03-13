@@ -39,8 +39,6 @@ XCODES_DIR="${HOME}/Builds/Platforms"
 ALT_XCODE_DIR=$(xcode-select -print-path)
 
 # Detect iOS variants
-checkiOS 4_6_2 iPhoneSimulator 6.1 i386
-checkiOS 5_1_1 iPhoneSimulator 7.1 i386
 checkiOS 6_2_0 iPhoneSimulator 8.2 "i386 x86_64"
 checkiOS 7_2_1 iPhoneSimulator 9.2 "i386 x86_64"
 checkiOS 7_2_1 iPhoneOS 9.2 "armv7 arm64"

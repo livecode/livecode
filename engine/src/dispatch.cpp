@@ -2099,11 +2099,49 @@ void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 
 bool MCDispatch::loadexternal(MCStringRef p_external)
 {
+	MCStringRef t_filename;
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Make sure we only use the leaf name
+	//   of the external when loading.
+    uindex_t t_slash_index;
+    uindex_t t_ext_length = MCStringGetLength(p_external);
+    MCStringRef t_external_leaf;
+    
+	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
+    {
+		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+            return false;
+    }
+    else
+        t_external_leaf = MCValueRetain(p_external);
+
+	if (!revandroid_loadExternalLibrary(t_external_leaf, t_filename))
+    {
+        MCValueRelease(t_external_leaf);
+		return false;
+    }
+
+	// Don't try and load any drivers as externals.
+	if (MCStringBeginsWithCString(t_external_leaf, (const char_t *)"db", kMCStringOptionCompareExact))
+	{
+        MCValueRelease(t_external_leaf);
+		MCValueRelease(t_filename);
+		return true;
+	}
+    
+    MCValueRelease(t_external_leaf);
+#else
+    // AL-2015-02-10: [[ SB Inclusions ]] New module loading utility deals with path resolution
+    t_filename = MCValueRetain(p_external);
+#endif
+	
 	if (m_externals == nil)
 		m_externals = new (nothrow) MCExternalHandlerList;
 	
 	bool t_loaded;
-	t_loaded = m_externals -> Load(p_external);
+	t_loaded = m_externals -> Load(t_filename);
+	MCValueRelease(t_filename);
 	
 	if (m_externals -> IsEmpty())
 	{

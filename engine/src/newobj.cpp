@@ -589,6 +589,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCMenuObject;
 	case F_MERGE:
 		return new MCMerge;
+    case F_MESSAGE_DIGEST:
+        return new MCMessageDigestFunc;
 	case F_MILLISECS:
 		return new MCMillisecs;
 	case F_MIN:
