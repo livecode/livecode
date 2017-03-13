@@ -134,17 +134,17 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
 }
 
 
-bool MCMacPlatformCore::GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
+bool MCMacCommonPlatformCore::GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
 {
     return false;
 }
 
-bool MCMacPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
+bool MCMacCommonPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
 {
     return false;
 }
 
-bool MCMacPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)
+bool MCMacCommonPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)
 {
     bool t_found;
     t_found = false;
@@ -168,7 +168,7 @@ bool MCMacPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type,
     return t_found;
 }
 
-bool MCMacPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)
+bool MCMacCommonPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)
 {
     bool t_found;
     t_found = false;
@@ -379,7 +379,7 @@ bool MCMacPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, M
     return t_found;
 }
 
-bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
+bool MCMacCommonPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
     // Get the font for the given control type
 	MCNewAutoNameRef t_font_name;
@@ -390,3 +390,17 @@ bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MC
     // Ensure the font is registered and return it
     return MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_font_name, r_font);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void)
+{
+#ifdef _SERVER
+    return MCPlatform::makeRef<MCMacCommonPlatformCore>();
+#else
+    return MCPlatform::makeRef<MCMacPlatformCore>();
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

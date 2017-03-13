@@ -40,6 +40,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "system.h"
 
+#include "platform.h"
+#include "platform-internal.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static uint2 nvars;
@@ -344,5 +347,18 @@ void X_main_loop_iteration()
 	MCdefaultstackptr = MCstaticdefaultstackptr;
 	MCS_alarm(0.0);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+int platform_main(int argc, char *argv[], char *envp[])
+{
+    if (MCPlatformInitialize())
+    {
+        return MCplatform -> Run(argc, argv, envp);
+    }
+    
+    return -1;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////

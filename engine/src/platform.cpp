@@ -119,6 +119,7 @@ namespace MCPlatform {
     
 #endif // FEATURE_PLATFORM_APPLICATION
     
+#ifndef _SERVER
     //////////
     
     void Callback::SendScreenParametersChanged(void)
@@ -126,6 +127,7 @@ namespace MCPlatform {
         //MCLog("Application -> ScreenParametersChanged()", 0);
         MCPlatformHandleScreenParametersChanged();
     }
+#endif
     
     //////////
     

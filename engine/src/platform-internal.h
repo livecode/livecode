@@ -769,7 +769,9 @@ namespace MCPlatform
         virtual void SendApplicationResume(void);
 #endif // FEATURE_PLATFORM_APPLICATION
         
+#ifndef _SERVER
         virtual void SendScreenParametersChanged(void);
+#endif
         
 #if defined(FEATURE_PLATFORM_WINDOW)
         virtual void SendWindowCloseRequest(MCPlatformWindowRef window);

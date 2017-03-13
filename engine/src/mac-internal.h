@@ -758,7 +758,30 @@ struct MCModalSession
     bool is_done;
 };
 
-class MCMacPlatformCore: public MCPlatformCore
+class MCMacCommonPlatformCore: public MCPlatform::UnreachableCore
+{
+public:
+    constexpr MCMacCommonPlatformCore() = default;
+    virtual ~MCMacCommonPlatformCore(void) {}
+    
+    // Theme
+    virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool);
+    virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int);
+    virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
+    virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
+    virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
+    
+    // Callbacks
+    virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
+    virtual void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
+protected:
+    // Engine callbacks
+    MCPlatformCallbackRef m_callback = nil;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformCore: public MCMacCommonPlatformCore
 {
 public:
     constexpr MCMacPlatformCore() = default;
@@ -924,13 +947,6 @@ public:
     virtual void SyncBackdrop(void);
     virtual void ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window);
     
-    // Theme
-    virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool);
-    virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int);
-    virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
-    virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
-    virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
-    
     // Scripting
     virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void);
     
@@ -939,10 +955,6 @@ public:
     
     // Sound
     virtual MCPlatformSoundRef CreateSound(void);
-    
-    // Callbacks
-    MCPlatformCallbackRef GetCallback(void) { return m_callback;}
-    void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;};
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1051,9 +1063,6 @@ private:
     uint32_t m_quitting_state_count = 0;
     uint8_t *m_quitting_states = nil;
     MCMacPlatformMenu *m_icon_menu = nil;    
-
-    // Engine callbacks
-    MCPlatformCallbackRef m_callback = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

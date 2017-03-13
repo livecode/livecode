@@ -617,7 +617,7 @@ extern "C" void MCModulesFinalize();
 
 int platform_main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() || !MCSInitialize() ||
+    if (!MCPlatformInitialize() || !MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
     
