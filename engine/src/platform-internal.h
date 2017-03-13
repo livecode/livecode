@@ -592,6 +592,143 @@ typedef MCPlatform::Core MCPlatformCore;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace MCPlatform {
+    
+    class UnreachableCore: public Core
+    {
+    public:
+        virtual int Run(int argc, char *argv[], char *envp[]) { MCUnreachableReturn(-1) };
+        
+        // Wait
+        virtual bool WaitForEvent(double p_duration, bool p_blocking) { MCUnreachableReturn(false) };
+        virtual void BreakWait(void) { MCUnreachable() };
+        
+        // Callbacks
+        virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context)  { MCUnreachable() };
+        
+        // Abort key
+        virtual bool InitializeAbortKey(void) { MCUnreachableReturn(false) };
+        virtual void FinalizeAbortKey(void) { MCUnreachable() };
+        virtual bool GetAbortKeyPressed(void) { MCUnreachableReturn(false) };
+        
+        // Color transform
+        virtual MCPlatformColorTransformRef CreateColorTransform(void) { MCUnreachable() };
+        virtual bool InitializeColorTransform(void) { MCUnreachableReturn(false) };
+        virtual void FinalizeColorTransform(void)  { MCUnreachable() };
+        
+        // Menus
+        virtual MCPlatformMenuRef CreateMenu(void)  { MCUnreachable() };
+        virtual bool InitializeMenu(void) { MCUnreachableReturn(false) };
+        virtual void FinalizeMenu(void)  { MCUnreachable() };
+        virtual void ShowMenubar(void)  { MCUnreachable() };
+        virtual void HideMenubar(void)  { MCUnreachable() };
+        virtual void SetMenubar(MCPlatformMenuRef p_menu)  { MCUnreachable() };
+        virtual MCPlatformMenuRef GetMenubar(void)  { MCUnreachable() };
+        virtual void SetIconMenu(MCPlatformMenuRef p_menu)  { MCUnreachable() };
+        virtual void SaveQuittingState()  { MCUnreachable() };
+        virtual void PopQuittingState()  { MCUnreachable() };
+        virtual bool IsInQuittingState(void)  { MCUnreachableReturn(false) };
+        virtual void LockMenuSelect(void)  { MCUnreachable() };
+        virtual void UnlockMenuSelect(void)  { MCUnreachable() };
+        
+        // Dialogs
+        virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message)  { MCUnreachable() };
+        
+        // Windows
+        virtual MCPlatformWindowRef CreateWindow(void) { MCUnreachableReturn(nil) };
+        virtual bool GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)  { MCUnreachableReturn(false) };
+        
+        // Window mask
+        virtual MCPlatformWindowMaskRef CreateWindowMask(void)  { MCUnreachableReturn(nil) };
+        
+        // Print dialog
+        virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void) { MCUnreachableReturn(nil) };
+        
+        // Color dialog
+        virtual void BeginColorDialog(MCStringRef p_title, const MCColor& p_color)  { MCUnreachable() };
+        virtual MCPlatformDialogResult EndColorDialog(MCColor& r_color)  { MCUnreachableReturn(kMCPlatformDialogResultError) };
+        
+        // File & folder dialog
+        virtual void BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file) { MCUnreachable() };
+        virtual MCPlatformDialogResult EndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)  { MCUnreachableReturn(kMCPlatformDialogResultError) };
+        virtual void BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)  { MCUnreachable() };
+        virtual MCPlatformDialogResult EndFolderDialog(MCStringRef& r_selected_folder)  { MCUnreachableReturn(kMCPlatformDialogResultError) };
+        
+        // System Properties
+        virtual void GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)  { MCUnreachable() };
+        virtual void SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)  { MCUnreachable() };
+        
+        // Player
+        virtual MCPlatformPlayerRef CreatePlayer(void)  { MCUnreachableReturn(nil) };
+        
+        // Snapshots
+        virtual void ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)  { MCUnreachable() };
+        virtual void ScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)  { MCUnreachable() };
+        virtual void ScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap) { MCUnreachable() };
+        virtual void ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)  { MCUnreachable() };
+        
+        virtual void Beep(void)  { MCUnreachable() };
+        
+        virtual void DeathGrip(MCPlatform::Base * p_window)  { MCUnreachable() };
+        
+        // Events
+        virtual void FlushEvents(MCPlatformEventMask p_mask) { MCUnreachable() };
+        virtual uint32_t GetEventTime(void) { MCUnreachableReturn(0) };
+        
+        // Mice
+        virtual MCPlatformCursorRef CreateCursor(void)  { MCUnreachableReturn(nil) };
+        virtual void HideCursorUntilMouseMoves(void)  { MCUnreachable() };
+        virtual bool GetMouseButtonState(uindex_t p_button)  { MCUnreachableReturn(false) };
+        virtual bool GetMouseClick(uindex_t p_button, MCPoint& r_location)  { MCUnreachableReturn(false) };
+        virtual void GetMousePosition(MCPoint& r_location) { MCUnreachable() };
+        virtual void SetMousePosition(MCPoint p_location)  { MCUnreachable() };
+        virtual void GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)  { MCUnreachable() };
+        virtual void GrabPointer(MCPlatformWindowRef p_window)  { MCUnreachable() };
+        virtual void UngrabPointer(void)  { MCUnreachable() };
+        
+        // Modifier Keys
+        virtual MCPlatformModifiers GetModifiersState(void)  { MCUnreachableReturn(0) };
+        virtual bool GetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)  { MCUnreachableReturn(false) };
+        
+        // Drag and drop
+        virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)  { MCUnreachable() };
+        
+        // Screens
+        virtual void GetScreenCount(uindex_t& r_count)  { MCUnreachable() };
+        virtual void GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)  { MCUnreachable() };
+        virtual void GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)  { MCUnreachable() };
+        virtual void GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)  { MCUnreachable() };
+        virtual void DisableScreenUpdates(void)  { MCUnreachable() };
+        virtual void EnableScreenUpdates(void)  { MCUnreachable() };
+        
+        // Backdrop
+        virtual void ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)  { MCUnreachable() };
+        
+        // Themes
+        virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)  { MCUnreachableReturn(false) };
+        virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int)  { MCUnreachableReturn(false) };
+        virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color)  { MCUnreachableReturn(false) };
+        virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)  { MCUnreachableReturn(false) };
+        virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)  { MCUnreachableReturn(false) };
+        
+        // Script Environment
+        virtual MCPlatformScriptEnvironmentRef CreateScriptEnvironment(void) { MCUnreachableReturn(nil) };
+        
+        // Fonts
+        virtual MCPlatformLoadedFontRef CreateLoadedFont(void) { MCUnreachableReturn(nil) };
+        
+        // Sound
+        virtual MCPlatformSoundRef CreateSound(void) { MCUnreachableReturn(nil) };
+        
+        // Callbacks
+        virtual MCPlatformCallbackRef GetCallback(void) { MCUnreachableReturn(nil) };
+        virtual void SetCallback(MCPlatformCallbackRef p_callback)  { MCUnreachable() };
+    };
+    
+} /* namespace MCPlatform */
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 namespace MCPlatform
 {
