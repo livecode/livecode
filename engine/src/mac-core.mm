@@ -1527,7 +1527,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 	{
 		// Get the time of the mouse press event.
 		uint32_t t_event_time;
-		t_event_time = MCPlatformGetEventTime();
+		t_event_time = GetEventTime();
 		
 		// If the click occured within the double click time and double click
 		// radius *and* if the button is the same as the last clicked button
@@ -1549,10 +1549,10 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 	else
 	{
 		MCPoint t_global_pos;
-		MCPlatformMapPointFromWindowToScreen(m_mouse_window, m_mouse_position, t_global_pos);
+		m_mouse_window -> MapPointFromWindowToScreen(m_mouse_position, t_global_pos);
 		
 		Window t_new_mouse_window;
-		MCPlatformGetWindowAtPoint(t_global_pos, t_new_mouse_window);
+		GetWindowAtPoint(t_global_pos, t_new_mouse_window);
 		
 		m_mouse_was_control_click = false;
 		
@@ -1562,7 +1562,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 			// If this is the same button as the last mouseDown, then
 			// update the click time.
 			if (p_button == m_mouse_last_click_button)
-				m_mouse_last_click_time = MCPlatformGetEventTime();
+				m_mouse_last_click_time = GetEventTime();
 			
 			m_callback -> SendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
 		}
@@ -1600,7 +1600,7 @@ void MCMacPlatformCore::HandleMouseCursorChange(MCPlatformWindowRef p_window)
         // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
         //   a resizable frame.
         bool t_is_resizable;
-        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
+        p_window -> GetProperty(kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
         
         if (t_is_resizable)
         {

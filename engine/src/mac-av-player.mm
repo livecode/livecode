@@ -702,7 +702,7 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // Block-wait until the status becomes something.
     [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
     while([t_player status] == AVPlayerStatusUnknown)
-        MCPlatformWaitForEvent(60.0, true);
+        m_platform -> WaitForEvent(60.0, true);
 
     [t_player removeObserver: m_observer forKeyPath: @"status"];
 

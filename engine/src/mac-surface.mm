@@ -66,7 +66,7 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	m_window -> Retain();
 	
 	// IM-2015-02-23: [[ WidgetPopup ]] Find out if this surface is for an opaque window
-	MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyIsOpaque, kMCPlatformPropertyTypeBool, &m_opaque);
+	p_window -> GetProperty(kMCPlatformWindowPropertyIsOpaque, kMCPlatformPropertyTypeBool, &m_opaque);
 	
 	// Borrow the CGContext and MCRegion for now.
 	m_cg_context = p_cg_context;
