@@ -316,7 +316,7 @@ bool initialise_jvm()
     init_jvm_args(&vm_args);
     
     JavaVMOption* options = new (nothrow) JavaVMOption[1];
-    options[0].optionString = "-Djava.class.path=/usr/lib/java";
+    options[0].optionString = const_cast<char*>("-Djava.class.path=/usr/lib/java");
     
     vm_args.nOptions = 1;
     vm_args.options = options;
