@@ -562,9 +562,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
     MCObjectHandle t_current_object;
 	t_current_object = ctxt . GetObject() -> GetHandle();
 	
-	MCObjectListener *t_prev_listener;
-	t_prev_listener = nil;
-	
 	MCObjectListener *t_listener;
 	t_listener = s_object_listeners;
     
@@ -575,8 +572,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 
         MCObjectListenerTarget *t_target;
         t_target = nil;
-        MCObjectListenerTarget *t_prev_target;
-        t_prev_target = nil;
         
         if (t_listener -> object . IsValid())
         {
@@ -593,7 +588,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
             }
         }
         
-        t_prev_listener = t_listener;
         t_listener = t_listener -> next;
 	}
     t_listeners . Take(r_listeners, r_count);
