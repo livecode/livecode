@@ -57,7 +57,9 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
     
     if (!t_resolved_typeinfo -> foreign . descriptor . copy(p_contents, t_value + 1))
@@ -82,7 +84,9 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
     
     if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))
@@ -107,7 +111,9 @@ bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeig
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
 
     if (t_resolved_typeinfo->foreign.descriptor.doexport == nil ||
