@@ -791,7 +791,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	// MW-2008-08-12: Add access to the MCurlresult internal global variable
 	//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
-	r_value = (MCStringRef)MCValueRetain(MCurlresult -> getvalueref());
+    ctxt.ConvertToString(MCurlresult -> getvalueref(), r_value);
 }
 
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
