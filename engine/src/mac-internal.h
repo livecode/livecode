@@ -955,6 +955,11 @@ public:
     
     // Sound
     virtual MCPlatformSoundRef CreateSound(void);
+    
+    // Native Layer
+    virtual MCPlatformNativeLayerRef CreateNativeLayer(void);
+    virtual bool CreateNativeContainer(void *&r_view);
+    virtual void ReleaseNativeView(void *p_view);
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1318,6 +1323,53 @@ private:
     
     Function *m_functions;
     uint4 m_function_count;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
+//                the top-level window view by keeping its bounds the same as its frame.
+//                This allows us to place contents in terms of window coords without having to
+//                adjust for the location of the group container.
+@interface com_runrev_livecode_MCContainerView: NSView
+
+- (void)setFrameOrigin:(NSPoint)newOrigin;
+- (void)setFrameSize:(NSSize)newSize;
+
+@end
+
+@compatibility_alias MCContainerView com_runrev_livecode_MCContainerView;
+
+///////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformNativeLayer : public MCPlatformNativeLayer
+{
+public:
+    constexpr MCMacPlatformNativeLayer(void) = default;
+    ~MCMacPlatformNativeLayer(void);
+    
+    virtual bool GetNativeView(void *&r_view);
+    virtual void SetNativeView(void *p_view);
+    
+    // Performs the attach/detach operations
+    virtual void Attach(MCPlatformWindowRef p_window, void *p_container_view, void *p_view_above, bool p_visible);
+    virtual void Detach();
+    
+    virtual bool Paint(MCGContextRef p_context);
+    virtual void SetGeometry(const MCRectangle &p_rect);
+    virtual void SetViewportGeometry(const MCRectangle &p_rect);
+    virtual void SetVisible(bool p_visible);
+    
+    // Performs a relayering operation
+    virtual void Relayer(void *p_container_view, void *p_view_above);
+    
+private:
+    
+    NSView* m_view = nil;
+    NSBitmapImageRep *m_cached = nil;
+    MCPlatformWindowRef m_window = nil;
+    NSRect calculateFrameRect(const MCRectangle &p_rect);
+    
 };
 
 ///////////////////////////////////////////////////////////////////////////////

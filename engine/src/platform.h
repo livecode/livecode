@@ -715,6 +715,10 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef window, MCPlatformAllowedDragOpera
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef MCPlatform::NativeLayer *MCPlatformNativeLayerRef;
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef class MCPlatformWindow *MCPlatformWindowRef;
 
 enum MCPlatformWindowStyle

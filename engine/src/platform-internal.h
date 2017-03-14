@@ -579,9 +579,15 @@ namespace MCPlatform {
         // Sound
         virtual MCPlatformSoundRef CreateSound(void) = 0;
         
+        // Native layer
+        virtual MCPlatformNativeLayerRef CreateNativeLayer(void) = 0;
+        virtual bool CreateNativeContainer(void *&r_view) = 0;
+        virtual void ReleaseNativeView(void *p_view) = 0;
+
         // Callbacks
         virtual MCPlatformCallbackRef GetCallback(void) = 0;
         virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
+        
     };
     
     typedef Ref<Core> CoreRef;
@@ -720,6 +726,11 @@ namespace MCPlatform {
         // Sound
         virtual MCPlatformSoundRef CreateSound(void) { MCUnreachableReturn(nil) };
         
+        // Native layer
+        virtual MCPlatformNativeLayerRef CreateNativeLayer(void)  { MCUnreachableReturn(nil) };
+        virtual bool CreateNativeContainer(void *&r_view) { MCUnreachableReturn(false) };
+        virtual void ReleaseNativeView(void *p_view) { MCUnreachable() };
+        
         // Callbacks
         virtual MCPlatformCallbackRef GetCallback(void) { MCUnreachableReturn(nil) };
         virtual void SetCallback(MCPlatformCallbackRef p_callback)  { MCUnreachable() };
@@ -748,6 +759,37 @@ namespace MCPlatform
 } /* namespace MCPlatform */
 
 typedef MCPlatform::ScriptEnvironment MCPlatformScriptEnvironment;
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+namespace MCPlatform
+{
+    
+class NativeLayer : public CoreReference
+{
+public:
+    
+    virtual bool GetNativeView(void *&r_view) = 0;
+    virtual void SetNativeView(void *p_view) = 0;
+    
+    // Performs the attach/detach operations
+    virtual void Attach(MCPlatformWindowRef p_window, void *p_container_view, void *p_view_above, bool p_visible) = 0;
+    virtual void Detach() = 0;
+    
+    virtual bool Paint(MCGContextRef p_context) = 0;
+    virtual void SetGeometry(const MCRectangle &p_rect) = 0;
+    virtual void SetViewportGeometry(const MCRectangle &p_rect) = 0;
+    virtual void SetVisible(bool p_visible) = 0;
+    
+    // Performs a relayering operation
+    virtual void Relayer(void *p_container_view, void *p_view_above) = 0;
+};
+
+} /* namespace MCPlatform */
+
+typedef MCPlatform::NativeLayer MCPlatformNativeLayer;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

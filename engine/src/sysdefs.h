@@ -207,6 +207,7 @@ namespace MCPlatform {
     class Core;
     class ScriptEnvironment;
     class Callback;
+    class NativeLayer;
 } /* namespace MCPlatform */
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
@@ -219,6 +220,7 @@ typedef class MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
 typedef class MCPlatform::Core *MCPlatformCoreRef;
 typedef class MCPlatform::ScriptEnvironment *MCPlatformScriptEnvironmentRef;
 typedef class MCPlatform::Callback *MCPlatformCallbackRef;
+typedef class MCPlatform::NativeLayer *MCPlatformNativeLayerRef;
 
 typedef void *MCColorTransformRef;
 
