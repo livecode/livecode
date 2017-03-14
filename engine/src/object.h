@@ -672,7 +672,7 @@ public:
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
 
-    virtual void uncacheid(void);
+    virtual void removereferences(void);
     
 	// [[ C++11 ]] MSVC doesn't support typename here while other compilers require it
 #ifdef _MSC_VER

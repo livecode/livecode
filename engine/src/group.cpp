@@ -1031,20 +1031,20 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	}
 }
 
-void MCGroup::uncacheid()
+void MCGroup::removereferences()
 {
     if (controls != NULL)
     {
         MCControl *t_control;
         t_control = controls;
         do
-        {   t_control -> uncacheid();
+        {   t_control -> removereferences();
             t_control = t_control -> next();
         }
         while(t_control != controls);
     }
     
-    MCObject::uncacheid();
+    MCObject::removereferences();
 }
 
 bool MCGroup::isdeletable(bool p_check_flag)
