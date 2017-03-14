@@ -738,8 +738,6 @@ public:
             return;
         }
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
@@ -750,15 +748,12 @@ public:
 		{
 			if (t_listener -> object == t_object_handle)
 				break;
-			t_prev_listener = t_listener;
 		}
 		
 		if (t_listener != nil)
 		{
 			MCObjectListenerTarget *t_target;
 			t_target = nil;
-			MCObjectListenerTarget *t_prev_target;
-			t_prev_target = nil;
 			
 			MCObjectHandle t_target_object;
             t_target_object = ctxt . GetObjectHandle();
@@ -773,7 +768,6 @@ public:
                     t_changed = true;
                     break;
 				}
-				t_prev_target = t_target;
 			}
             
             if (t_changed)
