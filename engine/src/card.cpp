@@ -1158,7 +1158,7 @@ Boolean MCCard::del(bool p_check_flag)
 			}
 			else
 			{
-                optr->getref()->uncacheid();
+                optr->getref()->removereferences();
 				getstack()->removecontrol(optr->getref());
 			}
 			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
@@ -1169,7 +1169,7 @@ Boolean MCCard::del(bool p_check_flag)
 		while (optr != objptrs);
 	}
     
-    uncacheid();
+    removereferences();
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.

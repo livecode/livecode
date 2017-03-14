@@ -32,3 +32,26 @@ on TestSendParams
 	send tSendScript to tStack
 	TestAssert "send script with multiple params", the result is "2"
 end TestSendParams
+
+private function MessageExists pId
+	repeat for each line tLine in the pendingMessages
+		if item 1 of tLine is pId then
+			return true
+		end if
+	end repeat
+	return false
+end MessageExists
+
+
+on TestSendToSubobj
+	local tStack, tMsgId
+	create stack
+	put the short name of it into tStack
+	set the defaultStack to tStack
+	create button
+	send "mouseUp" to it in 5 millisecs
+	put the result into tMsgId
+	delete stack tStack
+
+	TestAssert "message canceled on delete", not MessageExists(tMsgId)
+end TestSendToSubobj
