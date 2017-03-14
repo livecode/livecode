@@ -457,9 +457,6 @@ void MCInternalObjectListenerMessagePendingListeners(void)
         
 		MCobjectpropertieschanged = False;
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
-		
 		MCObjectListener *t_listener;
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
@@ -479,8 +476,6 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 					t_listener -> object -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
-					MCObjectListenerTarget *t_prev_target;
-					t_prev_target = nil;	
 					
 					double t_new_time;
 					t_new_time = MCS_time();
@@ -543,15 +538,12 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                                 t_changed = true;
                             }
 								
-                            t_prev_target = t_target;
 							t_target = t_target -> next;
 						}
 					}
 					else
 						t_listener -> object -> signallistenerswithmessage(t_properties_changed);
 				}
-				
-				t_prev_listener = t_listener;
 			}
 			
             t_listener = t_listener -> next;
