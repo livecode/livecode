@@ -45,6 +45,11 @@ extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCSLibraryRef MCScriptGetLibrary(void);
+bool MCScriptLoadLibrary(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_path);
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,
@@ -309,14 +314,40 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
     uindex_t method_count;
 };
 
+enum MCJavaCallType {
+    MCJavaCallTypeInstance,
+    MCJavaCallTypeStatic,
+    MCJavaCallTypeNonVirtual,
+    MCJavaCallTypeConstructor,
+    MCJavaCallTypeGetter,
+    MCJavaCallTypeSetter,
+    MCJavaCallTypeStaticGetter,
+    MCJavaCallTypeStaticSetter
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
     MCStringRef binding;
     
     // Bound function information - not pickled.
-    void *function;
-    void *function_argtypes;
-    void *function_cif;
+    bool is_java: 1;
+    bool is_bound: 1;
+    
+    union
+    {
+        struct
+        {
+            void *function;
+            void *function_argtypes;
+            void *function_cif;
+        } native;
+        struct
+        {
+            MCNameRef class_name;
+            void *method_id;
+            int call_type;
+        } java;
+    };
 };
 
 struct MCScriptPropertyDefinition: public MCScriptDefinition

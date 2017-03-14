@@ -53,7 +53,7 @@ struct MCBuiltinModule
 
 static MCBuiltinModule *s_builtin_modules = nil;
 static MCScriptModuleRef s_builtin_module = nil;
-static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
+static MCScriptLoadLibraryCallback s_load_library_callback = nil;
 
 extern "C" void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
 {
@@ -66,8 +66,16 @@ extern "C" void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
     s_builtin_modules = p_module;
 }
 
+static MCSLibraryRef s_libscript_library = nullptr;
+
 bool MCScriptInitialize(void)
 {
+    if (!MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCScriptInitialize),
+                                     s_libscript_library))
+    {
+        return false;
+    }
+
     for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
     {
         MCStreamRef t_stream;
@@ -287,7 +295,7 @@ bool MCScriptInitialize(void)
             return false;
     }
     
-    s_resolve_shared_library_callback = nil;
+    s_load_library_callback = nullptr;
     
     return true;
 }
@@ -299,19 +307,40 @@ void MCScriptFinalize(void)
         MCScriptReleaseModule(t_module->handle);
     }
     MCScriptReleaseModule(s_builtin_module);
-}
-
-void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
-{
-    s_resolve_shared_library_callback = p_callback;
-}
-
-bool MCScriptResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
-{
-    if (s_resolve_shared_library_callback == nil)
-        return false;
     
-    return s_resolve_shared_library_callback(p_module, p_name, r_path);
+    MCValueRelease(s_libscript_library);
+}
+
+void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback p_callback)
+{
+    s_load_library_callback = p_callback;
+}
+
+bool MCScriptLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibraryRef& r_library)
+{
+    // If the library name is empty, then we want libscript's library.
+    if (MCStringIsEmpty(p_name))
+    {
+        r_library = MCValueRetain(s_libscript_library);
+        return true;
+    }
+    
+    // If there is a callback, then use that.
+    if (s_load_library_callback != nullptr)
+    {
+        return s_load_library_callback(p_module,
+                                       p_name,
+                                       r_library);
+    }
+    
+    // Otherwise, just use the name as is.
+    return MCSLibraryCreateWithPath(p_name,
+                                    r_library);
+}
+
+MCSLibraryRef MCScriptGetLibrary(void)
+{
+    return s_libscript_library;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

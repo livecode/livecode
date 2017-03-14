@@ -1006,12 +1006,19 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    MCWidgetOnSave(m_widget, &t_value);
+    if (!MCWidgetOnSave(m_widget,
+                        &t_value))
+    {
+        r_state = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
     {
         CatchError(ctxt);
         return;
     }
+    
     r_state = (MCArrayRef)t_value . Take();
 }
 

@@ -88,14 +88,14 @@ typedef double          real8;
 
 // Boolean definitions
 
-typedef unsigned char Boolean;
+#ifndef __MACTYPES__
+typedef bool Boolean;
+#endif
+static const bool True = true;
+static const bool False = false;
 
 #ifndef Bool
 #define Bool int
 #endif
-
-#define False 0
-#define True 1
-#define Mixed 2
 
 #endif

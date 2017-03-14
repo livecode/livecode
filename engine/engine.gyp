@@ -435,6 +435,25 @@
 									'cp', '<@(_inputs)', '<@(_outputs)',
 								],
 							},
+							{
+								'action_name': 'copy_nfc_tech_filter',
+								'message': 'Copying NFC tech filter file',
+								
+								'inputs':
+								[
+									'rsrc/android-nfc_tech_filter.xml',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
 						],
 						
 						'all_dependent_settings':
@@ -446,6 +465,7 @@
 									'<(PRODUCT_DIR)/Manifest.xml',
 									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
 									'<(PRODUCT_DIR)/notify_icon.png',
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
 								],
 							},
 						},
@@ -641,36 +661,6 @@
 				},
 			},
 		},
-		
-		{
-			'target_name': 'development-postprocess',
-			'type': 'none',
-
-			'dependencies':
-			[
-				'development',
-				'../thirdparty/libopenssl/libopenssl.gyp:revsecurity',
-			],
-
-			'conditions':
-			[
-				[
-					'OS == "mac"',
-					{
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
-								'files':
-								[
-									'<(PRODUCT_DIR)/revsecurity.dylib',
-								],
-							},
-						],
-					},
-				],
-			],
-		},
 
 		{
 			'target_name': 'development',
@@ -687,7 +677,9 @@
 			},
 			
 			'dependencies':
-			[
+            [
+                '../thirdparty/libopenssl/libopenssl.gyp:revsecurity_built',
+                '../revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
@@ -722,7 +714,19 @@
 						[
 							'rsrc/LiveCode.icns',
 							'rsrc/LiveCodeDoc.icns',
-						],
+                        ],
+                        
+                        'copies':
+                        [
+                            {
+                                'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
+                                'files':
+                                [
+                                    '<(PRODUCT_DIR)/revsecurity.dylib',
+                                    '<(PRODUCT_DIR)/revpdfprinter.bundle',
+                                ],
+                            },
+                        ],
 					},
 				],
 				[

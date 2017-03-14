@@ -339,14 +339,14 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             {
                 // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
                 // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-                MCAutoPointer<MCContainer> t_container;
-                if (!t_params->evalcontainer(ctxt, &t_container))
+                MCContainer t_container;
+                if (!t_params->evalcontainer(ctxt, t_container))
                 {
                     ctxt . LegacyThrow(EE_BINARYD_BADDEST);
                     return;
                 }
                 
-                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+                /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             }
             else
             {
@@ -1363,14 +1363,14 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         {
             // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
             // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-            MCAutoPointer<MCContainer> t_container;
-            if (!t_result_params->evalcontainer(ctxt, &t_container))
+            MCContainer t_container;
+            if (!t_result_params->evalcontainer(ctxt, t_container))
             {
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
 
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+            /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             
             t_result_params = t_result_params->getnext();
         }
@@ -2518,11 +2518,11 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(key, EE_QUERYREGISTRY_BADEXP, &t_key))
         return;
 
-	MCAutoPointer<MCContainer> t_container;
+    MCContainer t_container;
     MCAutoStringRef t_type;
 	if (type != NULL)
 	{
-		if (!type -> evalcontainer(ctxt, &t_container))
+		if (!type -> evalcontainer(ctxt, t_container))
 		{
 			ctxt . LegacyThrow(EE_QUERYREGISTRY_BADDEST);
 			return;
@@ -2539,8 +2539,8 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	if (!ctxt.HasError())
 	{
-		if (*t_container != nil)
-			/* UNCHECKED */ t_container->set_valueref(*t_type);
+        if (type != NULL)
+            /* UNCHECKED */ t_container.set_valueref(*t_type);
 	}
 }
 
@@ -3161,6 +3161,50 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+Parse_stat
+MCMessageDigestFunc::parse(MCScriptPoint &sp,
+                           Boolean the)
+{
+    MCExpression *t_params[MAX_EXP];
+    uint2 t_param_count = 0;
+
+    if (getexps(sp, t_params, t_param_count) != PS_NORMAL ||
+        (t_param_count != 2))
+    {
+        /* Wrong number of parameters or some other probleem */
+        freeexps(t_params, t_param_count);
+
+        MCperror->add(PE_MESSAGEDIGEST_BADPARAM, sp);
+    }
+
+    m_data.Reset(t_params[0]);
+    m_type.Reset(t_params[1]);
+    return PS_NORMAL;
+}
+
+void
+MCMessageDigestFunc::eval_ctxt(MCExecContext &ctxt,
+                               MCExecValue &r_value)
+{
+    MCNewAutoNameRef t_name;
+    if (!ctxt.EvalExprAsNameRef(m_type.Get(), EE_MESSAGEDIGEST_BADTYPE, &t_name))
+        return;
+    MCAutoDataRef t_data;
+    if (!ctxt.EvalExprAsDataRef(m_data.Get(), EE_MESSAGEDIGEST_BADDATA, &t_data))
+        return;
+    MCAutoDataRef t_digest;
+    MCFiltersEvalMessageDigest(ctxt, *t_data, *t_name, &t_digest);
+    if (!ctxt.HasError())
+    {
+        r_value.dataref_value = t_digest.Take();
+        r_value.type = kMCExecValueTypeDataRef;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
 #include "test.h"

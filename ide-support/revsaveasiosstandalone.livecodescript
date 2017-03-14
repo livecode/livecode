@@ -474,12 +474,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- Externals to reference
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
-   repeat for each element tExternal in tCopiedExternals
-      if tExternal["type"] is among the words of "external external-tmp" then
-         put tExternal["location"] & return after tDeploy["externals"]
+   repeat for each key tExternalName in tCopiedExternals
+      local tExternalRec
+      put tCopiedExternals[tExternalName] into tExternalRec
+      if tExternalRec["type"] is among the words of "external external-tmp" then
+         put tExternalName & return after tDeploy["externals"]
       end if
+      put tExternalName & ":" & "./" & tExternalRec["location"] & return after tDeploy["library"]
    end repeat
    delete the last char of tDeploy["externals"]
+   delete the last char of tDeploy["library"]
    
    -- Put the redirects if any
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
@@ -603,7 +607,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
-         throw "extracting debug symbols failed with" && it
+         revStandaloneProgress "Extracting debug symbols failed"
       end if
       
       // Reinstate env var MallocNanoZone if it was set.

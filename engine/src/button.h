@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 #include "stack.h"
-
+#include "mctristate.h"
 
 #define AQUA_FUDGE 8
 
@@ -234,10 +234,10 @@ public:
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
 	uint2 getfamily();
-	Boolean gethilite(uint4 parid);
+	MCTristate gethilite(uint4 parid);
 	void setdefault(Boolean def);
-	Boolean sethilite(uint4 parid, Boolean hilite);
-	void resethilite(uint4 parid, Boolean hilite);
+	Boolean sethilite(uint4 parid, MCTristate hilite);
+	void resethilite(uint4 parid, MCTristate hilite);
 
 	// MW-2011-09-30: [[ Redraw ]] This function conditionally does a redraw all
 	//   if flags means it might need to be.

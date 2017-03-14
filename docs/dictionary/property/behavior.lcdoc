@@ -8,7 +8,7 @@ Syntax: set the behavior of <object> to {<button> | <stack>}
 
 Summary:
 Allows an <object(glossary)> to inherit its <script> <handler|handlers>
-from another <object(glossary)>
+from another <object(glossary)>.
 
 Associations: stack, card, field, button, graphic, scrollbar, player,
 image, widget
@@ -20,11 +20,16 @@ OS: mac, windows, linux, ios, android, html5
 Platforms: desktop, server, mobile
 
 Example:
-set the behavior of tNewGroup to the long id of button "Widget" of card "Behaviors"
+local tNewGroup
+set the behavior of tNewGroup to \
+   the long id of button "myBehavior" of card "Behaviors"
+
+Example:
+set the behavior of stack "foo" to the long id of stack "foobehavior"
 
 Value:
 A <object reference|reference> to a <button> or <stack> containing the
-<script> to use as a <behavior>, or <empty> if the control should have
+<script> to use as a <behavior>, or <empty> if the <control> should have
 no <behavior>.
 
 Description:
@@ -32,34 +37,34 @@ Behaviors are a method to create common functionality between
 <object|objects> without duplicating the <script|scripts>.
 
 The value of the <behavior> <property> is a <object reference|reference>
-to a <button> or <stack> containing the script to
+to a <button> or <stack> containing the <script> to
 use.  The format stored in the object it's assigned to is similar to a
 <id(property)|long ID>.  The main difference is that where a long ID
 includes the full path to the <stack file>, the form stored in the
 <behavior> includes only the stack <name>, allowing the reference to
-continue to work after the stack file has been moved to another
+continue to work after the <stack file> has been moved to another
 computer. If you set the <behavior> to a long ID, LiveCode converts it
 to a rugged form without the stack <file path>.
 
 By default, the <behavior> of newly created objects is <empty>.
 
-An object with a <behavior> set will act as though its script was set
-to the script of the <behavior> <button> or <stack>. If multiple
+An object with a <behavior> set will act as though its <script> was set
+to the <script> of the <behavior> <button> or <stack>. If multiple
 objects share the same <behavior>, each will have its own set of
 <script local variable|script local variables>. Any references to
 `me`, `the owner of me`, and so on, will resolve to the child object
 currently executing.
 
-The <button> or <stack> containing the <behavior> script can be located
+The <button> or <stack> containing the <behavior> <script> can be located
 anywhere. In particular this allows for it be located in a <password>
-protected stack, allowing you to protect the script without need to
+protected stack, allowing you to protect the <script> without need to
 protect the controls using it.
 
 Behaviors are resolved by LiveCode immediately after loading a stack
-file.  The engine acts as though it is resolving a control reference
+file. The engine acts as though it is resolving a <control> reference
 of the form:
 
-    button id <id> of stack <stack name> [ of stack <mainstack name> ]
+> button id *id* of stack *stack name* [ of stack *mainstack name* ]
 
 
 Thus the <stackFiles> property will be searched and stacks loaded into
@@ -91,10 +96,9 @@ used.
 Changes:
 From version 6.7.5, a stack can be used as a behavior.
 From version 6.1, the behavior property of a control currently
-
-    being used as a behavior will now be taken into account and result
-    in the child behavior deferring to the parent behavior in the same
-    way a control defers to its behavior.
+being used as a behavior will now be taken into account and result
+in the child behavior deferring to the parent behavior in the same
+way a control defers to its behavior.
 
 
 References: dispatch (command), empty (constant), object (glossary),

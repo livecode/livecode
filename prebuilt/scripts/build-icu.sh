@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
@@ -30,7 +31,7 @@ esac
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
 		echo "Fetching ICU source"
-		curl http://download.icu-project.org/files/icu4c/${ICU_VERSION}/icu4c-${ICU_VERSION_ALT}-src.tgz -o "${ICU_TGZ}"
+		curl --fail -L http://download.icu-project.org/files/icu4c/${ICU_VERSION}/icu4c-${ICU_VERSION_ALT}-src.tgz -o "${ICU_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${ICU_TGZ}" ] ; then 
@@ -161,7 +162,9 @@ function buildICU {
 		if [ ! -e "${ICU_ARCH_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
 			mkdir -p "${ICU_ARCH_SRC}/custom-data"
 			cd "${ICU_ARCH_SRC}/custom-data"
-			curl http://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
+			# TODO[Bug 19198] Create custom ICU minimal data for ICU 58
+			#curl --fail http://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
+			cp "../data/out/tmp/icudt${ICU_VERSION_MAJOR}l.dat" .
 		else
 			cd "${ICU_ARCH_SRC}/custom-data"
 		fi

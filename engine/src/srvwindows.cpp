@@ -724,30 +724,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 		return fname;
 	}
-	
-	//////////
-	
-	virtual void *LoadModule(MCStringRef p_path)
-	{
-		MCAutoStringRef t_resolved_path;
-		/* UNCHECKED */ ResolveNativePath(p_path, &t_resolved_path);
-	
-		HMODULE t_handle;
-		t_handle = LoadLibraryExA(MCStringGetCString(*t_resolved_path), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 
-		return t_handle;
-	}
-	
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
-	{
-		return GetProcAddress((HMODULE)p_module, p_symbol);
-	}
-	
-	virtual void UnloadModule(void *p_module)
-	{
-		FreeLibrary((HMODULE)p_module);
-	}
-	
 	////
 	
 	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)

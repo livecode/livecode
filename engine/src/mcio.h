@@ -120,6 +120,8 @@ extern IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, I
 extern IO_stat IO_write_string_legacy_full(const MCString &string, IO_handle stream, uint1 size, bool p_write_null);
 extern IO_stat IO_read_cstring_legacy(char*& r_string, IO_handle stream, uint1 size);
 extern IO_stat IO_write_cstring_legacy(const char* string, IO_handle stream, uint1 size);
+// Read and immediately discard a legacy string
+extern IO_stat IO_discard_cstring_legacy(IO_handle string, uint1 size);
 
 // These methods are used by 5.5 -> 7.0 props which saved their value out in UTF-8.
 extern IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
@@ -188,7 +190,8 @@ extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);
-extern MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
+extern MCFileEncodingType MCS_resolve_BOM_from_bytes(byte_t *p_bytes, uindex_t p_size, uint32_t &r_size);
+extern MCFileEncodingType MCS_resolve_BOM(IO_handle &x_stream, uint32_t &r_size);
 
 ///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
 extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);

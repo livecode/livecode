@@ -917,53 +917,11 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
 	t_offset_y = t_current_y - texty + dy;
-
-    // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
-    // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
-
-	
-	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
-	//   pixmap tile in this case to ensure the offset falls within 32767.
-	if (MCU_abs(t_offset_y) > INT16_MAX)
-    {
-        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
-        if (t_offset_y > INT16_MAX)
-            t_offset_y %= INT16_MAX;
-        else
-        {
-            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
-            //  is implementation-defined.
-            int4 t_positive_offset;
-            t_positive_offset = -t_offset_y;
-            t_positive_offset %= INT16_MAX;
-            t_offset_y = -t_positive_offset;
-        }
-		
-		t_offset_y %= t_height;
-		if (t_offset_y < 0)
-			t_offset_y += t_height;
-	}
-
-    if (MCU_abs(t_offset_x) > INT16_MAX)
-    {
-        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
-        if (t_offset_x > INT16_MAX)
-            t_offset_x %= INT16_MAX;
-        else
-        {
-            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
-            //  is implementation-defined.
-            int4 t_positive_offset;
-            t_positive_offset = -t_offset_x;
-            t_positive_offset %= INT16_MAX;
-            t_offset_x = -t_positive_offset;
-        }
-        
-        t_offset_x %= t_width;
-        if (t_offset_x < 0)
-            t_offset_x += t_width;
-    }
-
+    
+    // Ensure the offsets are in the 16-bit signed int range.
+    t_offset_y = MCSgn(t_offset_y) * (MCAbs(t_offset_y) % t_height);
+    t_offset_x = MCSgn(t_offset_x) * (MCAbs(t_offset_x) % t_width);
+    
 	dc -> setfillstyle(t_current_style, t_current_pixmap, t_offset_x, t_offset_y);
 }
 

@@ -145,12 +145,6 @@ X_init(int argc,
 
 	/* ---------- More globals */
 
-	/* executable file name */
-	if (!MCsystem->PathFromNative(argv[0], MCcmd))
-	{
-		goto error_cleanup;
-	}
-
 	/* Locales */
 	if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
 	{

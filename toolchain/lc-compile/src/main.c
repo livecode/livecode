@@ -18,10 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "literal.h"
-#include "position.h"
-#include "literal.h"
-#include "report.h"
+#include <literal.h>
+#include <position.h>
+#include <report.h>
+#include "outputfile.h"
 
 extern void ROOT(void);
 extern void yyExtend(void);

@@ -26,7 +26,8 @@ EMMAKE ?= emmake
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
 IPHONEOS_VERSIONS ?= 9.2 10.2
-IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 10.2
+IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2
+SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -142,13 +143,13 @@ compile-ios-%:
 check-ios-%:
 	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
 
-# Dummy targets to prevent our build system from building iOS 5.1 simulator
-config-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
-compile-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
-check-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
+# Dummy targets to prevent our build system from building old iOS simulators
+$(addprefix config-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix compile-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix check-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile check): %: %$(lastword $(IPHONEOS_VERSIONS))
@@ -184,6 +185,16 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+
+# Dummy rules for Windows x86-64 builds
+# TODO Replace with real rules
+config-win-x86_64:
+	mkdir -p build-win-x86_64
+compile-win-x86_64:
+	mkdir -p win-x86_64-bin
+all-win-x86_64:
+	$(MAKE) config-win-x86_64
+	$(MAKE) compile-win-x86_64
 
 ################################################################
 # Emscripten rules

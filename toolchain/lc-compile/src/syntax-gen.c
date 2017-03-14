@@ -19,9 +19,11 @@
 #include <assert.h>
 #include <string.h>
 
-#include "report.h"
-#include "literal.h"
-#include "position.h"
+#include <allocate.h>
+#include <position.h>
+#include <report.h>
+#include <literal.h>
+#include "outputfile.h"
 
 #define MAX_NODE_DEPTH 32
 
@@ -185,26 +187,6 @@ static unsigned int s_unreserved_keyword_count = 0;
 static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values);
 
 static FILE* s_output;
-
-////////////////////////////////////////////////////////////////////////////////
-
-void *Allocate(size_t p_size)
-{
-    void *t_ptr;
-    t_ptr = calloc(1, p_size);
-    if (t_ptr == NULL)
-        Fatal_OutOfMemory();
-    return t_ptr;
-}
-
-void *Reallocate(void *p_ptr, size_t p_new_size)
-{
-    void *t_new_ptr;
-    t_new_ptr = realloc(p_ptr, p_new_size);
-    if (t_new_ptr == NULL)
-        Fatal_OutOfMemory();
-    return t_new_ptr;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -596,7 +578,7 @@ static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
 
 static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
 {
-    long t_index;
+    long t_index = 0;
     switch(p_node -> kind)
     {
         case kSyntaxNodeKindEmpty:

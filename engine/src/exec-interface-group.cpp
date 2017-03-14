@@ -173,7 +173,7 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(part))
+                    && !bptr->gethilite(part).isFalse())
                 {
                     t_found = true;
 					break;

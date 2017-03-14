@@ -228,7 +228,13 @@ static MCHookNativeControlsDescriptor s_native_control_desc =
 #endif
 
 void MCS_common_init(void)
-{	
+{
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCS_common_init),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+    
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	
@@ -1312,65 +1318,78 @@ void MCS_close(IO_handle &x_stream)
 	x_stream -> Close();
 }
 
-// Inspects the BOM of a text file to retrieve its encoding
-MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
+MCFileEncodingType MCS_resolve_BOM_from_bytes(byte_t *p_bytes, uindex_t p_size, uint32_t &r_size)
 {
-    uint1 t_BOM[4];
-    int64_t t_size;
-    uint32_t t_size_read;
-    uint32_t t_position;
-    MCFileEncodingType t_encoding;
-    t_encoding = kMCFileEncodingNative;
-
-    t_size = x_stream -> GetFileSize();
-
-    t_position = x_stream -> Tell();
-    x_stream -> Seek(0, 1);    
+    if (p_size > 3)
+    {
+        if (p_bytes[0] == 0xFF
+            && p_bytes[1] == 0xFE
+            && p_bytes[2] == 0x0
+            && p_bytes[3] == 0x0)
+        {
+            r_size = 4;
+            return kMCFileEncodingUTF32LE;
+        }
+        else if (p_bytes[0] == 0x0
+                 && p_bytes[1] == 0x0
+                 && p_bytes[2] == 0xFE
+                 && p_bytes[3] == 0xFF)
+        {
+            r_size = 4;
+            return kMCFileEncodingUTF32BE;
+        }
+    }
     
-    // Reading to find a UTF-32 BOM
-    if (t_size > 3)
+    if (p_size > 1)
     {
-        if (x_stream -> Read(t_BOM, 4, t_size_read))
+        if (p_bytes[0] == 0xFE && p_bytes[1] == 0xFF)
         {
-            if (t_BOM[0] == 0xFF
-                    && t_BOM[1] == 0xFE
-                    && t_BOM[2] == 0x0
-                    && t_BOM[3] == 0x0)
-                t_encoding = kMCFileEncodingUTF32LE;
-            else if (t_BOM[0] == 0x0
-                     && t_BOM[1] == 0x0
-                     && t_BOM[2] == 0xFE
-                     && t_BOM[3] == 0xFF)
-                t_encoding = kMCFileEncodingUTF32BE;
-            else
-                x_stream -> Seek(0,1);
+            r_size = 2;
+            return kMCFileEncodingUTF16BE;
+        }
+        else if (p_bytes[0] == 0xFF && p_bytes[1] == 0xFE)
+        {
+            r_size = 2;
+            return kMCFileEncodingUTF16LE;
         }
     }
-
-    if (t_encoding == kMCFileEncodingNative && t_size > 1)
+    
+    if (p_size > 2)
     {
-        if (x_stream -> Read(t_BOM, 2, t_size_read))
+        if (p_bytes[0] == 0xEF
+            && p_bytes[1] == 0xBB
+            && p_bytes[2] == 0xBF)
         {
-            if (t_BOM[0] == 0xFE && t_BOM[1] == 0xFF)
-                t_encoding = kMCFileEncodingUTF16BE;
-            else if (t_BOM[0] == 0xFF && t_BOM[1] == 0xFE)
-                t_encoding = kMCFileEncodingUTF16LE;
-            else
-                x_stream -> Seek(0, 1);
+            r_size = 3;
+            return kMCFileEncodingUTF8;
         }
     }
+    
+    r_size = 0;
+    return kMCFileEncodingNative;
+}
 
-    if (t_encoding == kMCFileEncodingNative && t_size > 2)
-    {
-        if (x_stream -> Read(t_BOM, 3, t_size_read)
-                && t_size_read == 3
-                && t_BOM[0] == 0xEF
-                && t_BOM[1] == 0xBB
-                && t_BOM[2] == 0xBF)
-            t_encoding = kMCFileEncodingUTF8;
-    }
+// Inspects the BOM of a text file to retrieve its encoding
+MCFileEncodingType MCS_resolve_BOM(IO_handle &x_stream, uint32_t &r_size)
+{
+    byte_t t_BOM[4];
+    int64_t t_size = x_stream -> GetFileSize();
+    uint32_t t_size_read;
+    uint32_t t_bom_size = 0;
+    uint32_t t_position = static_cast<uint32_t>(x_stream -> Tell());
 
+
+    x_stream -> Seek(0, 1);
+    
+    uint32_t t_to_read = MCMin(4, t_size);
+    x_stream -> Read(t_BOM, t_to_read, t_size_read);
+    
+    MCFileEncodingType t_encoding =
+        MCS_resolve_BOM_from_bytes(t_BOM, t_size_read, t_bom_size);
+    
     x_stream -> Seek(t_position, 1);
+    
+    r_size = t_bom_size;
     return t_encoding;
 }
 
@@ -1439,20 +1458,12 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
     {
         MCFileEncodingType t_file_encoding;
         MCAutoStringRef t_text;
-        uindex_t t_bom_size;
 
-        t_bom_size = 0;
         t_buffer . Shrink(t_size);
 
-        t_file_encoding = MCS_resolve_BOM(t_file);
+        uindex_t t_bom_size;
+        t_file_encoding = MCS_resolve_BOM(t_file, t_bom_size);
         
-        if (t_file_encoding == kMCFileEncodingUTF16
-                || t_file_encoding == kMCFileEncodingUTF16BE
-                || t_file_encoding == kMCFileEncodingUTF16LE)
-            t_bom_size = 2;
-        else if (t_file_encoding == kMCFileEncodingUTF8)
-            t_bom_size = 3;
-
         if (t_success)
             t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
@@ -1855,42 +1866,6 @@ bool MCS_isnan(double p_number)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
-{
-    MCAutoStringRef t_resolved_path;
-    MCAutoStringRef t_native_path;
-
-    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
-    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
-    //  name into an invalid absolute name constructed from the current folder.
-    //  We consider any leaf path as a system library.
-    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
-    {
-        if (!MCS_resolvepath(p_filename, &t_resolved_path))
-            return NULL;
-    }
-    else
-    {
-        t_resolved_path = p_filename;
-    }
-
-    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
-        return NULL;
-
-    return MCsystem -> LoadModule(*t_native_path);
-}
-
-MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-{
-
-	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
-}
-
-void MCS_unloadmodule(MCSysModuleHandle p_module)
-{
-	MCsystem -> UnloadModule(p_module);
-}
 
 // TODO: move somewhere better
 #if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)

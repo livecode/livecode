@@ -24,9 +24,9 @@ export CUSTOM_CXX="${CXX}"
 # Special behaviour if "all" is specified as the platform
 if [ "${PLATFORM}" == "all" ] ; then
 	set -e
-	"$0" mac
-	"$0" android
-	"$0" ios
+	"$0" mac "$CUSTOM_ARCH" "$TARGET_LIB"
+	"$0" android "$CUSTOM_ARCH" "$TARGET_LIB"
+	"$0" ios "$CUSTOM_ARCH" "$TARGET_LIB"
 	exit
 fi
 

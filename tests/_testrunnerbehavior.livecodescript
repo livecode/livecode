@@ -16,8 +16,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
--- FIXME provide this on the command line
-constant kLogFilename = "_test_suite.log"
+constant kDefaultLogFilename = "_test_suite.log"
 
 ----------------------------------------------------------------
 -- Top-level actions
@@ -85,10 +84,6 @@ private command doInvoke pInfo
 end doInvoke
 
 private command doRun pInfo
-   if pInfo["args"][2] is empty then
-      doUsage 1
-   end if
-   
    TestRunnerRunLoadLibraries
 
    local tAnalysis
@@ -103,7 +98,14 @@ private command doRun pInfo
    if the platform is "win32" then
       replace return with numToChar(13) & numToChar(10) in tLogForWriting
    end if
-   put tLogForWriting into url ("binfile:" & kLogFilename)
+   
+   local tLogFilename
+   put $TEST_SUITE_LOG_FILE into tLogFilename
+   if tLogFilename is empty then
+      put kDefaultLogFilename into tLogFilename
+   end if
+   
+   put tLogForWriting into url ("binfile:" & tLogFilename)
    
    if TesterTapGetWorstResult(tAnalysis) is "FAIL" then
       quit 1

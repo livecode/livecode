@@ -183,7 +183,7 @@ public:
     static MCClipboard* CreateSystemSelectionClipboard();
     static MCClipboard* CreateSystemDragboard();
     
-    
+	bool IsDragboard() const;
 private:
     
     // The raw clipboard that is being wrapped

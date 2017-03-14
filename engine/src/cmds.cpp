@@ -982,11 +982,6 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 
-	MCVarref *t_src_ref, *t_dst_ref;
-	t_src_ref = source -> getrootvarref();
-	t_dst_ref = dest -> getrootvarref();
-	overlap = t_src_ref != NULL && t_dst_ref != NULL && t_src_ref -> rootmatches(t_dst_ref);
-
 	return PS_NORMAL;
 }
 
@@ -1061,7 +1056,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 				MCEngineExecPutOutput(ctxt, t_string);
 		}
 		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
-			MCIdeExecPutIntoMessage(ctxt, t_string, prep);
+			MCDebuggingExecPutIntoMessage(ctxt, t_string, prep);
 		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
 			MCServerExecPutHeader(ctxt, t_string, prep == PT_NEW_HEADER);
 		else if (prep == PT_CONTENT)
@@ -1138,7 +1133,7 @@ void MCPut::compile(MCSyntaxFactoryRef ctxt)
 		case PT_AFTER:
 		case PT_BEFORE:
 			MCSyntaxFactoryEvalConstantInt(ctxt, prep);
-			MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecPutIntoMessageMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCDebuggingExecPutIntoMessageMethodInfo);
 			break;
 		case PT_HEADER:
 		case PT_NEW_HEADER:

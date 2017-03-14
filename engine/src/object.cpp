@@ -300,9 +300,6 @@ MCObject::~MCObject()
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
-	MCscreen->cancelmessageobject(this, NULL);
-	removefrom(MCfrontscripts);
-	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
 	delete[] colors; /* Allocated with new[] */
@@ -855,10 +852,14 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
-void MCObject::uncacheid()
+void MCObject::removereferences()
 {
     if (m_in_id_cache)
         getstack()->uncacheobjectbyid(this);
+    
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
 }
 
 bool MCObject::isdeletable(bool p_check_flag)
@@ -979,7 +980,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
@@ -1006,7 +1006,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1078,6 +1077,8 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 {	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
+
+	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
 	parsescript(True);
@@ -2068,6 +2069,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCtargetptr . object = this;
     MCtargetptr . part_id = 0;
 
+    MCObjectExecutionLock t_self_lock(this);
+
 	// Dispatch the message
 	Exec_stat t_stat;
 	t_stat = MCU_dofrontscripts(p_type, p_message, p_params);
@@ -2091,15 +2094,15 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean changedefault, Boolean send, Boolean p_is_debug_message)
 {
-	MCStack *mystack = getstack();
-	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
+	MCStackHandle t_stack = getstack();
+	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
     // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
 	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
-	MCscreen->flush(mystack->getw());
+	MCscreen->flush(t_stack->getw());
 	
 	// Object's cannot be deleted whilst they are executing script. However,
 	// this method will run script when script in the object is *not* running
@@ -2116,7 +2119,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
-		MCdefaultstackptr = mystack;
+		MCdefaultstackptr = t_stack;
 		MCtargetptr . object = this;
         MCtargetptr . part_id = 0;
 	}
@@ -2130,22 +2133,27 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
-		Window mywindow = mystack->getw();
-		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == NULL
-		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+		
+		if (t_stack.IsValid())
 		{
-			// PASS STATE FIX
-			Exec_stat oldstat = stat;
-			stat = handle(HT_MESSAGE, mess, paramptr, this);
-			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-				stat = ES_PASS;
+			Window mywindow = t_stack->getw();
+			if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
+					&& (MCtracewindow == NULL
+						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+			{
+				// PASS STATE FIX
+				Exec_stat oldstat = stat;
+				stat = handle(HT_MESSAGE, mess, paramptr, this);
+				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+					stat = ES_PASS;
+			}
 		}
 	}
-	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
 		MCdefaultstackptr = t_old_defaultstack;
 	
@@ -2870,7 +2878,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr)
+Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
@@ -2894,7 +2902,10 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ctxt, NULL);
+
+    MCObjectExecutionLock t_self_lock(this);
+	Exec_stat stat = hptr->exec(ctxt, p_args);
+
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2932,6 +2943,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    MCObjectExecutionLock t_self_lock(this);
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");

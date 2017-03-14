@@ -28,17 +28,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 template<typename T> class MCAutoValueRefBase;
 
-template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T In(const MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . In();
 }
 
-template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T& Out(MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . Out();
 }
 
-template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
+template<typename T>
+T& InOut(MCAutoValueRefBase<T>& p_auto)
 {
     return p_auto . InOut();
 }
@@ -47,10 +50,7 @@ template<typename T> class MCAutoValueRefBase
 {
 public:
 
-	inline MCAutoValueRefBase(void)
-		: m_value(nil)
-	{
-	}
+    constexpr MCAutoValueRefBase(void) = default;
     
     inline MCAutoValueRefBase(const MCAutoValueRefBase& other) :
       m_value(nil)
@@ -136,23 +136,23 @@ public:
     friend T& InOut<>(MCAutoValueRefBase<T>&);
     
 protected:
-	T m_value;
+	T m_value = nullptr;
     
     // Return the contents of the auto pointer in a form for an in parameter.
-    inline T In(void) const
+    T In(void) const
     {
         return m_value;
     }
     
     // Return the contents of the auto pointer in a form for an out parameter.
-    inline T& Out(void)
+    T& Out(void)
     {
 		MCAssert(m_value == nil);
 		return m_value;
     }
     
     // Return the contents of the auto pointer in a form for an inout parameter.
-    inline T& InOut(void)
+    T& InOut(void)
     {
         return m_value;
     }
@@ -166,7 +166,7 @@ class MCAutoMutableValueRefBase :
   public MCAutoValueRefBase<T>
 {
 public:
-    inline MCAutoMutableValueRefBase() :
+    constexpr MCAutoMutableValueRefBase() :
       MCAutoValueRefBase<T>()
     {
     }
@@ -214,11 +214,7 @@ typedef MCAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRel
 template<typename T> class MCAutoValueRefArrayBase
 {
 public:
-	MCAutoValueRefArrayBase(void)
-	{
-		m_values = nil;
-        m_value_count = 0;
-	}
+	constexpr MCAutoValueRefArrayBase() = default;
     
 	~MCAutoValueRefArrayBase(void)
 	{
@@ -371,8 +367,8 @@ public:
 	}
     
 private:
-	T* m_values;
-    uindex_t m_value_count;
+	T* m_values = nullptr;
+    uindex_t m_value_count = 0;
 };
 
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
@@ -390,8 +386,8 @@ typedef MCAutoValueRefArrayBase<MCNameRef> MCAutoNameRefArray;
 class MCAutoStringRefAsUTF16String
 {
 public:
-	MCAutoStringRefAsUTF16String() {}
-	~MCAutoStringRefAsUTF16String() {}
+    constexpr MCAutoStringRefAsUTF16String() = default;
+
 	bool Lock(MCStringRef p_string)
 	{
 		return MCStringUnicodeCopy(p_string, &m_string);
@@ -431,11 +427,7 @@ typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsLPCWSTR;
 class MCAutoStringRefAsLPWSTR
 {
 public:
-	MCAutoStringRefAsLPWSTR() :
-	  m_buffer(nil),
-	  m_size(0)
-	{
-	}
+	constexpr MCAutoStringRefAsLPWSTR() = default;
 
 	~MCAutoStringRefAsLPWSTR()
 	{
@@ -467,8 +459,8 @@ public:
 		return Ptr();
 	}
 private:
-	unichar_t *m_buffer;
-	uindex_t m_size;
+	unichar_t *m_buffer = nullptr;
+	uindex_t m_size = 0;
 };
 #endif /* __WINDOWS__ */
 
@@ -477,11 +469,7 @@ private:
 class MCAutoStringRefAsUTF8String
 {
 public:
-    MCAutoStringRefAsUTF8String(void)
-    {
-        m_utf8string = nil;
-		m_size = 0;
-    }
+	constexpr MCAutoStringRefAsUTF8String() = default;
     
     ~MCAutoStringRefAsUTF8String(void)
     {
@@ -510,8 +498,8 @@ public:
     }
     
 private:
-    char *m_utf8string;
-    uindex_t m_size;
+	char *m_utf8string = nullptr;
+    uindex_t m_size = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,9 +509,7 @@ private:
 class MCAutoStringRefAsCFString
 {
 public:
-    MCAutoStringRefAsCFString(void) :
-        m_cfstring(nil)
-    {}
+    constexpr MCAutoStringRefAsCFString(void) = default;
     
     ~MCAutoStringRefAsCFString(void)
     {
@@ -548,7 +534,7 @@ public:
     }
     
 private:
-    CFStringRef m_cfstring;
+    CFStringRef m_cfstring = nullptr;
 };
 
 #endif
@@ -558,10 +544,7 @@ private:
 class MCAutoStringRefAsPascalString
 {
 public:
-    MCAutoStringRefAsPascalString(void)
-    {
-        m_pascal_string = nil;
-    }
+    constexpr MCAutoStringRefAsPascalString() = default;
     
     ~MCAutoStringRefAsPascalString(void)
     {
@@ -600,7 +583,7 @@ public:
     }
     
 private:
-    unsigned char *m_pascal_string;
+    unsigned char *m_pascal_string = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -608,11 +591,7 @@ private:
 class MCAutoStringRefAsSysString
 {
 public:
-    MCAutoStringRefAsSysString()
-    {
-        m_bytes = nil;
-        m_byte_count = 0;
-    }
+    constexpr MCAutoStringRefAsSysString() = default;
 
     ~MCAutoStringRefAsSysString()
     {
@@ -652,8 +631,8 @@ public:
     }
 
 private:
-    char *m_bytes;
-    size_t m_byte_count;
+    char *m_bytes = nullptr;
+    size_t m_byte_count = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -664,9 +643,7 @@ private:
 class MCAutoStringRefAsBSTR
 {
 public:
-    MCAutoStringRefAsBSTR(void)
-    {
-    }
+    constexpr MCAutoStringRefAsBSTR() = default;
     
     ~MCAutoStringRefAsBSTR(void)
     {
@@ -690,7 +667,7 @@ public:
     }
     
 private:
-    BSTR m_bstr;
+    BSTR m_bstr = nullptr;
 };
 #endif // __WINDOWS__
 #endif
@@ -700,8 +677,8 @@ private:
 class MCAutoStringRefAsNativeChars
 {
 public:
-	MCAutoStringRefAsNativeChars() {}
-	~MCAutoStringRefAsNativeChars() {}
+	constexpr MCAutoStringRefAsNativeChars() = default;
+
 	bool Lock(MCStringRef p_string)
 	{
 		return MCStringNativeCopy(p_string, &m_string);
@@ -772,12 +749,12 @@ template<typename T> class MCAutoPointer
 public:
     typedef T* pointer;
 
-    MCAutoPointer() : m_ptr(nullptr) {}
+    constexpr MCAutoPointer() = default;
 
-    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+    constexpr MCAutoPointer(decltype(nullptr)) {}
 
     /* Construct the managed pointer using a specific value. */
-    MCAutoPointer(pointer p) : m_ptr(p) {}
+    constexpr MCAutoPointer(pointer p) : m_ptr(p) {}
 
     /* Construct managed pointer by moving a pointer from another
      * managed pointer of the same type. */
@@ -839,7 +816,7 @@ public:
 	}
 
 private:
-	T *m_ptr;
+	T *m_ptr = nullptr;
 };
 
 /* This version of MCAutoPointer should be used when you need to
@@ -853,12 +830,12 @@ template<typename T> class MCAutoPointer<T[]>
 public:
     typedef T* pointer;
 
-    MCAutoPointer() : m_ptr(nullptr) {}
+    constexpr MCAutoPointer() = default;
 
-    MCAutoPointer(decltype(nullptr)) : m_ptr(nullptr) {}
+    constexpr MCAutoPointer(decltype(nullptr)) {}
 
     /* Construct the managed pointer using a specific value. */
-    MCAutoPointer(pointer p) : m_ptr(p) {}
+    constexpr MCAutoPointer(pointer p) : m_ptr(p) {}
 
     /* Construct managed pointer by moving a pointer from another
      * managed pointer of the same type. */
@@ -925,7 +902,7 @@ public:
     }
 	
 private:
-	T *m_ptr;
+	T *m_ptr = nullptr;
 };
 
 template <typename T, void (Deleter)(T*)>
@@ -935,15 +912,9 @@ public:
  
     typedef T* pointer;
     
-	MCAutoCustomPointer() :
-      m_ptr(nil)
-	{
-	}
+    constexpr MCAutoCustomPointer() = default;
     
-    MCAutoCustomPointer(T*&& take) :
-      m_ptr(take)
-    {
-    }
+    constexpr MCAutoCustomPointer(T*&& take) : m_ptr(take) {}
     
 	~MCAutoCustomPointer()
 	{
@@ -967,7 +938,13 @@ public:
 	{
 		return m_ptr;
 	}
-    
+
+    T* operator -> (void)
+    {
+        MCAssert(m_ptr != nullptr);
+        return m_ptr;
+    }
+
     operator bool () const
     {
         return m_ptr != nil;
@@ -988,7 +965,7 @@ public:
 	
 private:
     
-	T* m_ptr;
+	T* m_ptr = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,11 +1014,7 @@ private:
 template<typename T> class MCAutoArray
 {
 public:
-	MCAutoArray(void)
-	{
-		m_ptr = nil;
-		m_size = 0;
-	}
+    constexpr MCAutoArray() = default;
 
 	~MCAutoArray(void)
 	{
@@ -1142,19 +1115,15 @@ public:
     }
 
 private:
-	T *m_ptr;
-	uindex_t m_size;
+	T *m_ptr = nullptr;
+	uindex_t m_size = 0;
 };
 
 // Version of MCAutoArray that applies the provided deallocator to each element of the array when freed
 template <typename T, void (*FREE)(T)> class MCAutoCustomPointerArray
 {
 public:
-	MCAutoCustomPointerArray(void)
-	{
-		m_ptr = nil;
-		m_size = 0;
-	}
+    constexpr MCAutoCustomPointerArray() = default;
 	
 	~MCAutoCustomPointerArray(void)
 	{
@@ -1262,8 +1231,8 @@ public:
 	}
 	
 private:
-	T *m_ptr;
-	uindex_t m_size;
+    T *m_ptr = nullptr;
+    uindex_t m_size = 0;
 	
 	void FreeElements(const MCRange &p_elements)
 	{
@@ -1286,11 +1255,7 @@ private:
 class MCAutoNativeCharArray
 {
 public:
-	MCAutoNativeCharArray(void)
-	{
-		m_chars = nil;
-		m_char_count = 0;
-	}
+    constexpr MCAutoNativeCharArray() = default;
 
 	~MCAutoNativeCharArray(void)
 	{
@@ -1373,18 +1338,14 @@ public:
 	}
 
 private:
-	char_t *m_chars;
-	uindex_t m_char_count;
+	char_t *m_chars = nullptr;
+	uindex_t m_char_count = 0;
 };
 
 class MCAutoByteArray
 {
 public:
-	MCAutoByteArray(void)
-	{
-		m_bytes = nil;
-		m_byte_count = 0;
-	}
+    constexpr MCAutoByteArray() = default;
 	
 	~MCAutoByteArray(void)
 	{
@@ -1465,8 +1426,8 @@ public:
 	}
 	
 private:
-	char_t *m_bytes;
-	uindex_t m_byte_count;
+	char_t *m_bytes = nullptr;
+	uindex_t m_byte_count = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -189,7 +189,7 @@ bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 	t_page_format = NULL;
 	if (t_success)
 	{
-        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_settings_data.getstring(), t_settings_data.getlength());
+        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_page_format_data.getstring(), t_page_format_data.getlength());
         if (t_data == nil || noErr != PMPageFormatCreateWithDataRepresentation(t_data, &t_page_format))
             t_success = false;
         CFRelease(t_data);
@@ -708,7 +708,9 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 {
 	PMRect t_pm_page_rect, t_pm_paper_rect;
 	PDEBUG(stderr, "SetProperties: PMGetAdjustedPaperRect\n");
-	if (PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr && PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
+	if (m_page_format != nullptr &&
+        PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr &&
+        PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
 	{
 		int4 t_left;
 		t_left = (int4)floor(t_pm_page_rect . left - t_pm_paper_rect . left);
@@ -733,7 +735,8 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 	
 	PDEBUG(stderr, "SetProperties: PMPrinterGetDescriptionURL\n");
     CFURLRef t_ppd_url = NULL;
-	if (PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
+	if (m_printer != nullptr &&
+        PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
 	{
 		char *t_ppd_file;
 		t_ppd_file = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_ppd_url, kCFURLPOSIXPathStyle), true);

@@ -2,53 +2,43 @@ Name: md5Digest
 
 Type: function
 
-Syntax: the md5Digest of <dataString>
+Syntax: the md5Digest of <message>
 
-Syntax: md5Digest(<dataString>)
+Syntax: md5Digest(<message>)
 
 Summary:
-<return|Returns> a 128- <bit> <value> based on a <string>.
+Computes a MD5 cryptographic message digest.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux
 
-Platforms: desktop, server, mobile
-
-Example:
-md5Digest("ABC")
+Platforms: desktop, server
 
 Example:
-set the savedPrint of field 1 to the md5Digest of field 1
+get the md5Digest of "LiveCode"
 
 Example:
-if the savedPrint of field 1 is not the md5Digest of field 1 then beep
+put textEncode("Message to verify", "UTF-8") into tMessage
+get md5Digest(tMessage)
 
 Parameters:
-dataString (string):
-
+message(data): A <binary data> string.
 
 Returns:
-The <md5Digest> <function> <return|returns> a 128- <bit> value. (If you
-view this <value> as a <string>, it is 16 <characters> long.).
+Returns the message digest of the <message> as a 16 <byte> <binary
+data> string.
 
 Description:
-Use the <md5Digest> <function> to create a fingerprint of the
-<dataString> which can be checked later to ensure that the <string> has
-not changed.
+Compute a message digest of <message> using the MD5 cryptographic
+hash function.
 
-The value returned for one <dataString> is mathematically unlikely to be
-identical to the value <return|returned> for an altered version of the
-<dataString>. Therefore, you can check the <md5Digest> of a <string>
-against a saved <md5Digest> to determine whether the <string> has
-changed since you saved the <value>.
+> *Warning:* Serious flaws have been found in the MD5 hash algorithm
+> that make in unsuitable to use for security-critical purposes.
+> Unless you need backwards compatibility with existing systems, use
+> one of the other algorithms available with the <messageDigest> <function>
 
-For technical information about the MD5 digest algorithm, see [RFC
-1321](https://tools.ietf.org/html/rfc1321). 
+References: sha1Digest (function), messageDigest (function),
+	byte (glossary), function (glossary)
 
-References: function (control structure), base64Decode (function),
-base64Encode (function), charToNum (function), value (function),
-return (glossary), bit (glossary), string (keyword), characters (keyword)
-
-Tags: text processing
-
+Tags: math

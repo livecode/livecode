@@ -20,11 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unxsupport.h"
 #include <stdlib.h>
 
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec)
-{
-	dlclose(tdatabaserec -> driverref);
-}
-
 void MCU_path2std(char *p_path)
 {
   if (p_path == NULL || !*p_path)
@@ -124,13 +119,14 @@ char *MCS_resolvepath(const char *path)
       pw = getpwnam(tpath + 1);
     if (pw == NULL)
       return NULL;
-    tildepath = new (nothrow) char[strlen(pw->pw_dir) + strlen(tptr) + 2];
+    tildepath = static_cast<char*>(malloc(sizeof(*tildepath) *
+                                          (strlen(pw->pw_dir) + strlen(tptr) + 2)));
     strcpy(tildepath, pw->pw_dir);
     if (*tptr) {
       strcat(tildepath, "/");
       strcat(tildepath, tptr);
     }
-    delete tpath;
+    free(tpath);
   }
   else
     tildepath = strclone(path);
@@ -150,11 +146,11 @@ char *MCS_resolvepath(const char *path)
   char *newname = new (nothrow) char[PATH_MAX + 2];
 
   if ((size = readlink(tildepath, newname, PATH_MAX)) < 0) {
-    delete tildepath;
-    delete newname;
+      free(tildepath);
+    delete[] newname;
     return NULL;
   }
-  delete tildepath;
+  free(tildepath);
   newname[size] = '\0';
   if (newname[0] != '/') {
     char *fullpath = new (nothrow) char[strlen(path) + strlen(newname) + 2];
@@ -165,72 +161,10 @@ char *MCS_resolvepath(const char *path)
     else
       sptr++;
     strcpy(sptr, newname);
-    delete newname;
+    delete[] newname;
     newname = MCS_resolvepath(fullpath);
-    delete fullpath;
+    delete[] fullpath;
   }
   return newname;
 }
 
-
-// DoLoadDatabaseDriver
-
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
-{
-	char *t_filename;
-	t_filename = NULL;
-	
-	if (t_filename == NULL)
-	{
-	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 4);
-	sprintf(t_filename, "%s.so", p_path);
-	}
-
-	void *t_driver_handle;
-	t_driver_handle = dlopen(t_filename, RTLD_NOW);
-
-	if (t_driver_handle == NULL)
-	{
-		free(t_filename);
-		return NULL;
-	}
-
-	DATABASEREC *t_result;
-	t_result = new (nothrow) DATABASEREC;
-
-	t_result -> driverref = t_driver_handle;
-	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
-	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
-	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
-    t_result -> setcallbacksptr = (set_callbacksrefptr)dlsym(t_driver_handle, "setcallbacksref");
-	free(t_filename);
-	return t_result;
-
-}
-
-const char *GetExternalFolder(void)
-{
-	static char *s_folder = NULL;
-	if (s_folder == NULL)
-	{
-		Dl_info t_info;
-		if (dladdr((void *)GetExternalFolder, &t_info) == 0)
-			return NULL;
-
-		// MW-2011-07-22: If there is no '/' in the path, then we're not getting
-		//   a full path back (e.g. on Android) therefore there's no way to
-		//   search the folder the external is in.
-		if (strrchr(t_info . dli_fname, '/') == NULL)
-			return NULL;
-
-		s_folder = strdup(t_info . dli_fname);
-		strrchr(s_folder, '/')[0] = '\0';
-	}
-
-	return s_folder;
-}
-
-const char *GetApplicationFolder(void)
-{
-	return NULL;
-}

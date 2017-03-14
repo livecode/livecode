@@ -32,8 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "mcerror.h"
 #include "util.h"
-#include "md5.h"
-#include "sha1.h"
 #include "osspec.h"
 
 #include "globals.h"

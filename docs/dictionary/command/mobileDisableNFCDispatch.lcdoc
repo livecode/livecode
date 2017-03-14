@@ -1,0 +1,26 @@
+Name: mobileDisableNFCDispatch
+
+Type: command
+
+Syntax: mobileDisableNFCDispatch
+
+Summary:
+Release the NFC device and allow NFC tags to be handled by other apps.
+
+Introduced: 9.0
+
+OS: android
+
+Platforms: mobile
+
+Example:
+mobileDisableNFCDispatch
+
+Description:
+Use the <mobileDisableNFCDispatch> command to release the hold obtained from calling
+<mobileEnableNFCDispatch> once your app no longer requires to capture NFC tag data.
+
+References: mobileIsNFCAvailable (function), mobileIsNFCEnabled (function),
+mobileEnableNFCDispatch (command),
+nfcTagReceived (message)
+

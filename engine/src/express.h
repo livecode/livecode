@@ -58,8 +58,7 @@ public:
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
     // EP-less version of evaluation functions
-    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 
 	// Return the var-ref which lies at the root of this expression. 
 	// A return value of NULL means that there is no root variable.

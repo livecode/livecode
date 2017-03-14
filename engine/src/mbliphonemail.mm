@@ -274,7 +274,9 @@ static void compose_mail_prewait(void *p_context)
 	t_ns_subject = MCStringConvertToAutoreleasedNSString(ctxt -> subject);
 	
 	NSString *t_ns_body;
-	t_ns_body = MCStringConvertToAutoreleasedNSString(ctxt -> body);
+    t_ns_body = nil;
+    if (ctxt -> body != nil && !MCStringIsEmpty(ctxt -> body))
+        t_ns_body = MCStringConvertToAutoreleasedNSString(ctxt -> body);
 	
 	NSArray *t_ns_to;
 	t_ns_to = nil;

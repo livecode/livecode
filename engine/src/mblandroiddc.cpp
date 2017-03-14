@@ -1227,6 +1227,9 @@ static void empty_signal_handler(int)
 {
 }
 
+extern
+bool MCAndroidGetLibraryPath(MCStringRef &r_path);
+
 static void *mobile_main(void *arg)
 {
 	co_enter_engine();
@@ -1253,6 +1256,17 @@ static void *mobile_main(void *arg)
 		co_leave_engine();
 		return (void *)1;
 	}
+    
+    MCAutoStringRef t_lib_path;
+    if (!MCSInitialize() ||
+        !MCAndroidGetLibraryPath(&t_lib_path) ||
+        !(MCSLibraryAndroidSetNativeLibPath(*t_lib_path), true) ||
+        !MCModulesInitialize() ||
+        !MCScriptInitialize())
+    {
+        co_leave_engine();
+        return (void *)1;
+    }
     
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;

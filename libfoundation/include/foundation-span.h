@@ -44,11 +44,6 @@
  * order to make sure that there is as much commonality as possible
  * between the behaviour of an MCSpan and an array pointer. */
 
-/* TODO[C++11] Many of the constructors & methods in MCSpan are
- * declared constexpr.  However, some of our compilers don't support
- * constexpr, and for those compilers constexpr is defined to
- * empty. */
-
 /* TODO[C++14] Some of the constexpr methods in MCSpan use assertions,
  * and have to do ugly chaining using the comma operator in a return
  * statement in order to comply with the C++11 restrictions on
@@ -70,10 +65,8 @@ public:
 	typedef ElementType&& ElementRRef;
 
 	/* ---------- Constructors */
-	constexpr MCSpan()
-		: m_data(nullptr), m_length(0) {}
-	constexpr MCSpan(decltype(nullptr))
-		: m_data(nullptr), m_length(0) {}
+	constexpr MCSpan() = default;
+	constexpr MCSpan(decltype(nullptr)) {}
 	constexpr MCSpan(ElementPtr p_ptr, IndexType p_count)
 		: m_data(p_ptr), m_length(p_count) {}
 
@@ -81,32 +74,16 @@ public:
 	constexpr MCSpan(ElementType (&arr)[N])
 		: m_data(&arr[0]), m_length(N) {}
 
-	/* TODO[C++11] MCSpan(MCSpan &other) = default; */
-	constexpr MCSpan(MCSpan& other)
-		: m_data(other.m_data), m_length(other.m_length) {}
+	constexpr MCSpan(const MCSpan& other) = default;
 
-	/* TODO[C++11] MCSpan(MCSpan &&other) = default; */
-	constexpr MCSpan(MCSpan&& other)
-		: m_data(static_cast<ElementPtr &&>(other.m_data)),
-		  m_length(static_cast<IndexType &&>(other.m_length)) {}
+	constexpr MCSpan(MCSpan&& other) = default;
 
-	/* TODO[C++11] ~MCSpan() = default; */
-	~MCSpan() {}
+	~MCSpan() = default;
 
 	/* ---------- Assignment ops */
-	/* TODO[C++11] MCSpan& operator=(const MCSpan& other) = default; */
-	MCSpan& operator=(const MCSpan& other) {
-		m_data = other.m_data;
-		m_length = other.m_length;
-		return *this;
-	}
+	MCSpan& operator=(const MCSpan& other) = default;
 
-	/* TODO[C++11] MCSpan& operator=(MCSpan&& other) = default; */
-	MCSpan& operator=(MCSpan&& other) {
-		m_data = static_cast<ElementPtr &&>(other.m_data);
-		m_length = static_cast<IndexType &&>(other.m_length);
-		return *this;
-	}
+	MCSpan& operator=(MCSpan&& other) = default;
 
 	/* ---------- Subspans */
 	constexpr MCSpan first(IndexType p_count) const
@@ -191,8 +168,8 @@ protected:
 		return *this;
 	}
 
-	ElementPtr m_data;
-	IndexType m_length;
+	ElementPtr m_data = nullptr;
+	IndexType m_length = 0;
 };
 
 template <typename ElementType>
@@ -211,8 +188,7 @@ MCMakeSpan(ElementType *p_ptr,
 	return MCSpan<ElementType>(p_ptr, p_count);
 }
 
-/* TODO[C++11] The default value for ElementType should be byte_t */
-template <typename ElementType>
+template <typename ElementType = byte_t>
 MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
 {
 	MCAssert(MCDataGetLength(p_data) % sizeof(ElementType) == 0);

@@ -1,0 +1,34 @@
+Name: mobileIsNFCEnabled
+
+Type: function
+
+Syntax: mobileIsNFCEnabled()
+
+Summary:
+Returns true if the NFC function of the device is enabled, false otherwise.
+
+Introduced: 9.0
+
+OS: android
+
+Platforms: mobile
+
+Example:
+get mobileIsNFCEnabled()
+
+Example:
+if mobileIsNFCEnabled() is "true" then 
+  answer "Device NFC has been turned on"
+end if
+
+Returns:
+The <mobileIsNFCEnabled> function returns true if the device
+NFC function has been enabled and false otherwise.
+
+Description:
+Use the <mobileIsNFCEnabled> function to check whether the
+user has enabled the NFC function of the device.
+
+References: mobileIsNFCAvailable (function), mobileEnableNFCDispatch (command),
+nfcTagReceived (message)
+

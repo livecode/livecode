@@ -278,7 +278,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
 	}
 	
 	if (t_success)
-		t_success = MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+		t_success = MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt);
 	
     if (t_success)
     {

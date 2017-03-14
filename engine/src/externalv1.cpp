@@ -789,9 +789,9 @@ bool MCTemporaryExternalVariable::IsTemporary(void)
 
 //////////
 
-MCReferenceExternalVariable::MCReferenceExternalVariable(MCVariable *p_variable)
+MCReferenceExternalVariable::MCReferenceExternalVariable(MCContainer& p_container)
+    : m_container(p_container)
 {
-	m_variable = p_variable;
 }
 
 MCReferenceExternalVariable::~MCReferenceExternalVariable(void)
@@ -810,12 +810,12 @@ bool MCReferenceExternalVariable::IsTransient(void)
 
 MCValueRef MCReferenceExternalVariable::GetValueRef(void)
 {
-	return m_variable -> getvalueref();
+	return m_container.get_valueref();
 }
 
 void MCReferenceExternalVariable::SetValueRef(MCValueRef p_value)
 {
-	m_variable -> setvalueref(p_value);
+	m_container.set_valueref(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -836,7 +836,8 @@ bool MCExternalV1::Prepare(void)
 	// Fetch the description callback - this symbol has to exist since a V1
 	// external is only created if it does!
 	MCExternalDescribeProc t_describe;
-	t_describe = (MCExternalDescribeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalDescribe"));
+	t_describe = (MCExternalDescribeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalDescribe"));
 	
 	// Update the current external var.
 	s_current_external = this;
@@ -846,18 +847,19 @@ bool MCExternalV1::Prepare(void)
 	
 	// Unset the current external var.
 	s_current_external = nil;
-	
+    
 	if (m_info == nil)
 		return false;
 
-	return true;
+    return true;
 }
 
 bool MCExternalV1::Initialize(void)
 {
 	// Fetch the initialize entry point.
 	MCExternalInitializeProc t_initialize;
-	t_initialize = (MCExternalInitializeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalInitialize"));
+	t_initialize = (MCExternalInitializeProc)MCU_library_lookup(*m_module,
+                                                                MCSTR("MCExternalInitialize"));
 	if (t_initialize == nil)
 		return true;
 	
@@ -889,7 +891,8 @@ void MCExternalV1::Finalize(void)
 {
 	// Fetch the finalize entry point.
 	MCExternalFinalizeProc t_finalize;
-	t_finalize = (MCExternalFinalizeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalFinalize"));
+	t_finalize = (MCExternalFinalizeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalFinalize"));
 	if (t_finalize == nil)
 		return;
 	
@@ -967,44 +970,17 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 	
 	// Now iterate through the parameters, fetching the parameter values as we go.
 	for(uint32_t i = 0; p_parameters != nil && t_stat == ES_NORMAL; i++, p_parameters = p_parameters -> getnext())
-	{
-		MCVariable* t_var;
-		t_var = p_parameters -> eval_argument_var();
-		if (t_var != nil)
-		{
-			// We are a variable parameter so use the value directly (i.e. pass by
-			// reference).
-			
-			// MW-2014-01-22: [[ CompatV1 ]] Create a reference to the MCVariable.
-			t_parameter_vars[i] = new (nothrow) MCReferenceExternalVariable(t_var);
-		}
-		else
-		{
-			// AL-2014-08-28: [[ ArrayElementRefParams ]] Evaluate container if necessary
-			MCAutoValueRef t_value;
-			MCContainer *t_container;
-			t_container = p_parameters -> eval_argument_container();
-			
-			if (t_container != nil)
-			{
-				MCNameRef *t_path;
-				uindex_t t_length;
-				t_container -> getpath(t_path, t_length);
-				
-				MCExecContext ctxt(p_context, nil, nil);
-				
-				if (t_length == 0)
-					t_parameter_vars[i] = new (nothrow) MCReferenceExternalVariable(t_container -> getvar());
-				else
-					t_container -> eval(ctxt, &t_value);
-			}
-			else
-				t_value = p_parameters -> getvalueref_argument();
-			
-			// MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
-			if (*t_value != nil)
-				t_parameter_vars[i] = new (nothrow) MCTransientExternalVariable(*t_value);
-		}
+    {
+        MCContainer *t_container
+                = p_parameters -> eval_argument_container();
+        if (t_container != nil)
+        {
+            t_parameter_vars[i] = new (nothrow) MCReferenceExternalVariable(*t_container);
+        }
+        else
+        {
+            t_parameter_vars[i] = new (nothrow) MCTransientExternalVariable(p_parameters->getvalueref_argument());
+        }
 	}
 
 	// We have our list of parameters (hopefully), so now call - passing a temporary
@@ -1017,7 +993,10 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		// MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
 		//   We then store the previous global value of the it extvar, and set this one.
 		//   As external calls are recursive, this should be fine :)
-		MCReferenceExternalVariable t_it(MCECptr -> GetIt() -> evalvar(*MCECptr));
+        MCContainer t_it_container;
+        MCECptr->GetIt()->evalcontainer(*MCECptr, t_it_container);
+		MCReferenceExternalVariable t_it(t_it_container);
+        
 		MCReferenceExternalVariable *t_old_it;
 		t_old_it = s_external_v1_current_it;
 		s_external_v1_current_it = &t_it;
@@ -1240,7 +1219,10 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
         case kMCExternalContextQueryResult:
             // MW-2014-01-22: [[ CompatV1 ]] If the result shim hasn't been made, make it.
             if (s_external_v1_result == nil)
-                s_external_v1_result = new (nothrow) MCReferenceExternalVariable(MCresult);
+            {
+                s_external_v1_result_container = new (nothrow) MCContainer(MCresult);
+                s_external_v1_result = new (nothrow) MCReferenceExternalVariable(*s_external_v1_result_container);
+            }
             *(MCExternalVariableRef *)result = s_external_v1_result;
             break;
         case kMCExternalContextQueryIt:

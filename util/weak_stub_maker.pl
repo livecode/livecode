@@ -2,7 +2,10 @@
 
 use warnings;
 use Text::ParseWords;
+use Getopt::Long;
 
+my $foundation = 0;
+GetOptions ('foundation|f' => \$foundation);
 my $inputFile = $ARGV[0];
 my $outputFile = $ARGV[1];
 
@@ -77,20 +80,68 @@ output "#include <stdlib.h>";
 output "#include <stdio.h>";
 output "#include <cstring>";
 output ;
-output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
-output "#include <mach-o/dyld.h>";
-output "#define SYMBOL_PREFIX \"_\"";
-output "#else";
 output "#define SYMBOL_PREFIX";
-output "#endif";
 
 output ;
 output "typedef void *module_t;";
 output "typedef void *handler_t;";
 output ;
-output "extern \"C\" void *MCU_loadmodule(const char *);";
-output "extern \"C\" void MCU_unloadmodule(void *);";
-output "extern \"C\" void *MCU_resolvemodulesymbol(void *, const char *);";
+
+
+# MCSupportLibraryLoad and friends have engine dependency - for example 
+# when weak linking to the crypto library we rely on revsecurity living 
+# next to the executable, which is resolved using MCcmd. We also rely on 
+# mappings from dynamic library names to paths which can be custom-
+# defined as deploy parameters. Hence we need to use special 
+# implementations for access to the libfoundation system library API 
+# if we require no engine dependency.
+if ($foundation == 1) 
+{
+	output "#define kMCStringEncodingUTF8 4";
+	output "extern \"C\" bool MCStringCreateWithBytes(const char *, unsigned int, int, bool, void*&);";
+	output "extern \"C\" void MCValueRelease(void *);";
+	output "extern \"C\" bool MCSLibraryCreateWithPath(void *, void*&);";
+	output "extern \"C\" void *MCSLibraryLookupSymbol(void *, void *);";
+	output ;
+	output "static void *MCSupportLibraryLoad(const char *p_name_cstr)";
+	output "{";
+	output "  void *t_name;";
+	output "  if (!MCStringCreateWithBytes(p_name_cstr, strlen(p_name_cstr), kMCStringEncodingUTF8, false, t_name))";
+	output "    return NULL;";
+	output "  void *t_handle;";
+	output "  if (!MCSLibraryCreateWithPath(t_name, t_handle))";
+	output "  {";
+	output "    t_handle = NULL;";
+	output "  }";
+	output "  MCValueRelease(t_name);";
+	output "  return t_handle;";
+	output "}";
+	
+	output ;
+	output "static void MCSupportLibraryUnload(void *p_handle)";
+	output "{";
+	output "  if (p_handle != NULL)";
+	output "    MCValueRelease(p_handle);";
+	output "}";
+
+	output ;
+	output "static void *MCSupportLibraryLookupSymbol(void *p_handle, const char *p_name_cstr)";
+	output "{";
+	output "  void *t_symbol_name;";
+	output "  if (!MCStringCreateWithBytes(p_name_cstr, strlen(p_name_cstr), kMCStringEncodingUTF8, false, t_symbol_name))";
+	output "    return NULL;";
+	output "  void *t_symbol;";
+	output "  t_symbol = MCSLibraryLookupSymbol(p_handle, t_symbol_name);";
+	output "  MCValueRelease(t_symbol_name);";
+	output "  return t_symbol;";
+	output "}";
+}
+else
+{
+	output "extern \"C\" void *MCSupportLibraryLoad(const char *);";
+	output "extern \"C\" void MCSupportLibraryUnload(void *);";
+	output "extern \"C\" void *MCSupportLibraryLookupSymbol(void *, const char *);";
+}
 output ;
 
 output "extern \"C\"";
@@ -99,7 +150,7 @@ output ;
 output "static int module_load(const char *p_source, module_t *r_module)";
 output "{";
 output "  module_t t_module;";
-output " 	t_module = (module_t)MCU_loadmodule(p_source);";
+output " 	t_module = (module_t)MCSupportLibraryLoad(p_source);";
 output "  if (t_module == NULL)";
 output "    return 0;";
 output "  *r_module = t_module;";
@@ -110,14 +161,14 @@ output ;
 # MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Implemented module_unload for Android.
 output "static int module_unload(module_t p_module)";
 output "{";
-output "  MCU_unloadmodule(p_module);";
+output "  MCSupportLibraryUnload(p_module);";
 output "  return 1;";
 output "}";
 output ;
 output "static int module_resolve(module_t p_module, const char *p_name, handler_t *r_handler)";
 output "{";
 output "  handler_t t_handler;";
-output "    t_handler = MCU_resolvemodulesymbol(p_module, p_name);";
+output "    t_handler = MCSupportLibraryLookupSymbol(p_module, p_name);";
 output "  if (t_handler == NULL)";
 output "    return 0;";
 output "  *r_handler = t_handler;";
@@ -177,6 +228,10 @@ sub generateModule
 	my $darwinLibrary = $libraries[1];
 	my $windowsLibrary = $libraries[2];
 	
+	if (@libraries < 1)
+	{
+		$unixLibrary = "";
+	}
 	if (@libraries < 2)
 	{
 		$darwinLibrary = "";
@@ -209,7 +264,7 @@ sub generateModule
     output "#define MODULE_${moduleUpper}_NAME \"$unixLibrary\"";
     # MM-2014-02-10: [[ LibOpenSSL 1.0.1e ]] Prefix android modules with lib.
     output "#elif defined(TARGET_SUBPLATFORM_ANDROID)";
-    output "#define MODULE_${moduleUpper}_NAME \"lib$unixLibrary\"";
+    output "#define MODULE_${moduleUpper}_NAME \"$unixLibrary\"";
     output "#elif defined(_WINDOWS)";
     output "#define MODULE_${moduleUpper}_NAME \"$windowsLibrary\"";
     output "#endif";
@@ -231,7 +286,7 @@ sub generateModule
     output "  if (!module_load(p_path, &module_$module))";
     output "  {";
     output "  #ifdef _DEBUG";
-    output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
+    output "    fprintf(stderr, \"Unable to load library: %s\\n\", p_path);";
     output "  #endif";
     output "    goto err;";
     output "  }";

@@ -51,6 +51,8 @@ import android.os.Vibrator;
 import android.os.Environment;
 import android.provider.MediaStore.*;
 import android.provider.MediaStore.Images.Media;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.net.*;
 import java.io.*;
@@ -115,6 +117,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+	private NFCModule m_nfc_module;
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
@@ -127,6 +130,8 @@ public class Engine extends View implements EngineApi
     private String m_last_certificate_verification_error;
 	
 	private boolean m_new_intent;
+
+	private int m_photo_width, m_photo_height;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,6 +175,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
@@ -219,6 +225,9 @@ public class Engine extends View implements EngineApi
 		System.setProperty("http.keepAlive", "false");
 		
 		m_new_intent = false;
+
+		m_photo_width = 0;
+		m_photo_height = 0;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,6 +456,20 @@ public class Engine extends View implements EngineApi
 						case KeyEvent.KEYCODE_DEL:
 							keyCode = 0xff08;
 							break;
+						// Hao-2017-02-08: [[ Bug 11727 ]] Detect arrow key for field input
+						case KeyEvent.KEYCODE_DPAD_LEFT:
+							keyCode = 0xff51;
+							break;
+						case KeyEvent.KEYCODE_DPAD_UP:
+							keyCode = 0xff52;
+							break;
+						case KeyEvent.KEYCODE_DPAD_RIGHT:
+							keyCode = 0xff53;
+							break;
+						case KeyEvent.KEYCODE_DPAD_DOWN:
+							keyCode = 0xff54;
+							break;
+							
 							
 						default:
 					}
@@ -579,7 +602,8 @@ public class Engine extends View implements EngineApi
 		if (imm != null)
 			imm.restartInput(this);
 		
-        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
+		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
+        imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
     }
 
     public void hideKeyboard()
@@ -1818,8 +1842,11 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-	public void showPhotoPicker(String p_source)
+	public void showPhotoPicker(String p_source, int p_width, int p_height)
 	{
+		m_photo_width = p_width;
+		m_photo_height = p_height;
+
 		if (p_source.equals("camera"))
 			showCamera();
 		else if (p_source.equals("album"))
@@ -1914,7 +1941,20 @@ public class Engine extends View implements EngineApi
 				{
 					t_out.write(t_buffer, 0, t_readcount);
 				}
-				doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+
+				// HH-2017-01-19: [[ Bug 11313 ]]Support maximum width and height of the image
+				if(m_photo_height > 0 && m_photo_width > 0)
+				{
+					Bitmap bm = BitmapFactory.decodeByteArray(t_out.toByteArray(), 0, t_out.size());
+					Bitmap rBm = Bitmap.createScaledBitmap(bm, m_photo_width, m_photo_height, true);
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					rBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte[] byteArray = stream.toByteArray();
+					doPhotoPickerDone(byteArray, byteArray.length);
+				}
+				else
+					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+				
 				t_in.close();
 				t_out.close();
 			}
@@ -2739,6 +2779,29 @@ public class Engine extends View implements EngineApi
 
 ////////
 
+	// NFC
+	public boolean isNFCAvailable()
+	{
+		return m_nfc_module.isAvailable();
+	}
+	
+	public boolean isNFCEnabled()
+	{
+		return m_nfc_module.isEnabled();
+	}
+	
+	public void enableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(true);
+	}
+	
+	public void disableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(false);
+	}
+	
+////////
+
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
     public String getLaunchUri(Intent intent)
     {
@@ -2940,6 +3003,9 @@ public class Engine extends View implements EngineApi
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
 		
+		if (m_nfc_module != null)
+			m_nfc_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2962,6 +3028,9 @@ public class Engine extends View implements EngineApi
 		
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
+		
+		if (m_nfc_module != null)
+			m_nfc_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
@@ -2970,6 +3039,9 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
+			if (m_nfc_module != null)
+				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
+				
 			doLaunchDataChanged();
 			
 			String t_launch_url;
@@ -3115,15 +3187,24 @@ public class Engine extends View implements EngineApi
         if (resultCode == Activity.RESULT_OK)
 		{
             Uri t_data = data.getData();
-            String t_path = null;
+            String t_path = "";
             if (t_data != null)
             {
-                Cursor t_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_cursor = null;
+                try
+                {
+                    t_cursor = ((LiveCodeActivity) getContext())
+                        .getContentResolver()
+                        .query(t_data, null, null, null, null);
+                }
+                catch (SecurityException e) {}
+
                 if (t_cursor != null)
                 {
                     t_cursor.moveToFirst();
-                    int t_index = t_cursor.getColumnIndex (MediaStore.Images.ImageColumns.DATA);
-                    t_path = t_cursor.getString(t_index);
+                    int t_index = t_cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                    if (t_index > 0)
+                        t_path = t_cursor.getString(t_index);
                 }
                 Log.i("revandroid", "onMediaResult picked path: " + t_path);
             }

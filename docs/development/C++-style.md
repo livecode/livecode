@@ -237,3 +237,14 @@ See also [C++ Feature Usage Guidelines for LiveCode](C++-features.md).
   Bad:
 
         double t_area = 2*acos(0.0)*t_radius*t_radius;
+
+* When using preprocessor macros, ensure that the `#define`d identifier 
+  has a value.
+
+  Good:
+
+        #define FEATURE_PLATFORM_PLAYER (1)
+
+  Bad:
+
+        #define FEATURE_PLATFORM_PLAYER

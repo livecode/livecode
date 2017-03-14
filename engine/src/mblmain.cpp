@@ -105,17 +105,8 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 	MCFontInitialize();
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
-
-    // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
-#if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef& r_filename);
-    MCAutoStringRef t_filename;
-    revandroid_loadExternalLibrary(MCSTR("revsecurity"), &t_filename);
-#endif
     
 	////
-	
-	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))

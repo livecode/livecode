@@ -604,17 +604,6 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(externalfiles);
 
-	uint2 i = 0;
-	while (i < MCnusing)
-		if (MCusing[i] == this)
-		{
-			MCnusing--;
-			uint2 j;
-			for (j = i ; j < MCnusing ; j++)
-				MCusing[j] = MCusing[j + 1];
-		}
-		else
-			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
 	if (MCmbstackptr.IsBoundTo(this))
 		MCmbstackptr = nil;
@@ -1388,12 +1377,12 @@ bool MCStack::isdeletable(bool p_check_flag)
 
 Boolean MCStack::del(bool p_check_flag)
 {
-    if (!isdeletable(true))
+    if (!isdeletable(p_check_flag))
 	   return False;
 
 	while (substacks)
 	{
-		if (!substacks -> del(p_check_flag))
+		if (!substacks -> del(false))
 			return False;
 	}
 	
@@ -1464,9 +1453,68 @@ Boolean MCStack::del(bool p_check_flag)
         needs = NULL;
     }
     
+    removereferences();
+    
+    uint2 i = 0;
+    while (i < MCnusing)
+        if (MCusing[i] == this)
+        {
+            MCnusing--;
+            uint2 j;
+            for (j = i ; j < MCnusing ; j++)
+                MCusing[j] = MCusing[j + 1];
+        }
+        else
+            i++;
+    
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
+}
+
+void MCStack::removereferences()
+{
+    if (controls != NULL)
+    {
+        MCControl *t_control = controls;
+        do
+        {   t_control -> removereferences();
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    if (aclips != NULL)
+    {
+        MCAudioClip *t_aclip = aclips;
+        do
+        {   t_aclip -> removereferences();
+            t_aclip = t_aclip -> next();
+        }
+        while(t_aclip != aclips);
+    }
+    
+    if (vclips != NULL)
+    {
+        MCVideoClip *t_vclip = vclips;
+        do
+        {   t_vclip -> removereferences();
+            t_vclip = t_vclip -> next();
+        }
+        while(t_vclip != vclips);
+    }
+    
+    if (cards != NULL)
+    {
+        MCCard *t_card = cards;
+        do
+        {   t_card -> removereferences();
+            t_card = t_card -> next();
+        }
+        while(t_card != cards);
+    }
+    
+    MCObject::removereferences();
 }
 
 void MCStack::paste(void)
