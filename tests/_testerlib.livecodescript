@@ -111,6 +111,7 @@ function TesterParseTestCommandNames pFilename
    -- Scan the file for "on Test*" definitions
    local tCommandNames, tCount, tLine, tName
 
+   local tCommandNameSeen
    repeat for each line tLine in tScript
       if token 1 of tLine is not "on" then
          next repeat
@@ -122,6 +123,12 @@ function TesterParseTestCommandNames pFilename
          next repeat
       end if
 
+      if tCommandNameSeen[tName] then
+         -- Duplicate test name
+         write merge("Error: duplicate test name [[tName]] in [[pFilename]]\n") to stderr
+         quit 1
+      end if
+
       -- Exclude the test setup message
       if tName is "TestSetup" or tName is "TestTearDown" then
          next repeat
@@ -129,6 +136,7 @@ function TesterParseTestCommandNames pFilename
 
       add 1 to tCount
       put tName into tCommandNames[tCount]
+      put true into tCommandNameSeen[tName]
    end repeat
 
    return tCommandNames
