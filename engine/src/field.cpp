@@ -2634,7 +2634,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr;
 			tptr = getcarddata(fdata, 0, False);
 			if (tptr != NULL)
-				if ((stat = tptr -> save(stream, OT_FDATA, 0, p_version)) != IO_NORMAL)
+				if ((stat = tptr -> save(stream, OT_FDATA, 0, this, p_version)) != IO_NORMAL)
 					return stat;
 		}
 		else
@@ -2642,7 +2642,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr = fdata;
 			do
 			{
-				if ((stat = tptr->save(stream, OT_FDATA, p_part, p_version)) != IO_NORMAL)
+				if ((stat = tptr->save(stream, OT_FDATA, p_part, this, p_version)) != IO_NORMAL)
 					return stat;
 				tptr = tptr->next();
 			}

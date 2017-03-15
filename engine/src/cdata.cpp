@@ -164,7 +164,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version)
+IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, MCObject *p_parent, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -191,10 +191,16 @@ IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t
 		}
 		else
 		{
+            // Ensure field's saved MCCdata paragraphs have a parent
+            if (p_parent != nil)
+                MCAssert(p_parent -> gettype() == CT_FIELD);
+            
 			MCParagraph *tptr = (MCParagraph *)data;
 			if (tptr != NULL)
 				do
 				{
+                    if (p_parent != nil)
+                        tptr -> setparent(static_cast<MCField *>(p_parent));
 					if ((stat = tptr->save(stream, p_part, p_version)) != IO_NORMAL)
 						return stat;
 					tptr = (MCParagraph *)tptr->next();
