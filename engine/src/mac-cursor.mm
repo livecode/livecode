@@ -106,12 +106,6 @@ static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
     return t_new_image;
 }
 
-MCMacPlatformCursor::MCMacPlatformCursor(void)
-: is_standard(false),
-  standard(kMCPlatformStandardCursorNone)
-{
-}
-
 MCMacPlatformCursor::~MCMacPlatformCursor(void)
 {
     if (!is_standard)

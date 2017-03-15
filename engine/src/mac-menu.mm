@@ -474,16 +474,10 @@ MCMacPlatformMenu::MCMacPlatformMenu(void)
     menu = [[MCMenuHandlingKeys alloc] initWithTitle: @""];
     menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: this];
     [menu setDelegate: menu_delegate];
-    is_menubar = false;
     
     // Turn on auto-enablement - this allows dialogs to control the enablement
     // of items with appropriate tag.
     [menu setAutoenablesItems: YES];
-    
-    // SN-2014-11-06: [[ Bug 13940 ]] Initialises the accelerator presence flag.
-    quit_item = nil;
-    preferences_item = nil;
-    about_item = nil;
 }
 
 MCMacPlatformMenu::~MCMacPlatformMenu(void)

@@ -56,11 +56,6 @@ static com_runrev_livecode_MCSoundDelegate *s_delegate = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformSound::MCMacPlatformSound(void)
-    : m_sound(nullptr)
-{
-}
-
 MCMacPlatformSound::~MCMacPlatformSound(void)
 {
     if (m_sound != nullptr)

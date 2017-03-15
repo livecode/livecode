@@ -182,38 +182,6 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformScriptEnvironment::MCMacPlatformScriptEnvironment(void)
-{
-    if (JavaScriptCoreLibrary == NULL)
-    {
-        JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-        GET_JSC_SYMBOL(JSGlobalContextCreate);
-        GET_JSC_SYMBOL(JSGlobalContextRelease);
-        GET_JSC_SYMBOL(JSContextGetGlobalObject);
-        GET_JSC_SYMBOL(JSEvaluateScript);
-        GET_JSC_SYMBOL(JSCheckScriptSyntax);
-        GET_JSC_SYMBOL(JSStringCreateWithCFString);
-        GET_JSC_SYMBOL(JSStringCopyCFString);
-        GET_JSC_SYMBOL(JSValueMakeString);
-        GET_JSC_SYMBOL(JSValueToStringCopy);
-        GET_JSC_SYMBOL(JSValueToObject);
-        GET_JSC_SYMBOL(JSValueProtect);
-        GET_JSC_SYMBOL(JSValueUnprotect);
-        GET_JSC_SYMBOL(JSStringRelease);
-        GET_JSC_SYMBOL(JSClassCreate);
-        GET_JSC_SYMBOL(JSClassRelease);
-        GET_JSC_SYMBOL(JSObjectMake);
-        GET_JSC_SYMBOL(JSObjectGetPrivate);
-        GET_JSC_SYMBOL(JSObjectGetProperty);
-        GET_JSC_SYMBOL(JSObjectSetProperty);
-        GET_JSC_SYMBOL(JSObjectCallAsFunction);
-    }
-
-    m_runtime = NULL;
-	m_functions = NULL;
-	m_function_count = 0;
-}
-
 MCMacPlatformScriptEnvironment::~MCMacPlatformScriptEnvironment(void)
 {
 	for(uint4 i = 0; i < m_function_count; ++i)
@@ -408,6 +376,31 @@ char *MCMacPlatformScriptEnvironment::Call(const char *p_method, const char **p_
 
 MCPlatformScriptEnvironmentRef MCMacPlatformCore::CreateScriptEnvironment()
 {
+    if (JavaScriptCoreLibrary == NULL)
+    {
+        JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+        GET_JSC_SYMBOL(JSGlobalContextCreate);
+        GET_JSC_SYMBOL(JSGlobalContextRelease);
+        GET_JSC_SYMBOL(JSContextGetGlobalObject);
+        GET_JSC_SYMBOL(JSEvaluateScript);
+        GET_JSC_SYMBOL(JSCheckScriptSyntax);
+        GET_JSC_SYMBOL(JSStringCreateWithCFString);
+        GET_JSC_SYMBOL(JSStringCopyCFString);
+        GET_JSC_SYMBOL(JSValueMakeString);
+        GET_JSC_SYMBOL(JSValueToStringCopy);
+        GET_JSC_SYMBOL(JSValueToObject);
+        GET_JSC_SYMBOL(JSValueProtect);
+        GET_JSC_SYMBOL(JSValueUnprotect);
+        GET_JSC_SYMBOL(JSStringRelease);
+        GET_JSC_SYMBOL(JSClassCreate);
+        GET_JSC_SYMBOL(JSClassRelease);
+        GET_JSC_SYMBOL(JSObjectMake);
+        GET_JSC_SYMBOL(JSObjectGetPrivate);
+        GET_JSC_SYMBOL(JSObjectGetProperty);
+        GET_JSC_SYMBOL(JSObjectSetProperty);
+        GET_JSC_SYMBOL(JSObjectCallAsFunction);
+    }
+
     MCPlatform::Ref<MCPlatformScriptEnvironment> t_ref = MCPlatform::makeRef<MCMacPlatformScriptEnvironment>();
     t_ref -> SetPlatform(this);
     

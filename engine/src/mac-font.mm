@@ -28,10 +28,6 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformLoadedFont::MCMacPlatformLoadedFont() : m_globally(false)
-{
-}
-
 MCMacPlatformLoadedFont::~MCMacPlatformLoadedFont(void)
 {
     coretext_font_unload(*m_path, m_globally);

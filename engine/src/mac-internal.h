@@ -650,7 +650,7 @@ public:
     
 private:
 	MCGRaster m_mask;
-	CGImageRef m_cg_mask;
+    CGImageRef m_cg_mask = nil;
     
     friend MCMacPlatformSurface;
 };
@@ -660,12 +660,12 @@ private:
 class MCMacPlatformLoadedFont: public MCPlatformLoadedFont
 {
 public:
-    MCMacPlatformLoadedFont();
-    ~MCMacPlatformLoadedFont(void);
+    MCMacPlatformLoadedFont(void) = default;
+    virtual ~MCMacPlatformLoadedFont(void);
     virtual bool CreateWithPath(MCStringRef p_path, bool p_globally);
 private:
     MCAutoStringRef m_path;
-    bool m_globally;
+    bool m_globally = false;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,15 +673,15 @@ private:
 class MCMacPlatformCursor: public MCPlatformCursor
 {
 public:
-    MCMacPlatformCursor(void);
-    ~MCMacPlatformCursor(void);
+    MCMacPlatformCursor(void) = default;
+    virtual ~MCMacPlatformCursor(void);
     virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot);
     virtual void Set(void);
 private:
-    bool is_standard;
-    MCPlatformStandardCursor standard;
-    NSCursor *custom;
+    bool is_standard = false;
+    MCPlatformStandardCursor standard = kMCPlatformStandardCursorNone;
+    NSCursor *custom = nil;
 };
 
 
@@ -690,12 +690,12 @@ private:
 class MCMacPlatformColorTransform: public MCPlatformColorTransform
 {
 public:
-    MCMacPlatformColorTransform();
+    MCMacPlatformColorTransform(void) = default;
     virtual ~MCMacPlatformColorTransform(void);
     virtual bool Apply(MCImageBitmap *p_image);
     virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info);
 private:
-    CGColorSpaceRef m_colorspace;
+    CGColorSpaceRef m_colorspace = nil;
 };
 
 
@@ -704,7 +704,7 @@ private:
 class MCMacPlatformPrintDialogSession: public MCPlatformPrintDialogSession
 {
 public:
-    MCMacPlatformPrintDialogSession();
+    constexpr MCMacPlatformPrintDialogSession(void) = default;
     virtual ~MCMacPlatformPrintDialogSession(void);
     virtual void BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
     virtual void BeginSettings(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
@@ -714,13 +714,13 @@ public:
 private:
     virtual void Begin(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format, id p_panel);
     
-    MCPlatformPrintDialogResult m_result;
-    MCPlatformWindowRef m_owner;
+    MCPlatformPrintDialogResult m_result = kMCPlatformPrintDialogResultContinue;
+    MCPlatformWindowRef m_owner = nil;
     
-    NSPrintInfo *m_info;
-    PMPrintSession m_session;
-    PMPrintSettings m_settings;
-    PMPageFormat m_page_format;
+    NSPrintInfo *m_info = nil;
+    PMPrintSession m_session = nil;
+    PMPrintSettings m_settings = nil;
+    PMPageFormat m_page_format = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -784,7 +784,7 @@ protected:
 class MCMacPlatformCore: public MCMacCommonPlatformCore
 {
 public:
-    constexpr MCMacPlatformCore() = default;
+    constexpr MCMacPlatformCore(void) = default;
     virtual ~MCMacPlatformCore(void);
     
     virtual int Run(int argc, char *argv[], char *envp[]);
@@ -1075,8 +1075,8 @@ private:
 class MCMacPlatformSound: public MCPlatformSound
 {
 public:
-    MCMacPlatformSound(void);
-    ~MCMacPlatformSound(void);
+    constexpr MCMacPlatformSound(void) = default;
+    virtual ~MCMacPlatformSound(void);
     
     virtual bool IsValid(void) const;
     
@@ -1093,7 +1093,7 @@ public:
     virtual void GetProperty(MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value);
 
 private:
-    NSSound *m_sound;
+    NSSound *m_sound = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1303,8 +1303,8 @@ sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)Jav
 class MCMacPlatformScriptEnvironment: public MCPlatformScriptEnvironment
 {
 public:
-    MCMacPlatformScriptEnvironment(void);
-    ~MCMacPlatformScriptEnvironment(void);
+    constexpr MCMacPlatformScriptEnvironment(void) = default;
+    virtual ~MCMacPlatformScriptEnvironment(void);
     
     virtual bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
     
@@ -1319,10 +1319,10 @@ private:
         MCPlatformScriptEnvironmentCallback callback;
     };
     
-    JSGlobalContextRef m_runtime;
+    JSGlobalContextRef m_runtime = nil;
     
-    Function *m_functions;
-    uint4 m_function_count;
+    Function *m_functions = nil;
+    uint4 m_function_count = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

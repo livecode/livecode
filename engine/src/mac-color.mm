@@ -49,11 +49,6 @@ inline void MCColorMatrix3x3GetElements(const MCColorMatrix3x3 &p_matrix, CGFloa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformColorTransform::MCMacPlatformColorTransform()
-: m_colorspace(nullptr)
-{
-}
-
 bool
 MCMacPlatformColorTransform::CreateWithColorSpace(const MCColorSpaceInfo& p_info)
 {

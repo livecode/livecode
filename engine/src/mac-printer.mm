@@ -53,18 +53,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-MCMacPlatformPrintDialogSession::MCMacPlatformPrintDialogSession()
-: m_result(kMCPlatformPrintDialogResultContinue)
-, m_owner(nil)
-, m_info(nil)
-, m_session(nil)
-, m_settings(nil)
-, m_page_format(nil)
-{
-    
-}
-
 MCMacPlatformPrintDialogSession::~MCMacPlatformPrintDialogSession(void)
 {
     if (m_owner != nil)
