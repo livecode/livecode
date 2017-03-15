@@ -1781,6 +1781,7 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
                     }
                     break;
                 }
+                t_insert_iter = t_insert_iter->next();
             }
             while (t_insert_iter != objptrs);
         }
