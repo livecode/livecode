@@ -2,7 +2,7 @@ Name: import snapshot
 
 Type: command
 
-Syntax: import snapshot [from rect[angle] <rectDescription>] [of <objectRef> | <stackRef>] [{with | without} effects] [at size <sizeDescription>]
+Syntax: import snapshot [from rect[angle] <rectDescription>] [of {<objectRef> | <stackRef>}] [{with | without} effects] [at size <sizeDescription>]
 
 Syntax: import snapshot from {<objectRef> [{with | without} effects] | <stackRef>} [at size <sizeDescription>]
 
