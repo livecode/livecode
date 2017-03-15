@@ -2,7 +2,7 @@ Name: listStyle
 
 Type: property
 
-Syntax: set the listStyle of <line> of <field> to <style>
+Syntax: set the listStyle of line <lineNumber> of <fieldRef> to <styleType>
 
 Summary:
 Specifies what type of list style is used for the line of text.
@@ -18,9 +18,19 @@ Platforms: desktop, server, mobile
 Example:
 set the listStyle of line 1 of field 1 to "disc"
 
+Example: 
+# clear all list formatting in a field
+set the listStyle of line 1 to -1 of field 1 to empty
+
 Parameters:
-style (enum):
-The style of bullet to use for the line of text in the list. One of:
+lineNumber (integer):
+A number corresponding to one of the lines in the field.
+
+fieldRef:
+Any valid <object reference|field reference>.
+
+styleType (enum):
+The style of bullet to use for the line of text in the list.
 
 -   "disc": A solid round bullet.
 -   "circle": A ring.
@@ -28,26 +38,24 @@ The style of bullet to use for the line of text in the list. One of:
 -   "decimal": A numeric ordered list: 1. 2. 3. 4...
 -   "lower latin": An lowercase ordered roman character: a. b. c. d...
 -   "upper latin": An uppercase ordered roman character: A. B. C. D...
--   "lower roman": A lowercase ordered latin character: i. ii. iii.
-    iv... 
--   "upper roman": An uppercase ordered latin character: I. II. III.
-    IV... 
--   "skip": No list marker is shown and the line is skipped where
-    ordered list styles are in use.
+-   "lower roman": A lowercase ordered latin character: i. ii. iii. iv... 
+-   "upper roman": An uppercase ordered latin character: I. II. III. IV... 
+-   "skip": No list marker is shown and the line is skipped where ordered list styles are in use.
 
 
 Value:
-The <listStyle> of a line of a field returns the style type set for the
+The <listStyle> of a line of a field returns the <styleType> set for the
 line of text.
 
 Description:
 Use the <listStyle> property to control the style of the bullet used for
-the line of text in a field.
+the line of text in a field. To remove a <listStyle> from a line, set the
+value of the <listStyle> of the line to <empty>.
 
-References: firstIndent (property), textAlign (property),
-formattedWidth (property), formattedText (property), listDepth (property),
-listBehavior (property), hScrollbar (property), rightIndent (property),
-textSize (property)
+References: empty (constant), firstIndent (property), 
+listBehavior (property), listDepth (property), listIndex (property), 
+listIndent (property), object reference (glossary), 
+rightIndent (property), textAlign (property)
 
 Tags: ui
 
