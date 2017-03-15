@@ -66,9 +66,10 @@ Any paragraphs with <listStyle> set are prefixed by an appropriate
 plain-text form of the bullet or index.
 
 
-References: return (constant), property (glossary), character (keyword),
-characters (keyword), field (keyword), lines (keyword), field (object),
-dontWrap (property), listStyle (property), plainText (property),
+References: chunk (glossary), return (constant), property (glossary), 
+character (keyword), characters (keyword), field (keyword), 
+lines (keyword), field (object), dontWrap (property), 
+listStyle (property), plainText (property), 
 unicodeFormattedText (property), unicodePlainText (property)
 
 Tags: text processing
