@@ -104,55 +104,6 @@ const char *MCCefWin32GetExternalPath(void)
 	return s_external_path;
 }
 
-bool MCCefWin32AppendPath(const char *p_base, const char *p_path, char *&r_path)
-{
-	if (p_base == nil)
-		return MCCStringClone(p_path, r_path);
-	else if (MCCStringEndsWith(p_base, "\\"))
-		return MCCStringFormat(r_path, "%s%s", p_base, p_path);
-	else
-		return MCCStringFormat(r_path, "%s\\%s", p_base, p_path);
-}
-
-#ifdef _DEBUG
-#define CEF_PATH_PREFIX ""
-#else
-#define CEF_PATH_PREFIX "CEF\\"
-#endif
-
-// IM-2014-03-25: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetLocalePath(void)
-{
-	static char *s_locale_path = nil;
-
-	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"locales", s_locale_path);
-
-	return s_locale_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] subprocess executable located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetSubProcessName(void)
-{
-	static char *s_exe_path = nil;
-
-	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"revbrowser-cefprocess.exe", s_exe_path);
-
-	return s_exe_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] libcef dll located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetCefLibraryPath(void)
-{
-	static char *s_lib_path = nil;
-
-	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"libcef.dll", s_lib_path);
-
-	return s_lib_path;
-}
-
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefWin32Browser *t_browser;
@@ -514,15 +465,5 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 	return t_success;
 }
 
-const char* MCCefPlatformGetResourcesDirPath()
-{
-    return NULL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-
-// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
-#include <stdlib.h>
-#include <stdio.h>
-#include <cstring>
 

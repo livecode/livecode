@@ -127,8 +127,6 @@ bool MCWin32HRGNToMCGRegion(HRGN p_region, MCGRegionRef &r_region)
 	s_rect_count = 0;
 	if (MCWin32RegionForEachRect(p_region, HRGNToMCGRegionCallback, t_region))
 	{
-		MCLog("convert HRGN with %d rects", s_rect_count);
-
 		r_region = t_region;
 		return true;
 	}

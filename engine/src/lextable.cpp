@@ -1217,6 +1217,7 @@ LT factor_table[] =
         {"menuobject", TT_FUNCTION, F_MENU_OBJECT},
         {"menus", TT_FUNCTION, F_MENUS},
         {"merge", TT_FUNCTION, F_MERGE},
+        {"messagedigest", TT_FUNCTION, F_MESSAGE_DIGEST},
 		{"messagemessages", TT_PROPERTY, P_MESSAGE_MESSAGES},
 		{"metadata", TT_PROPERTY, P_METADATA},
         {"metal", TT_PROPERTY, P_METAL},

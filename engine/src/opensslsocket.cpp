@@ -562,9 +562,12 @@ bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struc
 
 	if (p_final)
 	{
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
-		MCscreen->delaymessage(t_info->target, t_info->message, t_info->name, *t_string);
+        if (t_info -> target . IsValid())
+        {
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
+            MCscreen->delaymessage(t_info->target, t_info->message, t_info->name, *t_string);
+        }
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
@@ -1523,7 +1526,7 @@ void MCSocket::acceptone()
 	struct sockaddr_in addr;
 	int addrsize = sizeof(addr);
 	SOCKET newfd = accept(fd, (struct sockaddr *)&addr, &addrsize);
-	if (newfd > 0)
+	if (newfd > 0 && object . IsValid())
 	{
 		char *t = inet_ntoa(addr.sin_addr);
 		MCAutoStringRef n;
@@ -1582,7 +1585,7 @@ void MCSocket::readsome()
 #endif
 		else
 		{
-			if (message != NULL)
+			if (message != NULL && object . IsValid())
 			{
 				char *t = inet_ntoa(addr.sin_addr);
 				MCAutoStringRef n;
@@ -1626,7 +1629,7 @@ void MCSocket::readsome()
 #else
 
 			int newfd = accept(fd, (struct sockaddr *)&addr, &addrsize);
-			if (newfd > 0)
+			if (newfd > 0 && object . IsValid())
 			{
 				int val = 1;
 				ioctl(newfd, FIONBIO, (char *)&val);
@@ -1753,13 +1756,16 @@ void MCSocket::processreadqueue()
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
-				MCParameter *params = new (nothrow) MCParameter;
-				params->setvalueref_argument(name);
-				params->setnext(new MCParameter);
-				params->getnext()->setvalueref_argument(*t_data);
-				MCscreen->addmessage(e->optr, e->message, curtime, params);
+                if (e -> optr . IsValid())
+                {
+                    MCParameter *params = new (nothrow) MCParameter;
+                    params->setvalueref_argument(name);
+                    params->setnext(new MCParameter);
+                    params->getnext()->setvalueref_argument(*t_data);
+                    MCscreen->addmessage(e->optr, e->message, curtime, params);
+                }
 				delete e;
-				if (nread == 0 && fd == 0)
+				if (nread == 0 && fd == 0 && object . IsValid())
 					MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
@@ -1771,10 +1777,10 @@ void MCSocket::processreadqueue()
 void MCSocket::writesome()
 {
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-	if (!connected && message != NULL)
+	if (!connected && message != NULL && object . IsValid())
 	{
 #else
-	if (!accepting && !connected && message != NULL)
+	if (!accepting && !connected && message != NULL && object . IsValid())
 	{
 #endif
 		MCscreen->delaymessage(object, message, MCNameGetString(name));
@@ -1822,8 +1828,10 @@ void MCSocket::writesome()
 			{
 				MCSocketwrite *e = wevents->remove
 				                   (wevents);
-				MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
-				added = True;
+                if (e -> optr . IsValid())
+                    MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
+				
+                added = True;
 				delete e;
 			}
 			else
@@ -1850,15 +1858,19 @@ void MCSocket::doclose()
 	{
 		if (error != NULL)
 		{
-			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
-			MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
+            if (object . IsValid())
+            {
+                MCAutoStringRef t_error;
+                /* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
+                MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
+            }
 			added = True;
 		}
 		else
 			if (nread == 0)
 			{
-				MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
+				if (object . IsValid())
+                    MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 	}

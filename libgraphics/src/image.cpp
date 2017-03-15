@@ -228,7 +228,8 @@ bool MCGImageHasPartialTransparency(MCGImageRef self)
 		return false;
 
 	MCGRaster t_raster;
-	/* UNCHECKED */ MCGImageGetRaster(self, t_raster);
+	if (!MCGImageGetRaster(self, t_raster))
+        return false;
 
 	if (t_raster.format == kMCGRasterFormat_A)
 		return true;

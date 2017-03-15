@@ -436,11 +436,12 @@ void MCStack::mode_load(void)
 		MCAutoNameRef t_ide_override_name;
 		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
 
-		MClockmessages++;
+        bool t_old_lock = MClockmessages;
+		MClockmessages = true;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
         getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
-		MClockmessages--;
+		MClockmessages = t_old_lock;
 
 		bool t_treat_as_ide;
         MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);

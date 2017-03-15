@@ -2,12 +2,18 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object(glossary)>] | from <object> } [{with | without} effects] [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object(glossary)>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
 
 Introduced: 2.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, mobile
+
+Security: privacy
 
 Example:
 export snapshot to file "Test.ppm"
@@ -36,6 +42,7 @@ given in relative (window) coordinates; otherwise, it is given in
 absolute coordinates.
 
 object:
+Any valid <object reference>.
 
 size:
 The width,height of the snapshot in pixels.
@@ -133,11 +140,14 @@ To export a snapshot of the screen in iOS use the form:
 >*Important:*  The 'at size' variant of the export snapshot command is
 > currently only when creating snapshots of objects.
 
+Changes: The `at size` variant, which allows resizing of the exported 
+snapshot to specified dimensions, was added in version 6.0.
+
 References: export (command), import snapshot (command), select (command),
 screenRect (function), PPM (glossary), command (glossary),
 container (glossary), PBM (glossary), alpha channel (glossary),
 file (keyword), image (keyword), cursor (property), rectangle (property),
-windowID (property)
+windowID (property), object reference (glossary)
 
-Tags: file system
+Tags: file system, multimedia
 

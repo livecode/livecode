@@ -1183,29 +1183,12 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
 
 void MCButton::GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite)
 {
-    uint2 t_hilite;
-    t_hilite = gethilite(p_part);
-    
-    if (t_hilite == Mixed)
-    {
-        r_hilite . type = kMCInterfaceTriStateMixed;
-        r_hilite . mixed = t_hilite;
-        return;
-    }
-
-    r_hilite . type = kMCInterfaceTriStateBoolean;
-    r_hilite . state = (Boolean)t_hilite == True;
+    r_hilite.value = gethilite(p_part);
 }
 
 void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite)
 {
-    Boolean t_new_state;
-    if (p_hilite . type == kMCInterfaceTriStateMixed)
-        t_new_state = p_hilite . mixed;
-    else
-        t_new_state = (Boolean)p_hilite . state;
-    
-    if (sethilite(p_part, t_new_state))
+    if (sethilite(p_part, p_hilite.value))
     {
         if (state & CS_HILITED)
         {

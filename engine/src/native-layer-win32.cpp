@@ -198,7 +198,7 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	if (t_success)
 	{
 		// At last - we can draw it!
-		MCGRectangle rect = {{0, 0}, {t_rect.width, t_rect.height}};
+		MCGRectangle rect = {{0, 0}, {MCGFloat(t_rect.width), MCGFloat(t_rect.height)}};
 		MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
 	}
 

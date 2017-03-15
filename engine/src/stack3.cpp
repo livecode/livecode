@@ -294,9 +294,11 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
 		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return checkloadstat(stat);
-		
-		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
+
+        uint1 t_underline = 0;
+		if ((stat = IO_read_uint1(&t_underline, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
+        linkatts->underline = (t_underline != 0);
         
         // for interface colors, empty name means unset whereas nil name means
         // defer to rgb values. Therefore set values to nil if they are empty.

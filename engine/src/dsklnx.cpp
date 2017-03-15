@@ -1274,34 +1274,6 @@ public:
         return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
     }
 
-    virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
-    {
-        // dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
-        // spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
-        //
-        // Because converting to a sys string allocates memory, this alignment will always be satisfied.
-        // (malloc/new always return alignment >= int/pointer alignment)
-        MCAutoStringRefAsSysString t_filename_sys;
-        /* UNCHECKED */ t_filename_sys.Lock(p_path);
-
-        MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)dlopen(*t_filename_sys, (RTLD_NOW | RTLD_LOCAL));
-
-        return t_result ;
-    }
-
-    virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-        MCAutoStringRefAsSysString t_symbol_sys;
-        /* UNCHECKED */ t_symbol_sys.Lock(p_symbol);
-        return (MCSysModuleHandle)(dlsym(p_module, *t_symbol_sys));
-    }
-
-    virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-        dlclose(p_module);
-    }
-
     virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 		MCAutoStringRefAsSysString t_path;
@@ -1371,19 +1343,6 @@ public:
         closedir(dirptr);
 
         return t_success;
-    }
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-    virtual bool GetExecutablePath(MCStringRef &r_executable)
-    {
-        char t_executable[PATH_MAX];
-		ssize_t t_size;
-        t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-		if (t_size >= PATH_MAX || t_size < 0)
-            return false;
-        
-        t_executable[t_size] = 0;
-        return MCStringCreateWithSysString(t_executable, r_executable);
     }
 
     virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)

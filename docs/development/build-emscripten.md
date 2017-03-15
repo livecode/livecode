@@ -22,10 +22,10 @@ an Emscripten engine.
 
        /opt/emsdk_portable/emsdk list
 
-3. Install and activate the "incoming" SDK by running:
+3. Install and activate SDK 1.35.23 by running:
 
-       /opt/emsdk_portable/emsdk install sdk-incoming-64bit
-       /opt/emsdk_portable/emsdk activate sdk-incoming-64bit
+       /opt/emsdk_portable/emsdk install sdk-1.35.23-32bit
+       /opt/emsdk_portable/emsdk activate sdk-1.35.23-32bit
 
    This will take a really long time and use an insane amount of RAM.
 
@@ -65,4 +65,3 @@ Some web browsers (including Google Chrome) have JavaScript security policies th
     python -m SimpleHTTPServer 8080
 
 You can then load http://localhost:8080/ in a web browser to view your standalone HTML5 engine.
-

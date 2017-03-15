@@ -14,19 +14,14 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "libscript/script.h"
-#include "script-private.h"
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-system.h>
 
 #include "ffi.h"
 
-#include "foundation-auto.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
-
+#include "libscript/script.h"
+#include "script-private.h"
 #include "script-bytecode.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -581,134 +576,69 @@ __MCScriptSplitForeignBindingString(MCStringRef& x_string,
 	return true;
 }
 
-static bool
-__MCScriptPlatformLoadSharedLibrary(MCStringRef p_path,
-									void*& r_handle)
+static bool __split_function_signature(MCStringRef p_string, MCStringRef& r_function, MCStringRef& r_arguments, MCStringRef& r_return)
 {
-#if defined(_WIN32)
-	HMODULE t_module;
-	MCAutoStringRefAsWString t_library_wstr;
-	if (!t_library_wstr.Lock(p_path))
+	MCAutoStringRef t_head, t_args, t_return;
+	uindex_t t_open_bracket_offset, t_close_bracket_offset;
+	if (!MCStringFirstIndexOfChar(p_string, '(', 0, kMCStringOptionCompareExact, t_open_bracket_offset) ||
+		!MCStringFirstIndexOfChar(p_string, ')', 0, kMCStringOptionCompareExact, t_close_bracket_offset))
 	{
-		return false;
-	}
-
-	t_module = LoadLibraryW(*t_library_wstr);
-	if (t_module == NULL)
-	{
-		return false;
-	}
-	
-	r_handle = (void *)t_module;
-#else
-	MCAutoStringRefAsUTF8String t_utf8_library;
-	if (!t_utf8_library.Lock(p_path))
-	{
-		return false;
-	}
-	
-	void *t_module;
-	t_module = dlopen(*t_utf8_library, RTLD_LAZY);
-	if (t_module == NULL)
-	{
-		return false;
-	}
-	
-	r_handle = (void *)t_module;
-#endif
-	return true;
-}
-
-static bool
-__MCScriptPlatformLoadSharedLibraryFunction(void *p_module,
-											MCStringRef p_function,
-											void*& r_pointer)
-{
-	MCAutoStringRefAsCString t_function_name;
-	if (!t_function_name.Lock(p_function))
-	{
-		return false;
-	}
-	
-	void *t_pointer;
-#if defined(_WIN32)
-	t_pointer = GetProcAddress((HMODULE)p_module,
-							   *t_function_name);
-#else
-	t_pointer = dlsym(p_module,
-					  *t_function_name);
-#endif
-	
-	r_pointer = t_pointer;
-	
-	return true;
-}
-
-static bool
-__MCScriptLoadSharedLibrary(MCScriptModuleRef p_module,
-							MCStringRef p_library,
-							void*& r_handle)
-{
-	// If there is no library name then we resolve to the executable module.
-	if (MCStringIsEmpty(p_library))
-	{
-#if defined(_WIN32)
-		r_handle = GetModuleHandle(NULL);
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
-		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
-		//    given, so first resolve the path to the library.
-		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library,
-												MCStringRef &r_path);
-		MCAutoStringRef t_path;
-		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"),
-										 &t_path))
-		{
-			return false;
-		}
-		
-		MCAutoStringRefAsCString t_cstring;
-		if (!t_cstring.Lock(*t_path))
-		{
-			return false;
-		}
-		
-		r_handle = dlopen(*t_cstring, 0);
-#else
-		r_handle = dlopen(NULL, 0);
-#endif
+		r_function = MCValueRetain(p_string);
+		r_arguments = MCValueRetain(kMCEmptyString);
+		r_return = MCValueRetain(kMCEmptyString);
 		return true;
 	}
 	
-	// If there is no slash in the name, we try to resolve based on the module.
-	uindex_t t_offset;
-	if (!MCStringFirstIndexOfChar(p_library,
-								  '/',
-								  0,
-								  kMCStringOptionCompareExact,
-								  t_offset))
-	{
-		MCAutoStringRef t_mapped_library;
-		if (MCScriptResolveSharedLibrary(p_module,
-										 p_library,
-										 Out(t_mapped_library)))
-		{
-			if (__MCScriptPlatformLoadSharedLibrary(*t_mapped_library,
-													r_handle))
-			{
-				return true;
-			}
-		}
-	}
+	if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_open_bracket_offset, t_close_bracket_offset + 1), &t_args))
+		return false;
 	
-	// If the previous two things failed, then just try to load the library as written.
-	if (__MCScriptPlatformLoadSharedLibrary(p_library,
-											r_handle))
-	{
-		return true;
-	}
+	if (!MCStringCopySubstring(p_string, MCRangeMake(t_close_bracket_offset + 1, UINDEX_MAX), &t_return))
+		return false;
 	
-	// Oh dear - no native code library for us!
-	return false;
+	if (!MCStringCopySubstring(p_string, MCRangeMake(0, t_open_bracket_offset), &t_head))
+		return false;
+	
+	r_arguments = MCValueRetain(*t_args);
+	r_return = MCValueRetain(*t_return);
+	r_function = MCValueRetain(*t_head);
+	return true;
+}
+
+// Resolve the call type
+static MCJavaCallType __MCScriptGetJavaCallType(MCStringRef p_class, MCStringRef p_function, MCStringRef p_calling)
+{
+    if (MCStringIsEqualToCString(p_function, "new", kMCStringOptionCompareExact))
+        return MCJavaCallTypeConstructor;
+    
+    bool t_is_static =
+        MCStringIsEqualToCString(p_calling, "static", kMCStringOptionCompareCaseless);
+    
+    // If the 'class' is get or set, then the binding is for a field
+    if (p_class != nullptr &&
+        MCStringIsEqualToCString(p_class, "get", kMCStringOptionCompareExact))
+    {
+        if (t_is_static)
+            return MCJavaCallTypeStaticGetter;
+        
+        return MCJavaCallTypeGetter;
+    }
+
+    if (p_class != nullptr &&
+        MCStringIsEqualToCString(p_class, "set", kMCStringOptionCompareExact))
+    {
+        if (t_is_static)
+            return MCJavaCallTypeStaticSetter;
+        
+        return MCJavaCallTypeSetter;
+    }
+    
+    if (t_is_static)
+        return MCJavaCallTypeStatic;
+
+    if (MCStringIsEqualToCString(p_calling, "nonvirtual", kMCStringOptionCompareCaseless))
+        return MCJavaCallTypeNonVirtual;
+    
+    return MCJavaCallTypeInstance;
 }
 
 static bool
@@ -723,7 +653,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 	MCAutoStringRef t_language;
 	MCAutoStringRef t_library;
 	MCAutoStringRef t_class;
-	MCAutoStringRef t_function;
+	MCAutoStringRef t_function_string;
 	MCAutoStringRef t_calling;
 	if (!__MCScriptSplitForeignBindingString(t_rest,
 											 ':',
@@ -737,7 +667,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		!MCStringDivideAtChar(t_rest,
 							  '!',
 							  kMCStringOptionCompareExact,
-							  &t_function,
+							  &t_function_string,
 							  &t_calling))
 	{
 		MCValueRelease(t_rest);
@@ -745,6 +675,10 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 	}
 	
 	MCValueRelease(t_rest);
+	
+	MCAutoStringRef t_arguments, t_return, t_function;
+	if (!__split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return))
+		return false;
 	
 	int t_cc;
 	if (!MCStringIsEmpty(*t_calling))
@@ -759,6 +693,9 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			"cdecl",
 			"pascal",
 			"register",
+			"instance",
+			"static",
+			"nonvirtual",
 			nil
 		};
 		for(t_cc = 0; s_callconvs[t_cc] != nil; t_cc++)
@@ -792,10 +729,11 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return MCScriptThrowClassNotAllowedInCBindingError();
 		}
 		
-		void *t_module;
-		if (!__MCScriptLoadSharedLibrary(MCScriptGetModuleOfInstance(p_instance),
-										 *t_library,
-										 t_module))
+        /* TODO: This leaks a module handle! */
+        MCSLibraryRef t_module;
+		if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                 *t_library,
+                                 t_module))
 		{
 			if (r_bound == nil)
 			{
@@ -807,15 +745,15 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return true;
 		}
 		
-		void *t_pointer;
-		if (!__MCScriptPlatformLoadSharedLibraryFunction(t_module,
-														 *t_function,
-														 t_pointer))
+		void *t_pointer =
+                MCSLibraryLookupSymbol(t_module,
+                                       *t_function);
+		if (t_pointer == nullptr)
 		{
 			return false;
 		}
 		
-		p_handler -> function = t_pointer;
+		p_handler -> native . function = t_pointer;
 	}
 	else if (MCStringIsEqualToCString(*t_language,
 									  "cpp",
@@ -840,35 +778,62 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		return MCScriptThrowObjCBindingNotImplemented();
 #endif
 	}
-	else if (MCStringIsEqualToCString(*t_language,
-									  "java",
-									  kMCStringOptionCompareExact))
-	{
-#if !defined(TARGET_SUBPLATFORM_ANDROID)
-		if (r_bound == nil)
-		{
-			return MCScriptThrowJavaBindingNotSupported();
-		}
-		
-		*r_bound = false;
-		
-		return true;
-#else
-		return MCScriptThrowJavaBindingNotImplemented();
-#endif
-	}
+	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
+    {
+		p_handler -> is_java = true;
 	
+        p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
+                                                                  *t_function,
+                                                                  *t_calling);
+        
+		MCNewAutoNameRef t_class_name;
+		if (!MCNameCreate(*t_library, &t_class_name))
+			return false;
+		
+		p_handler -> java . class_name = MCValueRetain(*t_class_name);
+		
+		MCTypeInfoRef t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
+        
+        // Check that the java signature in the binding string is
+        // compatible with the types of the foreign handler
+		if (!MCJavaCheckSignature(t_signature,
+		                          *t_arguments,
+		                          *t_return,
+		                          p_handler -> java . call_type))
+            return false;
+        
+        if (!MCJavaVMInitialize())
+            return false;
+		
+        void *t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_arguments, *t_return, p_handler -> java . call_type);
+        
+		if (t_method_id != nullptr)
+		{
+			p_handler -> java . method_id = t_method_id;
+		}
+		else
+		{
+			if (r_bound == nullptr)
+			{
+                return false;
+            }
+			*r_bound = false;
+			
+			return true;
+		}
+	}
+
 #ifdef _WIN32
 	r_abi = t_cc == 0 ? FFI_DEFAULT_ABI : (ffi_abi)t_cc;
 #else
 	r_abi = FFI_DEFAULT_ABI;
 #endif
-	
-	if (r_bound != nil)
+
+	if (r_bound != nullptr)
 	{
 		*r_bound = true;
 	}
-	
+
 	return true;
 }
 
@@ -883,31 +848,46 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 								 MCScriptForeignHandlerDefinition *p_handler,
 								 bool *r_bound)
 {
-	bool t_bound = false;
+	bool t_bound = p_handler->is_bound;
 	
 	ffi_abi t_abi;
-	if (!__MCScriptResolveForeignFunctionBinding(p_instance,
-												 p_handler,
-												 t_abi,
-												 r_bound != nil ? &t_bound : nil))
+	if (!t_bound)
 	{
-		return false;
+        bool *t_bound_ptr = nullptr;
+        if (r_bound != nullptr)
+            t_bound_ptr = &t_bound;
+        
+		if (!__MCScriptResolveForeignFunctionBinding(p_instance,
+													 p_handler,
+													 t_abi,
+													 t_bound_ptr))
+		{
+			return false;
+		}
+		
+		p_handler->is_bound = t_bound;
 	}
 	
 	// If we are 'try to bind' and the foreign binding failed, then
 	// return the bound status to the caller and return.
-	if (r_bound != nil &&
+	if (r_bound != nullptr &&
 		!t_bound)
 	{
 		*r_bound = false;
 		return true;
 	}
-
+	
 	// If the function didn't produce a valid pointer either throw, or return
 	// unbound depending on the r_bound out ptr.
-	if (p_handler -> function == nil)
+	bool t_resolved;
+	if (p_handler -> is_java)
+		t_resolved = p_handler -> java . method_id != nullptr;
+	else
+		t_resolved = p_handler -> native . function != nullptr;
+	
+	if (!t_resolved)
 	{
-		if (r_bound == nil)
+		if (r_bound == nullptr)
 		{
 			return MCScriptThrowUnableToResolveForeignHandlerError(p_instance,
 																   p_handler);
@@ -924,15 +904,16 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 	// Ask the handler typeinfo to construct its ffi 'cif'. If this fails
 	// then it will already have thrown (either OOM, or there was a problem
 	// with libffi!).
-	if (!MCHandlerTypeInfoGetLayoutType(t_signature,
+	if (!p_handler -> is_java &&
+        !MCHandlerTypeInfoGetLayoutType(t_signature,
 										t_abi,
-										p_handler->function_cif))
+										p_handler->native.function_cif))
 	{
 		return false;
 	}
 	
 	// If we are a non-trapping bind, then indicate that we bound successfully.
-	if (r_bound != nil)
+	if (r_bound != nullptr)
 	{
 		*r_bound = true;
 	}

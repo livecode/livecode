@@ -20,12 +20,15 @@ Example:
 mobileControlDo "myPlayerControl", "play"
 
 Example:
+local tScrollerControlID
 mobileControlDo tScrollerControlID, "flashScrollIndicators"
 
 Example:
+local tBrowserControlName
 mobileControlDo tBrowserControlName, "execute", "alert('javascript browser test')"
 
 Example:
+local tFieldControlName
 mobileControlDo tFieldControlName, "focus"
 
 Example:
@@ -37,76 +40,89 @@ idOrName:
 The id or name of the control.
 
 action (enum):
-The action to perform. Browser Specific Actions Scroller Specific
-Actions (iOS Only) Player Specific Actions Text Input Specific Actions
-Multi-line Text Input Specific Actions Multi-line Text Input Specific
-Actions (iOS Only)
-
-	- "maxWidth (optional)": If maxWidth and maxHeight are specified, the
-      snapshot is scaled to fit within a rectangle of that size but
-      preserving the frame's aspect ratio.
-	- "maxHeight (optional)": If maxWidth and maxHeight are specified, the
-      snapshot is scaled to fit within a rectangle of that size but
-      preserving the frame's aspect ratio.
-
-
--   "advance": Move forward through the history (wraps the goForward
-    method of UIWebView).
--   "retreat": Move backward through the history (wraps the goBack
-    method of UIWebView).
--   "reload": Reload the current page (wraps the reload method of
-    UIWebView). 
--   "stop": Stop loading the current page (wraps the stopLoading method
-    of UIWebView).
--   "load baseUrl, htmlText": Loads as page consisting of the given
-    htmlText with the given baseUrl (wraps theloadHtmlString method of
-    UIWebView). Takes the following additional parameters:
--   "baseUrl": 
--   "htmlText": 
--   "execute, script": Evaluates the given JavaScript script in the
-    context of the current page (wraps the
-    stringByEvaluationJavaScriptFromString method of UIWebView). Takes
-    the following additional parameter:
--   "script": 
--   "flashScrollIndicators": Makes the scroll indicators flash
-    momentarily. 
--   "play": Start playing the content of the player.
--   "pause": Pause the content at the current position.
--   "stop": Stop playing the content of the player.
--   "prepareToPlay" (iOS Only): Make the content ready to play, but
-    don't actually commence playback.
--   "begin seeking forward" (iOS Only): Start seeking forward through
-    the content of the player.
--   "begin seeking backward" (iOS Only): Start seeking backward through
-    the content of the player.
--   "end seeking" (iOS Only): Stop seeking through the content of the
-    player. 
--   "snapshot | snapshot exactly, time, [ maxWidth, maxHeight ]" (iOS
-    Only): Take a snapshot of the movie at time milliseconds from the
-    beginning. If the 'exactly' form is specified the frame produced is
-    as close as possible to time, otherwise the nearest keyframe is
-    used. The snapshot is made available as a new image object cloned
-    from the templateImage, with data in the format as specified by the
-    global paintCompression property. Takes the following additional
-    parameters: 
--   "time": The milliseconds from the beginning.
--   "focus": Focus on the control. On iOS this will also display the
-    keyboard. 
--   "scrollRangeToVisible rangeStart, rangeLength": Ensures the given
-    text range is visible in the view by changing the scroll of the
-    field. 
--   "rangeStart": The start index of the text that is to be made
-    visible. 
--   "rangeLength": The length of the text that is to be made visible.
+The name of the <action> to perform. See Description for complete <action> listing.
 
 
 Description:
 Use the <mobileControlDo> command to execute behaviors specific to a
 particular native mobile control created using <mobileControlCreate>. An
 action may require or have a number of optional extra parameters which
-are defined in the values section below.
+are defined in the <action> listing section below.
 
-References: mobileControlCreate (command), mobileControlDelete (command),
+**<action> listing: **
+
+**Browser Specific Actions** 
+- "advance": Move forward through the history (wraps the goForward
+method of UIWebView).
+- "retreat": Move backward through the history (wraps the goBack
+method of UIWebView).
+- "reload": Reload the current page (wraps the reload method of
+UIWebView). 
+- "stop": Stop loading the current page (wraps the stopLoading method
+of UIWebView).
+- "load", *baseUrl*, *htmlText*: Loads as page consisting of the given
+    htmlText with the given baseUrl (wraps theloadHtmlString method of
+    UIWebView). Takes the following additional parameters:
+  - *baseUrl*
+  - "*htmlText*
+- "execute", *script*: <evaluate|Evaluates> the given JavaScript script in the
+context of the current page (wraps the
+stringByEvaluationJavaScriptFromString method of UIWebView). Takes
+the following additional parameter:
+  - *script*
+
+**Scroller Specific Actions (iOS Only)**
+- "flashScrollIndicators": Makes the scroll indicators flash
+momentarily. 
+
+**Player Specific Actions**
+- "play": Start playing the content of the player.
+- "pause": Pause the content at the current position.
+- "stop": Stop playing the content of the player.
+- "prepareToPlay" (iOS Only): Make the content ready to play, but
+don't actually commence playback.
+- "begin seeking forward" (iOS Only): Start seeking forward through
+the content of the player.
+- "begin seeking backward" (iOS Only): Start seeking backward through
+the content of the player.
+- "end seeking" (iOS Only): Stop seeking through the content of the
+player. 
+- "snapshot" | "snapshot exactly", *time*, [ *maxWidth*, *maxHeight* ]
+(iOS Only): Take a snapshot of the movie at time milliseconds from the
+beginning. If the 'exactly' form is specified the frame produced is
+as close as possible to time, otherwise the nearest keyframe is
+used. The snapshot is made available as a new image object cloned
+from the templateImage, with data in the format as specified by the
+<global> <paintCompression> property. Takes the following 
+additional parameters: 
+  - *time*: The milliseconds from the beginning.
+  - *maxWidth* (optional): If *maxWidth* and *maxHeight* are specified, the
+snapshot is scaled to fit within a rectangle of that size but
+preserving the frame's aspect ratio.
+  - *maxHeight* (optional): If *maxWidth* and *maxHeight* are specified, the
+snapshot is scaled to fit within a rectangle of that size but
+preserving the frame's aspect ratio.
+
+**Text Input Specific Actions**
+- "focus": Focus on the control. On iOS this will also display the
+keyboard. 
+    
+**Multi-line Text Input Specific Actions**
+- "focus": Focus on the control. On iOS this will also display the
+keyboard. 
+
+**Multi-line Text Input Specific Actions (iOS Only)**
+- "scrollRangeToVisible" *rangeStart*, *rangeLength*: Ensures the given
+text range is visible in the view by changing the scroll of the
+field. Takes the following additional parameters:
+  - *rangeStart*: The start index of the text that is to be made
+visible. 
+  - *rangeLength*: The length of the text that is to be made visible.
+
+
+References: evaluate (glossary), global (glossary), 
+mobileControlCreate (command), mobileControlDelete (command),
 mobileControlSet (command), mobileControlGet (function),
-mobileControlTarget (function), mobileControls (function)
+mobileControlTarget (function), mobileControls (function),
+paintCompression (property)
 

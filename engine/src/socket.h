@@ -48,7 +48,7 @@ public:
 	uint4 size;
 	char *until;
 	real8 timeout;
-	MCObject *optr;
+	MCObjectHandle optr;
 	MCNameRef message;
 	MCSocketread(uint4 s, char *u, MCObject *o, MCNameRef m);
 	~MCSocketread();
@@ -76,7 +76,7 @@ class MCSocketwrite : public MCDLlist
 {
 public:
 	real8 timeout;
-	MCObject *optr;
+	MCObjectHandle optr;
 	MCNameRef message;
 	char *buffer;
 	uint4 size;
@@ -130,7 +130,7 @@ public:
 	Boolean connected;
 	Boolean shared;
 	MCSocketState resolve_state;
-	MCObject *object;
+	MCObjectHandle object;
 	MCNameRef message;
 	MCSocketread *revents;
 	MCSocketwrite *wevents;

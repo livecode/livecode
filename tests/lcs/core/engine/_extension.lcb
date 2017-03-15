@@ -37,4 +37,19 @@ public handler TestExtensionDelimiterAccess()
 	return [the item delimiter, the line delimiter, the column delimiter, the row delimiter]
 end handler
 
+public handler TestExtensionExecuteScript_Do(in pScript as String, in pTarget as String, in pParams as List)
+	if pParams is the empty list and pTarget is the empty string then
+		execute script pScript
+	else if pParams is the empty list and pTarget is not the empty string then
+		resolve script object pTarget
+		execute script pScript in the result
+	else if pParams is not the empty list and pTarget is the empty string then
+		execute script pScript with pParams
+	else
+		resolve script object pTarget
+		execute script pScript in the result with pParams
+	end if
+	return the result
+end handler
+
 end library

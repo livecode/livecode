@@ -41,9 +41,9 @@ If the <uuidType> is empty or "random" a version 4 (random) UUID is
 returned. A cryptographic quality pseudo-random number generator is
 used to generate the randomness.
 
-If the <uuidType> is md5 a version 3 UUID is returned.
+If the <uuidType> is "md5" a version 3 UUID is returned.
 
-If the <uuidType> is sha1 a version 5 UUID is returned.
+If the <uuidType> is "sha1" a version 5 UUID is returned.
 
 Description:
 Use the <uuid> function to genrate a universally unique identifier.
@@ -53,6 +53,10 @@ The <uuid> returns a UUID, the type of UUID can be specified.
 If <uuidType> is "md5" or "sha1" then it returns a version 3 (md5) or 
 version 5 (sha1) UUID. Here <namespace> should be the UUID of the 
 namespace in which name sits, and <uuidName> can be any string.
+
+*Warning:* If you are using UUIDs as a security credential or any part
+of an authentication scheme, you are recommended to use only the
+"random" <uuidType>.
 
 References: md5Digest (function)
 

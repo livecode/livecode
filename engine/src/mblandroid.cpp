@@ -85,34 +85,6 @@ void MCAndroidSystem::Debug(MCStringRef p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSysModuleHandle MCAndroidSystem::LoadModule(MCStringRef p_path)
-{
-	MCAutoStringRef t_resolved_path;
-	/* UNCHECKED */ MCAndroidResolveLibraryPath(p_path, &t_resolved_path);
-	
-	MCAutoStringRefAsUTF8String t_utf8_path;
-	/* UNCHECKED */ t_utf8_path . Lock(*t_resolved_path);
-	
-	void *t_result;
-	t_result = dlopen(*t_utf8_path, RTLD_LAZY);
-	MCLog("LoadModule(%s) - %p\n", *t_utf8_path, t_result);
-	return (MCSysModuleHandle)t_result;
-}
-
-MCSysModuleHandle MCAndroidSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-{
-    MCAutoStringRefAsUTF8String t_utf8_symbol;
-    /* UNCHECKED */ t_utf8_symbol . Lock(p_symbol);
-	return (MCSysModuleHandle)dlsym((void*)p_module, *t_utf8_symbol);
-}
-
-void MCAndroidSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	dlclose((void*)p_module);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 MCSystemInterface *MCMobileCreateAndroidSystem(void)
 {
 	return new MCAndroidSystem;

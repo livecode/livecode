@@ -19,6 +19,7 @@ import sys
 import platform
 import re
 import os
+import subprocess
 
 KNOWN_PLATFORMS = (
     'linux-x86', 'linux-x86_64', 'android-armv6',
@@ -102,7 +103,7 @@ def process_env_options(opts):
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
         'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION',
-        'MS_SPEECH_SDK4', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
+        'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
         )
     for v in vars:
         opts[v] = os.getenv(v)
@@ -148,7 +149,6 @@ def process_arg_options(opts, args):
             '-Dtarget_arch': 'TARGET_ARCH',
             '-DOS': 'OS',
             '-Dperl': 'PERL',
-            '-Dms_speech_sdk4': 'MS_SPEECH_SDK4',
             '-Dms_speech_sdk5': 'MS_SPEECH_SDK5',
             '-Dquicktime_sdk': 'QUICKTIME_SDK',
             '-Gmsvs_version': 'WIN_MSVS_VERSION',
@@ -206,10 +206,7 @@ def guess_xcode_arch(target_sdk):
         else:
             return 'armv7 arm64'
     if sdk == 'iphonesimulator':
-        if int(ver) < 8:
-            return 'i386'
-        else:
-            return 'i386 x86_64'
+        return 'x86_64'
 
 def validate_target_arch(opts):
     if opts['TARGET_ARCH'] is None:
@@ -218,6 +215,11 @@ def validate_target_arch(opts):
         platform = opts['PLATFORM']
         if platform == 'emscripten':
             opts['TARGET_ARCH'] = 'js'
+            return
+
+        # Windows builds don't understand 'x86_64'
+        if platform == 'win-x86_64':
+            opts['TARGET_ARCH'] = 'x64'
             return
 
         platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
@@ -263,10 +265,25 @@ def validate_gyp_settings(opts):
     if opts['BUILD_EDITION'] is None:
         opts['BUILD_EDITION'] = 'community'
 
-def guess_java_home(os):
+def guess_java_home(platform):
+    if platform.startswith('linux'):
+        try:
+            javac_str = '/bin/javac'
+            javac_path = subprocess.check_output(['/usr/bin/env', 
+                         'readlink', '-f', '/usr' + javac_str]).strip()
+            if (os.path.isfile(javac_path) and
+                javac_path.endswith(javac_str)):
+                return javac_path[:-len(javac_str)]
+        except subprocess.CalledProcessError as e:
+            print(e)
+            pass # Fall through to other ways of guessing
+
+    # More guesses
     try:
-        return subprocess.check_output('/usr/libexec/java_home')
-    except CalledProcessError as e:
+        if os.path.isfile('/usr/libexec/java_home'):
+            return subprocess.check_output('/usr/libexec/java_home').strip()
+    except subprocess.CalledProcessError as e:
+        print(e)
         pass
     for d in ('/usr/lib/jvm/default', '/usr/lib/jvm/default-java'):
         if os.path.isdir(d):
@@ -274,8 +291,8 @@ def guess_java_home(os):
 
 def validate_java_tools(opts):
     if opts['JAVA_SDK'] is None:
-        validate_os(opts)
-        sdk = guess_java_home(os)
+        validate_platform(opts)
+        sdk = guess_java_home(opts['PLATFORM'])
         if sdk is None:
             error('Java SDK not found; set $JAVA_SDK')
         opts['JAVA_SDK'] = sdk
@@ -306,12 +323,6 @@ def guess_windows_perl():
 
     error('Perl not found; set $PERL')
 
-def guess_ms_speech_sdk4():
-    d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK')
-    if not os.path.isdir(d):
-        return None
-    return d
-
 def guess_ms_speech_sdk5():
     d = os.path.join(get_program_files_x86(), 'Microsoft Speech SDK 5.1')
     if not os.path.isdir(d):
@@ -328,9 +339,6 @@ def validate_windows_tools(opts):
     if opts['PERL'] is None:
         opts['PERL'] = guess_windows_perl()
 
-    if opts['MS_SPEECH_SDK4'] is None:
-        opts['MS_SPEECH_SDK4'] = guess_ms_speech_sdk4()
-
     if opts['MS_SPEECH_SDK5'] is None:
         opts['MS_SPEECH_SDK5'] = guess_ms_speech_sdk5()
 
@@ -338,7 +346,7 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
-        opts['WIN_MSVS_VERSION'] = '2010'
+        opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
 # Mac & iOS-specific options
@@ -375,7 +383,7 @@ def guess_android_tooldir(name):
 # in the SDK's build-tools subdirectory.  This is pretty fragile if someone
 # has (potentially?) multiple sets of build tools installed.
 def guess_android_build_tools(sdkdir):
-    dirs = listdir(os.path.join(sdkdir, 'build-tools'))
+    dirs = os.listdir(os.path.join(sdkdir, 'build-tools'))
     if len(dirs) == 1:
         return dirs[0]
     return None
@@ -478,7 +486,9 @@ def gyp_define_args(opts, names):
 
 def configure_linux(opts):
     validate_target_arch(opts)
-    args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH']]
+    validate_java_tools(opts)
+    args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_emscripten(opts):
@@ -500,14 +510,16 @@ def configure_android(opts):
                        'OBJDUMP', 'STRIP'))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
                                   '-Dcross_compile=1',
-                                  '-Gandroid_ndk_version=' + opts['ANDROID_NDK_VERSION']]
+                                  '-Gandroid_ndk_version=' + opts['ANDROID_NDK_VERSION'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_win(opts):
+    validate_target_arch(opts)
     validate_windows_tools(opts)
 
     args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
-    args += gyp_define_args(opts, {'ms_speech_sdk4': 'MS_SPEECH_SDK4',
+    args += gyp_define_args(opts, {'target_arch':    'TARGET_ARCH',
                                    'ms_speech_sdk5': 'MS_SPEECH_SDK5',
                                    'quicktime_sdk':  'QUICKTIME_SDK', })
 
@@ -519,10 +531,12 @@ def configure_win(opts):
 def configure_mac(opts):
     validate_target_arch(opts)
     validate_xcode_sdks(opts)
+    validate_java_tools(opts)
 
     args = core_gyp_args(opts) + ['-Dtarget_sdk=' + opts['XCODE_TARGET_SDK'],
                                   '-Dhost_sdk=' + opts['XCODE_HOST_SDK'],
-                                  '-Dtarget_arch=' + opts['TARGET_ARCH']]
+                                  '-Dtarget_arch=' + opts['TARGET_ARCH'],
+                                  '-Djavahome=' + opts['JAVA_SDK']]                                  
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_ios(opts):

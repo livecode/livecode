@@ -16,9 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
--- FIXME provide this on the command line
-constant kLogFilename = "_test_suite.log"
-
 private function getTestRunnerBehavior
    -- Compute the filename of the test runner
    local tTestsPath, tStack
@@ -59,7 +56,7 @@ command TestRunnerImpl_DoRun pInfo
    return the result for value
 end TestRunnerImpl_DoRun
 
-private command TestRunnerImpl_DoUsage pStatus
+command TestRunnerImpl_DoUsage pStatus
    write "Usage: _testrunner.livecodescript run [SCRIPT [COMMAND]]" & return to stderr
    quit pStatus
 end TestRunnerImpl_DoUsage

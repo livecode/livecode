@@ -18,9 +18,26 @@
 			
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'conditions':
 				[
-					'../thirdparty/libcurl/include',
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/curl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'../thirdparty/libcurl/include',
+							],
+						},
+					],
 				],
 			},
 			
@@ -57,7 +74,7 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/curl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

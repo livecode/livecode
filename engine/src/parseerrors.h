@@ -1777,6 +1777,9 @@ enum Parse_errors
 
     // {PE-0575} open: expected 'from' address
     PE_OPEN_NOFROM,
+
+    // {PE-0576} messageDigest: bad parameters
+    PE_MESSAGEDIGEST_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

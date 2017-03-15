@@ -3817,34 +3817,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         return MCListCopyAsString(*t_list, r_drives) ? True : False;
     }
-	
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-	virtual bool GetExecutablePath(MCStringRef& r_path)
-	{
-		uint32_t bufsize = 0;
-		_NSGetExecutablePath(NULL, &bufsize);
-        // Use MCMemoryNewArray to allocate the buffer, for consistency with
-        //  free() being used in MCStringCreateWithBytesAndRelease
-        char* buf;
-        if (!MCMemoryNewArray(bufsize, buf))
-            return False;
-        
-		if (_NSGetExecutablePath(buf, &bufsize) != 0)
-        {
-			MCMemoryDeleteArray(buf);
-			return False;
-		}
-
-		MCAutoStringRef t_path;
-        // [[ Bug 15062 ]] The path returned by _NSGetExecutablePath is UTF-8
-        //  encoded. We should decode it this way.
-        // We use strlen, as in MCStringCreateWithCString, to avoid the surprise
-        //  of a trailing NULL character.
-        return MCStringCreateWithBytesAndRelease((byte_t*)buf, strlen(buf), kMCStringEncodingUTF8, false, &t_path)
-            && ResolvePath(*t_path, r_path);
-	}
-
 
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
@@ -4141,75 +4113,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         
         return t_handle;
-    }
-	
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
-    {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        MCAutoStringRefAsUTF8String t_utf_path;
-        
-        if (!t_utf_path.Lock(p_filename))
-            return NULL;
-        
-        void *t_result;
-        
-        t_result = dlopen(*t_utf_path, RTLD_LAZY);
-        
-        return (MCSysModuleHandle)t_result;
-#else
-        MCAutoStringRefAsUTF8String t_utf_path;
-        
-        if (!t_utf_path.Lock(p_filename))
-            return NULL;
-        
-        CFURLRef t_url;
-        t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_utf_path, strlen(*t_utf_path), False);
-        
-        if (t_url == NULL)
-            return NULL;
-		
-        MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
-        
-        CFRelease(t_url);
-        
-        return (MCSysModuleHandle)t_result;
-#endif
-    }
-    
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
-#else
-        CFStringRef t_cf_symbol;
-       
-        MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
-        if (t_cf_symbol == NULL)
-            return NULL;
-        
-        void *t_symbol_ptr;
-        t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
-        
-        CFRelease(t_cf_symbol);
-        
-        return (MCSysModuleHandle) t_symbol_ptr;
-#endif
-    }
-    
-	virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-        
-        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
-#ifdef _SERVER
-        dlclose(p_module);
-#else
-        CFRelease((CFBundleRef)p_module);
-#endif
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
