@@ -19,6 +19,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local myTextFile
 write the formattedText of field 1 to file myTextFile
 
 Example:
@@ -52,23 +53,23 @@ unwrapped before being put in the <field(keyword)>. Double end-of-line
 single end-of-line characters are converted to spaces.
 
 The engine will interpret a numToChar(11) character in a field paragraph
-> as an explicit linebreak when the (effective) dontWrap of the
-> paragraph is false. This allows multiple &lsquo;lines&rsquo; to be
-> displayed within a single paragraph. The <formattedText> property maps
-> any explicit line breaks to newlines.
+as an explicit linebreak when the (effective) dontWrap of the
+paragraph is false. This allows multiple &lsquo;lines&rsquo; to be
+displayed within a single paragraph. The <formattedText> property maps
+any explicit line breaks to newlines.
+
 >*Note:* that since the vGrid property turns dontWrap on for the
 > paragraph, using the line-break char in table paragraphs will have no
 > effect. 
 
-Any paragraphs with listStyle set are prefixed by an appropriate
-> plain-text form of the bullet or index.
->*Note:* The listStyle property is experimental. Please refer to the
-> release notes for further information on this feature.
+Any paragraphs with <listStyle> set are prefixed by an appropriate
+plain-text form of the bullet or index.
+
 
 References: return (constant), property (glossary), character (keyword),
 characters (keyword), field (keyword), lines (keyword), field (object),
-dontWrap (property), unicodePlainText (property),
-unicodeFormattedText (property), plainText (property)
+dontWrap (property), listStyle (property), plainText (property),
+unicodeFormattedText (property), unicodePlainText (property)
 
 Tags: text processing
 
