@@ -1440,6 +1440,8 @@ Boolean MCStack::del(bool p_check_flag)
         needs = NULL;
     }
     
+    removereferences();
+    
     uint2 i = 0;
     while (i < MCnusing)
         if (MCusing[i] == this)
@@ -1455,6 +1457,51 @@ Boolean MCStack::del(bool p_check_flag)
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
+}
+
+void MCStack::removereferences()
+{
+    if (controls != NULL)
+    {
+        MCControl *t_control = controls;
+        do
+        {   t_control -> removereferences();
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    if (aclips != NULL)
+    {
+        MCAudioClip *t_aclip = aclips;
+        do
+        {   t_aclip -> removereferences();
+            t_aclip = t_aclip -> next();
+        }
+        while(t_aclip != aclips);
+    }
+    
+    if (vclips != NULL)
+    {
+        MCVideoClip *t_vclip = vclips;
+        do
+        {   t_vclip -> removereferences();
+            t_vclip = t_vclip -> next();
+        }
+        while(t_vclip != vclips);
+    }
+    
+    if (cards != NULL)
+    {
+        MCCard *t_card = cards;
+        do
+        {   t_card -> removereferences();
+            t_card = t_card -> next();
+        }
+        while(t_card != cards);
+    }
+    
+    MCObject::removereferences();
 }
 
 void MCStack::paste(void)

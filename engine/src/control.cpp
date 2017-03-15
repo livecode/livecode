@@ -500,20 +500,20 @@ Boolean MCControl::del(bool p_check_flag)
 	switch (parent->gettype())
 	{
         case CT_STACK:
-            uncacheid();
+            removereferences();
             parent.GetAs<MCStack>()->removecontrol(this);
             break;
         
         case CT_CARD:
             if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
 				return False;
-            uncacheid();
+            removereferences();
 			getstack()->removecontrol(this);
 			break;
         
         case CT_GROUP:
 			parent.GetAs<MCGroup>()->removecontrol(this, True);
-            uncacheid();
+            removereferences();
 			break;
 
         default:

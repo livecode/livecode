@@ -853,10 +853,14 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
-void MCObject::uncacheid()
+void MCObject::removereferences()
 {
     if (m_in_id_cache)
         getstack()->uncacheobjectbyid(this);
+    
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
 }
 
 bool MCObject::isdeletable(bool p_check_flag)
@@ -873,10 +877,6 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
-    MCscreen->cancelmessageobject(this, NULL);
-    removefrom(MCfrontscripts);
-    removefrom(MCbackscripts);
-    
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
 	if (m_is_parent_script)
