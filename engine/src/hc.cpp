@@ -2219,7 +2219,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	}
 	if (filetype == HC_RAW || rsize == 0)
 	{
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 		return macreadresources();
 #else
 			return IO_NORMAL;

@@ -1214,7 +1214,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 
 bool MCS_hostaddress(MCStringRef &r_host_address)
 {
-#if defined(_MACOSX)
+#if defined(_MAC_DESKTOP)
     bool t_success;
     t_success = true;
     

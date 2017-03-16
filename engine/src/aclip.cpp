@@ -598,7 +598,7 @@ Boolean MCAudioClip::open_audio()
 	}
 	return True;
 }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 Boolean MCAudioClip::open_audio() //plays a sound immediately
 {
 	if (sound != NULL)  //if sound is already open and constructed
@@ -713,7 +713,7 @@ Boolean MCAudioClip::play()
 		return False;
 	}
 	return True;
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 	SCStatus cs;       //channel status record
 	OSErr err = noErr;
 	// the sizeof(SCStatus) gives 27 bytes, but the actual record size is 24
@@ -821,7 +821,7 @@ void MCAudioClip::stop(Boolean abort)
 		waveOutClose(hwaveout);
 		hwaveout = NULL;
 	}
-#elif defined _MACOSX  //minshe
+#elif defined _MAC_DESKTOP  //minshe
 	//MAC stuff here.... Send a quiet command to stop a sound that is currenty playing
 	if (sound != NULL)
 	{
@@ -958,7 +958,7 @@ uint2 MCS_getplayloudness()
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume;
     GetDefaultOutputVolume(&volume);
     t_loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
@@ -1002,7 +1002,7 @@ void MCS_setplayloudness(uint2 p_loudness)
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume = p_loudness * 255 / 100;
     SetDefaultOutputVolume(volume | volume << 16);
 #elif defined TARGET_PLATFORM_LINUX
