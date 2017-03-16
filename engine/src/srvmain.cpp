@@ -281,10 +281,12 @@ end scriptExecutionError\
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _MAC_SERVER
 MCTheme *MCThemeCreateNative(void)
 {
 	return nil;
 }
+#endif
 
 MCUIDC *MCCreateScreenDC(void)
 {

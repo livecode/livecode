@@ -610,24 +610,6 @@
 			# Native layers
 			'src/native-layer.h',
 			'src/native-layer.cpp',
-		],
-		
-		# Sources that are only for desktop mode
-		'engine_desktop_source_files':
-		[
-			# Group "Desktop"
-			'src/desktop-dc.h',
-			'src/dsklnxmain.cpp',
-			'src/dskmain.cpp',
-			'src/dskw32main.cpp',
-			'src/dskspec.cpp',
-			'src/desktop.cpp',
-			'src/desktop-dc.cpp',
-			'src/desktop-stack.cpp',
-			'src/desktop-menu.cpp',
-			'src/desktop-image.cpp',
-			'src/desktop-ans.cpp',
-			'src/legacy_spec.cpp',
 			
 			# Group "Platform"
 			'src/platform.h',
@@ -646,6 +628,49 @@
 			'src/platform-menu.cpp',
 			'src/platform-printer.cpp',
 			'src/platform-scripting.cpp',
+			
+			# Group "Mac Platform"
+			'src/mac-internal.h',
+			'src/mac-extern.h',
+			'src/mac-abort.mm',
+			'src/mac-av-player.mm',
+			'src/mac-color.mm',
+			'src/mac-core.mm',
+			'src/mac-cursor.mm',
+			'src/mac-dialog.mm',
+			'src/mac-font.mm',
+			'src/mac-menu.mm',
+			'src/mac-pasteboard.mm',
+			'src/mac-printer.mm',
+			'src/mac-qt-player.mm',
+			'src/mac-qt-recorder.mm',
+			'src/mac-scripting.mm',
+			'src/mac-snapshot.mm',
+			'src/mac-sound.mm',
+			'src/mac-surface.mm',
+			'src/mac-window.mm',
+			'src/mac-layer.mm',
+			'src/cgimageutil.cpp',
+			'src/osxtheme.h',
+			'src/osxtheme.cpp',
+		],
+		
+		# Sources that are only for desktop mode
+		'engine_desktop_source_files':
+		[
+			# Group "Desktop"
+			'src/desktop-dc.h',
+			'src/dsklnxmain.cpp',
+			'src/dskmain.cpp',
+			'src/dskw32main.cpp',
+			'src/dskspec.cpp',
+			'src/desktop.cpp',
+			'src/desktop-dc.cpp',
+			'src/desktop-stack.cpp',
+			'src/desktop-menu.cpp',
+			'src/desktop-image.cpp',
+			'src/desktop-ans.cpp',
+			'src/legacy_spec.cpp',
 			
 			# Group "Native Layer"
 			'src/native-layer.cpp',
@@ -695,32 +720,10 @@
 			'src/lnxtextlayout.cpp',
 			
 			# Group "Desktop - Mac"
-			'src/mac-internal.h',
-			'src/mac-extern.h',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',
-			'src/osxtheme.h',
-			'src/cgimageutil.cpp',
 			'src/coretextlayout.mm',
-			'src/mac-abort.mm',
-			'src/mac-av-player.mm',
-			'src/mac-color.mm',
-			'src/mac-core.mm',
-			'src/mac-cursor.mm',
-			'src/mac-dialog.mm',
-			'src/mac-font.mm',
-			'src/mac-menu.mm',
-			'src/mac-pasteboard.mm',
-			'src/mac-printer.mm',
-			'src/mac-qt-player.mm',
-			'src/mac-qt-recorder.mm',
-			'src/mac-scripting.mm',
-			'src/mac-snapshot.mm',
-			'src/mac-sound.mm',
-			'src/mac-surface.mm',
-			'src/mac-window.mm',
-			'src/mac-layer.mm',
 			'src/osxcisupport.mm',
 			'src/osxcoreimage.cpp',
 			'src/osxfield.cpp',
@@ -728,7 +731,6 @@
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
-			'src/osxtheme.mm',
 			'src/visualeffect.h',
 			
 			# Group "Desktop - Windows"
@@ -1051,7 +1053,7 @@
 					[
 						'src/dskmac.cpp',
 						'src/srvmac.cpp',
-						'src/native-layer-mac.mm',
+						'src/native-layer-mac.cpp',
 					],
 				},
 			],

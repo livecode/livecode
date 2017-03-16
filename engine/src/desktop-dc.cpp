@@ -58,9 +58,6 @@
 
 Boolean tripleclick = False;
 
-static CFAbsoluteTime s_animation_start_time = 0;
-static CFAbsoluteTime s_animation_current_time = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCScreenDC::MCScreenDC(void)
@@ -127,8 +124,6 @@ Boolean MCScreenDC::open()
 	MCPlatformCreateMenu(icon_menu);
 	MCPlatformSetIconMenu(icon_menu);
 
-	s_animation_start_time = CFAbsoluteTimeGetCurrent();
-	
 	return True;
 }
 
@@ -872,8 +867,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
                 done = True;
         }
 		
-		s_animation_current_time = CFAbsoluteTimeGetCurrent();
-		
 		// If 'quit' has been set then we must have got a finalization request
 		if (MCquit)
 		{
@@ -1139,23 +1132,6 @@ void MCStacklist::hidepaletteschanged(void)
 		}
 		while (tptr != stacks);
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-double MCMacGetAnimationStartTime(void)
-{
-	return s_animation_start_time;
-}
-
-double MCMacGetAnimationCurrentTime(void)
-{
-	return s_animation_current_time;
-}
-
-void MCMacBreakWait(void)
-{
-	MCPlatformBreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

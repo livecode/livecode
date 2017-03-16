@@ -772,6 +772,8 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 	}
 	
 	[t_pool release];
+    
+    m_animation_current_time = CFAbsoluteTimeGetCurrent();
 	
 	return t_event != nil;
 }
@@ -1934,6 +1936,11 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 extern "C" bool MCModulesInitialize(void);
 extern "C" void MCModulesFinalize(void);
 
+MCMacPlatformCore::MCMacPlatformCore(void)
+{
+    m_animation_start_time = CFAbsoluteTimeGetCurrent();
+}
+
 MCMacPlatformCore::~MCMacPlatformCore()
 {
     if (m_abort_key_thread != nil)
@@ -2030,6 +2037,13 @@ void MCMacPlatformCore::DisableScreenUpdates(void)
 void MCMacPlatformCore::EnableScreenUpdates(void)
 {
     NSEnableScreenUpdates();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void)
+{
+    return MCPlatform::makeRef<MCMacPlatformCore>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

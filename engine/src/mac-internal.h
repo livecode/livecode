@@ -758,33 +758,13 @@ struct MCModalSession
     bool is_done;
 };
 
-class MCMacCommonPlatformCore: public MCPlatform::UnreachableCore
-{
-public:
-    constexpr MCMacCommonPlatformCore() = default;
-    virtual ~MCMacCommonPlatformCore(void) {}
-    
-    // Theme
-    virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool);
-    virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int);
-    virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
-    virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
-    virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
-    
-    // Callbacks
-    virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
-    virtual void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
-protected:
-    // Engine callbacks
-    MCPlatformCallbackRef m_callback = nil;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCMacPlatformCore: public MCMacCommonPlatformCore
+class MCMacPlatformCore: public MCPlatform::Core
 {
 public:
-    constexpr MCMacPlatformCore(void) = default;
+    MCMacPlatformCore(void);
     virtual ~MCMacPlatformCore(void);
     
     virtual int Run(int argc, char *argv[], char *envp[]);
@@ -960,6 +940,32 @@ public:
     virtual MCPlatformNativeLayerRef CreateNativeLayer(void);
     virtual bool CreateNativeContainer(void *&r_view);
     virtual void ReleaseNativeView(void *p_view);
+    
+    // Theme
+    virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool);
+    virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int);
+    virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
+    virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
+    virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
+    virtual bool DrawTheme(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr);
+    virtual bool LoadTheme(void);
+    virtual uint16_t GetThemeId(void);
+    virtual uint16_t GetThemeFamilyId(void);
+    virtual bool IsThemeWidgetSupported(Widget_Type wtype);
+    virtual int32_t GetThemeMetric(Widget_Metric wmetric);
+    virtual int32_t GetThemeWidgetMetric(const MCWidgetInfo &winfo,Widget_Metric wmetric);
+    virtual void GetThemeWidgetRect(const MCWidgetInfo &winfo, Widget_Metric wmetric, const MCRectangle &srect, MCRectangle &drect);
+    virtual bool GetThemePropBool(Widget_ThemeProps themeprop);
+    virtual bool DrawThemeWidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &d);
+    virtual Widget_Part HitTestTheme(const MCWidgetInfo &winfo, int2 mx, int2 my, const MCRectangle &drect);
+    virtual void UnloadTheme(void);
+    virtual bool DrawThemeFocusBorder(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect);
+    virtual bool DrawThemeMetalBackground(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect, MCObject *p_object);
+    
+    // Callbacks
+    virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
+    virtual void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
+
 private:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1067,7 +1073,13 @@ private:
     MCMacPlatformMenu * m_menubar = nil;
     uint32_t m_quitting_state_count = 0;
     uint8_t *m_quitting_states = nil;
-    MCMacPlatformMenu *m_icon_menu = nil;    
+    MCMacPlatformMenu *m_icon_menu = nil;
+    
+    CFAbsoluteTime m_animation_start_time = 0;
+    CFAbsoluteTime m_animation_current_time = 0;
+    
+    // Engine callbacks
+    MCPlatformCallbackRef m_callback = nil;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

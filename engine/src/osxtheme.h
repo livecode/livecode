@@ -21,72 +21,76 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #endif
 
+#include "osxprefix.h"
+
 struct MCThemeDrawInfo
 {
-	MCRectangle dest;
-	union
-	{
-		struct
-		{
-			HIThemeTrackDrawInfo info;
-			ItemCount count;
-		} slider;
-		
-		struct
-		{
-			HIThemeTrackDrawInfo info;
-		} progress;
-		
-		struct
-		{
-			HIThemeTrackDrawInfo info;
-			Boolean horizontal;
-		} scrollbar;
-		
-		struct
-		{
-			HIRect bounds;
-			HIThemeButtonDrawInfo info;
-		} button;
-		
-		struct
-		{
-			Rect bounds;
-			ThemeDrawState state;
-			bool is_filled;
-			bool is_secondary;
-		} group;
-		
-		struct
-		{
-			Rect bounds;
-			ThemeDrawState state;
-			bool is_list;
-		} frame;
-		
-		struct
-		{
-			Rect bounds;
-			ThemeDrawState state;
-		} tab_pane, background;
-		
-		struct
-		{
-			Rect bounds;
-			bool is_disabled;
-			bool is_hilited;
-			bool is_pressed;
-			bool is_first;
-			bool is_last;
-		} tab;
-		
-		struct
-		{
-			Rect bounds;
-			Boolean focused;
-		} focus_rect;
-	};
+    MCRectangle dest;
+    union
+    {
+        struct
+        {
+            HIThemeTrackDrawInfo info;
+            ItemCount count;
+        } slider;
+        
+        struct
+        {
+            HIThemeTrackDrawInfo info;
+        } progress;
+        
+        struct
+        {
+            HIThemeTrackDrawInfo info;
+            Boolean horizontal;
+        } scrollbar;
+        
+        struct
+        {
+            HIRect bounds;
+            HIThemeButtonDrawInfo info;
+        } button;
+        
+        struct
+        {
+            Rect bounds;
+            ThemeDrawState state;
+            bool is_filled;
+            bool is_secondary;
+        } group;
+        
+        struct
+        {
+            Rect bounds;
+            ThemeDrawState state;
+            bool is_list;
+        } frame;
+        
+        struct
+        {
+            Rect bounds;
+            ThemeDrawState state;
+        } tab_pane, background;
+        
+        struct
+        {
+            Rect bounds;
+            bool is_disabled;
+            bool is_hilited;
+            bool is_pressed;
+            bool is_first;
+            bool is_last;
+        } tab;
+        
+        struct
+        {
+            Rect bounds;
+            Boolean focused;
+        } focus_rect;
+    };
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 class MCNativeTheme: public MCTheme
 {

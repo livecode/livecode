@@ -19,10 +19,10 @@
 #include "graphics.h"
 #include "imagebitmap.h"
 
-#if defined(TARGET_PLATFORM_MACOS_X)
-#include <Carbon/Carbon.h>
-#elif defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(TARGET_SUBPLATFORM_IPHONE)
 #include <CoreGraphics/CoreGraphics.h>
+#else
+#include <Carbon/Carbon.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@
 // IM-2014-09-29: [[ Bug 13451 ]] return the sRGB colorspace (as a CGColorSpaceRef).
 bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace)
 {
-	CGColorSpaceRef t_colorspace;
+	CGColorSpaceRef t_colorspace = nullptr;
 	
 #if defined(TARGET_PLATFORM_MACOS_X)
 	// on OSX request sRGB by name.
