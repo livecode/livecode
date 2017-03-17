@@ -1,8 +1,28 @@
+/* Copyright (C) 2003-2017 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #ifndef __MC_MAC_PLATFORM__
 #define __MC_MAC_PLATFORM__
 
 #import <AppKit/AppKit.h>
 #include <Carbon/Carbon.h>
+
+#include "typedefs.h"
+#include "platform.h"
+#include "platform-internal.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -821,8 +841,8 @@ public:
     virtual void ApplicationBecomePseudoModalFor(NSWindow *p_window);
     virtual NSWindow *ApplicationPseudoModalFor(void);
     virtual bool ApplicationSendEvent(NSEvent *p_event);
-    bool GetResponderChangeLock(void) {return m_lock_responder_change; }
-    void SetResponderChangeLock(bool p_lock_responder_change) { m_lock_responder_change = p_lock_responder_change; }
+    virtual bool GetResponderChangeLock(void) {return m_lock_responder_change; }
+    virtual void SetResponderChangeLock(bool p_lock_responder_change) { m_lock_responder_change = p_lock_responder_change; }
     
     // Window mask
     virtual MCPlatformWindowMaskRef CreateWindowMask(void);
@@ -836,8 +856,8 @@ public:
     virtual MCPlatformDialogResult EndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type);
     virtual void BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
     virtual MCPlatformDialogResult EndFolderDialog(MCStringRef& r_selected_folder);
-    void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
-    MCPlatformDialogResult EndOpenSaveDialog(void);
+    virtual void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
+    virtual MCPlatformDialogResult EndOpenSaveDialog(void);
     
     // Print dialog
     virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void);
@@ -869,8 +889,8 @@ public:
     // Events
     virtual void FlushEvents(MCPlatformEventMask p_mask);
     virtual uint32_t GetEventTime(void);
-    bool GetInsideFocusEvent(void) {return m_inside_focus_event; }
-    void SetInsideFocusEvent(bool p_inside_focus_event) { m_inside_focus_event = p_inside_focus_event; }
+    virtual bool GetInsideFocusEvent(void) {return m_inside_focus_event; }
+    virtual void SetInsideFocusEvent(bool p_inside_focus_event) { m_inside_focus_event = p_inside_focus_event; }
     
     // Mice
     virtual MCPlatformCursorRef CreateCursor(void);
@@ -897,8 +917,8 @@ public:
     virtual void SyncMouseBeforeDragging(void);
     virtual void SyncMouseAfterTracking(void);
     virtual void HandleModifiersChanged(MCPlatformModifiers p_modifiers);
-    bool GetCursorIsHidden(void) { return m_cursor_is_hidden; }
-    void SetCursorIsHidden(bool p_hidden) { m_cursor_is_hidden = p_hidden; }
+    virtual bool GetCursorIsHidden(void) { return m_cursor_is_hidden; }
+    virtual void SetCursorIsHidden(bool p_hidden) { m_cursor_is_hidden = p_hidden; }
     
     // Modifier Keys
     virtual MCPlatformModifiers GetModifiersState(void);
@@ -966,7 +986,9 @@ public:
     virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
     virtual void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
 
-private:
+    // Platform extensions
+    virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
+protected:
     // Sound
     void GetGlobalVolume(double& r_volume);
     void SetGlobalVolume(double p_volume);

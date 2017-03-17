@@ -2039,11 +2039,8 @@ void MCMacPlatformCore::EnableScreenUpdates(void)
     NSEnableScreenUpdates();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-MCPlatform::Ref<MCPlatformCore> MCMacPlatformCreateCore(void)
+bool MCMacPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
 {
-    return MCPlatform::makeRef<MCMacPlatformCore>();
+    return false;
 }
 
-////////////////////////////////////////////////////////////////////////////////

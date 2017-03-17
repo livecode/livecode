@@ -636,6 +636,7 @@
 			'src/mac-av-player.mm',
 			'src/mac-color.mm',
 			'src/mac-core.mm',
+			'src/mac-community-core.mm',
 			'src/mac-cursor.mm',
 			'src/mac-dialog.mm',
 			'src/mac-font.mm',

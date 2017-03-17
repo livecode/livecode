@@ -605,6 +605,8 @@ namespace MCPlatform {
         virtual MCPlatformCallbackRef GetCallback(void) = 0;
         virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
         
+        // Platform extensions
+        virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface) = 0;
     };
     
     typedef Ref<Core> CoreRef;
