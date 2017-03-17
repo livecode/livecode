@@ -267,6 +267,4 @@ hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
     return t_context;
 }
 
-#undef ELF_STEP
-
 ////////////////////////////////////////////////////////////////////////////////
