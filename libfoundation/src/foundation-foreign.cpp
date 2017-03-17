@@ -18,8 +18,10 @@
 #include <foundation-auto.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 #include <limits>
+#include <type_traits>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +33,93 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
+
+struct bool_type_desc_t {
+    using c_type = bool;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
+    static constexpr auto& base_type_info = kMCNullTypeInfo;
+    static constexpr auto& type_info = kMCBoolTypeInfo;
+    static constexpr auto is_optional = false;
+    static constexpr auto is_bridgable = true;
+    using bridge_type = MCBooleanRef;
+    static constexpr auto& bridge_type_info = kMCBooleanTypeInfo;
+    static constexpr auto& hash_func = MCHashBool;
+};
+
+template<typename CType>
+struct numeric_type_desc_t {
+    using c_type = CType;
+    static constexpr auto& base_type_info = kMCNullTypeInfo;
+    static constexpr auto is_optional = false;
+    static constexpr auto is_bridgable = true;
+    using bridge_type = MCNumberRef;
+    static constexpr auto& bridge_type_info = kMCNumberTypeInfo;
+};
+
+template<typename CType>
+struct integral_type_desc_t: public numeric_type_desc_t<CType> {
+    static constexpr auto& hash_func = MCHashInt<CType>;
+};
+
+struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt32;
+    static constexpr auto& type_info = kMCUIntTypeInfo;
+    static constexpr auto describe_format = "<foreign unsigned integer %u>";
+};
+struct int_type_desc_t: public integral_type_desc_t<integer_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt32;
+    static constexpr auto& type_info = kMCIntTypeInfo;
+    static constexpr auto describe_format = "<foreign integer %i>";
+    static constexpr auto& hash_func = MCHashInteger;
+};
+struct size_type_desc_t: public integral_type_desc_t<size_t>  {
+    static_assert(SIZE_MAX == UINT64_MAX || SIZE_MAX == UINT32_MAX,
+                  "Unsupported size for size_t");
+    static constexpr auto primitive_type =
+        ((SIZE_MAX == UINT64_MAX) ?
+         kMCForeignPrimitiveTypeUInt64 :
+         kMCForeignPrimitiveTypeUInt32);
+    static constexpr auto& type_info = kMCSizeTypeInfo;
+    static constexpr auto describe_format = "<foreign size %zu>";
+    static constexpr auto& hash_func = MCHashUSize;
+};
+struct ssize_type_desc_t: public integral_type_desc_t<ssize_t>  {
+    static_assert(SSIZE_MAX == INT64_MAX || SSIZE_MAX == INT32_MAX,
+                  "Unsupported size for ssize_t");
+    static constexpr auto primitive_type =
+        ((SSIZE_MAX == INT64_MAX) ?
+         kMCForeignPrimitiveTypeSInt64 :
+         kMCForeignPrimitiveTypeSInt32);
+    static constexpr auto& type_info = kMCSSizeTypeInfo;
+    static constexpr auto describe_format = "<foreign signed size %zd>";
+    static constexpr auto& hash_func = MCHashSize;
+};
+
+struct float_type_desc_t: public numeric_type_desc_t<float> {
+    using c_type = float;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeFloat32;
+    static constexpr auto& type_info = kMCFloatTypeInfo;
+    static constexpr auto describe_format = "<foreign float %g>";
+    static constexpr auto& hash_func = MCHashDouble;
+};
+struct double_type_desc_t: public numeric_type_desc_t<double> {
+    using c_type = double;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeFloat64;
+    static constexpr auto& type_info = kMCDoubleTypeInfo;
+    static constexpr auto describe_format = "<foreign double %g>";
+    static constexpr auto& hash_func = MCHashDouble;
+};
+
+struct pointer_type_desc_t {
+    using c_type = void*;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypePointer;
+    static constexpr auto is_optional = true;
+    static constexpr auto is_bridgable = false;
+    static constexpr auto& type_info = kMCPointerTypeInfo;
+    static constexpr auto describe_format = "<foreign pointer %p>";
+    static constexpr auto& base_type_info = kMCNullTypeInfo;
+    static constexpr auto& hash_func = MCHashPointer;
+};
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MCTypeInfoRef kMCForeignExportErrorTypeInfo;
@@ -182,545 +271,395 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename OverflowedType>
 static bool
-__throw_numeric_overflow(MCTypeInfoRef p_error, MCTypeInfoRef p_type)
+__throw_numeric_overflow(MCTypeInfoRef p_error)
 {
     return MCErrorCreateAndThrow(p_error,
-                                 "type", p_type,
+                                 "type", OverflowedType::type_info,
                                  "reason", MCSTR("numeric overflow"),
                                  nil);
 }
 
-// bool foreign type handlers
+/* ----------------------------------------------------------------
+ * Generic implementations
+ * ---------------------------------------------------------------- */
 
-static void __bool_finalize(void *)
+namespace /* anonymous */ {
+
+/* We need to be able to partially specialize describe(), doimport()
+ * and doexport() as they have very type specific requirements.
+ * Unfortunately, you can't partially specialize a function template.
+ * The correct thing to do in this case is to have a single function
+ * template that hands off to a functor template -- because struct
+ * templates _can_ be partially specialized.
+ *
+ * See also "Why not specialize function templates?"
+ * http://gotw.ca/publications/mill17.htm
+ */
+
+template<typename TypeDesc>
+struct Describe
 {
-}
-
-static bool __bool_copy(void *from, void *to)
-{
-    *(bool *)to = *(bool *)from; return true;
-}
-
-static bool __bool_equal(void *left, void *right, bool& r_equal)
-{
-    r_equal = *(bool *)left == *(bool *)right; return true;
-}
-
-static bool __bool_hash(void *value, hash_t& r_hash)
-{
-    r_hash = (hash_t)*(bool *)value; return true;
-}
-
-static bool __bool_import(void *contents, bool release, MCValueRef& r_value)
-{
-    if (*(bool *)contents)
-        r_value = MCValueRetain(kMCTrue);
-    else
-        r_value = MCValueRetain(kMCFalse);
-    return true;
-}
-
-static bool __bool_export(MCValueRef value, bool release, void *contents)
-{
-    *(bool *)contents = value == kMCTrue;
-    if (release)
-        MCValueRelease(value);
-    return true;
-}
-
-// pointer handlers
-
-static bool __pointer_initialize(void *contents)
-{
-    *(void **)contents = nil;
-    return true;
-}
-
-static void __pointer_finalize(void *contents)
-{
-}
-
-static bool __pointer_defined(void *contents)
-{
-    return *(void **)contents != nil;
-}
-
-static bool __pointer_copy(void *from, void *to)
-{
-    *(void **)to = *(void **)from;
-    return true;
-}
-
-static bool __pointer_equal(void *left, void *right, bool& r_equal)
-{
-    r_equal = *(void **)left == *(void **)right;
-    return true;
-}
-
-static bool __pointer_hash(void *value, hash_t& r_hash)
-{
-    r_hash = MCHashPointer(*(void **)value);
-    return true;
-}
-
-
-// numeric foreign type handlers
-
-template<typename T> static void __numeric_finalize(void *)
-{
-}
-
-template<typename T> static bool __numeric_copy(void *from, void *to)
-{
-    *(T *)to = *(T *)from;
-    return true;
-}
-
-template<typename T> static bool __numeric_equal(void *left, void *right, bool& r_equal)
-{
-    r_equal = *(T *)left == *(T *)right;
-    return true;
-}
-
-static bool __int_hash(void *value, hash_t& r_hash)
-{
-    r_hash = MCHashInteger(*(integer_t *)value);
-    return true;
-}
-
-static bool
-__uint_hash(void *value,
-            hash_t & r_hash)
-{
-	r_hash = MCHashUInteger(*(uinteger_t *) value);
-	return true;
-}
-
-static bool __float_hash(void *value, hash_t& r_hash)
-{
-    r_hash = MCHashDouble(*(float *)value);
-    return true;
-}
-
-static bool __double_hash(void *value, hash_t& r_hash)
-{
-    r_hash = MCHashDouble(*(double *)value);
-    return true;
-}
-
-static bool
-__size_hash (void *value,
-             hash_t & r_hash)
-{
-	r_hash = MCHashUSize(*reinterpret_cast<size_t *>(value));
-	return true;
-}
-
-static bool
-__ssize_hash (void *value,
-             hash_t & r_hash)
-{
-	r_hash = MCHashSize(*reinterpret_cast<ssize_t *>(value));
-	return true;
-}
-
-static bool __int_import(void *contents, bool release, MCValueRef& r_value)
-{
-    return MCNumberCreateWithInteger(*(integer_t *)contents, (MCNumberRef&)r_value);
-}
-
-static bool __uint_import(void *contents, bool release, MCValueRef& r_value)
-{
-    return MCNumberCreateWithUnsignedInteger(*(uinteger_t *)contents, (MCNumberRef&)r_value);
-}
-
-static bool
-__size_import (void *contents,
-               bool release,
-               MCValueRef & r_value)
-{
-	size_t t_value = *static_cast<size_t *>(contents);
-
-    if (t_value <= UINTEGER_MAX)
+    static bool describe(typename TypeDesc::c_type p_value, MCStringRef& r_description)
     {
-        return MCNumberCreateWithUnsignedInteger(uinteger_t(t_value),
-                                                 reinterpret_cast<MCNumberRef&>(r_value));
+        return MCStringFormat(r_description, TypeDesc::describe_format, p_value);
     }
-#ifdef __64_BIT__
-    else if (t_value <= (1ULL << std::numeric_limits<double>::digits))
+};
+
+template<typename TypeDesc, typename Enable = void>
+struct DoExport
+{
+    static_assert(sizeof(typename TypeDesc::c_type) == 0, "Missing export specialization");
+    static bool doexport(typename TypeDesc::bridge_type p_boxed_value, typename TypeDesc::c_type& r_value)
     {
-        return MCNumberCreateWithReal(double(t_value),
-                                      reinterpret_cast<MCNumberRef&>(r_value));
+        return false;
     }
-#endif
-    else
+};
+
+template<typename TypeDesc, typename Enable = void>
+struct DoImport
+{
+    static_assert(sizeof(typename TypeDesc::c_type) == 0, "Missing import specialization");
+    static bool doimport(typename TypeDesc::c_type p_value, typename TypeDesc::bridge_type& r_boxed_value)
     {
-        return __throw_numeric_overflow(kMCForeignImportErrorTypeInfo,
-                                        kMCSizeTypeInfo);
-	}
+        return false;
+    }
+};
+
+template <typename TypeDesc>
+bool initialize(void *contents)
+{
+    static_assert(TypeDesc::is_optional, "This type is not optional");
+    *static_cast<typename TypeDesc::c_type *>(contents) = typename TypeDesc::c_type();
+    return true;
 }
 
-static bool
-__ssize_import (void *contents,
-               bool release,
-               MCValueRef & r_value)
+template <typename TypeDesc>
+void finalize(void *contents)
 {
-	ssize_t t_value = *static_cast<ssize_t *>(contents);
+}
+
+template <typename TypeDesc>
+bool defined(void *contents)
+{
+    static_assert(TypeDesc::is_optional, "This type is not optional");
+    return *static_cast<typename TypeDesc::c_type *>(contents) == typename TypeDesc::c_type();
+}
+
+template <typename TypeDesc>
+bool equal(void *left, void *right, bool& r_equal)
+{
+    r_equal = *static_cast<typename TypeDesc::c_type *>(left) == *static_cast<typename TypeDesc::c_type *>(right);
+    return true;
+}
+
+template <typename TypeDesc>
+bool copy(void *from, void *to)
+{
+    *static_cast<typename TypeDesc::c_type *>(to) = *static_cast<typename TypeDesc::c_type *>(from);
+    return true;
+}
+
+template <typename TypeDesc>
+bool move(void *from, void *to)
+{
+    return copy<TypeDesc>(from, to);
+}
+
+template <typename TypeDesc>
+bool hash(void *value, hash_t& r_hash)
+{
+    r_hash = TypeDesc::hash_func(*static_cast<typename TypeDesc::c_type *>(value));
+    return true;
+}
+
+template <typename TypeDesc>
+bool describe(void *contents, MCStringRef& r_string)
+{
+    return Describe<TypeDesc>::describe(*static_cast<typename TypeDesc::c_type *>(contents), r_string);
+}
+
+template <typename TypeDesc>
+bool doexport(MCValueRef p_value, bool p_release, void *contents)
+{
+    static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
+    if (!DoExport<TypeDesc>::doexport(static_cast<typename TypeDesc::bridge_type>(p_value),
+                                      *static_cast<typename TypeDesc::c_type *>(contents)))
+    {
+        return false;
+    }
     
-    if (t_value >= INTEGER_MIN && t_value <= INTEGER_MAX)
+    if (p_release)
     {
-        return MCNumberCreateWithInteger(integer_t(t_value),
-                                         reinterpret_cast<MCNumberRef&>(r_value));
+        MCValueRelease(p_value);
     }
-#ifdef __64_BIT__
-    else if (t_value >= -(1LL << std::numeric_limits<double>::digits) &&
-             t_value <= (1LL << std::numeric_limits<double>::digits))
-    {
-        return MCNumberCreateWithReal(double(t_value),
-                                      reinterpret_cast<MCNumberRef&>(r_value));
-    }
-#endif
-    else
-    {
-        return __throw_numeric_overflow(kMCForeignImportErrorTypeInfo,
-                                        kMCSSizeTypeInfo);
-	}
-}
-
-static bool __float_import(void *contents, bool release, MCValueRef& r_value)
-{
-    return MCNumberCreateWithReal(*(float *)contents, (MCNumberRef&)r_value);
-}
-
-static bool __double_import(void *contents, bool release, MCValueRef& r_value)
-{
-    return MCNumberCreateWithReal(*(double *)contents, (MCNumberRef&)r_value);
-}
-
-template <typename T>
-static bool
-__any_int_export(MCValueRef value,
-                 bool release,
-                 void *contents,
-                 MCTypeInfoRef typeinfo)
-{
-    // Fetch the number as a double
-    double t_value =
-            MCNumberFetchAsReal(static_cast<MCNumberRef>(value));
- 
-    // First check that the value is within the contiguous integer range
-    // of doubles. If that succeeds, then check it fits within the target
-    // integer type.
-    if (t_value < double(-(1LL << std::numeric_limits<double>::digits)) ||
-        t_value > double(1LL << std::numeric_limits<double>::digits) ||
-        t_value < double(std::numeric_limits<T>::min()) ||
-        t_value > double(std::numeric_limits<T>::max()))
-    {
-        return __throw_numeric_overflow(kMCForeignExportErrorTypeInfo,
-                                        typeinfo);
-    }
-
-    *(T *)contents = T(t_value);
-
-    if (release)
-        MCValueRelease(value);
     
     return true;
 }
 
-static bool
-__int_export(MCValueRef value, bool release, void *contents)
+template <typename TypeDesc>
+bool doimport(void *contents, bool p_release, MCValueRef& r_value)
 {
-    return __any_int_export<integer_t>(value, release, contents, kMCIntTypeInfo);
+    static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
+    return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
+                                        reinterpret_cast<typename TypeDesc::bridge_type&>(r_value));
 }
 
-static bool
-__uint_export(MCValueRef value, bool release, void *contents)
-{
-	return __any_int_export<uinteger_t>(value, release, contents, kMCUIntTypeInfo);
-}
+/* ---------- bool specializations */
 
-static bool
-__size_export(MCValueRef value, bool release, void *contents)
-{
-    return __any_int_export<size_t>(value, release, contents, kMCSizeTypeInfo);
-}
 
-static bool
-__ssize_export(MCValueRef value, bool release, void *contents)
+/* We need to specialize describe for bool because it returns fixed
+ * strings instead of using a format string. */
+template <>
+struct Describe<bool_type_desc_t>
 {
-    return __any_int_export<ssize_t>(value, release, contents, kMCSSizeTypeInfo);
-}
+    static bool describe(bool p_value, MCStringRef& r_string)
+    {
+        return MCStringFormat(r_string, p_value ? "<foreign true>" : "<foreign false>");
+    }
+};
 
-static bool __float_export(MCValueRef value, bool release, void *contents)
+template <>
+struct DoImport<bool_type_desc_t>
 {
-    *(float *)contents = float(MCNumberFetchAsReal((MCNumberRef)value));
-    if (release)
-        MCValueRelease(value);
-    return true;
-}
+    static bool doimport(bool p_value, MCBooleanRef& r_boxed_value)
+    {
+        r_boxed_value = MCValueRetain(p_value ? kMCTrue : kMCFalse);
+        return true;
+    }
+};
 
-static bool __double_export(MCValueRef value, bool release, void *contents)
+template <>
+struct DoExport<bool_type_desc_t>
 {
-    *(double *)contents = MCNumberFetchAsReal((MCNumberRef)value);
-    if (release)
-        MCValueRelease(value);
-    return true;
-}
+    static bool doexport(MCValueRef p_boxed_value, bool& r_value)
+    {
+        r_value = (p_boxed_value == kMCTrue);
+        return true;
+    }
+};
 
-static bool
-__bool_describe (void *contents,
-                 MCStringRef & r_string)
-{
-	return MCStringCopy (MCSTR(*((bool *) contents) ? "<foreign true>" : "<foreign false>"), r_string);
-}
+/* ---------- pointer specializations */
 
-static bool
-__int_describe (void *contents,
-                MCStringRef & r_string)
-{
-	return MCStringFormat (r_string, "<foreign integer %i>",
-	                       *((integer_t *) contents));
-}
+/* ---------- floating-point numeric specializations */
 
-static bool
-__uint_describe (void *contents,
-                 MCStringRef & r_string)
+template <typename RealType>
+struct DoExport<
+    RealType, typename std::enable_if<std::is_floating_point<typename RealType::c_type>::value>::type>
 {
-	return MCStringFormat (r_string, "<foreign unsigned integer %u>",
-	                       *((uinteger_t *) contents));
-}
+    static bool doexport(MCNumberRef p_boxed_value, typename RealType::c_type& r_value)
+    {
+        r_value = typename RealType::c_type(MCNumberFetchAsReal(p_boxed_value));
+        return true;
+    }
+};
 
-static bool
-__float_describe (void *contents,
-                  MCStringRef & r_string)
+template <typename RealType>
+struct DoImport<
+    RealType, typename std::enable_if<std::is_floating_point<typename RealType::c_type>::value>::type>
 {
-	return MCStringFormat (r_string, "<foreign float %g>",
-	                       (double) *((float *) contents));
-}
+    static bool doimport(typename RealType::c_type& p_value, MCNumberRef& r_boxed_value)
+    {
+        return MCNumberCreateWithReal(p_value, r_boxed_value);
+    }
+};
 
-static bool
-__double_describe (void *contents,
-                   MCStringRef & r_string)
-{
-	return MCStringFormat (r_string, "<foreign double %g>",
-	                       *((double *) contents));
-}
+/* ---------- integer numeric specializations */
 
-static bool
-__pointer_describe (void *contents,
-                    MCStringRef & r_string)
+template <typename IntType>
+struct DoExport<
+    IntType, typename std::enable_if<std::is_integral<typename IntType::c_type>::value>::type>
 {
-	return MCStringFormat (r_string, "<foreign pointer %p>",
-	                       *((void **) contents));
-}
+    static bool doexport(MCNumberRef p_boxed_value, typename IntType::c_type& r_value)
+    {
+        // Fetch the number as a double
+        double t_value = MCNumberFetchAsReal(p_boxed_value);
 
-static bool
-__size_describe (void *contents,
-                 MCStringRef & r_string)
-{
-	return MCStringFormat (r_string, "<foreign size %zu>",
-	                       *((size_t *) contents));
-}
+        // First check that the value is within the contiguous integer range
+        // of doubles. If that succeeds, then check it fits within the target
+        // integer type.
+        if (t_value < double(-(1LL << std::numeric_limits<double>::digits)) ||
+            t_value > double(1LL << std::numeric_limits<double>::digits) ||
+            t_value < double(std::numeric_limits<typename IntType::c_type>::min()) ||
+            t_value > double(std::numeric_limits<typename IntType::c_type>::max()))
+        {
+            return __throw_numeric_overflow<IntType>(kMCForeignExportErrorTypeInfo);
+        }
 
-static bool
-__ssize_describe (void *contents,
-                 MCStringRef & r_string)
-{
-	return MCStringFormat (r_string, "<foreign ssize %zd>",
-	                       *((ssize_t *) contents));
-}
+        r_value = typename IntType::c_type(t_value);
 
-static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc, MCTypeInfoRef& r_typeinfo)
+        return true;
+    }
+};
+
+template <typename IntType>
+struct DoImport<
+    IntType, typename std::enable_if<std::is_integral<typename IntType::c_type>::value &&
+                                     std::is_signed<typename IntType::c_type>::value>::type>
 {
-    MCAutoStringRef t_name_string;
-    if (!MCStringCreateWithCString(p_name, &t_name_string))
-        return false;
-    MCNewAutoNameRef t_name_name;
-    if (!MCNameCreate(*t_name_string, &t_name_name))
-        return false;
-	
-	if (!MCNamedForeignTypeInfoCreate(*t_name_name, p_desc, r_typeinfo))
-		return false;
-	
-    return true;
-}
+    static bool doimport(typename IntType::c_type p_value, MCNumberRef& r_boxed_value)
+    {
+        if (p_value >= INTEGER_MIN && p_value <= INTEGER_MAX)
+        {
+            return MCNumberCreateWithInteger(integer_t(p_value), r_boxed_value);
+        }
+        else if (p_value >= -(1LL << std::numeric_limits<double>::digits) &&
+                 p_value <= (1LL << std::numeric_limits<double>::digits))
+        {
+            return MCNumberCreateWithReal(double(p_value), r_boxed_value);
+        }
+        else
+        {
+            return __throw_numeric_overflow<IntType>(kMCForeignExportErrorTypeInfo);
+        }
+    }
+};
+
+template <typename UIntType>
+struct DoImport<
+    UIntType, typename std::enable_if<std::is_integral<typename UIntType::c_type>::value &&
+                                      std::is_unsigned<typename UIntType::c_type>::value>::type>
+{
+    static bool doimport(typename UIntType::c_type p_value, MCNumberRef& r_boxed_value)
+    {
+        if (p_value <= UINTEGER_MAX)
+        {
+            return MCNumberCreateWithUnsignedInteger(uinteger_t(p_value), r_boxed_value);
+        }
+        else if (p_value <= (1ULL << std::numeric_limits<double>::digits))
+        {
+            return MCNumberCreateWithReal(double(p_value), r_boxed_value);
+        }
+        else
+        {
+            return __throw_numeric_overflow<UIntType>(kMCForeignExportErrorTypeInfo);
+        }
+    }
+};
+
+template <typename TypeDesc>
+class DescriptorBuilder {
+public:
+    static bool create(const char *p_name)
+    {
+        MCTypeInfoRef& destination = TypeDesc::type_info;
+
+        MCForeignPrimitiveType primitive =
+            TypeDesc::primitive_type;
+
+        /* TODO[C++17] Some of the fields in here are left empty, and
+         * are filled in by calling setup_optional() and
+         * setup_bridge().  We could use constexpr if instead (see
+         * below). */
+        MCForeignTypeDescriptor d = {
+            sizeof(typename TypeDesc::c_type),
+            TypeDesc::base_type_info,
+            nullptr, /* bridgetype */
+            &primitive, /* layout */
+            1, /* layout_size */
+            nullptr, /* initialize */
+            finalize<TypeDesc>,
+            nullptr, /* defined */
+            move<TypeDesc>,
+            copy<TypeDesc>,
+            equal<TypeDesc>,
+            hash<TypeDesc>,
+            nullptr, /* doimport */
+            nullptr, /* doexport */
+            describe<TypeDesc>
+        };
+
+        setup_optional<TypeDesc>(d);
+        setup_bridge<TypeDesc>(d);
+
+        MCAutoStringRef t_name_string;
+        if (!MCStringCreateWithCString(p_name, &t_name_string))
+            return false;
+        MCNewAutoNameRef t_name_name;
+        if (!MCNameCreate(*t_name_string, &t_name_name))
+            return false;
+
+        if (!MCNamedForeignTypeInfoCreate(*t_name_name, &d, destination))
+            return false;
+
+        return true;
+    }
+
+private:
+
+    /* TODO[C++17] We need to use the setup_optional() and
+     * setup_bridge() methods as separate templates because it's
+     * important not to try to instantiate the callback functions for
+     * types for which they are invalid (e.g. doimport<void*>() will
+     * fail to compile).  This can easily be replaced with constexpr
+     * if. */
+
+    /* Setup the initialize() and defined() methods depending on
+     * whether the ValueType is optional or not. */
+    template <typename OptionalType,
+              typename std::enable_if<
+                  OptionalType::is_optional, int>::type = 0>
+    static void setup_optional(MCForeignTypeDescriptor& d)
+    {
+        d.initialize = initialize<OptionalType>;
+        d.defined = defined<OptionalType>;
+    }
+
+    template <typename RequiredType,
+              typename std::enable_if<
+                  !RequiredType::is_optional, int>::type = 0>
+    static void setup_optional(MCForeignTypeDescriptor& d)
+    {
+        d.initialize = nullptr;
+        d.defined = nullptr;
+    }
+
+    /* Setup the doimport() and doexport() methods depending on
+     * whether the ValueType is optional or not. */
+    template <typename BridgableType,
+              typename std::enable_if<
+                  BridgableType::is_bridgable, int>::type = 0>
+    static void setup_bridge(MCForeignTypeDescriptor& d)
+    {
+        d.bridgetype = BridgableType::bridge_type_info;
+        d.doimport = doimport<BridgableType>;
+        d.doexport = doexport<BridgableType>;
+    }
+
+    template <typename UnbridgeableType,
+              typename std::enable_if<
+                  !UnbridgeableType::is_bridgable, int>::type = 0>
+    static void setup_bridge(MCForeignTypeDescriptor& d)
+    {
+        d.bridgetype = kMCNullTypeInfo;
+        d.doimport = nullptr;
+        d.doexport = nullptr;
+    }
+};
+
+} /* anonymous namespace */
+
+/* ---------------------------------------------------------------- */
 
 bool __MCForeignValueInitialize(void)
 {
-    MCForeignPrimitiveType p;
-    MCForeignTypeDescriptor d;
-    d . size = sizeof(bool);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCBooleanTypeInfo;
-    p = kMCForeignPrimitiveTypeBool;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = nil;
-    d . finalize = __bool_finalize;
-    d . defined = nil;
-    d . move = __bool_copy;
-    d . copy = __bool_copy;
-    d . equal = __bool_equal;
-    d . hash = __bool_hash;
-    d . doimport = __bool_import;
-    d . doexport = __bool_export;
-    d . describe = __bool_describe;
-    if (!__build_typeinfo("__builtin__.bool", &d, kMCBoolTypeInfo))
-        return false;
-    
-    d . size = sizeof(integer_t);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
-    p = kMCForeignPrimitiveTypeSInt32;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = nil;
-    d . finalize = __numeric_finalize<integer_t>;
-    d . defined = nil;
-    d . move = __numeric_copy<integer_t>;
-    d . copy = __numeric_copy<integer_t>;
-    d . equal = __numeric_equal<integer_t>;
-    d . hash = __int_hash;
-    d . doimport = __int_import;
-    d . doexport = __int_export;
-    d . describe = __int_describe;
-    if (!__build_typeinfo("__builtin__.int", &d, kMCIntTypeInfo))
-        return false;
-    
-    d . size = sizeof(uinteger_t);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
-    p = kMCForeignPrimitiveTypeUInt32;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = nil;
-    d . finalize = __numeric_finalize<uinteger_t>;
-    d . defined = nil;
-    d . move = __numeric_copy<uinteger_t>;
-    d . copy = __numeric_copy<uinteger_t>;
-    d . equal = __numeric_equal<uinteger_t>;
-    d . hash = __uint_hash;
-    d . doimport = __uint_import;
-    d . doexport = __uint_export;
-    d . describe = __uint_describe;
-    if (!__build_typeinfo("__builtin__.uint", &d, kMCUIntTypeInfo))
-        return false;
-    
-    d . size = sizeof(float);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
-    p = kMCForeignPrimitiveTypeFloat32;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = nil;
-    d . finalize = __numeric_finalize<float>;
-    d . defined = nil;
-    d . move = __numeric_copy<float>;
-    d . copy = __numeric_copy<float>;
-    d . equal = __numeric_equal<float>;
-    d . hash = __float_hash;
-    d . doimport = __float_import;
-    d . doexport = __float_export;
-    d . describe = __float_describe;
-    if (!__build_typeinfo("__builtin__.float", &d, kMCFloatTypeInfo))
-        return false;
-    
-    d . size = sizeof(double);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
-    p = kMCForeignPrimitiveTypeFloat64;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = nil;
-    d . finalize = __numeric_finalize<double>;
-    d . defined = nil;
-    d . move = __numeric_copy<double>;
-    d . copy = __numeric_copy<double>;
-    d . equal = __numeric_equal<double>;
-    d . hash = __double_hash;
-    d . doimport = __double_import;
-    d . doexport = __double_export;
-    d . describe = __double_describe;
-    if (!__build_typeinfo("__builtin__.double", &d, kMCDoubleTypeInfo))
-        return false;
-    
-    d . size = sizeof(void *);
-    d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNullTypeInfo;
-    p = kMCForeignPrimitiveTypePointer;
-    d . layout = &p;
-    d . layout_size = 1;
-    d . initialize = __pointer_initialize;
-    d . finalize = __pointer_finalize;
-    d . defined = __pointer_defined;
-    d . move = __pointer_copy;
-    d . copy = __pointer_copy;
-    d . equal = __pointer_equal;
-    d . hash = __pointer_hash;
-    d . doimport = nil;
-    d . doexport = nil;
-    d . describe = __pointer_describe;
-    if (!__build_typeinfo("__builtin__.pointer", &d, kMCPointerTypeInfo))
+    if (!(DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
+          DescriptorBuilder<int_type_desc_t>::create("__builtin__.int") &&
+          DescriptorBuilder<uint_type_desc_t>::create("__builtin__.uint") &&
+          DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
+          DescriptorBuilder<double_type_desc_t>::create("__builtin__.double") &&
+          DescriptorBuilder<pointer_type_desc_t>::create("__builtin__.pointer") &&
+          DescriptorBuilder<size_type_desc_t>::create("__builtin__.size") &&
+          DescriptorBuilder<ssize_type_desc_t>::create("__builtin__ssize")))
         return false;
 
-	d . size = sizeof(size_t);
-	d . basetype = kMCNullTypeInfo;
-	d . bridgetype = kMCNumberTypeInfo;
-#if SIZE_MAX == UINT64_MAX
-	p = kMCForeignPrimitiveTypeUInt64;
-#elif SIZE_MAX == UINT32_MAX
-	p = kMCForeignPrimitiveTypeUInt32;
-#else
-#	error "Unsupported storage layout for size_t"
-#endif
-	d . layout = &p;
-	d . layout_size = 1;
-	d . initialize = nil;
-	d . finalize = __numeric_finalize<size_t>;
-	d . defined = nil;
-	d . move = __numeric_copy<size_t>;
-	d . copy = __numeric_copy<size_t>;
-	d . equal = __numeric_equal<size_t>;
-	d . hash = __size_hash;
-	d . doimport = __size_import;
-	d . doexport = __size_export;
-	d . describe = __size_describe;
-	if (!__build_typeinfo("__builtin__.size", &d, kMCSizeTypeInfo))
-		return false;
-    
-	d . size = sizeof(ssize_t);
-	d . basetype = kMCNullTypeInfo;
-	d . bridgetype = kMCNumberTypeInfo;
-#if SSIZE_MAX == INT64_MAX
-	p = kMCForeignPrimitiveTypeUInt64;
-#elif SSIZE_MAX == INT32_MAX
-	p = kMCForeignPrimitiveTypeUInt32;
-#else
-#	error "Unsupported storage layout for ssize_t"
-#endif
-	d . layout = &p;
-	d . layout_size = 1;
-	d . initialize = nil;
-	d . finalize = __numeric_finalize<ssize_t>;
-	d . defined = nil;
-	d . move = __numeric_copy<ssize_t>;
-	d . copy = __numeric_copy<ssize_t>;
-	d . equal = __numeric_equal<ssize_t>;
-	d . hash = __ssize_hash;
-	d . doimport = __ssize_import;
-	d . doexport = __ssize_export;
-	d . describe = __ssize_describe;
-	if (!__build_typeinfo("__builtin__.ssize", &d, kMCSSizeTypeInfo))
-		return false;
-    
-	/* ---------- */
+    /* ---------- */
 
-	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
-		return false;
-	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeExportError"), MCNAME("runtime"), MCSTR("error exporting foreign '%{type}' value: %{reason}"), kMCForeignExportErrorTypeInfo))
-		return false;
+    if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
+        return false;
+    if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeExportError"), MCNAME("runtime"), MCSTR("error exporting foreign '%{type}' value: %{reason}"), kMCForeignExportErrorTypeInfo))
+        return false;
 
     return true;
 }
