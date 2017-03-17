@@ -33,8 +33,8 @@
 class MCPlatformSurface
 {
 public:
-	MCPlatformSurface(void);
-	virtual ~MCPlatformSurface(void);
+	constexpr MCPlatformSurface(void) = default;
+    virtual ~MCPlatformSurface(void) {}
 	
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
@@ -57,8 +57,8 @@ namespace MCPlatform {
 class WindowMask: public CoreReference
 {
 public:
-    WindowMask(void);
-    virtual ~WindowMask(void);
+    constexpr WindowMask(void) = default;
+    virtual ~WindowMask(void) {}
     
     virtual bool IsValid(void) const = 0;
 
@@ -387,8 +387,8 @@ typedef MCPlatform::Sound MCPlatformSound;
 class MCPlatformPlayer: public MCPlatform::CoreReference
 {
 public:
-	MCPlatformPlayer(void);
-	virtual ~MCPlatformPlayer(void);
+	constexpr MCPlatformPlayer(void) = default;
+    virtual ~MCPlatformPlayer(void) {};
 	
 	virtual bool GetNativeView(void *&r_view) = 0;
 	virtual bool SetNativeParentView(void *p_parent_view) = 0;

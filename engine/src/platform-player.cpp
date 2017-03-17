@@ -22,17 +22,6 @@
 #include "graphics_util.h"
 #include "globals.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MCPlatformPlayer::MCPlatformPlayer(void)
-{
-}
-
-MCPlatformPlayer::~MCPlatformPlayer(void)
-{
-	// PM-2014-08-11: [[ Bug 13109 ]] Moved code to MCPlatformPlayer::Release
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player)

@@ -762,14 +762,6 @@ bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatformWindowMask::WindowMask(void)
-{
-}
-
-MCPlatformWindowMask::~WindowMask(void)
-{
-}
-
 void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask)
 {
     MCPlatformWindowMaskRef t_mask = MCplatform -> CreateWindowMask();
