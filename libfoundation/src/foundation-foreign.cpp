@@ -34,6 +34,15 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
 
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt8TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt8TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt16TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt16TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt32TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt32TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt64TypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt64TypeInfo;
+
 struct bool_type_desc_t {
     using c_type = bool;
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
@@ -59,6 +68,47 @@ struct numeric_type_desc_t {
 template<typename CType>
 struct integral_type_desc_t: public numeric_type_desc_t<CType> {
     static constexpr auto& hash_func = MCHashInt<CType>;
+};
+
+struct uint8_type_desc_t: public integral_type_desc_t<uint8_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt8;
+    static constexpr auto& type_info = kMCUInt8TypeInfo;
+    static constexpr auto describe_format = "<foreign 8-bit unsigned integer %u>";
+};
+struct int8_type_desc_t: public integral_type_desc_t<int8_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt8;
+    static constexpr auto& type_info = kMCInt8TypeInfo;
+    static constexpr auto describe_format = "<foreign 8-bit integer %d>";
+};
+struct uint16_type_desc_t: public integral_type_desc_t<uint16_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt16;
+    static constexpr auto& type_info = kMCUInt16TypeInfo;
+    static constexpr auto describe_format = "<foreign 16-bit unsigned integer %u>";
+};
+struct int16_type_desc_t: public integral_type_desc_t<int16_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt16;
+    static constexpr auto& type_info = kMCInt16TypeInfo;
+    static constexpr auto describe_format = "<foreign 16-bit integer %d>";
+};
+struct uint32_type_desc_t: public integral_type_desc_t<uint32_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt32;
+    static constexpr auto& type_info = kMCUInt32TypeInfo;
+    static constexpr auto describe_format = "<foreign 32-bit unsigned integer %u>";
+};
+struct int32_type_desc_t: public integral_type_desc_t<int32_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt32;
+    static constexpr auto& type_info = kMCInt32TypeInfo;
+    static constexpr auto describe_format = "<foreign 32-bit integer %d>";
+};
+struct uint64_type_desc_t: public integral_type_desc_t<uint64_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt64;
+    static constexpr auto& type_info = kMCUInt64TypeInfo;
+    static constexpr auto describe_format = "<foreign 64-bit unsigned integer %u>";
+};
+struct int64_type_desc_t: public integral_type_desc_t<int64_t> {
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt64;
+    static constexpr auto& type_info = kMCInt64TypeInfo;
+    static constexpr auto describe_format = "<foreign 64-bit integer %d>";
 };
 
 struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
@@ -651,7 +701,15 @@ bool __MCForeignValueInitialize(void)
           DescriptorBuilder<double_type_desc_t>::create("__builtin__.double") &&
           DescriptorBuilder<pointer_type_desc_t>::create("__builtin__.pointer") &&
           DescriptorBuilder<size_type_desc_t>::create("__builtin__.size") &&
-          DescriptorBuilder<ssize_type_desc_t>::create("__builtin__ssize")))
+          DescriptorBuilder<ssize_type_desc_t>::create("__builtin__ssize") &&
+          DescriptorBuilder<uint8_type_desc_t>::create("__builtin__.uint8") &&
+          DescriptorBuilder<int8_type_desc_t>::create("__builtin__.int8") &&
+          DescriptorBuilder<uint16_type_desc_t>::create("__builtin__.uint16") &&
+          DescriptorBuilder<int16_type_desc_t>::create("__builtin__.int16") &&
+          DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
+          DescriptorBuilder<int32_type_desc_t>::create("__builtin__.int32") &&
+          DescriptorBuilder<uint64_type_desc_t>::create("__builtin__.uint64") &&
+          DescriptorBuilder<int64_type_desc_t>::create("__builtin__.int64")))
         return false;
 
     /* ---------- */
