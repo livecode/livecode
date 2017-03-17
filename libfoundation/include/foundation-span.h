@@ -197,4 +197,21 @@ MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
 	return MCMakeSpan(t_ptr, t_length);
 }
 
+/* ----------------------------------------------------------------
+ * Span-based overloads for pointer+range libfoundation functions
+ * ---------------------------------------------------------------- */
+
+MC_DLLEXPORT
+hash_t MCHashBytes(MCSpan<const byte_t> bytes);
+
+MC_DLLEXPORT
+hash_t MCHashBytesStream(hash_t previous,
+                         MCSpan<const byte_t> bytes);
+
+MC_DLLEXPORT
+hash_t MCHashNativeChars(MCSpan<const char_t> chars);
+
+MC_DLLEXPORT
+hash_t MCHashChars(MCSpan<const unichar_t> chars);
+
 #endif /* !__MC_FOUNDATION_SPAN_H__ */

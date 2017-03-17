@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 #include <foundation-stdlib.h>
 
 #include "foundation-private.h"
@@ -261,11 +262,23 @@ hash_t MCHashBytes(const void *p_bytes, size_t length)
 }
 
 MC_DLLEXPORT_DEF
+hash_t MCHashBytes(MCSpan<const byte_t> p_bytes)
+{
+    return MCHashBytes(p_bytes.data(), p_bytes.size());
+}
+
+MC_DLLEXPORT_DEF
 hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
 {
     MCHashBytesContext t_context(p_start);
     t_context.consume(reinterpret_cast<const byte_t *>(p_bytes), length);
     return t_context;
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashBytesStream(hash_t p_start, MCSpan<const byte_t> p_bytes)
+{
+    return MCHashBytesStream(p_start, p_bytes.data(), p_bytes.size());
 }
 
 template <typename CodeUnit>
@@ -283,9 +296,21 @@ hash_t MCHashNativeChars(const char_t *chars, size_t char_count)
 }
 
 MC_DLLEXPORT_DEF
+hash_t MCHashNativeChars(MCSpan<const char_t> p_chars)
+{
+    return hash_chars(p_chars.data(), p_chars.size());
+}
+
+MC_DLLEXPORT
 hash_t MCHashChars(const unichar_t *chars, size_t char_count)
 {
     return hash_chars(chars, char_count);
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashChars(MCSpan<const unichar_t> p_chars)
+{
+    return hash_chars(p_chars.data(), p_chars.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
