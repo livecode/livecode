@@ -576,10 +576,11 @@
 							
 			# Group "Theming"
 			'src/linux-theme.cpp',
-			'src/mac-theme.mm',
 			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
+			'src/osxtheme.h',
+			'src/osxtheme.cpp',
 				
 			# Group "Syntax"
 			'src/syntax.h',
@@ -591,18 +592,14 @@
 			'src/clipboard.h',
 			'src/em-clipboard.h',
 			'src/lnx-clipboard.h',
-			'src/mac-clipboard.h',
 			'src/mblandroid-clipboard.h',
 			'src/mbliphone-clipboard.h',
-			'src/raw-clipboard.h',
 			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
 			'src/em-clipboard.cpp',
 			'src/lnx-clipboard.cpp',
-			'src/mac-clipboard.mm',
 			'src/mblandroid-clipboard.cpp',
 			'src/mbliphone-clipboard.mm',
-			'src/raw-clipboard.cpp',
 			'src/w32-clipboard.cpp',
 
 			'src/mixin-refcounted.h',
@@ -628,7 +625,10 @@
 			'src/platform-menu.cpp',
 			'src/platform-printer.cpp',
 			'src/platform-scripting.cpp',
-			
+		],
+		
+		'engine_platform_source_files':
+		[
 			# Group "Mac Platform"
 			'src/mac-internal.h',
 			'src/mac-extern.h',
@@ -651,9 +651,13 @@
 			'src/mac-surface.mm',
 			'src/mac-window.mm',
 			'src/mac-layer.mm',
+			'src/mac-theme.mm',
 			'src/cgimageutil.cpp',
-			'src/osxtheme.h',
-			'src/osxtheme.cpp',
+			'src/raw-clipboard.h',
+			'src/raw-clipboard.cpp',
+			'src/mac-clipboard.h',
+			'src/mac-clipboard.mm',
+			'src/platform-window-common.cpp',
 		],
 		
 		# Sources that are only for desktop mode
