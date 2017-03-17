@@ -1592,31 +1592,25 @@ void MCMacPlatformCore::HandleMouseCursorChange(MCPlatformWindowRef p_window)
     MCMacPlatformWindow *t_window;
     t_window = (MCMacPlatformWindow *)p_window;
     
-    // If we are on Lion+ then check to see if the mouse location is outside
-    // of any of the system tracking rects (used for resizing etc.)
-    extern uint4 MCmajorosversion;
-    if (MCmajorosversion >= 0x1070)
+    // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
+    //   a resizable frame.
+    bool t_is_resizable;
+    p_window -> GetProperty(kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
+    
+    if (t_is_resizable)
     {
-        // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
-        //   a resizable frame.
-        bool t_is_resizable;
-        p_window -> GetProperty(kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
         
-        if (t_is_resizable)
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: m_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
         {
-            NSArray *t_tracking_areas;
-            t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
-            
-            NSPoint t_mouse_loc;
-            t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: m_mouse_position];
-            for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
-            {
-                if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
-                    return;
-            }
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
         }
     }
-    
+   
     // MW-2014-06-25: [[ Bug 12634 ]] Make sure we only change the cursor if we are not
     //   within a native view.
     if ([t_window -> GetContainerView() hitTest: [t_window -> GetView() mapMCPointToNSPoint: m_mouse_position]] == t_window -> GetView())
