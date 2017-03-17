@@ -1797,7 +1797,7 @@ void MCMacPlatformCore::SyncMouseBeforeDragging(void)
         //  a mouseLeave handler
         if (m_mouse_window != nil)
         {
-            MCPlatformReleaseWindow(m_mouse_window);
+            m_mouse_window -> Release();
             m_mouse_window = nil;
         }
 	}
