@@ -607,6 +607,11 @@ namespace MCPlatform {
         
         // Platform extensions
         virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface) = 0;
+        
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        // Apple platforms only
+        virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
+#endif
     };
     
     typedef Ref<Core> CoreRef;

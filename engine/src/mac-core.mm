@@ -2044,3 +2044,8 @@ bool MCMacPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::
     return false;
 }
 
+void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))
+{
+    block();
+}
+

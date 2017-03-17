@@ -82,6 +82,15 @@ void MCPlatformBreakWait(void)
     MCplatform -> BreakWait();
 }
 
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+// Apple platforms only
+void MCPlatformRunBlockOnMainFiber(void (^block)(void))
+{
+    MCplatform -> RunBlockOnMainFiber(block);
+}
+#endif
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)

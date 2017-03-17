@@ -1332,4 +1332,11 @@ typedef MCPlatform::Callback *MCPlatformCallbackRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+// Apple platforms only
+void MCPlatformRunBlockOnMainFiber(void (^block)(void));
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
