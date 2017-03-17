@@ -40,8 +40,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "system.h"
 
+#include "libscript/script.h"
+
 #include "platform.h"
 #include "platform-internal.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -348,10 +355,23 @@ void X_main_loop_iteration()
 
 int platform_main(int argc, char *argv[], char *envp[])
 {
+    extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
+    if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
+        if (!MCS_mac_elevation_bootstrap_main(argc, argv))
+            return -1;
+    
+    if (!MCInitialize() || !MCSInitialize() ||
+        !MCModulesInitialize() || !MCScriptInitialize())
+        exit(-1);
+    
     if (MCPlatformInitialize())
     {
         return MCplatform -> Run(argc, argv, envp);
     }
+    
+    MCScriptFinalize();
+    MCModulesFinalize();
+    MCFinalize();
     
     return -1;
 }

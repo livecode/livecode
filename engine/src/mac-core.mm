@@ -25,8 +25,6 @@
 
 #include "graphics_util.h"
 
-#include "libscript/script.h"
-
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1950,11 +1948,6 @@ MCMacPlatformCore::~MCMacPlatformCore()
 
 int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
 {
-    extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
-    if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
-        if (!MCS_mac_elevation_bootstrap_main(argc, argv))
-            return -1;
-    
     NSAutoreleasePool *t_pool;
     t_pool = [[NSAutoreleasePool alloc] init];
     
@@ -1966,10 +1959,6 @@ int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
     
     // Register for reconfigurations.
     CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, this);
-    
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
-        exit(-1);
     
     // On OSX, argv and envp are encoded as UTF8
     MCStringRef *t_new_argv;
@@ -2020,10 +2009,6 @@ int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
     
     // Drain the autorelease pool.
     [t_pool release];
-    
-    MCScriptFinalize();
-    MCModulesFinalize();
-    MCFinalize();
     
     return 0;
 }
