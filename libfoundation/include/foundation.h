@@ -1281,6 +1281,9 @@ extern "C" {
 //   the same from version to version. In particular, never serialize a hash
 //   value - recompute on unserialization of the object.
 
+// Return a hash for the given bool.
+MC_DLLEXPORT hash_t MCHashBool(bool);
+
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);

@@ -214,6 +214,12 @@ void MCMemoryDeleteArray(void *p_array)
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
+hash_t MCHashBool(bool b)
+{
+    return hash_t(b);
+}
+
+MC_DLLEXPORT_DEF
 hash_t MCHashInteger(integer_t i)
 {
 	return MCHashInt(i);
