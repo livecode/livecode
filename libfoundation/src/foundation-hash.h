@@ -128,4 +128,47 @@ public:
     }
 };
 
+/* ----------------------------------------------------------------
+ * Object representation hashing
+ * ---------------------------------------------------------------- */
+
+/* These functions are compatible with `MCHashBytes()` and
+ * `MCHashBytesStream()`, and are used when it's desirable to hash a
+ * single value's C++ object representation.  They are only enabled
+ * for TriviallyCopyable types, i.e. types where the value
+ * representation is a subset of the object representation. */
+
+template <typename T>
+inline hash_t MCHashObject(T p_object)
+{
+    /* TODO[C++11] Enable this assertion once all our C++ compilers support it. */
+    /* static_assert(std::is_trivially_copyable<T>::value,
+           "MCHashObject can only be used with trivially copyable types"); */
+    return MCHashBytes(reinterpret_cast<const void*>(&p_object),
+                       sizeof(p_object));
+}
+
+template <typename T>
+inline hash_t MCHashObjectStream(hash_t p_start,
+                                 T p_object)
+{
+    /* TODO[C++11] Enable this assertion once all our C++ compilers support it. */
+    /* static_assert(std::is_trivially_copyable<T>::value,
+           "MCHashObjectStream can only be used with trivially copyable types"); */
+    return MCHashBytesStream(p_start,
+                             reinterpret_cast<const void*>(&p_object),
+                             sizeof(p_object));
+}
+
+/* Hash multiple objects of possibly-differing types into a hash
+ * stream. */
+template <typename Head, typename... Tail>
+inline hash_t MCHashObjectStream(hash_t p_start,
+                                 Head p_object,
+                                 Tail ... p_others)
+{
+    return MCHashObjectStream(MCHashObjectStream(p_start, p_object),
+                              p_others ...);
+}
+
 #endif /*!MC_FOUNDATION_HASH_H*/
