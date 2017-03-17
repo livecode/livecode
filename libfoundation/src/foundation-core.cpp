@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 #include "foundation-hash.h"
+#include "foundation-string-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -265,6 +266,26 @@ hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
     MCHashBytesContext t_context(p_start);
     t_context.consume(reinterpret_cast<const byte_t *>(p_bytes), length);
     return t_context;
+}
+
+template <typename CodeUnit>
+static hash_t hash_chars(CodeUnit *p_chars, size_t char_count)
+{
+    MCHashCharsContext t_context;
+    while (char_count-- > 0) t_context.consume(*p_chars++);
+    return t_context;
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashNativeChars(const char_t *chars, size_t char_count)
+{
+    return hash_chars(chars, char_count);
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashChars(const unichar_t *chars, size_t char_count)
+{
+    return hash_chars(chars, char_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
