@@ -77,7 +77,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_user_font = [[NSFont userFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_usertext);
+                MCNameCreateWithCString("(Styled Text)", *r_name);
             return s_user_font;
         }
             
@@ -89,7 +89,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_menu_font = [[NSFont menuFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_menutext);
+                MCNameCreateWithCString("(Menu)", *r_name);
             return s_menu_font;
         }
             
@@ -98,7 +98,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_content_font = [[NSFont controlContentFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_content);
+                MCNameCreateWithCString("(Text)", *r_name);
             return s_content_font;
         }
             
@@ -113,7 +113,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_message_font = [[NSFont messageFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_message);
+                MCNameCreateWithCString("(Message)", *r_name);
             return s_message_font;
         }
             
@@ -121,7 +121,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_tooltip_font = [[NSFont toolTipsFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_tooltip);
+                MCNameCreateWithCString("(Tooltip)", *r_name);
             return s_tooltip_font;
         }
             
@@ -129,7 +129,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_system_font = [[NSFont systemFontOfSize:[NSFont systemFontSize]] retain];
             if (r_name)
-                *r_name = MCValueRetain(MCN_font_system);
+                MCNameCreateWithCString("(System)", *r_name);
             return s_system_font;
         }
     }
