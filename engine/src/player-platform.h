@@ -96,9 +96,9 @@ public:
 	MCPlayer(const MCPlayer &sref);
 	virtual ~MCPlayer();
     
-    MCPlayer *getnextplayer()
+    MCPlayerHandle getnextplayer()
     {
-        return (MCPlayer*)nextplayer;
+        return nextplayer;
     }
     
 	// virtual functions from MCObject    
@@ -431,6 +431,17 @@ public:
     void detachplayer(void);
     
     void setmirrored(bool p_mirrored);
+    
+    // MCplayers handling
+    static void StopPlayers(MCStack* p_stack);
+    static void SyncPlayers(MCStack* p_stack, MCContext* p_context);
+    static void ClosePlayers(MCStack* p_stack);
+    static void AttachPlayers(MCStack* p_stack);
+    static void DetachPlayers(MCStack* p_stack);
+    static void SetPlayersVolume(uinteger_t p_volume);
+    
+    static MCPlayer* FindPlayerByName(MCNameRef p_name);
+    static MCPlayer* FindPlayerById(uint32_t p_id);
 };
 #endif
 

@@ -98,9 +98,9 @@ public:
 	MCPlayer(const MCPlayer &sref);
 	virtual ~MCPlayer();
     
-    MCPlayer *getnextplayer()
+    MCPlayerHandle getnextplayer()
     {
-        return (MCPlayer*)nextplayer;
+        return nextplayer;
     }
     
 	// virtual functions from MCObject
@@ -473,7 +473,18 @@ public:
     
     virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt);
     virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt);
-};
+    
+    // MCplayers handling
+    static void StopPlayers(MCStack* p_stack);
+    static void SyncPlayers(MCStack* p_stack, MCContext* p_context);
+    static void ClosePlayers(MCStack* p_stack);
+    static void SetPlayersVolume(uinteger_t p_volume);
+    
+    static MCPlayer* FindPlayerByName(MCNameRef p_name);
+    static MCPlayer* FindPlayerById(uint32_t p_id);
+    
 #endif // FEATURE_PLATFORM_PLAYER
+};
+
 
 #endif // PLAYER_LEGACY_H

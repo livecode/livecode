@@ -875,7 +875,9 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 }
 
 MCPlayer::~MCPlayer()
-{    
+{
+    removefromplayers();
+    
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
     

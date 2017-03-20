@@ -213,16 +213,16 @@ void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string)
 	{
 		t_success = MCListCreateMutable('\n', &t_list);
 
-		MCPlayer *tptr = MCplayers;
-		while (t_success && tptr != NULL)
+		MCPlayerHandle t_player = MCplayers;
+		while (t_success && t_player.IsValid())
 		{
-			if (tptr->isdisposable())
+			if (t_player->isdisposable())
 			{
 				MCAutoValueRef t_string;
-				t_success = tptr->names(P_NAME, &t_string) && MCListAppend(*t_list, *t_string);
+				t_success = t_player->names(P_NAME, &t_string) && MCListAppend(*t_list, *t_string);
 				t_playing = true;
 			}
-			tptr = tptr->getnextplayer();
+			t_player = t_player->getnextplayer();
 		}
 	}
 	if (t_success)
@@ -442,39 +442,24 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 MCPlayer* MCMultimediaExecGetClip(MCStringRef p_clip, int p_chunk_type)
 {
 	IO_cleanprocesses();
-	MCPlayer *tptr;
 	// Lookup the name we are searching for. If it doesn't exist, then no object can
 	// have it as a name.
-	tptr = nil;
 	if (p_chunk_type == CT_EXPRESSION)
 	{
         // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
-		MCNameRef t_obj_name;
-		t_obj_name = MCNameLookup(p_clip);
-		if (t_obj_name != nil)
-		{
-			tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				if (tptr -> hasname(t_obj_name))
-					break;
-				tptr = tptr->getnextplayer();
-			}
-		}
+		return MCPlayer::FindPlayerByName(MCNameLookup(p_clip));
 	}
-	else if (p_chunk_type == CT_ID)
+	
+    if (p_chunk_type == CT_ID)
 	{
-		tptr = MCplayers;
-		uint4 t_id;
-		MCU_stoui4(p_clip, t_id);
-		while (tptr != NULL)
-		{
-			if (tptr -> getaltid() == t_id)
-				break;
-			tptr = tptr->getnextplayer();
-		}
+        uint4 t_id;
+        if (!MCU_stoui4(p_clip, t_id))
+            return nullptr;
+
+        return MCPlayer::FindPlayerById(t_id);
 	}
-	return tptr;
+
+    MCUnreachableReturn(nullptr);
 }
 
 void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_filename, bool p_looping, MCPoint *p_at, MCStringRef p_options, bool p_prepare)
@@ -871,15 +856,9 @@ void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
     if (MCSystemSetPlayLoudness(p_loudness))
         return;
 #endif
-    if (MCplayers)
-    {
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            tptr->setvolume(p_loudness);
-            tptr = tptr->getnextplayer();
-        }
-    }
+    
+    MCPlayer::SetPlayersVolume(p_loudness);
+    
     MCS_setplayloudness(p_loudness);
 
 	MCtemplateaudio -> SetPlayLoudness(ctxt, p_loudness);

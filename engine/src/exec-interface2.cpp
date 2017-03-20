@@ -2646,16 +2646,7 @@ void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {
         IO_cleanprocesses();
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            if (tptr -> hasname(p_name))
-            {
-                t_clip = tptr;
-                break;
-            }
-            tptr = tptr->getnextplayer();
-        }
+        t_clip = MCPlayer::FindPlayerByName(p_name);
     }
     
     if (t_clip != nil)

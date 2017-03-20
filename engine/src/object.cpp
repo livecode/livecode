@@ -3114,9 +3114,8 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		t_context -> setfunction(GXblendSrcOver);
 
         // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            t_player -> syncbuffering(t_context);
-            
+        MCPlayer::SyncPlayers(getstack(), t_context);
+        
 #ifdef FEATURE_PLATFORM_PLAYER
         MCPlatformWaitForEvent(0.0, true);
 #endif

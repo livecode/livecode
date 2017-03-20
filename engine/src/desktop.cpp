@@ -1332,7 +1332,7 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+	for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
             return t_player;

@@ -86,6 +86,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 
 MCPlayer::~MCPlayer()
 {
+    removefromplayers();
+    
 	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
 }
