@@ -107,7 +107,14 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 
 bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect, MCObject *p_object)
 {
-    return MCplatform -> DrawThemeMetalBackground(p_context, p_dirty, p_rect, p_object);
+    if (p_context -> gettype() == CONTEXT_TYPE_PRINTER)
+        return false;
+    
+    uint2 i;
+    if (p_object -> getcindex(DI_BACK, i) || p_object -> getpindex(DI_BACK, i))
+        return false;
+    
+    return MCplatform -> DrawThemeMetalBackground(p_context, p_dirty, p_rect, p_object -> getstack() -> getwindow());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

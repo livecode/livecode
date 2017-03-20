@@ -1587,15 +1587,8 @@ bool MCMacPlatformCore::DrawThemeFocusBorder(MCContext *p_context, const MCRecta
     return true;
 }
 
-bool MCMacPlatformCore::DrawThemeMetalBackground(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect, MCObject *p_object)
+bool MCMacPlatformCore::DrawThemeMetalBackground(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect, MCPlatformWindowRef p_window)
 {
-    if (p_context -> gettype() == CONTEXT_TYPE_PRINTER)
-        return false;
-    
-    uint2 i;
-    if (p_object -> getcindex(DI_BACK, i) || p_object -> getpindex(DI_BACK, i))
-        return false;
-    
     MCThemeDrawInfo p_info;
     p_info.dest = p_rect;
     p_info . background . bounds . left = p_dirty . x;
@@ -1603,12 +1596,10 @@ bool MCMacPlatformCore::DrawThemeMetalBackground(MCContext *p_context, const MCR
     p_info . background . bounds . right = p_dirty . x + p_dirty . width;
     p_info . background . bounds . bottom = p_dirty . y + p_dirty . height;
     
-    Window t_window;
-    t_window = p_object -> getstack() -> getwindow();
     // COCOA-TODO: metalbackground drawing
 #ifdef OLD_MAC
-    if (t_window  != nil)
-        p_info . background . state = IsWindowHilited((WindowPtr)t_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
+    if (p_window  != nil)
+        p_info . background . state = IsWindowHilited((WindowPtr)p_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
     else
 #endif
         p_info . background . state = kThemeStateActive;
