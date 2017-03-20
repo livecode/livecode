@@ -19,7 +19,6 @@
 
 #include "globdefs.h"
 #include "parsedef.h"
-#include "globals.h"
 #include "desktop-dc.h"
 
 #include "imagebitmap.h"
@@ -336,10 +335,7 @@ void MCMacPlatformCore::ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*
 	//  6.1 behaviour was to default to snapshot of the whole screen.
 	if (t_screen_rect . width == 0 || t_screen_rect . height == 0)
 	{
-		const MCDisplay *t_displays;
-		MCscreen -> getdisplays(t_displays, false);
-		
-		t_screen_rect = t_displays[0] . viewport;
+        GetScreenViewport(0, t_screen_rect);
 	}
     
 	ScreenSnapshot(t_screen_rect, p_size, r_bitmap);
