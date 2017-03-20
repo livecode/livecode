@@ -24,6 +24,8 @@
 #include "player.h"
 #include "exec.h"
 
+#include "globals.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCPlayer::kProperties[] =
@@ -77,4 +79,36 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
+
+void MCPlayer::removereferences()
+{
+    // OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
+    while (opened)
+        close();
+    
+    playstop();
+    
+    removefromplayers();
+    
+    MCObject::removereferences();
+}
+
+void MCPlayer::removefromplayers()
+{
+    if (MCplayers)
+    {
+        if (MCplayers == this)
+            MCplayers = nextplayer;
+        else
+        {
+            MCPlayer *tptr = MCplayers;
+            while (tptr->nextplayer.IsBound() && tptr->nextplayer != this)
+                tptr = tptr->nextplayer;
+            
+            if (tptr->nextplayer == this)
+                tptr->nextplayer = nextplayer;
+        }
+     }
+     nextplayer = nullptr;
+}
 

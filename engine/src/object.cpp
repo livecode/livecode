@@ -861,6 +861,19 @@ void MCObject::removereferences()
     MCscreen->cancelmessageobject(this, NULL);
     removefrom(MCfrontscripts);
     removefrom(MCbackscripts);
+    
+    // If the object is marked as being used as a parentScript, flush the parentScript
+    // table so we don't get any dangling pointers.
+    if (m_is_parent_script)
+    {
+        MCParentScript::FlushObject(this);
+        m_is_parent_script = false;
+    }
+    
+    // This object is in the process of being deleted; invalidate any weak refs
+    // and prevent any new ones from being created.
+    m_weak_proxy->Clear();
+    m_weak_proxy = nil;
 }
 
 bool MCObject::isdeletable(bool p_check_flag)
@@ -877,19 +890,6 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
-    // If the object is marked as being used as a parentScript, flush the parentScript
-    // table so we don't get any dangling pointers.
-	if (m_is_parent_script)
-	{
-		MCParentScript::FlushObject(this);
-        m_is_parent_script = false;
-    }
-	
-	// This object is in the process of being deleted; invalidate any weak refs
-	// and prevent any new ones from being created.
-	m_weak_proxy->Clear();
-	m_weak_proxy = nil;
-	
 	return True;
 }
 

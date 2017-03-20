@@ -133,6 +133,9 @@ public:
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
     
+    virtual void removereferences(void);
+    void removefromplayers(void);
+    
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
