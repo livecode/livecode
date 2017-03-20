@@ -115,22 +115,6 @@ static MCCustomPrinterTransform MCCustomPrinterTransformFromMCGAffineTransform(c
 	return t_transform;
 }
 
-static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGRasterFormat p_format)
-{
-	switch (p_format)
-	{
-	case kMCGRasterFormat_ARGB:
-		return kMCCustomPrinterImageRawARGB;
-	case kMCGRasterFormat_xRGB:
-		return kMCCustomPrinterImageRawXRGB;
-	case kMCGRasterFormat_A:
-	case kMCGRasterFormat_U_ARGB:
-    default:
-		// Unsupported
-        MCUnreachableReturn(kMCCustomPrinterImageNone);
-	}
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCCustomPrinterImageFromMCGImage(MCGImageRef p_image, MCCustomPrinterImage &r_image, void *&r_pixel_cache)

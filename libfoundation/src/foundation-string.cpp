@@ -2468,25 +2468,24 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingUTF16BE:
         {
             uindex_t t_char_count;
-            unichar_t *t_bytes;
-            if (MCStringConvertToUnicode(self, t_bytes, t_char_count))
+            unichar_t * t_bytes;
+            if (!MCStringConvertToUnicode(self, t_bytes, t_char_count))
+                return false;
+
+            if ((p_encoding == kMCStringEncodingUTF16BE &&
+                 kMCByteOrderHost != kMCByteOrderBigEndian) ||
+                (p_encoding == kMCStringEncodingUTF16LE &&
+                 kMCByteOrderHost != kMCByteOrderLittleEndian))
             {
-                unichar_t *t_buffer;
-                MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
-                
-                for (uindex_t i = 0; i < t_char_count; i++)
+                for (uindex_t i = 0; i < t_char_count; ++i)
                 {
-                    if (p_encoding == kMCStringEncodingUTF16BE)
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToBig((t_bytes)[i]);   
-                    else
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                    t_bytes[i] = MCSwapInt(t_bytes[i]);
                 }
-				MCMemoryDeleteArray (t_bytes);
-                r_bytes = (byte_t*&)t_buffer;
-                r_byte_count = t_char_count * sizeof(unichar_t);
-                return true;
             }
-            return false;
+
+            r_bytes = reinterpret_cast<byte_t*>(t_bytes);
+            r_byte_count = t_char_count * sizeof(*t_bytes);
+            return true;
         }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);

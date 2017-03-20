@@ -36,7 +36,7 @@ typedef struct
 }
 java_type_map;
 
-static java_type_map type_map[] =
+static const java_type_map type_map[] =
 {
     {"V", kMCJavaTypeVoid},
     {"Z", kMCJavaTypeBoolean},
