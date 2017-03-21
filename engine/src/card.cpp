@@ -1795,7 +1795,7 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
         optr->setparent(this);
         getstack()->appendcontrol(optr);
 
-        if (t_insert_iter == objptrs)
+        if (foundobj == nullptr)
         {
             if (t_before)
                 newptr->insertto(objptrs);
