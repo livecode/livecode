@@ -20,7 +20,7 @@
 
 #include "platform.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally);
 bool coretext_font_unload(MCStringRef p_path, bool p_globally);

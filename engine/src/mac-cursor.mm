@@ -24,7 +24,7 @@
 
 #include "platform.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 

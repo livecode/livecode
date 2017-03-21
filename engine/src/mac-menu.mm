@@ -22,7 +22,7 @@
 
 #include "platform.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include <Carbon/Carbon.h>
 

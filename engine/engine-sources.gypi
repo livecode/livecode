@@ -609,21 +609,28 @@
 			'src/native-layer.cpp',
 			
 			# Group "Platform"
-			'src/platform.h',
 			'src/platform.cpp',
-			'src/platform-base.h',
+			'src/platform-legacy.h',
 		],
 		
 		'engine_platform_source_files':
 		[
+			# Group "Common Platform"
+			'src/platform.h',
+			'src/platform-base.h',
+			'src/platform-window.cpp',
+			'src/platform-recorder.cpp',
+			'src/raw-clipboard.h',
+			'src/raw-clipboard.cpp',
+			
 			# Group "Mac Platform"
-			'src/mac-internal.h',
+			'src/mac-platform.h',
+			'src/mac-community-core.mm',
 			'src/mac-extern.h',
 			'src/mac-abort.mm',
 			'src/mac-av-player.mm',
 			'src/mac-color.mm',
 			'src/mac-core.mm',
-			'src/mac-community-core.mm',
 			'src/mac-cursor.mm',
 			'src/mac-dialog.mm',
 			'src/mac-font.mm',
@@ -640,12 +647,8 @@
 			'src/mac-layer.mm',
 			'src/mac-theme.mm',
 			'src/cgimageutil.cpp',
-			'src/raw-clipboard.h',
-			'src/raw-clipboard.cpp',
 			'src/mac-clipboard.h',
 			'src/mac-clipboard.mm',
-			'src/platform-window.cpp',
-			'src/platform-recorder.cpp',
 		],
 		
 		# Sources that are only for desktop mode

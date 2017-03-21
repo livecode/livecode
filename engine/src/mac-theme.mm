@@ -18,7 +18,7 @@
 #include "platform.h"
 
 #include "osxprefix.h"
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include "globdefs.h"
 #include "objdefs.h"

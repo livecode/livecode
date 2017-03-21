@@ -23,7 +23,7 @@
 
 #include "platform.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include <objc/objc-runtime.h>
 
