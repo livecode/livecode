@@ -25,6 +25,8 @@
 #include "globals.h"
 #endif
 
+#include "platform-extern.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -843,12 +845,9 @@ inline MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#include "mac-extern.h"
-
 inline bool MCPlatformInitialize(void)
 {
-    MCPlatform::CoreRef t_platform = MCMacPlatformCreateCore();
+    MCPlatform::CoreRef t_platform = MCPlatformCreateCore();
     MCplatform = t_platform.unsafeTake();
     MCPlatform::Ref<MCPlatformCallback> t_callback = MCPlatform::makeRef<MCPlatformCallback>();
     MCplatform -> SetCallback(t_callback.unsafeTake());

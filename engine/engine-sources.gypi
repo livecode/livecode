@@ -618,6 +618,7 @@
 			# Group "Common Platform"
 			'src/platform.h',
 			'src/platform-base.h',
+			'src/platform-extern.h',
 			'src/platform-window.cpp',
 			'src/platform-recorder.cpp',
 			'src/raw-clipboard.h',
@@ -626,7 +627,6 @@
 			# Group "Mac Platform"
 			'src/mac-platform.h',
 			'src/mac-community-core.mm',
-			'src/mac-extern.h',
 			'src/mac-abort.mm',
 			'src/mac-av-player.mm',
 			'src/mac-color.mm',
