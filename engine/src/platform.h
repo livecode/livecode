@@ -1396,12 +1396,6 @@ namespace MCPlatform {
         virtual bool WaitForEvent(double p_duration, bool p_blocking) = 0;
         virtual void BreakWait(void) = 0;
         
-        // Callbacks
-        virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context) = 0;
-        
-        // Player
-        virtual MCPlatformPlayerRef CreatePlayer(void) = 0;
-        
         // Themes
         virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool) = 0;
         virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int) = 0;
