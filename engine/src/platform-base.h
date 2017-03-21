@@ -15,8 +15,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#if !defined(MC_PLATFORM_INTERNAL_INSIDE)
-#	error "Only <platform-internal.h> can be included directly"
+#if !defined(MC_PLATFORM_INSIDE)
+#	error "Only <platform.h> can be included directly"
 #endif
 
 namespace MCPlatform {

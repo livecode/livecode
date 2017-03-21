@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics_util.h"
 
 #include "globals.h"
-#include "platform-internal.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

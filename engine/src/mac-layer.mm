@@ -16,7 +16,6 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "platform.h"
-#include "platform-internal.h"
 #include "mac-internal.h"
 #include "graphics_util.h"
 

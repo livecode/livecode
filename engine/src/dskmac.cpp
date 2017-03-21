@@ -22,6 +22,7 @@
 #include "globdefs.h"
 #include "objdefs.h"
 
+#include "platform-legacy.h"
 
 #include "exec.h"
 #include "globals.h"

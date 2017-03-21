@@ -52,6 +52,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "platform-legacy.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _PropList

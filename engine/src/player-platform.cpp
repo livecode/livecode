@@ -55,6 +55,7 @@
 //// PLATFORM PLAYER
 
 #include "platform.h"
+#include "platform-legacy.h"
 
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2

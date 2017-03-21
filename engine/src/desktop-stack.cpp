@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "platform.h"
+#include "platform-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"

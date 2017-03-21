@@ -97,6 +97,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "chunk.h"
 
+#ifdef FEATURE_PLATFORM_RECORDER
+#include "platform-legacy.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool MCquit;

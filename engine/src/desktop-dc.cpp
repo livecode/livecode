@@ -14,8 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "platform.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -49,8 +47,6 @@
 #include "mode.h"
 
 #include "desktop-dc.h"
-
-#include "platform.h"
 
 #include <Carbon/Carbon.h>
 

@@ -19,6 +19,7 @@
 
 #include "uidc.h"
 #include "platform.h"
+#include "platform-legacy.h"
 
 class MCScreenDC: public MCUIDC
 {

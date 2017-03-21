@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "libscript/script.h"
 
+#include "platform-legacy.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _IREVIAM

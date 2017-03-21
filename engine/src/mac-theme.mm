@@ -16,7 +16,6 @@
 
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "osxprefix.h"
 #include "mac-internal.h"

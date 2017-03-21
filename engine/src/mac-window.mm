@@ -24,7 +24,6 @@
 #include "unicode.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "mac-clipboard.h"
 #include "mac-internal.h"

@@ -23,7 +23,6 @@
 #include "notify.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "mac-internal.h"
 

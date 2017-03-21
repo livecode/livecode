@@ -20,7 +20,6 @@
 
 #include "native-layer.h"
 #include "platform.h"
-#include "platform-internal.h"
 
 class MCNativeLayerMac : public MCNativeLayer
 {

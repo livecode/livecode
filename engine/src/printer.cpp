@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // SN-2014-08-25: [[ Bug 13187 ]] Added for the MCplayers' syncbuffering call
 #ifdef FEATURE_PLATFORM_PLAYER
 #include "platform.h"
+#include "platform-legacy.h"
 #endif
 
 extern char *strndup(const char *p_string, unsigned int p_length);

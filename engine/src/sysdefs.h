@@ -212,7 +212,6 @@ namespace MCPlatform {
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
-typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
 typedef class MCPlatformPlayer *MCPlatformPlayerRef;
 typedef class MCPlatform::Cursor *MCPlatformCursorRef;
 typedef class MCPlatform::Menu *MCPlatformMenuRef;

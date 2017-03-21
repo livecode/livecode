@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "font.h"
 #include "platform.h"
+#include "platform-legacy.h"
 #include "mctheme.h"
 
 MCTheme *

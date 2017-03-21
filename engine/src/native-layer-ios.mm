@@ -48,7 +48,7 @@
 #include "native-layer-ios.h"
 
 #include "platform.h"
-#include "platform-internal.h"
+#include "platform-legacy.h"
 
 #include "mbliphoneapp.h"
 #include "mblcontrol.h"

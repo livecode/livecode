@@ -46,6 +46,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "resolution.h"
 
+#include "platform-legacy.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack *MCStack::findstackd(Window w)

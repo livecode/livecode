@@ -30,7 +30,6 @@
 #include "osxprefix.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "variable.h"
 

@@ -49,7 +49,6 @@
 #include "native-layer-mac.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "graphics_util.h"
 

@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <cups/ppd.h>
 #include <pwd.h>
 
+#include "platform-legacy.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool serialize_cfdata(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFDataRef p_data);
