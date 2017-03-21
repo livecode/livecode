@@ -199,7 +199,7 @@ def validate_os(opts):
 def guess_xcode_arch(target_sdk):
     sdk, ver = re.match('^([^\d]*)(\d*)', target_sdk).groups()
     if sdk == 'macosx':
-        return 'i386'
+        return 'i386 x86_64'
     if sdk == 'iphoneos':
         if int(ver) < 8:
             return 'armv7'
@@ -269,7 +269,7 @@ def guess_java_home(platform):
     if platform.startswith('linux'):
         try:
             javac_str = '/bin/javac'
-            javac_path = subprocess.check_output(['/usr/bin/env', 
+            javac_path = subprocess.check_output(['/usr/bin/env',
                          'readlink', '-f', '/usr' + javac_str]).strip()
             if (os.path.isfile(javac_path) and
                 javac_path.endswith(javac_str)):
@@ -536,7 +536,7 @@ def configure_mac(opts):
     args = core_gyp_args(opts) + ['-Dtarget_sdk=' + opts['XCODE_TARGET_SDK'],
                                   '-Dhost_sdk=' + opts['XCODE_HOST_SDK'],
                                   '-Dtarget_arch=' + opts['TARGET_ARCH'],
-                                  '-Djavahome=' + opts['JAVA_SDK']]                                  
+                                  '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_ios(opts):
