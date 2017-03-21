@@ -1389,7 +1389,48 @@ typedef class MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
 
 namespace MCPlatform {
     
-    class Core: public Base
+    class MinimalCore: public Base
+    {
+    public:
+        // Wait
+        virtual bool WaitForEvent(double p_duration, bool p_blocking) = 0;
+        virtual void BreakWait(void) = 0;
+        
+        // Callbacks
+        virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context) = 0;
+        
+        // Player
+        virtual MCPlatformPlayerRef CreatePlayer(void) = 0;
+        
+        // Themes
+        virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool) = 0;
+        virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int) = 0;
+        virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color) = 0;
+        virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font) = 0;
+        virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string) = 0;
+        
+        // Callbacks
+        virtual MCPlatformCallbackRef GetCallback(void) = 0;
+        virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
+        
+        // Platform extensions
+        virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface) = 0;
+        
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        // Apple platforms only
+        virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
+#endif
+    };
+    
+    typedef Ref<MinimalCore> MinimalCoreRef;
+    
+} /* namespace MCPlatform */
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace MCPlatform {
+    
+    class Core: public MinimalCore
     {
     public:
         virtual int Run(int argc, char *argv[], char *envp[]) = 0;
@@ -1551,8 +1592,13 @@ namespace MCPlatform {
     
 } /* namespace MCPlatform */
 
+#ifdef PLATFORM_IS_MINIMAL
+typedef MCPlatform::MinimalCore MCPlatformCore;
+typedef MCPlatform::MinimalCore *MCPlatformCoreRef;
+#else
 typedef MCPlatform::Core MCPlatformCore;
 typedef MCPlatform::Core *MCPlatformCoreRef;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

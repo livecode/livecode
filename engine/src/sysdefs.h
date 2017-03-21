@@ -204,6 +204,7 @@ namespace MCPlatform {
     class Sound;
     class WindowMask;
     class PrintDialogSession;
+    class MinimalCore;
     class Core;
     class ScriptEnvironment;
     class Callback;
@@ -216,10 +217,15 @@ typedef class MCPlatformPlayer *MCPlatformPlayerRef;
 typedef class MCPlatform::Cursor *MCPlatformCursorRef;
 typedef class MCPlatform::Menu *MCPlatformMenuRef;
 typedef class MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
-typedef class MCPlatform::Core *MCPlatformCoreRef;
 typedef class MCPlatform::ScriptEnvironment *MCPlatformScriptEnvironmentRef;
 typedef class MCPlatform::Callback *MCPlatformCallbackRef;
 typedef class MCPlatform::NativeLayer *MCPlatformNativeLayerRef;
+
+#ifdef PLATFORM_IS_MINIMAL
+typedef class MCPlatform::MinimalCore *MCPlatformCoreRef;
+#else
+typedef class MCPlatform::Core *MCPlatformCoreRef;
+#endif
 
 typedef void *MCColorTransformRef;
 
