@@ -48,6 +48,11 @@ public:
             delete this;
         }
     }
+    virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
+    {
+        return false;
+    }
+
 private:
     mutable int64_t m_references = 1;
 };

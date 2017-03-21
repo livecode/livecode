@@ -2019,7 +2019,7 @@ void MCMacPlatformCore::EnableScreenUpdates(void)
 
 bool MCMacPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
 {
-    return false;
+    return MCPlatform::Base::QueryInterface(p_interface_id, r_interface);
 }
 
 void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))

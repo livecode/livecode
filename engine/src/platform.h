@@ -1410,16 +1410,17 @@ namespace MCPlatform {
         virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string) = 0;
         
         // Callbacks
-        virtual MCPlatformCallbackRef GetCallback(void) = 0;
-        virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
-        
-        // Platform extensions
-        virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface) = 0;
+        virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
+        virtual void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
         
 #if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
         // Apple platforms only
         virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
 #endif
+        
+    protected:
+        // Engine callbacks
+        MCPlatformCallbackRef m_callback = nil;
     };
     
     typedef Ref<MinimalCore> MinimalCoreRef;
@@ -1578,9 +1579,6 @@ namespace MCPlatform {
         // Callbacks
         virtual MCPlatformCallbackRef GetCallback(void) = 0;
         virtual void SetCallback(MCPlatformCallbackRef p_callback) = 0;
-        
-        // Platform extensions
-        virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface) = 0;
         
 #if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
         // Apple platforms only
