@@ -130,9 +130,6 @@ static void CALLBACK LoopFiberRoutine(void *p_parameter)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	// MW-2010-05-09: Elevated process handling - if the cmd line begins with '-elevated-slave'
@@ -218,8 +215,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			++csptr;
 	}
 
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+        !MCSInitialize() ||
+        !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set
@@ -329,7 +327,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MCValueRelease(MCcmdline);
     
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 
 	if (t_tsf_mgr != nil)

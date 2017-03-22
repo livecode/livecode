@@ -43,18 +43,28 @@ MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 
 struct MCBuiltinModule
 {
-    const char *name;
-    unsigned char *data;
-    unsigned long size;
+    MCBuiltinModule *next;
+    MCScriptModuleRef handle;
+    const unsigned char *data;
+    long size;
+    bool (*initializer)(void);
+    void (*finalizer)(void);
 };
 
+static MCBuiltinModule *s_builtin_modules = nil;
 static MCScriptModuleRef s_builtin_module = nil;
-static MCScriptModuleRef *s_builtin_modules = nil;
-static uindex_t s_builtin_module_count = 0;
-
 static MCScriptLoadLibraryCallback s_load_library_callback = nil;
 
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
+extern "C" void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
+{
+    if (p_module -> next != nullptr)
+    {
+        return;
+    }
+    
+    p_module->next = s_builtin_modules;
+    s_builtin_modules = p_module;
+}
 
 static MCSLibraryRef s_libscript_library = nullptr;
 
@@ -65,28 +75,22 @@ bool MCScriptInitialize(void)
     {
         return false;
     }
-    
-    MCBuiltinModule **t_modules;
-    unsigned int t_module_count;
-    if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
-        return true;
-    
-    if (!MCMemoryNewArray(t_module_count, s_builtin_modules))
-        return false;
-    
-    for(uindex_t i = 0; i < t_module_count; i++)
+
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
     {
         MCStreamRef t_stream;
-        if (!MCMemoryInputStreamCreate(t_modules[i] -> data, t_modules[i] -> size, t_stream))
+        if (!MCMemoryInputStreamCreate(t_module->data, t_module->size, t_stream))
             return false;
         
-        if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[i]))
+        if (!MCScriptCreateModuleFromStream(t_stream, t_module->handle))
             return false;
+        
+        MCScriptSetModuleLifecycleFunctions(t_module->handle,
+                                            t_module->initializer,
+                                            t_module->finalizer);
         
         MCValueRelease(t_stream);
     }
-    
-    s_builtin_module_count = t_module_count;
     
     // This block builds the builtin module - which isn't possible to compile from
     // source as the names of the types we are defining are currently part of the
@@ -284,6 +288,13 @@ bool MCScriptInitialize(void)
 			return false;
     }
 
+    // Now make sure all builtin modules are usable.
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        if (!MCScriptEnsureModuleIsUsable(t_module->handle))
+            return false;
+    }
+    
     s_load_library_callback = nullptr;
     
     return true;
@@ -291,10 +302,11 @@ bool MCScriptInitialize(void)
 
 void MCScriptFinalize(void)
 {
-    for(uindex_t i = 0; i < s_builtin_module_count; i++)
-        MCScriptReleaseModule(s_builtin_modules[i]);
-    MCMemoryDeleteArray(s_builtin_modules);
-    MCValueRelease(s_builtin_module);
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        MCScriptReleaseModule(t_module->handle);
+    }
+    MCScriptReleaseModule(s_builtin_module);
     
     MCValueRelease(s_libscript_library);
 }
@@ -434,17 +446,3 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern "C"
-{
-    extern MCBuiltinModule* g_builtin_modules[];
-    extern unsigned int g_builtin_module_count;
-}
-
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count)
-{
-	// Use the array defined in the module-helper.cpp file
-    r_modules = g_builtin_modules;
-    r_count = g_builtin_module_count;
-    return true;
-}

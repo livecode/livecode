@@ -50,9 +50,6 @@ void X_main_loop(void)
 		X_main_loop_iteration();
 }
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int platform_main(int argc, char *argv[], char *envp[])
 {
 	// On Linux, the argv and envp could be in pretty much any format. The
@@ -70,12 +67,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	if (!MCSInitialize())
 	{
 		fprintf(stderr, "Fatal: platform initialization failed\n");
-		exit(-1);
-	}
-	
-	if (!MCModulesInitialize())
-	{
-		fprintf(stderr, "Fatal: built-in module initialization failed\n");
 		exit(-1);
 	}
 	
@@ -148,7 +139,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code = X_close();
 
 	MCScriptFinalize();
-	MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);

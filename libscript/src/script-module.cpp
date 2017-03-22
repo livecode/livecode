@@ -233,6 +233,12 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
+    // Call the finalizer, if any.
+    if (self->finalizer != nullptr)
+    {
+        self->finalizer();
+    }
+    
     // Release the bits pickle-release doesn't touch.
     for(uindex_t i = 0; i < self -> dependency_count; i++)
         if (self -> dependencies[i] . instance != nil)
@@ -493,6 +499,15 @@ MCScriptCreateModulesFromData(MCDataRef p_data,
     return MCScriptCreateModulesFromStream(*t_stream, x_modules);
 }
 
+void
+MCScriptSetModuleLifecycleFunctions(MCScriptModuleRef p_module,
+                                    bool (*p_initializer)(void),
+                                    void (*p_finalizer)(void))
+{
+    p_module->initializer = p_initializer;
+    p_module->finalizer = p_finalizer;
+}
+
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
 {
     for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)
@@ -618,6 +633,13 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 			goto error_cleanup;
     }
 
+    // Now call the initializer, if any.
+    if (self->initializer != nullptr)
+    {
+        if (!self->initializer())
+            goto error_cleanup;
+    }
+    
     // Now build all the typeinfo's
     for(uindex_t i = 0; i < self -> type_count; i++)
     {

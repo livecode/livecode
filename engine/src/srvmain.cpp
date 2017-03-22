@@ -608,13 +608,11 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int platform_main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() ||
+        !MCSInitialize() ||
+	    !MCScriptInitialize())
 		exit(-1);
     
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
@@ -668,7 +666,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	MCMemoryDeleteArray(t_new_envp);
 
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);
