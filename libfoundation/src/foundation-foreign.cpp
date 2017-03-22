@@ -25,15 +25,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The C bool type
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCBoolTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCUIntTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCIntTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCFloatTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCDoubleTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
 
+// The C float type
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCFloatTypeInfo;
+// The C double type
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCDoubleTypeInfo;
+
+// The C void * type (with enforced non-nullptr check).
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
+
+// The standard sized integer types
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt8TypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt8TypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt16TypeInfo;
@@ -42,6 +45,47 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt32TypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt32TypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCUInt64TypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCInt64TypeInfo;
+
+// The size_t and ssize_t types which are architecture / platform dependent
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
+
+// The C unsigned long / long types which are architecture / platform dependent
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCULongTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCLongTypeInfo;
+
+// The uinteger_t and integer_t types, which are engine dependent
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCIntTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignBoolTypeInfo() { return kMCBoolTypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignFloatTypeInfo() { return kMCFloatTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignDoubleTypeInfo() { return kMCDoubleTypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignPointerTypeInfo() { return kMCPointerTypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUInt8TypeInfo() { return kMCUInt8TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignInt8TypeInfo() { return kMCInt8TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUInt16TypeInfo() { return kMCUInt16TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignInt16TypeInfo() { return kMCInt16TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUInt32TypeInfo() { return kMCUInt32TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignInt32TypeInfo() { return kMCInt32TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUInt64TypeInfo() { return kMCUInt64TypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignInt64TypeInfo() { return kMCInt64TypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSizeTypeInfo() { return kMCSizeTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSSizeTypeInfo() { return kMCSSizeTypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongTypeInfo() { return kMCCULongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCLongTypeInfo() { return kMCCLongTypeInfo; }
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntTypeInfo() { return kMCUIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignIntTypeInfo() { return kMCIntTypeInfo; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 struct bool_type_desc_t {
     using c_type = bool;
@@ -103,20 +147,46 @@ struct int32_type_desc_t: public integral_type_desc_t<int32_t> {
 struct uint64_type_desc_t: public integral_type_desc_t<uint64_t> {
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt64;
     static constexpr auto& type_info = kMCUInt64TypeInfo;
-    static constexpr auto describe_format = "<foreign 64-bit unsigned integer %u>";
+    static constexpr auto describe_format = "<foreign 64-bit unsigned integer %llu>";
 };
 struct int64_type_desc_t: public integral_type_desc_t<int64_t> {
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt64;
     static constexpr auto& type_info = kMCInt64TypeInfo;
-    static constexpr auto describe_format = "<foreign 64-bit integer %d>";
+    static constexpr auto describe_format = "<foreign 64-bit integer %lld>";
+};
+
+struct culong_type_desc_t: public integral_type_desc_t<unsigned long> {
+    static_assert(ULONG_MAX == UINT32_MAX || ULONG_MAX == UINT64_MAX,
+                  "Unsupported size for long");
+    static constexpr auto primitive_type = 
+        ((ULONG_MAX == UINT64_MAX) ?
+         kMCForeignPrimitiveTypeUInt64 :
+         kMCForeignPrimitiveTypeUInt32);
+    static constexpr auto& type_info = kMCCULongTypeInfo;
+    static constexpr auto describe_format = "<foreign unsigned long integer %lu>";
+};
+struct clong_type_desc_t: public integral_type_desc_t<long> {
+    static_assert(LONG_MAX == INT32_MAX || LONG_MAX == UINT64_MAX,
+                  "Unsupported size for long");
+    static constexpr auto primitive_type = 
+        ((LONG_MAX == INT64_MAX) ?
+         kMCForeignPrimitiveTypeSInt64 :
+         kMCForeignPrimitiveTypeSInt32);
+    static constexpr auto& type_info = kMCCLongTypeInfo;
+    static constexpr auto describe_format = "<foreign long integer %li>";
+    static constexpr auto& hash_func = MCHashInteger;
 };
 
 struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
+    static_assert(UINTEGER_MAX == UINT32_MAX,
+                  "Unsupported size for uinteger_t");
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt32;
     static constexpr auto& type_info = kMCUIntTypeInfo;
     static constexpr auto describe_format = "<foreign unsigned integer %u>";
 };
 struct int_type_desc_t: public integral_type_desc_t<integer_t> {
+    static_assert(INTEGER_MAX == INT32_MAX,
+                  "Unsupported size for integer_t");
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt32;
     static constexpr auto& type_info = kMCIntTypeInfo;
     static constexpr auto describe_format = "<foreign integer %i>";
@@ -173,17 +243,6 @@ struct pointer_type_desc_t {
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MCTypeInfoRef kMCForeignExportErrorTypeInfo;
-
-////////////////////////////////////////////////////////////////////////////////
-
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignBoolTypeInfo() { return kMCBoolTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntTypeInfo() { return kMCUIntTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignIntTypeInfo() { return kMCIntTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignFloatTypeInfo() { return kMCFloatTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignDoubleTypeInfo() { return kMCDoubleTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignPointerTypeInfo() { return kMCPointerTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSizeTypeInfo() { return kMCSizeTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSSizeTypeInfo() { return kMCSSizeTypeInfo; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -695,13 +754,9 @@ private:
 bool __MCForeignValueInitialize(void)
 {
     if (!(DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
-          DescriptorBuilder<int_type_desc_t>::create("__builtin__.int") &&
-          DescriptorBuilder<uint_type_desc_t>::create("__builtin__.uint") &&
           DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
           DescriptorBuilder<double_type_desc_t>::create("__builtin__.double") &&
           DescriptorBuilder<pointer_type_desc_t>::create("__builtin__.pointer") &&
-          DescriptorBuilder<size_type_desc_t>::create("__builtin__.size") &&
-          DescriptorBuilder<ssize_type_desc_t>::create("__builtin__ssize") &&
           DescriptorBuilder<uint8_type_desc_t>::create("__builtin__.uint8") &&
           DescriptorBuilder<int8_type_desc_t>::create("__builtin__.int8") &&
           DescriptorBuilder<uint16_type_desc_t>::create("__builtin__.uint16") &&
@@ -709,7 +764,13 @@ bool __MCForeignValueInitialize(void)
           DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
           DescriptorBuilder<int32_type_desc_t>::create("__builtin__.int32") &&
           DescriptorBuilder<uint64_type_desc_t>::create("__builtin__.uint64") &&
-          DescriptorBuilder<int64_type_desc_t>::create("__builtin__.int64")))
+          DescriptorBuilder<int64_type_desc_t>::create("__builtin__.int64") &&
+          DescriptorBuilder<size_type_desc_t>::create("__builtin__.size") &&
+          DescriptorBuilder<ssize_type_desc_t>::create("__builtin__ssize") &&
+          DescriptorBuilder<culong_type_desc_t>::create("__builtin__.culong") &&
+          DescriptorBuilder<clong_type_desc_t>::create("__builtin__.clong") &&
+          DescriptorBuilder<uint_type_desc_t>::create("__builtin__.uint") &&
+          DescriptorBuilder<int_type_desc_t>::create("__builtin__.int")))
         return false;
 
     /* ---------- */
@@ -725,13 +786,23 @@ bool __MCForeignValueInitialize(void)
 void __MCForeignValueFinalize(void)
 {
     MCValueRelease(kMCBoolTypeInfo);
-    MCValueRelease(kMCIntTypeInfo);
-    MCValueRelease(kMCUIntTypeInfo);
     MCValueRelease(kMCFloatTypeInfo);
     MCValueRelease(kMCDoubleTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
+    MCValueRelease(kMCUInt8TypeInfo);
+    MCValueRelease(kMCInt8TypeInfo);
+    MCValueRelease(kMCUInt16TypeInfo);
+    MCValueRelease(kMCInt16TypeInfo);
+    MCValueRelease(kMCUInt32TypeInfo);
+    MCValueRelease(kMCInt32TypeInfo);
+    MCValueRelease(kMCUInt64TypeInfo);
+    MCValueRelease(kMCInt64TypeInfo);
 	MCValueRelease(kMCSizeTypeInfo);
 	MCValueRelease(kMCSSizeTypeInfo);
+	MCValueRelease(kMCCULongTypeInfo);
+	MCValueRelease(kMCCLongTypeInfo);
+    MCValueRelease(kMCUIntTypeInfo);
+    MCValueRelease(kMCIntTypeInfo);
 
 	MCValueRelease (kMCForeignImportErrorTypeInfo);
 	MCValueRelease (kMCForeignExportErrorTypeInfo);

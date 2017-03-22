@@ -1544,24 +1544,47 @@ MC_DLLEXPORT MCTypeInfoRef MCListTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCProperListTypeInfo(void) ATTRIBUTE_PURE;
 
 MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
-
-MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignFloatTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignDoubleTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignPointerTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt64TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCInt64TypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt64TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignInt64TypeInfo(void) ATTRIBUTE_PURE;
 
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
-
 MC_DLLEXPORT MCTypeInfoRef MCForeignSizeTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignSSizeTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCCULongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCLongTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCULongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCLongTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
 
 //////////
 
