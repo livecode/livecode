@@ -166,7 +166,7 @@ struct culong_type_desc_t: public integral_type_desc_t<unsigned long> {
     static constexpr auto describe_format = "<foreign unsigned long integer %lu>";
 };
 struct clong_type_desc_t: public integral_type_desc_t<long> {
-    static_assert(LONG_MAX == INT32_MAX || LONG_MAX == UINT64_MAX,
+    static_assert(LONG_MAX == INT32_MAX || LONG_MAX == INT64_MAX,
                   "Unsupported size for long");
     static constexpr auto primitive_type = 
         ((LONG_MAX == INT64_MAX) ?
