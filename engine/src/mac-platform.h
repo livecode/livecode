@@ -988,10 +988,11 @@ public:
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
     
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
     // Apple platforms only
     virtual void RunBlockOnMainFiber(void (^block)(void));
 #endif
+    
 protected:
     // Sound
     void GetGlobalVolume(double& r_volume);

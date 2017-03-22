@@ -27,6 +27,8 @@
 
 #include "platform-extern.h"
 
+#ifndef PLATFORM_IS_MINIMAL
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -495,6 +497,8 @@ inline MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color)
     return MCplatform -> EndColorDialog(r_new_color);
 }
 
+#endif /* PLATFORM_IS_MINIMAL */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCPlatformPlayerRetain(MCPlatformPlayerRef player)
@@ -635,6 +639,8 @@ inline void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef &r_player
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef PLATFORM_IS_MINIMAL
 
 // SN-2014-07-23: [[ Bug 12907 ]]
 //  Update as well MCSreenDC::createscriptenvironment (and callees)
@@ -843,6 +849,8 @@ inline MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPl
     return p_recorder -> EndDialog();
 }
 
+#endif /* PLATFORM_IS_MINIMAL */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool MCPlatformInitialize(void)
@@ -861,6 +869,8 @@ inline void MCPlatformFinalize(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef PLATFORM_IS_MINIMAL
 
 inline void MCPlatformShowMessageDialog(MCStringRef p_title, MCStringRef p_message)
 {
@@ -883,6 +893,8 @@ inline void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCP
 {
     MCplatform -> SetSystemProperty(p_property, p_type, p_value);
 }
+
+#endif /* PLATFORM_IS_MINIMAL */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -909,6 +921,8 @@ inline void MCPlatformRunBlockOnMainFiber(void (^block)(void))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef PLATFORM_IS_MINIMAL
 
 // Return true if the abort key has been pressed since the last check.
 inline bool MCPlatformGetAbortKeyPressed(void)
@@ -1047,6 +1061,8 @@ inline void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle
     MCplatform -> ScreenSnapshotOfWindowArea(window_id, p_area, p_size, r_bitmap);
 }
 
+#endif /* PLATFORM_IS_MINIMAL */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool MCPlatformGetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
@@ -1074,6 +1090,8 @@ inline bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MC
     return MCplatform -> GetControlThemePropString(p_type, p_part, p_state, p_which, r_string);
 }
 
+#ifndef PLATFORM_IS_MINIMAL
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCPlatformRetainColorTransform(MCPlatformColorTransformRef p_transform)
@@ -1095,6 +1113,8 @@ inline bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transfor
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#endif /* PLATFORM_IS_MINIMAL */
 
 #endif
 

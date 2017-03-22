@@ -649,6 +649,12 @@
 			'src/cgimageutil.cpp',
 			'src/mac-clipboard.h',
 			'src/mac-clipboard.mm',
+			
+			# Group "iOS Platform"
+			'src/mbliphone-platform.h',
+			'src/mbliphone-core.mm',
+			'src/mbliphone-theme.mm',
+			'src/mbliphone-community-core.mm',
 		],
 		
 		# Sources that are only for desktop mode

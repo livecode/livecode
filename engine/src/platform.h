@@ -1396,6 +1396,9 @@ namespace MCPlatform {
         virtual bool WaitForEvent(double p_duration, bool p_blocking) = 0;
         virtual void BreakWait(void) = 0;
         
+        // Player
+        virtual MCPlatformPlayerRef CreatePlayer(void) = 0;
+        
         // Themes
         virtual bool GetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool) = 0;
         virtual bool GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, int& r_int) = 0;
@@ -1417,7 +1420,9 @@ namespace MCPlatform {
         MCPlatformCallbackRef m_callback = nil;
     };
     
-    typedef Ref<MinimalCore> MinimalCoreRef;
+#ifdef PLATFORM_IS_MINIMAL
+    typedef Ref<MinimalCore> CoreRef;
+#endif
     
 } /* namespace MCPlatform */
 
@@ -1580,7 +1585,9 @@ namespace MCPlatform {
 #endif
     };
     
+#ifndef PLATFORM_IS_MINIMAL
     typedef Ref<Core> CoreRef;
+#endif
     
 } /* namespace MCPlatform */
 
