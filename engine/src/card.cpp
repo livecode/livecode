@@ -1769,20 +1769,24 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 
             do
             {
-                if (foundobj == t_insert_iter->getref())
-                {
-                    if (t_found_in_group)
-                    {
-                        uint2 t_minimum_layer = 0;
-                        count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
-                              t_minimum_layer, True);
-                        t_before = (t_insert_iter->next() == objptrs ||
-                                    newlayer < t_minimum_layer);
-                    }
-                    break;
-                }
-                t_insert_iter = t_insert_iter->next();
-            }
+				if (foundobj == t_insert_iter->getref())
+				{
+					if (t_found_in_group)
+					{
+						uint2 t_minimum_layer = 0;
+						count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
+							  t_minimum_layer, True);
+						if (t_insert_iter->next() == objptrs ||
+							newlayer < t_minimum_layer)
+						{
+							t_before = true;
+							if (t_insert_iter == objptrs)
+								foundobj = nullptr;
+						}
+					}
+					break;
+				}
+				t_insert_iter = t_insert_iter->next();            }
             while (t_insert_iter != objptrs);
         }
 
