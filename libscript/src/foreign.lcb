@@ -22,22 +22,44 @@ module com.livecode.foreign
 
 public foreign type Pointer binds to "MCForeignPointerTypeInfo"
 
-public foreign type UInt32 binds to "MCForeignUIntTypeInfo"
-public foreign type Int32 binds to "MCForeignIntTypeInfo"
+public foreign type Float32 binds to "MCForeignFloatTypeInfo"
+public foreign type Float64 binds to "MCForeignDoubleTypeInfo"
+
+----------------------------------------------------------------
+-- Sized integral types
+----------------------------------------------------------------
+
+public foreign type UInt8 binds to "MCForeignUInt8TypeInfo"
+public foreign type Int8 binds to "MCForeignInt8TypeInfo"
+public foreign type UInt16 binds to "MCForeignUInt16TypeInfo"
+public foreign type Int16 binds to "MCForeignInt16TypeInfo"
+public foreign type UInt32 binds to "MCForeignUInt32TypeInfo"
+public foreign type Int32 binds to "MCForeignInt32TypeInfo"
+public foreign type UInt64 binds to "MCForeignUInt64TypeInfo"
+public foreign type Int64 binds to "MCForeignInt64TypeInfo"
 
 public foreign type UIntSize binds to "MCForeignSizeTypeInfo"
 public foreign type IntSize binds to "MCForeignSSizeTypeInfo"
 
-public foreign type Float32 binds to "MCForeignFloatTypeInfo"
-public foreign type Float64 binds to "MCForeignDoubleTypeInfo"
+public type UIntPtr is UIntSize
+public type IntPtr is IntSize
 
 ----------------------------------------------------------------
 -- C types
 ----------------------------------------------------------------
 
 public foreign type CBool binds to "MCForeignBoolTypeInfo"
-public type CInt is Int32
+public type CUChar is UInt8
+public type CChar is Int8
+public type CUShort is UInt16
+public type CShort is Int16
 public type CUInt is UInt32
+public type CInt is Int32
+public foreign type CULong binds to "MCForeignCULongTypeInfo"
+public foreign type CLong binds to "MCForeignCLongTypeInfo"
+public type CULongLong is UInt64
+public type CLongLong is Int64
+
 public type CFloat is Float32
 public type CDouble is Float64
 
@@ -45,10 +67,11 @@ public type CDouble is Float64
 -- LiveCode engine types
 ----------------------------------------------------------------
 
-public type LCInt is Int32
-public type LCUInt is UInt32
-public type LCIndex is Int32
-public type LCUIndex is UInt32
+public foreign type LCInt binds to "MCForeignIntTypeInfo"
+public foreign type LCUInt binds to "MCForeignUIntTypeInfo"
+
+public type LCIndex is LCInt
+public type LCUIndex is LCUInt
 
 ----------------------------------------------------------------
 -- Nul-terminated string pointer types
