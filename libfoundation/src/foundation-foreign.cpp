@@ -453,7 +453,7 @@ template <typename TypeDesc>
 bool defined(void *contents)
 {
     static_assert(TypeDesc::is_optional, "This type is not optional");
-    return *static_cast<typename TypeDesc::c_type *>(contents) == typename TypeDesc::c_type();
+    return *static_cast<typename TypeDesc::c_type *>(contents) != typename TypeDesc::c_type();
 }
 
 template <typename TypeDesc>
@@ -493,6 +493,7 @@ template <typename TypeDesc>
 bool doexport(MCValueRef p_value, bool p_release, void *contents)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
+    
     if (!DoExport<TypeDesc>::doexport(static_cast<typename TypeDesc::bridge_type>(p_value),
                                       *static_cast<typename TypeDesc::c_type *>(contents)))
     {
@@ -511,8 +512,9 @@ template <typename TypeDesc>
 bool doimport(void *contents, bool p_release, MCValueRef& r_value)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
-    return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
+    bool t_success = DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
                                         reinterpret_cast<typename TypeDesc::bridge_type&>(r_value));
+    return t_success;
 }
 
 /* ---------- bool specializations */
