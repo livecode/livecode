@@ -437,16 +437,16 @@ void MCButton::open()
 	//   has changed (i.e. background transition has occured).
 	uint32_t t_old_state;
 	t_old_state = state;
-	switch(gethilite(0))
+	switch(gethilite(0).value)
 	{
-	case True:
+	case kMCTristateTrue:
 		state |= CS_HILITED;
 		state &= ~CS_MIXED;
 		break;
-	case False:
+	case kMCTristateFalse:
 		state &= ~(CS_HILITED | CS_MIXED);
 		break;
-	case Mixed:
+	case kMCTristateMixed:
 		state &= ~CS_HILITED;
 		state |= CS_MIXED;
 		break;
@@ -1860,16 +1860,16 @@ void MCButton::replacedata(MCCdata *&data, uint4 newid)
 	bptr->appendto(bdata);
 	if (opened)
 	{
-		switch(gethilite(newid))
+		switch(gethilite(newid).value)
 		{
-		case True:
+		case kMCTristateTrue:
 			state |= CS_HILITED;
 			state &= ~CS_MIXED;
 			break;
-		case False:
+		case kMCTristateFalse:
 			state &= ~(CS_HILITED | CS_MIXED);
 			break;
-		case Mixed:
+		case kMCTristateMixed:
 			state &= ~CS_HILITED;
 			state |= CS_MIXED;
 			break;
@@ -2060,7 +2060,7 @@ uint2 MCButton::getfamily()
 	return family;
 }
 
-Boolean MCButton::gethilite(uint4 parid)
+MCTristate MCButton::gethilite(uint4 parid)
 {
 	if (flags & F_SHARED_HILITE)
 		parid = 0;
@@ -2089,7 +2089,7 @@ void MCButton::setdefault(Boolean def)
 	}
 }
 
-Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
+Boolean MCButton::sethilite(uint4 parid, MCTristate hilite)
 {
 	Boolean set
 		= True;
@@ -2104,21 +2104,21 @@ Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
 	MCCdata *foundptr = getbptr(parid);
 	
 	bool t_hilite_changed;
-	t_hilite_changed = hilite != foundptr -> getset();
+	t_hilite_changed = hilite != MCTristate(foundptr -> getset());
 	
-	foundptr->setset(hilite);
+	foundptr->setset(!hilite.isFalse());
 	uint4 oldstate = state;
 	if (opened && set)
-			switch (hilite)
+			switch (hilite.value)
 			{
-			case True:
+			case kMCTristateTrue:
 				state |= CS_HILITED;
 				state &= ~CS_MIXED;
 				break;
-			case False:
+			case kMCTristateFalse:
 				state &= ~(CS_HILITED | CS_MIXED);
 				break;
-			case Mixed:
+			case kMCTristateMixed:
 				state &= ~CS_HILITED;
 				state |= CS_MIXED;
 			}
@@ -2129,7 +2129,7 @@ Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
 	return state != oldstate;
 }
 
-void MCButton::resethilite(uint4 parid, Boolean hilite)
+void MCButton::resethilite(uint4 parid, MCTristate hilite)
 {
 	if (sethilite(parid, hilite))
 	{

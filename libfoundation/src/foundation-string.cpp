@@ -281,6 +281,14 @@ bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStr
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_cstring, strlen(p_cstring), p_options);
 }
 
+MC_DLLEXPORT_DEF
+bool MCStringSubstringIsEqualToCString(MCStringRef p_string, MCRange p_range, const char *p_cstring, MCStringOptions p_options)
+{
+    __MCAssertIsString(p_string);
+    
+    return MCStringSubstringIsEqualToNativeChars(p_string, p_range, (const char_t *)p_cstring, strlen(p_cstring), p_options);
+}
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 MC_DLLEXPORT_DEF
@@ -2460,25 +2468,24 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingUTF16BE:
         {
             uindex_t t_char_count;
-            unichar_t *t_bytes;
-            if (MCStringConvertToUnicode(self, t_bytes, t_char_count))
+            unichar_t * t_bytes;
+            if (!MCStringConvertToUnicode(self, t_bytes, t_char_count))
+                return false;
+
+            if ((p_encoding == kMCStringEncodingUTF16BE &&
+                 kMCByteOrderHost != kMCByteOrderBigEndian) ||
+                (p_encoding == kMCStringEncodingUTF16LE &&
+                 kMCByteOrderHost != kMCByteOrderLittleEndian))
             {
-                unichar_t *t_buffer;
-                MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
-                
-                for (uindex_t i = 0; i < t_char_count; i++)
+                for (uindex_t i = 0; i < t_char_count; ++i)
                 {
-                    if (p_encoding == kMCStringEncodingUTF16BE)
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToBig((t_bytes)[i]);   
-                    else
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                    t_bytes[i] = MCSwapInt(t_bytes[i]);
                 }
-				MCMemoryDeleteArray (t_bytes);
-                r_bytes = (byte_t*&)t_buffer;
-                r_byte_count = t_char_count * sizeof(unichar_t);
-                return true;
             }
-            return false;
+
+            r_bytes = reinterpret_cast<byte_t*>(t_bytes);
+            r_byte_count = t_char_count * sizeof(*t_bytes);
+            return true;
         }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
@@ -2964,16 +2971,28 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
 MC_DLLEXPORT_DEF
 bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
-	MCAssert(nil != p_chars);
+    return MCStringSubstringIsEqualToNativeChars(self,
+                                                 MCRangeMake(0, UINDEX_MAX),
+                                                 p_chars,
+                                                 p_char_count,
+                                                 p_options);
+}
 
+MC_DLLEXPORT_DEF
+bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
+{
+    __MCAssertIsString(self);
+    MCAssert(nil != p_chars);
+    
     if (MCStringIsNative(self))
     {
         if (__MCStringIsIndirect(self))
             self = self -> string;
         
-        return __MCNativeOp_IsEqualTo(self -> native_chars,
-                                      self -> char_count,
+        __MCStringClampRange(self, p_range);
+        
+        return __MCNativeOp_IsEqualTo(self -> native_chars + p_range . offset,
+                                      p_range . length,
                                       p_chars,
                                       p_char_count,
                                       p_options);
@@ -2982,9 +3001,9 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
     if (MCStringCantBeEqualToNative(self, p_options))
         return false;
     
-	MCAutoStringRef t_string;
-	MCStringCreateWithNativeChars(p_chars, p_char_count, &t_string);
-	return MCStringIsEqualTo(self, *t_string, p_options);
+    MCAutoStringRef t_string;
+    MCStringCreateWithNativeChars(p_chars, p_char_count, &t_string);
+    return MCStringSubstringIsEqualTo(self, p_range, *t_string, p_options);
 }
 
 MC_DLLEXPORT_DEF
@@ -6219,6 +6238,65 @@ bool MCStringIsGraphemeClusterBoundary(MCStringRef self, uindex_t p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(__LINUX__)
+static const iconv_t k_invalid_iconv_fd = reinterpret_cast<iconv_t>(-1);
+
+static bool is_valid_iconv_fd(iconv_t p_fd)
+{
+    return p_fd != k_invalid_iconv_fd;
+}
+
+static iconv_t s_iconv_unicode_from_sys_fd = k_invalid_iconv_fd;
+static iconv_t s_iconv_unicode_to_sys_fd   = k_invalid_iconv_fd;
+static iconv_t s_iconv_native_to_sys_fd    = k_invalid_iconv_fd;
+
+static bool
+__MCStringInitializeIconv()
+{
+    const char *k_internal_iconv_charset =
+        (kMCByteOrderHost == kMCByteOrderLittleEndian ? "UTF-16LE" : "UTF-16BE");
+
+    // What is the system character encoding?
+    //
+    // Doing this here is unpleasant but the MCString*SysString functions are
+    // needed before the libfoundation initialise call completes
+    if (__MCSysCharset == nil)
+    {
+        setlocale(LC_CTYPE, "");
+        __MCSysCharset = nl_langinfo(CODESET);
+    }
+
+    s_iconv_unicode_from_sys_fd = iconv_open(k_internal_iconv_charset, __MCSysCharset);
+    if (!is_valid_iconv_fd(s_iconv_unicode_from_sys_fd))
+        return false;
+    s_iconv_unicode_to_sys_fd = iconv_open(__MCSysCharset, k_internal_iconv_charset);
+    if (!is_valid_iconv_fd(s_iconv_unicode_to_sys_fd))
+        return false;
+    s_iconv_native_to_sys_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
+    if (!is_valid_iconv_fd(s_iconv_native_to_sys_fd))
+        return false;
+
+    return true;
+}
+
+static void
+__MCStringFinalizeIconv()
+{
+    auto t_iconv_cleanup = [](iconv_t& p_fd) {
+        if (is_valid_iconv_fd(p_fd))
+        {
+            iconv_close(p_fd);
+            p_fd = k_invalid_iconv_fd;
+        }
+    };
+
+    t_iconv_cleanup(s_iconv_unicode_from_sys_fd);
+    t_iconv_cleanup(s_iconv_unicode_to_sys_fd);
+    t_iconv_cleanup(s_iconv_native_to_sys_fd);
+}
+
+#endif /* __LINUX__ */
+
 MC_DLLEXPORT_DEF MCStringRef kMCEmptyString;
 MC_DLLEXPORT_DEF MCStringRef kMCTrueString;
 MC_DLLEXPORT_DEF MCStringRef kMCFalseString;
@@ -6229,6 +6307,11 @@ MC_DLLEXPORT_DEF MCStringRef kMCTabString;
 
 bool __MCStringInitialize(void)
 {
+#if defined(__LINUX__)
+    if (!__MCStringInitializeIconv())
+        return false;
+#endif
+
 	if (!MCStringCreateWithNativeChars((const char_t *)"", 0, kMCEmptyString))
 		return false;
     
@@ -6270,6 +6353,10 @@ void __MCStringFinalize(void)
     kMCLineEndString = nil;
     MCValueRelease(kMCTabString);
     kMCTabString = nil;
+
+#if defined(__LINUX__)
+    __MCStringFinalizeIconv();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6287,6 +6374,9 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	size_t t_alloc_remain = 0;
     char * t_out;
 	char * t_out_cursor;
+
+    /* Reset the iconv file descriptor */
+    iconv(fd, nullptr, nullptr, nullptr, nullptr);
 
     t_out = (char*)malloc(in_len);
     if (t_out == nil)
@@ -6360,27 +6450,8 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
         return true;
     }
 
-
-    // What is the system character encoding?
-    //
-    // Doing this here is unpleasant but the MCString*SysString functions are
-    // needed before the libfoundation initialise call is made
-    if (__MCSysCharset == nil)
-    {
-        setlocale(LC_CTYPE, "");
-        __MCSysCharset = nl_langinfo(CODESET);
-    }
-
-    // Create the pseudo-FD that iconv uses for character conversion. The most
-	// convenient form is UTF-16 as StringRefs can be constructed directly from that.
-#ifdef __LITTLE_ENDIAN__
-    iconv_t t_fd = iconv_open("UTF-16LE", __MCSysCharset);
-#else
-    iconv_t t_fd = iconv_open("UTF-16BE", __MCSysCharset);
-#endif
-	
     // Was creation of the iconv FD successful?
-    if (t_fd == (iconv_t)-1)
+    if (!is_valid_iconv_fd(s_iconv_unicode_from_sys_fd))
         return false;
 
     // Measure the string
@@ -6391,8 +6462,8 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 	char *t_utf16_bytes;
 	size_t t_utf16_byte_len;
 	bool t_success;
-    t_success = do_iconv(t_fd, p_system_string, t_len, t_utf16_bytes, t_utf16_byte_len);
-	iconv_close(t_fd);
+    t_success = do_iconv(s_iconv_unicode_from_sys_fd, p_system_string, t_len,
+                         t_utf16_bytes, t_utf16_byte_len);
 	
 	if (!t_success)
 		return false;
@@ -6430,23 +6501,19 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
     {
-        t_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
+        t_fd = s_iconv_native_to_sys_fd;
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);
 	}
 	else
 	{
-#ifdef __LITTLE_ENDIAN__
-        t_fd = iconv_open(__MCSysCharset, "UTF-16LE");
-#else
-        t_fd = iconv_open(__MCSysCharset, "UTF-16BE");
-#endif
+        t_fd = s_iconv_unicode_to_sys_fd;
 		t_mc_string = (const char *)MCStringGetCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string) * sizeof(unichar_t);
 	}
 
     // Was creation of the iconv FD successful?
-    if (t_fd == (iconv_t)-1)
+    if (!is_valid_iconv_fd(t_fd))
         return false;
 	
 	// Perform the conversion
@@ -6454,7 +6521,6 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 	char *t_sys_string;
 	size_t t_sys_len;
 	t_success = do_iconv(t_fd, t_mc_string, t_mc_len, t_sys_string, t_sys_len);
-	iconv_close(t_fd);
 	
 	if (!t_success)
 		return false;

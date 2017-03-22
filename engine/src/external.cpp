@@ -233,7 +233,6 @@ MCExternal::MCExternal(void)
 {
 	m_next = nil;
 	m_references = 0;
-	m_module = nil;
 	m_name = nil;
 }
 
@@ -247,16 +246,11 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_success = true;
 	
 	// Load the referenced module.
-	MCSysModuleHandle t_module;
-	t_module = nil;
+	MCSAutoLibraryRef t_module;
 	if (t_success)
 	{
-        // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
-        // SN-2015-04-07: [[ Bug 15164 ]] Use StringRef (we might want a Unicode
-        //  path to keep its Unicode chars).
-        t_module = (MCSysModuleHandle)MCU_loadmodule_stringref(p_filename);
-
-		if (t_module == NULL)
+        &t_module = MCU_library_load(p_filename);
+		if (!t_module.IsSet())
 			t_success = false;
 	}
 
@@ -265,17 +259,18 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_external = nil;
 	if (t_success)
 		for(t_external = s_externals; t_external != nil; t_external = t_external -> m_next)
-			if (t_external -> m_module == t_module)
+			if (MCValueIsEqualTo(*t_module,
+                                 *(t_external->m_module)))
 				break;
 
 	// If we failed to find the external, then we must try and prepare it.
 	if (t_success && t_external == nil)
 	{
 		// First try and load it as a new style external.
-	
-		if (MCS_resolvemodulesymbol(t_module, MCSTR("MCExternalDescribe")) != nil)
+        
+		if (MCU_library_lookup(*t_module, MCSTR("MCExternalDescribe")) != nil)
 			t_external = MCExternalCreateV1();
-		else if (MCS_resolvemodulesymbol(t_module, MCSTR("getXtable")) != nil)
+		else if (MCU_library_lookup(*t_module, MCSTR("getXtable")) != nil)
 			t_external = MCExternalCreateV0();
 		
 		if (t_external != nil)
@@ -284,7 +279,7 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 			s_externals = t_external;
 
 			t_external -> m_references = 0;
-			t_external -> m_module = t_module;
+			t_external -> m_module = t_module.Take();
 			t_external -> m_name = nil;
 			
 			t_success = t_external -> Prepare();

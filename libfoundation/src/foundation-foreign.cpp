@@ -19,6 +19,8 @@
 
 #include "foundation-private.h"
 
+#include <limits>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCBoolTypeInfo;
@@ -55,7 +57,9 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
     
     if (!t_resolved_typeinfo -> foreign . descriptor . copy(p_contents, t_value + 1))
@@ -80,7 +84,9 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
     
     if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))
@@ -105,7 +111,9 @@ bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeig
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, sizeof(__MCForeignValue) + t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeForeignValue,
+                                 t_resolved_typeinfo -> foreign . descriptor . size,
+                                 t_value))
         return false;
 
     if (t_resolved_typeinfo->foreign.descriptor.doexport == nil ||
@@ -179,6 +187,15 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool
+__throw_numeric_overflow(MCTypeInfoRef p_error, MCTypeInfoRef p_type)
+{
+    return MCErrorCreateAndThrow(p_error,
+                                 "type", p_type,
+                                 "reason", MCSTR("numeric overflow"),
+                                 nil);
+}
 
 // bool foreign type handlers
 
@@ -329,19 +346,25 @@ __size_import (void *contents,
                bool release,
                MCValueRef & r_value)
 {
-	size_t t_value = *(size_t *) contents;
+	size_t t_value = *static_cast<size_t *>(contents);
 
-	if (t_value > UINTEGER_MAX)
-	{
-		MCErrorCreateAndThrow (kMCForeignImportErrorTypeInfo,
-		                       "type", kMCSizeTypeInfo,
-		                       "reason", MCSTR("too large for Number representation"),
-		                       nil);
-		return false;
+    if (t_value <= UINTEGER_MAX)
+    {
+        return MCNumberCreateWithUnsignedInteger(uinteger_t(t_value),
+                                                 reinterpret_cast<MCNumberRef&>(r_value));
+    }
+#ifdef __64_BIT__
+    else if (t_value <= (1ULL << std::numeric_limits<double>::digits))
+    {
+        return MCNumberCreateWithReal(double(t_value),
+                                      reinterpret_cast<MCNumberRef&>(r_value));
+    }
+#endif
+    else
+    {
+        return __throw_numeric_overflow(kMCForeignImportErrorTypeInfo,
+                                        kMCSizeTypeInfo);
 	}
-
-	return MCNumberCreateWithUnsignedInteger((uinteger_t) t_value,
-	                                         (MCNumberRef &) r_value);
 }
 
 static bool
@@ -349,19 +372,26 @@ __ssize_import (void *contents,
                bool release,
                MCValueRef & r_value)
 {
-	ssize_t t_value = *(ssize_t *) contents;
+	ssize_t t_value = *static_cast<ssize_t *>(contents);
     
-	if (t_value < INTEGER_MIN || t_value > INTEGER_MAX)
-	{
-		MCErrorCreateAndThrow (kMCForeignImportErrorTypeInfo,
-		                       "type", kMCSizeTypeInfo,
-		                       "reason", MCSTR("too large for Number representation"),
-		                       nil);
-		return false;
+    if (t_value >= INTEGER_MIN && t_value <= INTEGER_MAX)
+    {
+        return MCNumberCreateWithInteger(integer_t(t_value),
+                                         reinterpret_cast<MCNumberRef&>(r_value));
+    }
+#ifdef __64_BIT__
+    else if (t_value >= -(1LL << std::numeric_limits<double>::digits) &&
+             t_value <= (1LL << std::numeric_limits<double>::digits))
+    {
+        return MCNumberCreateWithReal(double(t_value),
+                                      reinterpret_cast<MCNumberRef&>(r_value));
+    }
+#endif
+    else
+    {
+        return __throw_numeric_overflow(kMCForeignImportErrorTypeInfo,
+                                        kMCSSizeTypeInfo);
 	}
-    
-	return MCNumberCreateWithInteger((integer_t) t_value,
-                                     (MCNumberRef &) r_value);
 }
 
 static bool __float_import(void *contents, bool release, MCValueRef& r_value)
@@ -374,47 +404,64 @@ static bool __double_import(void *contents, bool release, MCValueRef& r_value)
     return MCNumberCreateWithReal(*(double *)contents, (MCNumberRef&)r_value);
 }
 
-static bool __int_export(MCValueRef value, bool release, void *contents)
+template <typename T>
+static bool
+__any_int_export(MCValueRef value,
+                 bool release,
+                 void *contents,
+                 MCTypeInfoRef typeinfo)
 {
-    *(integer_t *)contents = MCNumberFetchAsInteger((MCNumberRef)value);
+    // Fetch the number as a double
+    double t_value =
+            MCNumberFetchAsReal(static_cast<MCNumberRef>(value));
+ 
+    // First check that the value is within the contiguous integer range
+    // of doubles. If that succeeds, then check it fits within the target
+    // integer type.
+    if (t_value < double(-(1LL << std::numeric_limits<double>::digits)) ||
+        t_value > double(1LL << std::numeric_limits<double>::digits) ||
+        t_value < double(std::numeric_limits<T>::min()) ||
+        t_value > double(std::numeric_limits<T>::max()))
+    {
+        return __throw_numeric_overflow(kMCForeignExportErrorTypeInfo,
+                                        typeinfo);
+    }
+
+    *(T *)contents = T(t_value);
+
     if (release)
         MCValueRelease(value);
+    
     return true;
 }
 
-template <typename T>
 static bool
-__uint_export (MCValueRef value,
-               bool release,
-               void *contents,
-               MCTypeInfoRef typeinfo)
+__int_export(MCValueRef value, bool release, void *contents)
 {
-	/* Unsigned values can't be negative */
-	if (0 > MCNumberFetchAsReal ((MCNumberRef) value))
-	{
-		MCErrorCreateAndThrow (kMCForeignExportErrorTypeInfo,
-		                       "type", typeinfo,
-		                       "reason", MCSTR("cannot store negative value in unsigned integer"),
-		                       nil);
-		return false;
-	}
-
-    *(T *)contents = MCNumberFetchAsUnsignedInteger((MCNumberRef)value);
-
-    if (release)
-        MCValueRelease(value);
-    return true;
+    return __any_int_export<integer_t>(value, release, contents, kMCIntTypeInfo);
 }
 
 static bool
 __uint_export(MCValueRef value, bool release, void *contents)
 {
-	return __uint_export<uinteger_t>(value, release, contents, kMCUIntTypeInfo);
+	return __any_int_export<uinteger_t>(value, release, contents, kMCUIntTypeInfo);
+}
+
+static bool
+__size_export(MCValueRef value, bool release, void *contents)
+{
+    return __any_int_export<size_t>(value, release, contents, kMCSizeTypeInfo);
+}
+
+static bool
+__ssize_export(MCValueRef value, bool release, void *contents)
+{
+    return __any_int_export<ssize_t>(value, release, contents, kMCSSizeTypeInfo);
 }
 
 static bool __float_export(MCValueRef value, bool release, void *contents)
 {
-    *(float *)contents = MCNumberFetchAsReal((MCNumberRef)value);
+    *(float *)contents = float(MCNumberFetchAsReal((MCNumberRef)value));
     if (release)
         MCValueRelease(value);
     return true;
@@ -426,18 +473,6 @@ static bool __double_export(MCValueRef value, bool release, void *contents)
     if (release)
         MCValueRelease(value);
     return true;
-}
-
-static bool
-__size_export(MCValueRef value, bool release, void *contents)
-{
-	return __uint_export<size_t>(value, release, contents, kMCSizeTypeInfo);
-}
-
-static bool
-__ssize_export(MCValueRef value, bool release, void *contents)
-{
-	return __uint_export<ssize_t>(value, release, contents, kMCSSizeTypeInfo);
 }
 
 static bool

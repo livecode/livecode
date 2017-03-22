@@ -101,6 +101,8 @@ enum
     // SN-2015-03-12: [[ Bug 14413 ]] Add new UTF-8 <-> native conversion functions
     /* V4 */ OPERATION_CONVERT_FROM_NATIVE_TO_UTF8,
     /* V4 */ OPERATION_CONVERT_TO_NATIVE_FROM_UTF8,
+
+    /* V5 */ OPERATION_COPY_NATIVE_PATH_OF_MODULE,
 };
 
 enum
@@ -931,6 +933,21 @@ void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolv
         s_delete(t_result);
 }
 
+char *CopyNativePathOfModule(void *p_handle, int *r_success)
+{
+    char *t_result;
+
+    if (s_external_interface_version < 5)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return NULL;
+    }
+
+    t_result = (s_operations[OPERATION_COPY_NATIVE_PATH_OF_MODULE])(p_handle, NULL, NULL, r_success);
+    
+    return retstr(t_result);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // IM-2014-09-23: [[ RevBrowserCEF ]] External V4 functions
@@ -984,6 +1001,34 @@ const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
     
     return t_result;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// These stubs allow externals to use the weak linking script.
+
+void *MCSupportLibraryLoad(const char *p_path)
+{
+    int t_retval = EXTERNAL_SUCCESS;
+    void *t_result = NULL;
+    LoadModuleByName(p_path, &t_result, &t_retval);
+    return t_retval == EXTERNAL_SUCCESS ? t_result : NULL;
+}
+
+void MCSupportLibraryUnload(void *p_handle)
+{
+    int t_retval = EXTERNAL_SUCCESS;
+    UnloadModule(p_handle, &t_retval);
+}
+
+void *MCSupportLibraryLookupSymbol(void *p_handle, const char *p_symbol)
+{
+    int t_retval = EXTERNAL_SUCCESS;
+    void *t_pointer = NULL;
+    ResolveSymbolInModule(p_handle, p_symbol, &t_pointer, &t_retval);
+    return t_retval == EXTERNAL_SUCCESS ? t_pointer : NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
 struct LibExport

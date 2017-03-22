@@ -30,28 +30,39 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define istrdup strdup
 
-struct DATABASEREC
-{
-	char dbname[255];
-	idcounterrefptr idcounterptr;
-	new_connectionrefptr  newconnectionptr;
-	release_connectionrefptr releaseconnectionptr;
-    set_callbacksrefptr setcallbacksptr;
-	HINSTANCE driverref;
-};
-
-char *GetModuleFolder(HINSTANCE p_module);
-const char *GetExternalFolder(void);
-const char *GetApplicationFolder(void);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path);
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec);
 void MCU_path2std(char *p_path);
 void MCU_path2native(char *p_path);
 void MCU_fix_path(char *cstr);
 char *MCS_getcurdir(void);
 char *MCS_resolvepath(const char *p_path);
-BOOL WINAPI DllMain(HINSTANCE tInstance, DWORD dwReason, LPVOID /*lpReserved*/);
 
-extern HINSTANCE hInstance;
+#if defined(_MSC_VER) && _MSC_VER < 1900
 
+#define snprintf c99_snprintf
+#define vsnprintf c99_vsnprintf
 
+__inline int c99_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
+{
+    int count = -1;
+    
+    if (size != 0)
+        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
+    if (count == -1)
+        count = _vscprintf(format, ap);
+    
+    return count;
+}
+
+__inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
+{
+    int count;
+    va_list ap;
+    
+    va_start(ap, format);
+    count = c99_vsnprintf(outBuf, size, format, ap);
+    va_end(ap);
+    
+    return count;
+}
+
+#endif

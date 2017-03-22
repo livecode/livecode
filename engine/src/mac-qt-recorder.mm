@@ -35,8 +35,10 @@
 #include "variable.h"
 
 #include <Cocoa/Cocoa.h>
-#include <QTKit/QTKit.h>
-#include <QuickTime/QuickTime.h>
+#if defined(FEATURE_QUICKTIME)
+#   include <QTKit/QTKit.h>
+#   include <QuickTime/QuickTime.h>
+#endif
 #include <CoreAudioKit/CoreAudioKit.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>

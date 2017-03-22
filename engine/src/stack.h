@@ -353,6 +353,7 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
 
+    virtual void removereferences(void);
 	virtual Boolean del(bool p_check_flag);
     virtual bool isdeletable(bool p_check_flag);
     

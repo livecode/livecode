@@ -457,9 +457,6 @@ void MCInternalObjectListenerMessagePendingListeners(void)
         
 		MCobjectpropertieschanged = False;
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
-		
 		MCObjectListener *t_listener;
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
@@ -479,8 +476,6 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 					t_listener -> object -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
-					MCObjectListenerTarget *t_prev_target;
-					t_prev_target = nil;	
 					
 					double t_new_time;
 					t_new_time = MCS_time();
@@ -543,15 +538,12 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                                 t_changed = true;
                             }
 								
-                            t_prev_target = t_target;
 							t_target = t_target -> next;
 						}
 					}
 					else
 						t_listener -> object -> signallistenerswithmessage(t_properties_changed);
 				}
-				
-				t_prev_listener = t_listener;
 			}
 			
             t_listener = t_listener -> next;
@@ -570,9 +562,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
     MCObjectHandle t_current_object;
 	t_current_object = ctxt . GetObject() -> GetHandle();
 	
-	MCObjectListener *t_prev_listener;
-	t_prev_listener = nil;
-	
 	MCObjectListener *t_listener;
 	t_listener = s_object_listeners;
     
@@ -583,8 +572,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 
         MCObjectListenerTarget *t_target;
         t_target = nil;
-        MCObjectListenerTarget *t_prev_target;
-        t_prev_target = nil;
         
         if (t_listener -> object . IsValid())
         {
@@ -601,7 +588,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
             }
         }
         
-        t_prev_listener = t_listener;
         t_listener = t_listener -> next;
 	}
     t_listeners . Take(r_listeners, r_count);
@@ -752,8 +738,6 @@ public:
             return;
         }
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
@@ -764,15 +748,12 @@ public:
 		{
 			if (t_listener -> object == t_object_handle)
 				break;
-			t_prev_listener = t_listener;
 		}
 		
 		if (t_listener != nil)
 		{
 			MCObjectListenerTarget *t_target;
 			t_target = nil;
-			MCObjectListenerTarget *t_prev_target;
-			t_prev_target = nil;
 			
 			MCObjectHandle t_target_object;
             t_target_object = ctxt . GetObjectHandle();
@@ -787,7 +768,6 @@ public:
                     t_changed = true;
                     break;
 				}
-				t_prev_target = t_target;
 			}
             
             if (t_changed)

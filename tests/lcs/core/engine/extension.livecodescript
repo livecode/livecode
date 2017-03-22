@@ -177,3 +177,26 @@ on TestExtensionLibraryDelimiterAccess
    TestDiagnostic tDelimiters
    TestAssert "library handler can access delimiters", tDelimiters is "a,b,c,d"
 end TestExtensionLibraryDelimiterAccess
+
+//////////
+
+on TestExtensionExecuteScript
+   -- See Anomaly 19137
+   TestExtensionExecuteScript_Do "return the long id of this card", empty, empty
+   TestAssert "execute script works", the result is the long id of this card
+
+   create stack "TempStack"
+   TestExtensionExecuteScript_Do "return the short name of me", the long id of stack "TempStack", empty
+   TestAssert "execute script in object works", the result is the short name of stack "TempStack"
+   delete stack "TempStack"
+
+   local tArgs
+   put 200 into tArgs[1]
+   TestExtensionExecuteScript_Do "return param(1)", empty, tArgs
+   TestAssert "execute script with arguments works", the result is 200
+
+   create stack "TempStack2"
+   TestExtensionExecuteScript_Do "return the short name of me & param(1)", the long id of stack "TempStack2", tArgs
+   TestAssert "execute script in object with arguments works", the result is "TempStack2200"
+   delete stack "TempStack2"
+end TestExtensionExecuteScript

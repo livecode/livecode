@@ -118,9 +118,14 @@ static bool __MCMemoryInputStreamTell(MCStreamRef p_stream, filepos_t& r_positio
 
 static bool __MCMemoryInputStreamSeek(MCStreamRef p_stream, filepos_t p_position)
 {
+    /* This type is large enough to hold both the maximum value of
+     * filepos_t and the maximum value of a size_t. */
+    using file_size_t = decltype(filepos_t{} + size_t{});
+
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	if (p_position < 0 || p_position > self -> length)
+	if (p_position < 0
+        || /*NARROWING*/file_size_t(p_position) > self -> length)
 		return false;
 	self -> pointer = (size_t)p_position;
 	return true;

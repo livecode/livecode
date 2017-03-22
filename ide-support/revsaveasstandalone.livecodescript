@@ -132,12 +132,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the short name of the topStack into pStack
    end if
    
-   -- Script only stacks can not store standalone settings so don't allow them as targets
-   if the scriptOnly of stack pStack then
-      answer error "Script only stacks are not currently supported as standalone mainstacks"
-      exit revSaveAsStandalone
-   end if
-   
    if the fileName of stack pStack = empty then
       put "edited" into gREVStackStatus[pStack]
    end if
@@ -957,12 +951,7 @@ end revSaveAsLinuxStandalone
 
 private command  __ReloadOriginalStackFile pStackPath, pStack
    if there is a stack pStack then
-      local tOldLock
-      put the lockMessages into tOldLock
-      lock messages
-      set the cantDelete of stack pStack to false
-      delete stack pStack
-      set the lockMessages to tOldLock
+      __UnloadStack pStack
    end if
    
    local tError
@@ -973,6 +962,29 @@ private command  __ReloadOriginalStackFile pStackPath, pStack
    end try
    return it for value
 end __ReloadOriginalStackFile
+
+
+private command __UnloadStack pStack
+   local tOldLock, tStackEntry, tStack
+
+   put the lockMessages into tOldLock
+   lock messages
+
+   repeat for each line tStackEntry in the stackfiles of stack pStack
+      put item 1 of tStackEntry into tStack
+      if tStack is not empty AND there is a stack tStack then
+         set the cantDelete of stack tStack to false
+         delete stack tStack
+      end if
+   end repeat
+
+   -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
+   set the cantDelete of stack pStack to false
+   delete stack pStack
+   set the lockMessages to tOldLock
+
+   return empty
+end __UnloadStack
 
 #####################################################################
 # Check for open stacks, ask to save if need be then close them
@@ -2253,6 +2265,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          if the result is not empty then
             revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
          end if
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
@@ -2301,7 +2314,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
                revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
             end if
          end repeat
-         
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       default
          break
@@ -2498,9 +2511,7 @@ command revStandaloneDeployWithParams pTarget, pStackFilePath, pDeployInfo
    lock messages
    lock screen
    save stack pStackFilePath
-   -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
-   set the cantDelete of stack pStackFilePath to false
-   delete stack pStackFilePath
+   __UnloadStack the short name of stack pStackFilePath
    unlock screen
    unlock messages
    

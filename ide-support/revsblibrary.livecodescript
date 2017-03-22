@@ -1054,22 +1054,6 @@ end utilityMakePathRelative
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-command revSBResaveScriptOnlyStackAsProperStackFile pStackName, pStackFilePath, pOutputStackFilePath
-   lock messages
-   if there is a stack pStackName then
-      set the name of stack pStackName to "__keep_this_around__"
-   end if
-   create invisible stack "__temp_real_stack__"
-   set the script of stack "__temp_real_stack__" to the script of stack pStackFilePath
-   set the name of stack "__temp_real_stack__" to pStackName
-   save stack pStackName as pOutputStackFilePath
-   delete stack pStackName
-   if there is a stack "__keep_this_around__" then
-      set the name of stack "__keep_this_around__" to pStackName
-   end if
-   unlock messages
-end revSBResaveScriptOnlyStackAsProperStackFile
-
 # AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
 # this function to return the 'common' name of each of the libraries.
 function revSBScriptLibraryNameFromStackName pStack
@@ -1533,7 +1517,11 @@ function revSBAdditionalExternalsList pPlatform
          local tExternalFolder
          repeat for each line tExternalFolder in folders(tFolder)
             if tExternalFolder begins with "." then next repeat
-           
+            
+            if there is a file (tFolder & slash & tExternalFolder & slash & "ide_only") then
+               next repeat
+            end if
+            
             local tContents
             put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
             
@@ -2118,23 +2106,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       prependToStringList tInitScript, tStartupScript
    end if
    
-   -- Resave all aux stack files as non-script-only files 
-   local tResavedAux
-   if tAuxiliaryStackFiles is not empty then
-      repeat for each line tStackFile in tAuxiliaryStackFiles
-         local tTempStackFile
-         put the tempname into tTempStackFile
-         revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-         appendToStringList tTempStackFile, tResavedAux
-      end repeat
-   end if
-   
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
+      appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
    end if
    
-   put tResavedAux into xDeployParams["auxiliary_stackfiles"]
+   put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
 end revSBUpdateDeployParams

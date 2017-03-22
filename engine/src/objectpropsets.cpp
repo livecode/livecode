@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -87,6 +87,13 @@ MCArrayRef MCObjectPropertySet::fetch_nocopy() const
     return m_props.IsSet() ? *m_props : kMCEmptyArray;
 }
 
+MCAutoArrayRef MCObjectPropertySet::fetch_ensure()
+{
+    if (!m_props.IsSet())
+        MCArrayCreateMutable(&m_props);
+    return m_props;
+}
+
 bool MCObjectPropertySet::list(MCStringRef& r_keys) const
 {
     return MCArrayListKeys(fetch_nocopy(), '\n', r_keys);
@@ -120,9 +127,10 @@ bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MC
 
 bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value)
 {
-    if (!m_props.IsSet() && !MCArrayCreateMutable(&m_props))
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
         return false;
-    return MCArrayStoreValue(*m_props, ctxt . GetCaseSensitive(), p_name, p_value);
+    return MCArrayStoreValue(*t_props, ctxt . GetCaseSensitive(), p_name, p_value);
 }
 
 bool MCObjectPropertySet::restrict(MCStringRef p_string)
@@ -187,25 +195,21 @@ bool MCObjectPropertySet::isnested_legacy(void) const
 
 IO_stat MCObjectPropertySet::loadprops_legacy(IO_handle p_stream)
 {
-    MCAutoArrayRef t_new_props;
-    if (!MCArrayCreateMutable(&t_new_props))
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
         return IO_ERROR;
 
-    IO_stat t_status = MCArrayLoadFromHandleLegacy(*t_new_props, p_stream);
-    if (t_status == IO_NORMAL)
-        m_props.Give(t_new_props.Take());
+    IO_stat t_status = MCArrayLoadFromHandleLegacy(*t_props, p_stream);
     return t_status;
 }
 
 IO_stat MCObjectPropertySet::loadarrayprops_legacy(MCObjectInputStream& p_stream)
 {
-    MCAutoArrayRef t_new_props;
-    if (!MCArrayCreateMutable(&t_new_props))
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
         return IO_ERROR;
 
-    IO_stat t_status = MCArrayLoadFromStreamLegacy(*t_new_props, p_stream);
-    if (t_status == IO_NORMAL)
-        m_props.Give(t_new_props.Take());
+    IO_stat t_status = MCArrayLoadFromStreamLegacy(*t_props, p_stream);
     return t_status;
 }
 

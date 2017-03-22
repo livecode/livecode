@@ -1,0 +1,37 @@
+Name: msg
+
+Synonyms: msg
+
+Type: keyword
+
+Syntax: msg
+
+Summary:
+A special <global> <variable> that is used with the <put> command when
+no other destination container is specified.
+
+Introduced: 1.0
+
+OS: mac, windows, linux, ios, android, HTML5
+
+Platforms: desktop, mobile
+
+Example:
+-- set msg to foobar
+put "foobar"
+
+Example:
+put "baz" after msg
+
+Description:
+When <msg> is modified by a command the <msgChanged> <message> is sent
+to the object that modified it. If the <msgChanged> <message> is
+unhandled or passed then the value of <msg> will be written to the
+system log or in no ui mode (command line) to <stdout>.
+
+In LiveCode IDE <msg> and the <msgChanged> <message> are used to implement
+the message box.
+
+References: put (command), msgChanged (message), keyword (glossary),
+global (keyword), variable (glossary), message (glossary), 
+stdout <keyword>

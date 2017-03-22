@@ -1031,20 +1031,20 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	}
 }
 
-void MCGroup::uncacheid()
+void MCGroup::removereferences()
 {
     if (controls != NULL)
     {
         MCControl *t_control;
         t_control = controls;
         do
-        {   t_control -> uncacheid();
+        {   t_control -> removereferences();
             t_control = t_control -> next();
         }
         while(t_control != controls);
     }
     
-    MCObject::uncacheid();
+    MCObject::removereferences();
 }
 
 bool MCGroup::isdeletable(bool p_check_flag)
@@ -1897,7 +1897,7 @@ void MCGroup::radio(uint4 parid, MCControl *focused)
 		{
 			MCButton *bptr = (MCButton *)focused;
 			if (bptr->getstyle() == F_RADIO
-			        && (bptr->gethilite(parid)
+                && (!bptr->gethilite(parid).isFalse()
 			            || (bptr->getstate(CS_MFOCUSED)
 			                && MCU_point_in_rect(bptr->getrect(), mx, my))))
 			{
@@ -1930,7 +1930,7 @@ MCButton *MCGroup::gethilitedbutton(uint4 parid)
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(parid))
+                    && !bptr->gethilite(parid).isFalse())
 					return bptr;
 			}
 			cptr = cptr->next();

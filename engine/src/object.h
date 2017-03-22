@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
+#include <utility>
+
 // Disabled until C++11 support is available on all platforms
 #if 0
 #include <type_traits>
@@ -267,40 +269,29 @@ class MCObjectProxy<T>::Handle
 {
 public:
     
-    Handle() :
-      m_proxy(nullptr)
-    {
-    }
+	constexpr Handle() = default;
     
-    Handle(MCObjectProxy* p_proxy) :
-      m_proxy(nullptr)
+    Handle(MCObjectProxy* p_proxy)
     {
         Set(p_proxy);
     }
     
-    explicit Handle(const T* p_object) :
-      m_proxy(nullptr)
+    explicit Handle(const T* p_object)
     {
         Set(p_object);
     }
     
-    Handle(const Handle& p_handle) :
-      m_proxy(nullptr)
+    Handle(const Handle& p_handle)
     {
         Set(p_handle.m_proxy);
     }
     
-    Handle(Handle&& p_handle) : m_proxy(nullptr)
+    Handle(Handle&& p_handle)
     {
-        /* TODO[C++11] std::swap */
-        m_proxy = p_handle.m_proxy;
-        p_handle.m_proxy = nullptr;
+        std::swap(m_proxy, p_handle.m_proxy);
     }
 
-    Handle(decltype(nullptr)) :
-      m_proxy(nullptr)
-    {
-    }
+    constexpr Handle(decltype(nullptr)) {}
     
     Handle& operator= (MCObjectProxy* p_proxy)
     {
@@ -323,9 +314,7 @@ public:
     Handle& operator=(Handle&& p_handle)
     {
         Set(nullptr);
-        /* TODO[C++11] std::swap */
-        m_proxy = p_handle.m_proxy;
-        p_handle.m_proxy = nullptr;
+        std::swap(m_proxy, p_handle.m_proxy);
         return *this;
     }
 
@@ -454,7 +443,7 @@ public:
 private:
     
     // The proxy for the object this is a handle to
-    MCObjectProxy*  m_proxy;
+    MCObjectProxy*  m_proxy = nullptr;
     
     void Set(MCObjectProxy* p_proxy)
     {
@@ -689,7 +678,7 @@ public:
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
 
-    virtual void uncacheid(void);
+    virtual void removereferences(void);
     
 	// [[ C++11 ]] MSVC doesn't support typename here while other compilers require it
 #ifdef _MSC_VER
@@ -1044,7 +1033,7 @@ public:
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
 
-	Exec_stat domess(MCStringRef sptr);
+	Exec_stat domess(MCStringRef sptr, MCParameter *args = nil);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
     void editscript(MCStringRef p_at = nil);
@@ -1686,5 +1675,29 @@ inline MCObject* MCObjectCast<MCObject>(MCObject* p_object)
 {
     return p_object;
 }
+
+/* Helper class for locking an object for execution during a block.
+ * Always allocate this on the stack, e.g.:
+ *
+ *    {
+ *        MCObjectExecutionLock obj_lock {obj};
+ *        // ... do stuff
+ *    }
+ */
+class MCObjectExecutionLock
+{
+    MCObjectHandle m_handle;
+public:
+    MCObjectExecutionLock(MCObject* obj) : m_handle(obj)
+    {
+        if (m_handle.IsValid())
+            m_handle->lockforexecution();
+    }
+    ~MCObjectExecutionLock()
+    {
+        if (m_handle.IsValid())
+            m_handle->unlockforexecution();
+    }
+};
 
 #endif

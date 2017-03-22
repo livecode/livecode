@@ -9,8 +9,10 @@
 		'module_test_sources':
 		[
 			'test/environment.cpp',
+			'test/test_hash.cpp',
 			'test/test_string.cpp',
 			'test/test_typeconvert.cpp',
+            'test/test_system-library.cpp',
 		],
 	},
 
@@ -63,6 +65,7 @@
 				'include/system-commandline.h',
 				'include/system-file.h',
 				'include/system-init.h',
+                'include/system-library.h',
 				'include/system-random.h',
 				'include/system-stream.h',
 				
@@ -80,6 +83,9 @@
 				'src/foundation-error.cpp',
 				'src/foundation-filters.cpp',
 				'src/foundation-foreign.cpp',
+				'src/foundation-java.cpp',
+				'src/foundation-java-private.cpp',
+				'src/foundation-java-private.h',
 				'src/foundation-handler.cpp',
 				'src/foundation-list.cpp',
 				'src/foundation-locale.cpp',
@@ -106,9 +112,43 @@
 				'src/system-file.cpp',
 				'src/system-file-posix.cpp',
 				'src/system-file-w32.cpp',
-				'src/system-init.cpp',
+                'src/system-init.cpp',
+                'src/system-library.cpp',
+                'src/system-library-android.hpp',
+                'src/system-library-emscripten.hpp',
+                'src/system-library-ios.hpp',
+                'src/system-library-mac.hpp',
+                'src/system-library-posix.hpp',
+                'src/system-library-static.hpp',
+                'src/system-library-linux.hpp',
+                'src/system-library-w32.hpp',
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
+			],
+
+			'actions':
+			[
+				{
+					'action_name': 'generate_libfoundationjvm_stubs',
+					'inputs':
+					[
+						'../util/weak_stub_maker.pl',
+						'jvm.stubs',
+					],
+					'outputs':
+					[
+						'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
+					],
+
+					'action':
+					[
+						'<@(perl)',
+						'../util/weak_stub_maker.pl',
+						'--foundation',
+						'jvm.stubs',
+						'<@(_outputs)',
+					],
+				},
 			],
 			
 			'conditions':
@@ -123,20 +163,94 @@
 					},
 				],
 				[
-					'OS == "win"',
-					{
-						'sources/':
-						[
-							['exclude', '.*-posix\\.cpp$'],
-						],
-					},
+					'OS != "win"',
 					{
 						'sources/':
 						[
 							['exclude', '.*-w32\\.cpp$'],
 						],
 					},
+                    {
+                        'sources/':
+                        [
+                            ['exclude', '.*-posix\\.cpp$'],
+                        ],
+                    },
+                ],
+                [
+                    'OS != "mac"',
+                    {
+                        'sources/':
+                        [
+                            ['exclude', '.*-mac\\.cpp$'],
+                        ],
+                    },
+                ],
+                [
+                    'OS != "ios"',
+                    {
+                        'sources/':
+                        [
+                            ['exclude', '.*-ios\\.cpp$'],
+                        ],
+                    },
+                ],
+                [
+                    'OS != "linux"',
+                    {
+                        'sources/':
+                        [
+                            ['exclude', '.*-linux\\.cpp$'],
+                        ],
+                    },
+                ],
+                [
+                    'OS != "android"',
+                    {
+                        'sources/':
+                        [
+                            ['exclude', '.*-android\\.cpp$'],
+                        ],
+                    }
+                ],
+                
+                # Set java-related defines and includes
+                [
+					'host_os == "mac" and OS != "ios"',
+					{
+						'defines':
+						[
+							'TARGET_SUPPORTS_JAVA',
+						],
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/darwin',
+						],
+						'sources':
+						[
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
+						],
+					},
 				],
+				[
+					'host_os == "linux" and OS != "emscripten"',
+					{
+						'defines':
+						[
+							'TARGET_SUPPORTS_JAVA',
+						],
+						'include_dirs':
+						[
+							'<(javahome)/include',
+							'<(javahome)/include/linux',
+						],
+						'sources':
+						[
+							'<(INTERMEDIATE_DIR)/src/libfoundationjvm.stubs.cpp',
+						],
+					},
+                ],
 			],
 			
 			'direct_dependent_settings':

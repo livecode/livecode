@@ -6,19 +6,34 @@ REM #
 REM #   BUILD OPENSSL
 REM #
 
+ECHO Build OpenSSL for %BUILDTRIPLE%
+
 SET OPENSSL_TGZ=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%.tar.gz
-SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%
+SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%-src
+SET OPENSSL_BIN=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%-bin
+SET OPENSSL_TAR=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%.tar
+SET OPENSSL_BUILD_LOG=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%.log
+
+REM The files (relative to BIN) to include in the tar archive (UNIX path format)
+SET OPENSSL_FILES=lib/libeay32.lib lib/ssleay32.lib lib/ossl_static.pdb include/openssl
+
+REM
 
 cd "%_ROOT_DIR%"
 
 if not exist %OPENSSL_TGZ% (
-	echo "Fetching openssl-%OPENSSL_VERSION%
+	echo Fetching openssl-%OPENSSL_VERSION%
 	perl -MLWP::Simple -e "getstore('http://www.openssl.org/source/openssl-%OpenSSL_VERSION%.tar.gz', '%OPENSSL_TGZ%')"
 )
 
 if not exist %OPENSSL_SRC% (
-	echo "Unpacking openssl-%OPENSSL_VERSION%"
+	echo Unpacking openssl-%OPENSSL_VERSION% for %BUILDTRIPLE%
 	perl -MArchive::Tar -e "$Archive::Tar::FOLLOW_SYMLINK=1;Archive::Tar->extract_archive('%OpenSSL_TGZ%', 1);"
+	ren openssl-%OpenSSL_VERSION% openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%-src
+)
+
+IF "%1"=="prepare" (
+	EXIT /B 0
 )
 
 cd "%OPENSSL_SRC%"
@@ -26,7 +41,11 @@ cd "%OPENSSL_SRC%"
 REM Configure and build OpenSSL
 REM We disable hardware crypto engine support and any patented algorithms
 REM We build as static (but position-independent) libraries then link manually later
-SET OPENSSL_CONFIG=no-hw no-rc5 no-shared --prefix=%_INSTALL_DIR%
+SET OPENSSL_CONFIG=no-hw no-rc5 no-shared --prefix=%OPENSSL_BIN%
+
+IF %MODE%==debug (
+	SET OPENSSL_CONFIG=%OPENSSL_CONFIG% --debug
+)
 
 IF %ARCH%==x86_64 (
   SET OPENSSL_CONFIG=%OPENSSL_CONFIG% VC-WIN64A
@@ -38,36 +57,52 @@ IF %ARCH%==x86_64 (
   SET MACHINE=x86
 )
 
-perl Configure %OPENSSL_CONFIG%
-nmake clean
-nmake
+ECHO Configuring OpenSSL for %BUILDTRIPLE%
+ECHO ========== CONFIGURING ==========  >%OPENSSL_BUILD_LOG%
+perl Configure %OPENSSL_CONFIG% >>%OPENSSL_BUILD_LOG% 2>>&1
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
-REM Test the OpenSSL build (just in case)
-nmake test
+ECHO Building OpenSSL for %BUILDTRIPLE%
+ECHO ========== BUILDING ==========  >>%OPENSSL_BUILD_LOG%
+nmake clean 1>NUL 2>NUL
+nmake >>%OPENSSL_BUILD_LOG% 2>>&1
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
-REM Generate the .def files for libcrypto and libssl
-perl util\mkdef.pl crypto %BITS% > revcrypto.def
-perl util\mkdef.pl ssl    %BITS% > revssl.def
-
-REM Merge the definitions files
-%_TOOLS_DIR%Revolution.exe %_TOOLS_DIR%merge_dll_def.rev --name REVSECURITY revcrypto.def revssl.def > revsecurity.def
-
-REM Link the revsecurity.dll file
-link /nologo /subsystem:console /machine:%MACHINE% /opt:ref /dll /release /out:revsecurity.dll /def:revsecurity.def libcrypto.lib libssl.lib ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib libcmt.lib
+ECHO Testing OpenSSL for %BUILDTRIPLE%
+ECHO ========== TESTING ==========  >>%OPENSSL_BUILD_LOG%
+nmake test >>%OPENSSL_BUILD_LOG% 2>>&1
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
-IF NOT EXIST "%_INSTALL_DIR%\win32\%ARCH%\include" MKDIR "%_INSTALL_DIR%\win32\%ARCH%\include"
-IF NOT EXIST "%_INSTALL_DIR%\win32\%ARCH%\lib"     MKDIR "%_INSTALL_DIR%\win32\%ARCH%\lib"
+ECHO Packaging OpenSSL for %BUILDTRIPLE%
+ECHO ========== PACKAGING ==========  >>%OPENSSL_BUILD_LOG%
 
-XCOPY /E /Y /I include\openssl\* "%_INSTALL_DIR%\win32\%ARCH%\include\openssl\"
-COPY /Y revsecurity.dll "%_INSTALL_DIR%\win32\%ARCH%\lib"
-COPY /Y revsecurity.lib "%_INSTALL_DIR%\win32\%ARCH%\lib"
-COPY /Y revsecurity.exp "%_INSTALL_DIR%\win32\%ARCH%\lib"
-COPY /Y revsecurity.def "%_INSTALL_DIR%\win32\%ARCH%\lib"
+IF NOT EXIST "%OPENSSL_BIN%\include" MKDIR "%OPENSSL_BIN%\include"
+IF NOT EXIST "%OPENSSL_BIN%\lib"     MKDIR "%OPENSSL_BIN%\lib"
 
-REM Curl statically links against OpenSSL so give it a copy of the static libraries that were built
+XCOPY /E /Y /I include\openssl\* "%OPENSSL_BIN%\include\openssl\" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
 REM Current versions of Curl still use the old library names for linking against OpenSSL 1.1.0 on Windows
-COPY /Y libcrypto.lib "%_INSTALL_DIR%\win32\%ARCH%\lib\libeay32.lib"
-COPY /Y libssl.lib    "%_INSTALL_DIR%\win32\%ARCH%\lib\ssleay32.lib"
+COPY /Y libcrypto.lib "%OPENSSL_BIN%\lib\libeay32.lib" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+COPY /Y libssl.lib    "%OPENSSL_BIN%\lib\ssleay32.lib" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+COPY /Y ossl_static.pdb    "%OPENSSL_BIN%\lib\ossl_static.pdb" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+REM Build the prebuilt archives
+
+cd "%OPENSSL_BIN%"
+FOR /F "usebackq tokens=*" %%x IN (`cygpath.exe -u %OPENSSL_TAR%`) DO SET OPENSSL_TAR_CYG=%%x
+
+ECHO Archiving OpenSSL for %BUILDTRIPLE%
+ECHO ========== ARCHIVING ==========  >>%OPENSSL_BUILD_LOG%
+bash -c "tar --create --file=%OPENSSL_TAR_CYG% --transform='flags=r;s|^|%BUILDTRIPLE%/|' %OPENSSL_FILES%" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+ECHO Compressing OpenSSL for %BUILDTRIPLE%
+ECHO ========== COMPRESSING ==========  >>%OPENSSL_BUILD_LOG%
+bash -c "bzip2 --force %OPENSSL_TAR_CYG%" >>%OPENSSL_BUILD_LOG% 2>>&1
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%

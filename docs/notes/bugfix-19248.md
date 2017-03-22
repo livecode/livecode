@@ -1,0 +1,1 @@
+# When standalone builder removes the target stack from memory it now removes any stackfiles stacks that are in memory as well.

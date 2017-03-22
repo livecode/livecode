@@ -71,20 +71,16 @@
 							['exclude', '^src/(ds|mci).*\\.cpp$'],
 						],
 					},
+					{
+						'sources/':
+						[
+							['exclude', '^src/(qt).*\\.cpp$'],
+						],
+					},
 				],
 				[
 					'OS == "win"',
 					{
-						'include_dirs':
-						[
-							'<(quicktime_sdk)/CIncludes',
-						],
-						
-						'library_dirs':
-						[
-							'<(quicktime_sdk)/Libraries',
-						],
-						
 						'libraries':
 						[
 							'-lgdi32',
@@ -94,7 +90,6 @@
 							'-loleaut32',
 							'-lstrmiids',
 							'-lvfw32',
-							'-lQTMLClient'
 						],
 					},
 				],

@@ -469,25 +469,27 @@ extern "C" LIBRARY_EXPORT void setcallbacksref(DBcallbacks *callbacks)
     dbcallbacks = callbacks;
 }
 
-extern "C" void *MCU_loadmodule(const char *p_path)
+#ifndef REVDB_BUILD
+extern "C" void *MCSupportLibraryLoad(const char *p_path)
 {
     if (dbcallbacks == NULL)
         return NULL;
     return dbcallbacks -> load_module(p_path);
 }
 
-extern "C" void MCU_unloadmodule(void *p_handle)
+extern "C" void MCSupportLibraryUnload(void *p_handle)
 {
     if (dbcallbacks == NULL)
         return;
     dbcallbacks -> unload_module(p_handle);
 }
 
-extern "C" void *MCU_resolvemodulesymbol(void *p_handle, const char *p_symbol)
+extern "C" void *MCSupportLibraryLookupSymbol(void *p_handle, const char *p_symbol)
 {
     if (dbcallbacks == NULL)
         return NULL;
     return dbcallbacks -> resolve_symbol_in_module(p_handle, p_symbol);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

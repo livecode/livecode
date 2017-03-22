@@ -874,8 +874,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// MM-2011-07-14: Add support for listing avaiable network interfaces
 	case P_NETWORK_INTERFACES:
 
-	case P_REV_MESSAGE_BOX_LAST_OBJECT: // DEVELOPMENT only
-	case P_REV_MESSAGE_BOX_REDIRECT: // DEVELOPMENT only
+	case P_MESSAGE_BOX_LAST_OBJECT:
 	case P_REV_LICENSE_LIMITS: // DEVELOPMENT only
 
 	// MW-2010-06-04: Add support for dock menu and status icon separation.

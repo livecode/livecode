@@ -111,14 +111,6 @@ MCLicenseParameters MClicenseparameters =
 
 Boolean MCenvironmentactive = False;
 
-MCObjectHandle MCmessageboxredirect = nil;
-
-// IM-2013-04-16: [[ BZ 10836 ]] Provide reference to the last "put" source
-// as a global property, the "revMessageBoxLastObject"
-MCObjectHandle MCmessageboxlastobject = nil;
-MCNameRef MCmessageboxlasthandler = nil;
-uint32_t MCmessageboxlastline = 0;
-
 Boolean MCcrashreportverbose = False;
 MCStringRef MCcrashreportfilename = nil;
 
@@ -159,9 +151,7 @@ MCObjectPropertyTable MCStack::kModePropertyTable =
 MCPropertyInfo MCProperty::kModeProperties[] =
 {    
 	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
-    DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
-    DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
-	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, Mode, RevLicenseInfoByKey)
+    DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, Mode, RevLicenseInfoByKey)
     DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
     DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
     DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
@@ -446,11 +436,12 @@ void MCStack::mode_load(void)
 		MCAutoNameRef t_ide_override_name;
 		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
 
-		MClockmessages++;
+        bool t_old_lock = MClockmessages;
+		MClockmessages = true;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
         getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
-		MClockmessages--;
+		MClockmessages = t_old_lock;
 
 		bool t_treat_as_ide;
         MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
@@ -669,94 +660,6 @@ bool MCModeCanSetObjectScript(uint4 obj_id)
 // In development mode, we don't check the old CANT_STANDALONE flag.
 bool MCModeShouldCheckCantStandalone(void)
 {
-	return false;
-}
-
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
-{
-	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
-	// if the source of the change is not within the message box
-	MCObject *t_msg_box = nil;
-	if (MCmessageboxredirect.IsValid())
-		t_msg_box = MCmessageboxredirect;
-	else
-	{
-		if (!MCmbstackptr)
-			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
-		t_msg_box = MCmbstackptr;
-	}
-	
-	MCObject *t_src_object = nil;
-	if (ctxt.GetObject() != nil)
-		t_src_object = ctxt.GetObject();
-	
-	bool t_in_msg_box = false;
-	
-	MCObject *t_obj_ptr = t_src_object;
-	while (t_obj_ptr != nil)
-	{
-		if (t_obj_ptr == t_msg_box)
-		{
-			t_in_msg_box = true;
-			break;
-		}
-		t_obj_ptr = t_obj_ptr->getparent();
-	}
-	
-	if (!t_in_msg_box)
-	{
-		MCmessageboxlastobject = t_src_object->GetHandle();
-		
-		MCNameDelete(MCmessageboxlasthandler);
-		MCmessageboxlasthandler = nil;
-		MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
-		
-        MCmessageboxlastline = ctxt . GetLine();
-	}
-	
-	if (MCmessageboxredirect.IsValid())
-	{
-		if (MCmessageboxredirect -> gettype() == CT_FIELD)
-		{
-            MCField *t_msg_field = MCmessageboxredirect.GetAs<MCField>();
-			MCStack *t_msg_stack;
-			t_msg_stack = t_msg_field -> getstack();
-
-            t_msg_field -> settext(0, p_string, False);
-			
-            Window_mode newmode = t_msg_stack -> userlevel() == 0 ? WM_MODELESS
-										: (Window_mode)(t_msg_stack -> userlevel() + WM_TOP_LEVEL_LOCKED);
-			
-			// MW-2011-07-05: [[ Bug 9608 ]] The 'ep' that is passed through to us does
-			//   not necessarily have an attached object any more. Given that the 'rel'
-			//   parameter of the open stack call is unused, computing it from that
-			//   context is redundent.
-			if (t_msg_stack -> getmode() != newmode)
-				t_msg_stack -> openrect(t_msg_stack -> getrect(), newmode, NULL, WP_DEFAULT, OP_NONE);
-			else
-				t_msg_stack -> raise();
-		}
-		else
-		{
-			MCAutoNameRef t_msg_changed;
-			/* UNCHECKED */ t_msg_changed . CreateWithCString("msgchanged");
-			
-			bool t_added = false;
-			if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
-			{
-				MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-				t_added = true;
-			}
-			
-			MCmessageboxredirect -> message(t_msg_changed);
-		
-			if (t_added)
-				MCnexecutioncontexts--;
-		}
-
-		return true;
-	}
-
 	return false;
 }
 
@@ -1491,90 +1394,12 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     }
 }
 
-static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
-{    
-    MCObject *objptr = NULL;
-    MCChunk *tchunk = new (nothrow) MCChunk(False);
-    MCerrorlock++;
-    MCScriptPoint sp(p_string);
-    if (tchunk->parse(sp, False) == PS_NORMAL)
-    {
-        uint4 parid;
-        tchunk->getobj(ctxt, objptr, parid, True);
-    }
-    MCerrorlock--;
-    delete tchunk;
-    return objptr;
-}
-
-void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
-{
-    MCObject *t_object;
-    t_object = getobj(ctxt, p_target);
-    
-    if (t_object != NULL)
-        MCmessageboxredirect = t_object -> GetHandle();
-    else
-        MCmessageboxredirect = nil;
-}
-            
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
-    // MM-2012-11-06: [[ Property Listener ]]
-    MCpropertylistenerthrottletime = p_time;
+	// MM-2012-11-06: [[ Property Listener ]]
+	MCpropertylistenerthrottletime = p_time;
 #endif
-}
-
-void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
-{
-    if (MCmessageboxlastobject.IsValid())
-    {
-        bool t_success;
-
-        MCAutoStringRef t_obj, t_long_id;
-        MCAutoValueRef t_id_value;
-        t_success = MCStringCreateMutable(0, &t_obj);
-        
-        if (t_success)
-            t_success = MCmessageboxlastobject->names(P_LONG_ID, &t_id_value);
-        if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
-            t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
-
-        if (t_success && MCmessageboxlastobject->getparentscript() != nil)
-        {
-            t_success = MCmessageboxlastobject->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
-            if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
-                t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
-        }
-        if (t_success && MCStringCopy(*t_obj, r_object))
-            return;
-    }
-    else
-    {
-        r_object = MCValueRetain(kMCEmptyString);
-        return;
-    }
-    
-    ctxt . Throw();
-}
-
-void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
-{
-    if (MCmessageboxredirect.IsValid())
-    {
-        MCAutoValueRef t_long_id;
-        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
-            ctxt . ConvertToString(*t_long_id, r_id))
-            return;
-    }
-    else
-    {
-        r_id = MCValueRetain(kMCEmptyString);
-        return;
-    }
-    
-    ctxt . Throw();
 }
 
 void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits)

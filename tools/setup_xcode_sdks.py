@@ -3,7 +3,7 @@
 # Update these lists if you need different SDK versions!
 
 iphoneos_versions = ["10.2", "9.2"]
-iphonesimulator_versions = ["10.2", "9.2", "8.2", "7.1", "6.1"]
+iphonesimulator_versions = ["10.2", "9.2", "8.2"]
 macosx_versions = ["10.9", "10.6"]
 
 # This tool creates the symlinks required for Xcode builds of LiveCode.

@@ -1,0 +1,3 @@
+jvm
+	JNI_GetDefaultJavaVMInitArgs: (pointer) -> ()
+	JNI_CreateJavaVM: (pointer, pointer, pointer) -> (integer)

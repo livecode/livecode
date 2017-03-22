@@ -609,19 +609,19 @@ public:
         if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
 		
-
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr . object -> GetHandle();
 			t_context . name = *t_item;
-            t_context . var = ctxt . GetIt() -> evalvar(ctxt);
+            if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
+                return;
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
 				t_context . stream = MCS_open(*t_file, kMCOpenFileModeWrite, False, False, 0);
 
-			t_context . var -> clear();
+			t_context.var.clear();
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
@@ -645,7 +645,7 @@ private:
 		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
-		MCVariable *var;
+		MCContainer var;
 	};
 
 	static bool extract_item(void *p_context, const void *p_data, uint32_t p_data_length, uint32_t p_data_offset, uint32_t p_data_total)
@@ -663,15 +663,7 @@ private:
 			MCExecContext ctxt;
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCStringRef t_value;
-            MCAutoValueRef t_valueref;
-            context -> var -> copyasvalueref(&t_valueref);
-			/* UNCHECKED */ ctxt . ConvertToString(*t_valueref, t_value);
-			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			if (!MCStringAppend(t_value, *t_data))
-				return false;
-            context -> var ->setvalueref(t_value);
-			MCValueRelease(t_value);
+            context->var.set(ctxt, *t_data, kMCVariableSetAfter);
 		}
         
 		if (context->target.IsValid())
@@ -1184,7 +1176,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 
-	case kMCCapsuleSectionTypeStack:
+	case kMCCapsuleSectionTypeMainStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read project stack");
@@ -1195,6 +1187,18 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         //   the startup script and such work.
         MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyMainStack:
+        if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read project stack");
+            return false;
+        }
+        
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
+        break;
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
@@ -1233,11 +1237,35 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeAuxiliaryStack:
     {
         MCStack *t_aux_stack;
-        if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
+        const char *t_result;
+        if (MCdispatcher -> trytoreadbinarystack(kMCEmptyString,
+                                                 kMCEmptyString,
+                                                 p_stream, nullptr,
+                                                 t_aux_stack, t_result) != IO_NORMAL)
         {
             MCresult -> sets("failed to read auxillary stack");
             return false;
         }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+        break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadscriptonlystackofsize(kMCEmptyString,
+                                                           p_stream,
+                                                           p_length,
+                                                           nullptr,
+                                                           t_aux_stack,
+                                                           t_result)
+            != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
 			
@@ -1546,12 +1574,6 @@ bool MCModeCanSetObjectScript(uint4 obj_id)
 bool MCModeShouldCheckCantStandalone(void)
 {
 	return true;
-}
-
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
-{
-	return false;
 }
 
 // The standalone mode causes a relaunch message.

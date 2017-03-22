@@ -38,31 +38,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCS_log(MCStringRef p_message)
+
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
 {
-	MCsystem -> Debug(p_message);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
-{
-	switch(p_kind)
+	bool t_success;
+	switch (p_kind)
 	{
-	case kMCSPutOutput:
-	case kMCSPutBeforeMessage:
-	case kMCSPutIntoMessage:
-	case kMCSPutAfterMessage:
-		MCS_log(p_data);
-		break;
-
-	default:
-		break;
+		case kMCSPutBeforeMessage:
+			t_success = MCmb -> set(ctxt, p_string, kMCVariableSetBefore);
+			break;
+		case kMCSPutOutput:
+		case kMCSPutIntoMessage:
+			t_success = MCmb -> set(ctxt, p_string);
+			break;
+		case kMCSPutAfterMessage:
+			t_success = MCmb -> set(ctxt, p_string, kMCVariableSetAfter);
+			break;
+		default:
+			t_success = false;
+			break;
 	}
-    
-    ctxt . SetTheResultToBool(True);
-	return true;
+	
+	return t_success;
 }
 
 // Missing implementation. What to write here? Panos.

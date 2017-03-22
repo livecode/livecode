@@ -455,7 +455,9 @@ Copy to email addresses with one per line
 pSubject (string):
 Email subject line
 
-pAttachmentA (array): Each element of the array must be in the following form
+pAttachmentA (array): A numerically indexed (1..N) multi-dimensional
+array. Each element describes a different attachment. The elements of
+the array may contain the following keys.
 
 - "filepath": The full path to the file. Optional if the "data" element has a value
 - "data": The file data. Optional if the "filepath" element has a value
