@@ -38,3 +38,16 @@ on TestDeleteStackWithSubstack
 	
 	TestAssert "delete stack with substack no crash", true
 end TestDeleteStackWithSubstack
+
+on TestDeleteSelectedObjects
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	create field
+	select button 1 and field 1
+	
+	delete
+	
+	TestAssert "delete selected objects", the number of controls is 0
+end TestDeleteSelectedObjects
