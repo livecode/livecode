@@ -1261,7 +1261,6 @@ static void *mobile_main(void *arg)
     if (!MCSInitialize() ||
         !MCAndroidGetLibraryPath(&t_lib_path) ||
         !(MCSLibraryAndroidSetNativeLibPath(*t_lib_path), true) ||
-        !MCModulesInitialize() ||
         !MCScriptInitialize())
     {
         co_leave_engine();
