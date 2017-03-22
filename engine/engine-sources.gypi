@@ -576,8 +576,6 @@
 							
 			# Group "Theming"
 			'src/linux-theme.cpp',
-			'src/mblandroid-theme.cpp',
-			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
 			'src/osxtheme.h',
 			'src/osxtheme.cpp',
@@ -592,14 +590,10 @@
 			'src/clipboard.h',
 			'src/em-clipboard.h',
 			'src/lnx-clipboard.h',
-			'src/mblandroid-clipboard.h',
-			'src/mbliphone-clipboard.h',
 			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
 			'src/em-clipboard.cpp',
 			'src/lnx-clipboard.cpp',
-			'src/mblandroid-clipboard.cpp',
-			'src/mbliphone-clipboard.mm',
 			'src/w32-clipboard.cpp',
 
 			'src/mixin-refcounted.h',
@@ -655,6 +649,16 @@
 			'src/mbliphone-core.mm',
 			'src/mbliphone-theme.mm',
 			'src/mbliphone-community-core.mm',
+			'src/mbliphone-clipboard.mm',
+			'src/mbliphone-clipboard.h',
+			
+			# Group "Android Platform"
+			'src/mblandroid-platform.h',
+			'src/mblandroid-core.cpp',
+			'src/mblandroid-theme.cpp',
+			'src/mblandroid-clipboard.cpp',
+			'src/mblandroid-clipboard.h',
+			
 		],
 		
 		# Sources that are only for desktop mode
