@@ -26,7 +26,7 @@ widget com.livecode.widget.svgpath
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in livecode

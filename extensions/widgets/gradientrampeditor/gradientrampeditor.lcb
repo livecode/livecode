@@ -58,7 +58,7 @@ Handle the <selectedStopChanged> message to perform an operation when the select
 
 **/
 
-widget com.livecode.widget.gradientRampEditor
+widget com.livecode.widget.gradientrampeditor
 
 metadata title is "Gradient Ramp Editor"
 metadata author is "LiveCode"
