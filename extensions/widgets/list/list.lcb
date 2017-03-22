@@ -118,8 +118,8 @@ public handler OnPaint() returns nothing
 	variable tListItem as Array
 	put the empty array into tListItem
 	
-	variable tx as Integer
-	put 1 into tx
+	variable tX as Integer
+	put 1 into tX
 	
 	put the floor of mViewTopPosition / mRowHeight into mFirstListItem
 	if mFirstListItem < 1 then
@@ -131,8 +131,8 @@ public handler OnPaint() returns nothing
 	subtract tTopOffset from tTop
 	
 	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
-	repeat with tx from mFirstListItem up to the number of elements in mListData
-		put element tx of mListData into tListItem
+	repeat with tX from mFirstListItem up to the number of elements in mListData
+		put element tX of mListData into tListItem
 		put mMargin into tLeft
 		// Draw the background
 		
