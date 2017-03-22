@@ -39,10 +39,14 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCScriptForEachBuiltinModuleCallback)(void *p_context, MCScriptModuleRef p_module);
+
 typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
 
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
+
+bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback, void *p_context);
 
 void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
 
@@ -166,6 +170,9 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
 
 // Load a module from a blob
 MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
+
+// Set initializer / finalizer
+void MCScriptSetModuleLifecycleFunctions(MCScriptModuleRef module, bool (*initializer)(void), void (*finalizer)(void));
 
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);

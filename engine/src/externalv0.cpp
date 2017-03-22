@@ -384,6 +384,40 @@ MCExternal *MCExternalCreateV0(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Convert a libfoundation string to a buffer + length.
+ *
+ * Allocate a new buffer and fill it with the result of encoding
+ * p_string.  The new buffer pointer is returned in r_buffer and its
+ * length is returned in r_length.
+ *
+ * If p_is_text is true, the contents of p_string is encoded with
+ * UTF-8.  Otherwise, p_string is normalised and converted to the
+ * platform native encoding.
+*/
+static bool convert_from_string (MCStringRef p_string,
+                                 bool p_is_text,
+                                 char*& r_buffer,
+                                 uindex_t& r_length)
+{
+    if (p_is_text)
+    {
+        if (!MCStringConvertToUTF8(p_string, r_buffer, r_length))
+            return false;
+    }
+    else
+    {
+        char_t* t_buf = nullptr;
+        uindex_t t_len = 0;
+        if (!MCStringNormalizeAndConvertToNative(p_string, t_buf, t_len))
+            return false;
+        r_buffer = reinterpret_cast<char*>(t_buf);
+        r_length = t_len;
+    }
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static int trans_stat(Exec_stat stat)
 {
 	switch(stat)
@@ -1340,14 +1374,11 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
     
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
-    
-    char *t_result;
-    uindex_t t_char_count;
-    if (p_is_text)
-        /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_result, t_char_count);
-    else
-        /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_result, t_char_count);
-    
+
+    char *t_result = nullptr;
+    uindex_t t_char_count = 0;
+    /* UNCHECKED */ convert_from_string(*t_string, p_is_text, t_result, t_char_count);
+
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
     // in case '\0' are present in the value fetched.
@@ -1433,17 +1464,14 @@ static bool get_array_element_utf8(void *p_context, MCArrayRef p_array, MCNameRe
 	if (ctxt -> strings != nil)
 	{
         // The value needs to be converted as a UTF8/C-string
-        uindex_t t_length;
-        char *t_chars;
+        uindex_t t_length = 0;
+        char *t_chars = nullptr;
         MCAutoStringRef t_string;
         
         if (!MCECptr -> ConvertToString(p_value, &t_string))
             t_string = kMCEmptyString;
         
-        if (ctxt -> is_text)
-            /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_chars, t_length);
-        else
-            /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_chars, t_length);
+        /* UNCHECKED */ convert_from_string(*t_string, ctxt->is_text, t_chars, t_length);
         
         ctxt -> strings[ctxt -> index] . length = (int)t_length;
         ctxt -> strings[ctxt -> index] . sptr = (const char*)t_chars;

@@ -47,11 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
 static uint2 nvars;
 
 static void create_var(MCStringRef p_var)
@@ -360,8 +355,9 @@ int platform_main(int argc, char *argv[], char *envp[])
         if (!MCS_mac_elevation_bootstrap_main(argc, argv))
             return -1;
     
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+            !MCSInitialize() ||
+            !MCScriptInitialize())
         exit(-1);
     
     if (MCPlatformInitialize())
@@ -370,7 +366,6 @@ int platform_main(int argc, char *argv[], char *envp[])
     }
     
     MCScriptFinalize();
-    MCModulesFinalize();
     MCFinalize();
     
     return -1;

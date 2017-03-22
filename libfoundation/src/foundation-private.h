@@ -445,6 +445,7 @@ extern const uindex_t __kMCValueHashTableSizes[];
 extern const uindex_t __kMCValueHashTableCapacities[];
 
 bool __MCValueCreate(MCValueTypeCode type_code, size_t size, __MCValue*& r_value);
+
 void __MCValueDestroy(__MCValue *value);
 
 bool __MCValueImmutableCopy(__MCValue *value, bool release, __MCValue*& r_new_value);
@@ -460,6 +461,20 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 	if (__MCValueCreate(p_type_code, sizeof(T), t_value))
 		return r_value = (T *)t_value, true;
 	return false;
+}
+
+/* Allocate a value ref structure that has enough space to hold an
+ * instance of ValueType, possibly with some extra space tacked on the
+ * end. */
+template <typename ValueType>
+inline bool __MCValueCreateExtended(MCValueTypeCode p_type_code,
+                                    size_t p_extra_space,
+                                    ValueType*& r_value)
+{
+    __MCValue* t_new = nullptr;
+    if (__MCValueCreate(p_type_code, sizeof(ValueType) + p_extra_space, t_new))
+        return r_value = static_cast<ValueType*>(t_new), r_value != nullptr;
+    return false;
 }
 
 //////////

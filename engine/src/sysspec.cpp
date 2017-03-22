@@ -229,11 +229,14 @@ static MCHookNativeControlsDescriptor s_native_control_desc =
 
 void MCS_common_init(void)
 {
+#if !defined(__EMSCRIPTEN__)
     MCSAutoLibraryRef t_self;
     MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCS_common_init),
                                 &t_self);
     MCSLibraryCopyPath(*t_self,
                        MCcmd);
+#endif
+    
     
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);

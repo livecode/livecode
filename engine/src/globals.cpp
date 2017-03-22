@@ -1244,6 +1244,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
     MCwidgeteventmanager = new (nothrow) MCWidgetEventManager;
     
+    /* Now that the script engine state has been initialized, we can load all
+     * builtin extensions. */
+    if (!MCExtensionInitialize())
+    {
+        return false;
+    }
+    
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1255,6 +1262,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 int X_close(void)
 {
+    /* Finalize all builtin extensions */
+    MCExtensionFinalize();
+
 	// MW-2008-01-18: [[ Bug 5711 ]] Make sure we disable the backdrop here otherwise we
 	//   get crashiness on Windows due to hiding the backdrop calling WindowProc which
 	//   attempts to access stacks that have been deleted...

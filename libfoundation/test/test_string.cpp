@@ -147,7 +147,8 @@ static void check_bidi_of_surrogate_range(int p_lower, int p_upper)
 		ASSERT_TRUE(t_pua_chars.Resize(t_size * 2));
     for(int i = 0; i < t_size; i++)
     {
-        MCUnicodeCodepointToSurrogates(i + p_lower, t_pua_chars.Ptr() + i * 2);
+        MCUnicodeCodepointToSurrogates(i + p_lower,
+                                       t_pua_chars[i*2], t_pua_chars[i*2 + 1]);
     }
 
 		MCAutoArray<uint8_t> t_props;

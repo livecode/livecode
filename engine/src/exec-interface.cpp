@@ -2988,7 +2988,10 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		added = True;
 	}
     
-	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
+	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned) != ES_NORMAL)
+    {
+        ctxt.Throw();
+    }
 
 	if (MCwatchcursor)
 	{

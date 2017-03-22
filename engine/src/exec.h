@@ -5594,6 +5594,9 @@ void MCNFCExecDisableNFCDispatch(MCExecContext& ctxt);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCExtensionInitialize(void);
+void MCExtensionFinalize(void);
+
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
 

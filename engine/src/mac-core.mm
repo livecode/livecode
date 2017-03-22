@@ -1924,9 +1924,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
 MCMacPlatformCore::MCMacPlatformCore(void)
 {
     m_animation_start_time = CFAbsoluteTimeGetCurrent();
@@ -1937,7 +1934,6 @@ MCMacPlatformCore::~MCMacPlatformCore()
     if (m_abort_key_thread != nil)
         [m_abort_key_thread release];
 }
-
 
 int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
 {
@@ -2026,4 +2022,3 @@ void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))
 {
     block();
 }
-
