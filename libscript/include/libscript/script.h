@@ -39,10 +39,14 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCScriptForEachBuiltinModuleCallback)(void *p_context, MCScriptModuleRef p_module);
+
 typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
 
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
+
+bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback, void *p_context);
 
 void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
 

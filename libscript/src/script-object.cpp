@@ -338,6 +338,21 @@ bool MCScriptLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibr
                                     r_library);
 }
 
+bool
+MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback,
+                             void *p_context)
+{
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module -> next)
+    {
+        if (!p_callback(p_context, t_module->handle))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 MCSLibraryRef MCScriptGetLibrary(void)
 {
     return s_libscript_library;
