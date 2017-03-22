@@ -317,10 +317,27 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
  }
 
+/* This function frees the given loaded extension. It must have already been
+ * removed from the global MCextensions lists. */
+static void
+__MCEngineFreeExtension(MCLoadedExtension *p_extension)
+{
+    if (p_extension -> instance != nil)
+        MCScriptReleaseInstance(p_extension -> instance);
+    MCScriptReleaseModule(p_extension -> module);
+    MCValueRelease(p_extension -> module_name);
+    MCValueRelease(p_extension -> resource_path);
+    MCMemoryDelete(p_extension);
+}
+
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
 {
     MCNewAutoNameRef t_name;
-    MCNameCreate(p_module_name, &t_name);
+    if (!MCNameCreate(p_module_name, &t_name))
+    {
+        ctxt.Throw();
+        return;
+    }
     
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
         if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
@@ -355,19 +372,18 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
 				ctxt . SetTheResultToCString("module in use");
 				return;
 			}
-			
-            if (t_ext -> instance != nil)
-                MCScriptReleaseInstance(t_ext -> instance);
-            MCScriptReleaseModule(t_ext -> module);
-            MCValueRelease(t_ext -> module_name);
-			MCValueRelease(t_ext -> resource_path);
+            
+            /* Unlink the extension from the global linked-list */
             if (t_previous != nil)
                 t_previous -> next = t_ext -> next;
             else
                 MCextensions = t_ext -> next;
-            MCMemoryDelete(t_ext);
             
+            /* Makes sure the global handler list is refreshed on next use */
             MCextensionschanged = true;
+            
+            /* Free the extension struct and things it owns */
+            __MCEngineFreeExtension(t_ext);
             
 			return;
         }
@@ -1434,5 +1450,36 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCExtensionInitialize(void)
+{
+    return MCScriptForEachBuiltinModule([](void *p_context, MCScriptModuleRef p_module) {
+        if (MCScriptIsModuleALibrary(p_module) ||
+            MCScriptIsModuleAWidget(p_module))
+        {
+            return MCEngineAddExtensionFromModule(p_module);
+        }
+
+        return true;
+    }, nullptr);
+}
+
+void
+MCExtensionFinalize(void)
+{
+    while(MCextensions != nullptr)
+    {
+        /* Unlink the extension from the global list */
+        MCLoadedExtension *t_ext = MCextensions;
+        MCextensions = MCextensions->next;
+        
+        /* Free the extensions */
+        __MCEngineFreeExtension(t_ext);
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
