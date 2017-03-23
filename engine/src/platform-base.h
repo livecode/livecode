@@ -19,6 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	error "Only <platform.h> can be included directly"
 #endif
 
+#include <type_traits>
+#include <utility>
+
 namespace MCPlatform {
 
 class Base

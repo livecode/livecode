@@ -103,7 +103,7 @@ bool MCAndroidPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type
     
     // Get the text size for this control type
     int t_text_size;
-    if (!MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_text_size))
+    if (!GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_text_size))
         return false;
     
     // The default font is Roboto of the appropriate size
