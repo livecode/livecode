@@ -575,7 +575,6 @@
             'src/w32flst.cpp',
 							
 			# Group "Theming"
-			'src/linux-theme.cpp',
 			'src/windows-theme.cpp',
 			'src/osxtheme.h',
 			'src/osxtheme.cpp',
@@ -589,11 +588,9 @@
 
 			'src/clipboard.h',
 			'src/em-clipboard.h',
-			'src/lnx-clipboard.h',
 			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
 			'src/em-clipboard.cpp',
-			'src/lnx-clipboard.cpp',
 			'src/w32-clipboard.cpp',
 
 			'src/mixin-refcounted.h',
@@ -659,6 +656,12 @@
 			'src/mblandroid-clipboard.cpp',
 			'src/mblandroid-clipboard.h',
 			
+			# Group "Linux Platform"
+			'src/linux-platform.h',
+			'src/linux-core.cpp',
+			'src/linux-theme.cpp',
+			'src/lnx-clipboard.h',
+			'src/lnx-clipboard.cpp',			
 		],
 		
 		# Sources that are only for desktop mode

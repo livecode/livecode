@@ -16,6 +16,7 @@
 
 
 #include "platform.h"
+#include "linux-platform.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -204,8 +205,12 @@ static GtkStyle* getStyleForControlType(MCPlatformControlType p_type, MCPlatform
     return s_styles[p_type];
 }
 
+bool MCLinuxPlatformCore::GetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
 
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
+bool MCLinuxPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
@@ -240,7 +245,7 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     return t_found;
 }
 
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCColor& r_color)
+bool MCLinuxPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCColor& r_color)
 {
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
@@ -336,7 +341,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 
 // Utility function needed by the Linux font code. Gets the family name of the
 // font for the given control type.
-bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState, MCPlatformThemeProperty p_prop, MCStringRef& r_string)
+bool MCLinuxPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState, MCPlatformThemeProperty p_prop, MCStringRef& r_string)
 {
     if (p_prop != kMCPlatformThemePropertyTextFont)
         return false;
@@ -350,7 +355,7 @@ bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatfor
     return MCStringCreateWithCString(pango_font_description_get_family(t_pango), r_string);
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
+bool MCLinuxPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);

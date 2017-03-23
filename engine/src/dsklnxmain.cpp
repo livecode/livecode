@@ -64,7 +64,7 @@ int platform_main(int argc, char *argv[], char *envp[])
 		exit(-1);
 	}
 	
-	if (!MCSInitialize())
+	if (!MCSInitialize() || !MCPlatformInitialize())
 	{
 		fprintf(stderr, "Fatal: platform initialization failed\n");
 		exit(-1);
