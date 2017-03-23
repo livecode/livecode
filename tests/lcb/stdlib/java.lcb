@@ -120,7 +120,7 @@ public handler TestGetConstant()
 		when tPiTrunc is 3
 end handler
 
-foreign handler CallJavaAdd(in pLeft as CInt, in pRight as CInt) returns CInt binds to "java:java.lang.Math>addExact(JJ)J!static"
+foreign handler CallJavaAdd(in pLeft as JLong, in pRight as JLong) returns JLong binds to "java:java.lang.Math>addExact(JJ)J!static"
 
 public handler TestCallStaticMethod()
 	variable tLeft as Number

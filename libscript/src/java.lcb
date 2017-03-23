@@ -34,6 +34,14 @@ module com.livecode.java
 
 use com.livecode.foreign
 
+public type JBoolean is CBool
+public type JByte is Int8
+public type JShort is Int16
+public type JInt is Int32
+public type JLong is Int64
+public type JFloat is CFloat
+public type JDouble is CDouble
+
 public foreign type JObject binds to "MCJavaObjectTypeInfo"
 public type JString is JObject
 public type JByteArray is JObject
