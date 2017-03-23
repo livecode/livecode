@@ -430,31 +430,47 @@ statement blocks.
     ForeignHandlerDefinition
       : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
-    ForeignType
-      : Type
-      | 'CBool'
-      | 'CInt'
-      | 'CUInt'
-      | 'CFloat'
-      | 'CDouble'
-
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
-Foreign handler definitions can contain more types in their parameters
-than elsewhere - those specified in the ForeignType clause. These allow
-low-level types to be specified making it easier to interoperate.
+There are a number of types defined in the foreign module which map to
+the appropriate foreign type when used in foreign handler signatures.
 
-Foreign types map to high-level types as follows:
+There are the standard C primitive types:
 
- - bool maps to boolean
- - int and uint map to integer (number)
- - float and double map to real (number)
+ - CBool maps to 'bool'
+ - CChar and CUChar map to 'char' and 'unsigned char'
+ - CShort and CUShort map to 'short' and 'unsigned short'
+ - CInt and CUInt map to 'int' and 'unsigned int'
+ - CLong and CULong map to 'long' and 'unsigned long'
+ - CLongLong and CULongLong map to 'long long' and 'unsigned long long'
+ - CFloat maps to 'float'
+ - CDouble maps to 'double'
 
-This mapping means that a foreign handler with a bool parameter say,
-will accept a boolean from LiveCode Builder code when called.
+There are the standard sized integer types:
 
-At present, only C and Java binding is allowed and follow these rules:
+ - Int8 and UInt8 map to 8-bit integers
+ - Int16 and UInt16 map to 16-bit integers
+ - Int32 and UInt32 map to 32-bit integers
+ - Int64 and UInt64 map to 64-bit integers
+ - IntSize and UIntSize map to the integer size needed to hold a memory size
+ - IntPtr and UIntPtr map to the integer size needed to hold a pointer
+
+There are aliases for the Java primitive types:
+
+ - JBoolean maps to CBool
+ - JByte maps to Int8
+ - JShort maps to Int16
+ - JInt maps to Int32
+ - JLong maps to Int64
+
+All the primitive types above will implicitly convert between corresponding
+high level types:
+
+  - CBool converts to and from Boolean
+  - All integer and real types convert to and from Number
+
+Other LCB types pass as follows into foreign handlers:
 
  - any type passes an MCValueRef
  - nothing type passes as the null pointer
@@ -466,12 +482,11 @@ At present, only C and Java binding is allowed and follow these rules:
  - Data type passes an MCDataRef
  - Array type passes an MCArrayRef
  - List type passes an MCProperListRef
- - Pointer type passes a void *
- - CBool type passes a bool (i.e. an int - pre-C99).
- - CInt type passes an int
- - CUInt type passes an unsigned int
- - CFloat type passes a float
- - CDouble type passes a double
+
+Finally, the Pointer type passes as void * to foreign handlers. If you want
+a pointer which can be null, then use optional Pointer - LCB will throw an
+error if there is an attempt to map from the null pointer value to a slot
+with a non-optional Pointer type.
 
 Modes map as follows:
 
