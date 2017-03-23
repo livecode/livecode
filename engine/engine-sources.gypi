@@ -739,6 +739,7 @@
 			'src/lnxtextlayout.cpp',
 			
 			# Group "Desktop - Mac"
+			'src/mac-main.cpp',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',

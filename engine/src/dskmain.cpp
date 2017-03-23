@@ -42,9 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
-#include "platform.h"
-#include "platform-legacy.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static uint2 nvars;
@@ -345,31 +342,5 @@ void X_main_loop_iteration()
 	MCdefaultstackptr = MCstaticdefaultstackptr;
 	MCS_alarm(0.0);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-int platform_main(int argc, char *argv[], char *envp[])
-{
-    extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
-    if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
-        if (!MCS_mac_elevation_bootstrap_main(argc, argv))
-            return -1;
-    
-    if (!MCInitialize() ||
-            !MCSInitialize() ||
-            !MCScriptInitialize())
-        exit(-1);
-    
-    if (MCPlatformInitialize())
-    {
-        return MCplatform -> Run(argc, argv, envp);
-    }
-    
-    MCScriptFinalize();
-    MCFinalize();
-    
-    return -1;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
