@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 local sWidget
 
 on TestSetup
-   TestLoadExtension "com.livecode.library.iconSVG"
+   TestLoadExtension "com.livecode.library.iconsvg"
    TestLoadExtension "com.livecode.library.widgetutils"
    TestLoadExtension "com.livecode.library.scriptitems"
    TestLoadExtension "com.livecode.widget.segmented"
