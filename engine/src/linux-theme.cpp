@@ -396,7 +396,7 @@ bool MCLinuxPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, 
     {
         t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
         t_font_size = pango_font_description_get_size(t_pango)/PANGO_SCALE;
-        /* UNCHECKED */ MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size);
+        /* UNCHECKED */ GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size);
     }
     
     if (t_found)

@@ -263,7 +263,7 @@ bool MCWindowsPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type
             {
                 // Get the size of the font we should be using
 				int t_fontsize;
-				MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+				GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
 				
 				// Get the font name and size from the LOGFONT structure and
                 // create a font from it.
@@ -276,7 +276,7 @@ bool MCWindowsPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type
             else
             {
                 int t_fontsize;
-                MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+                GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
                 if (MCmajorosversion >= 0x0600)
                 {
                     // Return the Vista+ UI font
