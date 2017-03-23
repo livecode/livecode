@@ -173,8 +173,7 @@ struct clong_type_desc_t: public integral_type_desc_t<long> {
          kMCForeignPrimitiveTypeSInt64 :
          kMCForeignPrimitiveTypeSInt32);
     static constexpr auto& type_info = kMCCLongTypeInfo;
-    static constexpr auto describe_format = "<foreign long integer %li>";
-    static constexpr auto& hash_func = MCHashInteger;
+    static constexpr auto describe_format = "<foreign long integer %ld>";
 };
 
 struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
@@ -189,7 +188,7 @@ struct int_type_desc_t: public integral_type_desc_t<integer_t> {
                   "Unsupported size for integer_t");
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeSInt32;
     static constexpr auto& type_info = kMCIntTypeInfo;
-    static constexpr auto describe_format = "<foreign integer %i>";
+    static constexpr auto describe_format = "<foreign integer %d>";
     static constexpr auto& hash_func = MCHashInteger;
 };
 struct size_type_desc_t: public integral_type_desc_t<size_t>  {
@@ -201,7 +200,6 @@ struct size_type_desc_t: public integral_type_desc_t<size_t>  {
          kMCForeignPrimitiveTypeUInt32);
     static constexpr auto& type_info = kMCSizeTypeInfo;
     static constexpr auto describe_format = "<foreign size %zu>";
-    static constexpr auto& hash_func = MCHashUSize;
 };
 struct ssize_type_desc_t: public integral_type_desc_t<ssize_t>  {
     static_assert(SSIZE_MAX == INT64_MAX || SSIZE_MAX == INT32_MAX,
@@ -212,21 +210,20 @@ struct ssize_type_desc_t: public integral_type_desc_t<ssize_t>  {
          kMCForeignPrimitiveTypeSInt32);
     static constexpr auto& type_info = kMCSSizeTypeInfo;
     static constexpr auto describe_format = "<foreign signed size %zd>";
-    static constexpr auto& hash_func = MCHashSize;
 };
 
 struct float_type_desc_t: public numeric_type_desc_t<float> {
     using c_type = float;
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeFloat32;
     static constexpr auto& type_info = kMCFloatTypeInfo;
-    static constexpr auto describe_format = "<foreign float %g>";
+    static constexpr auto describe_format = "<foreign float %lg>";
     static constexpr auto& hash_func = MCHashDouble;
 };
 struct double_type_desc_t: public numeric_type_desc_t<double> {
     using c_type = double;
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeFloat64;
     static constexpr auto& type_info = kMCDoubleTypeInfo;
-    static constexpr auto describe_format = "<foreign double %g>";
+    static constexpr auto describe_format = "<foreign double %lg>";
     static constexpr auto& hash_func = MCHashDouble;
 };
 
@@ -241,8 +238,8 @@ struct pointer_type_desc_t {
     static constexpr auto& hash_func = MCHashPointer;
 };
 
-MCTypeInfoRef kMCForeignImportErrorTypeInfo;
-MCTypeInfoRef kMCForeignExportErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignExportErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -622,7 +619,7 @@ struct DoImport<
         }
         else
         {
-            return __throw_numeric_overflow<IntType>(kMCForeignExportErrorTypeInfo);
+            return __throw_numeric_overflow<IntType>(kMCForeignImportErrorTypeInfo);
         }
     }
 };
@@ -644,7 +641,7 @@ struct DoImport<
         }
         else
         {
-            return __throw_numeric_overflow<UIntType>(kMCForeignExportErrorTypeInfo);
+            return __throw_numeric_overflow<UIntType>(kMCForeignImportErrorTypeInfo);
         }
     }
 };

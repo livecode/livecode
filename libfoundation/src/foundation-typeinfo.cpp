@@ -642,6 +642,7 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . hash = p_descriptor -> hash;
     self -> foreign . descriptor . doimport = p_descriptor -> doimport;
     self -> foreign . descriptor . doexport = p_descriptor -> doexport;
+    self -> foreign . descriptor . describe = p_descriptor -> describe;
     
     if (!__MCForeignTypeInfoComputeLayoutType(self))
     {

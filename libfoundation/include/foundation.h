@@ -2987,6 +2987,9 @@ MC_DLLEXPORT bool MCErrorThrowGenericWithMessage(MCStringRef message, ...);
 //  FOREIGN DEFINITIONS
 //
 
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignExportErrorTypeInfo;
+
 MC_DLLEXPORT bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 MC_DLLEXPORT bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 
