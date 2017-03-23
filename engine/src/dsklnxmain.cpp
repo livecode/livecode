@@ -31,6 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 #include "libscript/script.h"
 
+#include "platform.h"
+#include "platform-legacy.h"
+
 #include <locale.h>
 #include <langinfo.h>
 

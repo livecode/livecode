@@ -316,7 +316,7 @@ bool MCWin32DSPlayer::HandleGraphEvent()
 			else
 			{
 				m_control->StopWhenReady();
-				MCPlatformCallbackSendPlayerFinished(this);
+                m_platform -> GetCallback() -> SendPlayerFinished(this);
 			}
 			break;
 		}
@@ -348,11 +348,11 @@ bool MCWin32DSPlayer::HandleTimer()
 			if (t_index - 1 > m_last_marker)
 			{
 				m_last_marker = t_index - 1;
-				MCPlatformCallbackSendPlayerMarkerChanged(this, m_callback_markers.ptr[m_last_marker]);
+				m_platform -> GetCallback() -> SendPlayerMarkerChanged(this, m_callback_markers.ptr[m_last_marker]);
 			}
 		}
 
-		MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+		m_platform -> GetCallback() -> SendPlayerCurrentTimeChanged(this);
 	}
 
 	return true;
@@ -1514,21 +1514,14 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWin32DSPlayer *MCWin32DSPlayerCreate()
+MCPlatformPlayerRef MCWindowsPlatformCore::CreatePlayer()
 {
-	MCWin32DSPlayer *t_player;
-	t_player = new (nothrow) MCWin32DSPlayer();
-
-	if (t_player == nil)
-		return nil;
-
-	if (!t_player->Initialize())
-	{
-		delete t_player;
-		return nil;
-	}
-
-	return t_player;
+    MCPlatform::Ref<MCWin32DSPlayer> t_ref = MCPlatform::makeRef<MCWin32DSPlayer>();
+    t_ref -> SetPlatform(this);
+    if (!t_ref -> Initialize())
+        return nil;
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

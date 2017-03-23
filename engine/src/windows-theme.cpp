@@ -17,6 +17,7 @@
 
 #include "prefix.h"
 #include "platform.h"
+#inclide "windows-platform.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -73,7 +74,7 @@ static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
     return false;
 }
 
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+bool MCWindowsPlatformCore::GetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
 {
     return false;
 }
@@ -83,7 +84,7 @@ extern bool MCWin32GetScreenDPI(uint32_t&, uint32_t&);
 // Density used by default for the Win32 UI
 #define NORMAL_DENSITY  96
 
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
+bool MCWindowsPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
     bool t_found;
     t_found = false;
@@ -119,7 +120,7 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     return t_found;
 }
 
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCColor& r_color)
+bool MCWindowsPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCColor& r_color)
 {
     bool t_found;
     t_found = false;
@@ -250,7 +251,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
     return t_found;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
+bool MCWindowsPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     switch (p_prop)
     {
@@ -294,3 +295,9 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     
     return false;
 }
+
+bool MCWindowsPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
+{
+    return false;
+}
+

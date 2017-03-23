@@ -575,7 +575,6 @@
             'src/w32flst.cpp',
 							
 			# Group "Theming"
-			'src/windows-theme.cpp',
 			'src/osxtheme.h',
 			'src/osxtheme.cpp',
 				
@@ -588,11 +587,9 @@
 
 			'src/clipboard.h',
 			'src/em-clipboard.h',
-			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
 			'src/em-clipboard.cpp',
-			'src/w32-clipboard.cpp',
-
+			
 			'src/mixin-refcounted.h',
 			
 			# Native layers
@@ -661,7 +658,15 @@
 			'src/linux-core.cpp',
 			'src/linux-theme.cpp',
 			'src/lnx-clipboard.h',
-			'src/lnx-clipboard.cpp',			
+			'src/lnx-clipboard.cpp',
+			
+			# Group "Windows Platform"
+			'src/windows-platform.h',
+			'src/windows-core.cpp',
+			'src/windows-community-core.mm',
+			'src/windows-theme.cpp',
+			'src/w32-clipboard.h',
+			'src/w32-clipboard.cpp',			
 		],
 		
 		# Sources that are only for desktop mode
