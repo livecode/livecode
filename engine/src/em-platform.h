@@ -14,18 +14,18 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MC_LINUX_PLATFORM__
-#define __MC_LINUX_PLATFORM__
+#ifndef __MC_EM_PLATFORM__
+#define __MC_EM_PLATFORM__
 
 #include "platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCLinuxPlatformCore: public MCPlatformCore
+class MCEmscriptenPlatformCore: public MCPlatformCore
 {
 public:
-    constexpr MCLinuxPlatformCore(void) = default;
-    virtual ~MCLinuxPlatformCore(void) {}
+    constexpr MCEmscriptenPlatformCore(void) = default;
+    virtual ~MCEmscriptenPlatformCore(void) {}
     
     // Wait
     virtual bool WaitForEvent(double p_duration, bool p_blocking);
@@ -40,7 +40,7 @@ public:
     virtual bool GetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCColor& r_color);
     virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font);
     virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string);
-   
+    
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
 };
