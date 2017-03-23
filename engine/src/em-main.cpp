@@ -32,6 +32,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <unistd.h>
 
+#include "platform.h"
+#include "platform-legacy.h"
+
 /* ================================================================
  * Emscripten engine start-up
  * ================================================================ */
@@ -53,7 +56,7 @@ platform_main(int argc, char *argv[], char *envp[])
 		MCstackbottom = &magic_stack_base;
 	}
 
-	if (!MCInitialize())
+    if (!MCInitialize() || !MCPlatformInitialize())
 	{
 		MCEmscriptenBootError("Core initialisation");
 	}

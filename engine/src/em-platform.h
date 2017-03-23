@@ -14,18 +14,18 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MC_EM_PLATFORM__
-#define __MC_EM_PLATFORM__
+#ifndef __MC_LINUX_PLATFORM__
+#define __MC_LINUX_PLATFORM__
 
 #include "platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCEmscriptenPlatformCore: public MCPlatformCore
+class MCLinuxPlatformCore: public MCPlatformCore
 {
 public:
-    constexpr MCEmscriptenPlatformCore(void) = default;
-    virtual ~MCEmscriptenPlatformCore(void) {}
+    constexpr MCLinuxPlatformCore(void) = default;
+    virtual ~MCLinuxPlatformCore(void) {}
     
     // Wait
     virtual bool WaitForEvent(double p_duration, bool p_blocking);

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "font.h"
 #include "platform.h"
-#include "platform-legacy.h"
+#include "em-platform.h"
 #include "mctheme.h"
 
 MCTheme *
@@ -38,7 +38,7 @@ MCThemeCreateNative()
 /* FIXME not yet implemented */
 
 bool
-MCPlatformGetControlThemePropColor(MCPlatformControlType p_type,
+MCEmscriptenPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type,
                                    MCPlatformControlPart p_part,
                                    MCPlatformControlState p_state,
                                    MCPlatformThemeProperty p_prop,
@@ -48,7 +48,7 @@ MCPlatformGetControlThemePropColor(MCPlatformControlType p_type,
 }
 
 bool
-MCPlatformGetControlThemePropFont(MCPlatformControlType p_type,
+MCEmscriptenPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type,
                                   MCPlatformControlPart p_part,
                                   MCPlatformControlState p_state,
                                   MCPlatformThemeProperty p_prop,
@@ -57,4 +57,34 @@ MCPlatformGetControlThemePropFont(MCPlatformControlType p_type,
 	/* For now, ask for the compiled-in default font name and size*/
 	return MCFontCreate(MCNAME(DEFAULT_TEXT_FONT), 0,
 	                    DEFAULT_TEXT_SIZE, r_font);
+}
+
+bool
+MCEmscriptenPlatformCore::GetControlThemePropBool(MCPlatformControlType p_type,
+                                             MCPlatformControlPart p_part,
+                                             MCPlatformControlState p_state,
+                                             MCPlatformThemeProperty p_prop,
+                                             bool& r_bool)
+{
+    return false;
+}
+
+bool
+MCEmscriptenPlatformCore::GetControlThemePropString(MCPlatformControlType p_type,
+                                                    MCPlatformControlPart p_part,
+                                                    MCPlatformControlState p_state,
+                                                    MCPlatformThemeProperty p_which,
+                                                    MCStringRef& r_string)
+{
+    return false;
+}
+
+bool
+MCEmscriptenPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type,
+                                                     MCPlatformControlPart p_part,
+                                                     MCPlatformControlState p_state,
+                                                     MCPlatformThemeProperty p_prop,
+                                                     int& r_int)
+{
+    return false;
 }

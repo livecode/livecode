@@ -586,9 +586,7 @@
 			'src/socket_resolve.cpp',
 
 			'src/clipboard.h',
-			'src/em-clipboard.h',
 			'src/clipboard.cpp',
-			'src/em-clipboard.cpp',
 			
 			'src/mixin-refcounted.h',
 			
@@ -666,7 +664,14 @@
 			'src/windows-community-core.mm',
 			'src/windows-theme.cpp',
 			'src/w32-clipboard.h',
-			'src/w32-clipboard.cpp',			
+			'src/w32-clipboard.cpp',
+			
+			# Group "Emscripten Platform"
+			'src/em-platform.h',
+			'src/em-core.cpp',
+			'src/em-theme.cpp',
+			'src/em-clipboard.h',
+			'src/em-clipboard.cpp',	
 		],
 		
 		# Sources that are only for desktop mode
