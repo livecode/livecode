@@ -156,8 +156,6 @@ void MCSellist::clear(Boolean message)
 		delete nodeptr;
 	}
     
-	MCundos->freestate();
-    
 	if (message && optr)
 		optr->message(MCM_selected_object_changed);
 }
@@ -541,36 +539,59 @@ Boolean MCSellist::cut()
 
 Boolean MCSellist::del()
 {
+    if (!IsDeletable())
+        return False;
+ 
+	if (nullptr == objects)
+        return False;
+
+    MCundos->freestate();
+    
+    MCStack *sptr = objects->m_ref->getstack();
+    while (objects != NULL)
+    {
+        MCSelnode *tptr = objects->remove(objects);
+        if (tptr->m_ref->gettype() >= CT_GROUP)
+        {
+            MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
+            uint2 num = 0;
+            cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
+            
+            Ustruct *us = new (nothrow) Ustruct;
+            us->type = UT_DELETE;
+            us->ud.layer = num;
+            MCundos->savestate(cptr, us);
+            
+            if (cptr->del(true))
+            {
+                tptr->m_ref = nil;
+            }
+        }
+        delete tptr;
+    }
+    sptr->message(MCM_selected_object_changed);
+    return True;
+}
+
+bool MCSellist::IsDeletable()
+{
+    if (nullptr == objects)
+        return false;
+    
     // Clear all deleted objects first
     Clean();
-    
-    MCundos->freestate();
-	if (objects != NULL)
-	{
-		MCStack *sptr = objects->m_ref->getstack();
-		while (objects != NULL)
-		{
-			MCSelnode *tptr = objects->remove(objects);
-			if (tptr->m_ref->gettype() >= CT_GROUP)
-			{
-				MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
-				uint2 num = 0;
-				cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-				if (cptr->del(true))
-				{
-					Ustruct *us = new (nothrow) Ustruct;
-					us->type = UT_DELETE;
-					us->ud.layer = num;
-					MCundos->savestate(cptr, us);
-					tptr->m_ref = nil;
-				}
-			}
-			delete tptr;
-		}
-		sptr->message(MCM_selected_object_changed);
-		return True;
-	}
-	return False;
+
+    MCSelnode *t_object = objects;
+    do
+    {
+        if (!t_object->m_ref->isdeletable(true))
+            return false;
+        
+        t_object = t_object->next();
+    }
+    while (t_object != objects);
+
+    return true;
 }
 
 void MCSellist::startmove(int2 x, int2 y, Boolean canclone)
