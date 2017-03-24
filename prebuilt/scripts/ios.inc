@@ -25,7 +25,7 @@ function checkiOS {
     local t_sdk_ver=$3
     local t_archs=$4
 	 
-	 local t_try_xcode="${XCODES_DIR}/Xcode_${t_xcode_dir}"
+	 local t_try_xcode="${XCODES_DIR}/Xcode_${t_xcode_ver}"
     if [ -e "${t_try_xcode}" ]; then
 	 	addiOS "${t_try_xcode}/Xcode.app/Contents/Developer" "${t_sdk_name}" "${t_sdk_ver}" "${t_archs}"
     elif [ -e "${ALT_XCODE_DIR}/Platforms/${t_sdk_name}.platform/Developer/SDKs/${t_sdk_name}${t_sdk_ver}.sdk" ]; then
