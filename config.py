@@ -22,7 +22,7 @@ import os
 
 KNOWN_PLATFORMS = (
     'linux-x86', 'linux-x86_64', 'android-armv6',
-    'mac', 'ios', 'win-x86', 'win-x86_64', 'emscripten'
+    'mac', 'ios', 'win-x86', 'win-x86_64', 'emscripten', 'linux-armv7'
 )
 
 def usage(exit_status):
@@ -220,7 +220,7 @@ def validate_target_arch(opts):
             opts['TARGET_ARCH'] = 'js'
             return
 
-        platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
+        platform_arch = re.search('-(x86|x86_64|armv6|armv7)$', platform)
         if platform_arch is not None:
             opts['TARGET_ARCH'] = platform_arch.group(1)
             return
@@ -382,7 +382,7 @@ def guess_android_build_tools(sdkdir):
 
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
-        opts['ANDROID_NDK_VERSION'] = 'r14'
+        opts['ANDROID_NDK_VERSION'] = 'r10d'
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
     if opts['ANDROID_PLATFORM'] is None:

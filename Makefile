@@ -62,7 +62,7 @@ check-common-%:
 # Linux rules
 ################################################################
 
-LINUX_ARCHS = x86_64 x86
+LINUX_ARCHS = x86_64 x86 armv7
 
 config-linux-%:
 	./config.sh --platform linux-$*
