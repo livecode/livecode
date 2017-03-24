@@ -51,3 +51,46 @@ on TestDeleteSelectedObjects
 	
 	TestAssert "delete selected objects", the number of controls is 0
 end TestDeleteSelectedObjects
+
+on TestDeleteSelectedCantDelete
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	
+	local tGroup
+	create group
+	put it into tGroup
+	
+	create field in tGroup
+	set the cantDelete of tGroup to true
+	
+	select button 1
+	delete
+	
+	select tGroup
+	delete
+	
+	local tThereIsAGroup
+	put there is a tGroup into tThereIsAGroup
+		
+	undo
+	
+	TestAssert "can't delete group with cantDelete true", tThereIsAGroup
+	TestAssert "undo previous delete after failed delete", there is a button 1
+end TestDeleteSelectedCantDelete
+
+on TestUndoAfterDeleteNothing
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	select button 1
+	delete
+
+	select empty
+	delete
+	undo
+	
+	TestAssert "undo previous delete after failed delete", there is a button 1
+end TestUndoAfterDeleteNothing
