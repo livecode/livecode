@@ -1700,7 +1700,7 @@
 'sweep' CheckIdentifiers(ANY)
 
     'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
-        CheckIdIsSuitableForDefinition(Id)
+        CheckIdIsSuitableForNamespace(Id)
         CheckIdentifiers(Definitions)
 
     --
@@ -1747,6 +1747,28 @@
     'rule' CheckIdentifiers(STATEMENT'variable(_, Id, _)):
         CheckIdIsSuitableForDefinition(Id)
 
+'action' CheckIdIsSuitableForNamespace(ID)
+
+    'rule' CheckIdIsSuitableForNamespace(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Id'Namespace -> Namespace
+        (|
+            IsNameValidForNamespace(Name)
+
+            (|
+                IsNameSuitableForNamespace(Name)
+            ||
+                Warning_UnsuitableNameForNamespace(Position, Name)
+            |)
+        ||
+            Error_InvalidNameForNamespace(Position, Name)
+        |)
+        [|
+            where(Namespace -> id(NextId))
+            CheckIdIsSuitableForNamespace(NextId)
+        |]
+
 'action' CheckIdIsSuitableForDefinition(ID)
 
     'rule' CheckIdIsSuitableForDefinition(Id):
@@ -1754,8 +1776,6 @@
         Id'Position -> Position
 		Id'Namespace -> Namespace
         (|
-			where(Namespace -> id(_))
-		||
             IsNameSuitableForDefinition(Name)
         ||
             Warning_UnsuitableNameForDefinition(Position, Name)

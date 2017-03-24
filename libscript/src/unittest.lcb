@@ -55,9 +55,9 @@ Tags: Unit tests
 
 module com.livecode.unittest
 
-public foreign handler MCUnitPlan(in pCount as Number) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
-public foreign handler MCUnitDiagnostic(in pMessage as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
-foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
+public foreign handler MCUnitPlan(in pCount as Number) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in pMessage as String) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitDiagnostic"
+foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitOutputTest"
 
 ----------------------------------------------------------------
 -- Test syntax
