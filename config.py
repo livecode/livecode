@@ -390,7 +390,7 @@ def guess_android_build_tools(sdkdir):
 
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
-        opts['ANDROID_NDK_VERSION'] = 'r10d'
+        opts['ANDROID_NDK_VERSION'] = 'r14'
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
     if opts['ANDROID_PLATFORM'] is None:
