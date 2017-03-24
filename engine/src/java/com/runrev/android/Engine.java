@@ -604,6 +604,7 @@ public class Engine extends View implements EngineApi
 		
 		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
         imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+		updateKeyboardVisible(true);
     }
 
     public void hideKeyboard()
@@ -616,6 +617,7 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 		
         imm.hideSoftInputFromWindow(getWindowToken(), 0);
+		updateKeyboardVisible(false);
     }
 
 	public void resetKeyboard()
@@ -1413,10 +1415,22 @@ public class Engine extends View implements EngineApi
 	{
 		// Log.i(TAG, "onSizeChanged({" + w + "x" + h + "}, {" + oldw + ", " + oldh + "})");
 		
-		// IM-2013-11-15: [[ Bug 10485 ]] As we can't determine directly if the resize is due to the keyboard
-		// being made visible, we use a rule of thumb that anything larger than 100 pixels must be the keyboard.
-		int t_height_diff = getContainer().getRootView().getHeight() - getContainer().getHeight();
-		updateKeyboardVisible(t_height_diff > 100);
+		// status bar height
+		int t_status_bar_height = 0;
+		int t_resource_id = getResources().getIdentifier("status_bar_height", "dimen", "android");
+		if (t_resource_id > 0)
+		{
+			t_status_bar_height = getResources().getDimensionPixelSize(t_resource_id);
+		}
+		
+		// display window size for the app layout
+		Rect t_app_rect = new Rect();
+		getActivity().getWindow().getDecorView().getWindowVisibleDisplayFrame(t_app_rect);
+		
+		// keyboard height equals (screen height - (user app height + status))
+		int t_keyboard_height = getContainer().getRootView().getHeight() - (t_app_rect.height() + t_status_bar_height);
+		
+		updateKeyboardVisible(t_keyboard_height > 0);
 		
 		Rect t_rect;
 		t_rect = null;
