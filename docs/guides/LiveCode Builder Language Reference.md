@@ -1027,7 +1027,7 @@ or go away without warning.
 ### Safe Foreign Handlers
 
     SafeForeignHandler
-      : '____safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
+      : '__safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
 By default foreign handlers are considered unsafe and thus can only be used in
 unsafe blocks, or unsafe handlers. However, at the moment it is possible for a
