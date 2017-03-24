@@ -156,8 +156,6 @@ void MCSellist::clear(Boolean message)
 		delete nodeptr;
 	}
     
-	MCundos->freestate();
-    
 	if (message && optr)
 		optr->message(MCM_selected_object_changed);
 }
