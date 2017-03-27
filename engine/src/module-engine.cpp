@@ -674,8 +674,8 @@ static hash_t __MCScriptObjectHash(MCValueRef p_value)
 
 static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_description)
 {
-    __MCScriptObjectImpl *self;
-    self = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_value);
+    auto self =
+            reinterpret_cast<__MCScriptObjectImpl *>(MCValueGetExtraBytesPtr(p_value));
     
     if (!self->handle.IsValid())
     {
