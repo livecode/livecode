@@ -20,6 +20,7 @@
 #include <ffi.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1209,7 +1210,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     intenum_t t_code;
     t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
-    t_hash = MCHashBytesStream(t_hash, &t_code, sizeof(uint32_t));
+    t_hash = MCHashObjectStream(t_hash, t_code);
     if (t_code == kMCTypeInfoTypeIsAlias)
     {
         // If the alias name is empty, then we treat it as a unique unnamed type.
@@ -1220,19 +1221,20 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
             // Aliases are only equal if both name and type are the same. This is because
             // they are informative (for debugging purposes) rather than having any
             // semantic value.
-            t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
-            t_hash = MCHashBytesStream(t_hash, &self -> alias . typeinfo, sizeof(self -> alias . typeinfo));
+            t_hash = MCHashObjectStream(t_hash,
+                                        self -> alias . name,
+                                        self -> alias . typeinfo);
         }
     }
     else if (t_code == kMCTypeInfoTypeIsNamed)
     {
         // Named types are only hashed on the name as a named type can only be bound
         // to a single type at any one time (for obvious reasons!).
-        t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
+        t_hash = MCHashObjectStream(t_hash, self -> alias . name);
     }
     else if (t_code == kMCTypeInfoTypeIsOptional)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> optional . basetype, sizeof(self -> optional . basetype));
+        t_hash = MCHashObjectStream(t_hash, self -> optional . basetype);
     }
     else if (t_code == kMCTypeInfoTypeIsForeign)
     {
@@ -1241,19 +1243,25 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     }
     else if (t_code == kMCValueTypeCodeRecord)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> record . field_count, sizeof(self -> record . field_count));
-        t_hash = MCHashBytesStream(t_hash, self -> record . fields, sizeof(MCRecordTypeFieldInfo) * self -> record . field_count);
+        t_hash = MCHashObjectStream(t_hash, self -> record . field_count);
+        t_hash = MCHashSpanStream(t_hash,
+                                  MCMakeSpan(self -> record . fields,
+                                             self -> record . field_count));
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> handler . field_count, sizeof(self -> handler . field_count));
-        t_hash = MCHashBytesStream(t_hash, &self -> handler . return_type, sizeof(self -> handler . return_type));
-        t_hash = MCHashBytesStream(t_hash, self -> handler . fields, sizeof(MCRecordTypeFieldInfo) * self -> handler . field_count);
+        t_hash = MCHashObjectStream(t_hash,
+                                    self -> handler . field_count,
+                                    self -> handler . return_type);
+        t_hash = MCHashSpanStream(t_hash,
+                                  MCMakeSpan(self -> handler . fields,
+                                             self -> handler . field_count));
     }
     else if (t_code == kMCValueTypeCodeError)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
-        t_hash = MCHashBytesStream(t_hash, &self -> error . message, sizeof(self -> error . message));
+        t_hash = MCHashObjectStream(t_hash,
+                                    self -> error . domain,
+                                    self -> error . message);
     }
     else if (t_code == kMCValueTypeCodeCustom)
     {

@@ -17,6 +17,7 @@
 #include <foundation.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -362,15 +363,11 @@ hash_t __MCRecordHash(__MCRecord *self)
     hash_t t_hash;
     t_hash = 0;
 
-	hash_t t_typeinfo_hash;
-	t_typeinfo_hash = MCHashPointer(self -> typeinfo);
-	t_hash = MCHashBytesStream(t_hash, &t_typeinfo_hash, sizeof(hash_t));
+	t_hash = MCHashObjectStream(t_hash, MCHashPointer(self->typeinfo));
 
     for(uindex_t i = 0; i < __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo); i++)
     {
-        hash_t t_element_hash;
-        t_element_hash = MCValueHash(self -> fields[i]);
-        t_hash = MCHashBytesStream(t_hash, &t_element_hash, sizeof(hash_t));
+        t_hash = MCHashObjectStream(t_hash, MCValueHash(self -> fields[i]));
     }
     return t_hash;
 }
