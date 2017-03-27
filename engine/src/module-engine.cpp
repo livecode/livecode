@@ -674,8 +674,25 @@ static hash_t __MCScriptObjectHash(MCValueRef p_value)
 
 static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_description)
 {
-    r_description = MCSTR("<script object>");
-    return true;
+    auto self =
+            reinterpret_cast<__MCScriptObjectImpl *>(MCValueGetExtraBytesPtr(p_value));
+    
+    if (!self->handle.IsValid())
+    {
+        return MCStringCopy(MCSTR("<deleted script object>"),
+                            r_description);
+    }
+    
+    MCAutoValueRef t_object_name;
+    if (!self->handle->names(P_LONG_NAME_NO_FILENAME,
+                             &t_object_name))
+    {
+        return false;
+    }
+    
+    return MCStringFormat(r_description,
+                          "<script object %@>",
+                          *t_object_name);
 }
 
 static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
