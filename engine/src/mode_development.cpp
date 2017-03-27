@@ -1360,6 +1360,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
             { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
             { "android-embedded", kMCLicenseDeployToIOSEmbedded },
             { "html5", kMCLicenseDeployToHTML5 },
+            { "filemaker", kMCLicenseDeployToFileMaker },
         };
         
         MClicenseparameters . deploy_targets = 0;
@@ -1437,6 +1438,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
         "iOS Embedded",
         "Android Embedded",
         "HTML5",
+        "FileMaker",
     };
     
     bool t_success;
