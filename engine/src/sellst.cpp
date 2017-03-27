@@ -557,7 +557,7 @@ Boolean MCSellist::del()
             uint2 num = 0;
             cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
             
-            Ustruct *us = new Ustruct;
+            Ustruct *us = new (nothrow) Ustruct;
             us->type = UT_DELETE;
             us->ud.layer = num;
             MCundos->savestate(cptr, us);
