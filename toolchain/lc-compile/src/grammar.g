@@ -471,7 +471,10 @@
             Statements(-> Body)
         "end" "handler"
 
-    'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
+	'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
+		Access(-> Access) "__safe" "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
+
+    'rule' HandlerDefinition(-> unsafe(Position, foreignhandler(Position, Access, Name, Signature, Binding))):
         Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)

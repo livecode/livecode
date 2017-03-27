@@ -22,7 +22,7 @@ end getPathData
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
-	TestLoadExtension "com.livecode.library.iconSVG"
+	TestLoadExtension "com.livecode.library.iconsvg"
 	TestLoadExtension "com.livecode.widget.svgpath"
 	create widget "testSvgPath" as "com.livecode.widget.svgpath"
 end TestSetup

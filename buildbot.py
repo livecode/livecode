@@ -36,8 +36,21 @@ import uuid
 import config
 
 # The set of platforms for which this branch supports automated builds
-BUILDBOT_PLATFORMS = ('linux-x86', 'linux-x86_64', 'android-armv6', 'mac',
-    'ios', 'win-x86', 'emscripten')
+BUILDBOT_PLATFORM_TRIPLES = (
+    'x86-linux-debian8',
+    'x86_64-linux-debian8',
+    'armv6-android-api9',
+    'universal-mac-macosx10.9', # Minimum deployment target
+    'universal-ios-iphoneos10.2',
+    'universal-ios-iphoneos9.2',
+    'universal-ios-iphonesimulator10.2',
+    'universal-ios-iphonesimulator9.2',
+    'universal-ios-iphonesimulator8.2',
+    'universal-ios-iphonesimulator7.1',
+    'universal-ios-iphonesimulator6.1',
+    'x86-win32', # TODO[2017-03-23] More specific ABI
+    'js-emscripten', # TODO[2017-03-23] More specific ABI
+)
 # The set of build tasks that this branch supports
 BUILDBOT_TARGETS = ('config', 'compile', 'bin-archive', 'bin-extract',
     'dist-notes', 'dist-docs', 'dist-server', 'dist-tools', 'dist-upload',
@@ -68,6 +81,9 @@ def error(message):
     print("ERROR: " + message)
     sys.exit(1)
 
+def get_target_triple():
+    return os.environ.get('BUILD_TARGET_TRIPLE')
+
 def get_build_platform():
     platform = (os.environ.get('BUILD_PLATFORM'),
                 os.environ.get('BUILD_SUBPLATFORM'))
@@ -80,6 +96,13 @@ def get_buildtype():
 
 def get_build_edition():
     return os.environ.get('BUILD_EDITION', 'community')
+
+def check_target_triple():
+    # Check that this branch can actually be built for the specified platform
+    triple = get_target_triple()
+    if not triple in BUILDBOT_PLATFORM_TRIPLES:
+        print('Buildbot build for "{}" platform is not supported'.format(triple))
+        sys.exit(SKIP_EXIT_STATUS)
 
 ################################################################
 # Defer to buildbot.mk
@@ -99,6 +122,7 @@ def exec_configure(args):
     sys.exit(config.configure(args))
 
 def do_configure():
+    check_target_triple()
     platform, subplatform = get_build_platform()
 
     if platform == 'ios':
@@ -197,6 +221,8 @@ def exec_msbuild(platform):
         sys.exit(exit_status)
 
 def do_compile():
+    check_target_triple()
+
     platform, subplatform = get_build_platform()
     if platform.startswith('win-'):
         return exec_msbuild(platform)
@@ -224,12 +250,6 @@ def do_bin_archive():
 ################################################################
 
 def buildbot_task(target):
-    # Check that this branch can actually be built for the specified platform
-    platform, subplatform = get_build_platform()
-    if not platform in BUILDBOT_PLATFORMS:
-        print('Buildbot build for "{}" platform is not supported'.format(platform))
-        sys.exit(SKIP_EXIT_STATUS)
-
     # Check that this branch supports performing the requested buildbot task
     if not target in BUILDBOT_TARGETS:
         print('Buildbot build step "{}" is not supported'.format(target))

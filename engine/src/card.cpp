@@ -3065,11 +3065,15 @@ void MCCard::drawselectedchildren(MCDC *dc)
         return;
     do
     {
-        if (tptr -> getref() -> getstate(CS_SELECTED))
-            tptr->getref()->drawselected(dc);
+        MCControl *t_control = tptr->getref();
+        if (t_control != nullptr)
+        {
+            if (tptr -> getref() -> getstate(CS_SELECTED))
+                tptr->getref()->drawselected(dc);
         
-        if (tptr -> getrefasgroup() != nil)
-            tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            if (tptr -> getrefasgroup() != nil)
+                tptr -> getrefasgroup() -> drawselectedchildren(dc);
+        }
             
         tptr = tptr->next();
     }
@@ -3140,7 +3144,9 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		MCObjptr *tptr = objptrs;
 		do
 		{
-			tptr->getref()->redraw(dc, dirty);
+            MCControl *t_control = tptr->getref();
+            if (t_control != nullptr)
+                t_control->redraw(dc, dirty);
 			tptr = tptr->next();
 		}
 		while (tptr != objptrs);

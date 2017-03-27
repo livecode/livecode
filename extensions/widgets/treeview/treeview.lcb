@@ -74,7 +74,7 @@ The actionDoubleClick message is sent to the widget's script object when a row o
 is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
 **/
 
-widget com.livecode.widget.treeView
+widget com.livecode.widget.treeview
 
 use com.livecode.canvas
 use com.livecode.widget

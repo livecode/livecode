@@ -102,3 +102,17 @@ end module
 %ERROR "Identifier 'UndeclaredHandler' not declared" AT BEFORE_HANDLER
 %ERROR "Identifier 'UndeclaredVar' not declared" AT BEFORE_VAR
 %ENDTEST
+
+%TEST WarnOnInvalidNamespaceStartWithDigit
+module %{POS}compiler_test.0foo
+end module
+%EXPECT PASS
+%ERROR "Namespace component '0foo' must not begin with a digit" AT POS
+%ENDTEST
+
+%TEST WarnOnInvalidNamespaceContainsUppercase
+module %{POS}compiler_test.FOO
+end module
+%EXPECT PASS
+%WARNING "Non-lowercase namespace component 'FOO' may cause future syntax error" AT POS
+%ENDTEST

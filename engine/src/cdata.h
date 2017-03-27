@@ -35,7 +35,7 @@ public:
 	MCCdata(const MCCdata &fref, MCField* p_new_owner);
 	~MCCdata();
 	IO_stat load(IO_handle stream, MCObject *parent, uint32_t version);
-	IO_stat save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version);
+	IO_stat save(IO_handle stream, Object_type type, uint4 p_part, MCObject *parent, uint32_t p_version);
 	uint4 getid();
 	void setid(uint4 newid);
 	MCParagraph *getparagraphs();

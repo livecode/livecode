@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /*
 This widget displays a color with optional alpha channel.
 */
-widget com.livecode.widget.colorSwatch
+widget com.livecode.widget.colorswatch
 --
 
 -- dependency declarations

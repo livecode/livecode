@@ -3665,7 +3665,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	{
 		do
 		{
-			if ((stat = tptr->save(stream, OT_BDATA, p_part, p_version)) != IO_NORMAL)
+			if ((stat = tptr->save(stream, OT_BDATA, p_part, nil, p_version)) != IO_NORMAL)
 				return stat;
 			tptr = (MCCdata *)tptr->next();
 		}

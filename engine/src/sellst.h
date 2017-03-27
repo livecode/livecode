@@ -38,6 +38,7 @@ private:
 	Boolean dropclone;
     
     void Clean();
+    bool IsDeletable();
     
 public:
     

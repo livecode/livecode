@@ -19,12 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Palette header bar widget.
 */
 
-widget com.livecode.widget.paletteActions
+widget com.livecode.widget.paletteactions
 
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 
 metadata title is "Palette Actions"

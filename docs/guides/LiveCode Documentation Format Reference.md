@@ -235,7 +235,7 @@ etc.
 ### Inline documentation
 Documentation for LiveCode script and LiveCode extensions can be done in-line. In this case, the Name, Type, Syntax and Associated elements are auto-generated. 
 
-The code-block enclosed in /* */ immediately preceding the handler or syntax definition is used for the other elements of the documentation for that entry. In LiveCode extensions, the types of parameters are also pulled from the associated handler.
+The code-block enclosed in /** */ immediately preceding the handler or syntax definition is used for the other elements of the documentation for that entry. In LiveCode extensions, the types of parameters are also pulled from the associated handler.
 
 ### Separate docs files examples
 
@@ -344,13 +344,13 @@ In general, writing inline docs has fewer requirements since several of the elem
 #### LiveCode Builder syntax example
 
 ```
-/*  
+/**  
 This library consists of the operations on lists included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.list
 
-/*
+/**
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
 output:			The first element of <Target>
@@ -387,7 +387,7 @@ end module
 
 #### LiveCode Builder handler example
 ```
-/*
+/**
 Summary: Logs the result of a test to the <xResults> list
 
 Parameters:
@@ -415,7 +415,7 @@ end handler
 ```
 #### LiveCode script handler example
 ```
-/*
+/**
 Summary: Extracts the inline docs from a .lcb file
 
 pFile: The path to the .lcb file to extract docs from

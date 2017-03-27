@@ -860,6 +860,68 @@ IsNameSuitableForModule (NameRef p_id)
 	return 0;
 }
 
+/* Check that the name is suitable for a namespace component.
+ * A namespace component must be composed of [a-z_0-9] but not
+ * start with a digit. */
+int
+IsNameSuitableForNamespace(NameRef p_id)
+{
+    const char *t_id;
+    size_t i;
+    
+    GetStringOfNameLiteral (p_id, &t_id);
+    
+    /* Must not start with a digit */
+    if (t_id[0] >= '0' &&
+        t_id[0] <= '9')
+    {
+        return 0;
+    }
+    
+    /* Must now continue with anything from [a-z0-9_] */
+    for(i = 0; '\0' != t_id[i]; ++i)
+    {
+        if (!isascii(t_id[i]))
+        {
+            return 0;
+        }
+        
+        if (isalnum(t_id[i]))
+        {
+            if (!islower(t_id[i]))
+            {
+                return 0;
+            }
+        }
+        else if ('_' != t_id[i])
+        {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
+
+/* Check that the name is valid as a namespace component.
+ * A namespace component is valid if it consists of [a-zA-Z0-9_] and
+ * does not start with a digit. */
+int
+IsNameValidForNamespace(NameRef p_id)
+{
+    const char *t_id;
+    
+    GetStringOfNameLiteral (p_id, &t_id);
+    
+    /* Must not start with a digit */
+    if (t_id[0] >= '0' &&
+        t_id[0] <= '9')
+    {
+        return 0;
+    }
+    
+    return 1;
+}
+
 /* Check that defined names *don't* match [a-z]+ (because these names
  * are reserved for syntax keywords) */
 int
@@ -870,7 +932,16 @@ IsNameSuitableForDefinition (NameRef p_id)
 
 	GetStringOfNameLiteral (p_id, &t_id);
 
-	for (i = 0; '\0' != t_id[i]; ++i)
+    for(i = 0; '\0' != t_id[i]; ++i)
+    {
+        /* We ignore any number of _ before the identifier */
+        if ('_' != t_id[i])
+        {
+            break;
+        }
+    }
+    
+	for (; '\0' != t_id[i]; ++i)
 	{
 		/* If char is not in [a-z] then string is okay */
 		if (t_id[i] < 'a' || t_id[i] > 'z')
