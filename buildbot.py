@@ -37,10 +37,10 @@ import config
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
-    'x86-linux-debian7',
-    'x86_64-linux-debian7',
-    'armv6-android-api8',
-    'universal-mac-macosx10.6', # Minimum deployment target
+    'x86-linux-debian8',
+    'x86_64-linux-debian8',
+    'armv6-android-api9',
+    'universal-mac-macosx10.9', # Minimum deployment target
     'universal-ios-iphoneos10.2',
     'universal-ios-iphoneos9.2',
     'universal-ios-iphonesimulator10.2',
