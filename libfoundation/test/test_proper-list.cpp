@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "gtest/gtest.h"
 
 #include "foundation.h"
+#include "foundation-span.h"
 #include "foundation-auto.h"
 
 TEST(properlist, createwithforeignvalues_bridgable)
@@ -25,7 +26,7 @@ TEST(properlist, createwithforeignvalues_bridgable)
     size_t t_float_count = sizeof(t_floats) / sizeof(t_floats[0]);
     
     MCAutoProperListRef t_float_list;
-    ASSERT_TRUE(MCProperListCreateWithForeignValues(kMCFloatTypeInfo, t_floats, t_float_count, &t_float_list));
+    ASSERT_TRUE(MCProperListCreateWithForeignValues(kMCFloatTypeInfo, MCMakeSpan(t_floats), &t_float_list));
     ASSERT_EQ(MCProperListGetLength(*t_float_list), t_float_count);
     for(size_t i = 0; i < t_float_count; i++)
     {
@@ -45,7 +46,7 @@ TEST(properlist, createwithforeignvalues_unbridgable)
     size_t t_pointer_count = sizeof(t_pointers) / sizeof(t_pointers[0]);
     
     MCAutoProperListRef t_pointer_list;
-    ASSERT_TRUE(MCProperListCreateWithForeignValues(kMCPointerTypeInfo, t_pointers, t_pointer_count, &t_pointer_list));
+    ASSERT_TRUE(MCProperListCreateWithForeignValues(kMCPointerTypeInfo, MCMakeSpan(t_pointers), &t_pointer_list));
     ASSERT_EQ(MCProperListGetLength(*t_pointer_list), t_pointer_count);
     for(size_t i = 0; i < t_pointer_count; i++)
     {

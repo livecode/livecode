@@ -59,6 +59,7 @@
 				'include/foundation-locale.h',
 				'include/foundation-math.h',
 				'include/foundation-objc.h',
+                'include/foundation-span.h',
 				'include/foundation-stdlib.h',
 				'include/foundation-system.h',
 				'include/foundation-text.h',

@@ -70,8 +70,11 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 }
 
 MC_DLLEXPORT_DEF
-bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_type, const void *p_values, uindex_t p_length, MCProperListRef& r_list)
+bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_typeinfo, const void *p_values, uindex_t p_value_count, MCProperListRef& r_list)
 {
+    __MCAssertIsForeignTypeInfo(p_typeinfo);
+    MCAssert(p_values != nullptr || p_value_count == 0);
+
     MCAutoProperListRef t_list;
     if (!MCProperListCreateMutable(&t_list))
     {
@@ -79,9 +82,9 @@ bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_type, const void *p_val
     }
 
     const MCForeignTypeDescriptor *t_descriptor =
-            MCForeignTypeInfoGetDescriptor(p_type);
+            MCForeignTypeInfoGetDescriptor(p_typeinfo);
 
-    while(p_length > 0)
+    while(p_value_count > 0)
     {
         MCAutoValueRef t_value;
         if (t_descriptor->doimport != nil)
@@ -95,7 +98,7 @@ bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_type, const void *p_val
         }
         else
         {
-            if (!MCForeignValueCreate(p_type,
+            if (!MCForeignValueCreate(p_typeinfo,
                                       (void *)p_values,
                                       (MCForeignValueRef&)&t_value))
             {
@@ -109,7 +112,7 @@ bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_type, const void *p_val
             return false;
         }
 
-        p_length -= 1;
+        p_value_count -= 1;
         p_values = (byte_t *)p_values + t_descriptor->size;
     }
 

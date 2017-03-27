@@ -3173,7 +3173,7 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // raw values. The raw values should be sequential in memory, size(type) apart.
 // If the foreign type does not bridge (has no import method), then a boxed
 // foreign value is created (MCForeignValueRef).
-MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t length, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
