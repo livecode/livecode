@@ -1273,7 +1273,8 @@ int X_close(void)
 
 	MCstacks->closeall();
 	MCselected->clear(False);
-
+    MCundos->freestate();
+    
 	MCU_play_stop();
 #ifdef FEATURE_PLATFORM_RECORDER
     if (MCrecorder != nil)
