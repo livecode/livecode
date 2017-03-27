@@ -70,6 +70,61 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 }
 
 MC_DLLEXPORT_DEF
+bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_type, const void *p_values, uindex_t p_length, MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+
+    const MCForeignTypeDescriptor *t_descriptor =
+            MCForeignTypeInfoGetDescriptor(p_type);
+
+    while(p_length > 0)
+    {
+        MCAutoValueRef t_value;
+        if (t_descriptor->doimport != nil)
+        {
+            if (!t_descriptor->doimport((void *)p_values,
+                                        false,
+                                        &t_value))
+            {
+                   return false;
+            }
+        }
+        else
+        {
+            if (!MCForeignValueCreate(p_type,
+                                      (void *)p_values,
+                                      (MCForeignValueRef&)&t_value))
+            {
+                   return false;
+            }
+        }
+
+        if (!MCProperListPushElementOntoBack(*t_list,
+                                             *t_value))
+        {
+            return false;
+        }
+
+        p_length -= 1;
+        p_values = (byte_t *)p_values + t_descriptor->size;
+    }
+
+    if (!t_list.MakeImmutable())
+    {
+            return false;
+    }
+
+    r_list = t_list.Take();
+
+    return true;
+}
+
+
+MC_DLLEXPORT_DEF
 bool MCProperListCreateMutable(MCProperListRef& r_list)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeProperList, r_list))

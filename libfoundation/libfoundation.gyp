@@ -10,6 +10,7 @@
 		[
 			'test/environment.cpp',
 			'test/test_hash.cpp',
+			'test/test_proper-list.cpp',
 			'test/test_string.cpp',
 			'test/test_typeconvert.cpp',
             'test/test_system-library.cpp',
