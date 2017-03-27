@@ -1738,6 +1738,8 @@ enum Properties {
     
     P_SCRIPT_STATUS,
     
+    P_LONG_NAME_NO_FILENAME,
+    
     __P_LAST,
 };
 
