@@ -555,12 +555,6 @@ MCStack::~MCStack()
 	MCValueRelease(title);
 	MCValueRelease(titlestring);
 
-	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
-	{
-		stop_externals();
-		destroywindow();
-	}
-
 	// Clear and free the id cache before removing any controls
 	freeobjectidcache();
 	
@@ -1362,43 +1356,54 @@ bool MCStack::isdeletable(bool p_check_flag)
     return true;
 }
 
-Boolean MCStack::del(bool p_check_flag)
+Boolean MCStack::dodel()
 {
-    if (!isdeletable(p_check_flag))
-	   return False;
-
-	while (substacks)
-	{
-		if (!substacks -> del(false))
-			return False;
-	}
-	
     MCscreen->ungrabpointer();
     MCdispatcher->removemenu();
     
     setstate(True, CS_DELETE_STACK);
     
-	if (opened)
-	{
-		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
-		//   get system resource accumulation in a tight create/destroy loop.
-		flags |= F_DESTROY_WINDOW;
-		close();
-	}
-
-	if (curcard != NULL)
-		curcard->message(MCM_delete_stack);
-	else
-		if (cards != NULL)
-			cards->message(MCM_delete_stack);
-	
+    if (opened)
+    {
+        // MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
+        //   get system resource accumulation in a tight create/destroy loop.
+        flags |= F_DESTROY_WINDOW;
+        close();
+    }
+    
+    if (curcard != NULL)
+        curcard->message(MCM_delete_stack);
+    else
+        if (cards != NULL)
+            cards->message(MCM_delete_stack);
+    
     notifyattachments(kMCStackAttachmentEventDeleting);
+    
+    if (window != NULL && !(state & CS_FOREIGN_WINDOW))
+    {
+        stop_externals();
+        destroywindow();
+    }
     
     removereferences();
         
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
+}
+
+Boolean MCStack::del(bool p_check_flag)
+{
+    if (!isdeletable(p_check_flag))
+	   return False;
+
+    while (substacks)
+    {
+        if (!substacks -> del(false))
+            return False;
+    }
+    
+    return dodel();
 }
 
 void MCStack::removereferences()
