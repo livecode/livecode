@@ -131,6 +131,11 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
     MCAbortKeyThread * t_thread = (MCAbortKeyThread *)p_info;
     
+	 if (!t_thread.platform -> IsAbortKeyEnabled())
+    {
+        return;
+    }
+	 
     [t_thread setAbortKeyChecked:false];
     
 	// Update our period key mapping if the input source has changed / hasn't
@@ -201,7 +206,8 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		// i.e. We have detected Cmd-'.'
 		//
         [t_thread setAbortKeyPressed:true];
-	}
+		  t_thread.platform -> BreakWait();
+   }
 }
 
 @implementation com_runrev_livecode_MCAbortKeyThread
@@ -211,6 +217,7 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 @synthesize currentPeriodNeedsShift=m_current_period_needs_shift;
 @synthesize currentInputSource=m_current_input_source;
 @synthesize currentPeriodKeycode=m_current_period_keycode;
+@synthesize platform=m_platform;
 
 - (id) init
 {
@@ -291,6 +298,22 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMacPlatformCore::DisableAbortKey(void)
+{
+    m_abort_key_disabled += 1;
+}
+
+void MCMacPlatformCore::EnableAbortKey(void)
+{
+    MCAssert(0 < m_abort_key_disabled);
+    m_abort_key_disabled -= 1;
+}
+
+bool MCMacPlatformCore::IsAbortKeyEnabled(void)
+{
+	return m_abort_key_disabled == 0;
+}
+
 bool MCMacPlatformCore::GetAbortKeyPressed(void)
 {
     // MW-2014-04-23: [[ Bug 12163 ]] If the abortKey hasn't been checked
@@ -324,6 +347,7 @@ bool MCMacPlatformCore::InitializeAbortKey(void)
 #endif
 	
 	m_abort_key_thread = [[MCAbortKeyThread alloc] init];
+    [m_abort_key_thread setPlatform:this];
 	[m_abort_key_thread start];
 	return true;
 }
@@ -336,4 +360,3 @@ void MCMacPlatformCore::FinalizeAbortKey(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-

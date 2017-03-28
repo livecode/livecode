@@ -919,12 +919,32 @@ inline void MCPlatformRunBlockOnMainFiber(void (^block)(void))
 }
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-
 #ifndef PLATFORM_IS_MINIMAL
+
+inline void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
+{
+    MCplatform -> SetWaitForEventCallbacks(p_pre, p_post);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Return true if the abort key has been pressed since the last check.
 inline bool MCPlatformGetAbortKeyPressed(void)
+{
+    return MCplatform -> GetAbortKeyPressed();
+}
+
+inline void DisableAbortKey(void)
+{
+    MCplatform -> DisableAbortKey();
+}
+
+inline void EnableAbortKey(void)
+{
+    MCplatform -> EnableAbortKey();
+}
+
+inline bool IsAbortKeyEnabled(void)
 {
     return MCplatform -> GetAbortKeyPressed();
 }
@@ -982,6 +1002,11 @@ inline void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 inline void MCPlatformUngrabPointer(void)
 {
     MCplatform -> UngrabPointer();
+}
+
+inline void MCPlatformClearLastMouseEvent(void)
+{
+    MCplatform -> ClearLastMouseEvent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

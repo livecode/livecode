@@ -1628,11 +1628,17 @@ void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMacPlatformCore::SetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
+{
+    m_pre_waitforevent_callback = p_pre;
+    m_post_waitforevent_callback = p_post;
+}
+
 void MCMacPlatformCore::BreakWait(void)
 {
     [m_callback_lock lock];
 	if (m_wait_broken)
-    {
+   {
         [m_callback_lock unlock];
         return;
     }
@@ -1659,7 +1665,7 @@ void MCMacPlatformCore::BreakWait(void)
 	[t_pool release];
 }
 
-static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+void MCMacPlatformWaitEventObserverCallback(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
     MCMacPlatformCore * t_platform = (MCMacPlatformCore *) info;
     if (t_platform -> InBlockingWait())
@@ -1675,17 +1681,18 @@ bool MCMacPlatformCore::InBlockingWait(void)
 
 void MCMacPlatformCore::EnableEventChecking(void)
 {
-	m_event_checking_enabled += 1;
+    MCAssert(0 < m_event_checking_disabled);
+	m_event_checking_disabled -= 1;
 }
 
 void MCMacPlatformCore::DisableEventChecking(void)
-{
-	m_event_checking_enabled -= 1;
+{ 
+	m_event_checking_disabled += 1;
 }
 
 bool MCMacPlatformCore::IsEventCheckingEnabled(void)
 {
-	return m_event_checking_enabled == 0;
+	return m_event_checking_disabled == 0;
 }
 
 bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
@@ -1693,6 +1700,26 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 	if (!IsEventCheckingEnabled())
 		return false;
 	
+    if (m_pre_waitforevent_callback != nullptr)
+    {
+        if (!m_pre_waitforevent_callback(p_duration, p_blocking))
+        {
+            return false;
+        }
+    }
+    else
+    {
+		 // Make sure we have our observer and install it. This is used when we are
+	    // blocking and should break the event loop whenever a new event is added
+	    // to the queue.
+	    if (m_observer == nil)
+	    {
+			   CFRunLoopObserverContext t_context = {0, this, nil, nil, nil};
+			   m_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, MCMacPlatformWaitEventObserverCallback, &t_context);
+			   CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], m_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+	    }
+    }
+    
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
@@ -1709,16 +1736,6 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 	MCMemoryDeleteArray(t_callbacks);
 	t_callbacks = nil;
 	t_callback_count = 0;
-	
-	// Make sure we have our observer and install it. This is used when we are
-	// blocking and should break the event loop whenever a new event is added
-	// to the queue.
-	if (m_observer == nil)
-	{
-        CFRunLoopObserverContext t_context = {0, this, nil, nil, nil};
-		m_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, &t_context);
-		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], m_observer, (CFStringRef)NSEventTrackingRunLoopMode);
-	}
 	
 	m_in_blocking_wait = true;
 	
@@ -1773,9 +1790,24 @@ bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
     
     m_animation_current_time = CFAbsoluteTimeGetCurrent();
 	
+    if (m_post_waitforevent_callback != nullptr)
+    {
+        return m_post_waitforevent_callback(t_event != nullptr);
+    }
+    
 	return t_event != nil;
 }
 
+void MCMacPlatformCore::ClearLastMouseEvent(void)
+{
+    if (m_last_mouse_event == nil)
+    {
+        return;
+    }
+    
+    [m_last_mouse_event release];
+    m_last_mouse_event = nil;
+}
 
 void MCMacPlatformCore::BeginModalSession(MCMacPlatformWindow *p_window)
 {
@@ -3075,6 +3107,3 @@ bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorS
     
     return MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
 }
-
-
-

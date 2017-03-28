@@ -464,6 +464,7 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
     BOOL m_current_period_needs_shift; // = false;
     TISInputSourceRef m_current_input_source;
     CGKeyCode m_current_period_keycode; // = 0xffff;
+    MCMacPlatformCore * m_platform;
 }
 
 @property (nonatomic, assign) BOOL abortKeyChecked;
@@ -471,6 +472,7 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
 @property (nonatomic, assign) BOOL currentPeriodNeedsShift;
 @property (nonatomic, assign) TISInputSourceRef currentInputSource;
 @property (nonatomic, assign) CGKeyCode currentPeriodKeycode;
+@property (nonatomic, assign) MCMacPlatformCore * platform;
 
 - (void)main;
 - (void)terminate;
@@ -832,6 +834,7 @@ public:
     virtual bool WaitForEvent(double p_duration, bool p_blocking);
     virtual void BreakWait(void);
     virtual bool InBlockingWait(void);
+    virtual void SetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post);
     
     // Callbacks
     virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context);
@@ -840,6 +843,9 @@ public:
     virtual bool InitializeAbortKey(void);
     virtual void FinalizeAbortKey(void);
     virtual bool GetAbortKeyPressed(void);
+    virtual void DisableAbortKey(void);
+    virtual void EnableAbortKey(void);
+    virtual bool IsAbortKeyEnabled(void);
     
     // Color transform
     virtual MCPlatformColorTransformRef CreateColorTransform(void);
@@ -960,6 +966,7 @@ public:
     virtual void HandleModifiersChanged(MCPlatformModifiers p_modifiers);
     virtual bool GetCursorIsHidden(void) { return m_cursor_is_hidden; }
     virtual void SetCursorIsHidden(bool p_hidden) { m_cursor_is_hidden = p_hidden; }
+    virtual void ClearLastMouseEvent(void);
     
     // Modifier Keys
     virtual MCPlatformModifiers GetModifiersState(void);
@@ -1093,10 +1100,11 @@ protected:
     // Core image
     coreimage_visualeffect_ref_t CoreImageVisualEffectCreate(NSString *p_name);
     
-    uindex_t m_event_checking_enabled = 0;
+    uindex_t m_event_checking_disabled = 0;
     
     // Abort key
     MCAbortKeyThread *m_abort_key_thread = nil;
+    uindex_t m_abort_key_disabled = 0;
     
     // Windows
     MCPlatformWindowRef m_moving_window = nil;
@@ -1110,7 +1118,9 @@ protected:
     bool m_in_blocking_wait = false;
     CFRunLoopObserverRef m_observer = nil;
     bool m_wait_broken = false;
-
+    MCPlatformPreWaitForEventCallback m_pre_waitforevent_callback = nullptr;
+    MCPlatformPostWaitForEventCallback m_post_waitforevent_callback = nullptr;
+    
     // Callbacks
     NSLock *m_callback_lock = nil;
     MCCallback *m_callbacks = nil;

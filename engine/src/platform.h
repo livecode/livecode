@@ -464,6 +464,11 @@ enum MCPlatformSystemProperty
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCPlatformPreWaitForEventCallback)(double duration, bool blocking);
+typedef bool (*MCPlatformPostWaitForEventCallback)(bool found_event);
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCPlatformControlType
 {
     kMCPlatformControlTypeGeneric = 0,  // Global theming (i.e the theme inherited by all controls)
@@ -2433,6 +2438,7 @@ namespace MCPlatform {
         // Wait
         virtual bool WaitForEvent(double p_duration, bool p_blocking) = 0;
         virtual void BreakWait(void) = 0;
+        virtual void SetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post) = 0;
         
         // Callbacks
         virtual void ScheduleCallback(void (*p_callback)(void *), void *p_context) = 0;
@@ -2441,6 +2447,9 @@ namespace MCPlatform {
         virtual bool InitializeAbortKey(void) = 0;
         virtual void FinalizeAbortKey(void) = 0;
         virtual bool GetAbortKeyPressed(void) = 0;
+        virtual void DisableAbortKey(void) = 0;
+        virtual void EnableAbortKey(void) = 0;
+        virtual bool IsAbortKeyEnabled(void) = 0;
         
         // Color transform
         virtual MCPlatformColorTransformRef CreateColorTransform(void) = 0;
@@ -2516,6 +2525,7 @@ namespace MCPlatform {
         virtual void GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window) = 0;
         virtual void GrabPointer(MCPlatformWindowRef p_window) = 0;
         virtual void UngrabPointer(void) = 0;
+        virtual void ClearLastMouseEvent(void) = 0;
         
         // Modifier Keys
         virtual MCPlatformModifiers GetModifiersState(void) = 0;
@@ -4078,4 +4088,3 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
-
