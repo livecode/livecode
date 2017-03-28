@@ -49,7 +49,7 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'universal-ios-iphonesimulator7.1',
     'universal-ios-iphonesimulator6.1',
     'x86-win32', # TODO[2017-03-23] More specific ABI
-    'js-emscripten', # TODO[2017-03-23] More specific ABI
+    'js-emscripten-sdk1.35',
 )
 # The set of build tasks that this branch supports
 BUILDBOT_TARGETS = ('config', 'compile', 'bin-archive', 'bin-extract',
