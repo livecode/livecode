@@ -209,6 +209,8 @@ namespace MCPlatform {
     class ScriptEnvironment;
     class Callback;
     class NativeLayer;
+    class Stubs;
+    class CoreReference;
 } /* namespace MCPlatform */
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;

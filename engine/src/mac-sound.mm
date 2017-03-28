@@ -46,7 +46,7 @@
 
 - (void)sound:(NSSound *)sound didFinishPlaying:(BOOL)finishedPlaying
 {
-     m_sound -> GetPlatform() -> GetCallback() -> SendSoundFinished((MCPlatformSoundRef)sound);
+     m_sound -> GetPlatform() -> SendSoundFinished((MCPlatformSoundRef)sound);
 }
 
 @end
@@ -133,6 +133,7 @@ MCPlatformSoundRef MCMacPlatformCore::CreateSound(void)
 {
     MCPlatform::Ref<MCPlatformSound> t_ref = MCPlatform::makeRef<MCMacPlatformSound>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

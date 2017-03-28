@@ -28,10 +28,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Quartz/Quartz.h>
 
+#include "platform.h"
+#include "mac-platform.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,16 +49,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_sr
 
 #define OBJC_LEAVE \
 	[__t_pool release];
-
-typedef struct __coreimage_visualeffect_t coreimage_visualeffect_t;
-typedef coreimage_visualeffect_t *coreimage_visualeffect_ref_t;
-struct __coreimage_visualeffect_t
-{
-	coreimage_visualeffect_t *next;
-	NSString *name;
-	rei_visualeffect_info_ref_t info;
-};
-
 static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_name)
 {
 	coreimage_visualeffect_ref_t t_effect = NULL;
@@ -156,34 +149,31 @@ static void coreimage_visualeffect_destroy(coreimage_visualeffect_ref_t p_effect
 	free(p_effect);
 }
 
-static NSArray *sg_effects = NULL;
-static coreimage_visualeffect_ref_t sg_effect_infos = NULL;
-
-rei_boolean_t coreimage_visualeffect_initialise(void)
+rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectInitialize(void)
 {
 	OBJC_ENTER(false)
 		
 	NS_DURING
 		if (NSClassFromString(@"CIFilter") != nil)
-			sg_effects = [[CIFilter filterNamesInCategory: kCICategoryTransition] retain];
+			m_g_effects = [[CIFilter filterNamesInCategory: kCICategoryTransition] retain];
 	NS_HANDLER
-		sg_effects = NULL;
+		m_g_effects = NULL;
 	NS_ENDHANDLER
 
 	OBJC_LEAVE
 	
-	return sg_effects != NULL;
+	return m_g_effects != NULL;
 }
 
-void coreimage_visualeffect_finalise(void)
+void MCMacPlatformCore::CoreImageVisualEffectFinalize(void)
 {
 	OBJC_ENTER_VOID
 
 	NS_DURING
-		[sg_effects release];
+		[m_g_effects release];
 		
 		coreimage_visualeffect_ref_t t_effect;
-		t_effect = sg_effect_infos;
+		t_effect = m_g_effect_infos;
 		while(t_effect != NULL)
 		{
 			coreimage_visualeffect_ref_t t_next;
@@ -197,7 +187,7 @@ void coreimage_visualeffect_finalise(void)
 	OBJC_LEAVE
 }
 
-rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info)
+rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectLookup(const char *p_name, rei_visualeffect_info_ref_t *r_info)
 {
 	NSString *t_name = nil;
 	coreimage_visualeffect_ref_t t_effect = NULL;
@@ -210,19 +200,19 @@ rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect
 		if (t_name == NULL)
 			return false;
 
-		for(t_effect = sg_effect_infos; t_effect != NULL; t_effect = t_effect -> next)
+		for(t_effect = m_g_effect_infos; t_effect != NULL; t_effect = t_effect -> next)
 			if ([t_name isEqualToString: t_effect -> name])
 				break;
 
 		unsigned int t_index;
 		if (t_effect == NULL)
-			for(t_index = 0; t_index < [sg_effects count]; ++t_index)
+			for(t_index = 0; t_index < [m_g_effects count]; ++t_index)
 			{
-				if ([t_name isEqualToString: [sg_effects objectAtIndex: t_index]])
+				if ([t_name isEqualToString: [m_g_effects objectAtIndex: t_index]])
 				{
 					t_effect = coreimage_visualeffect_create(t_name);
-					t_effect -> next = sg_effect_infos;
-					sg_effect_infos = t_effect;
+					t_effect -> next = m_g_effect_infos;
+					m_g_effect_infos = t_effect;
 					break;
 				}
 			}
@@ -237,11 +227,6 @@ rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect
 	
 	return t_effect != NULL;
 }
-
-static CIFilter *sg_current_filter = nil;
-static rei_rectangle_t sg_current_area;
-// IM-2013-08-29: [[ RefactorGraphics ]] Record surface height so we can transform image location to flipped context
-static float sg_current_height;
 
 bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
@@ -262,7 +247,7 @@ bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 	return t_success;
 }
 
-rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters)
+rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectBegin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters)
 {
 	bool t_success = true;
 	
@@ -349,7 +334,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 					t_height = p_parameters -> entries[t_index] . value . image . height;
 					t_data = p_parameters -> entries[t_index] . value . image . data;
 					CGColorSpaceRef t_color_space;
-					/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_color_space);
+					/* UNCHECKED */ MCImageGetCGColorSpace(t_color_space);
 					t_value = [CIImage imageWithBitmapData: [NSData dataWithBytesNoCopy: t_data length: t_width * t_height * 4] bytesPerRow: t_width * 4 size: CGSizeMake(t_width, t_height) format: kCIFormatARGB8 colorSpace: t_color_space];
 					CGColorSpaceRelease(t_color_space);
 				}
@@ -376,19 +361,19 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 		[t_filter setValue: t_image_b forKey: @"inputTargetImage"];
 	
 		[t_filter retain];
-		sg_current_filter = t_filter;
+		m_g_current_filter = t_filter;
 		
-		sg_current_area = *p_area;
-		sg_current_height = p_surface_height;
+		m_g_current_area = *p_area;
+		m_g_current_height = p_surface_height;
 	}
 	
 	NS_HANDLER
 		t_bound = false;
 		
-		if (sg_current_filter != NULL)
-			[sg_current_filter release];
+		if (m_g_current_filter != NULL)
+			[m_g_current_filter release];
 	
-		sg_current_filter = NULL;
+		m_g_current_filter = NULL;
 	NS_ENDHANDLER;
 	
 	OBJC_LEAVE
@@ -396,7 +381,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 	return t_bound;
 }
 
-rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time)
+rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectStep(MCStackSurface *p_target, float p_time)
 {
 	CGContextRef t_cg_context = nil;
 	if (p_target->LockTarget(kMCStackSurfaceTargetCoreGraphics, (void*&)t_cg_context))
@@ -408,9 +393,9 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 		
 		NS_DURING
 		t_context = [CIContext contextWithCGContext: t_cg_context options: nil];
-		CGContextClearRect(t_cg_context, CGRectMake(sg_current_area . x, sg_current_area . y, sg_current_area . width, sg_current_area . height));
-		[sg_current_filter setValue: [NSNumber numberWithFloat: p_time] forKey: @"inputTime"];
-		[t_context drawImage: [sg_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(sg_current_area . x, sg_current_height - (sg_current_area . y + sg_current_area . height)) fromRect: CGRectMake(0, 0, sg_current_area . width, sg_current_area . height)];
+		CGContextClearRect(t_cg_context, CGRectMake(m_g_current_area . x, m_g_current_area . y, m_g_current_area . width, m_g_current_area . height));
+		[m_g_current_filter setValue: [NSNumber numberWithFloat: p_time] forKey: @"inputTime"];
+		[t_context drawImage: [m_g_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(m_g_current_area . x, m_g_current_height - (m_g_current_area . y + m_g_current_area . height)) fromRect: CGRectMake(0, 0, m_g_current_area . width, m_g_current_area . height)];
 		CGContextFlush(t_cg_context);
 		NS_HANDLER
 		t_result = false;
@@ -426,20 +411,20 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 	return false;
 }
 
-rei_boolean_t coreimage_visualeffect_end(void)
+rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectEnd(void)
 {
 	rei_boolean_t t_result = false;
 	
 	OBJC_ENTER(false)
 	
 	NS_DURING
-		if (sg_current_filter != NULL)
-			[sg_current_filter release];
+		if (m_g_current_filter != NULL)
+			[m_g_current_filter release];
 	NS_HANDLER
 		t_result = false;
 	NS_ENDHANDLER
 	
-	sg_current_filter = NULL;
+	m_g_current_filter = NULL;
 	
 	OBJC_LEAVE
 

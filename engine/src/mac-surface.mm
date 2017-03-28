@@ -29,12 +29,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-// COCOA-TODO: Clean up external linkage for surface.
-extern MCRectangle MCU_intersect_rect(const MCRectangle&, const MCRectangle&);
-extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
-extern MCGFloat MCResGetDeviceScale(void);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -430,7 +427,7 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, const MCGRaster &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 {
 	CGColorSpaceRef t_colorspace;
-	if (MCMacPlatformGetImageColorSpace(t_colorspace))
+	if (MCImageGetCGColorSpace(t_colorspace))
 	{
 		CGImageRef t_image;
 		t_image = nil;
@@ -499,14 +496,6 @@ static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_re
 	
 	CGContextClipToRects(p_context, t_rects, t_count);
 	MCMemoryDeleteArray(t_rects);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace)
-{
-	return MCImageGetCGColorSpace(r_colorspace);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

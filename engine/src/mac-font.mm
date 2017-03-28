@@ -22,8 +22,8 @@
 
 #include "mac-platform.h"
 
-bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally);
-bool coretext_font_unload(MCStringRef p_path, bool p_globally);
+extern bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally);
+extern bool coretext_font_unload(MCStringRef p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +47,7 @@ MCPlatformLoadedFontRef MCMacPlatformCore::CreateLoadedFont()
 {
     MCPlatform::Ref<MCPlatformLoadedFont> t_ref = MCPlatform::makeRef<MCMacPlatformLoadedFont>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

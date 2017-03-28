@@ -31,10 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
-
-////////////////////////////////////////////////////////////////////////////////
-
 static float menu_screen_height(void)
 {
 	NSArray *t_screens;
@@ -215,7 +211,9 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
+extern bool MCMacCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
+
+void MCMacPlatformCore::CGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
 {
 	if (p_image != nil)
 	{
@@ -236,7 +234,7 @@ static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_si
 		MCImageBitmapClear(t_bitmap);
 		
 		CGContextRef t_context;
-		/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
+		/* UNCHECKED */ MCMacCreateCGContextForBitmap(t_bitmap, t_context);
 		
 		// Draw the image scaled down onto the bitmap
 		CGContextScaleCTM(t_context, t_hscale, t_vscale);
@@ -361,7 +359,7 @@ void MCMacPlatformCore::ScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id,
 	else
 		t_size = *p_size;
 	
-	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 
@@ -421,7 +419,7 @@ void MCMacPlatformCore::ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_siz
 	else
 		t_size = *p_size;
 	
-	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 

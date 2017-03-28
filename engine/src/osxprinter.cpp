@@ -78,7 +78,6 @@ extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_
 
 // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 

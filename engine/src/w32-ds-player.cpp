@@ -316,7 +316,7 @@ bool MCWin32DSPlayer::HandleGraphEvent()
 			else
 			{
 				m_control->StopWhenReady();
-                m_platform -> GetCallback() -> SendPlayerFinished(this);
+                m_platform -> SendPlayerFinished(this);
 			}
 			break;
 		}
@@ -348,11 +348,11 @@ bool MCWin32DSPlayer::HandleTimer()
 			if (t_index - 1 > m_last_marker)
 			{
 				m_last_marker = t_index - 1;
-				m_platform -> GetCallback() -> SendPlayerMarkerChanged(this, m_callback_markers.ptr[m_last_marker]);
+				m_platform -> SendPlayerMarkerChanged(this, m_callback_markers.ptr[m_last_marker]);
 			}
 		}
 
-		m_platform -> GetCallback() -> SendPlayerCurrentTimeChanged(this);
+		m_platform -> SendPlayerCurrentTimeChanged(this);
 	}
 
 	return true;

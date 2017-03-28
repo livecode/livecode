@@ -8,7 +8,6 @@
 			'include/customprinter.h',
 			'src/bitmapeffect.h',
 			'src/bitmapeffectblur.h',
-			'src/color.h',
 			'src/context.h',
 			'src/font.h',
 			'src/gradient.h',
@@ -27,7 +26,6 @@
 			'src/tilecache.h',
 			'src/bitmapeffect.cpp',
 			'src/bitmapeffectblur.cpp',
-			'src/color.cpp',
 			'src/combiners.cpp',
 			'src/customprinter.cpp',
 			'src/font.cpp',
@@ -606,9 +604,10 @@
 			'src/platform-base.h',
 			'src/platform-extern.h',
 			'src/platform-window.cpp',
-			'src/platform-recorder.cpp',
 			'src/raw-clipboard.h',
 			'src/raw-clipboard.cpp',
+			'src/color.h',
+			'src/color.cpp',
 			
 			# Group "Mac Platform"
 			'src/mac-platform.h',
@@ -623,8 +622,6 @@
 			'src/mac-menu.mm',
 			'src/mac-pasteboard.mm',
 			'src/mac-printer.mm',
-			'src/mac-qt-player.mm',
-			'src/mac-qt-recorder.mm',
 			'src/mac-scripting.mm',
 			'src/mac-snapshot.mm',
 			'src/mac-sound.mm',
@@ -635,6 +632,8 @@
 			'src/cgimageutil.cpp',
 			'src/mac-clipboard.h',
 			'src/mac-clipboard.mm',
+			'src/mac-coreimage.mm',
+			'src/coretextfont-loading.cpp',
 			
 			# Group "iOS Platform"
 			'src/mbliphone-platform.h',
@@ -744,14 +743,13 @@
 			'src/osxprefix.h',
 			'src/osxprinter.h',
 			'src/coretextlayout.mm',
-			'src/osxcisupport.mm',
-			'src/osxcoreimage.cpp',
 			'src/osxfield.cpp',
-			'src/osximage.cpp',
+			'src/osximage.mm',
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
 			'src/visualeffect.h',
+			'src/osxcoreimage.mm',
 			
 			# Group "Desktop - Windows"
 			'src/w32compat.h',

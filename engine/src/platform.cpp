@@ -17,6 +17,18 @@
 
 #include "platform.h"
 #include "platform-legacy.h"
+#include "globals.h"
+#include "font.h"
+#include "util.h"
+#include "system.h"
+#include "graphics_util.h"
+#include "securemode.h"
+#include "mode.h"
+#include "dispatch.h"
+#include "variable.h"
+#include "param.h"
+
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,35 +96,59 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
 namespace MCPlatform {
     
-    void Callback::SendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
+    bool Callback::Callback_GetGlobalProperty(MCPlatformGlobalProperty p_property, MCPlatformPropertyType p_type, void *r_value)
+    {
+        switch (p_property)
+        {
+            case kMCPlatformGlobalPropertyDoubleDelta:
+                *(uint16_t *)r_value = MCdoubledelta;
+                break;
+            case kMCPlatformGlobalPropertyDoubleTime:
+                *(uint16_t *)r_value = MCdoubletime;
+                break;
+            case kMCPlatformGlobalPropertyDragDelta:
+                *(uint16_t *)r_value = MCdragdelta;
+                break;
+            case kMCPlatformGlobalPropertyMajorOSVersion:
+                *(uint32_t *)r_value = MCmajorosversion;
+                break;
+            case kMCPlatformGlobalPropertyAppIsActive:
+                *(bool *)r_value = MCappisactive;
+                break;
+        }
+        
+        return true;
+    }
+    
+    void Callback::Callback_SendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         MCPlatformHandleApplicationStartup(p_argc, p_argv, p_envp, r_error_code, r_error_message);
 #endif // FEATURE_PLATFORM_APPLICATION
     }
     
-    void Callback::SendApplicationShutdown(int& r_exit_code)
+    void Callback::Callback_SendApplicationShutdown(int& r_exit_code)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
        MCPlatformHandleApplicationShutdown(r_exit_code);
 #endif // FEATURE_PLATFORM_APPLICATION
     }
     
-    void Callback::SendApplicationShutdownRequest(bool& r_terminate)
+    void Callback::Callback_SendApplicationShutdownRequest(bool& r_terminate)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         MCPlatformHandleApplicationShutdownRequest(r_terminate);
 #endif // FEATURE_PLATFORM_APPLICATION
     }
     
-    void Callback::SendApplicationRun(bool& r_continue)
+    void Callback::Callback_SendApplicationRun(bool& r_continue)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         MCPlatformHandleApplicationRun(r_continue);
 #endif // FEATURE_PLATFORM_APPLICATION
     }
     
-    void Callback::SendApplicationSuspend(void)
+    void Callback::Callback_SendApplicationSuspend(void)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         //MCLog("Application -> Suspend()", 0);
@@ -120,7 +156,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_APPLICATION
     }
     
-    void Callback::SendApplicationResume(void)
+    void Callback::Callback_SendApplicationResume(void)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         //MCLog("Application -> Resume()", 0);
@@ -131,7 +167,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendScreenParametersChanged(void)
+    void Callback::Callback_SendScreenParametersChanged(void)
     {
 #if defined(FEATURE_PLATFORM_APPLICATION)
         //MCLog("Application -> ScreenParametersChanged()", 0);
@@ -141,7 +177,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendWindowCloseRequest(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowCloseRequest(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> CloseRequest()", p_window);
@@ -150,7 +186,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowClose(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowClose(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> Close()", p_window);
@@ -159,7 +195,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowCancel(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowCancel(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> Cancel()", p_window);
@@ -168,7 +204,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)
+    void Callback::Callback_SendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowReshape([%d, %d, %d, %d])", p_window, p_new_content . x, p_new_content . y, p_new_content . width, p_new_content . height);
@@ -177,7 +213,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
+    void Callback::Callback_SendWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         MCPlatformWindowDeathGrip(p_window);
@@ -185,7 +221,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
+    void Callback::Callback_SendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
@@ -194,7 +230,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowIconify(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowIconify(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowIconify()", p_window);
@@ -203,7 +239,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowUniconify(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowUniconify(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowUniconify()", p_window);
@@ -212,7 +248,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowFocus(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowFocus(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowFocus()", p_window);
@@ -221,7 +257,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendWindowUnfocus(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendWindowUnfocus(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> WindowUnfocus()", p_window);
@@ -232,7 +268,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendModifiersChanged(MCPlatformModifiers p_modifiers)
+    void Callback::Callback_SendModifiersChanged(MCPlatformModifiers p_modifiers)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("ModifiersChanged()", 0);
@@ -242,7 +278,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendMouseEnter(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendMouseEnter(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseEnter()", p_window);
@@ -251,7 +287,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseLeave(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendMouseLeave(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseLeave()", p_window);
@@ -260,7 +296,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
+    void Callback::Callback_SendMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
        //MCLog("Window(%p) -> MouseDown(%d, %d)", p_window, p_button, p_count);
@@ -269,7 +305,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
+    void Callback::Callback_SendMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseUp(%d, %d)", p_window, p_button, p_count);
@@ -278,7 +314,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
+    void Callback::Callback_SendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseDrag(%d)", p_window, p_button);
@@ -287,7 +323,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
+    void Callback::Callback_SendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseRelease(%d, %d)", p_window, p_button, p_was_menu);
@@ -296,7 +332,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
+    void Callback::Callback_SendMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
@@ -305,7 +341,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMouseScroll(MCPlatformWindowRef p_window, int dx, int dy)
+    void Callback::Callback_SendMouseScroll(MCPlatformWindowRef p_window, int dx, int dy)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> MouseScroll(%d, %d)", p_window, dx, dy);
@@ -316,7 +352,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
+    void Callback::Callback_SendDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> DragEnter(%p)", p_window, p_dragboard);
@@ -325,7 +361,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendDragLeave(MCPlatformWindowRef p_window)
+    void Callback::Callback_SendDragLeave(MCPlatformWindowRef p_window)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> DragLeave()", p_window);
@@ -334,7 +370,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
+    void Callback::Callback_SendDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> DragMove([%d, %d])", p_window, p_location . x, p_location . y);
@@ -343,7 +379,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
+    void Callback::Callback_SendDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> DragDrop()", p_window);
@@ -354,7 +390,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    void Callback::Callback_SendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> RawKeyDown(%d)", p_window, p_key_code);
@@ -363,7 +399,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    void Callback::Callback_SendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> KeyDown(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
@@ -372,7 +408,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+    void Callback::Callback_SendKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> KeyUp(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
@@ -383,7 +419,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
+    void Callback::Callback_SendTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         MCPlatformHandleTextInputQueryTextRanges(p_window, r_marked_range, r_selected_range);
@@ -392,7 +428,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
+    void Callback::Callback_SendTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         MCPlatformHandleTextInputQueryTextIndex(p_window, p_location, r_index);
@@ -401,7 +437,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
+    void Callback::Callback_SendTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         MCPlatformWindowDeathGrip(p_window);
@@ -409,7 +445,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
+    void Callback::Callback_SendTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         MCPlatformWindowDeathGrip(p_window);
@@ -417,7 +453,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
+    void Callback::Callback_SendTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> InsertText('', [%u, %u], [%u, %u], %d)", p_window, p_replace_range . offset, p_replace_range . length, p_selection_range . offset, p_selection_range . length, p_mark);
@@ -426,7 +462,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
+    void Callback::Callback_SendTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> Action(%d)", p_window, p_action);
@@ -437,7 +473,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendMenuUpdate(MCPlatformMenuRef p_menu)
+    void Callback::Callback_SendMenuUpdate(MCPlatformMenuRef p_menu)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Menu(%p) -> Update()", p_menu);
@@ -445,7 +481,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_WINDOW
     }
     
-    void Callback::SendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index)
+    void Callback::Callback_SendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Menu(%p) -> Select(%d)", p_menu, p_index);
@@ -455,7 +491,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
+    void Callback::Callback_SendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
     {
 #if defined(FEATURE_PLATFORM_WINDOW)
         //MCLog("Window(%p) -> ViewFocusSwitched(%d)", p_window, p_view_id);
@@ -465,14 +501,14 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendPlayerFrameChanged(MCPlatformPlayerRef p_player)
+    void Callback::Callback_SendPlayerFrameChanged(MCPlatformPlayerRef p_player)
     {
 #if defined(FEATURE_PLATFORM_PLAYER)
         MCPlatformHandlePlayerFrameChanged(p_player);
 #endif // FEATURE_PLATFORM_PLAYER
     }
     
-    void Callback::SendPlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
+    void Callback::Callback_SendPlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
     {
 #if defined(FEATURE_PLATFORM_PLAYER)
         //MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
@@ -480,7 +516,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_PLAYER
     }
     
-    void Callback::SendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+    void Callback::Callback_SendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     {
 #if defined(FEATURE_PLATFORM_PLAYER)
         //MCLog("Player(%p) -> CurrentTimeChanged()", p_player);
@@ -488,7 +524,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_PLAYER
     }
     
-    void Callback::SendPlayerFinished(MCPlatformPlayerRef p_player)
+    void Callback::Callback_SendPlayerFinished(MCPlatformPlayerRef p_player)
     {
 #if defined(FEATURE_PLATFORM_PLAYER)
         //MCLog("Player(%p) -> Finished()", p_player);
@@ -496,7 +532,7 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_PLAYER
     }
     
-    void Callback::SendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
+    void Callback::Callback_SendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
     {
 #if defined(FEATURE_PLATFORM_PLAYER)
         // MCLog("Player(%p) -> BufferUpdated()", p_player);
@@ -506,7 +542,7 @@ namespace MCPlatform {
     
     //////////
     
-    void Callback::SendSoundFinished(MCPlatformSoundRef p_sound)
+    void Callback::Callback_SendSoundFinished(MCPlatformSoundRef p_sound)
     {
 #if defined(FEATURE_PLATFORM_AUDIO)
         //MCLog("Sound(%p) -> Finished()", p_sound);
@@ -514,6 +550,131 @@ namespace MCPlatform {
 #endif // FEATURE_PLATFORM_AUDIO
     }
     
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    void *Callback::Callback_MCListPopFront(void*& x_list)
+    {
+        return MCListPopFront(x_list);
+    }
+    
+    void Callback::Callback_MCListPushBack(void*& x_list, void *p_element)
+    {
+        MCListPushBack(x_list, p_element);
+    }
+    
+    bool Callback::Callback_MCFontCreateWithHandle(MCSysFontHandle p_handle, MCNameRef p_name, MCFontRef& r_font)
+    {
+        return MCFontCreateWithHandle(p_handle, p_name, r_font);
+    }
+    MCRectangle Callback::Callback_MCU_reduce_rect(const MCRectangle &srect, int2 amount)
+    {
+        return MCU_reduce_rect(srect, amount);
+    }
+    
+    MCRectangle Callback::Callback_MCU_intersect_rect(const MCRectangle &one, const MCRectangle &two)
+    {
+        return MCU_intersect_rect(one, two);
+    }
+    Boolean Callback::Callback_MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y)
+    {
+        return MCU_point_in_rect(srect, x, y);
+    }
+    void Callback::Callback_MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result) const
+    {
+        MCU_urldecode(p_source, p_use_utf8, r_result);
+    }
+    bool Callback::Callback_MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded) const
+    {
+        return MCU_urlencode(p_url, p_use_utf8, r_encoded);
+    }
+    bool Callback::Callback_MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path)
+    {
+        return MCS_pathtonative(p_livecode_path, r_native_path);
+    }
+    bool Callback::Callback_MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
+    {
+        return MCS_resolvepath(p_path, r_resolved_path);
+    }
+    real8 Callback::Callback_MCS_time(void)
+    {
+        return MCS_time();
+    }
+    void Callback::Callback_MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
+    {
+        MCGRasterApplyAlpha(x_raster, p_alpha, p_offset);
+    }
+    bool Callback::Callback_MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count)
+    {
+        return MCStringsSplit(p_string, p_separator, r_strings, r_count);
+    }
+    void Callback::Callback_MCImageFreeBitmap(MCImageBitmap *p_bitmap)
+    {
+        return MCImageFreeBitmap(p_bitmap);
+    }
+    void Callback::Callback_MCImageBitmapClear(MCImageBitmap *p_bitmap)
+    {
+        return MCImageBitmapClear(p_bitmap);
+    }
+    bool Callback::Callback_MCImageBitmapCreate(uindex_t p_width, uindex_t p_height, MCImageBitmap *&r_bitmap)
+    {
+        return MCImageBitmapCreate(p_width, p_height, r_bitmap);
+    }
+    bool Callback::Callback_MCImageBitmapHasTransparency(MCImageBitmap *p_bitmap)
+    {
+        return MCImageBitmapHasTransparency(p_bitmap);
+    }
+    MCGRaster Callback::Callback_MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultiplied)
+    {
+        return MCImageBitmapGetMCGRaster(p_bitmap, p_is_premultiplied);
+    }
+    bool Callback::Callback_MCSecureModeCanAccessAppleScript(void)
+    {
+        return MCSecureModeCanAccessAppleScript();
+    }
+    
+    void Callback::Callback_SendOpenDoc(MCStringRef p_string)
+    {
+        if (MCModeShouldQueueOpeningStacks())
+        {
+            MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+            MCstacknames[MCnstacks++] = MCValueRetain(p_string);
+        }
+        else
+        {
+            MCStack *stkptr;  //stack pointer
+            if (MCdispatcher->loadfile(p_string, stkptr) == IO_NORMAL)
+                stkptr->open();
+        }
+    }
+    
+    void Callback::Callback_DoScript(MCStringRef p_script, MCStringRef &r_result)
+    {
+        MCExecContext ctxt(MCdefaultstackptr -> getcard(), nil, nil);
+        MCdefaultstackptr->getcard()->domess(p_script);
+        MCAutoValueRef t_value;
+        /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, r_result);
+    }
+    
+    void Callback::Callback_Eval(MCStringRef p_script, MCStringRef &r_result)
+    {
+        MCExecContext ctxt(MCdefaultstackptr -> getcard(), nil, nil);
+        MCAutoValueRef t_value;
+        MCdefaultstackptr->getcard()->eval(ctxt, p_script, &t_value);
+        /* UNCHECKED */ ctxt.ConvertToString(*t_value, r_result);
+    }
+    
+    Exec_stat Callback::Callback_SendMessage(MCNameRef p_message, MCValueRef p_val1, MCValueRef p_val2, MCValueRef p_val3)
+    {
+        MCParameter p1, p2, p3;
+        p1.setvalueref_argument(p_val1);
+        p1.setnext(&p2);
+        p2.setvalueref_argument(p_val1);
+        p2.setnext(&p3);
+        p3.setvalueref_argument(p_val3);
+        
+        return MCdefaultstackptr->getcard()->message(p_message, &p1);
+    }
     ////////////////////////////////////////////////////////////////////////////////
     
 }  /* namespace MCPlatform */

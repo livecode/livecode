@@ -19,9 +19,11 @@
 
 #import <AppKit/AppKit.h>
 #include <Carbon/Carbon.h>
+#include "visualeffect.h"
 
 #include "typedefs.h"
 #include "platform.h"
+#include "visual.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -651,11 +653,6 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
-bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
-
-////////////////////////////////////////////////////////////////////////////////
-
 // IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
 class MCMacPlatformWindowMask: public MCPlatformWindowMask
 {
@@ -777,6 +774,26 @@ struct MCModalSession
     bool is_done;
 };
 
+struct MCFileFilter
+{
+    MCFileFilter *next;
+    MCStringRef tag;
+    MCStringRef *extensions;
+    uint32_t extension_count;
+    MCStringRef *filetypes;
+    uint32_t filetypes_count;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct __coreimage_visualeffect_t coreimage_visualeffect_t;
+typedef coreimage_visualeffect_t *coreimage_visualeffect_ref_t;
+struct __coreimage_visualeffect_t
+{
+    coreimage_visualeffect_t *next;
+    NSString *name;
+    rei_visualeffect_info_ref_t info;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -857,6 +874,7 @@ public:
     virtual MCPlatformDialogResult EndFolderDialog(MCStringRef& r_selected_folder);
     virtual void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
     virtual MCPlatformDialogResult EndOpenSaveDialog(void);
+    virtual bool FileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter);
     
     // Print dialog
     virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void);
@@ -980,6 +998,9 @@ public:
     virtual void UnloadTheme(void);
     virtual bool DrawThemeFocusBorder(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect);
     virtual bool DrawThemeMetalBackground(MCContext *p_context, const MCRectangle& p_dirty, const MCRectangle& p_rect, MCPlatformWindowRef p_window);
+    virtual Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect);
+    virtual void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
+    virtual void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect);
     
     // Callbacks
     virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
@@ -993,6 +1014,27 @@ public:
     virtual void RunBlockOnMainFiber(void (^block)(void));
 #endif
     
+    // Core image
+    virtual rei_boolean_t CoreImageVisualEffectInitialize(void);
+    virtual void CoreImageVisualEffectFinalize(void);
+    virtual rei_boolean_t CoreImageVisualEffectLookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
+    virtual rei_boolean_t CoreImageVisualEffectBegin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
+    virtual rei_boolean_t CoreImageVisualEffectStep(MCStackSurface *p_target, float p_time);
+    virtual rei_boolean_t CoreImageVisualEffectEnd(void);
+    
+    // Core graphics
+    virtual bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
+    virtual bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+    virtual void CGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap);
+    
+    // Apple events
+    virtual OSErr SpecialAppleEvent(const AppleEvent *ae, AppleEvent *reply);
+    virtual OSErr OpenDocAppleEvent(const AppleEvent *theAppleEvent, AppleEvent *reply);
+    virtual OSErr AnswerAppleEvent(const AppleEvent *ae, AppleEvent *reply);
+    virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply, MCStringRef &r_result);
+    virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error);
+    virtual void RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value);
+    virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result);
 protected:
     // Sound
     void GetGlobalVolume(double& r_volume);
@@ -1105,8 +1147,23 @@ protected:
     CFAbsoluteTime m_animation_start_time = 0;
     CFAbsoluteTime m_animation_current_time = 0;
     
+    // Core image
+    NSArray *m_g_effects = nil;
+    coreimage_visualeffect_ref_t m_g_effect_infos = nil;
+    CIFilter *m_g_current_filter = nil;
+    rei_rectangle_t m_g_current_area;
+    // IM-2013-08-29: [[ RefactorGraphics ]] Record surface height so we can transform image location to flipped context
+    float m_g_current_height = 0.0f;
+    
     // Engine callbacks
     MCPlatformCallbackRef m_callback = nil;
+    
+    // Apple Events
+    AEKeyword m_replykeyword = 0;   // Use in DoSpecial & other routines
+    MCStringRef m_AEReplyMessage = nil;
+    MCStringRef m_AEAnswerData = nil;
+    MCStringRef m_AEAnswerErr = nil;
+    const AppleEvent *m_aePtr = nil; //current apple event for mcs_request_ae()
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <type_traits>
 #include <utility>
 
+class MCPlatformStubs;
+
 namespace MCPlatform {
 
 class Base

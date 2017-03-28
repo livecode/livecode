@@ -25,8 +25,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-
 void MCMacPlatformCore::DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)
 {
 	CGImageRef t_cg_image;

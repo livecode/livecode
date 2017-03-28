@@ -229,7 +229,8 @@ IO_stat MCHcstak::macreadresources(void)
 //  MISC 
 //
 
-extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
@@ -308,10 +309,8 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 		return true;
 	}
     
-    extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-    
     CGColorSpaceRef t_colorspace;
-	/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
+	/* UNCHECKED */ MCImageGetCGColorSpace(t_colorspace);
     
     CGContextRef t_context;
     t_context = CGBitmapContextCreate(NULL, 64, 64, 8, 64 * 4, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));

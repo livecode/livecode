@@ -28,6 +28,8 @@
 
 #include "graphics_util.h"
 
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCAVFoundationPlayer;
@@ -98,6 +100,7 @@ private:
 	void Load(MCStringRef filename, bool is_url);
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
+    bool SnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap);
     
     CMTime CMTimeFromLCTime(uint32_t lc_time);
     uint32_t CMTimeToLCTime(CMTime cm_time);
@@ -362,7 +365,7 @@ void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
     uint32_t t_buffered_time;
     t_buffered_time = CMTimeToLCTime(p_timerange.duration);
     m_buffered_time = t_buffered_time;
-    m_platform -> GetCallback() -> SendPlayerBufferUpdated(this);
+    m_platform -> SendPlayerBufferUpdated(this);
     /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);
@@ -383,7 +386,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     if (!m_looping)
     {
         m_playing = false;
-        m_platform -> GetCallback() -> SendPlayerFinished(this);
+        m_platform -> SendPlayerFinished(this);
     }
     else
     {
@@ -466,7 +469,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
             if (m_markers[t_index - 1] != m_last_marker)
             {
                 m_last_marker = m_markers[t_index - 1];
-                m_platform -> GetCallback() -> SendPlayerMarkerChanged(this, m_last_marker);
+                m_platform -> SendPlayerMarkerChanged(this, m_last_marker);
                 m_synchronizing = true;
             }
         }
@@ -474,7 +477,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     
     // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
     if (!m_synchronizing && IsPlaying())
-        m_platform -> GetCallback() -> SendPlayerCurrentTimeChanged(this);
+        m_platform -> SendPlayerCurrentTimeChanged(this);
     
     m_synchronizing = false;
     
@@ -603,7 +606,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
         t_player -> m_current_frame = t_image;
     }
 
-	t_player -> GetPlatform() -> GetCallback() -> SendPlayerFrameChanged(t_player);
+	t_player -> GetPlatform() -> SendPlayerFrameChanged(t_player);
     
     if (t_player -> IsPlaying())
         t_player -> HandleCurrentTimeChanged();
@@ -950,7 +953,9 @@ void MCAVFoundationPlayer::Step(int amount)
     [[m_player currentItem] stepByCount:amount];
 }
 
-bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+
+bool MCAVFoundationPlayer::SnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 	
@@ -966,13 +971,11 @@ bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p
 	if (t_success)
 		MCImageBitmapClear(t_bitmap);
 	
-	extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-	
 	CGColorSpaceRef t_colorspace;
 	t_colorspace = nil;
 	
 	if (t_success)
-		t_success = MCMacPlatformGetImageColorSpace(t_colorspace);
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	CGContextRef t_cg_context;
 	t_cg_context = nil;
@@ -1043,7 +1046,7 @@ bool MCAVFoundationPlayer::LockBitmap(const MCGIntegerSize &p_size, MCImageBitma
 	if (m_player_item_video_output == nil || m_current_frame == nil)
 		return false;
 	
-	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
+	return SnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
 }
 
 void MCAVFoundationPlayer::UnlockBitmap(MCImageBitmap *bitmap)
@@ -1372,6 +1375,7 @@ MCPlatformPlayerRef MCMacPlatformCore::CreatePlayer()
 {
     MCPlatform::Ref<MCPlatformPlayer> t_ref = MCPlatform::makeRef<MCAVFoundationPlayer>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

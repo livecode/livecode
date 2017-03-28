@@ -26,8 +26,6 @@
 
 #include "mac-platform.h"
 
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-
 static NSCursor *s_watch_cursor = nil;
 
 static unsigned char s_watch_cursor_bits[] =
@@ -122,7 +120,7 @@ void MCMacPlatformCursor::CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot
 	is_standard = false;
 	
 	CGImageRef t_cg_image;
-	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
+	/* UNCHECKED */ static_cast<MCMacPlatformCore *>(m_platform) -> MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
 	
 	// Convert the CGImage into an NSIMage
 	NSImage *t_cursor_image;
@@ -206,6 +204,7 @@ MCPlatformCursorRef MCMacPlatformCore::CreateCursor()
 {
     MCPlatform::Ref<MCPlatformCursor> t_ref = MCPlatform::makeRef<MCMacPlatformCursor>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

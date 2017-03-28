@@ -25,7 +25,6 @@
 #include "parsedef.h"
 #include "filedefs.h"
 #include "mcstring.h"
-#include "globals.h"
 #include "mctheme.h"
 #include "util.h"
 #include "object.h"
@@ -39,27 +38,29 @@
 #import <AppKit/NSImageRep.h>
 #import <CoreText/CoreText.h>
 
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 // Returns the name of the legacy font
-static NSString* get_legacy_font_name()
+static NSString* get_legacy_font_name(uint32_t p_majorosversion)
 {
-    if (MCmajorosversion < 0x10A0)
+    if (p_majorosversion < 0x10A0)
         return @"Lucida Grande";
-    if (MCmajorosversion > 0x10B0)
+    if (p_majorosversion > 0x10B0)
         return @"San Francisco";
     else
         return @"Helvetica Neue";
 }
 
 // Returns the correct font for a control of the given type
-static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlState p_state, MCNameRef* r_name = nil)
+static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlState p_state, uint32_t p_majorosversion,  MCNameRef* r_name = nil)
 {
     // Always return the same font regardless of control type in legacy mode
     if (p_state & kMCPlatformControlStateCompatibility)
     {
         static NSFont* s_legacy_font = nil;
         if (nil == s_legacy_font)
-            s_legacy_font = [[NSFont fontWithName:get_legacy_font_name() size:11] retain];
+            s_legacy_font = [[NSFont fontWithName:get_legacy_font_name(p_majorosversion) size:11] retain];
         if (nil == s_legacy_font)
             s_legacy_font = [[NSFont systemFontOfSize:11] retain];
 
@@ -76,7 +77,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_user_font = [[NSFont userFontOfSize:-1.0] retain];
             if (r_name)
-                MCNameCreateWithCString("(Styled Text)", *r_name);
+                *r_name = MCNAME("(Styled Text)");
             return s_user_font;
         }
             
@@ -88,7 +89,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_menu_font = [[NSFont menuFontOfSize:-1.0] retain];
             if (r_name)
-                MCNameCreateWithCString("(Menu)", *r_name);
+                *r_name = MCNAME("(Menu)");
             return s_menu_font;
         }
             
@@ -97,7 +98,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_content_font = [[NSFont controlContentFontOfSize:-1.0] retain];
             if (r_name)
-                MCNameCreateWithCString("(Text)", *r_name);
+                *r_name = MCNAME("(Text)");
             return s_content_font;
         }
             
@@ -112,7 +113,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_message_font = [[NSFont messageFontOfSize:-1.0] retain];
             if (r_name)
-                MCNameCreateWithCString("(Message)", *r_name);
+                *r_name = MCNAME("(Message)");
             return s_message_font;
         }
             
@@ -120,7 +121,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_tooltip_font = [[NSFont toolTipsFontOfSize:-1.0] retain];
             if (r_name)
-                MCNameCreateWithCString("(Tooltip)", *r_name);
+                *r_name = MCNAME("(Tooltip)");
             return s_tooltip_font;
         }
             
@@ -128,7 +129,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_system_font = [[NSFont systemFontOfSize:[NSFont systemFontSize]] retain];
             if (r_name)
-                MCNameCreateWithCString("(System)", *r_name);
+                *r_name = MCNAME("(System)");
             return s_system_font;
         }
     }
@@ -154,11 +155,14 @@ bool MCMacPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type,
     {
         case kMCPlatformThemePropertyTextSize:
         {
+            uint32_t t_version;
+            GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+            
             // If in backwards-compatibility mode, all text is size 11
             if (p_state & kMCPlatformControlStateCompatibility)
                 r_int = 11;
             else
-                return [font_for_control(p_type, p_state) pointSize];
+                return [font_for_control(p_type, p_state, t_version) pointSize];
         }
         
         // Property is not known
@@ -382,9 +386,12 @@ bool MCMacPlatformCore::GetControlThemePropColor(MCPlatformControlType p_type, M
 
 bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
+    uint32_t t_version;
+    GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+    
     // Get the font for the given control type
 	MCNewAutoNameRef t_font_name;
-    NSFont* t_font = font_for_control(p_type, p_state, &(&t_font_name));
+    NSFont* t_font = font_for_control(p_type, p_state, t_version, &(&t_font_name));
     if (t_font == nil)
         return false;
     
@@ -394,17 +401,11 @@ bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
-
 static void getthemebuttonpartandstate(const MCWidgetInfo &winfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR);
 static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
 static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
-static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect);
-static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
 static ThemeTrackKind getscrollbarkind(Widget_Type wtype);
 static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo);
-static void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect);
 
 enum {
     kControlLowerUpButtonPart = 28,
@@ -477,7 +478,7 @@ static void converttomcrect(const Rect &macR, MCRectangle &mcR)
 }
 
 // IM-2014-01-24: [[ HiDPI ]] Factor out creation of CGBitmapContext for MCImageBitmap
-bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
+bool MCMacCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
 {
     bool t_success;
     t_success = true;
@@ -485,7 +486,7 @@ bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_cont
     CGContextRef t_cgcontext = nil;
     CGColorSpaceRef t_colorspace = nil;
     
-    t_success = MCMacPlatformGetImageColorSpace(t_colorspace);
+    t_success = MCImageGetCGColorSpace(t_colorspace);
     
     if (t_success)
     {
@@ -662,7 +663,7 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
     }
 }
 
-static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect)
+Widget_Part MCMacPlatformCore::HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect)
 {
     Widget_Part wpart =  WTHEME_PART_THUMB;
     HIPoint mouseLoc;
@@ -726,7 +727,7 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
     return wpart;
 }
 
-static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time)
+void MCMacPlatformCore::DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time)
 {
     MCThemeDrawInfo t_info;
     t_info . dest = drect;
@@ -861,7 +862,7 @@ static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDraw
 
 #define SB_MAXVALUE 16384
 
-static void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect)
+void MCMacPlatformCore::fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect)
 {
     /******************************************************************************
      * fill in the fields in the ThemeTrackDrawInfo structure to be used by other *
@@ -924,9 +925,13 @@ static void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &d
         drawInfo.attributes = kThemeTrackShowThumb;
     // MW-2012-09-17: [[ Bug ]] If the app is inactive, then render the progressbar
     //   as such.
+    
+    bool t_appisactive;
+    GetGlobalProperty(kMCPlatformGlobalPropertyAppIsActive, kMCPlatformPropertyTypeBool, &t_appisactive);
+    
     if (winfo.state & WTHEME_STATE_DISABLED)
         drawInfo.enableState = kThemeTrackDisabled;
-    else if (MCappisactive)
+    else if (t_appisactive)
         drawInfo.enableState = kThemeTrackActive;
     else
         drawInfo.enableState = kThemeTrackInactive;
@@ -1256,7 +1261,7 @@ bool MCMacPlatformCore::DrawTheme(MCGContextRef p_context, MCThemeDrawType p_typ
     {
         MCImageBitmapClear(t_bitmap);
         
-        t_success = MCOSXCreateCGContextForBitmap(t_bitmap, t_cgcontext);
+        t_success = MCMacCreateCGContextForBitmap(t_bitmap, t_cgcontext);
     }
     
     if (t_success)

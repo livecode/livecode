@@ -19,12 +19,20 @@
 
 #include "typedefs.h"
 #include "platform.h"
-
 #include "mac-platform.h"
 
 #include "graphics_util.h"
 
+#include <inttypes.h>
+
 #include <objc/objc-runtime.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define keyReplyErr 'errn'
+#define keyMCScript 'mcsc'  //reply from apple event
+
+#define AETIMEOUT                60.0
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -230,10 +238,6 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
 {
-    extern OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *event, AppleEvent *reply, long refcon);
-    extern OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *event, AppleEvent *reply, long refcon);
-    extern OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *event, AppleEvent *reply, long refcon);
-    
     if (!m_running)
     {
         MCPendingAppleEvent *t_event;
@@ -261,15 +265,15 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     }
     
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
-        return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
+        return m_platform -> AnswerAppleEvent(p_event, p_reply);
     
     // SN-2014-10-13: [[ Bug 13644 ]] Break the wait loop after we handled the Apple Event
     OSErr t_err;
-    t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    t_err =  m_platform -> SpecialAppleEvent(p_event, p_reply);
     if (t_err == errAEEventNotHandled)
     {
         if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
-            t_err = MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+            t_err =  m_platform -> OpenDocAppleEvent(p_event, p_reply);
     }
     
     if (t_err != errAEEventNotHandled)
@@ -301,7 +305,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// Dispatch the startup callback.
 	int t_error_code;
 	MCAutoStringRef t_error_message;
-	m_platform -> GetCallback() -> SendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
+	m_platform -> SendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
 	
 	[t_pool release];
 	
@@ -354,7 +358,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
         NSAutoreleasePool *t_pool;
         t_pool = [[NSAutoreleasePool alloc] init];
     
-        m_platform -> GetCallback() -> SendApplicationRun(t_continue);
+        m_platform -> SendApplicationRun(t_continue);
         
         [t_pool release];
         
@@ -393,7 +397,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// option for now of just sending the callback and seeing what AppKit does
 	// with the (eventual) event loop that will result...
 	bool t_terminate;
-	m_platform -> GetCallback() -> SendApplicationShutdownRequest(t_terminate);
+	m_platform -> SendApplicationShutdownRequest(t_terminate);
 	
 	if (t_terminate)
 		return NSTerminateNow;
@@ -405,7 +409,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 {
 	// Dispatch the shutdown callback.
 	int t_exit_code;
-	m_platform -> GetCallback() -> SendApplicationShutdown(t_exit_code);
+	m_platform -> SendApplicationShutdown(t_exit_code);
 	
 	// Finalize everything
 	[self finalizeModules];
@@ -460,7 +464,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
-	m_platform -> GetCallback() -> SendApplicationResume();
+	m_platform -> SendApplicationResume();
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
@@ -486,7 +490,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidResignActive:(NSNotification *)notification
 {
-	m_platform -> GetCallback() -> SendApplicationSuspend();
+	m_platform -> SendApplicationSuspend();
 }
 
 //////////
@@ -506,7 +510,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// Make sure we refetch the primary screen height.
     m_platform -> SetHasDesktopHeight(false);
 	// Dispatch the notification.
-	m_platform -> GetCallback() -> SendScreenParametersChanged();
+	m_platform -> SendScreenParametersChanged();
 }
 
 //////////
@@ -551,6 +555,1003 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 //////////
 
 @end
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
+{
+    MCAutoArray<byte_t> t_buffer;
+    if (!t_buffer.New(PATH_MAX))
+        return false;
+    FSRefMakePath(&p_ref, (UInt8*)t_buffer.Ptr(), PATH_MAX);
+    
+    t_buffer.Shrink(strlen((const char*)t_buffer.Ptr()));
+    
+    return MCStringCreateWithBytes(t_buffer.Ptr(), t_buffer.Size(), kMCStringEncodingUTF8, false, r_path);
+}
+
+inline char *FourCharCodeToString(FourCharCode p_code)
+{
+    char *t_result;
+    t_result = new (nothrow) char[5];
+    *(FourCharCode *)t_result = MCSwapInt32NetworkToHost(p_code);
+    t_result[4] = '\0';
+    return t_result;
+}
+
+static bool FourCharCodeToStringRef(FourCharCode p_code, MCStringRef& r_string)
+{
+    return MCStringCreateWithCString(FourCharCodeToString(p_code), r_string);
+}
+
+static bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode& r_four_char_code)
+{
+    char *temp;
+    uint32_t t_four_char_code;
+    if (!MCStringConvertToCString(p_string, temp))
+        return false;
+    
+    memcpy(&t_four_char_code, temp + p_start, 4);
+    r_four_char_code = MCSwapInt32HostToNetwork(t_four_char_code);
+    delete temp;
+    return true;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine,
+                        MCStringRef app, AEDesc *retDesc)
+{
+    
+    /* Carbon doesn't support the seding apple events between different
+     * machines, plus CARBON does not support PPC Toolbox routines,
+     * Therefore no need to do the complicated location/zone
+     * searching. Use Process Manager's routine to get target program's
+     * process id for the address descriptor */
+    ProcessSerialNumber psn;
+    psn.highLongOfPSN = 0;
+    psn.lowLongOfPSN = kNoProcess; //start at the beginning to do the search
+    ProcessInfoRec pInfoRec;
+    Str255 pname;
+    /* need to specify values for the processInfoLength,processName, and
+     * processAppSpec fields of the process information record to get
+     * info returned in those fields. Since we only want the application
+     * name info returned, we allocate a string of 255 length as buffer
+     * to store the process name */
+    pInfoRec.processInfoLength = sizeof(ProcessInfoRec);
+    pInfoRec.processName = pname;
+#ifdef __64_BIT__
+    pInfoRec.processAppRef = NULL;
+#else
+    pInfoRec.processAppSpec = NULL;
+#endif
+    Boolean processFound = False;
+    
+    while (GetNextProcess(&psn) == noErr)
+    {
+        if (GetProcessInformation(&psn, &pInfoRec) == noErr)
+        {
+            // Convert the process name (as a Pascal string) into a StringRef
+            MCAutoStringRef t_process_name;
+            if (!MCStringCreateWithPascalString(pInfoRec.processName, &t_process_name))
+                return ioErr;
+            if (MCStringIsEqualTo(*t_process_name, app, kMCStringOptionCompareCaseless))
+            {
+                processFound = True;
+                break;
+            }
+        }
+    }
+    if (processFound)
+        return AECreateDesc(typeProcessSerialNumber, (Ptr)&pInfoRec.processNumber,
+                            sizeof(ProcessSerialNumber), retDesc);
+    else
+        return procNotFound; //can't find the program/process to create a descriptor
+}
+
+static OSStatus getDescFromAddress(MCStringRef address, AEDesc *retDesc)
+{
+    /* return an address descriptor based on the target address passed in
+     * * There are 3 possible forms of target string: *
+     * 1. ZONE:MACHINE:APP NAME
+     * 2. MACHINE:APP NAME(sender & receiver are in the same zone but on different machine)
+     * 3. APP NAME
+     */
+    errno = noErr;
+    retDesc->dataHandle = NULL;  /* So caller can dispose always. */
+    
+    uindex_t t_index;
+    /* UNCHECKED */ MCStringFirstIndexOfChar(address, ':', 0, kMCStringOptionCompareExact, t_index);
+    
+    if (t_index == 0)
+    { //address contains application name only. Form # 3
+        errno = getDesc(0, NULL, NULL, address, retDesc);
+    }
+    
+    /* CARBON doesn't support the seding apple events between systmes. Therefore no
+     need to do the complicated location/zone searching                       */
+    
+    return errno;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+{
+    DescType rType;
+    Size rSize;
+    DescType dt;
+    Size s;
+    bool t_success = false;
+    if ((errno = AESizeOfAttribute(ae, key, &dt, &s)) == noErr)
+    {
+        switch (dt)
+        {
+            case typeBoolean:
+            {
+                Boolean b;
+                AEGetAttributePtr(ae, key, dt, &rType, &b, s, &rSize);
+                r_result = MCValueRetain(b ? kMCTrueString : kMCFalseString);
+                break;
+            }
+            case typeUTF8Text:
+            {
+                byte_t *result = new (nothrow) byte_t[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                delete[] result;
+                break;
+            }
+            case typeChar:
+            {
+                char_t *result = new (nothrow) char_t[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
+                break;
+            }
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                t_success = MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
+            }
+                break;
+            case typeSInt16:
+            {
+                int16_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId16, i);
+                break;
+            }
+            case typeSInt32:
+            {
+                int32_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId32, i);
+                break;
+            }
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId64, i);
+                break;
+            }
+            case typeIEEE32BitFloatingPoint:
+            {
+                float32_t f;
+                AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeIEEE64BitFloatingPoint:
+            {
+                float64_t f;
+                AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
+            case typeUInt32:
+            {
+                uint32_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu32, i);
+                break;
+            }
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
+            case typeNull:
+                r_result = MCValueRetain(kMCEmptyString);
+                break;
+#ifndef __64_BIT__
+                // FSSpecs don't exist in the 64-bit world
+            case typeFSS:
+            {
+                FSSpec fs;
+                errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
+                t_success = MCS_mac_FSSpec2path(&fs, r_result);
+            }
+                break;
+#endif
+            case typeFSRef:
+            {
+                FSRef t_fs_ref;
+                errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+                t_success = MCS_mac_fsref_to_path(t_fs_ref, r_result);
+            }
+                break;
+            default:
+                t_success = MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
+                break;
+        }
+    }
+    
+    if (!t_success && errno == 0)
+        errno = ioErr;
+    
+    return errno;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+{
+    DescType rType;
+    Size rSize;
+    DescType dt;
+    Size s;
+    bool t_success = true;
+    if ((errno = AESizeOfParam(ae, key, &dt, &s)) == noErr)
+    {
+        switch (dt)
+        {
+            case typeBoolean:
+            {
+                Boolean b;
+                AEGetParamPtr(ae, key, dt, &rType, &b, s, &rSize);
+                r_result = MCValueRetain(b ? kMCTrueString : kMCFalseString);
+                break;
+            }
+            case typeUTF8Text:
+            {
+                byte_t *result = new (nothrow) byte_t[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
+                break;
+            }
+            case typeChar:
+            {
+                char_t *result = new (nothrow) char_t[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
+                break;
+            }
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                t_success = MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
+            }
+                break;
+            case typeSInt16:
+            {
+                int16_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId16, i);
+                break;
+            }
+            case typeSInt32:
+            {
+                int32_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId32, i);
+                break;
+            }
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId64, i);
+                break;
+            }
+            case typeIEEE32BitFloatingPoint:
+            {
+                float32_t f;
+                AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeIEEE64BitFloatingPoint:
+            {
+                float64_t f;
+                AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
+            case typeUInt32:
+            {
+                uint32_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu32, i);
+                break;
+            }
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
+            case typeNull:
+                r_result = MCValueRetain(kMCEmptyString);
+                break;
+#ifndef __64_BIT__
+            case typeFSS:
+            {
+                FSSpec fs;
+                errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
+                t_success = MCS_mac_FSSpec2path(&fs, r_result);
+            }
+                break;
+#endif
+            case typeFSRef:
+            {
+                FSRef t_fs_ref;
+                errno = AEGetParamPtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+                t_success = MCS_mac_fsref_to_path(t_fs_ref, r_result);
+            }
+                break;
+            default:
+                t_success = MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
+                break;
+        }
+    }
+    
+    if (!t_success && errno == 0)
+        errno = ioErr;
+    
+    return errno;
+}
+
+static OSStatus getAddressFromDesc(AEAddressDesc targetDesc, char *address)
+{/* This function returns the zone, machine, and application name for the
+  indicated target descriptor.  */
+    
+    
+    address[0] = '\0';
+    return noErr;
+    
+}
+
+// SN-2014-10-07: [[ Bug 13587 ]] Using a MCList allows us to preserve unicode chars
+static bool fetch_ae_as_fsref_list(const AppleEvent *p_aePtr, MCListRef &r_list)
+{
+    AEDescList docList; //get a list of alias records for the documents
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
+    if (AEGetParamDesc(p_aePtr, keyDirectObject,
+                       typeAEList, &docList) == noErr
+        && AECountItems(&docList, &count) == noErr && count > 0)
+    {
+        AEKeyword rKeyword; //returned keyword
+        DescType rType;    //returned type
+        
+        FSRef t_doc_fsref;
+        
+        Size rSize;      //returned size, atual size of the docName
+        long item;
+        // get a FSSpec record, starts from count==1
+        
+        for (item = 1; item <= count; item++)
+        {
+            if (AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType,
+                            &t_doc_fsref, sizeof(FSRef), &rSize) != noErr)
+            {
+                AEDisposeDesc(&docList);
+                return false;
+            }
+            
+            // SN-2014-10-07: [[ Bug 13587 ]] Append directly the string, instead of converting to a CString
+            MCAutoStringRef t_fullpathname;
+            if (MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname))
+                MCListAppend(*t_list, *t_fullpathname);
+        }
+        AEDisposeDesc(&docList);
+    }
+    return MCListCopy(*t_list, r_list);
+}
+
+OSErr MCMacPlatformCore::SpecialAppleEvent(const AppleEvent *ae, AppleEvent *reply)
+{
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    OSErr err = errAEEventNotHandled;  //class, id, sender
+    DescType rType;
+    Size rSize;
+    AEEventClass aeclass;
+    AEGetAttributePtr(ae, keyEventClassAttr, typeType, &rType, &aeclass, sizeof(AEEventClass), &rSize);
+    
+    AEEventID aeid;
+    AEGetAttributePtr(ae, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+    if (aeclass == kTextServiceClass)
+    {
+        err = errAEEventNotHandled;
+        return err;
+    }
+    //trap for the AEAnswer event, let DoAEAnswer() to handle this event
+    if (aeclass == kCoreEventClass)
+    {
+        if (aeid == kAEAnswer)
+            return errAEEventNotHandled;
+    }
+    AEAddressDesc senderDesc;
+    //
+    char *p3val = new (nothrow) char[128];
+    //char *p3val = new (nothrow) char[kNBPEntityBufferSize + 1]; //sender's address 105 + 1
+    if (AEGetAttributeDesc(ae, keyOriginalAddressAttr,
+                           typeWildCard, &senderDesc) == noErr)
+    {
+        getAddressFromDesc(senderDesc, p3val);
+        AEDisposeDesc(&senderDesc);
+    }
+    else
+        p3val[0] = '\0';
+    
+    m_aePtr = ae; //saving the current AE pointer for use in mcs_request_ae()
+    MCAutoStringRef s1;
+    MCAutoStringRef s2;
+    MCAutoStringRef s3;
+    
+    /* UNCHECKED */ FourCharCodeToStringRef(aeclass, &s1);
+    /* UNCHECKED */ MCStringCreateWithCString(p3val, &s3);
+    /* UNCHECKED */ FourCharCodeToStringRef(aeid, &s2);
+    
+    /*for "appleEvent class, id, sender" message to inform script that
+     there is an AE arrived */
+    
+    Exec_stat stat = SendMessage(MCNAME("appleEvent"), *s1, *s2, *s3);
+    if (stat != ES_PASS && stat != ES_NOT_HANDLED)
+    { //if AE is handled by MC
+        if (stat == ES_ERROR)
+        { //error in handling AE in MC
+            err = errAECorruptData;
+            if (reply->dataHandle != NULL)
+            {
+                int16_t e = err;
+                AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
+            }
+        }
+        else
+        { //ES_NORMAL
+            if (m_AEReplyMessage == NULL) //no reply, will return no error code
+                err = noErr;
+            else
+            {
+                if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
+                {
+                    MCAutoStringRefAsUTF8String t_reply;
+                    /* UNCHECKED */ t_reply.Lock(m_AEReplyMessage);
+                    err = AEPutParamPtr(reply, m_replykeyword, typeUTF8Text, *t_reply, t_reply.Size());
+                    if (err != noErr)
+                    {
+                        int16_t e = err;
+                        AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
+                    }
+                }
+            }
+            
+            MCValueRelease(m_AEReplyMessage);
+            m_AEReplyMessage = NULL;
+        }
+    }
+    else
+        if (aeclass == kAEMiscStandards
+            && (aeid == kAEDoScript || aeid == 'eval'))
+        {
+            if ((err = AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
+            {
+                byte_t *sptr = new (nothrow) byte_t[rSize + 1];
+                AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, sptr, rSize, &rSize);
+                
+                MCAutoStringRef t_string;
+                MCAutoStringRefAsUTF8String t_utf8_string;
+                MCAutoStringRef t_sptr;
+                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(sptr, rSize, kMCStringEncodingUTF8, false, &t_sptr);
+                if (aeid == kAEDoScript)
+                    DoScript(*t_sptr, &t_string);
+                else
+                    Eval(*t_sptr, &t_string);
+                
+                /* UNCHECKED */ t_utf8_string.Lock(*t_string);
+                AEPutParamPtr(reply, '----', typeUTF8Text, *t_utf8_string, t_utf8_string.Size());
+                
+            }
+        }
+        else
+            err = errAEEventNotHandled;
+    // do nothing if the AE is not handled,
+    // let the standard AE dispacher to dispatch this AE
+    delete[] p3val;
+    return err;
+}
+
+OSErr MCMacPlatformCore::OpenDocAppleEvent(const AppleEvent *theAppleEvent, AppleEvent *reply)
+{ //Apple Event for opening documnets, in our use is to open stacks when user
+    //double clicked on a MC stack icon
+    
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    AEDescList docList; //get a list of alias records for the documents
+    errno = AEGetParamDesc(theAppleEvent, keyDirectObject, typeAEList, &docList);
+    if (errno != noErr)
+        return errno;
+    long count;
+    //get the number of docs descriptors in the list
+    AECountItems(&docList, &count);
+    if (count < 1)     //if there is no doc to be opened
+        return errno;
+    AEKeyword rKeyword; //returned keyword
+    DescType rType;    //returned type
+    
+    FSRef t_doc_fsref;
+    
+    Size rSize;        //returned size, atual size of the docName
+    long item;
+    // get a FSSpec record, starts from count==1
+    for (item = 1; item <= count; item++)
+    {
+        errno = AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType, &t_doc_fsref, sizeof(FSRef), &rSize);
+        if (errno != noErr)
+            return errno;
+        // extract FSSpec record's info & form a file name for MC to use
+        MCAutoStringRef t_full_path_name;
+        MCS_mac_fsref_to_path(t_doc_fsref, &t_full_path_name);
+        
+        SendOpenDoc(*t_full_path_name);
+        
+    }
+    AEDisposeDesc(&docList);
+    return noErr;
+}
+
+OSErr MCMacPlatformCore::AnswerAppleEvent(const AppleEvent *ae, AppleEvent *reply)
+{
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    //process the repy(answer) returned from a server app. When MCS_send() with
+    // a reply, the reply is handled in this routine.
+    // This is different from MCS_reply()
+    //check if there is an error code
+    DescType rType; //returned type
+    Size rSize;
+    
+    /*If the handler returns a result code other than noErr, and if the
+     client is waiting for a reply, it is returned in the keyErrorNumber
+     parameter of the reply Apple event. */
+    if (AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, NULL, 0, &rSize) == noErr)
+    {
+        byte_t* t_utf8 = new (nothrow) byte_t[rSize + 1];
+        AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+        /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, m_AEAnswerErr);
+    }
+    else
+    {
+        int16_t e;
+        if (AEGetParamPtr(ae, keyErrorNumber, typeSInt16, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
+            && e != noErr)
+        {
+            /* UNCHECKED */ MCStringFormat(m_AEAnswerErr, "Got error %d when sending Apple event", e);
+        }
+        else
+        {
+            if (m_AEAnswerData != NULL)
+            {
+                MCValueRelease(m_AEAnswerData);
+                m_AEAnswerData = NULL;
+            }
+            if ((errno = AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) != noErr)
+            {
+                if (errno == errAEDescNotFound)
+                {
+                    m_AEAnswerData = MCValueRetain(kMCEmptyString);
+                    return noErr;
+                }
+                /* UNCHECKED */ MCStringFormat(m_AEAnswerErr, "Got error %d when receiving Apple event", errno);
+                return errno;
+            }
+            byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
+            AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+            /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, m_AEAnswerData);
+        }
+    }
+    return noErr;
+}
+
+void MCMacPlatformCore::Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply, MCStringRef &r_result)
+{
+    
+    AEAddressDesc receiver;
+    errno = getDescFromAddress(p_program, &receiver);
+    if (errno != noErr)
+    {
+        AEDisposeDesc(&receiver);
+        /* UNCHECKED */ MCStringCreateWithCString("no such program", r_result);
+        return;
+    }
+    AppleEvent ae;
+    if (p_eventtype == NULL)
+        /* UNCHECKED */ MCStringCreateWithCString("miscdosc", p_eventtype);
+    
+    AEEventClass ac;
+    AEEventID aid;
+    
+    /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, ac);
+    /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, aid);
+    
+    AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+                       kAnyTransactionID, &ae);
+    AEDisposeDesc(&receiver); //dispose of the receiver description record
+    // if the ae message we are sending is 'odoc', 'pdoc' then
+    // create a document descriptor of type fypeFSS for the document
+    
+    Boolean docmessage = False; //Is this message contains a document descriptor?
+    AEDescList files_list, file_desc;
+    AliasHandle the_alias;
+    
+    if (aid == 'odoc' || aid == 'pdoc')
+    {
+        FSRef t_fsref;
+        
+        MCAutoStringRef t_auto_path;
+        MCAutoStringRefAsUTF8String t_path;
+        
+        OSStatus t_stat = noErr;
+        
+        if (!MCS_resolvepath(p_message, &t_auto_path))
+            // TODO assign relevant error code
+            t_stat = memFullErr;
+        
+        if (noErr == t_stat && !t_path.Lock(*t_auto_path))
+            t_stat = memFullErr;
+        
+        if (noErr == t_stat)
+            t_stat = FSPathMakeRef((const UInt8 *)(*t_path), &t_fsref, NULL);
+    
+        if (t_stat == noErr)
+        {
+            AECreateList(NULL, 0, false, &files_list);
+            FSNewAlias(NULL, &t_fsref, &the_alias);
+            HLock((Handle)the_alias);
+            AECreateDesc(typeAlias, (Ptr)(*the_alias),
+                         GetHandleSize((Handle)the_alias), &file_desc);
+            HUnlock((Handle) the_alias);
+            AEPutDesc(&files_list, 0, &file_desc);
+            AEPutParamDesc(&ae, keyDirectObject, &files_list);
+            docmessage = True;
+        }
+    }
+    //non document related massge, assume it's typeChar message
+    if (!docmessage && MCStringGetLength(p_message))
+    {
+        MCAutoStringRefAsUTF8String t_utf8;
+        /* UNCHECKED */ t_utf8.Lock(p_message);
+        AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_utf8, t_utf8.Size());
+    }
+    
+    //Send the Apple event
+    AppleEvent answer;
+    if (p_reply == True)
+        errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                       kAEDefaultTimeout, NULL, NULL); //no reply
+    else
+        errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+                       kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+    if (docmessage)
+    {
+        DisposeHandle((Handle)the_alias);
+        AEDisposeDesc(&file_desc);
+        AEDisposeDesc(&files_list);
+        AEDisposeDesc(&file_desc);
+    }
+    AEDisposeDesc(&ae);
+    if (errno != noErr)
+    {
+        char *buffer = new (nothrow) char[6 + I2L];
+        sprintf(buffer, "error %d", errno);
+        MCStringCreateWithCString(buffer, r_result);
+        delete[] buffer;
+        return;
+    }
+    if (p_reply == True)
+    { /* wait for a reply in a loop.  The reply comes in
+       from regular event handling loop
+       and is handled by an Apple event handler*/
+        real8 endtime = MCS_time() + AETIMEOUT;
+        while (True)
+        {
+            if (WaitForEvent(READ_INTERVAL, true))
+            {
+                /* UNCHECKED */ MCStringCreateWithCString("user interrupt", r_result);
+                return;
+            }
+            if (MCS_time() > endtime)
+            {
+                /* UNCHECKED */ MCStringCreateWithCString("timeout", r_result);
+                return;
+            }
+            if (m_AEAnswerErr != NULL || m_AEAnswerData != NULL)
+                break;
+        }
+        if (m_AEAnswerErr != NULL)
+        {
+            MCValueAssign(r_result, m_AEAnswerErr);
+            MCValueRelease(m_AEAnswerErr);
+            m_AEAnswerErr = NULL;
+        }
+        else
+        {
+            MCValueAssign(r_result, m_AEAnswerData);
+            MCValueRelease(m_AEAnswerData);
+            m_AEAnswerData = NULL;
+        }
+        AEDisposeDesc(&answer);
+    }
+    else
+        r_result = MCValueRetain(kMCEmptyString);
+}
+
+void MCMacPlatformCore::Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
+{
+    MCValueAssign(m_AEReplyMessage, p_message);
+    
+    //at any one time only either keyword or error is set
+    if (p_keyword != NULL)
+    {
+        /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, m_replykeyword);
+    }
+    else
+    {
+        if (p_error)
+            m_replykeyword = 'errs';
+        else
+            m_replykeyword = '----';
+    }
+}
+
+void MCMacPlatformCore::RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value)
+{
+    if (m_aePtr == NULL)
+    {
+        /* UNCHECKED */ MCStringCreateWithCString("No current Apple event", r_value); //as specified in HyperTalk
+        return;
+    }
+    errno = noErr;
+    
+    switch (Apple_event(p_ae))
+    {
+        case AE_CLASS:
+        {
+            if ((errno = getAEAttributes(m_aePtr, keyEventClassAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_DATA:
+        {
+            if (MCStringIsEmpty(p_message))
+            { //no keyword, get event parameter(data)
+                DescType rType;
+                Size rSize;  //actual size returned
+                /*first let's find out the size of incoming event data */
+                
+                // On Snow Leopard check for a coercion to a file list first as otherwise
+                // we get a bad URL!
+                uint32_t t_version;
+                GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+                
+                if (t_version >= 0x1060)
+                {
+                    // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
+                    MCAutoListRef t_list;
+                    
+                    if (fetch_ae_as_fsref_list(m_aePtr, &t_list))
+                    {
+                        /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
+                        return;
+                    }
+                }
+                
+                if ((errno = AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
+                {
+                    byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
+                    AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+                    /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, r_value);
+                }
+                else
+                {
+                    // SN-2014-10-07: [[ Bug 13587 ]] fetch_ae_as_frsef_list updated to return an MCList
+                    MCAutoListRef t_list;
+                    if (fetch_ae_as_fsref_list(m_aePtr, &t_list))
+                    /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
+                    else
+                    /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
+                }
+                return;
+            }
+            else
+            {
+                AEKeyword key;
+                /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), key);
+                
+                if (key == keyAddressAttr || key == keyEventClassAttr
+                    || key == keyEventIDAttr || key == keyEventSourceAttr
+                    || key == keyInteractLevelAttr || key == keyMissedKeywordAttr
+                    || key == keyOptionalKeywordAttr || key == keyOriginalAddressAttr
+                    || key == keyReturnIDAttr || key == keyTimeoutAttr
+                    || key == keyTransactionIDAttr)
+                {
+                    if ((errno = getAEAttributes(m_aePtr, key, r_value)) == noErr)
+                        return;
+                }
+                else
+                {
+                    if ((errno = getAEParams(m_aePtr, key, r_value)) == noErr)
+                        return;
+                }
+            }
+        }
+            break;
+        case AE_ID:
+        {
+            if ((errno = getAEAttributes(m_aePtr, keyEventIDAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_RETURN_ID:
+        {
+            if ((errno = getAEAttributes(m_aePtr, keyReturnIDAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_SENDER:
+        {
+            AEAddressDesc senderDesc;
+            char *sender = new (nothrow) char[128];
+            
+            if ((errno = AEGetAttributeDesc(m_aePtr, keyOriginalAddressAttr,
+                                            typeWildCard, &senderDesc)) == noErr)
+            {
+                errno = getAddressFromDesc(senderDesc, sender);
+                AEDisposeDesc(&senderDesc);
+                /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
+                return;
+            }
+            delete[] sender;
+            break;
+        }
+        case AE_RETURN:
+        case AE_UNDEFINED:
+        case AE_AE:
+            break;
+    }  /* end switch */
+    
+    if (errno == errAECoercionFail) //data could not display as text
+    {
+        /* UNCHECKED */ MCStringCreateWithCString("unknown type", r_value);
+        return;
+    }
+    
+    /* UNCHECKED */ MCStringCreateWithCString("not found", r_value);
+}
+
+bool MCMacPlatformCore::RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result)
+{
+    AEAddressDesc receiver;
+    errno = getDescFromAddress(p_program, &receiver);
+    if (errno != noErr)
+    {
+        AEDisposeDesc(&receiver);
+        /* UNCHECKED */ MCStringCreateWithCString("no such program", r_result);
+        r_value = MCValueRetain(kMCEmptyString);
+        return false;
+    }
+    AppleEvent ae;
+    errno = AECreateAppleEvent('misc', 'eval', &receiver,
+                               kAutoGenerateReturnID, kAnyTransactionID, &ae);
+    AEDisposeDesc(&receiver); //dispose of the receiver description record
+    //add parameters to the Apple event
+    MCAutoStringRefAsUTF8String t_message;
+    /* UNCHECKED */ t_message.Lock(p_message);
+    AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_message, t_message.Size());
+    //Send the Apple event
+    AppleEvent answer;
+    errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                   kAEDefaultTimeout, NULL, NULL); //no reply
+    AEDisposeDesc(&ae);
+    AEDisposeDesc(&answer);
+    if (errno != noErr)
+    {
+        char *buffer = new (nothrow) char[6 + I2L];
+        sprintf(buffer, "error %d", errno);
+        /* UNCHECKED */ MCStringCreateWithCString(buffer, r_result);
+        delete[] buffer;
+        
+        r_value = MCValueRetain(kMCEmptyString);
+        return false;
+    }
+    real8 endtime = MCS_time() + AETIMEOUT;
+    while (True)
+    {
+        if (WaitForEvent(READ_INTERVAL, true))
+        {
+            /* UNCHECKED */ MCStringCreateWithCString("user interrupt", r_result);
+            r_value = MCValueRetain(kMCEmptyString);
+            return false;
+        }
+        if (MCS_time() > endtime)
+        {
+            /* UNCHECKED */ MCStringCreateWithCString("timeout", r_result);
+            r_value = MCValueRetain(kMCEmptyString);
+            return false;
+        }
+        if (m_AEAnswerErr != NULL || m_AEAnswerData != NULL)
+            break;
+    }
+    
+    if (m_AEAnswerErr != NULL)
+    {
+        MCValueAssign(r_result, m_AEAnswerErr);
+        MCValueRelease(m_AEAnswerErr);
+        m_AEAnswerErr = NULL;
+        r_value = MCValueRetain(kMCEmptyString);
+    }
+    else
+    {
+        MCValueAssign(r_result, m_AEAnswerData);
+        MCValueRelease(m_AEAnswerData);
+        m_AEAnswerData = NULL;
+    }
+    
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1416,11 +2417,6 @@ bool MCMacPlatformMapKeyCode(uint32_t p_mac_keycode, uint32_t p_modifier_flags, 
 //   - mouse move messages when the mouse moves over our windows *and* when
 //     the mouse is down and the mouse is outside our windows.
 
-// COCOA-TODO: Clean up this external dependency.
-extern uint2 MCdoubledelta;
-extern uint2 MCdoubletime;
-extern uint2 MCdragdelta;
-
 void MCMacPlatformCore::LockCursor(void)
 {
     m_mouse_cursor_locked = true;
@@ -1531,9 +2527,15 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 		// If the click occured within the double click time and double click
 		// radius *and* if the button is the same as the last clicked button
 		// then increment the click count.
-		if (t_event_time - m_mouse_last_click_time < MCdoubletime &&
-			MCU_abs(m_mouse_last_click_screen_position . x - m_mouse_screen_position . x) < MCdoubledelta &&
-			MCU_abs(m_mouse_last_click_screen_position . y - m_mouse_screen_position . y) < MCdoubledelta &&
+        
+        uint16_t t_doubletime;
+        GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_doubletime);
+        uint16_t t_doubledelta;
+        GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_doubledelta);
+        
+		if (t_event_time - m_mouse_last_click_time < t_doubletime &&
+			MCU_abs(m_mouse_last_click_screen_position . x - m_mouse_screen_position . x) < t_doubledelta &&
+			MCU_abs(m_mouse_last_click_screen_position . y - m_mouse_screen_position . y) < t_doubledelta &&
 			m_mouse_last_click_button == p_button)
 			m_mouse_click_count += 1;
 		else
@@ -1543,7 +2545,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 		m_mouse_last_click_button = p_button;
 		m_mouse_last_click_screen_position = m_mouse_screen_position;
 		
-		m_callback -> SendMouseDown(m_mouse_window, p_button, m_mouse_click_count);
+		SendMouseDown(m_mouse_window, p_button, m_mouse_click_count);
 	}
 	else
 	{
@@ -1563,7 +2565,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 			if (p_button == m_mouse_last_click_button)
 				m_mouse_last_click_time = GetEventTime();
 			
-			m_callback -> SendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
+			SendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
 		}
 		else
 		{
@@ -1572,7 +2574,7 @@ void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 			m_mouse_last_click_time = 0;
 			
             // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
-			m_callback -> SendMouseRelease(m_mouse_window, p_button, false);
+			SendMouseRelease(m_mouse_window, p_button, false);
 		}
 	}
 }
@@ -1636,13 +2638,13 @@ void MCMacPlatformCore::HandleMouseAfterWindowHidden(void)
 void MCMacPlatformCore::HandleMouseForResizeStart(void)
 {
     if (m_mouse_window != nil)
-        m_callback -> SendMouseLeave(m_mouse_window);
+        SendMouseLeave(m_mouse_window);
 }
 
 void MCMacPlatformCore::HandleMouseForResizeEnd(void)
 {
     if (m_mouse_window != nil)
-        m_callback -> SendMouseEnter(m_mouse_window);
+        SendMouseEnter(m_mouse_window);
 }
 
 void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
@@ -1667,10 +2669,10 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 	if (t_new_mouse_window != m_mouse_window)
 	{
 		if (m_mouse_window != nil)
-			m_callback -> SendMouseLeave(m_mouse_window);
+			SendMouseLeave(m_mouse_window);
 		
 		if (t_new_mouse_window != nil)
-			m_callback -> SendMouseEnter(t_new_mouse_window);
+			SendMouseEnter(t_new_mouse_window);
 		
 		// If there is no mouse window, reset the cursor to default.
 		if (t_new_mouse_window == nil)
@@ -1707,15 +2709,18 @@ void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 			m_mouse_position = t_window_loc;
 			
 			// Send the mouse move.
-			m_callback -> SendMouseMove(m_mouse_window, t_window_loc);
+			SendMouseMove(m_mouse_window, t_window_loc);
 			
+            uint16_t t_dragdelta;
+            GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_dragdelta);
+            
 			// If this is the start of a drag, then send a mouse drag.
 			if (m_mouse_buttons != 0 && m_mouse_drag_button == 0xffffffff &&
-				(MCU_abs(p_screen_loc . x - m_mouse_last_click_screen_position . x) >= MCdragdelta ||
-				 MCU_abs(p_screen_loc . y - m_mouse_last_click_screen_position . y) >= MCdragdelta))
+				(MCU_abs(p_screen_loc . x - m_mouse_last_click_screen_position . x) >= t_dragdelta ||
+				 MCU_abs(p_screen_loc . y - m_mouse_last_click_screen_position . y) >= t_dragdelta))
 			{
 				m_mouse_drag_button = m_mouse_last_click_button;
-				m_callback -> SendMouseDrag(m_mouse_window, m_mouse_drag_button);
+				SendMouseDrag(m_mouse_window, m_mouse_drag_button);
 			}
 		}
         
@@ -1732,7 +2737,7 @@ void MCMacPlatformCore::HandleMouseScroll(CGFloat dx, CGFloat dy)
 		return;
 	
 	if (dx != 0.0 || dy != 0.0)
-		m_callback -> SendMouseScroll(m_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
+		SendMouseScroll(m_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
 }
 
 void MCMacPlatformCore::HandleMouseSync(void)
@@ -1747,9 +2752,9 @@ void MCMacPlatformCore::HandleMouseSync(void)
                 // MW-2014-06-11: [[ Bug 12339 ]] Don't send a mouseRelease message in this case.
 				if (m_mouse_was_control_click &&
 					i == 0)
-					m_callback -> SendMouseRelease(m_mouse_window, 2, true);
+					SendMouseRelease(m_mouse_window, 2, true);
 				else
-					m_callback -> SendMouseRelease(m_mouse_window, i, true);
+					SendMouseRelease(m_mouse_window, i, true);
 			}
 	}
 	
@@ -1789,8 +2794,8 @@ void MCMacPlatformCore::SyncMouseBeforeDragging(void)
 	{
         // MW-2014-06-11: [[ Bug 12339 ]] Ensure mouseRelease is sent if drag is starting.
 		if (t_button_to_release != 0xffffffff)
-			m_callback -> SendMouseRelease(m_mouse_window, t_button_to_release, false);
-		m_callback -> SendMouseLeave(m_mouse_window);
+			SendMouseRelease(m_mouse_window, t_button_to_release, false);
+		SendMouseLeave(m_mouse_window);
 		
         // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
         //  a mouseLeave handler
@@ -1824,7 +2829,7 @@ void MCMacPlatformCore::HandleModifiersChanged(MCPlatformModifiers p_modifiers)
 	if (m_mouse_modifiers != p_modifiers)
 	{
 		m_mouse_modifiers = p_modifiers;
-		m_callback -> SendModifiersChanged(p_modifiers);
+		SendModifiersChanged(p_modifiers);
 	}
 }
 	
@@ -2022,3 +3027,39 @@ void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))
 {
     block();
 }
+
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+
+bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image)
+{
+    bool t_success = true;
+    
+    CGColorSpaceRef t_colorspace = nil;
+    if (t_success)
+        t_success = MCImageGetCGColorSpace(t_colorspace);
+    
+    if (t_success)
+        t_success = MCImageBitmapToCGImage(p_bitmap, t_colorspace, p_copy, p_invert, r_image);
+    
+    CGColorSpaceRelease(t_colorspace);
+    
+    return t_success;
+}
+
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
+{
+    if (p_bitmap == nil)
+        return false;
+    bool t_mask;
+    t_mask = MCImageBitmapHasTransparency(p_bitmap);
+    
+    MCGRaster t_raster;
+    t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
+    
+    return MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
+}
+
+
+

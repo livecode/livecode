@@ -27,9 +27,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8 = false);
-
 static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
 {
     MCAutoStringRefAsCFString t_cf_string;
@@ -65,6 +62,61 @@ static bool ConvertCStringToJSString(const char *p_cstring, JSStringRef& r_js_st
 	return true;
 }
 
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+char *ConvertCFStringToCString(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false)
+{
+    bool t_success;
+    t_success = true;
+    
+    if (p_string == NULL)
+        t_success = false;
+    
+    char *t_cstring;
+    t_cstring = NULL;
+    if (t_success)
+    {
+        CFIndex t_string_length;
+        t_string_length = CFStringGetLength(p_string);
+        
+        // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+        CFStringEncoding t_encoding;
+        if (p_utf8_string)
+            t_encoding = kCFStringEncodingUTF8;
+        else
+            t_encoding = kCFStringEncodingMacRoman;
+        
+        CFIndex t_buffer_size;
+        t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, t_encoding) + 1;
+        t_cstring = (char *)malloc(t_buffer_size);
+        
+        if (t_cstring != NULL)
+        {
+            // MW-2012-03-15: [[ Bug 9935 ]] Use CFStringGetBytes() so that '?' is substituted for any non-
+            //   mappable chars.
+            CFIndex t_used;
+            CFStringGetBytes(p_string, CFRangeMake(0, CFStringGetLength(p_string)), t_encoding, '?', False, (UInt8*)t_cstring, t_buffer_size, &t_used);
+            t_cstring[t_used] = '\0';
+        }
+        else
+            t_success = false;
+        
+        if (t_success)
+            t_cstring = (char *)realloc(t_cstring, strlen(t_cstring) + 1);
+    }
+    
+    if (!t_success)
+    {
+        if (t_cstring != NULL)
+            free(t_cstring);
+        t_cstring = NULL;
+    }
+    
+    if (p_string != NULL && p_release)
+        CFRelease(p_string);
+    
+    return t_cstring;
+}
+
 static bool ConvertJSStringToCString(JSStringRef p_js_string, char*& r_cstring)
 {
 	CFStringRef t_cf_string;
@@ -73,7 +125,7 @@ static bool ConvertJSStringToCString(JSStringRef p_js_string, char*& r_cstring)
 		return false;
 	
 	char *t_cstring;
-	t_cstring = osx_cfstring_to_cstring(t_cf_string, true);
+	t_cstring = ConvertCFStringToCString(t_cf_string, true);
 	
 	if (t_cstring == NULL)
 		return false;
@@ -402,6 +454,7 @@ MCPlatformScriptEnvironmentRef MCMacPlatformCore::CreateScriptEnvironment()
 
     MCPlatform::Ref<MCPlatformScriptEnvironment> t_ref = MCPlatform::makeRef<MCMacPlatformScriptEnvironment>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

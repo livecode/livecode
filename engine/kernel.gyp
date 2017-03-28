@@ -4,9 +4,84 @@
 		'../common.gypi',
 		'engine-sources.gypi',
 	],
-
+	
 	'targets':
 	[
+		{
+			'target_name': 'libplatform',
+			'type': 'shared_library',
+			
+			'dependencies':
+			[
+				'../libfoundation/libfoundation.gyp:libFoundation',
+				'../libgraphics/libgraphics.gyp:libGraphics',
+			],
+			
+			'include_dirs':
+			[
+				'include',
+				'src',
+				'<(SHARED_INTERMEDIATE_DIR)/src',
+				'../libgraphics/include',
+				'../libscript/include',
+				'../libfoundation/include',
+			],
+			
+			'sources':
+			[
+				'<@(engine_platform_source_files)',
+				#'<(SHARED_INTERMEDIATE_DIR)/src/platform-stubs.cpp',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "mac"',
+					{
+						'defines':
+						[
+							# We want to use the new prototypes for the Objective-C
+							# dispatch methods as it helps catch certain errors at
+							# compile time rather than run time.
+							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
+						],
+					},
+					{
+						'type': 'none',
+					},
+				],
+			],
+			
+			'link_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "mac"',
+						{
+							'libraries':
+							[
+								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
+								'$(SDKROOT)/usr/lib/libcups.dylib',
+								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
+								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
+								'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreGraphics.framework',
+							],				
+						},
+					],
+				],
+			},
+		},
+		
 		{
 			'target_name': 'kernel',
 			'type': 'static_library',
@@ -33,6 +108,8 @@
 				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
+				
+				'libplatform',
 			],
 			
 			'include_dirs':

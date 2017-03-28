@@ -122,7 +122,7 @@ enum MCShadowedItemTags
     // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to the menubar
     if ([menu supermenu] == nil || m_menu -> GetOpenMenuItems() == 0)
     {
-        m_menu -> GetPlatform() -> GetCallback() -> SendMenuUpdate(m_menu);
+        m_menu -> GetPlatform() -> SendMenuUpdate(m_menu);
     }
     
     // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
@@ -157,7 +157,7 @@ enum MCShadowedItemTags
     
 	if (t_platform -> GetMenuSelectLock() == 0 || t_quit_accelerator_present)
     {
-		t_platform -> GetCallback() -> SendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+		t_platform -> SendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
         m_menu -> SetMenuItemSelected(true);
     }
     
@@ -280,14 +280,14 @@ enum MCShadowedItemTags
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
 	//    to allow shutdown in orderly fashion.
 	bool t_shutdown;
-	m_platform -> GetCallback() -> SendApplicationShutdownRequest(t_shutdown);
+	m_platform -> SendApplicationShutdownRequest(t_shutdown);
 }
 
 // SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
     if (static_cast<MCMacPlatformMenu*>(m_platform -> GetMenubar()) -> GetOpenMenuItems() != 0)
-       m_platform -> GetCallback() -> SendMenuUpdate(m_platform -> GetMenubar());
+       m_platform -> SendMenuUpdate(m_platform -> GetMenubar());
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -1004,6 +1004,7 @@ MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 {
     MCPlatform::Ref<MCPlatformMenu> t_ref = MCPlatform::makeRef<MCMacPlatformMenu>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }
@@ -1014,7 +1015,7 @@ MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 NSMenu *MCMacPlatformCore::GetIconMenu(void)
 {
 	if (m_icon_menu != nil)
-		m_callback -> SendMenuUpdate(m_icon_menu);
+		SendMenuUpdate(m_icon_menu);
 	
 	if (m_icon_menu != nil)
 		return m_icon_menu -> GetMenu();

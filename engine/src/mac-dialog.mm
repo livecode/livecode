@@ -190,17 +190,6 @@ MCPlatformDialogResult MCMacPlatformCore::EndFolderDialog(MCStringRef& r_selecte
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCFileFilter
-{
-	MCFileFilter *next;
-	MCStringRef tag;
-	MCStringRef *extensions;
-	uint32_t extension_count;
-	MCStringRef *filetypes;
-	uint32_t filetypes_count;
-};
-
-
 static void MCFileFilterDestroy(MCFileFilter *self)
 {
 	for(uint32_t i = 0; i < self -> extension_count; i++)
@@ -213,7 +202,7 @@ static void MCFileFilterDestroy(MCFileFilter *self)
 	MCMemoryDelete(self);
 }
 
-static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
+bool MCMacPlatformCore::FileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 {    
 	bool t_success;
 	t_success = true;
@@ -223,9 +212,7 @@ static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 	if (t_success)
 		t_success = MCMemoryNew(self);
     
-    extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
-	
-	MCAutoStringRefArray t_items;
+    MCAutoStringRefArray t_items;
 	if (t_success)
 		t_success = MCStringsSplit(p_desc, '|', t_items . PtrRef(), t_items . CountRef());
 	
@@ -302,9 +289,11 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
     NSSavePanel *m_panel;
     
     id m_panel_view_hack;
+    
+    MCMacPlatformCore * m_platform;
 }
 
-- (id)initWithPanel: (NSSavePanel *)panel;
+- (id)initWithPanel: (NSSavePanel *)panel platform:(MCMacPlatformCore *)platform;
 - (void)dealloc;
 
 - (void)setLabel: (NSString *)newLabel;
@@ -322,7 +311,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 @implementation com_runrev_livecode_MCFileDialogAccessoryView
 
-- (id)initWithPanel: (NSSavePanel *)panel;
+- (id)initWithPanel: (NSSavePanel *)panel platform:(MCMacPlatformCore *)platform
 {
 	self = [ super init ];
     if (self == nil)
@@ -350,14 +339,15 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	m_filter_index = 0;
     
     m_panel = panel;
-	
+    m_platform = platform;
+    
 	return self;
 }
 
 - (void)dealloc
 {
 	while(m_filters != nil)
-		MCFileFilterDestroy(MCListPopFront(m_filters));
+		MCFileFilterDestroy(static_cast<MCFileFilter *>(m_platform -> MCListPopFront((void *&)m_filters)));
 	
 	[ m_label release ];
 	[ m_options release ];
@@ -374,9 +364,9 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	for(uint32_t i = 0; i < p_count; i++)
 	{
 		MCFileFilter *t_filter;
-		if (MCFileFilterCreate(p_types[i], t_filter))
+		if (m_platform -> FileFilterCreate(p_types[i], t_filter))
 		{
-			MCListPushBack(m_filters, t_filter);
+			m_platform -> MCListPushBack((void *&)m_filters, t_filter);
 			if (t_filter -> tag != nil)
 				[ m_options addItemWithTitle: MCStringConvertToAutoreleasedNSString(t_filter -> tag)];
 		}
@@ -540,8 +530,10 @@ void MCMacPlatformCore::BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatf
 	}
 	else
 	{
-		extern uint4 MCmajorosversion;
-		if (MCmajorosversion >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
+        uint32_t t_version;
+        GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+        
+        if (t_version >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
 			[t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
 		else
 			[t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
@@ -552,7 +544,7 @@ void MCMacPlatformCore::BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatf
     MCFileDialogAccessoryView *t_accessory;
     if (p_type_count > 0)
     {
-        t_accessory = [[MCFileDialogAccessoryView alloc] initWithPanel: t_panel];
+        t_accessory = [[MCFileDialogAccessoryView alloc] initWithPanel: t_panel platform:this];
         [t_accessory setTypes: p_types length: p_type_count];
         [t_accessory setLabel: @"Format:"];
         if (p_type_count > 1)

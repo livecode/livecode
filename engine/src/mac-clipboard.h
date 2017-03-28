@@ -26,6 +26,7 @@
 
 #include "foundation-auto.h"
 
+#include "platform.h"
 
 class MCMacRawClipboardItemRep :
 public MCRawClipboardItemRep
@@ -91,7 +92,8 @@ private:
 
 
 class MCMacRawClipboard :
-  public MCRawClipboard
+  public MCRawClipboard,
+  public MCPlatform::Stubs
 {
 public:
     

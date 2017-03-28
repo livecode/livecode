@@ -27,8 +27,6 @@
 
 // IM-2014-09-24: [[ Bug 13208 ]] Update color transform to use CoreGraphics API
 
-////////////////////////////////////////////////////////////////////////////////
-
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +240,7 @@ MCPlatformColorTransformRef MCMacPlatformCore::CreateColorTransform(void)
 {
     MCPlatform::Ref<MCPlatformColorTransform> t_ref = MCPlatform::makeRef<MCMacPlatformColorTransform>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }

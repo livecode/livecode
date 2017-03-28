@@ -224,6 +224,7 @@ MCPlatformNativeLayerRef MCMacPlatformCore::CreateNativeLayer()
 {
     MCPlatform::Ref<MCPlatformNativeLayer> t_ref = MCPlatform::makeRef<MCMacPlatformNativeLayer>();
     t_ref -> SetPlatform(this);
+    t_ref -> SetCallback(m_callback);
     
     return t_ref.unsafeTake();
 }
