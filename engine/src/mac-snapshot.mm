@@ -211,8 +211,6 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCMacCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
-
 void MCMacPlatformCore::CGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
 {
 	if (p_image != nil)
@@ -234,7 +232,7 @@ void MCMacPlatformCore::CGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_siz
 		MCImageBitmapClear(t_bitmap);
 		
 		CGContextRef t_context;
-		/* UNCHECKED */ MCMacCreateCGContextForBitmap(t_bitmap, t_context);
+		/* UNCHECKED */ CreateCGContextForBitmap(t_bitmap, t_context);
 		
 		// Draw the image scaled down onto the bitmap
 		CGContextScaleCTM(t_context, t_hscale, t_vscale);

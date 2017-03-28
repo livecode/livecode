@@ -38,9 +38,6 @@
 #import <AppKit/NSImageRep.h>
 #import <CoreText/CoreText.h>
 
-extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-
 // Returns the name of the legacy font
 static NSString* get_legacy_font_name(uint32_t p_majorosversion)
 {
@@ -478,7 +475,7 @@ static void converttomcrect(const Rect &macR, MCRectangle &mcR)
 }
 
 // IM-2014-01-24: [[ HiDPI ]] Factor out creation of CGBitmapContext for MCImageBitmap
-bool MCMacCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
+bool MCMacPlatformCore::CreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
 {
     bool t_success;
     t_success = true;
@@ -1232,7 +1229,7 @@ bool MCMacPlatformCore::DrawTheme(MCGContextRef p_context, MCThemeDrawType p_typ
         t_scaled_bounds = MCGRectangleScale(MCRectangleToMCGRectangle(t_rect), t_ui_scale);
         
         MCRectangle t_int_bounds;
-        t_int_bounds = MCGRectangleGetIntegerBounds(t_scaled_bounds);
+        t_int_bounds = MCRectangleFromMCGIntegerRectangle(MCGRectangleGetBounds(t_scaled_bounds));
         
         t_width = t_int_bounds.width;
         t_height = t_int_bounds.height;
@@ -1261,7 +1258,7 @@ bool MCMacPlatformCore::DrawTheme(MCGContextRef p_context, MCThemeDrawType p_typ
     {
         MCImageBitmapClear(t_bitmap);
         
-        t_success = MCMacCreateCGContextForBitmap(t_bitmap, t_cgcontext);
+        t_success = CreateCGContextForBitmap(t_bitmap, t_cgcontext);
     }
     
     if (t_success)

@@ -3028,8 +3028,6 @@ void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))
     block();
 }
 
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-
 bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image)
 {
     bool t_success = true;

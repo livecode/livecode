@@ -14,7 +14,6 @@
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../libgraphics/libgraphics.gyp:libGraphics',
 			],
 			
 			'include_dirs':

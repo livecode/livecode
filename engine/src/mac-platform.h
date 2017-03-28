@@ -509,6 +509,9 @@ private:
 	
 	// IM-2014-10-03: [[ Bug 13432 ]] Convenience method to clear context and clip to the window mask
 	void ApplyMaskToCGContext(void);
+    void RenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend);
+    void RenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
+    void RenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, const MCGRaster &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
@@ -1001,6 +1004,7 @@ public:
     virtual Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect);
     virtual void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
     virtual void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect);
+    virtual bool CreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
     
     // Callbacks
     virtual MCPlatformCallbackRef GetCallback(void) { return m_callback;}
@@ -1021,6 +1025,7 @@ public:
     virtual rei_boolean_t CoreImageVisualEffectBegin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
     virtual rei_boolean_t CoreImageVisualEffectStep(MCStackSurface *p_target, float p_time);
     virtual rei_boolean_t CoreImageVisualEffectEnd(void);
+    virtual bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image);
     
     // Core graphics
     virtual bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);

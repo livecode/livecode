@@ -562,6 +562,7 @@
 			# Group "Desktop - Mac"
 			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
+			'src/cgimageutil.cpp',
 			
 			# Group "Desktop - Linux"
 			'src/lnxelevate.cpp',
@@ -629,7 +630,6 @@
 			'src/mac-window.mm',
 			'src/mac-layer.mm',
 			'src/mac-theme.mm',
-			'src/cgimageutil.cpp',
 			'src/mac-clipboard.h',
 			'src/mac-clipboard.mm',
 			'src/mac-coreimage.mm',

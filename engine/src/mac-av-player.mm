@@ -953,8 +953,6 @@ void MCAVFoundationPlayer::Step(int amount)
     [[m_player currentItem] stepByCount:amount];
 }
 
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-
 bool MCAVFoundationPlayer::SnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;

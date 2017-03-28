@@ -39,6 +39,13 @@
 
 #include "raw-clipboard.h"
 #include "parsedef.h"
+#include "graphics.h"
+
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+#include <CoreGraphics/CoreGraphics.h>
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+#include <ApplicationServices/ApplicationServices.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1038,7 +1045,42 @@ namespace MCPlatform
         virtual void Callback_DoScript(MCStringRef p_script, MCStringRef &r_result);
         virtual void Callback_Eval(MCStringRef p_script, MCStringRef &r_result);
         virtual Exec_stat Callback_SendMessage(MCNameRef p_message, MCValueRef p_val1, MCValueRef p_val2, MCValueRef p_val3);
-    };
+        
+        // libgraphics
+        virtual MCGImageRef Callback_MCGImageRetain(MCGImageRef image);
+        virtual void Callback_MCGImageRelease(MCGImageRef image);
+        virtual bool Callback_MCGRegionCreate(MCGRegionRef &r_region);
+        virtual int32_t Callback_MCGImageGetWidth(MCGImageRef image);
+        virtual bool Callback_MCGImageIsOpaque(MCGImageRef image);
+        virtual bool Callback_MCGRegionAddRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+        virtual void Callback_MCGRegionDestroy(MCGRegionRef p_region);
+        virtual bool Callback_MCGRegionIsEmpty(MCGRegionRef p_region);
+        virtual bool Callback_MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_callback, void *p_context);
+        virtual void Callback_MCGContextRelease(MCGContextRef context);
+        virtual int32_t Callback_MCGImageGetHeight(MCGImageRef image);
+        virtual bool Callback_MCGImageGetRaster(MCGImageRef image, MCGRaster &r_raster);
+        virtual bool Callback_MCGRegionSetEmpty(MCGRegionRef p_region);
+        virtual void Callback_MCGContextScaleCTM(MCGContextRef context, MCGFloat xscale, MCGFloat yscale);
+        virtual bool Callback_MCGRegionAddRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+        virtual MCGIntegerRectangle Callback_MCGRegionGetBounds(MCGRegionRef p_region);
+        virtual void Callback_MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
+        virtual void Callback_MCGContextClipToRect(MCGContextRef context, MCGRectangle rect);
+        virtual void Callback_MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter);
+        virtual MCGIntegerRectangle Callback_MCGRectangleGetBounds(const MCGRectangle &p_rect);
+        virtual void Callback_MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region);
+        virtual void Callback_MCGContextTranslateCTM(MCGContextRef context, MCGFloat xoffset, MCGFloat yoffset);
+        virtual bool Callback_MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_context);
+        virtual MCGAffineTransform Callback_MCGContextGetDeviceTransform(MCGContextRef context);
+        virtual bool Callback_MCGImageCreateWithRasterNoCopy(const MCGRaster &raster, MCGImageRef &r_image);
+        virtual MCGIntegerRectangle Callback_MCGIntegerRectangleIntersection(const MCGIntegerRectangle &rect_1, const MCGIntegerRectangle &rect_2);
+        
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        virtual CGBitmapInfo Callback_MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+        virtual bool Callback_MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+        virtual bool Callback_MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
+        virtual bool Callback_MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+#endif
+ };
     
     typedef Ref<Callback> CallbackRef;
     
@@ -1396,6 +1438,132 @@ namespace MCPlatform {
         {
             return m_callback -> Callback_SendMessage(p_message, p_val1, p_val2, p_val3);
         }
+        
+        // libgraphics
+        MCGImageRef MCGImageRetain(MCGImageRef image)
+        {
+            return m_callback -> Callback_MCGImageRetain(image);
+        }
+        void MCGImageRelease(MCGImageRef image)
+        {
+            m_callback -> Callback_MCGImageRelease(image);
+        }
+        bool MCGRegionCreate(MCGRegionRef &r_region)
+        {
+            return m_callback -> Callback_MCGRegionCreate(r_region);
+        }
+        int32_t MCGImageGetWidth(MCGImageRef image)
+        {
+            return m_callback -> Callback_MCGImageGetWidth(image);
+        }
+        bool MCGImageIsOpaque(MCGImageRef image)
+        {
+            return m_callback -> Callback_MCGImageIsOpaque(image);
+        }
+        bool MCGRegionAddRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect)
+        {
+            return m_callback -> Callback_MCGRegionAddRect(p_region, p_rect);
+        }
+        void MCGRegionDestroy(MCGRegionRef p_region)
+        {
+            m_callback -> Callback_MCGRegionDestroy(p_region);
+        }
+        bool MCGRegionIsEmpty(MCGRegionRef p_region)
+        {
+            return m_callback -> Callback_MCGRegionIsEmpty(p_region);
+        }
+        bool MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_callback, void *p_context)
+        {
+            return m_callback -> Callback_MCGRegionIterate(p_region, p_callback, p_context);
+        }
+        void MCGContextRelease(MCGContextRef context)
+        {
+            m_callback -> Callback_MCGContextRelease(context);
+        }
+        int32_t MCGImageGetHeight(MCGImageRef image)
+        {
+            return m_callback -> Callback_MCGImageGetHeight(image);
+        }
+        bool MCGImageGetRaster(MCGImageRef image, MCGRaster &r_raster)
+        {
+            return m_callback -> Callback_MCGImageGetRaster(image, r_raster);
+        }
+        bool MCGRegionSetEmpty(MCGRegionRef p_region)
+        {
+            return m_callback -> Callback_MCGRegionSetEmpty(p_region);
+        }
+        void MCGContextScaleCTM(MCGContextRef context, MCGFloat xscale, MCGFloat yscale)
+        {
+            m_callback -> Callback_MCGContextScaleCTM(context, xscale, yscale);
+        }
+        bool MCGRegionAddRegion(MCGRegionRef p_region, MCGRegionRef p_other)
+        {
+            return m_callback -> Callback_MCGRegionAddRegion(p_region, p_other);
+        }
+        MCGIntegerRectangle MCGRegionGetBounds(MCGRegionRef p_region)
+        {
+            return m_callback -> Callback_MCGRegionGetBounds(p_region);
+        }
+        void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter)
+        {
+            m_callback -> Callback_MCGContextDrawImage(context, image, dst_rect, filter);
+        }
+        void MCGContextClipToRect(MCGContextRef context, MCGRectangle rect)
+        {
+            m_callback -> Callback_MCGContextClipToRect(context, rect);
+        }
+        void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter)
+        {
+            m_callback -> Callback_MCGContextDrawPixels(context, raster, dst_rect, filter);
+        }
+        MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect)
+        {
+            return m_callback -> Callback_MCGRectangleGetBounds(p_rect);
+        }
+        void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region)
+        {
+            m_callback -> Callback_MCGContextClipToRegion(self, p_region);
+        }
+        void MCGContextTranslateCTM(MCGContextRef context, MCGFloat xoffset, MCGFloat yoffset)
+        {
+            m_callback -> Callback_MCGContextTranslateCTM(context, xoffset, yoffset);
+        }
+        bool MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_context)
+        {
+            return m_callback -> Callback_MCGContextCreateWithRaster(raster, r_context);
+        }
+        MCGAffineTransform MCGContextGetDeviceTransform(MCGContextRef context)
+        {
+            return m_callback -> Callback_MCGContextGetDeviceTransform(context);
+        }
+        bool MCGImageCreateWithRasterNoCopy(const MCGRaster &raster, MCGImageRef &r_image)
+        {
+            return m_callback -> Callback_MCGImageCreateWithRasterNoCopy(raster, r_image);
+        }
+        MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &rect_1, const MCGIntegerRectangle &rect_2)
+        {
+            return m_callback -> Callback_MCGIntegerRectangleIntersection(rect_1, rect_2);
+        }
+        
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        // cgimageutil.cpp
+        CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha)
+        {
+            return m_callback -> Callback_MCGPixelFormatToCGBitmapInfo(p_pixel_format, p_alpha);
+        }
+        bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace)
+        {
+            return m_callback -> Callback_MCImageGetCGColorSpace(r_colorspace);
+        }
+        bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image)
+        {
+            return m_callback -> Callback_MCGImageToCGImage(p_src, p_src_rect, p_invert, r_image);
+        }
+        bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
+        {
+            return m_callback -> Callback_MCGRasterToCGImage(p_raster, p_src_rect, p_colorspace, p_copy, p_invert, r_image);
+        }
+#endif
     protected:
         MCPlatformCallbackRef m_callback = nil;
     };

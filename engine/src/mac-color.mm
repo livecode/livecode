@@ -27,8 +27,6 @@
 
 // IM-2014-09-24: [[ Bug 13208 ]] Update color transform to use CoreGraphics API
 
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCColorMatrix3x3GetElements(const MCColorMatrix3x3 &p_matrix, CGFloat r_values[9])

@@ -31,12 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "platform.h"
 #include "mac-platform.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #define OBJC_ENTER_VOID \
@@ -228,7 +222,7 @@ rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectLookup(const char *p_name,
 	return t_effect != NULL;
 }
 
-bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
+bool MCMacPlatformCore::MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
 	CGImageRef t_cg_image = nil;
 	CIImage *t_ci_image = nil;

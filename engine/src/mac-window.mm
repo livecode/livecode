@@ -1582,9 +1582,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCGRegionRef t_update_region;
 	t_update_region = nil;
 	
-	/* UNCHECKED */ MCGRegionCreate(t_update_region);
+	/* UNCHECKED */ t_window -> MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
-		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
+		/* UNCHECKED */ t_window -> MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
 
 	//////////
     
@@ -1605,7 +1605,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 	//////////
 	
-	MCGRegionDestroy(t_update_region);
+	t_window -> MCGRegionDestroy(t_update_region);
 }
 
 //////////
