@@ -180,6 +180,14 @@ operator+(typename MCSpan<ElementType>::IndexType n,
 	return rhs + n;
 }
 
+/* TODO[C++17] Remove when we have class and struct template type inference */
+template<typename ElementType, size_t N>
+constexpr MCSpan<ElementType>
+MCMakeSpan(ElementType (&arr)[N])
+{
+    return MCSpan<ElementType>(arr, N);
+}
+
 template <typename ElementType>
 constexpr MCSpan<ElementType>
 MCMakeSpan(ElementType *p_ptr,
@@ -189,7 +197,7 @@ MCMakeSpan(ElementType *p_ptr,
 }
 
 template <typename ElementType = byte_t>
-MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
+inline MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
 {
 	MCAssert(MCDataGetLength(p_data) % sizeof(ElementType) == 0);
 	auto t_ptr = reinterpret_cast<ElementType*>(MCDataGetBytePtr(p_data));
@@ -232,6 +240,15 @@ inline hash_t MCHashSpanStream(hash_t p_previous,
            "MCHashObjectSpanStream can only be used with trivially copyable types"); */
     return MCHashBytesStream(p_previous,
                              p_span.data(), p_span.sizeBytes());
+}
+
+template <typename ElementType>
+inline bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_typeinfo, const MCSpan<ElementType> p_values, MCProperListRef& r_list)
+{
+    return MCProperListCreateWithForeignValues(p_typeinfo,
+                                               p_values.data(),
+                                               p_values.length(),
+                                               r_list);
 }
 
 #endif /* !__MC_FOUNDATION_SPAN_H__ */
