@@ -547,3 +547,8 @@ void MCNotifyPing(bool p_high_priority)
 #error Threading API not specified
 #endif
 }
+
+bool MCNotifyPending(void)
+{
+	return s_notifications != nil || s_safe_notifications != nil;
+}
