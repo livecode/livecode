@@ -17,21 +17,14 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
-constant kTwelveHours = 43200
-
 on TestLongTime24Hours
- local tSeconds
+ local tDateItems
  set the twelveHourTime to false
- put the seconds into tSeconds
- convert tSeconds to long time
+ put "2017,3,28,2,0,0,3" into tDateItems
+ convert tDateItems to long time
 
- TestAssert "Test 24-hour format 1", char 1 to 2 of tSeconds is a number
- TestAssert "Test 24-hour format 2", char 3 of tSeconds is ":"
- 
- put the seconds + kTwelveHours into tSeconds
- convert tSeconds to long time
- 
- TestAssert "Test 24-hour format 3", char 1 to 2 of tSeconds is a number
- TestAssert "Test 24-hour format 4", char 3 of tSeconds is ":"
+ TestAssert "Test 24-hour format 1", char 1 to 2 of tDateItems is a number
+ TestAssert "Test 24-hour format 2", char 3 of tDateItems is ":"
+ TestAssert "Test 24-hour format 3", tDateItems is "02:00:00"
 end TestLongTime24Hours
 
