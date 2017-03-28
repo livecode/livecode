@@ -381,11 +381,11 @@ command revDoSaveAsStandalone pStack, pFolder
          end switch
       end repeat
       
-      -- post build message
       if tHasDesktop then
-         __SendStandaloneSavedMessage pStack, tOutputFolder
          -- restore original
          __ReloadOriginalStackFile tStackFileName, pStack
+         -- post build message
+         __SendStandaloneSavedMessage pStack, tOutputFolder
       end if
       
    catch tError
