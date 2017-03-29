@@ -92,7 +92,7 @@ private:
     // won't work as the destructor is non-virtual to reduce overheads).
     inline void destroy()
     {
-        MCAssert(m_refcount == 0);
+        //MCAssert(m_refcount == 0);
         delete static_cast<Derived*>(this);
     }
 };

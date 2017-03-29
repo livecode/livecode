@@ -37,9 +37,9 @@ bool MCAndroidPlatformCore::QueryInterface(const char * p_interface_id, MCPlatfo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(void)
+MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(MCPlatformCallbackRef p_callback)
 {
-    return MCPlatform::makeRef<MCAndroidPlatformCore>();
+    return MCPlatform::makeRef<MCAndroidPlatformCore>(p_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -29,10 +29,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height);
-
-////////////////////////////////////////////////////////////////////////////////
-
 CGRect MCGIntegerRectangleToCGRect(const MCGIntegerRectangle &p_rect)
 {
 	return CGRectMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
@@ -47,6 +43,8 @@ CGRect MCMacFlipCGRect(const CGRect &p_rect, uint32_t p_surface_height)
 
 MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGContextRef p_cg_context, MCGRegionRef p_update_rgn)
 {
+    m_callback = p_window -> GetCallback();
+    
 	// Retain the window to ensure it doesn't vanish whilst the surface is alive.
 	m_window = p_window;
 	m_window -> Retain();
@@ -299,7 +297,7 @@ void MCMacPlatformSurface::Unlock(void)
 			MCGRasterApplyAlpha(m_raster, t_mask->m_mask, MCGIntegerPointMake(-t_bounds.origin.x * t_scale, -t_bounds.origin.y * t_scale));
 		}
 			
-        MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
+        ClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
         // IM-2014-10-03: [[ Bug 13432 ]] Render with copy blend mode to replace destination alpha with the source alpha.
         RenderRasterToCG(m_cg_context, t_dst_rect, m_raster, MCGRectangleMake(0, 0, m_raster.width, m_raster.height), 1.0, kMCGBlendModeCopy);
         
@@ -321,7 +319,7 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
+CGBlendMode MCMacPlatformSurface::MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 {
 	// MM-2013-08-28: [[ RefactorGraphics ]] Tweak for 10.4 SDK support.
 	switch (p_blend)
@@ -438,6 +436,7 @@ struct MCGRegionConvertToCGRectsState
 {
 	CGRect *rects;
 	uint32_t count;
+    MCMacPlatformSurface * surface;
 };
 
 static bool MCGRegionConvertToCGRectsCallback(void *p_state, const MCGIntegerRectangle &p_rect)
@@ -445,7 +444,7 @@ static bool MCGRegionConvertToCGRectsCallback(void *p_state, const MCGIntegerRec
 	MCGRegionConvertToCGRectsState *state;
 	state = static_cast<MCGRegionConvertToCGRectsState*>(p_state);
 	
-	if (!MCMemoryResizeArray(state -> count + 1, state -> rects, state -> count))
+	if (!state -> surface -> MCMemoryResizeArray(state -> count + 1, state -> rects, state -> count))
 		return false;
 	
 	state -> rects[state -> count - 1] = MCGIntegerRectangleToCGRect(p_rect);
@@ -453,11 +452,12 @@ static bool MCGRegionConvertToCGRectsCallback(void *p_state, const MCGIntegerRec
 	return true;
 }
 
-bool MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& r_cgrect_count)
+bool MCMacPlatformSurface::MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& r_cgrect_count)
 {
 	MCGRegionConvertToCGRectsState t_state;
 	t_state . rects = nil;
 	t_state . count = 0;
+    t_state . surface = this;
 	
 	if (!MCGRegionIterate(self, MCGRegionConvertToCGRectsCallback, &t_state))
 	{
@@ -471,7 +471,7 @@ bool MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& 
 	return true;
 }
 
-static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height)
+void MCMacPlatformSurface::ClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height)
 {
 	CGRect *t_rects;
 	t_rects = nil;

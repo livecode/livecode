@@ -24,7 +24,11 @@
 class MCLinuxPlatformCore: public MCPlatformCore
 {
 public:
-    constexpr MCLinuxPlatformCore(void) = default;
+    MCLinuxPlatformCore(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+
     virtual ~MCLinuxPlatformCore(void) {}
     
     // Wait
@@ -43,6 +47,11 @@ public:
     
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
+
+    // Clipboard
+    virtual MCRawClipboard* CreateSystemClipboard();
+    virtual MCRawClipboard* CreateSystemSelectionClipboard();
+    virtual MCRawClipboard* CreateSystemDragboard();
 };
 
 #endif

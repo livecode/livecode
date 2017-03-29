@@ -16,9 +16,9 @@
 
 
 #include "raw-clipboard.h"
+#include "globdefs.h"
 
 #include "foundation-auto.h"
-
 
 MCRawClipboard::~MCRawClipboard()
 {
@@ -33,6 +33,7 @@ MCRawClipboardItem::~MCRawClipboardItem()
 
 bool MCRawClipboardItem::HasRepresentation(MCStringRef p_type) const
 {
+#if !defined(_MAC_DESKTOP) && !defined(_MAC_SERVER)
     // Check that the representation string is valid
     if (p_type == NULL)
         return false;
@@ -44,12 +45,13 @@ bool MCRawClipboardItem::HasRepresentation(MCStringRef p_type) const
         if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
             return true;
     }
-    
+#endif
     return false;
 }
 
 const MCRawClipboardItemRep* MCRawClipboardItem::FetchRepresentationByType(MCStringRef p_type) const
 {
+#if !defined(_MAC_DESKTOP) && !defined(_MAC_SERVER)
     // Check that the representation string is valid
     if (p_type == NULL)
         return NULL;
@@ -61,10 +63,10 @@ const MCRawClipboardItemRep* MCRawClipboardItem::FetchRepresentationByType(MCStr
         if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
             return FetchRepresentationAtIndex(i);
     }
+#endif
     
     return NULL;
 }
-
 
 MCRawClipboardItemRep::~MCRawClipboardItemRep()
 {
@@ -73,13 +75,22 @@ MCRawClipboardItemRep::~MCRawClipboardItemRep()
 
 MCDataRef MCRawClipboard::EncodeBMPForTransfer(MCDataRef p_bmp) const
 {
+#if !defined(_MAC_DESKTOP) && !defined(_MAC_SERVER)
 	// Most platforms transfer BMP files without any further transformations
 	return MCValueRetain(p_bmp);
+#endif
+    
+    return NULL;
 }
 
 MCDataRef MCRawClipboard::DecodeTransferredBMP(MCDataRef p_bmp) const
 {
+#if !defined(_MAC_DESKTOP) && !defined(_MAC_SERVER)
 	// Most platforms transfer BMP files without any further transformations
 	return MCValueRetain(p_bmp);
+#endif
+    
+    return NULL;
 }
+
 

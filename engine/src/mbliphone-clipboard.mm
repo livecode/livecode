@@ -17,19 +17,20 @@
 
 
 #include "mbliphone-clipboard.h"
+#include "mbliphone-platform.h"
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemClipboard()
 {
     return new MCIPhoneRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemSelectionClipboard()
 {
     return new MCIPhoneRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemDragboard()
 {
     return new MCIPhoneRawClipboard;
 }

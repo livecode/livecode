@@ -43,7 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define OBJC_LEAVE \
 	[__t_pool release];
-static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_name)
+coreimage_visualeffect_ref_t MCMacPlatformCore::CoreImageVisualEffectCreate(NSString *p_name)
 {
 	coreimage_visualeffect_ref_t t_effect = NULL;
 	rei_visualeffect_info_ref_t t_info = NULL;
@@ -204,7 +204,7 @@ rei_boolean_t MCMacPlatformCore::CoreImageVisualEffectLookup(const char *p_name,
 			{
 				if ([t_name isEqualToString: [m_g_effects objectAtIndex: t_index]])
 				{
-					t_effect = coreimage_visualeffect_create(t_name);
+					t_effect = CoreImageVisualEffectCreate(t_name);
 					t_effect -> next = m_g_effect_infos;
 					m_g_effect_infos = t_effect;
 					break;

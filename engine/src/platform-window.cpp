@@ -25,8 +25,11 @@
 //  Platform Window Class Implementation
 //
 
-MCPlatformWindow::MCPlatformWindow(void)
+MCPlatformWindow::MCPlatformWindow(MCPlatformCoreRef p_platform)
 {
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
+    
     //MCLog("Create window %p", this);
     
     m_attachments = nil;
@@ -56,6 +59,7 @@ MCPlatformWindow::MCPlatformWindow(void)
     m_use_text_input = false;
     
     /* UNCHECKED */ MCGRegionCreate(m_dirty_region);
+    
     m_is_visible = false;
     m_is_focused = false;
     m_is_iconified = false;
@@ -64,9 +68,7 @@ MCPlatformWindow::MCPlatformWindow(void)
     m_is_opaque = true;
     
     // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
-    m_document_filename = MCValueRetain(kMCEmptyString);
-    
-    m_platform = nil;
+    m_document_filename = MCSTR("");
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)

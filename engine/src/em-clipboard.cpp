@@ -17,19 +17,20 @@
 
 
 #include "em-clipboard.h"
+#include "em-platform.h"
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemClipboard()
 {
     return new MCEmscriptenRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemSelectionClipboard()
 {
     return new MCEmscriptenRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemDragboard()
 {
     return new MCEmscriptenRawClipboard;
 }

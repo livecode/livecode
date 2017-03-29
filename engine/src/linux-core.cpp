@@ -36,9 +36,9 @@ bool MCLinuxPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(void)
+MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(MCPlatformCallbackRef p_callback)
 {
-    return MCPlatform::makeRef<MCLinuxPlatformCore>();
+    return MCPlatform::makeRef<MCLinuxPlatformCore>(p_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -16,6 +16,7 @@
 
 
 #include "lnx-clipboard.h"
+#include "linux-platform.h"
 
 #include <gdk/gdk.h>
 
@@ -63,17 +64,17 @@ const char * const MCLinuxRawClipboard::s_formats[kMCRawClipboardKnownTypeLast+1
 };
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemClipboard()
 {
     return new MCLinuxRawClipboard(GDK_SELECTION_CLIPBOARD);
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemSelectionClipboard()
 {
     return new MCLinuxRawClipboard(GDK_SELECTION_PRIMARY);
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemDragboard()
 {
     return new MCLinuxRawClipboard("XdndSelection");
 }

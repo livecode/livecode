@@ -62,7 +62,7 @@ class MCAVFoundationPlayer;
 class MCAVFoundationPlayer: public MCPlatformPlayer
 {
 public:
-	MCAVFoundationPlayer(void);
+	MCAVFoundationPlayer(MCPlatformCoreRef p_platform);
 	virtual ~MCAVFoundationPlayer(void);
     
 	virtual bool GetNativeView(void *&r_view);
@@ -251,8 +251,10 @@ private:
 ////////////////////////////////////////////////////////
 
 
-MCAVFoundationPlayer::MCAVFoundationPlayer(void)
+MCAVFoundationPlayer::MCAVFoundationPlayer(MCPlatformCoreRef p_platform)
 {
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
     // COMMENT: We can follow the same pattern as QTKitPlayer here - however we won't have
     //   an AVPlayer until we load, so that starts off as nil and we create a PlayerView
     //   with zero frame.
@@ -688,12 +690,18 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         return;
     }
 
+    CFStringRef t_filename_or_url;
+    if (!MCStringConvertToCFStringRef(p_filename_or_url, t_filename_or_url))
+        return;
+    
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
+        t_url = [NSURL fileURLWithPath: (NSString *)t_filename_or_url];
     else
-        t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
+        t_url = [NSURL URLWithString: (NSString *)t_filename_or_url];
 
+    CFRelease(t_filename_or_url);
+    
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
 
@@ -1371,9 +1379,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 
 MCPlatformPlayerRef MCMacPlatformCore::CreatePlayer()
 {
-    MCPlatform::Ref<MCPlatformPlayer> t_ref = MCPlatform::makeRef<MCAVFoundationPlayer>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformPlayer> t_ref = MCPlatform::makeRef<MCAVFoundationPlayer>(this);
     
     return t_ref.unsafeTake();
 }

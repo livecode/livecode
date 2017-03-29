@@ -103,7 +103,7 @@ void MCMacPlatformCore::DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllow
 	r_operation = MCMacPlatformMapNSDragOperationToDragOperation(t_op);
 }
 
-bool MCMacPasteboardConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data)
+bool MCMacPlatformCore::ConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data)
 {
 	// Check the data is actually TIFF, it is actually a PNG then do nothing
 	// (some versions of SnagIt! put PNG data masquerading as TIFF).

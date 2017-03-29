@@ -11,11 +11,6 @@
 			'target_name': 'libplatform',
 			'type': 'shared_library',
 			
-			'dependencies':
-			[
-				'../libfoundation/libfoundation.gyp:libFoundation',
-			],
-			
 			'include_dirs':
 			[
 				'include',

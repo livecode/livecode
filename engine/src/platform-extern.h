@@ -17,4 +17,4 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /* Compatibility functions for instantiating Mac platform implementations. */
 
-extern MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(void);
+extern MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(MCPlatformCallbackRef p_callback);

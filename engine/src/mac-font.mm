@@ -22,32 +22,82 @@
 
 #include "mac-platform.h"
 
-extern bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally);
-extern bool coretext_font_unload(MCStringRef p_path, bool p_globally);
+#import <ApplicationServices/ApplicationServices.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCMacPlatformLoadedFont::~MCMacPlatformLoadedFont(void)
 {
-    coretext_font_unload(*m_path, m_globally);
+    bool t_success;
+    t_success = true;
+    
+    MCPlatformAutoStringRefAsCFString t_cf_path(m_callback);
+    t_success = t_cf_path . Lock(*m_path);
+    
+    CFURLRef t_font_url;
+    t_font_url = NULL;
+    if (t_success)
+    {
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, *t_cf_path, kCFURLPOSIXPathStyle, false);
+        t_success = t_font_url != NULL;
+    }
+    
+    if (t_success)
+    {
+        CTFontManagerScope t_scope;
+        if (m_globally)
+            t_scope = kCTFontManagerScopeUser;
+        else
+            t_scope = kCTFontManagerScopeProcess;
+        t_success = CTFontManagerUnregisterFontsForURL(t_font_url, t_scope, NULL);
+    }
+    
+    if (t_font_url != NULL)
+        CFRelease(t_font_url);
 }
 
 
 bool
 MCMacPlatformLoadedFont::CreateWithPath(MCStringRef p_path, bool p_globally)
 {
+    m_path.SetCallback(m_callback);
     m_path.Reset(p_path);
     m_globally = p_globally;
-    coretext_font_load_from_path(*m_path, m_globally);
-    return true;
+    
+    bool t_success;
+    t_success = true;
+    
+    MCPlatformAutoStringRefAsCFString t_cf_path(m_callback);
+    t_success = t_cf_path . Lock(p_path);
+    
+    CFURLRef t_font_url;
+    t_font_url = NULL;
+    if (t_success)
+    {
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, *t_cf_path, kCFURLPOSIXPathStyle, false);
+        t_success = t_font_url != NULL;
+    }
+    
+    if (t_success)
+    {
+        CTFontManagerScope t_scope;
+        if (p_globally)
+            t_scope = kCTFontManagerScopeUser;
+        else
+            t_scope = kCTFontManagerScopeProcess;
+        t_success = CTFontManagerRegisterFontsForURL(t_font_url, t_scope, NULL);
+    }
+    
+    if (t_font_url != NULL)
+        CFRelease(t_font_url);
+    
+    return t_success;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformLoadedFontRef MCMacPlatformCore::CreateLoadedFont()
 {
-    MCPlatform::Ref<MCPlatformLoadedFont> t_ref = MCPlatform::makeRef<MCMacPlatformLoadedFont>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformLoadedFont> t_ref = MCPlatform::makeRef<MCMacPlatformLoadedFont>(this);
     
     return t_ref.unsafeTake();
 }

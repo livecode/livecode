@@ -236,9 +236,7 @@ bool MCMacPlatformColorTransform::Apply( MCImageBitmap *p_image)
 
 MCPlatformColorTransformRef MCMacPlatformCore::CreateColorTransform(void)
 {
-    MCPlatform::Ref<MCPlatformColorTransform> t_ref = MCPlatform::makeRef<MCMacPlatformColorTransform>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformColorTransform> t_ref = MCPlatform::makeRef<MCMacPlatformColorTransform>(this);
     
     return t_ref.unsafeTake();
 }

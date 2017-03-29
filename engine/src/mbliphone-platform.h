@@ -24,7 +24,11 @@
 class MCIPhonePlatformCore: public MCPlatformCore
 {
 public:
-    constexpr MCIPhonePlatformCore(void) = default;
+    MCIPhonePlatformCore(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+
     virtual ~MCIPhonePlatformCore(void) {}
     
     // Wait
@@ -48,6 +52,11 @@ public:
     // Apple platforms only
     virtual void RunBlockOnMainFiber(void (^block)(void));
 #endif
+    
+    // Clipboard
+    virtual MCRawClipboard* CreateSystemClipboard();
+    virtual MCRawClipboard* CreateSystemSelectionClipboard();
+    virtual MCRawClipboard* CreateSystemDragboard();
 };
 
 #endif

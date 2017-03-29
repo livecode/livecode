@@ -36,9 +36,8 @@ bool MCEmscriptenPlatformCore::QueryInterface(const char * p_interface_id, MCPla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(void)
+MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(MCPlatformCallbackRef p_callback)
 {
-    return MCPlatform::makeRef<MCEmscriptenPlatformCore>();
+    return MCPlatform::makeRef<MCEmscriptenPlatformCore>(p_callback);
 }
-
 ////////////////////////////////////////////////////////////////////////////////

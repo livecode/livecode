@@ -202,9 +202,7 @@ void MCMacPlatformCore::ResetCursor(void)
 
 MCPlatformCursorRef MCMacPlatformCore::CreateCursor()
 {
-    MCPlatform::Ref<MCPlatformCursor> t_ref = MCPlatform::makeRef<MCMacPlatformCursor>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformCursor> t_ref = MCPlatform::makeRef<MCMacPlatformCursor>(this);
     
     return t_ref.unsafeTake();
 }

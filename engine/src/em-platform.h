@@ -24,7 +24,10 @@
 class MCEmscriptenPlatformCore: public MCPlatformCore
 {
 public:
-    constexpr MCEmscriptenPlatformCore(void) = default;
+    MCEmscriptenPlatformCore(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
     virtual ~MCEmscriptenPlatformCore(void) {}
     
     // Wait
@@ -43,6 +46,11 @@ public:
     
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
+    
+    // Clipboard
+    virtual MCRawClipboard* CreateSystemClipboard();
+    virtual MCRawClipboard* CreateSystemSelectionClipboard();
+    virtual MCRawClipboard* CreateSystemDragboard();
 };
 
 #endif

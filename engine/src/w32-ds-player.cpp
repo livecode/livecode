@@ -54,7 +54,7 @@ typedef void (*MCWin32DSPlayerGraphCallback)(MCWin32DSPlayer *p_player, long evC
 class MCWin32DSPlayer : public MCPlatformPlayer
 {
 public:
-	MCWin32DSPlayer(void);
+    MCWin32DSPlayer(MCPlatformCoreRef p_platform);
 	virtual ~MCWin32DSPlayer(void);
 	
 	virtual bool GetNativeView(void *&r_view);
@@ -377,7 +377,8 @@ void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWin32DSPlayer::MCWin32DSPlayer()
+MCWin32DSPlayer::MCWin32DSPlayer(MCPlatformCoreRef p_platform) :
+    MCPlatformPlayer(p_platform)
 {
 	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
@@ -1516,8 +1517,7 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 
 MCPlatformPlayerRef MCWindowsPlatformCore::CreatePlayer()
 {
-    MCPlatform::Ref<MCWin32DSPlayer> t_ref = MCPlatform::makeRef<MCWin32DSPlayer>();
-    t_ref -> SetPlatform(this);
+    MCPlatform::Ref<MCWin32DSPlayer> t_ref = MCPlatform::makeRef<MCWin32DSPlayer>(this);
     if (!t_ref -> Initialize())
         return nil;
     

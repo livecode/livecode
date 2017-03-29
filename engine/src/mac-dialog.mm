@@ -96,36 +96,41 @@ void MCMacPlatformCore::BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSaveP
 	
 	/////////
 	
-	NSString *t_initial_folder;
+	CFStringRef t_initial_folder;
 	t_initial_folder = nil;
 	if (p_folder != nil)
-		t_initial_folder = MCStringConvertToAutoreleasedNSString(p_folder);
-	
-	NSString *t_initial_file;
+        /* UNCHECKED */ MCStringConvertToCFStringRef(p_folder, t_initial_folder);
+    
+	CFStringRef t_initial_file;
 	t_initial_file = nil;
 	if (p_file != nil)
-		t_initial_file = MCStringConvertToAutoreleasedNSString(p_file);
-	
+        /* UNCHECKED */ MCStringConvertToCFStringRef(p_file, t_initial_file);
+    
 	
 	if (p_owner == nil)
 	{
 		t_nest -> owner = nil;
 		
 		// MM-2012-03-16: [[ Bug ]] Use runModalForDirectory:file: rather than setting directory and file - methods only introduced in 10.6
-		if ([p_panel runModalForDirectory: t_initial_folder file: t_initial_file] == NSOKButton)
+		if ([p_panel runModalForDirectory: (NSString *)t_initial_folder file: (NSString *)t_initial_file] == NSOKButton)
 			t_nest -> result = kMCPlatformDialogResultSuccess;
 		else
 			t_nest -> result = kMCPlatformDialogResultCancel;
 	}
 	else
 	{
-		[p_panel beginSheetForDirectory: t_initial_folder
-								   file: t_initial_file
+		[p_panel beginSheetForDirectory: (NSString *)t_initial_folder
+								   file: (NSString *)t_initial_file
 						 modalForWindow: ((MCMacPlatformWindow *)p_owner) -> GetHandle()
 						  modalDelegate: m_dialog_delegate
 						 didEndSelector: @selector(panelDidEnd:returnCode:contextInfo:)
 							contextInfo: t_nest];
 	}
+    
+    if (t_initial_folder != nil)
+        CFRelease(t_initial_folder);
+    if (t_initial_file != nil)
+        CFRelease(t_initial_file);
 }
 
 MCPlatformDialogResult MCMacPlatformCore::EndOpenSaveDialog(void)
@@ -152,13 +157,25 @@ void MCMacPlatformCore::BeginFolderDialog(MCPlatformWindowRef p_owner, MCStringR
 {
     NSOpenPanel *t_panel;
     t_panel = [NSOpenPanel openPanel];
+    
+    CFStringRef t_prompt = nil;
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_prompt, t_prompt);
+    
     if (p_title != nil && MCStringGetLength(p_title) != 0)
     {
-        [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_title)];
-        [t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
+        CFStringRef t_title = nil;
+        /* UNCHECKED */ MCStringConvertToCFStringRef(p_title, t_title);
+    
+        [t_panel setTitle: (NSString *)t_title];
+        [t_panel setMessage: (NSString *)t_prompt];
+        
+        CFRelease(t_title);
     }
     else
-        [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
+        [t_panel setTitle: (NSString *)t_prompt];
+    
+    CFRelease(t_prompt);
+    
     [t_panel setPrompt: @"Choose"];
     [t_panel setCanChooseFiles: NO];
     [t_panel setCanChooseDirectories: YES];
@@ -190,7 +207,7 @@ MCPlatformDialogResult MCMacPlatformCore::EndFolderDialog(MCStringRef& r_selecte
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCFileFilterDestroy(MCFileFilter *self)
+void MCMacPlatformCore::FileFilterDestroy(MCFileFilter *self)
 {
 	for(uint32_t i = 0; i < self -> extension_count; i++)
 		MCValueRelease(self -> extensions[i]);
@@ -212,7 +229,7 @@ bool MCMacPlatformCore::FileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_fi
 	if (t_success)
 		t_success = MCMemoryNew(self);
     
-    MCAutoStringRefArray t_items;
+    MCPlatformAutoStringRefArray t_items(m_callback);
 	if (t_success)
 		t_success = MCStringsSplit(p_desc, '|', t_items . PtrRef(), t_items . CountRef());
 	
@@ -256,7 +273,7 @@ bool MCMacPlatformCore::FileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_fi
 	if (t_success)
 		r_filter = self;
 	else
-		MCFileFilterDestroy(self);
+		FileFilterDestroy(self);
 	
 	return t_success;
 }
@@ -347,7 +364,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 - (void)dealloc
 {
 	while(m_filters != nil)
-		MCFileFilterDestroy(static_cast<MCFileFilter *>(m_platform -> MCListPopFront((void *&)m_filters)));
+		m_platform -> FileFilterDestroy(static_cast<MCFileFilter *>(m_platform -> MCListPopFront((void *&)m_filters)));
 	
 	[ m_label release ];
 	[ m_options release ];
@@ -368,7 +385,12 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 		{
 			m_platform -> MCListPushBack((void *&)m_filters, t_filter);
 			if (t_filter -> tag != nil)
-				[ m_options addItemWithTitle: MCStringConvertToAutoreleasedNSString(t_filter -> tag)];
+            {
+                CFStringRef t_title = nil;
+                /* UNCHECKED */ m_platform -> MCStringConvertToCFStringRef(t_filter -> tag, t_title);
+                [ m_options addItemWithTitle: (NSString *) t_title];
+                CFRelease(t_title);
+            }
 		}
 	}
 	m_filter = m_filters;
@@ -435,10 +457,10 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	
 	// If any of the filters are * (ext or file type) then we allow all files
 	for (uint32_t i = 0; i < m_filter->extension_count; i++)
-		if (MCStringIsEqualTo(MCSTR("*"), m_filter->extensions[i], kMCCompareExact))
+		if (m_platform -> MCStringIsEqualTo(m_platform -> MCSTR("*"), m_filter->extensions[i], kMCCompareExact))
 			return YES;
 	for (uint32_t i = 0; i < m_filter->filetypes_count; i++)
-		if (MCStringIsEqualTo(MCSTR("*"), m_filter->filetypes[i], kMCCompareExact))
+		if (m_platform -> MCStringIsEqualTo(m_platform -> MCSTR("*"), m_filter->filetypes[i], kMCCompareExact))
 			return YES;
 	
 	// MM-2012-09-25: [[ Bug 10407 ]] Filter on the attirbutes of the target of the alias, rather than the alias.
@@ -464,16 +486,16 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	// Check to see if the extension of the file matches any of those in the extension list
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
-        MCAutoStringRef t_filename;
-		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
+        MCPlatformAutoStringRef t_filename(m_platform -> GetCallback());
+		if (m_platform -> MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
 			uindex_t t_dot;
             // AL-2014-04-01: [[ Bug 12081 ]] Find last occurrence of '.' rather than first, for file extension detection.
-            if (MCStringLastIndexOfChar(*t_filename, '.', UINDEX_MAX, kMCCompareExact, t_dot))
+            if (m_platform -> MCStringLastIndexOfChar(*t_filename, '.', UINDEX_MAX, kMCCompareExact, t_dot))
             {
                 MCRange t_range = MCRangeMake(t_dot + 1, UINDEX_MAX);
                 for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
-                    if (MCStringSubstringIsEqualTo(*t_filename, t_range, m_filter->extensions[i], kMCCompareCaseless))
+                    if (m_platform -> MCStringSubstringIsEqualTo(*t_filename, t_range, m_filter->extensions[i], kMCCompareCaseless))
                         t_should_show = YES;
             }
 		}
@@ -502,11 +524,11 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 		
 		for (uint32_t i = 0; i < m_filter->filetypes_count && !t_should_show; i++)
             // AL-2014-10-21: [[ Bug 13745 ]] Empty filter is not wild, so only do comparisons for non-empty
-			if (!MCStringIsEmpty(m_filter->filetypes[i]) &&
-                (MCStringIsEqualToCString(m_filter->filetypes[i], t_type, kMCCompareCaseless) ||
-                MCStringIsEqualToCString(m_filter->filetypes[i], t_creator, kMCCompareCaseless) ||
-                MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless) ||
-                MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless)))
+			if (!m_platform -> MCStringIsEmpty(m_filter->filetypes[i]) &&
+                (m_platform -> MCStringIsEqualToCString(m_filter->filetypes[i], t_type, kMCCompareCaseless) ||
+                m_platform -> MCStringIsEqualToCString(m_filter->filetypes[i], t_creator, kMCCompareCaseless) ||
+                m_platform -> MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless) ||
+                m_platform -> MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless)))
 				t_should_show = YES;
 	}
 	
@@ -522,11 +544,19 @@ void MCMacPlatformCore::BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatf
 {
 	NSSavePanel *t_panel;
 	t_panel = (p_kind == kMCPlatformFileDialogKindSave) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
-	
-	if (p_title != nil && !MCStringIsEmpty(p_title))
-	{
-		[t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_title)];
-		[t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
+    
+    CFStringRef t_prompt = nil;
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_prompt, t_prompt);
+    
+    if (p_title != nil && MCStringGetLength(p_title) != 0)
+    {
+        CFStringRef t_title = nil;
+        /* UNCHECKED */ MCStringConvertToCFStringRef(p_title, t_title);
+   
+        [t_panel setTitle: (NSString *) t_title];
+		[t_panel setMessage: (NSString *) t_prompt];
+        
+        CFRelease(t_title);
 	}
 	else
 	{
@@ -534,11 +564,13 @@ void MCMacPlatformCore::BeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatf
         GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
         
         if (t_version >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
-			[t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
+			[t_panel setMessage: (NSString *) t_prompt];
 		else
-			[t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
+			[t_panel setTitle: (NSString *) t_prompt];
 	}
 	
+    CFRelease(t_prompt);
+    
     // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
     //   an accessory view if more than one type.
     MCFileDialogAccessoryView *t_accessory;
@@ -593,7 +625,7 @@ MCPlatformDialogResult MCMacPlatformCore::EndFileDialog(MCPlatformFileDialogKind
 				NSString *t_alias;
 				resolve_alias([[(NSOpenPanel *)m_dialog_nesting -> panel filenames] objectAtIndex: i], t_alias);
                 
-				MCAutoStringRef t_conv_filename;			
+				MCPlatformAutoStringRef t_conv_filename(m_callback);
 				if (MCStringCreateWithCFString((CFStringRef)t_alias, &t_conv_filename))
 					/* UNCHECKED */ MCStringAppendFormat(r_paths, "%s%@", i > 0 ? "\n" : "", *t_conv_filename);
 

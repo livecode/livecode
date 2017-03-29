@@ -1087,8 +1087,7 @@ bool MCClipboard::CopyAsPNG(MCDataRef& r_png) const
 	if (!CopyAsData(kMCRawClipboardKnownTypeTIFF, &t_tiff_data))
 		return false;
 	
-	extern bool MCMacPasteboardConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data);
-	if (!MCMacPasteboardConvertTIFFToPNG(*t_tiff_data, r_png))
+	if (!MCplatform -> ConvertTIFFToPNG(*t_tiff_data, r_png))
 		return false;
 	
 	return true;
@@ -1504,18 +1503,18 @@ bool MCClipboard::CopyAsData(MCRawClipboardKnownType p_type, MCDataRef& r_data) 
 
 MCClipboard* MCClipboard::CreateSystemClipboard()
 {
-    return new MCClipboard(MCRawClipboard::CreateSystemClipboard());
+    return new MCClipboard(MCplatform -> CreateSystemClipboard());
 }
 
 MCClipboard* MCClipboard::CreateSystemSelectionClipboard()
 {
-    return new MCClipboard(MCRawClipboard::CreateSystemSelectionClipboard());
+    return new MCClipboard(MCplatform -> CreateSystemSelectionClipboard());
 }
 
 MCClipboard* MCClipboard::CreateSystemDragboard()
 {
     // Drag boards are created in a locked state
-    MCClipboard* t_dragboard = new (nothrow) MCClipboard(MCRawClipboard::CreateSystemDragboard());
+    MCClipboard* t_dragboard = new (nothrow) MCClipboard(MCplatform -> CreateSystemDragboard());
     t_dragboard->Lock(true);
     t_dragboard->Clear();
     return t_dragboard;

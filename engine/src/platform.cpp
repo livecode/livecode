@@ -821,5 +821,209 @@ namespace MCPlatform {
     
     ////////////////////////////////////////////////////////////////////////////////
     
+    
+    // libfoundation
+    bool Callback::Callback_MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data)
+    {
+        return MCDataCreateWithBytes(p_bytes, p_byte_count, r_data);
+    }
+    const byte_t *Callback::Callback_MCDataGetBytePtr(MCDataRef p_data)
+    {
+        return MCDataGetBytePtr(p_data);
+    }
+    uindex_t Callback::Callback_MCDataGetLength(MCDataRef p_data)
+    {
+        return MCDataGetLength(p_data);
+    }
+    bool Callback::Callback_MCListAppend(MCListRef list, MCValueRef value)
+    {
+        return MCListAppend(list, value);
+    }
+    bool Callback::Callback_MCListCopy(MCListRef list, MCListRef& r_new_list)
+    {
+        return MCListCopy(list, r_new_list);
+    }
+    bool Callback::Callback_MCListCopyAsString(MCListRef list, MCStringRef& r_string)
+    {
+        return MCListCopyAsString(list, r_string);
+    }
+    bool Callback::Callback_MCMemoryAllocate(size_t size, void*& r_block)
+    {
+        return MCMemoryAllocate(size, r_block);
+    }
+    bool Callback::Callback_MCMemoryReallocate(void *block, size_t new_size, void*& r_new_block)
+    {
+        return MCMemoryReallocate(block, new_size, r_new_block);
+    }
+    void Callback::Callback_MCMemoryDeallocate(void *block)
+    {
+        MCMemoryDeallocate(block);
+    }
+    bool Callback::Callback_MCMemoryNew(size_t size, void*& r_record)
+    {
+        return MCMemoryNew(size, r_record);
+    }
+    void Callback::Callback_MCMemoryDelete(void *p_record)
+    {
+        return MCMemoryDelete(p_record);
+    }
+    MCNameRef Callback::Callback_MCNAME(const char *p_string)
+    {
+        return MCNAME(p_string);
+    }
+    MCStringRef Callback::Callback_MCSTR(const char *string)
+    {
+        return MCSTR(string);
+    }
+    bool Callback::Callback_MCStringAppendFormatV(MCStringRef string, const char *p_format, va_list p_args)
+    {
+        return MCStringAppendFormatV(string, p_format, p_args);
+    }
+    bool Callback::Callback_MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options)
+    {
+        return MCStringBeginsWithCString(string, prefix_cstring, options);
+    }
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+    bool Callback::Callback_MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring)
+    {
+        return MCStringConvertToCFStringRef(string, r_cfstring);
+    }
+    bool Callback::Callback_MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string)
+    {
+        return MCStringCreateWithCFString(cf_string, r_string);
+    }
+#endif
+    bool Callback::Callback_MCStringConvertToCString(MCStringRef string, char*& r_cstring)
+    {
+        return MCStringConvertToCString(string, r_cstring);
+    }
+    bool Callback::Callback_MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count)
+    {
+        return MCStringConvertToUTF8(string, r_chars, r_char_count);
+    }
+    bool Callback::Callback_MCStringCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring)
+    {
+        return MCStringCopySubstring(string, range, r_substring);
+    }
+    bool Callback::Callback_MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string)
+    {
+        return MCStringCreateMutable(initial_capacity, r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string)
+    {
+        return MCStringCreateWithBytes(bytes, byte_count, encoding, is_external_rep, r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string)
+    {
+        return MCStringCreateWithBytesAndRelease(bytes, byte_count, encoding, is_external_rep, r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithCString(const char *cstring, MCStringRef& r_string)
+    {
+        return MCStringCreateWithCString(cstring, r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/, MCStringRef& r_string)
+    {
+        return MCStringCreateWithCStringAndRelease(cstring , r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string)
+    {
+        return MCStringCreateWithNativeChars(chars, char_count, r_string);
+    }
+    bool Callback::Callback_MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string)
+    {
+        return MCStringCreateWithPascalString(pascal_string, r_string);
+    }
+    bool Callback::Callback_MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data)
+    {
+        return MCStringEncode(string, encoding, is_external_rep, r_data);
+    }
+    bool Callback::Callback_MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string)
+    {
+        return MCStringDecode(data, encoding, is_external_rep, r_string);
+    }
+    bool Callback::Callback_MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options)
+    {
+        return MCStringFindAndReplace(string, pattern, replacement, options);
+    }
+    bool Callback::Callback_MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset)
+    {
+        return MCStringFirstIndexOfChar(string, needle, after, options, r_offset);
+    }
+    bool Callback::Callback_MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
+    {
+        return MCStringFormatV(r_string, p_format, p_args);
+    }
+    uindex_t Callback::Callback_MCStringGetLength(const MCStringRef string)
+    {
+        return MCStringGetLength(string);
+    }
+    bool Callback::Callback_MCStringIsEmpty(MCStringRef string)
+    {
+        return MCStringIsEmpty(string);
+    }
+    bool Callback::Callback_MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options)
+    {
+        return MCStringIsEqualTo(string, other, options);
+    }
+    bool Callback::Callback_MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options)
+    {
+        return MCStringIsEqualToCString(string, cstring, options);
+    }
+    bool Callback::Callback_MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset)
+    {
+        return MCStringLastIndexOfChar(string, needle, before, options, r_offset);
+    }
+    bool Callback::Callback_MCStringMutableCopy(MCStringRef string, MCStringRef& r_new_string)
+    {
+        return MCStringMutableCopy(string, r_new_string);
+    }
+    bool Callback::Callback_MCStringPrepend(MCStringRef string, MCStringRef prefix)
+    {
+        return MCStringPrepend(string, prefix);
+    }
+    bool Callback::Callback_MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options)
+    {
+        return MCStringSubstringIsEqualTo(string, range, p_other, p_options);
+    }
+    void Callback::Callback_MCValueRelease(MCValueRef value)
+    {
+        return MCValueRelease(value);
+    }
+    MCValueRef Callback::Callback_MCValueRetain(MCValueRef value)
+    {
+        return MCValueRetain(value);
+    }
+    bool Callback::Callback_MCMemoryNewArray(uindex_t count, size_t size, void*& r_array, uindex_t& r_count)
+    {
+        return MCMemoryNewArray(count, size, r_array, r_count);
+    }
+    bool Callback::Callback_MCMemoryNewArray(uindex_t count, size_t size, void*& r_array)
+    {
+        return MCMemoryNewArray(count, size, r_array);
+    }
+    bool Callback::Callback_MCListCreateMutable(char_t delimiter, MCListRef& r_list)
+    {
+        return MCListCreateMutable(delimiter, r_list);
+    }
+    void Callback::Callback_MCMemoryDeleteArray(void *array)
+    {
+        return MCMemoryDeleteArray(array);
+    }
+    bool Callback::Callback_MCMemoryResizeArray(uindex_t new_count, size_t size, void*& x_array, uindex_t& x_count)
+    {
+        return MCMemoryResizeArray(new_count, size, x_array, x_count);
+    }
+    void Callback::Callback___MCAssert(const char *file, uint32_t line, const char *message)
+    {
+#if defined(DEBUG_LOG)
+        __MCAssert(file, line, message);
+#endif
+    }
+    void Callback::Callback___MCUnreachable(void)
+    {
+#if defined(DEBUG_LOG)
+        __MCUnreachable();
+#endif
+    }
 }  /* namespace MCPlatform */
 

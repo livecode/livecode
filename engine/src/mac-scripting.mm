@@ -27,9 +27,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
+bool MCMacPlatformScriptEnvironment::ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
 {
-    MCAutoStringRefAsCFString t_cf_string;
+    MCPlatformAutoStringRefAsCFString t_cf_string(m_callback);
     
     if (!t_cf_string . Lock(p_string))
         return false;
@@ -346,8 +346,8 @@ void MCMacPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_re
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		r_result = MCValueRetain(kMCEmptyString);
-	}
+        /* UNCHECKED */ MCStringCreateWithCString("", r_result);
+    }
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
@@ -452,9 +452,7 @@ MCPlatformScriptEnvironmentRef MCMacPlatformCore::CreateScriptEnvironment()
         GET_JSC_SYMBOL(JSObjectCallAsFunction);
     }
 
-    MCPlatform::Ref<MCPlatformScriptEnvironment> t_ref = MCPlatform::makeRef<MCMacPlatformScriptEnvironment>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformScriptEnvironment> t_ref = MCPlatform::makeRef<MCMacPlatformScriptEnvironment>(this);
     
     return t_ref.unsafeTake();
 }

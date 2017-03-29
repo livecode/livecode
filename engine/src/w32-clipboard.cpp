@@ -16,6 +16,7 @@
 
 
 #include "w32-clipboard.h"
+#include "windows-platform.h"
 
 #include <ObjIdl.h>
 #include <ShlObj.h>
@@ -73,17 +74,17 @@ MCWin32RawClipboardCommon::format_mapping MCWin32RawClipboardCommon::s_formats[]
 #define kFormatMappingTableLength (sizeof(MCWin32RawClipboardCommon::s_formats) / sizeof(MCWin32RawClipboardCommon::s_formats[0]))
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemClipboard()
 {
 	return new MCWin32RawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemSelectionClipboard()
 {
 	return new MCWin32RawClipboardNull;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemDragboard()
 {
 	return new MCWin32RawClipboardNull;
 }

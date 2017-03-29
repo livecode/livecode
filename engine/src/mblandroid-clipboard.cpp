@@ -17,19 +17,20 @@
 
 
 #include "mblandroid-clipboard.h"
+#include "mblandroid-platform.h"
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCAndroidPlatformCore::CreateSystemClipboard()
 {
     return new MCAndroidRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCAndroidPlatformCore::CreateSystemSelectionClipboard()
 {
     return new MCAndroidRawClipboard;
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCAndroidPlatformCore::CreateSystemDragboard()
 {
     return new MCAndroidRawClipboard;
 }

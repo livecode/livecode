@@ -50,7 +50,7 @@ static NSString* get_legacy_font_name(uint32_t p_majorosversion)
 }
 
 // Returns the correct font for a control of the given type
-static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlState p_state, uint32_t p_majorosversion,  MCNameRef* r_name = nil)
+NSFont* MCMacPlatformCore::FontForControl(MCPlatformControlType p_type, MCPlatformControlState p_state, uint32_t p_majorosversion,  MCNameRef* r_name)
 {
     // Always return the same font regardless of control type in legacy mode
     if (p_state & kMCPlatformControlStateCompatibility)
@@ -159,7 +159,7 @@ bool MCMacPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type,
             if (p_state & kMCPlatformControlStateCompatibility)
                 r_int = 11;
             else
-                return [font_for_control(p_type, p_state, t_version) pointSize];
+                return [FontForControl(p_type, p_state, t_version) pointSize];
         }
         
         // Property is not known
@@ -387,8 +387,8 @@ bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MC
     GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
     
     // Get the font for the given control type
-	MCNewAutoNameRef t_font_name;
-    NSFont* t_font = font_for_control(p_type, p_state, t_version, &(&t_font_name));
+	MCPlatformNewAutoNameRef t_font_name(m_callback);
+    NSFont* t_font = FontForControl(p_type, p_state, t_version, &(&t_font_name));
     if (t_font == nil)
         return false;
     
@@ -398,8 +398,6 @@ bool MCMacPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void getthemebuttonpartandstate(const MCWidgetInfo &winfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR);
-static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
 static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
 static ThemeTrackKind getscrollbarkind(Widget_Type wtype);
 static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo);
@@ -507,10 +505,10 @@ bool MCMacPlatformCore::CreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGCont
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
+void MCMacPlatformCore::GetThemeButtonPartAndState(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
 {
     MCRectangle trect = drect;
-    ThemeButtonKind themebuttonkind;
+    ThemeButtonKind themebuttonkind = kThemePushButton;
     switch (widgetinfo.type)
     {
         case WTHEME_TYPE_CHECKBOX:
@@ -611,11 +609,11 @@ static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeBu
 }
 
 //draw theme button to MCScreen
-static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time)
+void MCMacPlatformCore::DrawThemeButton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time)
 {
     MCThemeDrawInfo t_info;
     t_info . dest = drect;
-    getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
+    GetThemeButtonPartAndState(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
     if (t_info . button . info . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
     {
         t_info . button . info . animation . time . start = p_start_time;
@@ -979,7 +977,7 @@ static inline void assign(HIRect& d, Rect s)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRef p_context, bool p_hidpi)
+void MCMacPlatformCore::DoDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRef p_context, bool p_hidpi)
 {
     CGContextRef t_context = p_context;
     
@@ -1273,7 +1271,7 @@ bool MCMacPlatformCore::DrawTheme(MCGContextRef p_context, MCThemeDrawType p_typ
         // Apply UI scaling transform
         CGContextConcatCTM(t_cgcontext, t_cg_transform);
         
-        MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext, t_ui_scale > 1.0);
+        DoDrawTheme(p_type, *p_info_ptr, t_cgcontext, t_ui_scale > 1.0);
         
         CGContextRelease(t_cgcontext);
         
@@ -1417,7 +1415,7 @@ void MCMacPlatformCore::GetThemeWidgetRect(const MCWidgetInfo &winfo, Widget_Met
                 {
                     HIThemeButtonDrawInfo bNewInfo;
                     HIRect macR,maccontentbounds;
-                    getthemebuttonpartandstate(winfo, bNewInfo,srect,macR);
+                    GetThemeButtonPartAndState(winfo, bNewInfo,srect,macR);
                     
                     HIThemeGetButtonBackgroundBounds(&macR, &bNewInfo, &maccontentbounds);
                     
@@ -1466,7 +1464,7 @@ bool MCMacPlatformCore::DrawThemeWidget(MCDC *dc, const MCWidgetInfo &winfo, con
         case WTHEME_TYPE_RADIOBUTTON:
         case WTHEME_TYPE_OPTIONBUTTON:
         case WTHEME_TYPE_PULLDOWN:
-            drawthemebutton(dc, winfo, drect, m_animation_start_time, m_animation_current_time);
+            DrawThemeButton(dc, winfo, drect, m_animation_start_time, m_animation_current_time);
             break;
         case WTHEME_TYPE_COMBOFRAME:
             break;
@@ -1489,7 +1487,7 @@ bool MCMacPlatformCore::DrawThemeWidget(MCDC *dc, const MCWidgetInfo &winfo, con
         }
             break;
         case WTHEME_TYPE_COMBOBUTTON:
-            drawthemebutton(dc, winfo, trect, m_animation_start_time, m_animation_current_time);
+            DrawThemeButton(dc, winfo, trect, m_animation_start_time, m_animation_current_time);
             break;
         case WTHEME_TYPE_SLIDER:
         case WTHEME_TYPE_SCROLLBAR:

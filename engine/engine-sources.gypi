@@ -633,7 +633,6 @@
 			'src/mac-clipboard.h',
 			'src/mac-clipboard.mm',
 			'src/mac-coreimage.mm',
-			'src/coretextfont-loading.cpp',
 			
 			# Group "iOS Platform"
 			'src/mbliphone-platform.h',
@@ -660,7 +659,7 @@
 			# Group "Windows Platform"
 			'src/windows-platform.h',
 			'src/windows-core.cpp',
-			'src/windows-community-core.mm',
+			'src/windows-community-core.cpp',
 			'src/windows-theme.cpp',
 			'src/w32-clipboard.h',
 			'src/w32-clipboard.cpp',

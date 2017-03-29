@@ -1074,12 +1074,66 @@ namespace MCPlatform
         virtual bool Callback_MCGImageCreateWithRasterNoCopy(const MCGRaster &raster, MCGImageRef &r_image);
         virtual MCGIntegerRectangle Callback_MCGIntegerRectangleIntersection(const MCGIntegerRectangle &rect_1, const MCGIntegerRectangle &rect_2);
         
+        // cgimageutil.cpp
 #if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
         virtual CGBitmapInfo Callback_MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
         virtual bool Callback_MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
         virtual bool Callback_MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
         virtual bool Callback_MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 #endif
+        
+        // libfoundation
+        virtual bool Callback_MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+        virtual const byte_t *Callback_MCDataGetBytePtr(MCDataRef p_data);
+        virtual uindex_t Callback_MCDataGetLength(MCDataRef p_data);
+        virtual bool Callback_MCListAppend(MCListRef list, MCValueRef value);
+        virtual bool Callback_MCListCopy(MCListRef list, MCListRef& r_new_list);
+        virtual bool Callback_MCListCopyAsString(MCListRef list, MCStringRef& r_string);
+        virtual bool Callback_MCMemoryAllocate(size_t size, void*& r_block);
+        virtual bool Callback_MCMemoryReallocate(void *block, size_t new_size, void*& r_new_block);
+        virtual void Callback_MCMemoryDeallocate(void *block);
+        virtual bool Callback_MCMemoryNew(size_t size, void*& r_record);
+        virtual void Callback_MCMemoryDelete(void *p_record);
+        virtual MCNameRef Callback_MCNAME(const char *);
+        virtual MCStringRef Callback_MCSTR(const char *string);
+        virtual bool Callback_MCStringAppendFormatV(MCStringRef string, const char *format, va_list args);
+        virtual bool Callback_MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        virtual bool Callback_MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
+        virtual bool Callback_MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
+#endif
+        virtual bool Callback_MCStringConvertToCString(MCStringRef string, char*& r_cstring);
+        virtual bool Callback_MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
+        virtual bool Callback_MCStringCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
+        virtual bool Callback_MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
+        virtual bool Callback_MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string);
+        virtual bool Callback_MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+        virtual bool Callback_MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+        virtual bool Callback_MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
+        virtual bool Callback_MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+        virtual bool Callback_MCStringFormatV(MCStringRef& r_string, const char *format, va_list args);
+        virtual uindex_t Callback_MCStringGetLength(const MCStringRef string);
+        virtual bool Callback_MCStringIsEmpty(MCStringRef string);
+        virtual bool Callback_MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
+        virtual bool Callback_MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
+        virtual bool Callback_MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
+        virtual bool Callback_MCStringMutableCopy(MCStringRef string, MCStringRef& r_new_string);
+        virtual bool Callback_MCStringPrepend(MCStringRef string, MCStringRef prefix);
+        virtual bool Callback_MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
+        virtual void Callback_MCValueRelease(MCValueRef value);
+        virtual MCValueRef Callback_MCValueRetain(MCValueRef value);
+        virtual bool Callback_MCMemoryNewArray(uindex_t count, size_t size, void*& r_array, uindex_t& r_count);
+        virtual bool Callback_MCMemoryNewArray(uindex_t count, size_t size, void*& r_array);
+        virtual bool Callback_MCListCreateMutable(char_t delimiter, MCListRef& r_list);
+        virtual void Callback_MCMemoryDeleteArray(void *array);
+        virtual bool Callback_MCMemoryResizeArray(uindex_t new_count, size_t size, void*& x_array, uindex_t& x_count);
+        virtual void Callback___MCAssert(const char *file, uint32_t line, const char *message);
+        virtual void Callback___MCUnreachable(void);
  };
     
     typedef Ref<Callback> CallbackRef;
@@ -1094,7 +1148,7 @@ namespace MCPlatform {
     public:
         constexpr Stubs() = default;
         ~Stubs() {}
-        void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback; }
+        void SetCallback(MCPlatformCallbackRef p_callback) {m_callback = p_callback;}
         MCPlatformCallbackRef GetCallback(void) {return m_callback; }
         
         bool GetGlobalProperty(MCPlatformGlobalProperty p_property, MCPlatformPropertyType p_type, void *r_value)
@@ -1564,6 +1618,304 @@ namespace MCPlatform {
             return m_callback -> Callback_MCGRasterToCGImage(p_raster, p_src_rect, p_colorspace, p_copy, p_invert, r_image);
         }
 #endif
+        
+        // libfoundation
+        bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data) const
+        {
+            return m_callback -> Callback_MCDataCreateWithBytes(p_bytes, p_byte_count, r_data);
+        }
+        const byte_t *MCDataGetBytePtr(MCDataRef p_data)
+        {
+            return m_callback -> Callback_MCDataGetBytePtr(p_data);
+        }
+        uindex_t MCDataGetLength(MCDataRef p_data)
+        {
+            return m_callback -> Callback_MCDataGetLength(p_data);
+        }
+        bool MCListAppend(MCListRef list, MCValueRef value)
+        {
+            return m_callback -> Callback_MCListAppend(list, value);
+        }
+        bool MCListCopy(MCListRef list, MCListRef& r_new_list)
+        {
+            return m_callback -> Callback_MCListCopy(list, r_new_list);
+        }
+        bool MCListCopyAsString(MCListRef list, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCListCopyAsString(list, r_string);
+        }
+        bool MCMemoryAllocate(size_t size, void*& r_block)
+        {
+            return m_callback -> Callback_MCMemoryAllocate(size, r_block);
+        }
+        bool MCMemoryReallocate(void *block, size_t new_size, void*& r_new_block)
+        {
+            return m_callback -> Callback_MCMemoryReallocate(block, new_size, r_new_block);
+        }
+        void MCMemoryDeallocate(void *block)
+        {
+            m_callback -> Callback_MCMemoryDeallocate(block);
+        }
+        bool MCMemoryNew(size_t size, void*& r_record)
+        {
+            return m_callback -> Callback_MCMemoryNew(size, r_record);
+        }
+        void MCMemoryDelete(void *p_record)
+        {
+            return m_callback -> Callback_MCMemoryDelete(p_record);
+        }
+        MCNameRef MCNAME(const char *p_string)
+        {
+            return m_callback -> Callback_MCNAME(p_string);
+        }
+        MCStringRef MCSTR(const char *string) const
+        {
+            return m_callback -> Callback_MCSTR(string);
+        }
+        bool MCStringAppendFormat(MCStringRef string, const char *p_format, ...)
+        {
+            bool t_success;
+            va_list t_args;
+            va_start(t_args, p_format);
+            t_success =  m_callback -> Callback_MCStringAppendFormatV(string, p_format, t_args);
+            va_end(t_args);
+            return t_success;
+        }
+        bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options) const
+        {
+            return m_callback -> Callback_MCStringBeginsWithCString(string, prefix_cstring, options);
+        }
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring) const
+        {
+            return m_callback -> Callback_MCStringConvertToCFStringRef(string, r_cfstring);
+        }
+         bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string) const
+        {
+            return m_callback -> Callback_MCStringCreateWithCFString(cf_string, r_string);
+        }
+#endif
+        bool MCStringConvertToCString(MCStringRef string, char*& r_cstring)
+        {
+            return m_callback -> Callback_MCStringConvertToCString(string, r_cstring);
+        }
+        bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count)
+        {
+            return m_callback -> Callback_MCStringConvertToUTF8(string, r_chars, r_char_count);
+        }
+        bool MCStringCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring) const
+        {
+            return m_callback -> Callback_MCStringCopySubstring(string, range, r_substring);
+        }
+        bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateMutable(initial_capacity, r_string);
+        }
+        bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithBytes(bytes, byte_count, encoding, is_external_rep, r_string);
+        }
+        bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithBytesAndRelease(bytes, byte_count, encoding, is_external_rep, r_string);
+        }
+        bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithCString(cstring, r_string);
+        }
+        bool MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithCStringAndRelease(cstring , r_string);
+        }
+        bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithNativeChars(chars, char_count, r_string);
+        }
+        bool MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string)
+        {
+            return m_callback -> Callback_MCStringCreateWithPascalString(pascal_string, r_string);
+        }
+        bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data) const
+        {
+            return m_callback -> Callback_MCStringEncode(string, encoding, is_external_rep, r_data);
+        }
+        bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string) const
+        {
+            return m_callback -> Callback_MCStringDecode(data, encoding, is_external_rep, r_string);
+        }
+        bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options) const
+        {
+            return m_callback -> Callback_MCStringFindAndReplace(string, pattern, replacement, options);
+        }
+        bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset) const
+        {
+            return m_callback -> Callback_MCStringFirstIndexOfChar(string, needle, after, options, r_offset);
+        }
+        bool MCStringFormat(MCStringRef& r_string, const char *p_format, ...)
+        {
+            bool t_success;
+            
+            va_list t_args;
+            va_start(t_args, p_format);
+            t_success = m_callback -> Callback_MCStringFormatV(r_string, p_format, t_args);
+            va_end(t_args);
+            
+            return t_success;
+        }
+        uindex_t MCStringGetLength(const MCStringRef string) const
+        {
+            return m_callback -> Callback_MCStringGetLength(string);
+        }
+        bool MCStringIsEmpty(MCStringRef string)
+        {
+            return m_callback -> Callback_MCStringIsEmpty(string);
+        }
+        bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options) const
+        {
+            return m_callback -> Callback_MCStringIsEqualTo(string, other, options);
+        }
+        bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options)
+        {
+            return m_callback -> Callback_MCStringIsEqualToCString(string, cstring, options);
+        }
+        bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset)
+        {
+            return m_callback -> Callback_MCStringLastIndexOfChar(string, needle, before, options, r_offset);
+        }
+        bool MCStringMutableCopy(MCStringRef string, MCStringRef& r_new_string) const
+        {
+            return m_callback -> Callback_MCStringMutableCopy(string, r_new_string);
+        }
+        bool MCStringPrepend(MCStringRef string, MCStringRef prefix) const
+        {
+            return m_callback -> Callback_MCStringPrepend(string, prefix);
+        }
+        bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options)
+        {
+            return m_callback -> Callback_MCStringSubstringIsEqualTo(string, range, p_other, p_options);
+        }
+        void MCValueRelease(MCValueRef value)
+        {
+            return m_callback -> Callback_MCValueRelease(value);
+        }
+        MCValueRef MCValueRetain(MCValueRef value) const
+        {
+            return m_callback -> Callback_MCValueRetain(value);
+        }
+        bool MCMemoryNewArray(uindex_t count, size_t size, void*& r_array, uindex_t& r_count)
+        {
+            return m_callback -> Callback_MCMemoryNewArray(count, size, r_array, r_count);
+        }
+        bool MCMemoryNewArray(uindex_t count, size_t size, void*& r_array)
+        {
+            return m_callback -> Callback_MCMemoryNewArray(count, size, r_array);
+        }
+        bool MCListCreateMutable(char_t delimiter, MCListRef& r_list)
+        {
+            return m_callback -> Callback_MCListCreateMutable(delimiter, r_list);
+        }
+        void MCMemoryDeleteArray(void *array)
+        {
+            return m_callback -> Callback_MCMemoryDeleteArray(array);
+        }
+        bool MCMemoryResizeArray(uindex_t new_count, size_t size, void*& x_array, uindex_t& x_count)
+        {
+            return m_callback -> Callback_MCMemoryResizeArray(new_count, size, x_array, x_count);
+        }
+        void __MCAssert(const char *file, uint32_t line, const char *message) const
+        {
+            return m_callback -> Callback___MCAssert(file, line, message);
+        }
+        void __MCUnreachable(void)
+        {
+            return m_callback -> Callback___MCUnreachable();
+        }
+        
+        template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array, uindex_t& r_count)
+        {
+            void *t_array;
+            if (m_callback -> Callback_MCMemoryNewArray(p_count, sizeof(T), t_array, r_count))
+                return r_array = static_cast<T *>(t_array), true;
+            return false;
+        }
+        
+        template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array)
+        {
+            void *t_array;
+            if (m_callback -> Callback_MCMemoryNewArray(p_count, sizeof(T), t_array))
+                return r_array = static_cast<T *>(t_array), true;
+            return false;
+        }
+        template<typename T> bool MCMemoryResizeArray(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
+        {
+            void *t_array;
+            t_array = x_array;
+            if (m_callback -> Callback_MCMemoryResizeArray(p_new_count, sizeof(T), t_array, x_count))
+            {
+                x_array = static_cast<T *>(t_array);
+                return true;
+            }
+            return false;
+        }
+        template<typename T> bool MCMemoryAllocate(size_t p_size, T*& r_block)
+        {
+            void *t_block;
+            if (m_callback -> Callback_MCMemoryAllocate(p_size, t_block))
+            {
+                r_block = static_cast<T *>(t_block);
+                return true;
+            }
+            return false;
+        }
+        template<typename T> bool MCMemoryNew(T*& r_record)
+        {
+            void *t_record;
+            if (MCMemoryNew(sizeof(T), t_record))
+            {
+                r_record = new (t_record) T;
+                return true;
+            }
+            return false;
+        }
+        template<typename T> T MCValueRetain(T value) const
+        {
+            return reinterpret_cast<T>(m_callback -> Callback_MCValueRetain((MCValueRef)value));
+        }
+        template<typename T> void MCValueAssign(T& dst, T src)
+        {
+            if (src == dst)
+                return;
+            
+            m_callback -> Callback_MCValueRetain(src);
+            m_callback -> Callback_MCValueRelease(dst);
+            dst = src;
+        }
+        template<typename T> bool MCMemoryReallocate(T *p_block, size_t p_new_size, T*& r_new_block)
+        {
+            void *t_new_block;
+            if (m_callback -> Callback_MCMemoryReallocate(p_block, p_new_size, t_new_block))
+            {
+                r_new_block = static_cast<T *>(t_new_block);
+                return true;
+            }
+            return false;
+        }
+        template<typename T> void MCMemoryDeleteArray(T* p_array)
+        {
+            m_callback -> Callback_MCMemoryDeleteArray(static_cast<void *>(p_array));
+        }
+        
+        // Array deleter that runs the destructor for each element
+        template <typename T>
+        void MCMemoryDeleteArray(T* p_array, uindex_t N)
+        {
+            // Run the destructor for each of the elements
+            for (size_t i = 0; i < N; i++)
+                p_array[i].~T();
+            
+            // Destroy the array
+            m_callback -> Callback_MCMemoryDeleteArray(static_cast<void *>(p_array));
+        }
     protected:
         MCPlatformCallbackRef m_callback = nil;
     };
@@ -1625,7 +1977,7 @@ struct MCPlatformWindowAttachment
 class MCPlatformWindow: public MCPlatform::CoreReference, public MCPlatform::Stubs
 {
 public:
-    MCPlatformWindow(void);
+    MCPlatformWindow(MCPlatformCoreRef p_platform);
     virtual ~MCPlatformWindow(void);
     
     // Returns true if the window is being shown.
@@ -2054,6 +2406,13 @@ namespace MCPlatform {
         // Apple platforms only
         virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
 #endif
+        
+        // Creates a new clipboard associated with the main system clipboard. Note
+        // that these are not kept synchronised - clipboards are only updated when
+        // the "synchronizeUpdates" method is called.
+        virtual MCRawClipboard* CreateSystemClipboard() = 0;
+        virtual MCRawClipboard* CreateSystemSelectionClipboard() = 0;
+        virtual MCRawClipboard* CreateSystemDragboard() = 0;
     };
     
 #ifdef PLATFORM_IS_MINIMAL
@@ -2164,6 +2523,7 @@ namespace MCPlatform {
         
         // Drag and drop
         virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation) = 0;
+        virtual bool ConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data) = 0;
         
         // Screens
         virtual void GetScreenCount(uindex_t& r_count) = 0;
@@ -2221,6 +2581,10 @@ namespace MCPlatform {
         // Apple platforms only
         virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
 #endif
+        
+        virtual MCRawClipboard* CreateSystemClipboard() = 0;
+        virtual MCRawClipboard* CreateSystemSelectionClipboard() = 0;
+        virtual MCRawClipboard* CreateSystemDragboard() = 0;
     };
     
 #ifndef PLATFORM_IS_MINIMAL
@@ -2231,6 +2595,1487 @@ namespace MCPlatform {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T> class MCPlatformAutoValueRefBase;
+
+template<typename T>
+T In(const MCPlatformAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . In();
+}
+
+template<typename T>
+T& Out(MCPlatformAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . Out();
+}
+
+template<typename T>
+T& InOut(MCPlatformAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . InOut();
+}
+
+template<typename T> class MCPlatformAutoValueRefBase :  public MCPlatform::Stubs
+{
+public:
+    
+    inline MCPlatformAutoValueRefBase(MCPlatformCallbackRef p_callback)
+    : m_value(nil)
+    {
+        m_callback = p_callback;
+    }
+    
+    inline MCPlatformAutoValueRefBase(const MCPlatformAutoValueRefBase& other) :
+    m_value(nil)
+    {
+        m_callback = other.m_callback;
+        Reset(other.m_value);
+    }
+    
+    MCPlatformAutoValueRefBase(MCPlatformAutoValueRefBase&& other)
+    : m_value(other.Take())
+    {
+        m_callback = other.m_callback;
+    }
+    
+    inline MCPlatformAutoValueRefBase(T p_value, MCPlatformCallbackRef p_callback)
+    : m_value(nil)
+    {
+        m_callback = p_callback;
+        
+        if (p_value)
+            m_value = MCValueRetain(p_value);
+    }
+    
+    inline ~MCPlatformAutoValueRefBase(void)
+    {
+        MCValueRelease(m_value);
+    }
+    
+    inline T operator = (T value)
+    {
+        MCAssert(m_value == nil);
+        m_value = (T)MCValueRetain(value);
+        return value;
+    }
+    
+    MCPlatformAutoValueRefBase& operator=(MCPlatformAutoValueRefBase&& other)
+    {
+        Give(other.Take());
+        return *this;
+    }
+    
+    inline T& operator & (void)
+    {
+        MCAssert(m_value == nil);
+        return m_value;
+    }
+    
+    inline T operator * (void) const
+    {
+        return m_value;
+    }
+    
+    bool IsSet() const
+    {
+        return m_value != nil;
+    }
+    
+    void Reset(T value = nil)
+    {
+        if (value == m_value)
+            return;
+        
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
+    // The give method places the given value into the container without
+    // retaining it - the auto container is considered to now own the value.
+    inline void Give(T value)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = value;
+    }
+    
+    // The take method removes the value from the container passing ownership
+    // to the caller.
+    inline T Take(void)
+    {
+        T t_value;
+        t_value = m_value;
+        m_value = nil;
+        return t_value;
+    }
+    
+    friend T In<>(const MCPlatformAutoValueRefBase<T>&);
+    friend T& Out<>(MCPlatformAutoValueRefBase<T>&);
+    friend T& InOut<>(MCPlatformAutoValueRefBase<T>&);
+    
+protected:
+    T m_value = nullptr;
+    
+    // Return the contents of the auto pointer in a form for an in parameter.
+    T In(void) const
+    {
+        return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an out parameter.
+    T& Out(void)
+    {
+        MCAssert(m_value == nil);
+        return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an inout parameter.
+    T& InOut(void)
+    {
+        return m_value;
+    }
+    
+private:
+    MCPlatformAutoValueRefBase<T>& operator = (MCPlatformAutoValueRefBase<T>& x);
+};
+
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)>
+class MCPlatformAutoMutableValueRefBase :
+public MCPlatformAutoValueRefBase<T>
+{
+public:
+    constexpr MCPlatformAutoMutableValueRefBase(MCPlatformCallbackRef p_callback) :
+    MCPlatformAutoValueRefBase<T>(p_callback)
+    {
+    }
+    
+    inline explicit MCPlatformAutoMutableValueRefBase(T p_value, MCPlatformCallbackRef p_callback) :
+    MCPlatformAutoValueRefBase<T>(p_value, p_callback)
+    {
+    }
+    
+    inline T operator = (T value)
+    {
+        return MCPlatformAutoValueRefBase<T>::operator =(value);
+    }
+    
+    inline bool MakeMutable(void)
+    {
+        return MutableCopyAndRelease(MCPlatformAutoValueRefBase<T>::m_value, MCPlatformAutoValueRefBase<T>::m_value);
+    }
+    
+    inline bool MakeImmutable(void)
+    {
+        return ImmutableCopyAndRelease(MCPlatformAutoValueRefBase<T>::m_value, MCPlatformAutoValueRefBase<T>::m_value);
+    }
+    
+private:
+    MCPlatformAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& operator = (MCPlatformAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& x);
+};
+
+typedef MCPlatformAutoValueRefBase<MCValueRef> MCPlatformAutoValueRef;
+typedef MCPlatformAutoValueRefBase<MCNumberRef> MCPlatformAutoNumberRef;
+typedef MCPlatformAutoMutableValueRefBase<MCStringRef, MCStringMutableCopyAndRelease, MCStringCopyAndRelease> MCPlatformAutoStringRef;
+typedef MCPlatformAutoMutableValueRefBase<MCArrayRef, MCArrayMutableCopyAndRelease, MCArrayCopyAndRelease> MCPlatformAutoArrayRef;
+typedef MCPlatformAutoValueRefBase<MCListRef> MCPlatformAutoListRef;
+typedef MCPlatformAutoValueRefBase<MCBooleanRef> MCPlatformAutoBooleanRef;
+typedef MCPlatformAutoMutableValueRefBase<MCSetRef, MCSetMutableCopyAndRelease, MCSetCopyAndRelease> MCPlatformAutoSetRef;
+typedef MCPlatformAutoValueRefBase<MCNameRef> MCPlatformNewAutoNameRef;
+typedef MCPlatformAutoMutableValueRefBase<MCDataRef, MCDataMutableCopyAndRelease, MCDataCopyAndRelease> MCPlatformAutoDataRef;
+typedef MCPlatformAutoValueRefBase<MCTypeInfoRef> MCPlatformAutoTypeInfoRef;
+typedef MCPlatformAutoMutableValueRefBase<MCRecordRef, MCRecordMutableCopyAndRelease, MCRecordCopyAndRelease> MCPlatformAutoRecordRef;
+typedef MCPlatformAutoValueRefBase<MCErrorRef> MCPlatformAutoErrorRef;
+typedef MCPlatformAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRelease, MCProperListCopyAndRelease> MCPlatformAutoProperListRef;
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T> class MCPlatformAutoValueRefArrayBase :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoValueRefArrayBase(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoValueRefArrayBase(void)
+    {
+        Reset();
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_values == nil);
+        return MCMemoryNewArray(p_size, m_values, m_value_count);
+    }
+    
+    //////////
+    
+    void Give(T* p_array, uindex_t p_size)
+    {
+        MCAssert(m_values == nil);
+        m_values = p_array;
+        m_value_count = p_size;
+    }
+    
+    void Take(T*& r_array, uindex_t& r_count)
+    {
+        r_array = m_values;
+        r_count = m_value_count;
+        
+        m_values = nil;
+        m_value_count = 0;
+    }
+    
+    /* Take the contents of the array as an immutable MCProperList.
+     * The contents of the array will no longer be accessible. */
+    bool TakeAsProperList (MCProperListRef& r_list)
+    {
+        MCProperListRef t_list;
+        if (!MCProperListCreateAndRelease ((MCValueRef *) m_values,
+                                           m_value_count,
+                                           t_list))
+            return false;
+        
+        m_values = nil;
+        m_value_count = 0;
+        
+        r_list = t_list;
+        return true;
+    }
+    
+    /* Reset the managed array by releasing all the values in the
+     * array and the underlying array storage. */
+    void Reset()
+    {
+        if (m_values != nil)
+        {
+            for (uindex_t i = 0; i < m_value_count; i++)
+                MCValueRelease(m_values[i]);
+            MCMemoryDeleteArray(m_values);
+        }
+    }
+    
+    //////////
+    
+    T* Ptr()
+    {
+        return m_values;
+    }
+    
+    uindex_t Size()
+    {
+        return m_value_count;
+    }
+    
+    T*& PtrRef()
+    {
+        MCAssert(m_values == nil);
+        return m_values;
+    }
+    
+    uindex_t& CountRef()
+    {
+        MCAssert(m_value_count == 0);
+        return m_value_count;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        return MCMemoryResizeArray(p_new_size, m_values, m_value_count);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_value_count);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_value_count);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool Append(MCPlatformAutoValueRefArrayBase<T> &p_array)
+    {
+        uindex_t t_index = Count();
+        if (!Extend(t_index + p_array.Count()))
+            return false;
+        
+        for (uindex_t i = 0; i < p_array.m_value_count; i++)
+            m_values[t_index + i] = MCValueRetain(p_array.m_values[i]);
+        
+        return true;
+    }
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_value_count + 1))
+            return false;
+        m_values[m_value_count - 1] = MCValueRetain(p_value);
+        return true;
+    }
+    
+    //////////
+    
+    uindex_t Count(void)
+    {
+        return m_value_count;
+    }
+    
+    //////////
+    
+    T* operator * (void) const
+    {
+        return m_values;
+    }
+    
+    T& operator [] (const uindex_t p_index)
+    {
+        MCAssert(m_values != nil);
+        return m_values[p_index];
+    }
+    
+    MCSpan<T> Span() const
+    {
+        return MCMakeSpan(m_values, m_value_count);
+    }
+    
+private:
+    T* m_values = nullptr;
+    uindex_t m_value_count = 0;
+};
+
+typedef MCPlatformAutoValueRefArrayBase<MCValueRef> MCPlatformAutoValueRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCNumberRef> MCPlatformAutoNumberRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCStringRef> MCPlatformAutoStringRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCDataRef> MCPlatformAutoDataRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCArrayRef> MCPlatformAutoArrayRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCListRef> MCPlatformAutoListRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCBooleanRef> MCPlatformAutoBooleanRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCSetRef> MCPlatformAutoSetRefArray;
+typedef MCPlatformAutoValueRefArrayBase<MCNameRef> MCPlatformAutoNameRefArray;
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsUTF16String :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsUTF16String(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringUnicodeCopy(p_string, &m_string);
+    }
+    void Unlock()
+    {
+        m_string.Reset();
+    }
+    const unichar_t *Ptr() const
+    {
+        MCAssert(!MCStringIsNative(*m_string));
+        return MCStringGetCharPtr(*m_string);
+    }
+    uindex_t Size() const
+    {
+        MCAssert(!MCStringIsNative(*m_string));
+        return MCStringGetLength(*m_string);
+    }
+    const unichar_t *operator*() const
+    {
+        return Ptr();
+    }
+private:
+    MCPlatformAutoStringRef m_string = nil;
+};
+
+typedef MCPlatformAutoStringRefAsUTF16String MCPlatformAutoStringRefAsWString;
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__WINDOWS__)
+typedef MCPlatformAutoStringRefAsUTF16String MCPlatformAutoStringRefAsLPCWSTR;
+
+/* Always ensures that its internal string buffer is always owned by
+ * the auto class, so that it's safe to pass to Windows API functions
+ * that take an LPWSTR rather than an LPCWSTR. */
+class MCPlatformAutoStringRefAsLPWSTR :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsLPWSTR(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoStringRefAsLPWSTR()
+    {
+        Unlock();
+    }
+    bool Lock(MCStringRef p_string)
+    {
+        MCAssert(nil == m_buffer);
+        m_size = MCStringGetLength(p_string);
+        return MCStringConvertToWString(p_string, m_buffer);
+    }
+    void Unlock()
+    {
+        MCMemoryDeleteArray(m_buffer);
+        m_buffer = nil;
+    }
+    unichar_t *Ptr()
+    {
+        MCAssert(nil != m_buffer);
+        return m_buffer;
+    }
+    uindex_t Size() const
+    {
+        MCAssert(nil != m_buffer);
+        return m_size;
+    }
+    unichar_t *operator*()
+    {
+        return Ptr();
+    }
+private:
+    unichar_t *m_buffer = nullptr;
+    uindex_t m_size = 0;
+};
+#endif /* __WINDOWS__ */
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsUTF8String :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsUTF8String(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoStringRefAsUTF8String(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToUTF8(p_string, m_utf8string, m_size);
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_utf8string);
+        m_utf8string = nil;
+    }
+    
+    const char *operator * (void) const
+    {
+        return m_utf8string;
+    }
+    
+    uindex_t Size()
+    {
+        return m_size;
+    }
+    
+private:
+    char *m_utf8string = nullptr;
+    uindex_t m_size = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__MAC__) || defined(__IOS__)
+#include <CoreFoundation/CoreFoundation.h>
+class MCPlatformAutoStringRefAsCFString :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsCFString(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoStringRefAsCFString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToCFStringRef(p_string, m_cfstring);
+    }
+    
+    void Unlock(void)
+    {
+        if (m_cfstring != nil)
+            CFRelease(m_cfstring);
+        m_cfstring = nil;
+    }
+    
+    CFStringRef operator * (void)
+    {
+        return m_cfstring;
+    }
+    
+private:
+    CFStringRef m_cfstring = nullptr;
+};
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsPascalString :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsPascalString(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoStringRefAsPascalString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        // A Pascal-style counted string can only contain a maximum of 255 chars
+        // so the string length has to be clamped to that.
+        uindex_t t_length = MCStringGetLength(p_string);
+        if (t_length > 255)
+            return false;
+        
+        // Allocate a buffer, adding an extra char for the count byte
+        MCMemoryNewArray(t_length + 1, m_pascal_string);
+        
+        // Copy the string to the buffer, leaving a byte at the beginning for
+        // the count.
+        MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), m_pascal_string+1);
+        
+        // Write the count byte
+        *m_pascal_string = uint8_t(t_length);
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_pascal_string);
+        m_pascal_string = nil;
+    }
+    
+    const unsigned char* operator * (void) const
+    {
+        return m_pascal_string;
+    }
+    
+private:
+    unsigned char *m_pascal_string = nullptr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsSysString :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsSysString(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+
+    ~MCPlatformAutoStringRefAsSysString()
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        MCAssert(m_bytes == nil);
+        return MCStringConvertToSysString(p_string, m_bytes, m_byte_count);
+    }
+    
+    void Unlock()
+    {
+        if (m_bytes != nil)
+        {
+            free(m_bytes);
+            m_bytes = nil;
+            m_byte_count = 0;
+        }
+    }
+    
+    const char *operator * () const
+    {
+        return Ptr();
+    }
+    
+    const char *Ptr(void) const
+    {
+        MCAssert(m_bytes != nil);
+        return m_bytes;
+    }
+    
+    size_t Size(void) const
+    {
+        return m_byte_count;
+    }
+    
+private:
+    char *m_bytes = nullptr;
+    size_t m_byte_count = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+#ifdef __WINDOWS__
+#include <WTypes.h>
+class MCPlatformAutoStringRefAsBSTR :  public MCPlatform::Stubs
+{
+public:
+    constexpr MCPlatformAutoStringRefAsBSTR(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoStringRefAsBSTR(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToBSTR(p_string, m_bstr);
+    }
+    
+    void Unlock(void)
+    {
+        SysFreeString(m_bstr);
+        m_bstr = nil;
+    }
+    
+    BSTR operator * (void)
+    {
+        return m_bstr;
+    }
+    
+private:
+    BSTR m_bstr = nullptr;
+};
+#endif // __WINDOWS__
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsNativeChars :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoStringRefAsNativeChars(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringNativeCopy(p_string, &m_string);
+    }
+    bool Lock(MCStringRef p_string,
+              const char_t * & r_buffer,
+              uindex_t & r_length)
+    {
+        if (!Lock(p_string))
+            return false;
+        r_buffer = MCStringGetNativeCharPtrAndLength(*m_string,
+                                                     r_length);
+        return true;
+    }
+    void Unlock()
+    {
+        m_string.Reset();
+    }
+    operator bool () const
+    {
+        return m_string.IsSet();
+    }
+    const char_t * operator*() const
+    {
+        MCAssert(MCStringIsNative(*m_string));
+        return MCStringGetNativeCharPtr(*m_string);
+    }
+    uindex_t Size() const
+    {
+        MCAssert(MCStringIsNative(*m_string));
+        uindex_t t_length;
+        (void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
+        return t_length;
+    }
+    MCSpan<const char_t> Span() const
+    {
+        return MCMakeSpan(operator*(), Size());
+    }
+private:
+    MCPlatformAutoStringRef m_string = nil;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoStringRefAsCString : public MCPlatformAutoStringRefAsNativeChars
+{
+public:
+    const char * operator* () const
+    {
+        return reinterpret_cast<const char *>(MCPlatformAutoStringRefAsNativeChars::operator*());
+    }
+    MCSpan<const char> Span() const
+    {
+        return MCMakeSpan(operator*(), Size());
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* This version of MCPlatformAutoPointer should be used when you need to
+ * manage a value created with the "new" operator.  For example:
+ *
+ *     MCPlatformAutoPointer<int> number;
+ *     number = new (nothrow) int;
+ */
+template<typename T> class MCPlatformAutoPointer :  public MCPlatform::Stubs
+{
+public:
+    typedef T* pointer;
+    
+    MCPlatformAutoPointer(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    constexpr MCPlatformAutoPointer(decltype(nullptr)) {}
+    
+    /* Construct the managed pointer using a specific value. */
+    MCPlatformAutoPointer(pointer p, MCPlatformCallbackRef p_callback) : m_ptr(p)
+    {
+        m_callback = p_callback;
+    }
+    
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCPlatformAutoPointer(MCPlatformAutoPointer&& other)
+    {
+        m_callback = other.m_callback;
+        m_ptr = other.Release();
+    }
+    
+    ~MCPlatformAutoPointer() { Reset(); }
+    
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete m_ptr;
+        m_ptr = value;
+    }
+    
+    /* Relinquish ownership of the managed pointer.  The MCPlatformAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+        pointer t_result = m_ptr;
+        m_ptr = nullptr;
+        return t_result;
+    }
+    
+    /* Test whether the MCPlatformAutoPointer has been set. */
+    operator bool() { return m_ptr != nullptr; }
+    
+    /* Return the pointer managed by the MCPlatformAutoPointer, or nullptr if
+     * there is no managed pointer. */
+    pointer Get() { return m_ptr; }
+    
+    MCPlatformAutoPointer& operator=(MCPlatformAutoPointer&& other)
+    {
+        Reset(other.Release());
+        return *this;
+    }
+    
+    T*& operator & (void)
+    {
+        MCAssert(m_ptr == nil);
+        return m_ptr;
+    }
+    
+    T* operator -> (void)
+    {
+        MCAssert(m_ptr != nil);
+        return m_ptr;
+    }
+    
+    T *operator * (void) const
+    {
+        return m_ptr;
+    }
+    
+    void Take(T*&r_ptr)
+    {
+        r_ptr = Release();
+    }
+    
+private:
+    T *m_ptr = nullptr;
+};
+
+/* This version of MCPlatformAutoPointer should be used when you need to
+ * manage a value created with the "new[]" operator.  For example:
+ *
+ *     MCPlatformAutoPointer<int[]> numbers;
+ *     numbers = new (nothrow) int[25];
+ */
+template<typename T> class MCPlatformAutoPointer<T[]> :  public MCPlatform::Stubs
+{
+public:
+    typedef T* pointer;
+    
+    MCPlatformAutoPointer(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    constexpr MCPlatformAutoPointer(decltype(nullptr)) {}
+    
+    /* Construct the managed pointer using a specific value. */
+    MCPlatformAutoPointer(pointer p, MCPlatformCallbackRef p_callback) : m_ptr(p)
+    {
+        m_callback = p_callback;
+    }
+    
+    /* Construct managed pointer by moving a pointer from another
+     * managed pointer of the same type. */
+    MCPlatformAutoPointer(MCPlatformAutoPointer&& other, MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+        m_ptr = other.Release();
+    }
+    
+    ~MCPlatformAutoPointer() { Reset(); }
+    
+    /* Destroy the managed pointer, and take ownership of the value
+     * provided.  Providing no value results in the managed pointer
+     * being cleared after calling Reset(). */
+    void Reset(pointer value = nullptr)
+    {
+        delete[] m_ptr;
+        m_ptr = value;
+    }
+    
+    /* Relinquish ownership of the managed pointer.  The MCPlatformAutoPointer is
+     * null after Release() is called. */
+    pointer Release() ATTRIBUTE_UNUSED
+    {
+    pointer t_result = m_ptr;
+    m_ptr = nullptr;
+    return t_result;
+}
+
+/* Test whether the MCPlatformAutoPointer has been set. */
+operator bool() { return m_ptr != nullptr; }
+
+/* Return the pointer managed by the MCPlatformAutoPointer, or nullptr if
+ * there is no managed pointer. */
+pointer Get() { return m_ptr; }
+
+MCPlatformAutoPointer& operator=(MCPlatformAutoPointer&& other)
+{
+    Reset(other.Release());
+    return *this;
+}
+
+T*& operator & (void)
+{
+    MCAssert(m_ptr != nil);
+    return m_ptr;
+}
+
+T* operator -> (void)
+{
+    MCAssert(m_ptr != nil);
+    return m_ptr;
+}
+
+T* operator * (void)
+{
+    return m_ptr;
+}
+
+void Take(T* & r_ptr)
+{
+    r_ptr = Release();
+}
+
+T& operator [] (size_t x)
+{
+    return m_ptr[x];
+}
+
+private:
+T *m_ptr = nullptr;
+};
+
+template <typename T, void (Deleter)(T*)>
+class MCPlatformAutoCustomPointer :  public MCPlatform::Stubs
+{
+public:
+    
+    typedef T* pointer;
+    
+    MCPlatformAutoCustomPointer(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+
+    MCPlatformAutoCustomPointer(T*&& take, MCPlatformCallbackRef p_callback) : m_ptr(take)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoCustomPointer()
+    {
+        Deleter(m_ptr);
+    }
+    
+    MCPlatformAutoCustomPointer& operator= (T*&& value)
+    {
+        Deleter(m_ptr);
+        m_ptr = value;
+        return *this;
+    }
+    
+    T*& operator& ()
+    {
+        MCAssert(m_ptr == nil);
+        return m_ptr;
+    }
+    
+    T* operator* () const
+    {
+        return m_ptr;
+    }
+    
+    T* operator -> (void)
+    {
+        MCAssert(m_ptr != nullptr);
+        return m_ptr;
+    }
+    
+    operator bool () const
+    {
+        return m_ptr != nil;
+    }
+    
+    void ReleaseTo(T*& r_ptr)
+    {
+        r_ptr = m_ptr;
+        m_ptr = nil;
+    }
+    
+    T* Release()
+    {
+        T* t_ptr = m_ptr;
+        m_ptr = nil;
+        return t_ptr;
+    }
+    
+private:
+    
+    T* m_ptr = nullptr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T> class MCPlatformAutoBlock :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoBlock(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+        m_ptr = nil;
+    }
+    
+    ~MCPlatformAutoBlock(void)
+    {
+        MCMemoryDeallocate(m_ptr);
+    }
+    
+    bool Allocate(size_t p_size)
+    {
+        MCAssert(m_ptr == nil);
+        return MCMemoryAllocate(p_size, m_ptr);
+    }
+    
+    bool Reallocate(size_t p_new_size)
+    {
+        return MCMemoryReallocate(p_new_size, m_ptr, m_ptr);
+    }
+    
+    void Deallocate(void)
+    {
+        MCMemoryDeallocate(m_ptr);
+        m_ptr = nil;
+    }
+    
+    T *operator * (void)
+    {
+        return m_ptr;
+    }
+    
+private:
+    T *m_ptr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T> class MCPlatformAutoArray :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoArray(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoArray(void)
+    {
+        MCMemoryDeleteArray(m_ptr);
+    }
+    
+    //////////
+    
+    T* Ptr()
+    {
+        return m_ptr;
+    }
+    
+    uindex_t Size() const
+    {
+        return m_size;
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_ptr == nil);
+        return MCMemoryNewArray(p_size, m_ptr, m_size);
+    }
+    
+    void Delete(void)
+    {
+        MCMemoryDeleteArray(m_ptr);
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        return MCMemoryResizeArray(p_new_size, m_ptr, m_size);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_size);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_size);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_size + 1))
+            return false;
+        m_ptr[m_size - 1] = p_value;
+        return true;
+    }
+    
+    //////////
+    
+    T*& PtrRef()
+    {
+        MCAssert(m_ptr == nil);
+        return m_ptr;
+    }
+    
+    uindex_t& SizeRef()
+    {
+        MCAssert(m_size == 0);
+        return m_size;
+    }
+    
+    //////////
+    
+    void Take(T*& r_array, uindex_t& r_count)
+    {
+        r_array = m_ptr;
+        r_count = m_size;
+        
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    T& operator [] (uindex_t p_index)
+    {
+        return m_ptr[p_index];
+    }
+    
+    const T& operator [] (uindex_t p_index) const
+    {
+        return m_ptr[p_index];
+    }
+    
+private:
+    T *m_ptr = nullptr;
+    uindex_t m_size = 0;
+};
+
+// Version of MCPlatformAutoArray that applies the provided deallocator to each element of the array when freed
+template <typename T, void (*FREE)(T)> class MCPlatformAutoCustomPointerArray :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoCustomPointerArray(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoCustomPointerArray(void)
+    {
+        FreeElements(MCRangeMake(0, m_size));
+        
+        MCMemoryDeleteArray(m_ptr);
+    }
+    
+    //////////
+    
+    T* Ptr()
+    {
+        return m_ptr;
+    }
+    
+    uindex_t Size() const
+    {
+        return m_size;
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_ptr == nil);
+        return MCMemoryNewArray(p_size, m_ptr, m_size);
+    }
+    
+    void Delete(void)
+    {
+        FreeElements(MCRangeMake(0, m_size));
+        
+        MCMemoryDeleteArray(m_ptr);
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        if (p_new_size < m_size)
+            FreeElements(MCRangeMake(p_new_size, m_size - p_new_size));
+        
+        return MCMemoryResizeArray(p_new_size, m_ptr, m_size);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_size);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_size);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_size + 1))
+            return false;
+        m_ptr[m_size - 1] = p_value;
+        return true;
+    }
+    
+    //////////
+    
+    T*& PtrRef()
+    {
+        MCAssert(m_ptr == nil);
+        return m_ptr;
+    }
+    
+    uindex_t& SizeRef()
+    {
+        MCAssert(m_size == 0);
+        return m_size;
+    }
+    
+    //////////
+    
+    void Take(T*& r_array, uindex_t& r_count)
+    {
+        r_array = m_ptr;
+        r_count = m_size;
+        
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    T& operator [] (uindex_t p_index)
+    {
+        return m_ptr[p_index];
+    }
+    
+    const T& operator [] (uindex_t p_index) const
+    {
+        return m_ptr[p_index];
+    }
+    
+private:
+    T *m_ptr = nullptr;
+    uindex_t m_size = 0;
+    
+    void FreeElements(const MCRange &p_elements)
+    {
+        uindex_t t_end;
+        t_end = (uindex_t)MCMin(m_size, p_elements.offset + p_elements.length);
+        
+        for (uindex_t i = p_elements.offset; i < t_end; i++)
+        {
+            if (m_ptr[i] != nil)
+            {
+                FREE(m_ptr[i]);
+                m_ptr[i] = nil;
+            }
+        }
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCPlatformAutoNativeCharArray :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoNativeCharArray(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoNativeCharArray(void)
+    {
+        if (m_chars != nil)
+            MCMemoryDeleteArray(m_chars);
+    }
+    
+    //////////
+    
+    char_t *Chars(void) const
+    {
+        return m_chars;
+    }
+    
+    size_t CharCount(void) const
+    {
+        return m_char_count;
+    }
+    
+    //////////
+    
+    void Give(char_t *p_chars, uindex_t p_char_count)
+    {
+        MCAssert(m_chars == nil);
+        m_chars = p_chars;
+        m_char_count = p_char_count;
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_chars == nil);
+        return MCMemoryNewArray(p_size, m_chars, m_char_count);
+    }
+    
+    void Delete(void)
+    {
+        MCMemoryDeleteArray(m_chars);
+        m_chars = nil;
+        m_char_count = 0;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        return MCMemoryResizeArray(p_new_size, m_chars, m_char_count);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_char_count);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_char_count);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool CreateString(MCStringRef& r_string)
+    {
+        return MCStringCreateWithNativeChars(m_chars, m_char_count, r_string);
+    }
+    
+    bool CreateStringAndRelease(MCStringRef& r_string)
+    {
+        if (MCStringCreateWithNativeChars(m_chars, m_char_count, r_string))
+        {
+            MCMemoryDeleteArray(m_chars);
+            m_chars = nil;
+            m_char_count = 0;
+            return true;
+        }
+        return false;
+    }
+    
+private:
+    char_t *m_chars = nullptr;
+    uindex_t m_char_count = 0;
+};
+
+class MCPlatformAutoByteArray :  public MCPlatform::Stubs
+{
+public:
+    MCPlatformAutoByteArray(MCPlatformCallbackRef p_callback)
+    {
+        m_callback = p_callback;
+    }
+    
+    ~MCPlatformAutoByteArray(void)
+    {
+        MCMemoryDeleteArray(m_bytes);
+    }
+    
+    //////////
+    
+    byte_t *Bytes(void) const
+    {
+        return m_bytes;
+    }
+    
+    size_t ByteCount(void) const
+    {
+        return m_byte_count;
+    }
+    
+    //////////
+    
+    void Give(byte_t *p_bytes, uindex_t p_byte_count)
+    {
+        MCAssert(m_bytes == nil);
+        m_bytes = p_bytes;
+        m_byte_count = p_byte_count;
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_bytes == nil);
+        return MCMemoryNewArray(p_size, m_bytes, m_byte_count);
+    }
+    
+    void Delete(void)
+    {
+        MCMemoryDeleteArray(m_bytes);
+        m_bytes = nil;
+        m_byte_count = 0;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        return MCMemoryResizeArray(p_new_size, m_bytes, m_byte_count);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_byte_count);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_byte_count);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool CreateData(MCDataRef& r_data)
+    {
+        return MCDataCreateWithBytes(m_bytes, m_byte_count, r_data);
+    }
+    
+    bool CreateDataAndRelease(MCDataRef& r_data)
+    {
+        if (MCDataCreateWithBytesAndRelease(m_bytes, m_byte_count, r_data))
+        {
+            m_bytes = nil;
+            m_byte_count = 0;
+            return true;
+        }
+        return false;
+    }
+    
+private:
+    char_t *m_bytes = nullptr;
+    uindex_t m_byte_count = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
 

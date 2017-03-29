@@ -512,6 +512,9 @@ private:
     void RenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend);
     void RenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
     void RenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, const MCGRaster &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
+    CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend);
+    bool MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& r_cgrect_count);
+    void ClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
@@ -529,7 +532,7 @@ private:
 class MCMacPlatformWindow: public MCPlatformWindow
 {
 public:
-	MCMacPlatformWindow(void);
+	MCMacPlatformWindow(MCPlatformCoreRef p_platform);
 	virtual ~MCMacPlatformWindow(void);
 
 	MCWindowView *GetView(void);
@@ -660,7 +663,7 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 class MCMacPlatformWindowMask: public MCPlatformWindowMask
 {
 public:
-    MCMacPlatformWindowMask(void);
+    MCMacPlatformWindowMask(MCPlatformCoreRef p_platform);
     virtual ~MCMacPlatformWindowMask(void);
     
     virtual bool IsValid(void) const;
@@ -679,11 +682,16 @@ private:
 class MCMacPlatformLoadedFont: public MCPlatformLoadedFont
 {
 public:
-    MCMacPlatformLoadedFont(void) = default;
+    MCMacPlatformLoadedFont(MCPlatformCoreRef p_platform) :
+        m_path(p_platform -> GetCallback())
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformLoadedFont(void);
     virtual bool CreateWithPath(MCStringRef p_path, bool p_globally);
 private:
-    MCAutoStringRef m_path;
+    MCPlatformAutoStringRef m_path;
     bool m_globally = false;
 };
 
@@ -692,7 +700,11 @@ private:
 class MCMacPlatformCursor: public MCPlatformCursor
 {
 public:
-    MCMacPlatformCursor(void) = default;
+    MCMacPlatformCursor(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformCursor(void);
     virtual void CreateStandard(MCPlatformStandardCursor p_standard_cursor);
     virtual void CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot);
@@ -709,7 +721,11 @@ private:
 class MCMacPlatformColorTransform: public MCPlatformColorTransform
 {
 public:
-    MCMacPlatformColorTransform(void) = default;
+    MCMacPlatformColorTransform(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformColorTransform(void);
     virtual bool Apply(MCImageBitmap *p_image);
     virtual bool CreateWithColorSpace(const MCColorSpaceInfo& p_info);
@@ -723,7 +739,11 @@ private:
 class MCMacPlatformPrintDialogSession: public MCPlatformPrintDialogSession
 {
 public:
-    constexpr MCMacPlatformPrintDialogSession(void) = default;
+    MCMacPlatformPrintDialogSession(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformPrintDialogSession(void);
     virtual void BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
     virtual void BeginSettings(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format);
@@ -803,7 +823,7 @@ struct __coreimage_visualeffect_t
 class MCMacPlatformCore: public MCPlatform::Core
 {
 public:
-    MCMacPlatformCore(void);
+    MCMacPlatformCore(MCPlatformCallbackRef p_callback);
     virtual ~MCMacPlatformCore(void);
     
     virtual int Run(int argc, char *argv[], char *envp[]);
@@ -878,6 +898,7 @@ public:
     virtual void BeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSavePanel *p_panel, MCStringRef p_folder, MCStringRef p_file);
     virtual MCPlatformDialogResult EndOpenSaveDialog(void);
     virtual bool FileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter);
+    virtual void FileFilterDestroy(MCFileFilter *self);
     
     // Print dialog
     virtual MCPlatformPrintDialogSessionRef CreatePrintDialogSession(void);
@@ -946,6 +967,7 @@ public:
     
     // Drag and drop
     virtual void DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation);
+    virtual bool ConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data);
     
     // Point translation
     virtual void SetHasDesktopHeight(bool p_has_desktop_height);
@@ -1040,10 +1062,36 @@ public:
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error);
     virtual void RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value);
     virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result);
+    
+    // Clipboard
+    virtual MCRawClipboard* CreateSystemClipboard();
+    virtual MCRawClipboard* CreateSystemSelectionClipboard();
+    virtual MCRawClipboard* CreateSystemDragboard();
 protected:
     // Sound
     void GetGlobalVolume(double& r_volume);
     void SetGlobalVolume(double p_volume);
+    
+    // Apple events
+    bool FetchAEAsFsrefList(const AppleEvent *p_aePtr, MCListRef &r_list);
+    OSStatus GetAddressFromDesc(AEAddressDesc targetDesc, char *address);
+    OSStatus GetAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
+    OSStatus GetAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
+    OSStatus GetDescFromAddress(MCStringRef address, AEDesc *retDesc);
+    OSStatus GetDesc(short locKind, MCStringRef zone, MCStringRef machine,
+                                        MCStringRef app, AEDesc *retDesc);
+    bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode& r_four_char_code);
+    bool FourCharCodeToStringRef(FourCharCode p_code, MCStringRef& r_string);
+    bool FsrefToPath(FSRef& p_ref, MCStringRef& r_path);
+
+    // Theme
+    NSFont* FontForControl(MCPlatformControlType p_type, MCPlatformControlState p_state, uint32_t p_majorosversion,  MCNameRef* r_name = nil);
+    void DoDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRef p_context, bool p_hidpi);
+    void DrawThemeButton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect, CFAbsoluteTime p_start_time, CFAbsoluteTime p_current_time);
+    void GetThemeButtonPartAndState(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR);
+
+    // Core image
+    coreimage_visualeffect_ref_t CoreImageVisualEffectCreate(NSString *p_name);
     
     uindex_t m_event_checking_enabled = 0;
     
@@ -1160,9 +1208,6 @@ protected:
     // IM-2013-08-29: [[ RefactorGraphics ]] Record surface height so we can transform image location to flipped context
     float m_g_current_height = 0.0f;
     
-    // Engine callbacks
-    MCPlatformCallbackRef m_callback = nil;
-    
     // Apple Events
     AEKeyword m_replykeyword = 0;   // Use in DoSpecial & other routines
     MCStringRef m_AEReplyMessage = nil;
@@ -1176,7 +1221,11 @@ protected:
 class MCMacPlatformSound: public MCPlatformSound
 {
 public:
-    constexpr MCMacPlatformSound(void) = default;
+    MCMacPlatformSound(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformSound(void);
     
     virtual bool IsValid(void) const;
@@ -1202,7 +1251,7 @@ private:
 class MCMacPlatformMenu: public MCPlatformMenu
 {
 public:
-    MCMacPlatformMenu(void);
+    MCMacPlatformMenu(MCPlatformCoreRef p_platform);
     virtual ~MCMacPlatformMenu(void);
     
     virtual void SetTitle(MCStringRef p_title);
@@ -1404,7 +1453,11 @@ sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)Jav
 class MCMacPlatformScriptEnvironment: public MCPlatformScriptEnvironment
 {
 public:
-    constexpr MCMacPlatformScriptEnvironment(void) = default;
+    MCMacPlatformScriptEnvironment(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     virtual ~MCMacPlatformScriptEnvironment(void);
     
     virtual bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
@@ -1414,6 +1467,8 @@ public:
     virtual char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
     
 private:
+    bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string);
+                                                                   
     struct Function
     {
         char *name;
@@ -1446,7 +1501,11 @@ private:
 class MCMacPlatformNativeLayer : public MCPlatformNativeLayer
 {
 public:
-    constexpr MCMacPlatformNativeLayer(void) = default;
+    MCMacPlatformNativeLayer(MCPlatformCoreRef p_platform)
+    {
+        m_platform = p_platform;
+        m_callback = p_platform -> GetCallback();
+    }
     ~MCMacPlatformNativeLayer(void);
     
     virtual bool GetNativeView(void *&r_view);

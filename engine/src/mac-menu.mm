@@ -468,8 +468,11 @@ void MCMacPlatformCore::UnlockMenuSelect(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-MCMacPlatformMenu::MCMacPlatformMenu(void)
+MCMacPlatformMenu::MCMacPlatformMenu(MCPlatformCoreRef p_platform)
 {
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
+    
     menu = [[MCMenuHandlingKeys alloc] initWithTitle: @""];
     menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: this];
     [menu setDelegate: menu_delegate];
@@ -535,7 +538,7 @@ void MCMacPlatformMenu::ClampMenuItemIndex(uindex_t& x_index)
 
 void MCMacPlatformMenu::SetTitle( MCStringRef p_title)
 {
-    MCAutoStringRefAsCFString t_cf_string;
+    MCPlatformAutoStringRefAsCFString t_cf_string(m_callback);
     /* UNCHECKED */ t_cf_string . Lock(p_title);
     [menu setTitle: (NSString*)*t_cf_string];
 }
@@ -647,7 +650,7 @@ void MCMacPlatformMenu::SetItemProperty(uindex_t p_index, MCPlatformMenuItemProp
 	NSMenuItem *t_item;
     t_item = [menu itemAtIndex: p_index];
     
-    MCAutoStringRefAsCFString t_cf_string;
+    MCPlatformAutoStringRefAsCFString t_cf_string(m_callback);
 	
 	switch(p_property)
 	{
@@ -1002,9 +1005,7 @@ MCPlatformMenuRef MCMacPlatformCore::GetMenubar(void)
 
 MCPlatformMenuRef MCMacPlatformCore::CreateMenu()
 {
-    MCPlatform::Ref<MCPlatformMenu> t_ref = MCPlatform::makeRef<MCMacPlatformMenu>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformMenu> t_ref = MCPlatform::makeRef<MCMacPlatformMenu>(this);
     
     return t_ref.unsafeTake();
 }

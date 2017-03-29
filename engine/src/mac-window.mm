@@ -1386,16 +1386,16 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
 {
+    MCMacPlatformWindow *t_window;
+    t_window = [self platformWindow];
     // Create a wrapper around the drag board for this operation if the drag
     // source is outside this instance of LiveCode.
     MCAutoRefcounted<MCMacRawClipboard> t_dragboard;
     if ([sender draggingSource] == nil)
-        t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
+        t_dragboard = new MCMacRawClipboard(t_window -> GetCallback(), [sender draggingPasteboard]);
     
 	NSDragOperation t_ns_operation;
 	
-	MCMacPlatformWindow *t_window;
-	t_window = [self platformWindow];
 	if (t_window != nil)
 	{
 		MCPlatformDragOperation t_operation;
@@ -1595,7 +1595,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		// IM-2014-09-30: [[ Bug 13501 ]] Prevent system event checking which can cause re-entrant calls to drawRect
 		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> DisableEventChecking();
         MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
-        t_surface . SetCallback(t_window -> GetCallback());
         t_window -> HandleRedraw(&t_surface, t_update_region);
 		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> EnableEventChecking();
     }
@@ -1678,9 +1677,10 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformWindow::MCMacPlatformWindow(void)
+MCMacPlatformWindow::MCMacPlatformWindow(MCPlatformCoreRef p_platform)
+: MCPlatformWindow(p_platform)
 {
-	m_delegate = nil;
+    m_delegate = nil;
 	m_view = nil;
     m_container_view = nil;
 	m_handle = nil;
@@ -2005,7 +2005,13 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? MCStringConvertToAutoreleasedNSString(m_title) : @""];
+    {
+        CFStringRef t_title = nil;
+        /* UNCHECKED */ MCStringConvertToCFStringRef(m_title, t_title);
+        
+		[m_window_handle setTitle: m_title != nil ? (NSString *) t_title : @""];
+        CFRelease(t_title);
+    }
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];
@@ -2174,7 +2180,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
-	MCGRegionIterate(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
+    MCGRegionIterate(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.
@@ -2278,18 +2284,20 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
 {
     MCStringRef t_native_filename;
     
-    NSString * t_represented_filename;
+    CFStringRef t_represented_filename;
     t_represented_filename = nil;
     
-    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
+    if (m_document_filename != nil && !MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
     {
-        t_represented_filename = MCStringConvertToAutoreleasedNSString(t_native_filename);
+        /* UNCHECKED */ MCStringConvertToCFStringRef(t_native_filename, t_represented_filename);
     }
     else
-        t_represented_filename = @"";
+        t_represented_filename = CFSTR("");
     
     // It appears setRepresentedFilename can't be set to nil
-    [m_window_handle setRepresentedFilename: t_represented_filename];
+    [m_window_handle setRepresentedFilename: (NSString *)t_represented_filename];
+    
+    CFRelease(t_represented_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2525,9 +2533,11 @@ static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image
 	return t_success;
 }
 
-MCMacPlatformWindowMask::MCMacPlatformWindowMask(void)
+MCMacPlatformWindowMask::MCMacPlatformWindowMask(MCPlatformCoreRef p_platform)
     : m_cg_mask(nullptr)
 {
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
     MCMemoryClear(m_mask);
 }
 
@@ -2561,18 +2571,14 @@ bool MCMacPlatformWindowMask::CreateWithAlphaAndRelease(int32_t p_width, int32_t
 
 MCPlatformWindowRef MCMacPlatformCore::CreateWindow()
 {
-    MCPlatform::Ref<MCPlatformWindow> t_ref = MCPlatform::makeRef<MCMacPlatformWindow>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformWindow> t_ref = MCPlatform::makeRef<MCMacPlatformWindow>(this);
     
     return t_ref.unsafeTake();
 }
 
 MCPlatformWindowMaskRef MCMacPlatformCore::CreateWindowMask()
 {
-    MCPlatform::Ref<MCPlatformWindowMask> t_ref = MCPlatform::makeRef<MCMacPlatformWindowMask>();
-    t_ref -> SetPlatform(this);
-    t_ref -> SetCallback(m_callback);
+    MCPlatform::Ref<MCPlatformWindowMask> t_ref = MCPlatform::makeRef<MCMacPlatformWindowMask>(this);
     
     return t_ref.unsafeTake();
 }

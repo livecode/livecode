@@ -855,10 +855,9 @@ inline MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPl
 
 inline bool MCPlatformInitialize(void)
 {
-    MCPlatform::CoreRef t_platform = MCPlatformCreateCore();
-    MCplatform = t_platform.unsafeTake();
     MCPlatform::Ref<MCPlatformCallback> t_callback = MCPlatform::makeRef<MCPlatformCallback>();
-    MCplatform -> SetCallback(t_callback.unsafeTake());
+    MCPlatform::CoreRef t_platform = MCPlatformCreateCore(t_callback.unsafeTake());
+    MCplatform = t_platform.unsafeTake();
     
     return true;
 }
