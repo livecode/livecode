@@ -703,6 +703,26 @@ bool MCHandler::getparamnames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+bool MCHandler::getparamnames_as_properlist(MCProperListRef& r_list)
+{
+	MCAutoProperListRef t_list;
+	if (!MCProperListCreateMutable(&t_list))
+		return false;
+	
+	for (uinteger_t i = 0; i < npnames; i++)
+		if (!MCProperListPushElementOntoBack(*t_list, pinfo[i].name))
+			return false;
+	
+	if (!t_list.MakeImmutable())
+	{
+		return false;
+	}
+	
+	r_list = t_list.Take();
+	
+	return true;
+}
+
 bool MCHandler::getvariablenames(MCListRef& r_list)
 {
 	MCAutoListRef t_list;
