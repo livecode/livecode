@@ -119,8 +119,8 @@ bool MCDateTimeInitialize()
 	g_basic_locale->time_formats[0] = MCSTR("!%#I:%M %p");
 	g_basic_locale->time_formats[1] = MCSTR("!%#I:%M:%S %p");
 	
-	g_basic_locale->time24_formats[0] = MCSTR("!%#H:%M");
-	g_basic_locale->time24_formats[1] = MCSTR("!%#H:%M:%S");
+	g_basic_locale->time24_formats[0] = MCSTR("!%H:%M");
+	g_basic_locale->time24_formats[1] = MCSTR("!%H:%M:%S");
 
 	g_basic_locale->time_morning_suffix = MCSTR("AM");
 	g_basic_locale->time_evening_suffix = MCSTR("PM");
