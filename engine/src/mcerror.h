@@ -46,6 +46,7 @@ public:
 	void append(MCError& string);
 	void copystringref(MCStringRef s, Boolean t);
 	bool copyasstringref(MCStringRef &r_string);
+	bool isthrown(void) const {return thrown;}
 	void clear();
 	Boolean isempty()
 	{
