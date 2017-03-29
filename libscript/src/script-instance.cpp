@@ -835,6 +835,9 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
                 return MCScriptThrowUnableToResolveForeignHandlerError(p_instance,
                                                                        p_handler);
             }
+            
+            MCErrorReset();
+            
 			*r_bound = false;
 			
 			return true;
