@@ -1573,11 +1573,11 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 	// object.
 	Exec_stat stat;
 	stat = ES_NOT_HANDLED;
-	if (!MCdynamicpath || MCdynamiccard->getparent() != this)
+	if (!MCdynamicpath || MCdynamiccard->getparent() == this)
 		stat = handleself(htype, message, params);
 	else if (passing_object != nil)
 	{
-		// MW-2011-06-20:  If dynamic path is enabled, and this stack is the parent
+		// MW-2011-06-20:  If dynamic path is enabled, and this stack is not the parent
 		//   of the dynamic card then instead of passing through this stack, we pass
 		//   through the dynamic card (which will then pass through this stack).
 		MCdynamicpath = False;
