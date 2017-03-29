@@ -2176,6 +2176,11 @@ end revAddExternal
 
 constant kSeparator = ":"
 private command revAddMapping pPlatform, pName, pLocation
+   -- The name comes in without 'db' in front of it for the existing database
+   -- drivers, but it needs to be 'db*'.
+   if pName is among the items of "sqlite,postgres,odbc,mysql,oracle" then
+      put "db" before pName
+   end if
    if sStandaloneSettingsA[pPlatform & ",library"] is not empty then put return after sStandaloneSettingsA[pPlatform & ",library"]
    put pName & kSeparator & "./" & pLocation after sStandaloneSettingsA[pPlatform & ",library"]
 end revAddMapping
