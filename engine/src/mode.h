@@ -32,6 +32,7 @@ enum
 	kMCModeEnvironmentTypePlayer,
 	kMCModeEnvironmentTypeServer,
 	kMCModeEnvironmentTypeMobile,
+    kMCModeEnvironmentTypeEmbedded,
 };
 
 
