@@ -79,4 +79,9 @@ struct MCLicenseParameters
 extern MCLicenseParameters MClicenseparameters;
 extern Boolean MCenvironmentactive;
 
+void MCLicenseSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
+void MCLicenseGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
+void MCLicenseGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info);
+void MCLicenseGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info);
+
 #endif
