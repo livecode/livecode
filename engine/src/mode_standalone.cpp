@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #if defined(_WINDOWS_DESKTOP)
 #include "prefix.h"
@@ -1367,3 +1368,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

@@ -276,9 +276,7 @@ static LT ask_table[] =
 
 LT command_table[] =
     {
-#if defined(MODE_DEVELOPMENT) || defined(MODE_INSTALLER) || defined(_TEST)
 		{"_internal", TT_STATEMENT, S_INTERNAL},
-#endif
         {"accept", TT_STATEMENT, S_ACCEPT},
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},

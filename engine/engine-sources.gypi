@@ -269,6 +269,7 @@
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
 			'src/imageloader.cpp',
+            'src/internal.cpp',
 			'src/ipng.cpp',
 			'src/iquantization.cpp',
 			'src/iquantize_new.cpp',
@@ -829,7 +830,6 @@
 			'src/deploy_windows.cpp',
 			'src/deploysecurity.cpp',
 			'src/ide.cpp',
-			'src/internal.cpp',
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
@@ -845,7 +845,6 @@
 		'engine_installer_mode_source_files':
 		[
 			'src/bsdiff_apply.cpp',
-			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.mm',
