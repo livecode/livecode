@@ -661,6 +661,15 @@ struct MCCallback
 static MCCallback *s_callbacks = nil;
 static uindex_t s_callback_count;
 
+static MCPlatformPreWaitForEventCallback s_pre_waitforevent_callback = nullptr;
+static MCPlatformPostWaitForEventCallback s_post_waitforevent_callback = nullptr;
+
+void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
+{
+    s_pre_waitforevent_callback = p_pre;
+    s_post_waitforevent_callback = p_post;
+}
+
 void MCPlatformBreakWait(void)
 {
     [s_callback_lock lock];
@@ -692,27 +701,27 @@ void MCPlatformBreakWait(void)
 	[t_pool release];
 }
 
-static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+void MCMacPlatformWaitEventObserverCallback(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
  	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
-static uindex_t s_event_checking_enabled = 0;
+static uindex_t s_event_checking_disabled = 0;
 
 void MCMacPlatformEnableEventChecking(void)
 {
-	s_event_checking_enabled += 1;
+	s_event_checking_disabled -= 1;
 }
 
 void MCMacPlatformDisableEventChecking(void)
 {
-	s_event_checking_enabled -= 1;
+	s_event_checking_disabled += 1;
 }
 
 bool MCMacPlatformIsEventCheckingEnabled(void)
 {
-	return s_event_checking_enabled == 0;
+	return s_event_checking_disabled == 0;
 }
 
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
@@ -720,6 +729,25 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (!MCMacPlatformIsEventCheckingEnabled())
 		return false;
 	
+    if (s_pre_waitforevent_callback != nullptr)
+    {
+        if (!s_pre_waitforevent_callback(p_duration, p_blocking))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        // Make sure we have our observer and install it. This is used when we are
+        // blocking and should break the event loop whenever a new event is added
+        // to the queue.
+        if (s_observer == nil)
+        {
+            s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, MCMacPlatformWaitEventObserverCallback, NULL);
+            CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+        }
+    }
+    
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
@@ -736,15 +764,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	MCMemoryDeleteArray(t_callbacks);
 	t_callbacks = nil;
 	t_callback_count = 0;
-	
-	// Make sure we have our observer and install it. This is used when we are
-	// blocking and should break the event loop whenever a new event is added
-	// to the queue.
-	if (s_observer == nil)
-	{
-		s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, NULL);
-		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
-	}
 	
 	s_in_blocking_wait = true;
 	
@@ -797,9 +816,24 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
 	[t_pool release];
 	
+    if (s_post_waitforevent_callback != nullptr)
+    {
+        return s_post_waitforevent_callback(t_event != nullptr);
+    }
+    
 	return t_event != nil;
 }
 
+void MCMacPlatformClearLastMouseEvent(void)
+{
+    if (s_last_mouse_event == nil)
+    {
+        return;
+    }
+    
+    [s_last_mouse_event release];
+    s_last_mouse_event = nil;
+}
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
