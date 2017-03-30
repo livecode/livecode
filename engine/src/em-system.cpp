@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcstring.h"
 #include "osspec.h"
+#include "globals.h"
 
 #include <fcntl.h>
 #include <dirent.h>
