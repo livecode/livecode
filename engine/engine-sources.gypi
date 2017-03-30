@@ -665,6 +665,7 @@
 			'src/windows-theme.cpp',
 			'src/w32-clipboard.h',
 			'src/w32-clipboard.cpp',
+			'src/w32-ds-player.cpp',
 			
 			# Group "Emscripten Platform"
 			'src/em-platform.h',
@@ -775,7 +776,6 @@
 			'src/w32icon.cpp',
 			'src/w32image.cpp',
 			'src/w32misc.cpp',
-			'src/w32-ds-player.cpp',
 			'src/w32prefix.cpp',
 			'src/w32printer.cpp',
 			'src/w32relaunch.cpp',
@@ -785,8 +785,7 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
-			'src/w32-core-compat.cpp',
-
+			
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',

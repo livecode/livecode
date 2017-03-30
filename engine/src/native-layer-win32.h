@@ -17,9 +17,9 @@
 #ifndef __MC_WIDGET_NATIVE__
 #define __MC_WIDGET_NATIVE__
 
-#include "native-layer.h"
+#include "prefix.h"
 
-#include <windows.h>
+#include "native-layer.h"
 
 class MCNativeLayerWin32 : public MCNativeLayer
 {

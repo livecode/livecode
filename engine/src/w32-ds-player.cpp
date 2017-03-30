@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <Windows.h>
+#include "prefix.h"
 #include <atlbase.h>
 #include <DShow.h>
 
@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics_util.h"
 #include "platform.h"
+#include "windows-platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -266,7 +267,7 @@ bool CreateEventWindow(MCWin32DSPlayer *p_player, HWND &r_window)
 		return false;
 
 	HWND t_window;
-	t_window = CreateWindow(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, MChInst, p_player);
+	t_window = CreateWindowA(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, MChInst, p_player);
 
 	if (t_window == nil)
 		return false;
@@ -281,7 +282,7 @@ bool CreateVideoWindow(MCWin32DSPlayer *p_player, HWND p_parent_hwnd, HWND &r_wi
 		return false;
 
 	HWND t_window;
-	t_window = CreateWindow(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, p_parent_hwnd, nil, MChInst, p_player);
+	t_window = CreateWindowA(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, p_parent_hwnd, nil, MChInst, p_player);
 
 	if (t_window == nil)
 		return false;
@@ -377,10 +378,12 @@ void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWin32DSPlayer::MCWin32DSPlayer(MCPlatformCoreRef p_platform) :
-    MCPlatformPlayer(p_platform)
+MCWin32DSPlayer::MCWin32DSPlayer(MCPlatformCoreRef p_platform)
 {
-	m_video_window = nil;
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
+    
+    m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
 	m_media_types = 0;
 	m_frame_length = 0;

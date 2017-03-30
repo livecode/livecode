@@ -17,7 +17,7 @@
 
 #include "prefix.h"
 #include "platform.h"
-#inclide "windows-platform.h"
+#include "windows-platform.h"
 
 #include "globdefs.h"
 #include "objdefs.h"

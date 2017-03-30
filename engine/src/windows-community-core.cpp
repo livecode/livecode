@@ -19,9 +19,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(void)
+MCPlatform::Ref<MCPlatformCore> MCPlatformCreateCore(MCPlatformCallbackRef p_callback)
 {
-    return MCPlatform::makeRef<MCWindowsPlatformCore>();
+    return MCPlatform::makeRef<MCWindowsPlatformCore>(p_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
