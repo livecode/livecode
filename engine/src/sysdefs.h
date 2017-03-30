@@ -119,6 +119,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION TYPES
+//
+
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-unicode.h>
+#include <foundation-bidi.h>
+
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  COMPILER AND CODE GENERATION DEFINES
 //
 
@@ -138,26 +159,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #error Unknown compiler being used.
 #endif
 
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION TYPES
-//
-
-#include <foundation.h>
-#include <foundation-auto.h>
-#include <foundation-unicode.h>
-#include <foundation-bidi.h>
-
-#ifdef __OBJC__
-#include <foundation-objc.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION SYSTEM LIBRARY
-//
-
-#include <foundation-system.h>
+// The engine is implemented assuming that 'bool' is at most one byte in size
+static_assert(sizeof(bool) <= 1, "Bool size is not at most 1 byte");
 
 //////////////////////////////////////////////////////////////////////
 //

@@ -665,6 +665,7 @@ __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 #define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
 
 #define __MCAssertIsErrorTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsError)
+#define __MCAssertIsForeignTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsForeign)
 
 ////////////////////////////////////////////////////////////////////////////////
 

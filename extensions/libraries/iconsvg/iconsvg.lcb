@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 This is an SVG icon path library.
 */
 
-library com.livecode.library.iconSVG
+library com.livecode.library.iconsvg
 
 use com.livecode.engine
 

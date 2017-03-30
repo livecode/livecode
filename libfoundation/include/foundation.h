@@ -580,12 +580,18 @@ typedef float32_t coord_t;
 // The 'char_t' type is used to hold a native encoded char.
 typedef unsigned char char_t;
 
-// The 'byte_t' type is used to hold a char in a binary string (native).
-typedef uint8_t byte_t;
+// The 'byte_t' type is used to hold a char in a binary string
+// (native).  This cannot be anything other than to be "unsigned char"
+// because we require the "sizeof" C++ operator to return sizes in
+// units of byte_t, and because we require it to be valid to cast to a
+// "byte_t*" in order to examine the object representation of a value.
+typedef unsigned char byte_t;
 
 // Constants used to represent the minimum and maximum values of a byte_t.
-#define BYTE_MIN UINT8_MIN
-#define BYTE_MAX UINT8_MAX
+// We require bytes to be 8 bits in size.
+static_assert(CHAR_BIT == 8, "Byte size is not 8 bits");
+#define BYTE_MIN (0)
+#define BYTE_MAX (255)
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
 // value).
@@ -978,7 +984,6 @@ template<> struct __MCStaticAssert<true> { };
 #define MCStaticAssert(expr)																						\
 enum { MC_CONCAT(__MCSA_,__LINE__) = sizeof(__MCStaticAssert<expr>) }
 #endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -3168,6 +3173,12 @@ MC_DLLEXPORT extern MCProperListRef kMCEmptyProperList;
 
 // Create an immutable list containing the given values.
 MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
+
+// Create an immutable list containing valuerefs built from a sequence of
+// raw values. The raw values should be sequential in memory, size(type) apart.
+// If the foreign type does not bridge (has no import method), then a boxed
+// foreign value is created (MCForeignValueRef).
+MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);

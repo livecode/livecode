@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "answer.h"
 #include "ask.h"
+#include "internal.h"
 
 #include "mode.h"
 
@@ -35,6 +36,8 @@ MCStatement *MCN_new_statement(int2 which)
 {
 	switch (which)
 	{
+    case S_INTERNAL:
+        return new MCInternal;
 	case S_ACCEPT:
 		return new MCAccept;
 	case S_ADD:

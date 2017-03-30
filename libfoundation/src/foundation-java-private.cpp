@@ -202,10 +202,10 @@ MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
 
 bool MCJavaPrivateErrorsInitialize()
 {
-    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodIdError"), MCNAME("java"), MCSTR("JNI exeception thrown when getting native method id"), kMCJavaNativeMethodIdErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodIdError"), MCNAME("java"), MCSTR("JNI exception thrown when getting native method id"), kMCJavaNativeMethodIdErrorTypeInfo))
         return false;
     
-    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodCallError"), MCNAME("java"), MCSTR("JNI exeception thrown when calling native method"), kMCJavaNativeMethodCallErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodCallError"), MCNAME("java"), MCSTR("JNI exception thrown when calling native method"), kMCJavaNativeMethodCallErrorTypeInfo))
         return false;
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature"), kMCJavaBindingStringSignatureErrorTypeInfo))
@@ -1289,7 +1289,9 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
     // exceptions
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
+#ifdef _DEBUG
         s_env -> ExceptionDescribe();
+#endif
         
         // Failure to clear the exception causes a crash when the JNI is
         // next used.
@@ -1440,7 +1442,9 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
     // exceptions
     if (s_env -> ExceptionCheck() == JNI_TRUE)
     {
+#ifdef _DEBUG
         s_env -> ExceptionDescribe();
+#endif
         
         // Failure to clear the exception causes a crash when the JNI is
         // next used.

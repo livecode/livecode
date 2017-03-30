@@ -1732,7 +1732,7 @@ void MCEngineGetSecurityCategories(MCExecContext& ctxt, intset_t& r_value)
 
 void MCEngineGetSecurityPermissions(MCExecContext& ctxt, intset_t& r_value)
 {
-	r_value = MCsecuremode;
+	r_value = ~MCsecuremode;
 }
 
 void MCEngineSetSecurityPermissions(MCExecContext& ctxt, intset_t p_value)

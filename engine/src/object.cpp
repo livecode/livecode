@@ -2354,10 +2354,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
         case P_ABBREV_ID:
             return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
             
-            // The stack object has its own version of long * which we check for here. We
-            // could make 'names()' virtual and do this that way, but since there shouldn't
-            // really be an exception to how id is formatted (and there won't be for any
-            // future object types) we handle it here.
+        // The stack object has its own version of long * which we check for here. We
+        // could make 'names()' virtual and do this that way, but since there shouldn't
+        // really be an exception to how id is formatted (and there won't be for any
+        // future object types) we handle it here.
+        case P_LONG_NAME_NO_FILENAME:
         case P_LONG_NAME:
         case P_LONG_ID:
             if (gettype() == CT_STACK)
@@ -2367,7 +2368,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
                 
                 MCStringRef t_filename;
                 t_filename = t_this -> getfilename();
-                if (MCStringIsEmpty(t_filename))
+                
+                /* If the property type is 'NO_FILENAME' then we resolve the name
+                 * of the mainstack, and not its filename. */
+                if (MCStringIsEmpty(t_filename) ||
+                    which == P_LONG_NAME_NO_FILENAME)
                 {
                     if (MCdispatcher->ismainstack(t_this))
                     {

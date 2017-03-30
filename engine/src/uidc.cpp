@@ -1322,6 +1322,16 @@ bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParame
     return true;
 }
 
+bool MCUIDC::hasmessagestodispatch(void)
+{
+    if (m_messages.GetCount() == 0)
+    {
+        return false;
+    }
+    
+    return m_messages[0].m_time <= MCS_time();
+}
+
 // MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
 //   of messages[] now being a sorted list.
 Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)

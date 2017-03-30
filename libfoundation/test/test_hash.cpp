@@ -93,21 +93,20 @@ TEST(hash, pointer)
 
 TEST(hash, bytes)
 {
-    const char k_zeros[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0};
-    const char k_order[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    const byte_t k_zeros[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0};
+    const byte_t k_order[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-    EXPECT_EQ(MCHashBytes(k_zeros, sizeof(k_zeros)), {0});
-    EXPECT_EQ(MCHashBytes(k_order, sizeof(k_order)), {107654892});
+    EXPECT_EQ(MCHashBytes(k_zeros), {0});
+    EXPECT_EQ(MCHashBytes(k_order), {107654892});
     /* Check that hashing isn't length-dependent */
     EXPECT_NE(MCHashBytes(k_order, sizeof(k_order) / 2),
-              MCHashBytes(k_order, sizeof(k_order)));
+              MCHashBytes(k_order));
 
     auto t_random_bytes_hash = [](hash_t& h) -> hash_t {
         MCAutoDataRef t_bytes;
         if (!MCSRandomData(256, &t_bytes))
             return false;
-        h = MCHashBytes(MCDataGetBytePtr(*t_bytes),
-                        MCDataGetLength(*t_bytes));
+        h = MCHashBytes(MCDataGetSpan<const byte_t>(*t_bytes));
         return true;
     };
     hash_t t_left, t_right;

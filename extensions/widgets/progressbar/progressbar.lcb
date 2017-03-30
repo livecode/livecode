@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.widget.progressBar
+widget com.livecode.widget.progressbar
 --
 
 -- adding metadata to ensure extension displays correctly in livecode

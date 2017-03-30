@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
-on  TestCombineStrings
+on TestCombineStrings
    local tArray, tKeyList, tKeys, tValues
    local tUncombinedData
    
@@ -36,10 +36,10 @@ on  TestCombineStrings
    sort lines of tUncombinedData by item 1 of each
    
    TestAssert "Combine strings", tUncombinedData is tArray
-end  TestCombineStrings
+end TestCombineStrings
 
 
-on  TestCombineNumbers
+on TestCombineNumbers
    local tArray, tKeyList
    local tUncombinedData
 
@@ -54,7 +54,7 @@ on  TestCombineNumbers
 end TestCombineNumbers
 
 
-on  TestCombineMixed
+on TestCombineMixed
    local tArray, tKeyList, tKeys, tValues
    local tUncombinedData
    
@@ -81,7 +81,7 @@ on  TestCombineMixed
 end TestCombineMixed
 
 
-on  test_arrayCombineByRow
+on TestArrayCombineByRow
    local tArray, tKeyList, tValues
    local tUncombinedData
    
@@ -93,16 +93,16 @@ on  test_arrayCombineByRow
    end repeat
    delete the last character of tUncombinedData
    
-   combine  tArray by row
+   combine tArray by row
    
    sort lines of tArray by item 1 of each
    sort lines of tUncombinedData by item 1 of each   
    
    TestAssert "Combine by row", tUncombinedData is tArray
-end  test_arrayCombineByRow
+end TestArrayCombineByRow
 
 
-on  test_arrayCombineByRow
+on TestArrayCombineByColumn
    local tArray, tKeyList, tValues
    local tUncombinedData
    
@@ -114,10 +114,10 @@ on  test_arrayCombineByRow
    end repeat
    delete the last character of tUncombinedData
    
-   combine  tArray by column
+   combine tArray by column
    
    sort lines of tArray by item 1 of each
    sort lines of tUncombinedData by item 1 of each   
    
    TestAssert "Combine by column", tUncombinedData is tArray
-end  test_arrayCombineByRow
+end TestArrayCombineByColumn

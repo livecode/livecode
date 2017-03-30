@@ -19,12 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 A widget to display icons for picking
 */
 
-widget com.livecode.widget.iconPicker
+widget com.livecode.widget.iconpicker
 
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 
 metadata author is "LiveCode"
 metadata version is "1.0.0"
