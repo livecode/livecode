@@ -6,108 +6,27 @@
 	],
 	
 	'targets':
-	[		
+	[
 		{
-			'target_name': 'kernel',
+			'target_name': 'libplatform',
 			'type': 'static_library',
-			
-			'dependencies':
-			[
-				'../libfoundation/libfoundation.gyp:libFoundation',
-				#'../libexternal/libexternal.gyp:libExternal',
-				'../libgraphics/libgraphics.gyp:libGraphics',
-				'../libscript/libscript.gyp:libScript',
-				
-				'../libbrowser/libbrowser.gyp:libbrowser',
-
-				'../thirdparty/libgif/libgif.gyp:libgif',
-				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../thirdparty/libpcre/libpcre.gyp:libpcre',
-				'../thirdparty/libpng/libpng.gyp:libpng',
-				'../thirdparty/libz/libz.gyp:libz',
-				
-				'../prebuilt/libopenssl.gyp:libopenssl_headers',
-
-				'engine-common.gyp:encode_version',
-				'engine-common.gyp:quicktime_stubs',
-				
-				'lcb-modules.gyp:engine_lcb_modules',
-				
-				'libplatform.gyp:libplatform',
-			],
 			
 			'include_dirs':
 			[
 				'include',
 				'src',
+				'../libgraphics/include',
+				'../libscript/include',
+				'../libfoundation/include',
 			],
 			
 			'sources':
 			[
-				'<@(engine_common_source_files)',
-				'<@(engine_desktop_source_files)',
-				'<@(engine_module_source_files)',
-				'<@(engine_java_source_files)',
+				'<@(engine_platform_source_files)',
 			],
 			
 			'conditions':
 			[
-				[
-					'OS == "linux"',
-					{
-						'include_dirs':
-						[
-							'../thirdparty/headers/linux/include/cairo',
-						],
-						
-						'defines':
-                        [
-                            # We use some features that are behind config macros in old versions of Pango
-                            'PANGO_ENABLE_BACKEND',
-                            'PANGO_ENABLE_ENGINE',
-						],
-					},
-				],
-				[
-					'OS == "android"',
-					{
-						'dependencies':
-						[
-							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
-							'../thirdparty/libskia/libskia.gyp:libskia',
-						],
-						
-						'sources!':
-						[
-							# Not yet supported on Android
-							'src/mblactivityindicator.cpp',
-							'src/mblcamera.cpp',
-						],
-										
-						# Force the entry point to be included in the output
-						'link_settings':
-						{
-							'ldflags':
-							[
-								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate'
-							],
-						},
-					},
-				],
-				[
-					'OS == "emscripten"',
-					{
-						'dependencies':
-						[
-							'../thirdparty/libskia/libskia.gyp:libskia',
-						],
-						'sources':
-						[
-							'<@(engine_minizip_source_files)',
-						],
-					},
-				],
 				[
 					'OS == "mac"',
 					{
@@ -118,7 +37,8 @@
 							# compile time rather than run time.
 							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
 						],
-					},
+                        # 'type': 'shared_library',
+    				},
 				],
 			],
 			
@@ -264,46 +184,6 @@
 					],
 				],
 			},
-		},
-		
-		{
-			'target_name': 'kernel-java',
-			'type': 'none',
-			
-			'conditions':
-			[
-				[
-					'OS == "android"',
-					{
-						'variables':
-						{
-							'java_classes_dir_name': 'classes_livecode_community',
-						},
-						
-						# Include the rules for compiling Java
-						'includes':
-						[
-							'../config/java.gypi',
-						],
-						
-						# A little indirection needed to get INTERMEDIATE_DIR escaped properly
-						'intermediate_dir_escaped': '<!(["sh", "-c", "echo $1 | sed -e $2", "echo", "<(INTERMEDIATE_DIR)", "s/\\\\$/\\\\\\$/g"])',
-	
-						'sources':
-						[
-							'<@(engine_aidl_source_files)',
-		
-							# Outputs from a rule don't get considered as
-							# inputs to another rule in Gyp, unfortunately
-							'<!@((for x in <@(engine_aidl_source_files); do echo "<(_intermediate_dir_escaped)/${x}"; done) | sed -e "s/\\.aidl$/\\.java/g")',
-		
-							# Some of the Java sources depend on the output
-							# from AIDL so they come last
-							'<@(engine_java_source_files)',
-						],
-					}
-				]
-			],
 		},
 	],
 }
