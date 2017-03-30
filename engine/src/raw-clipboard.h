@@ -232,7 +232,7 @@ public:
     
     // Fetches the representation (if any) identified by the representation's
     // type string. No ownership of the representation is transferred.
-    const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
+    virtual const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
     
     // Adds a representation for this clipboard item. On systems that use atoms
     // to store clipboard format strings, an atom will be automatically
