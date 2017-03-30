@@ -217,6 +217,8 @@
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
+				
+				'libplatform.gyp:libplatform',
 			],
 			
 			'sources':
@@ -276,6 +278,7 @@
 			[
 				'kernel-standalone.gyp:kernel-standalone',
 				'engine-common.gyp:security-community',
+				'libplatform.gyp:libplatform',
 			],
 			
 			'sources':
@@ -593,6 +596,7 @@
 			[
 				'kernel-installer.gyp:kernel-installer',
 				'engine-common.gyp:security-community',
+				'libplatform.gyp:libplatform',
 			],
 			
 			'sources':
@@ -684,6 +688,7 @@
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
 				'extract_docs',
+				'libplatform.gyp:libplatform',
 			],
 			
 			'sources':

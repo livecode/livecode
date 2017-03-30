@@ -74,7 +74,6 @@
 				'<@(engine_common_source_files)',
 				'<@(engine_server_source_files)',
 				'<@(engine_module_source_files)',
-				'<@(engine_platform_source_files)',
 			],
 			
 			'sources!':

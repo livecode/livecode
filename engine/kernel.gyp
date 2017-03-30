@@ -33,8 +33,6 @@
 				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
-				
-				'libplatform.gyp:libplatform',
 			],
 			
 			'include_dirs':
