@@ -127,6 +127,7 @@
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
+            'src/license.cpp',
 			'src/mcerror.h',
 			'src/mcio.h',
 			'src/mcssl.h',

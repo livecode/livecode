@@ -225,16 +225,11 @@ bool MCModeHasHomeStack(void);
 // Property getters & setters
 
 #ifdef MODE_DEVELOPMENT
-void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
-void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
 void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings);
 void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings);
-void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info);
-void MCModeGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info);
 void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners);
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time);
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time);
-
 #endif
 
 // IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.

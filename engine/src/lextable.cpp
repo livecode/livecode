@@ -1463,14 +1463,12 @@ LT factor_table[] =
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif
-#ifdef MODE_DEVELOPMENT
 		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
+#if defined(MODE_DEVELOPMENT)
 #ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-09-05: [[ Property Listener ]] Returns the list of all active object property listeners
 		{"revobjectlisteners", TT_PROPERTY, P_REV_OBJECT_LISTENERS},
-#endif
-#ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-11-06: [[ Property Listener ]] Minimum number of milliseconds between propertyChanged messages.
 		{"revpropertylistenerthrottle", TT_PROPERTY, P_REV_PROPERTY_LISTENER_THROTTLE_TIME},
 #endif
