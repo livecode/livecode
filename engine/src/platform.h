@@ -1318,7 +1318,7 @@ namespace MCPlatform {
         
         void SendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint)
         {
-            m_callback -> Callback_SendKeyDown(window, key_code, mapped_codepoint, unmapped_codepoint);
+            m_callback -> Callback_SendKeyUp(window, key_code, mapped_codepoint, unmapped_codepoint);
         }
         
         void SendTextInputQueryTextRanges(MCPlatformWindowRef window, MCRange& r_marked_range, MCRange& r_selected_range)
