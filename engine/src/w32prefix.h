@@ -47,3 +47,5 @@ extern HINSTANCE MChInst;
 #undef GetCurrentTime
 // Undef GetObject because GetObjectW was called instead of MCExecContext::GetObject()
 #undef GetObject
+
+#undef CreateWindow
