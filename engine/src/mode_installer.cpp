@@ -1602,14 +1602,6 @@ bool MCModeCanLoadHome(void)
 
 MCStatement *MCModeNewCommand(int2 which)
 {
-	switch(which)
-	{
-	case S_INTERNAL:
-		return new MCInternal;
-	default:
-		break;
-	}
-
 	return NULL;
 }
 

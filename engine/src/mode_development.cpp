@@ -678,8 +678,6 @@ MCStatement *MCModeNewCommand(int2 which)
 {
 	switch(which)
 	{
-	case S_INTERNAL:
-		return new MCInternal;
 	case S_REV_RELICENSE:
 		return new MCRevRelicense;
 	default:
