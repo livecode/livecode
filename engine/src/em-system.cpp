@@ -1114,7 +1114,7 @@ MCEmscriptenSystem::LaunchDocument(MCStringRef p_document)
 void
 MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 {
-	/* Successfully do nothing */
+	MCresult -> sets("no association");
 }
 
 void

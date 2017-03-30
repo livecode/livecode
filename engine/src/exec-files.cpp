@@ -827,7 +827,13 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
         t_new_url = p_url;
 
     if (ctxt . EnsureProcessIsAllowed())
+	{
+		// MCS_launch_url will set the result on failure, so we clear here to
+		// make sure it is empty if it succeeds.
+		ctxt.SetTheResultToEmpty();
+		
         MCS_launch_url(*t_new_url);
+	}
     else
         ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
