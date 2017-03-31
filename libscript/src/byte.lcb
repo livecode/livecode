@@ -432,6 +432,37 @@ begin
 	MCDataExecRandomBytes(Count, output)
 end syntax
 
+--
+
+public foreign handler MCDataExecReverseBytesOf(inout Target as Data) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse binary data
+Target:	A binary data string
+
+Example:
+	variable tForward
+	put 5 random bytes into tForward
+
+	variable tReversed
+	put tForward into tReversed
+	reverse tReversed
+
+	expect that the first byte of tForward is the last byte of tReversed
+	expect that the last byte of tForward is the first byte of tReversed
+
+Description:
+Reverses the order of bytes in the <Target>.
+
+Tags: Binary
+*/
+syntax ReverseBytesOf is statement
+	"reverse" <Target: Expression>
+begin
+	MCDataExecReverseBytesOf(Target)
+end syntax
+
 ----------------------------------------------------------------
 -- Conversion between bytes and numbers
 ----------------------------------------------------------------
