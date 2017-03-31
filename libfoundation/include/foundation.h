@@ -2651,6 +2651,8 @@ MC_DLLEXPORT bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 MC_DLLEXPORT bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 MC_DLLEXPORT bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
+MC_DLLEXPORT bool MCDataReverse(MCDataRef);
+
 MC_DLLEXPORT bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 MC_DLLEXPORT bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
