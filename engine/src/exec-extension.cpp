@@ -471,6 +471,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             
             if (!MCExtensionConvertFromScriptType(*MCECptr, t_arg_type, t_value))
             {
+                MCECptr->LegacyThrow(EE_INVOKE_TYPEERROR);
                 MCValueRelease(t_value);
                 t_success = false;
                 break;
@@ -489,13 +490,6 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         }
         
         t_param = t_param -> getnext();
-    }
-	
-    // If the above looped failed with t_success == false, then a type
-    // conversion error occurred.
-    if (!t_success)
-    {
-        MCECptr->LegacyThrow(EE_INVOKE_TYPEERROR);
     }
     
 	// Too many parameters error.

@@ -184,14 +184,24 @@ on TestAssertBroken pDescription, pExpectTrue, pReasonBroken
    _TestOutput pExpectTrue, pDescription, "TODO", pReasonBroken
 end TestAssertBroken
 
-on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode, pParam
+on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
    local tError
    try
       dispatch pHandler to pTarget with pParam
-    catch tError
-    end try
+   catch tError
+   end try
 
-    TestAssert pDescription, pErrorCode is item 1 of line 1 of tError
+   TestDiagnostic tError
+
+   local tSuccess
+   put true into tSuccess
+   repeat for each item tErrorCode in pErrorCodes
+      put tSuccess and \
+             (tErrorCode is item 1 of the first line of tError) into tSuccess
+      delete the first line of tError
+   end repeat
+
+   TestAssert pDescription, tSuccess
 end TestAssertThrow
 
 on ErrorDialog executionError, parseError
