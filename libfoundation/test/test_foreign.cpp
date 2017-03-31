@@ -147,37 +147,48 @@ void check_integral_raw_import_overflow(MCTypeInfoRef p_type_info, MCTypeInfoRef
 
 /* Bool Type Tests */
 
-TEST(foreign, Bool)
+static void
+test_bool_type(MCTypeInfoRef p_type, const char *p_false, const char *p_true)
 {
     /* Check Copy */
-    check_creation<bool>(kMCBoolTypeInfo, false);
-    check_creation<bool>(kMCBoolTypeInfo, true);
+    check_creation<bool>(p_type, false);
+    check_creation<bool>(p_type, true);
 
     /* Check Equality */
-    check_equality<bool>(kMCBoolTypeInfo, false, false, true);
-    check_equality<bool>(kMCBoolTypeInfo, true, true, true);
-    check_equality<bool>(kMCBoolTypeInfo, false, true, false);
-    check_equality<bool>(kMCBoolTypeInfo, true, false, false);
+    check_equality<bool>(p_type, false, false, true);
+    check_equality<bool>(p_type, true, true, true);
+    check_equality<bool>(p_type, false, true, false);
+    check_equality<bool>(p_type, true, false, false);
 
     /* Check Hash */
-    check_hash<bool>(kMCBoolTypeInfo, false, MCHashBool);
-    check_hash<bool>(kMCBoolTypeInfo, true, MCHashBool);
+    check_hash<bool>(p_type, false, MCHashBool);
+    check_hash<bool>(p_type, true, MCHashBool);
 
     /* Check describe */
-    check_describe<bool>(kMCBoolTypeInfo, false, "<foreign false>");
-    check_describe<bool>(kMCBoolTypeInfo, true, "<foreign true>");
+    check_describe<bool>(p_type, false,p_false);
+    check_describe<bool>(p_type, true, p_true);
     
     /* Check export (via api) - from Boolean */
-    check_export<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, false);
-    check_export<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, true);
+    check_export<bool>(p_type, MCBooleanCreateWithBool, false);
+    check_export<bool>(p_type, MCBooleanCreateWithBool, true);
     
     /* Check export (direct) - from Boolean */
-    check_export_raw<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, false);
-    check_export_raw<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, true);
+    check_export_raw<bool>(p_type, MCBooleanCreateWithBool, false);
+    check_export_raw<bool>(p_type, MCBooleanCreateWithBool, true);
     
     /* Check import (direct) - to Boolean */
-    check_import_raw<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, false);
-    check_import_raw<bool>(kMCBoolTypeInfo, MCBooleanCreateWithBool, true);
+    check_import_raw<bool>(p_type, MCBooleanCreateWithBool, false);
+    check_import_raw<bool>(p_type, MCBooleanCreateWithBool, true);
+}
+
+TEST(foreign, Bool)
+{
+    test_bool_type(kMCBoolTypeInfo, "<foreign bool false>", "<foreign bool true>");
+}
+
+TEST(foreign, CBool)
+{
+    test_bool_type(kMCCBoolTypeInfo, "<foreign c bool false>", "<foreign c bool true>");
 }
 
 /* Pointer Type Tests */
@@ -377,20 +388,31 @@ void test_integral(MCTypeInfoRef p_type_info, const char *p_format)
 }
 
 TEST_INTEGRAL(UInt8, uint8_t, "8-bit unsigned integer %u")
-TEST_INTEGRAL(Int8, int8_t, "8-bit integer %d")
+TEST_INTEGRAL(SInt8, int8_t, "8-bit signed integer %d")
 TEST_INTEGRAL(UInt16, uint16_t, "16-bit unsigned integer %u")
-TEST_INTEGRAL(Int16, int16_t, "16-bit integer %d")
+TEST_INTEGRAL(SInt16, int16_t, "16-bit signed integer %d")
 TEST_INTEGRAL(UInt32, uint32_t, "32-bit unsigned integer %u")
-TEST_INTEGRAL(Int32, int32_t, "32-bit integer %d")
+TEST_INTEGRAL(SInt32, int32_t, "32-bit signed integer %d")
 TEST_INTEGRAL(UInt64, uint64_t, "64-bit unsigned integer %llu")
-TEST_INTEGRAL(Int64, int64_t, "64-bit integer %lld")
+TEST_INTEGRAL(SInt64, int64_t, "64-bit signed integer %lld")
 
-TEST_INTEGRAL(Size, size_t, "size %zu")
-TEST_INTEGRAL(SSize, ssize_t, "signed size %zd")
+TEST_INTEGRAL(UIntSize, size_t, "unsigned size %zu")
+TEST_INTEGRAL(SIntSize, ssize_t, "signed size %zd")
+TEST_INTEGRAL(UIntPtr, uintptr_t, "unsigned intptr %zu")
+TEST_INTEGRAL(SIntPtr, intptr_t, "signed intptr %zd")
 
-TEST_INTEGRAL(CULong, unsigned long, "unsigned long integer %llu")
-TEST_INTEGRAL(CLong, long, "long integer %ld")
+TEST_INTEGRAL(CChar, char, "c char '%c'");
+TEST_INTEGRAL(CUChar, unsigned char, "c unsigned char %u")
+TEST_INTEGRAL(CSChar, signed char, "c signed char %d")
+TEST_INTEGRAL(CUShort, unsigned short, "c unsigned short %u")
+TEST_INTEGRAL(CSShort, signed short, "c signed short %d")
+TEST_INTEGRAL(CUInt, unsigned int, "c unsigned int %u")
+TEST_INTEGRAL(CSInt, signed int, "c signed int %d")
+TEST_INTEGRAL(CULong, unsigned long, "c unsigned long %lu")
+TEST_INTEGRAL(CSLong, signed long, "c signed long %ld")
+TEST_INTEGRAL(CULongLong, unsigned long long, "c unsigned long long %llu")
+TEST_INTEGRAL(CSLongLong, signed long long, "c signed long long %ld")
 
 TEST_INTEGRAL(UInt, uinteger_t, "unsigned integer %u")
-TEST_INTEGRAL(Int, integer_t, "integer %d")
+TEST_INTEGRAL(SInt, integer_t, "signed integer %d")
 

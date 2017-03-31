@@ -34,7 +34,7 @@ module com.livecode.java
 
 use com.livecode.foreign
 
-public type JBoolean is CBool
+public type JBoolean is Bool
 public type JByte is Int8
 public type JShort is Int16
 public type JInt is Int32
