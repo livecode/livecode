@@ -3221,6 +3221,8 @@ MC_DLLEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCPrope
 typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
 MC_DLLEXPORT bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
 
+MC_DLLEXPORT bool MCProperListReverse(MCProperListRef list);
+
 // Fetch the first element of the list. The returned value is not retained.
 MC_DLLEXPORT MCValueRef MCProperListFetchHead(MCProperListRef list);
 MC_DLLEXPORT // Fetch the last element of the list. The returned value is not retained.
