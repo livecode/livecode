@@ -17,9 +17,7 @@
 #ifndef __MC_PLATFORM__
 #define __MC_PLATFORM__
 
-#ifndef __MC_GLOBDEFS__
-#include "globdefs.h"
-#endif
+#include "prefix.h"
 
 #define MC_PLATFORM_INSIDE
 #include "platform-base.h"
@@ -86,6 +84,7 @@ enum MCPlatformGlobalProperty
     kMCPlatformGlobalPropertyDragDelta,
     kMCPlatformGlobalPropertyMajorOSVersion,
     kMCPlatformGlobalPropertyAppIsActive,
+    kMCPlatformGlobalPropertyHINSTANCE,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -961,7 +960,7 @@ namespace MCPlatform
     class Callback: public Base
     {
     public:
-        constexpr Callback() = default;
+        Callback() = default;
         ~Callback() {}
         
         virtual bool Callback_GetGlobalProperty(MCPlatformGlobalProperty p_property, MCPlatformPropertyType p_type, void *r_value);
@@ -1139,6 +1138,8 @@ namespace MCPlatform
         virtual bool Callback_MCMemoryResizeArray(uindex_t new_count, size_t size, void*& x_array, uindex_t& x_count);
         virtual void Callback___MCAssert(const char *file, uint32_t line, const char *message);
         virtual void Callback___MCUnreachable(void);
+        virtual bool Callback_MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi);
+
  };
     
     typedef Ref<Callback> CallbackRef;
@@ -1835,7 +1836,11 @@ namespace MCPlatform {
         {
             return m_callback -> Callback___MCUnreachable();
         }
-        
+        bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
+        {
+            return m_callback -> Callback_MCWin32GetScreenDPI(r_xdpi, r_ydpi);
+        }
+
         template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array, uindex_t& r_count)
         {
             void *t_array;
@@ -1933,7 +1938,7 @@ namespace MCPlatform {
     class WindowMask: public CoreReference, public Stubs
     {
     public:
-        constexpr WindowMask(void) = default;
+        WindowMask(void) = default;
         virtual ~WindowMask(void) {}
         
         virtual bool IsValid(void) const = 0;
@@ -2274,7 +2279,7 @@ namespace MCPlatform {
 class MCPlatformPlayer: public MCPlatform::CoreReference, public MCPlatform::Stubs
 {
 public:
-    constexpr MCPlatformPlayer(void) = default;
+    MCPlatformPlayer(void) = default;
     virtual ~MCPlatformPlayer(void) {};
     
     virtual bool GetNativeView(void *&r_view) = 0;

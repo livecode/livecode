@@ -128,6 +128,13 @@ namespace MCPlatform {
             case kMCPlatformGlobalPropertyAppIsActive:
                 *(bool *)r_value = MCappisactive;
                 break;
+            case kMCPlatformGlobalPropertyHINSTANCE:
+#if defined(_WINDOWS)
+                *(HINSTANCE*)r_value = MChInst;
+                break;
+#endif
+            default:
+                return false;
         }
         
         return true;
@@ -1024,6 +1031,14 @@ namespace MCPlatform {
 #if defined(DEBUG_LOG)
         __MCUnreachable();
 #endif
+    }
+    bool Callback::Callback_MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
+    {
+#if defined(_WINDOWS)
+        extern bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi);
+        return MCWin32GetScreenDPI(r_xdpi, r_ydpi);
+#endif
+        return false;
     }
 }  /* namespace MCPlatform */
 

@@ -29,8 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern HINSTANCE MChInst;
-
 void MCWin32BSTRFree(BSTR p_str) { SysFreeString(p_str); }
 
 #define kMCDSEventWindowClass "DSEVENTWINDOWCLASS"
@@ -135,6 +133,11 @@ private:
 	bool OpenFile(MCStringRef p_filename);
 	void CloseFile();
 
+	bool CreateVideoWindow(HWND p_parent_hwnd, HWND &r_window);
+	bool CreateEventWindow(HWND &r_window);
+	bool RegisterVideoWindowClass();
+	bool RegisterEventWindowClass();
+
 	MCWin32DSPlayerState m_state;
 	bool m_is_valid;
 	HWND m_video_window;
@@ -193,18 +196,22 @@ LRESULT CALLBACK DSHiddenWindowProc (HWND hWnd, UINT message, WPARAM wParam, LPA
 	
 }
 
-bool RegisterEventWindowClass()
+bool  MCWin32DSPlayer::RegisterEventWindowClass()
 {
 	WNDCLASS	wc={0};
 	static bool windowclassregistered = false;
-	if (!windowclassregistered) 
+	
+    HINSTANCE t_hinst;
+    GetGlobalProperty(kMCPlatformGlobalPropertyHINSTANCE, kMCPlatformPropertyTypePointer, &t_hinst);
+    
+    if (!windowclassregistered)
 	{
 		// Register the Monitor child window class
 		wc.style         = CS_HREDRAW|CS_VREDRAW|CS_OWNDC|CS_SAVEBITS;
 		wc.lpfnWndProc   = DSHiddenWindowProc;
 		wc.cbClsExtra    = 0;
 		wc.cbWndExtra    = 0;
-		wc.hInstance     = MChInst;
+		wc.hInstance     = t_hinst;
 		wc.hIcon         = LoadIcon(0, IDI_APPLICATION);
 		wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -239,11 +246,14 @@ LRESULT CALLBACK DSVideoWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 	
 }
 
-bool RegisterVideoWindowClass()
+bool  MCWin32DSPlayer::RegisterVideoWindowClass()
 {
 	static bool s_registered = false;
 
-	if (!s_registered)
+    HINSTANCE t_hinst;
+    GetGlobalProperty(kMCPlatformGlobalPropertyHINSTANCE, kMCPlatformPropertyTypePointer, &t_hinst);
+    
+    if (!s_registered)
 	{
 		WNDCLASSEX t_class;
 		MCMemoryClear(t_class);
@@ -251,7 +261,7 @@ bool RegisterVideoWindowClass()
 		t_class.cbSize = sizeof(WNDCLASSEX);
 		t_class.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC|CS_SAVEBITS;
 		t_class.lpfnWndProc = DSVideoWindowProc;
-		t_class.hInstance = MChInst;
+		t_class.hInstance = t_hinst;
 		t_class.lpszClassName = kMCDSVideoWindowClass;
 
 		if (RegisterClassEx(&t_class))
@@ -261,13 +271,16 @@ bool RegisterVideoWindowClass()
 	return s_registered;
 }
 
-bool CreateEventWindow(MCWin32DSPlayer *p_player, HWND &r_window)
+bool  MCWin32DSPlayer::CreateEventWindow(HWND &r_window)
 {
 	if (!RegisterEventWindowClass())
 		return false;
 
-	HWND t_window;
-	t_window = CreateWindowA(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, MChInst, p_player);
+    HINSTANCE t_hinst;
+    GetGlobalProperty(kMCPlatformGlobalPropertyHINSTANCE, kMCPlatformPropertyTypePointer, &t_hinst);
+    
+    HWND t_window;
+	t_window = CreateWindowA(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, t_hinst, this);
 
 	if (t_window == nil)
 		return false;
@@ -276,13 +289,16 @@ bool CreateEventWindow(MCWin32DSPlayer *p_player, HWND &r_window)
 	return true;
 }
 
-bool CreateVideoWindow(MCWin32DSPlayer *p_player, HWND p_parent_hwnd, HWND &r_window)
+bool MCWin32DSPlayer::CreateVideoWindow(HWND p_parent_hwnd, HWND &r_window)
 {
 	if (!RegisterVideoWindowClass())
 		return false;
 
-	HWND t_window;
-	t_window = CreateWindowA(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, p_parent_hwnd, nil, MChInst, p_player);
+    HINSTANCE t_hinst;
+    GetGlobalProperty(kMCPlatformGlobalPropertyHINSTANCE, kMCPlatformPropertyTypePointer, &t_hinst);
+    
+    HWND t_window;
+	t_window = CreateWindowA(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, p_parent_hwnd, nil, t_hinst, this);
 
 	if (t_window == nil)
 		return false;
@@ -417,7 +433,7 @@ bool MCWin32DSPlayer::Initialize()
 
 	HWND t_event_window = nil;
 	if (t_success)
-		t_success = CreateEventWindow(this, t_event_window);
+		t_success = CreateEventWindow(t_event_window);
 
 	if (t_success)
 	{
@@ -1172,7 +1188,7 @@ bool MCWin32DSPlayer::SetNativeParentView(void *p_view)
 		return true;
 
 	HWND t_video_window = nil;
-	if (!CreateVideoWindow(this, (HWND)p_view, t_video_window))
+	if (!CreateVideoWindow((HWND)p_view, t_video_window))
 		return false;
 
 	if (m_graph && !SetVideoWindow(t_video_window))

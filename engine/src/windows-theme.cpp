@@ -79,8 +79,6 @@ bool MCWindowsPlatformCore::GetControlThemePropBool(MCPlatformControlType, MCPla
     return false;
 }
 
-extern bool MCWin32GetScreenDPI(uint32_t&, uint32_t&);
-
 // Density used by default for the Win32 UI
 #define NORMAL_DENSITY  96
 
@@ -110,8 +108,11 @@ bool MCWindowsPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_t
             }
             else
             {
+                uint32_t t_version;
+                GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+                
                 // The default text size depends on the Windows version
-                r_int = MCmajorosversion >= 0x0600 ? 12 : 11;
+                r_int = t_version >= 0x0600 ? 12 : 11;
             }
             break;
         }
@@ -267,8 +268,8 @@ bool MCWindowsPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type
 				
 				// Get the font name and size from the LOGFONT structure and
                 // create a font from it.
-                MCAutoStringRef t_font_name_string;
-                MCNewAutoNameRef t_font_name;
+                MCPlatformAutoStringRef t_font_name_string(m_callback);
+                MCPlatformNewAutoNameRef t_font_name(m_callback);
                 if (MCStringCreateWithWString(lf.lfFaceName, &t_font_name_string)
                     && MCNameCreate(*t_font_name_string, &t_font_name))
                     return MCFontCreate(*t_font_name, 0, t_fontsize, r_font);
@@ -277,7 +278,10 @@ bool MCWindowsPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type
             {
                 int t_fontsize;
                 GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
-                if (MCmajorosversion >= 0x0600)
+                
+                uint32_t t_version;
+                GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+                if (t_version >= 0x0600)
                 {
                     // Return the Vista+ UI font
                     return MCFontCreate(MCNAME("Segoe UI"), 0, t_fontsize, r_font);
