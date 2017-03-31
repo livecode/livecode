@@ -559,6 +559,32 @@ begin
     MCCharRepeatForEachChar(iterator, Iterand, container)
 end syntax
 
+--
+
+public foreign handler MCStringExecReverseCharsOf(inout Target as String) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse a string
+Target:	A string
+
+Example:
+	variable tString
+	put "abcdef" into tString
+	reverse tString
+	expect that tString is "fedcba"
+
+Description:
+Reverses the order of characters in the <Target>.
+
+Tags: Strings
+*/
+syntax ReverseCharsOf is statement
+	"reverse" <Target: Expression>
+begin
+	MCStringExecReverseCharsOf(Target)
+end syntax
+
 ----------------------------------------------------------------
 
 /**
