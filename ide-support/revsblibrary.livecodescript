@@ -1631,13 +1631,7 @@ private command __InitialiseScriptLibraries
    local tLibraries
    put __ScriptLibraries() into tLibraries
    repeat for each line tLine in tLibraries
-      local tLibrary
-      put tLine into tLibrary["id"]
-      put tLine into tLibrary["title"]
-      put "script library" into tLibrary["type"]
-      put revSBAllDesktopPlatforms() & comma & \ 
-            revSBAllMobilePlatforms() into tLibrary["platforms"]
-      addToList tLibrary, sScriptLibraries
+      revSBAddAvailableLibrary revSBStackNameFromScriptLibraryName(tLine), tLine
    end repeat
 end __InitialiseScriptLibraries
 
