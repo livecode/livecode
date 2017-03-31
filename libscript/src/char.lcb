@@ -535,17 +535,15 @@ Summary:        Repeat over the chars of a string
 Iterand:        A string container.
 
 Example:
-	variable tString as String
-	put "stressed" into tString
-	
-	variable tReversed as String
 	variable tChar as String
-	put "" into tReversed
-	repeat for each char tChar in tString
-		put tChar before tReversed
+	variable tSpaceCount as Number
+	repeat for each char tChar in \
+			"the quick brown fox jumps over the lazy dog"
+		if tChar is " " then
+			add 1 to tSpaceCount
+		end if
 	end repeat
-
-    // tReversed is "desserts"
+	expect that tSpaceCount is 8
 
 Description:
 Use repeat for each to perform an operation on each char of a string. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
