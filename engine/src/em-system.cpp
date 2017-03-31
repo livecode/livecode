@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcstring.h"
 #include "osspec.h"
 #include "globals.h"
+#include "variable.h"
 
 #include <fcntl.h>
 #include <dirent.h>
