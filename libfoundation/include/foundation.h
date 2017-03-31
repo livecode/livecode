@@ -2144,6 +2144,11 @@ MC_DLLEXPORT bool MCStringMutableCopySubstringAndRelease(MCStringRef string, MCR
 
 /////////
 
+// Copy a string, reversing its contents
+MC_DLLEXPORT bool MCStringCopyReversed(MCStringRef string, MCStringRef& r_reversed);
+
+/////////
+
 // Returns true if the string is mutable
 MC_DLLEXPORT bool MCStringIsMutable(const MCStringRef string);
 
