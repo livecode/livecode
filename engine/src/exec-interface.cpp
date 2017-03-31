@@ -4555,14 +4555,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 			oldstack->kunfocus();
 			t_stack->close();
 			
-			MCPlayer *tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				MCPlayer *oldptr = tptr;
-				tptr = tptr->getnextplayer();
-				if (oldptr->getstack() == oldstack)
-					oldptr->close();
-			}
+            MCPlayer::ClosePlayers(oldstack);
 
 			if (!t_stack->takewindow(oldstack))
 			{

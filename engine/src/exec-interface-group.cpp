@@ -806,16 +806,4 @@ void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
 void MCGroup::SetVisible(MCExecContext &ctxt, uinteger_t part, bool setting)
 {
 	MCControl::SetVisible(ctxt, part, setting);
-#ifdef PLATFORM_PLAYER
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-	{
-		if (t_player -> getparent() == this)
-		{
-			if (setting)
-				t_player -> attachplayer();
-			else
-				t_player -> detachplayer();
-		}
-	}
-#endif
 }

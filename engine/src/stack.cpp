@@ -555,12 +555,6 @@ MCStack::~MCStack()
 	MCValueRelease(title);
 	MCValueRelease(titlestring);
 
-	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
-	{
-		stop_externals();
-		destroywindow();
-	}
-
 	// Clear and free the id cache before removing any controls
 	freeobjectidcache();
 	
@@ -1362,101 +1356,54 @@ bool MCStack::isdeletable(bool p_check_flag)
     return true;
 }
 
-Boolean MCStack::del(bool p_check_flag)
+Boolean MCStack::dodel()
 {
-    if (!isdeletable(p_check_flag))
-	   return False;
-
-	while (substacks)
-	{
-		if (!substacks -> del(false))
-			return False;
-	}
-	
     MCscreen->ungrabpointer();
     MCdispatcher->removemenu();
     
     setstate(True, CS_DELETE_STACK);
     
-	if (opened)
-	{
-		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
-		//   get system resource accumulation in a tight create/destroy loop.
-		flags |= F_DESTROY_WINDOW;
-		close();
-	}
-
-	if (curcard != NULL)
-		curcard->message(MCM_delete_stack);
-	else
-		if (cards != NULL)
-			cards->message(MCM_delete_stack);
-	
+    if (opened)
+    {
+        // MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
+        //   get system resource accumulation in a tight create/destroy loop.
+        flags |= F_DESTROY_WINDOW;
+        close();
+    }
+    
+    if (curcard != NULL)
+        curcard->message(MCM_delete_stack);
+    else
+        if (cards != NULL)
+            cards->message(MCM_delete_stack);
+    
     notifyattachments(kMCStackAttachmentEventDeleting);
     
-	if (MCdispatcher->ismainstack(this))
-	{
-		MCdispatcher->removestack(this);
-	}
-        else if (MCdispatcher->is_transient_stack(this))
-        {
-                MCdispatcher->remove_transient_stack(this);
-        }
-	else if (parent->gettype() == CT_STACK)
-	{
-		remove(parent.GetAs<MCStack>()->substacks);
-		// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
-		//   undo the extraopen.
-		if (parent.GetAs<MCStack>()->substacks == nil)
-			parent.GetAs<MCStack>()->extraclose(true);
-	}
-        else
-        {
-                // One of the above conditions should always be true
-                MCUnreachable();
-        }
-
-    if (MCtopstackptr == this)
+    if (window != NULL && !(state & CS_FOREIGN_WINDOW))
     {
-        MCtopstackptr = nil;
-        MCstacks->top(nil);
-    }
-    if (MCstaticdefaultstackptr == this)
-		MCstaticdefaultstackptr = MCtopstackptr;
-	if (MCdefaultstackptr == this)
-		MCdefaultstackptr = MCstaticdefaultstackptr;
-
-	// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
-	//   flag set, flush the parentscripts table.
-	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
-		MCParentScript::FlushStack(this);
-    
-    if (needs != NULL)
-    {
-        while (nneeds--)
-            needs[nneeds]->removelink(this);
-        
-        delete needs;
-        needs = NULL;
+        stop_externals();
+        destroywindow();
     }
     
     removereferences();
-    
-    uint2 i = 0;
-    while (i < MCnusing)
-        if (MCusing[i] == this)
-        {
-            MCnusing--;
-            uint2 j;
-            for (j = i ; j < MCnusing ; j++)
-                MCusing[j] = MCusing[j + 1];
-        }
-        else
-            i++;
-    
+        
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
     return MCObject::del(true);
+}
+
+Boolean MCStack::del(bool p_check_flag)
+{
+    if (!isdeletable(p_check_flag))
+	   return False;
+
+    while (substacks)
+    {
+        if (!substacks -> del(false))
+            return False;
+    }
+    
+    return dodel();
 }
 
 void MCStack::removereferences()
@@ -1500,6 +1447,64 @@ void MCStack::removereferences()
         }
         while(t_card != cards);
     }
+    
+    if (MCdispatcher->ismainstack(this))
+    {
+        MCdispatcher->removestack(this);
+    }
+    else if (MCdispatcher->is_transient_stack(this))
+    {
+        MCdispatcher->remove_transient_stack(this);
+    }
+    else if (parent->gettype() == CT_STACK)
+    {
+        remove(parent.GetAs<MCStack>()->substacks);
+        // MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
+        //   undo the extraopen.
+        if (parent.GetAs<MCStack>()->substacks == nil)
+            parent.GetAs<MCStack>()->extraclose(true);
+    }
+    else
+    {
+        // One of the above conditions should always be true
+        MCUnreachable();
+    }
+    
+    if (MCtopstackptr == this)
+    {
+        MCtopstackptr = nil;
+        MCstacks->top(nil);
+    }
+    if (MCstaticdefaultstackptr == this)
+        MCstaticdefaultstackptr = MCtopstackptr;
+    if (MCdefaultstackptr == this)
+        MCdefaultstackptr = MCstaticdefaultstackptr;
+    
+    // MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
+    //   flag set, flush the parentscripts table.
+    if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
+        MCParentScript::FlushStack(this);
+    
+    if (needs != NULL)
+    {
+        while (nneeds--)
+            needs[nneeds]->removelink(this);
+        
+        delete needs;
+        needs = NULL;
+    }
+
+    uint2 i = 0;
+    while (i < MCnusing)
+        if (MCusing[i] == this)
+        {
+            MCnusing--;
+            uint2 j;
+            for (j = i ; j < MCnusing ; j++)
+                MCusing[j] = MCusing[j + 1];
+        }
+        else
+            i++;
     
     MCObject::removereferences();
 }

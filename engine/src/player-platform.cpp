@@ -876,27 +876,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 
 MCPlayer::~MCPlayer()
 {
-	// OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
-	while (opened)
-		close();
-	
-	playstop();
-    
-    // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
-	if (MCplayers)
-	{
-		if (MCplayers == this)
-			MCplayers = nextplayer;
-		else
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer && tptr->nextplayer != this)
-				tptr = tptr->nextplayer;
-			if (tptr->nextplayer == this)
-                tptr->nextplayer = nextplayer;
-		}
-	}
-	nextplayer = nil;
+    removefromplayers();
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
@@ -1736,22 +1716,6 @@ Boolean MCPlayer::playstop()
     redrawcontroller();
     
 	freetmp();
-    
-    /*
-	if (MCplayers != NULL)
-	{
-		if (MCplayers == this)
-			MCplayers = nextplayer;
-		else
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
-				tptr = tptr->nextplayer;
-			if (tptr->nextplayer == this)
-                tptr->nextplayer = nextplayer;
-		}
-	}
-	nextplayer = NULL;*/
     
 	if (disposable)
 	{
