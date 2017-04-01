@@ -188,8 +188,8 @@ class __MCSLibraryHandleStatic
         
         MCAutoStringRef t_leaf_name;
         if (!MCStringCopySubstring(p_native_path,
-                                   MCRangeMake(t_last_separator,
-                                               t_first_extension - t_last_separator),
+                                   MCRangeMakeMinMax(t_last_separator,
+                                                     t_first_extension),
                                    &t_leaf_name))
         {
             return false;

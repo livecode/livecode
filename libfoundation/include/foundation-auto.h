@@ -1166,7 +1166,7 @@ public:
 	bool Resize(uindex_t p_new_size)
 	{
 		if (p_new_size < m_size)
-			FreeElements(MCRangeMake(p_new_size, m_size - p_new_size));
+			FreeElements(MCRangeMakeMinMax(p_new_size, m_size));
 		
 		return MCMemoryResizeArray(p_new_size, m_ptr, m_size);
 	}
