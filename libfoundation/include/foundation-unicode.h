@@ -39,7 +39,7 @@ inline bool MCUnicodeCodepointToSurrogates(codepoint_t p_codepoint,
 {
     if (p_codepoint < 0x10000)
     {
-        r_leading = unichar_t(p_codepoint); /* safe narrowing */
+        r_leading = MCNarrowCast<unichar_t>(p_codepoint);
         r_trailing = 0;
         return false;
     }
