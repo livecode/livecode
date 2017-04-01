@@ -1030,6 +1030,14 @@ template <typename T> void inline MCMemoryClear(T&p_struct)
 	MCMemoryClear(&p_struct, sizeof(T));
 }
 
+// Securely clear the memory of the given structure to all 0's
+template <typename T>
+void inline MCMemoryClearSecure(T& p_struct)
+{
+    MCMemoryClearSecure(reinterpret_cast<byte_t*>(&p_struct),
+                        sizeof(p_struct));
+}
+
 // Re-initialise an object to its default-constructed state
 template <typename T> void inline MCMemoryReinit(T& p_object)
 {
