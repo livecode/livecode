@@ -998,6 +998,11 @@ extern "C" {
 // Clear the given block of memory to all 0's.
 inline void MCMemoryClear(void *dst, size_t size) { memset(dst, 0, size); }
 
+// Clear the given block of memory to all 0's, ensuring that the
+// compiler never optimises it out.  Use this when clearing sensitive
+// data from memory.
+MC_DLLEXPORT void MCMemoryClearSecure(byte_t* dst, size_t size);
+
 // Fill the given block of memory with the given (byte) value.
 inline void MCMemoryFill(void *dst, size_t size, uint8_t value) { memset(dst, value, size); }
 

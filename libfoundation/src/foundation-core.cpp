@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation-hash.h"
 #include "foundation-string-hash.h"
 
+#if defined(__WINDOWS__)
+#   include <Windows.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __LINUX__
@@ -211,6 +215,25 @@ bool MCMemoryResizeArray(uindex_t p_new_count, size_t p_size, void*& x_array, ui
 void MCMemoryDeleteArray(void *p_array)
 {
 	MCMemoryDeallocate(p_array);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Securely clear the memory located at dst, using volatile to try to
+ * ensure that the compiler doesn't optimise it out. */
+MC_DLLEXPORT
+void MCMemoryClearSecure(byte_t* dst,
+                         size_t size)
+{
+#if defined(__WINDOWS__)
+    SecureZeroMemory(dst, size);
+#else
+    MCMemoryClear(dst, size);
+    /* Add a barrier to prevent the compiler from optimizing the above
+     * MCMemoryClear() call away.  Without this, both clang and GCC
+     * will optimise out the memory clear.*/
+    __asm__ __volatile__ ( "" : : "r"(dst) : "memory" );
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
