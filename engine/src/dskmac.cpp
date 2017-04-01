@@ -3847,7 +3847,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             else
             {
                 MCAutoStringRef t_username;
-                if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+                if (!MCStringCopySubstring(p_path, MCRangeMakeMinMax(1, t_user_end), &t_username))
                     return false;
                 MCAutoStringRefAsUTF8String t_utf8_username;
                 /* UNCHECKED */ t_utf8_username . Lock(*t_username);
@@ -3858,7 +3858,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 if (!MCStringCreateMutable(0, &t_tilde_path) ||
                     !MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
-                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMakeMinMax(t_user_end, MCStringGetLength(p_path))))
                     return false;
             }
             else
@@ -4636,7 +4636,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         bool t_is_path;
         if (MCStringBeginsWithCString(p_document, (const char_t*)"file:", kMCStringOptionCompareCaseless))
         {
-            MCStringCopySubstring(p_document, MCRangeMake(5, MCStringGetLength(p_document) - 5), &t_url);
+            MCStringCopySubstring(p_document, MCRangeMakeMinMax(5, MCStringGetLength(p_document)), &t_url);
             t_is_path = true;
         }
         else

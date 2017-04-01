@@ -522,7 +522,7 @@ struct MCMacSystem: public MCSystemInterface
 			else
 			{
 				MCAutoStringRef t_username;
-				if (!MCStringCopySubstring(p_path, MCRangeMake(1U, t_user_end - 1U), &t_username))
+				if (!MCStringCopySubstring(p_path, MCRangeMakeMinMax(1U, t_user_end), &t_username))
 					return false;
 
 				t_password = getpwnam(MCStringGetCString(*t_username));
@@ -532,7 +532,7 @@ struct MCMacSystem: public MCSystemInterface
 			{
 				if (!MCStringCreateMutable(0, &t_tilde_path) ||
 					!MCStringAppendNativeChars(*t_tilde_path, (const char_t *)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
-					!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+					!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMakeMinMax(t_user_end, MCStringGetLength(p_path))))
 					return false;
 			}
 			else

@@ -157,7 +157,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 					if (!MCStringFirstIndexOfChar(t_argument -> value, ',', t_pos, kMCCompareExact, t_comma))
 						t_comma = t_length;
 					MCAutoStringRef t_substring;
-					if (!MCStringCopySubstring(t_argument -> value, MCRangeMake(t_pos, t_comma - t_pos), &t_substring))
+					if (!MCStringCopySubstring(t_argument -> value, MCRangeMakeMinMax(t_pos, t_comma), &t_substring))
 						t_success = false;
 
 					if (!MCStringToDouble(*t_substring, t_vector[t_count]))
@@ -186,7 +186,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCStringOptionCompareCaseless))
                 {
                     MCAutoStringRef t_id;
-                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMake(3, MCStringGetLength(t_argument -> value) - 3), &t_id); 
+                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMakeMinMax(3, MCStringGetLength(t_argument -> value)), &t_id); 
                     integer_t t_int;
                     /* UNCHECKED */ MCStringToInteger(*t_id, t_int);
 					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, t_int));

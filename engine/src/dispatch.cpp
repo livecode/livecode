@@ -963,7 +963,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
         MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMakeMinMax(t_leaf_index + 1, MCStringGetLength(p_name)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
@@ -2110,7 +2110,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
     
 	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
     {
-		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+		if (!MCStringCopySubstring(p_external, MCRangeMakeMinMax(t_slash_index + 1, t_ext_length), t_external_leaf))
             return false;
     }
     else

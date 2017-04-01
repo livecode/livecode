@@ -817,7 +817,7 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == ' ')
 			t_old_offset++;
 
-		t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_text_style);
+		t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_text_style);
 
 		if (t_success)
 		{
@@ -2366,7 +2366,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
-			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
+			t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_color_string);
 			if (t_success)
 			{
 				MCInterfaceNamedColorParse(ctxt, *t_color_string, t_color);
@@ -2720,7 +2720,7 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(p_patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)

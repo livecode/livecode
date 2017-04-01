@@ -2318,7 +2318,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 					len = 0;
 				}
 				MCAutoStringRef s;
-				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
+				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMakeMinMax(t_start_pos, t_data_pos), &s); 
 				real8 n;
 				if (!MCTypeConvertStringToReal(*s, n))
 				{

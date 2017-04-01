@@ -2323,7 +2323,7 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
 			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish));
 			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
 			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 			MCValueRelease(t_value);
@@ -3570,7 +3570,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
         if (ctxt . HasError() || !MCStringMutableCopy(*t_text, &t_string))
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), p_string);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
@@ -3609,7 +3609,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
         if (ctxt . HasError())
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), *t_string_value);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), *t_string_value);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}

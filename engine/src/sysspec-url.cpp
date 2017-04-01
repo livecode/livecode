@@ -43,7 +43,7 @@ bool MCSystemStripUrl(MCStringRef p_url, MCStringRef &r_stripped)
 	while (t_end > t_start && is_whitespace(MCStringGetNativeCharAtIndex(p_url, t_end - 1)))
 		t_end--;
 	
-	return MCStringCopySubstring(p_url, MCRangeMake(t_start, t_end - t_start), r_stripped);
+	return MCStringCopySubstring(p_url, MCRangeMakeMinMax(t_start, t_end), r_stripped);
 }
 
 bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MCStringRef &r_processed_url)

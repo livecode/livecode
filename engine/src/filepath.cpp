@@ -85,7 +85,7 @@ bool MCPathAppend(MCStringRef p_base, MCStringRef p_path, MCStringRef &r_new)
 				return false;
 	}
 	
-	if (!MCStringAppendSubstring(*t_new, p_path, MCRangeMake(t_offset, MCStringGetLength(p_path) - t_offset)))
+	if (!MCStringAppendSubstring(*t_new, p_path, MCRangeMakeMinMax(t_offset, MCStringGetLength(p_path))))
 		return false;
 	
 	return MCStringCopy(*t_new, r_new);

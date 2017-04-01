@@ -504,7 +504,7 @@ MCDataRef MCWin32RawClipboardCommon::EncodeBMPForTransfer(MCDataRef p_bmp) const
 	// Strip the BITMAPFILEHEADER structure from the BMP and pass the BMP in its in-memory form
 	MCAutoDataRef t_data;
 	size_t t_offset = sizeof(BITMAPFILEHEADER);
-	if (!MCDataCopyRange(p_bmp, MCRangeMake(t_offset, MCDataGetLength(p_bmp) - t_offset), &t_data))
+	if (!MCDataCopyRange(p_bmp, MCRangeMakeMinMax(t_offset, MCDataGetLength(p_bmp)), &t_data))
 		return nil;
 	return *t_data;
 }

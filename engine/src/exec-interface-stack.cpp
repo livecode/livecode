@@ -144,48 +144,49 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 					t_end_pos = MCStringGetLength(p_input) + 1;
 				else
 					t_end_pos = t_comma + 1;
-				
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCtitlestring), kMCCompareCaseless))
+
+                MCRange t_range = MCRangeMakeMinMax(t_start_pos, t_end_pos - 1);
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCtitlestring), kMCCompareCaseless))
 				{
 					decorations |= WD_TITLE;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmenustring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmenustring), kMCCompareCaseless))
 				{
 					decorations |= WD_MENU | WD_TITLE;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCminimizestring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCminimizestring), kMCCompareCaseless))
 				{
 					decorations |= WD_MINIMIZE | WD_TITLE;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmaximizestring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmaximizestring), kMCCompareCaseless))
 				{
 					decorations |= WD_MAXIMIZE | WD_TITLE;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCclosestring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCclosestring), kMCCompareCaseless))
 				{
 					decorations |= WD_CLOSE | WD_TITLE;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmetalstring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmetalstring), kMCCompareCaseless))
 				{
 					decorations |= WD_METAL; //metal can not have title
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCutilitystring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCutilitystring), kMCCompareCaseless))
 				{
 					decorations |= WD_UTILITY;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCnoshadowstring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCnoshadowstring), kMCCompareCaseless))
 				{
 					decorations |= WD_NOSHADOW;
 					continue;
 				}
-				if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
 				{
 					decorations |= WD_FORCETASKBAR;
 					continue;
@@ -1159,7 +1160,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 
-		t_success = MCStringCopySubstring(p_substacks, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);
+		t_success = MCStringCopySubstring(p_substacks, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_name_string);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			// If tsub is one of the existing substacks of the stack, it is set to

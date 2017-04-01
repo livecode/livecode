@@ -698,7 +698,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
         else
         {
             // We have a named key, we just add the name to the path.
-            if (!MCStringCopySubstring(t_raw_key_str, MCRangeMake(t_subkey_start, t_subkey_end - t_subkey_start), &t_subkey_str))
+            if (!MCStringCopySubstring(t_raw_key_str, MCRangeMakeMinMax(t_subkey_start, t_subkey_end), &t_subkey_str))
                 return false;
         }
 
@@ -786,7 +786,7 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
         MCAutoDataRef t_key;
         MCNewAutoNameRef t_key_as_name;
         MCAutoStringRef t_key_as_string;
-        cgi_unescape_url(p_data, MCRangeMake(t_encoded_index, t_encoded_key_end - t_encoded_index), &t_key);
+        cgi_unescape_url(p_data, MCRangeMakeMinMax(t_encoded_index, t_encoded_key_end), &t_key);
 
         // The key should be native
         /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_key), MCDataGetLength(*t_key), &t_key_as_string);
@@ -800,7 +800,7 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 				t_encoded_value_end--;
 		
         MCAutoDataRef t_value;
-        cgi_unescape_url(p_data, MCRangeMake(t_encoded_value_index, t_encoded_value_end - t_encoded_value_index), &t_value);
+        cgi_unescape_url(p_data, MCRangeMakeMinMax(t_encoded_value_index, t_encoded_value_end), &t_value);
 
 		// MM-2011-07-13: Added p_native_encoding flag that specifies if the text should 
 		//   be converted from the outputTextEncoding to the native character set.

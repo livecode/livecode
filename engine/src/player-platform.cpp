@@ -2245,7 +2245,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         
         // SN-2014-07-28: [[ Bug 12984 ]] MCNumberParseOffset expects the string to finish after the number
         MCAutoStringRef t_callback_substring;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_callback_substring);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_start_index, t_comma_index), &t_callback_substring);
         
         // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
         if (MCNumberParse(*t_callback_substring, &t_time))
@@ -2266,7 +2266,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
             if (isspace(MCStringGetCharAtIndex(*t_callback, t_space_index)))
             {
                 MCAutoStringRef t_param;
-                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_space_index, t_end_index - t_space_index), &t_param);
+                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_space_index, t_end_index), &t_param);
                 /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
                 break;
             }
@@ -2274,14 +2274,14 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         }
         
         MCAutoStringRef t_message;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_callback_index, t_space_index), &t_message);
         /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
         if (m_callbacks[m_callback_count - 1] . parameter == nil)
         {
             MCAutoStringRef t_param;
-            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
+            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_start_index, t_comma_index), &t_param);
             /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
         }
 		
