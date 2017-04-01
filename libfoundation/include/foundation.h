@@ -707,6 +707,43 @@ using std::nothrow;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  NARROWING CONVERSIONS
+//
+
+#include <utility>
+#include <type_traits>
+
+/* A searchable way to do narrowing casts of numeric values (e.g. from
+ * uint32_t to uint8_t or from uindex_t to std::ptrdiff_t).  Use in
+ * preference to a C-style cast or a raw static_cast.  Should be used
+ * when you're totally certain that overflow/underflow has been
+ * logically ruled out elsewhere. */
+template <typename To, typename From>
+inline constexpr To MCNarrowCast(From p_from) noexcept
+{
+    return static_cast<To>(std::forward<From>(p_from));
+}
+
+/* Checked narrowing conversion of numeric values.  Use when there's a
+ * possibility that the input value might not fit into the output
+ * type, and you want to check.  Note that this is safe to use in
+ * generic/template code; if To can represent all values of From, it
+ * optimises to nothing.*/
+template <typename To, typename From>
+inline bool MCNarrow(From p_from, To& r_result)
+{
+    To t_to = static_cast<To>(p_from);
+    if (static_cast<From>(t_to) != p_from)
+        return false;
+    if ((std::is_signed<From>::value != std::is_signed<To>::value) &&
+        ((t_to < To{}) != (p_from < From{})))
+        return false;
+    r_result = t_to;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  MINIMUM FUNCTIONS
 //
 
