@@ -48,11 +48,6 @@ public:
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
     
-#if defined(TARGET_SUBPLATFORM_IPHONE)
-    // Apple platforms only
-    virtual void RunBlockOnMainFiber(void (^block)(void));
-#endif
-    
     // Clipboard
     virtual MCRawClipboard* CreateSystemClipboard();
     virtual MCRawClipboard* CreateSystemSelectionClipboard();

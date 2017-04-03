@@ -21,12 +21,12 @@
 
 bool MCEmscriptenPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
-    return MCscreen->wait(p_duration, p_blocking ? False : True, True);
+    return SystemWaitForEvent(p_duration, p_blocking);
 }
 
 void MCEmscriptenPlatformCore::BreakWait(void)
 {
-    MCscreen->pingwait();
+    SystemBreakWait();
 }
 
 // Platform extensions

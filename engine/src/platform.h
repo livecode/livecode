@@ -1026,6 +1026,12 @@ namespace MCPlatform
         
         virtual void Callback_SendSoundFinished(MCPlatformSoundRef sound);
         
+        virtual bool Callback_SystemWaitForEvent(double p_duration, bool p_blocking);
+        virtual void Callback_SystemBreakWait(void);
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+        virtual void Callback_RunBlockOnMainFiber(void (^block)(void));
+#endif
+        
         virtual void *Callback_MCListPopFront(void*& x_list);
         virtual void Callback_MCListPushBack(void*& x_list, void *p_element);
         virtual bool Callback_MCFontCreateWithHandle(MCSysFontHandle p_handle, MCNameRef p_name, MCFontRef& r_font);
@@ -1401,6 +1407,27 @@ namespace MCPlatform {
         {
             m_callback -> Callback_SendSoundFinished(sound);
         }
+        
+        bool SystemWaitForEvent(double p_duration, bool p_blocking)
+        {
+            return m_callback -> Callback_SystemWaitForEvent(p_duration, p_blocking);
+        }
+        void SystemBreakWait(void)
+        {
+            m_callback -> Callback_SystemBreakWait();
+        }
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
+        // Apple platforms only
+        void RunBlockOnMainFiber(void (^block)(void))
+        {
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+            m_callback -> Callback_RunBlockOnMainFiber(block);
+#else
+            block();
+#endif
+        }
+#endif
         
         void *MCListPopFront(void*& x_list)
         {
@@ -2412,11 +2439,6 @@ namespace MCPlatform {
         virtual bool GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font) = 0;
         virtual bool GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string) = 0;
         
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
-        // Apple platforms only
-        virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
-#endif
-        
         // Creates a new clipboard associated with the main system clipboard. Note
         // that these are not kept synchronised - clipboards are only updated when
         // the "synchronizeUpdates" method is called.
@@ -2592,11 +2614,7 @@ namespace MCPlatform {
         virtual void RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value) = 0;
         virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result) = 0;
         
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
-        // Apple platforms only
-        virtual void RunBlockOnMainFiber(void (^block)(void)) = 0;
-#endif
-        
+        // Clipboard
         virtual MCRawClipboard* CreateSystemClipboard() = 0;
         virtual MCRawClipboard* CreateSystemSelectionClipboard() = 0;
         virtual MCRawClipboard* CreateSystemDragboard() = 0;

@@ -22,12 +22,12 @@
 
 bool MCIPhonePlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
-    return MCscreen->wait(p_duration, p_blocking ? False : True, True);
+    return SystemWaitForEvent(p_duration, p_blocking);
 }
 
 void MCIPhonePlatformCore::BreakWait(void)
 {
-    MCIPhoneBreakWait();
+    SystemBreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,5 @@ bool MCIPhonePlatformCore::QueryInterface(const char * p_interface_id, MCPlatfor
     return false;
 }
 
-void MCIPhonePlatformCore::RunBlockOnMainFiber(void (^block)(void))
-{
-    MCIPhoneRunBlockOnMainFiber(block);
-}
+////////////////////////////////////////////////////////////////////////////////
+

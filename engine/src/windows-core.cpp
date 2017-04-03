@@ -17,15 +17,16 @@
 #include "platform.h"
 #include "windows-platform.h"
 #include "globals.h"
+#include "w32-clipboard.h"
 
 bool MCWindowsPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
-    return MCscreen->wait(p_duration, p_blocking ? False : True, True);
+    return SystemWaitForEvent(p_duration, p_blocking);
 }
 
 void MCWindowsPlatformCore::BreakWait(void)
 {
-    MCscreen->pingwait();
+    SystemBreakWait();
 }
 
 // Platform extensions

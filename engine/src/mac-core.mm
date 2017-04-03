@@ -3072,11 +3072,6 @@ bool MCMacPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::
     return MCPlatform::Base::QueryInterface(p_interface_id, r_interface);
 }
 
-void MCMacPlatformCore::RunBlockOnMainFiber(void (^block)(void))
-{
-    block();
-}
-
 bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image)
 {
     bool t_success = true;

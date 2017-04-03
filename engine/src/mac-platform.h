@@ -1041,12 +1041,7 @@ public:
 
     // Platform extensions
     virtual bool QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface);
-    
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
-    // Apple platforms only
-    virtual void RunBlockOnMainFiber(void (^block)(void));
-#endif
-    
+        
     // Core image
     virtual rei_boolean_t CoreImageVisualEffectInitialize(void);
     virtual void CoreImageVisualEffectFinalize(void);

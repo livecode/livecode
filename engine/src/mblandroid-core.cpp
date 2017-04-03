@@ -18,15 +18,16 @@
 #include "mblandroid-platform.h"
 #include "globals.h"
 #include "mblandroidutil.h"
+#include "mblandroid-clipboard.h"
 
 bool MCAndroidPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
-    return MCscreen->wait(p_duration, p_blocking ? False : True, True);
+    return SystemWaitForEvent(p_duration, p_blocking);
 }
 
 void MCAndroidPlatformCore::BreakWait(void)
 {
-    MCAndroidBreakWait();
+    SystemBreakWait();
 }
 
 // Platform extensions

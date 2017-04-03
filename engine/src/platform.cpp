@@ -569,6 +569,31 @@ namespace MCPlatform {
         MCPlatformHandleSoundFinished(p_sound);
 #endif // FEATURE_PLATFORM_AUDIO
     }
+
+    bool Callback::Callback_SystemWaitForEvent(double p_duration, bool p_blocking)
+    {
+        return MCscreen->wait(p_duration, p_blocking ? False : True, True);
+    }
+    void SystemBreakWait(void)
+    {
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+        extern void MCIPhoneBreakWait(void);
+        MCIPhoneBreakWait();
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
+        extern void MCAndroidBreakWait(void);
+        MCAndroidBreakWait();
+#else
+        MCscreen->pingwait();
+#endif
+    }
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+    // Apple platforms only
+    void Callback::Callback_RunBlockOnMainFiber(void (^block)(void))
+    {
+        extern void MCIPhoneRunBlockOnMainFiber(void (^block)(void));
+        MCIPhoneRunBlockOnMainFiber(block);
+    }
+#endif
     
     ////////////////////////////////////////////////////////////////////////////////
     
