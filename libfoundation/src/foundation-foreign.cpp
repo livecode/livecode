@@ -628,9 +628,8 @@ template <typename TypeDesc>
 bool doimport(void *contents, bool p_release, MCValueRef& r_value)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
-    bool t_success = DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
+    return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
                                         reinterpret_cast<typename TypeDesc::bridge_type&>(r_value));
-    return t_success;
 }
 
 /* ---------- bool specializations */

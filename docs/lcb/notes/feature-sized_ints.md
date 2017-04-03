@@ -12,6 +12,6 @@ version: 9.0.0-dp-7
   CUInt, CSLong, CULong, CSLongLong and CULongLong have been added.
   These all map to their corresponding C counterparts.
 
-* The Java integer primtive types JByte, JShort, JInt, JLong,
+* The Java integer primtive types JBoolean, JByte, JShort, JInt, JLong,
   JFloat and JDouble have been added. These map to int8_t,
   int16_t, int32_t, int64_t, float and double.

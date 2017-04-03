@@ -39,8 +39,8 @@ public type JByte is Int8
 public type JShort is Int16
 public type JInt is Int32
 public type JLong is Int64
-public type JFloat is CFloat
-public type JDouble is CDouble
+public type JFloat is Float32
+public type JDouble is Float64
 
 public foreign type JObject binds to "MCJavaObjectTypeInfo"
 public type JString is JObject

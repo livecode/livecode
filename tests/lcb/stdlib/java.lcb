@@ -40,7 +40,7 @@ end handler
 
 foreign handler CreateJavaString(in pBytes as JByteArray) returns JString binds to "java:java.lang.String>new([B)"
 
-foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as CUInt, out rData as Data) returns JBoolean binds to "<builtin>"
+foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as LCUIndex, out rData as Data) returns CBool binds to "<builtin>"
 
 public handler TestCreateJString()
    	if not the operating system is in ["mac", "linux"] then

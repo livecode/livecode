@@ -464,6 +464,8 @@ There are aliases for the Java primitive types:
  - JShort maps to Int16
  - JInt maps to Int32
  - JLong maps to Int64
+ - JFloat maps to Float32
+ - JDouble maps to Float64
 
 All the primitive types above will implicitly bridge between corresponding
 high level types:
