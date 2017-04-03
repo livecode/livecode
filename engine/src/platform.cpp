@@ -28,6 +28,8 @@
 #include "variable.h"
 #include "param.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 #if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
@@ -36,11 +38,17 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStri
 #else
 #include <ApplicationServices/ApplicationServices.h>
 #endif
-
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+#endif
+
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+extern void MCIPhoneBreakWait(void);
+extern void MCIPhoneRunBlockOnMainFiber(void (^block)(void));
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
+extern void MCAndroidBreakWait(void);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -580,10 +588,8 @@ namespace MCPlatform {
     void Callback::Callback_SystemBreakWait(void)
     {
 #if defined(TARGET_SUBPLATFORM_IPHONE)
-        extern void MCIPhoneBreakWait(void);
         MCIPhoneBreakWait();
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-        extern void MCAndroidBreakWait(void);
         MCAndroidBreakWait();
 #else
         MCscreen->pingwait();
@@ -593,7 +599,6 @@ namespace MCPlatform {
     // Apple platforms only
     void Callback::Callback_RunBlockOnMainFiber(void (^block)(void))
     {
-        extern void MCIPhoneRunBlockOnMainFiber(void (^block)(void));
         MCIPhoneRunBlockOnMainFiber(block);
     }
 #endif
