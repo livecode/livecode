@@ -216,6 +216,7 @@ enum MCPropertyType
 	kMCPropertyTypeBinaryString,
 	kMCPropertyTypeColor,
 	kMCPropertyTypeRectangle,
+    kMCPropertyTypeRectangle32,
 	kMCPropertyTypePoint,
 	kMCPropertyTypeInt16X2,
 	kMCPropertyTypeInt16X4,
@@ -681,6 +682,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkGetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectChunkThunkGetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectChunkThunkGetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle&)
+#define MCPropertyObjectChunkThunkGetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32&)
 #define MCPropertyObjectChunkThunkGetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t&)
 #define MCPropertyObjectChunkThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, typ&)
 #define MCPropertyObjectChunkThunkGetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
@@ -693,6 +695,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkSetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectChunkThunkSetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectChunkThunkSetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle)
+#define MCPropertyObjectChunkThunkSetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32)
 #define MCPropertyObjectChunkThunkSetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t)
 #define MCPropertyObjectChunkThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, const typ&)
 #define MCPropertyObjectChunkThunkSetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)

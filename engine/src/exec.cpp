@@ -1883,6 +1883,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
+        
+        case kMCPropertyTypeRectangle32:
+        {
+            MCRectangle32 t_value;
+            ((void(*)(MCExecContext&, void *, MCRectangle32&))prop -> getter)(ctxt, mark, t_value);
+            
+            MCAutoStringRef t_string;
+            if (!ctxt . HasError())
+            {
+                if (MCStringFormat(&t_string, "%d,%d,%d,%d", t_value.x, t_value.y, t_value.x + t_value.width, t_value.y + t_value.height))
+                {
+                    r_value . stringref_value = t_string.Take();
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+                else
+                {
+                    ctxt.Throw();
+                }
+            }
+        }
+        break;
             
         case kMCPropertyTypePoint:
         {
@@ -2750,6 +2771,25 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ((void(*)(MCExecContext&, void *, MCRectangle))prop -> setter)(ctxt, mark, t_value);
         }
             break;
+            
+        case kMCPropertyTypeRectangle32:
+        {
+            int4 a, b, c, d;
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi4x4(*t_value, a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                MCRectangle32 t_rect;
+                t_rect.x = a;
+                t_rect.y = b;
+                t_rect.width = c - a;
+                t_rect.height = d - b;
+                ((void(*)(MCExecContext&, void *, MCRectangle32))prop -> setter)(ctxt, mark, t_rect);
+            }
+        }
+        break;
             
         case kMCPropertyTypePoint:
         {
