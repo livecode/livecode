@@ -16,7 +16,6 @@
 
 
 #include "lnx-clipboard.h"
-#include "linux-platform.h"
 
 #include <gdk/gdk.h>
 
@@ -62,23 +61,6 @@ const char * const MCLinuxRawClipboard::s_formats[kMCRawClipboardKnownTypeLast+1
     NULL,                           // URL
     NULL,                           // URL list
 };
-
-
-MCRawClipboard* MCLinuxPlatformCore::CreateSystemClipboard()
-{
-    return new MCLinuxRawClipboard(GDK_SELECTION_CLIPBOARD);
-}
-
-MCRawClipboard* MCLinuxPlatformCore::CreateSystemSelectionClipboard()
-{
-    return new MCLinuxRawClipboard(GDK_SELECTION_PRIMARY);
-}
-
-MCRawClipboard* MCLinuxPlatformCore::CreateSystemDragboard()
-{
-    return new MCLinuxRawClipboard("XdndSelection");
-}
-
 
 MCLinuxRawClipboard::MCLinuxRawClipboard(const char* p_selection_atom_name) :
   MCRawClipboard(),

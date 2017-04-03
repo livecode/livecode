@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "em-platform.h"
 #include "globals.h"
+#include "em-clipboard.h"
 
 bool MCEmscriptenPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
@@ -32,6 +33,23 @@ void MCEmscriptenPlatformCore::BreakWait(void)
 bool MCEmscriptenPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
 {
     return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemClipboard()
+{
+    return new MCEmscriptenRawClipboard;
+}
+
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemSelectionClipboard()
+{
+    return new MCEmscriptenRawClipboard;
+}
+
+MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemDragboard()
+{
+    return new MCEmscriptenRawClipboard;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -588,6 +588,16 @@
 
 			'src/clipboard.h',
 			'src/clipboard.cpp',
+			'src/mbliphone-clipboard.mm',
+			'src/mbliphone-clipboard.h',
+			'src/mblandroid-clipboard.cpp',
+			'src/mblandroid-clipboard.h',
+			'src/em-clipboard.h',
+			'src/em-clipboard.cpp',
+			'src/lnx-clipboard.h',
+			'src/lnx-clipboard.cpp',
+			'src/w32-clipboard.h',
+			'src/w32-clipboard.cpp',
 			
 			'src/mixin-refcounted.h',
 			
@@ -641,38 +651,29 @@
 			'src/mbliphone-core.mm',
 			'src/mbliphone-theme.mm',
 			'src/mbliphone-community-core.mm',
-			'src/mbliphone-clipboard.mm',
-			'src/mbliphone-clipboard.h',
 			
 			# Group "Android Platform"
 			'src/mblandroid-platform.h',
 			'src/mblandroid-core.cpp',
 			'src/mblandroid-theme.cpp',
-			'src/mblandroid-clipboard.cpp',
-			'src/mblandroid-clipboard.h',
 			
 			# Group "Linux Platform"
 			'src/linux-platform.h',
 			'src/linux-core.cpp',
 			'src/linux-theme.cpp',
-			'src/lnx-clipboard.h',
-			'src/lnx-clipboard.cpp',
 			
 			# Group "Windows Platform"
 			'src/windows-platform.h',
 			'src/windows-core.cpp',
 			'src/windows-community-core.cpp',
 			'src/windows-theme.cpp',
-			'src/w32-clipboard.h',
-			'src/w32-clipboard.cpp',
 			'src/w32-ds-player.cpp',
 			
 			# Group "Emscripten Platform"
 			'src/em-platform.h',
 			'src/em-core.cpp',
 			'src/em-theme.cpp',
-			'src/em-clipboard.h',
-			'src/em-clipboard.cpp',	
+				
 		],
 		
 		# Sources that are only for desktop mode

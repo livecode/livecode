@@ -35,3 +35,20 @@ bool MCWindowsPlatformCore::QueryInterface(const char * p_interface_id, MCPlatfo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemClipboard()
+{
+    return new MCWin32RawClipboard;
+}
+
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemSelectionClipboard()
+{
+    return new MCWin32RawClipboardNull;
+}
+
+MCRawClipboard* MCWindowsPlatformCore::CreateSystemDragboard()
+{
+    return new MCWin32RawClipboardNull;
+}
+
+////////////////////////////////////////////////////////////////////////////////

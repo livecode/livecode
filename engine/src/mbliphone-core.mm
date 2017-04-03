@@ -18,6 +18,7 @@
 #include "mbliphone-platform.h"
 #include "globals.h"
 #include "mbliphoneapp.h"
+#include "mbliphone-clipboard.h"
 
 bool MCIPhonePlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
@@ -28,6 +29,26 @@ void MCIPhonePlatformCore::BreakWait(void)
 {
     MCIPhoneBreakWait();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemClipboard()
+{
+    return new MCIPhoneRawClipboard;
+}
+
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemSelectionClipboard()
+{
+    return new MCIPhoneRawClipboard;
+}
+
+MCRawClipboard* MCIPhonePlatformCore::CreateSystemDragboard()
+{
+    return new MCIPhoneRawClipboard;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Platform extensions
 bool MCIPhonePlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)

@@ -14,27 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
-
 #include "em-clipboard.h"
-#include "em-platform.h"
-
-
-MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemClipboard()
-{
-    return new MCEmscriptenRawClipboard;
-}
-
-MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemSelectionClipboard()
-{
-    return new MCEmscriptenRawClipboard;
-}
-
-MCRawClipboard* MCEmscriptenPlatformCore::CreateSystemDragboard()
-{
-    return new MCEmscriptenRawClipboard;
-}
-
 
 uindex_t MCEmscriptenRawClipboard::GetItemCount() const
 {

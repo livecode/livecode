@@ -17,24 +17,6 @@
 
 
 #include "mblandroid-clipboard.h"
-#include "mblandroid-platform.h"
-
-
-MCRawClipboard* MCAndroidPlatformCore::CreateSystemClipboard()
-{
-    return new MCAndroidRawClipboard;
-}
-
-MCRawClipboard* MCAndroidPlatformCore::CreateSystemSelectionClipboard()
-{
-    return new MCAndroidRawClipboard;
-}
-
-MCRawClipboard* MCAndroidPlatformCore::CreateSystemDragboard()
-{
-    return new MCAndroidRawClipboard;
-}
-
 
 uindex_t MCAndroidRawClipboard::GetItemCount() const
 {

@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "linux-platform.h"
 #include "globals.h"
+#include "lnx-clipboard.h"
 
 bool MCLinuxPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
 {
@@ -32,6 +33,23 @@ void MCLinuxPlatformCore::BreakWait(void)
 bool MCLinuxPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
 {
     return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemClipboard()
+{
+    return new MCLinuxRawClipboard(GDK_SELECTION_CLIPBOARD);
+}
+
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemSelectionClipboard()
+{
+    return new MCLinuxRawClipboard(GDK_SELECTION_PRIMARY);
+}
+
+MCRawClipboard* MCLinuxPlatformCore::CreateSystemDragboard()
+{
+    return new MCLinuxRawClipboard("XdndSelection");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
