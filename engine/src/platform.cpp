@@ -128,6 +128,9 @@ namespace MCPlatform {
             case kMCPlatformGlobalPropertyAppIsActive:
                 *(bool *)r_value = MCappisactive;
                 break;
+            case kMCPlatformGlobalPropertyQuit:
+                *(bool *)r_value = MCquit;
+                break;
             case kMCPlatformGlobalPropertyHINSTANCE:
 #if defined(_WINDOWS)
                 *(HINSTANCE*)r_value = MChInst;
@@ -574,7 +577,7 @@ namespace MCPlatform {
     {
         return MCscreen->wait(p_duration, p_blocking ? False : True, True);
     }
-    void SystemBreakWait(void)
+    void Callback::Callback_SystemBreakWait(void)
     {
 #if defined(TARGET_SUBPLATFORM_IPHONE)
         extern void MCIPhoneBreakWait(void);
@@ -632,6 +635,10 @@ namespace MCPlatform {
     {
         return MCU_urlencode(p_url, p_use_utf8, r_encoded);
     }
+    void Callback::Callback_MCU_set_rect(MCRectangle &rect, int2 p_x, int2 p_y, uint2 p_w, uint2 p_h)
+    {
+        return MCU_set_rect(rect, p_x, p_y, p_w, p_h);
+    }
     bool Callback::Callback_MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path)
     {
         return MCS_pathtonative(p_livecode_path, r_native_path);
@@ -643,6 +650,14 @@ namespace MCPlatform {
     real8 Callback::Callback_MCS_time(void)
     {
         return MCS_time();
+    }
+    Boolean Callback::Callback_MCS_exists(MCStringRef p_path, bool p_is_file)
+    {
+        return MCS_exists(p_path, p_is_file);
+    }
+    Boolean Callback::Callback_MCS_unlink(MCStringRef p_path)
+    {
+        return MCS_unlink(p_path);
     }
     void Callback::Callback_MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
     {

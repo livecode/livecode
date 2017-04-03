@@ -85,6 +85,7 @@ enum MCPlatformGlobalProperty
     kMCPlatformGlobalPropertyMajorOSVersion,
     kMCPlatformGlobalPropertyAppIsActive,
     kMCPlatformGlobalPropertyHINSTANCE,
+    kMCPlatformGlobalPropertyQuit,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1040,8 +1041,11 @@ namespace MCPlatform
         virtual Boolean Callback_MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y);
         virtual void Callback_MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result) const;
         virtual bool Callback_MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded) const;
+        virtual void Callback_MCU_set_rect(MCRectangle &rect, int2 p_x, int2 p_y, uint2 p_w, uint2 p_h);
         virtual bool Callback_MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path);
         virtual bool Callback_MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
+        virtual Boolean Callback_MCS_exists(MCStringRef p_path, bool p_is_file);
+        virtual Boolean Callback_MCS_unlink(MCStringRef p_path);
         virtual real8 Callback_MCS_time(void);
         virtual void Callback_MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset);
         virtual bool Callback_MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
@@ -1465,6 +1469,10 @@ namespace MCPlatform {
         {
             return m_callback -> Callback_MCU_urlencode(p_url, p_use_utf8, r_encoded);
         }
+        void MCU_set_rect(MCRectangle &rect, int2 p_x, int2 p_y, uint2 p_w, uint2 p_h)
+        {
+            return m_callback -> Callback_MCU_set_rect(rect, p_x, p_y, p_w, p_h);
+        }
         bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path)
         {
             return m_callback -> Callback_MCS_pathtonative(p_livecode_path, r_native_path);
@@ -1476,6 +1484,14 @@ namespace MCPlatform {
         real8 MCS_time(void)
         {
             return m_callback -> Callback_MCS_time();
+        }
+        Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
+        {
+            return m_callback -> Callback_MCS_exists(p_path, p_is_file);
+        }
+        Boolean MCS_unlink(MCStringRef p_path)
+        {
+            return m_callback -> Callback_MCS_unlink(p_path);
         }
         void MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
         {
