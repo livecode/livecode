@@ -131,70 +131,61 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename CType>
-constexpr MCForeignPrimitiveType __compute_signed_primitive_type()
+template <typename CType, typename Enable = void>
+struct compute_primitive_type
+{
+    static_assert(sizeof(CType) == 0,
+                  "No mapping from CType to primitive type");
+};
+
+template <typename CType>
+struct compute_primitive_type<
+    CType,
+    typename std::enable_if<std::is_integral<CType>::value &&
+                            std::is_signed<CType>::value>::type>
 {
     static_assert(sizeof(CType) != 1 || sizeof(CType) != 2 ||
                   sizeof(CType) != 4 || sizeof(CType) != 8,
                   "Unsupported signed integer size");
-    return sizeof(CType) == 1 ? kMCForeignPrimitiveTypeSInt8 :
-            sizeof(CType) == 2 ? kMCForeignPrimitiveTypeSInt16 :
-            sizeof(CType) == 4 ? kMCForeignPrimitiveTypeSInt32 :
-            sizeof(CType) == 8 ? kMCForeignPrimitiveTypeSInt64 :
-            kMCForeignPrimitiveTypeVoid;
+    static constexpr auto value =
+        sizeof(CType) == 1 ? kMCForeignPrimitiveTypeSInt8 :
+        sizeof(CType) == 2 ? kMCForeignPrimitiveTypeSInt16 :
+        sizeof(CType) == 4 ? kMCForeignPrimitiveTypeSInt32 :
+        sizeof(CType) == 8 ? kMCForeignPrimitiveTypeSInt64 :
+        kMCForeignPrimitiveTypeVoid;
 };
 
-template<typename CType>
-constexpr MCForeignPrimitiveType __compute_unsigned_primitive_type()
+template <typename CType>
+struct compute_primitive_type<
+    CType,
+    typename std::enable_if<std::is_integral<CType>::value &&
+                            !std::is_signed<CType>::value>::type>
 {
     static_assert(sizeof(CType) != 1 || sizeof(CType) != 2 ||
                   sizeof(CType) != 4 || sizeof(CType) != 8,
                   "Unsupported unsigned integer size");
-    return sizeof(CType) == 1 ? kMCForeignPrimitiveTypeUInt8 :
-            sizeof(CType) == 2 ? kMCForeignPrimitiveTypeUInt16 :
-            sizeof(CType) == 4 ? kMCForeignPrimitiveTypeUInt32 :
-            sizeof(CType) == 8 ? kMCForeignPrimitiveTypeUInt64 :
-            kMCForeignPrimitiveTypeVoid;
+    static constexpr auto value =
+        sizeof(CType) == 1 ? kMCForeignPrimitiveTypeUInt8 :
+        sizeof(CType) == 2 ? kMCForeignPrimitiveTypeUInt16 :
+        sizeof(CType) == 4 ? kMCForeignPrimitiveTypeUInt32 :
+        sizeof(CType) == 8 ? kMCForeignPrimitiveTypeUInt64 :
+        kMCForeignPrimitiveTypeVoid;
 };
 
-template<typename CType> constexpr MCForeignPrimitiveType
-__compute_primitive_type(void)
+template <> struct compute_primitive_type<float>
 {
-    static_assert(sizeof(CType) == 0, "No mapping from CType to primitive type");
-    return kMCForeignPrimitiveTypeVoid;
-}
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<char>(void) { return __compute_signed_primitive_type<char>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<signed char>(void) { return __compute_signed_primitive_type<signed char>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<unsigned char>(void) { return __compute_unsigned_primitive_type<unsigned char>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<short>(void) { return __compute_signed_primitive_type<short>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<unsigned short>(void) { return __compute_unsigned_primitive_type<unsigned short>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<int>(void) { return __compute_unsigned_primitive_type<int>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<unsigned int>(void) { return __compute_unsigned_primitive_type<unsigned int>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<long>(void) { return __compute_unsigned_primitive_type<long>();; }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<unsigned long>(void) { return __compute_unsigned_primitive_type<unsigned long>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<long long>(void) { return __compute_unsigned_primitive_type<long long>(); }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<unsigned long long>(void) { return __compute_unsigned_primitive_type<unsigned long long>(); }
+    static constexpr auto value = kMCForeignPrimitiveTypeFloat32;
+};
 
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<float>(void) { return kMCForeignPrimitiveTypeFloat32; }
-template<> constexpr MCForeignPrimitiveType
-__compute_primitive_type<double>(void) { return kMCForeignPrimitiveTypeFloat64; }
+template <> struct compute_primitive_type<double>
+{
+    static constexpr auto value = kMCForeignPrimitiveTypeFloat64;
+};
 
 template<typename CType>
 struct numeric_type_desc_t {
     using c_type = CType;
-    static constexpr auto primitive_type = __compute_primitive_type<CType>();
+    static constexpr auto primitive_type = compute_primitive_type<CType>::value;
     static constexpr auto& base_type_info = kMCNullTypeInfo;
     static constexpr auto is_optional = false;
     static constexpr auto is_bridgable = true;
