@@ -726,13 +726,15 @@ bool MCHandlerlist::listconstants(MCHandlerlistListConstantsCallback p_callback,
 
 bool MCHandlerlist::listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context)
 {
-	for(int t_type = HT_MIN; t_type < HT_MAX; t_type++)
+	for(int t_htype = HT_MIN; t_htype < HT_MAX; t_htype++)
 	{
-		for(uint2 i = 0; i < handlers[t_type].count(); i++)
+        int t_htype_index = static_cast<int>(t_htype - HT_MIN);
+        
+		for(uint2 i = 0; i < handlers[t_htype_index].count(); i++)
 		{
 			if (!p_callback(p_context,
-							(Handler_type)(t_type),
-							handlers[t_type].get()[i]))
+							static_cast<Handler_type>(t_htype),
+							handlers[t_htype_index].get()[i]))
 			{
 				return false;
 			}
