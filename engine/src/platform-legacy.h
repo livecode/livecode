@@ -620,23 +620,10 @@ inline void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef TARGET_PLATFORM_MACOS_X
-
 inline void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
 {
     r_player = MCplatform -> CreatePlayer();
 }
-
-#endif
-
-#ifdef TARGET_PLATFORM_WINDOWS
-class MCWin32DSPlayer;
-extern MCWin32DSPlayer *MCWin32DSPlayerCreate(void);
-inline void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef &r_player)
-{
-    r_player = (MCPlatformPlayerRef)MCWin32DSPlayerCreate();
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
