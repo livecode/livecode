@@ -116,6 +116,10 @@
 							# compile time rather than run time.
 							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
 						],
+						'sources!':
+						[
+							'src/raw-clipboard.cpp',
+						],
 					},
 				],
 			],

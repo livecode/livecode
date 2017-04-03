@@ -588,6 +588,8 @@
 
 			'src/clipboard.h',
 			'src/clipboard.cpp',
+			'src/raw-clipboard.h',
+			'src/raw-clipboard.cpp',
 			'src/mbliphone-clipboard.mm',
 			'src/mbliphone-clipboard.h',
 			'src/mblandroid-clipboard.cpp',
@@ -617,8 +619,6 @@
 			'src/platform-base.h',
 			'src/platform-extern.h',
 			'src/platform-window.cpp',
-			'src/raw-clipboard.h',
-			'src/raw-clipboard.cpp',
 			'src/color.h',
 			'src/color.cpp',
 			

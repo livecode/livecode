@@ -38,6 +38,10 @@
 							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
 						],
                         # 'type': 'shared_library',
+                        'sources':
+                        [
+                            'src/raw-clipboard.cpp',
+                        ],
     				},
 				],
 			],
