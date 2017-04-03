@@ -673,6 +673,73 @@ OSStatus MCMacPlatformCore::GetDescFromAddress(MCStringRef address, AEDesc *retD
     return errno;
 }
 
+bool MCMacPlatformCore::FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
+{
+#ifndef __64_BIT__
+    MCPlatformAutoNativeCharArray t_path(m_callback), t_name(m_callback);
+    MCPlatformAutoStringRef t_filename(m_callback);
+    MCPlatformAutoStringRef t_filename_std(m_callback);
+    char *t_char_ptr;
+    
+    t_path.New(PATH_MAX + 1);
+    t_name.New(PATH_MAX + 1);
+    
+    t_char_ptr = (char*)t_path.Chars();
+    
+    CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
+    
+    /* UNCHECKED */ t_name . Shrink(MCCStringLength((const char *)t_name . Chars()));
+    /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
+    /* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
+    
+    char oldchar = fSpec->name[0];
+    Boolean dontappendname = False;
+    fSpec->name[0] = '\0';
+    
+    FSRef ref;
+    
+    // MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+    
+    /* fSpec->name[0] = oldchar;
+     dontappendname = True;*/
+    
+    if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+    {
+        if (errno == nsvErr)
+        {
+            fSpec->name[0] = oldchar;
+            if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+            {
+                errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+                dontappendname = True;
+            }
+            else
+                t_char_ptr[0] = '\0';
+        }
+        else
+            t_char_ptr[0] = '\0';
+    }
+    else
+        errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+    
+    MCPlatformAutoStringRef t_path_str(m_callback);
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)t_char_ptr, strlen(t_char_ptr), kMCStringEncodingUTF8, false, &t_path_str);
+    
+    if (!dontappendname)
+    {
+        /* UNCHECKED */ MCStringFormat(r_path, "%@/%@", *t_path_str, *t_filename);
+    }
+    else
+    {
+        r_path = MCValueRetain(*t_path_str);
+    }
+    return true;
+#endif
+    
+    return false;
+}
+
+
 // MW-2006-08-05: Vetted for Endian issues
 OSStatus MCMacPlatformCore::GetAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
 {
@@ -783,7 +850,7 @@ OSStatus MCMacPlatformCore::GetAEAttributes(const AppleEvent *ae, AEKeyword key,
             {
                 FSSpec fs;
                 errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
-                t_success = MCS_mac_FSSpec2path(&fs, r_result);
+                t_success = FSSpec2path(&fs, r_result);
             }
                 break;
 #endif
@@ -914,7 +981,7 @@ OSStatus MCMacPlatformCore::GetAEParams(const AppleEvent *ae, AEKeyword key, MCS
             {
                 FSSpec fs;
                 errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
-                t_success = MCS_mac_FSSpec2path(&fs, r_result);
+                t_success = FSSpec2path(&fs, r_result);
             }
                 break;
 #endif

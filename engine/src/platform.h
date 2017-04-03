@@ -1047,6 +1047,7 @@ namespace MCPlatform
         virtual Boolean Callback_MCS_exists(MCStringRef p_path, bool p_is_file);
         virtual Boolean Callback_MCS_unlink(MCStringRef p_path);
         virtual real8 Callback_MCS_time(void);
+        virtual bool Callback_MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path);
         virtual void Callback_MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset);
         virtual bool Callback_MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
         virtual void Callback_MCImageFreeBitmap(MCImageBitmap *p_bitmap);
@@ -1492,6 +1493,10 @@ namespace MCPlatform {
         Boolean MCS_unlink(MCStringRef p_path)
         {
             return m_callback -> Callback_MCS_unlink(p_path);
+        }
+        bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
+        {
+            return m_callback -> Callback_MCS_pathfromnative(p_native_path, r_livecode_path);
         }
         void MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
         {

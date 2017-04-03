@@ -664,6 +664,10 @@ namespace MCPlatform {
     {
         return MCS_unlink(p_path);
     }
+    bool Callback::Callback_MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
+    {
+        return MCS_pathfromnative(p_native_path, r_livecode_path);
+    }
     void Callback::Callback_MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
     {
         MCGRasterApplyAlpha(x_raster, p_alpha, p_offset);

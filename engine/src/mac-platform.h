@@ -1064,6 +1064,7 @@ public:
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error);
     virtual void RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value);
     virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result);
+    virtual bool FSSpec2path(FSSpec *fSpec, MCStringRef& r_path);
     
     // Clipboard
     virtual MCRawClipboard* CreateSystemClipboard();
