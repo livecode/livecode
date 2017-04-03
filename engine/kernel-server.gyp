@@ -7,6 +7,7 @@
 			'kernel-server',
 			'../libfoundation/libfoundation.gyp:libFoundation',
 			'../libgraphics/libgraphics.gyp:libGraphics',
+			'libplatform.gyp:libplatform',
 		],
 		'module_test_sources':
 		[
