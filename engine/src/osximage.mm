@@ -24,8 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "image.h"
 
-#import "platform.h"
-#import "mac-platform.h"
+#include "platform.h"
+#include "mac-platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
