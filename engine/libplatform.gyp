@@ -134,16 +134,6 @@
 					[
 						'OS == "linux"',
 						{
-							'dependencies':
-							[
-								#'engine.gyp:create_linux_stubs',
-							],
-							
-							'sources':
-							[
-								'<(SHARED_INTERMEDIATE_DIR)/src/linux.stubs.cpp',
-							],
-							
 							'libraries':
 							[
 								'-ldl',
