@@ -296,16 +296,23 @@ command revDoSaveAsStandalone pStack, pFolder
    -- construct list of platforms to build, placing desktop platforms first
    local tHasDesktop
    local tBuildPlatforms
+   local tPlatform
    repeat for each item tTarget in revSBDesktopTargets()
       if sStandaloneSettingsA[tTarget] then
          put true into tHasDesktop
-         put revSBTargetToPlatform(tTarget) & itemDel after tBuildPlatforms
+         put revSBTargetToPlatform(tTarget) into tPlatform
+         if tPlatform is not among the items of tBuildPlatforms then
+            put tPlatform & itemDel after tBuildPlatforms
+         end if
       end if
    end repeat
    
    repeat for each item tTarget in revSBAdditionalTargets()
       if sStandaloneSettingsA[tTarget] then
-         put revSBTargetToPlatform(tTarget) & itemDel after tBuildPlatforms
+         put revSBTargetToPlatform(tTarget) into tPlatform
+         if tPlatform is not among the items of tBuildPlatforms then
+            put tPlatform & itemDel after tBuildPlatforms
+         end if
       end if
    end repeat
    
