@@ -15,11 +15,12 @@ LCS_ENGINE_FLAGS ?= $(guess_engine_flags)
 
 LCS_LOG = _lcs_test_suite.log
 LCS_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.livecodescript
+LCS_TESTS_DIR ?= $(top_srcdir)/tests/lcs
 
 ifeq ($(LCS_TESTENGINE),development)
 LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
 else
-LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run
+LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DIR)
 endif
 
 ########## LiveCode Builder test parameters

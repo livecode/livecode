@@ -95,14 +95,18 @@ private command doInvoke pInfo
 end doInvoke
 
 private command doRun pInfo
-   local tScript, tCommand, tAnalysis
-   put pInfo["args"][2] into tScript
-   put pInfo["args"][3] into tCommand
+   local tScript, tCommand, tAnalysis, tFolder
+   if there is a file pInfo["args"][2] then
+      put pInfo["args"][2] into tScript
+      put pInfo["args"][3] into tCommand
+   else if there is a folder pInfo["args"][2] then
+      put pInfo["args"][2] into tFolder
+   end if
 
    runLoadLibrary pInfo
    
    if tScript is empty then
-      runAllScripts pInfo
+      runAllScripts pInfo, tFolder
    else if tCommand is empty then
       runTestScript pInfo, tScript
    else
@@ -212,9 +216,9 @@ end runLoadLibrary
 
 -- Run all the test scripts that can be found below the current
 -- directory
-private command runAllScripts pInfo
+private command runAllScripts pInfo, pFolder
    local tFile, tAnalysis
-   repeat for each element tFile in TesterGetTestFileNames()
+   repeat for each element tFile in TesterGetTestFileNames(pFolder)
       runTestScript pInfo, tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
