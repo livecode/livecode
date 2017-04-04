@@ -52,14 +52,9 @@ end TesterGetTestFileNames
 
 -- Helper command used by runGetTestFileNames
 private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, @xFiles, @xCount
-   -- Save the CWD
-   local tSaveFolder
-   put the defaultfolder into tSaveFolder
-   set the defaultfolder to pPath
-
    -- Process files in the current directory
    local tFile
-   repeat for each line tFile in the files
+   repeat for each line tFile in files(pPath)
       if tFile ends with ("." & pExtension) and \
             not (tFile begins with "." or tFile begins with "_") then
 
@@ -74,7 +69,7 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
    -- Process subdirectories
    local tFolder, tFolderPath
-   repeat for each line tFolder in the folders
+   repeat for each line tFolder in folders(pPath)
       if tFolder begins with "." then
          next repeat
       end if
@@ -87,25 +82,22 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
       TesterGetActualFileNames_Recursive tFolderPath, tFolder, pExtension, xFiles, xCount
    end repeat
-
-   -- Restore the CWD
-   set the defaultfolder to tSaveFolder
 end TesterGetActualFileNames_Recursive
 
 -- Get a number-indexed array contain the names of all "test"
 -- commands in pFilename.
 function TesterParseTestCommandNames pFilename
    local tScript
-
    -- Get the contents of the file
+   local tResult
    open file pFilename for "UTF-8" text read
-   if the result is not empty then
-      throw the result
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
    end if
 
    read from file pFilename until end
    put it into tScript
-
    close file pFilename
 
    -- Scan the file for "on Test*" definitions
