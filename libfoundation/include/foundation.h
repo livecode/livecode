@@ -1289,6 +1289,8 @@ MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
 MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
+MC_DLLEXPORT hash_t MCHashInt64(int64_t);
+MC_DLLEXPORT hash_t MCHashUInt64(uint64_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.

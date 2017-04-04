@@ -285,8 +285,8 @@ template<typename T>
 hash_t __hash_int(T p_value)
 {
     if (std::is_signed<T>::value)
-        return MCHashSize(p_value);
-    return MCHashUSize(p_value);
+        return MCHashInt64(p_value);
+    return MCHashUInt64(p_value);
 }
 
 template<typename T>
@@ -321,7 +321,7 @@ void test_integral(MCTypeInfoRef p_type_info, const char *p_format)
     bool t_check_import_min_overflow = false;
     bool t_check_import_max_overflow = false;
     
-    T t_min, t_max;
+    int64_t t_min, t_max;
     
     // For C integer types of less than 64-bits in size, we can represent the
     // whole range in MCNumberRefs. For 64-bit size integral types, we can only
@@ -411,7 +411,7 @@ TEST_INTEGRAL(CSInt, signed int, "c signed int %d")
 TEST_INTEGRAL(CULong, unsigned long, "c unsigned long %lu")
 TEST_INTEGRAL(CSLong, signed long, "c signed long %ld")
 TEST_INTEGRAL(CULongLong, unsigned long long, "c unsigned long long %llu")
-TEST_INTEGRAL(CSLongLong, signed long long, "c signed long long %ld")
+TEST_INTEGRAL(CSLongLong, signed long long, "c signed long long %lld")
 
 TEST_INTEGRAL(UInt, uinteger_t, "unsigned integer %u")
 TEST_INTEGRAL(SInt, integer_t, "signed integer %d")
