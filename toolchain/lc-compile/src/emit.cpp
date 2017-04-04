@@ -196,6 +196,8 @@ struct AttachedReg
 
 static AttachedReg *s_attached_regs = nil;
 
+void EmitCheckNoRegisters(void);
+
 //////////
 
 //static MCTypeInfoRef *s_typeinfos = nil;
@@ -839,6 +841,9 @@ void EmitBeginUnsafeHandlerDefinition(long p_index, PositionRef p_position, Name
 
 void EmitEndHandlerDefinition(void)
 {
+    /* Check that registers have all been destroyed */
+    EmitCheckNoRegisters();
+    
     if (s_attached_regs != nil)
     {
         for(AttachedReg *t_reg = s_attached_regs; t_reg != NULL; t_reg = t_reg -> next)
@@ -1349,6 +1354,25 @@ void EmitDestroyRegister(long regindex)
     s_registers[regindex] = 0;
 
     Debug_Emit("DestroyRegister(%ld)", regindex);
+}
+
+void EmitCheckNoRegisters(void)
+{
+    bool t_all_destroyed = true;
+    if (s_register_count > 0)
+    {
+        for(uindex_t i = 0; i < s_register_count; i++)
+            if (s_registers[i] != 0)
+            {
+                t_all_destroyed = false;
+                Debug_Emit("Register %d not destroyed", i);
+            }
+    }
+    
+    if (!t_all_destroyed)
+    {
+        Fatal_InternalInconsistency("handler generation finished without destroying all registers");
+    }
 }
 
 //////////
