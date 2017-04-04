@@ -284,6 +284,20 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 }
 #endif
 
+struct FormatTable
+{
+    const char *label;
+    OSType value;
+};
+
+static FormatTable record_formats[] =
+{
+    { "aiff", kQTFileTypeAIFF },
+    { "wave", kQTFileTypeWave },
+    { "ulaw", kQTFileTypeMuLaw },
+    { "movie", kQTFileTypeMovie },
+};
+
 static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 {
 	bool t_success = true;
@@ -331,21 +345,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		Component c;
 		ComponentDescription cd;
 		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-			case EX_WAVE:
-				cd.componentSubType = kQTFileTypeWave;
-				break;
-			case EX_ULAW:
-				cd.componentSubType = kQTFileTypeMuLaw;
-				break;
-			case EX_AIFF:
-				cd.componentSubType = kQTFileTypeAIFF;
-				break;
-			default:
-				cd.componentSubType = kQTFileTypeMovie;
-				break;
-		}
+        cd.componentSubType = MCrecordformat;
 		cd.componentManufacturer = AUDIO_MEDIA_TYPE;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
@@ -398,7 +398,7 @@ void MCQTStopRecording(void)
 			sgSoundComp = NULL;
 		}
 #ifdef _WINDOWS
-		if (MCrecordformat == EX_MOVIE)
+        if (MCrecordformat == kQTFileTypeMovie)
         {
             MCAutoStringRefAsWString t_tempfile, t_exportfile;
             /* UNCHECKED */ t_tempfile . Lock(recordtempfile);
@@ -469,7 +469,7 @@ void MCQTRecordSound(MCStringRef fname)
 	UnsignedFixed sampleRate = 44100 << 16;
 #ifdef _WINDOWS
 	
-	if (MCrecordformat == EX_MOVIE)
+    if (MCrecordformat == kQTFileTypeMovie)
 	{
 		short denominator = (short)(MAXINT2 / MCrecordrate);
 		short numerator = (short)(MCrecordrate * denominator);
@@ -547,6 +547,24 @@ void MCQTGetRecordLoudness(integer_t &r_loudness)
 		SPBGetDeviceInfo(sgSndDriver, siLevelMeterOnOff, (char *)&meterState);
 		r_loudness = (uint2)((meterState[1] * 100) / 255);
 	}
+}
+        
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    {
+        if (MCStringIsEqualToCString(p_string, record_formats[i].label, kMCCompareCaseless))
+            return record_formats[i].value;
+    }
+}
+        
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    {
+        if (p_id == record_formats[i].value)
+            return record_formats[i].label;
+    }
 }
 
 void MCQTGetRecordCompressionList(MCStringRef &r_string)
@@ -1240,6 +1258,16 @@ void MCQTGetRecordCompressionList(MCStringRef &r_compression_list)
     r_compression_list = MCValueRetain(kMCEmptyString);
 }
 
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    return 0;
+}
+    
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    return kMCEmptyString;
+}
+        
 void MCQTStopRecording(void)
 {
 }

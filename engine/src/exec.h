@@ -4251,7 +4251,8 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value);
 
 ///////////
 
-extern MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo;
+struct MCMultimediaRecordFormat;
+extern MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo;
 
 extern MCExecMethodInfo *kMCMultimediaExecAnswerEffectMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecAnswerRecordMethodInfo;
@@ -4330,8 +4331,8 @@ void MCMultimediaExecPlayPlayerOperation(MCExecContext& ctxt, MCStack *p_target,
 void MCMultimediaExecPlayVideoOperation(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, int p_operation);
 void MCMultimediaExecPlayLastVideoOperation(MCExecContext& ctxt, int p_operation);
 
-void MCMultimediaGetRecordFormat(MCExecContext& ctxt, intenum_t &r_value);
-void MCMultimediaSetRecordFormat(MCExecContext& ctxt, intenum_t p_value);
+void MCMultimediaGetRecordFormat(MCExecContext& ctxt, MCMultimediaRecordFormat& r_value);
+void MCMultimediaSetRecordFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_value);
 void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value);
 void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value);
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value);

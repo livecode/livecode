@@ -82,6 +82,7 @@ public:
     
     virtual bool ListInputs(MCPlatformSoundRecorderListInputsCallback callback, void *context);
     virtual bool ListCompressors(MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+    virtual bool ListFormats(MCPlatformSoundRecorderListFormatsCallback callback, void *context);
     
     void Idle(void);
     
@@ -255,22 +256,9 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		Component c;
 		ComponentDescription cd;
 		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-			case EX_WAVE:
-				cd.componentSubType = kQTFileTypeWave;
-				break;
-			case EX_ULAW:
-				cd.componentSubType = kQTFileTypeMuLaw;
-				break;
-			case EX_AIFF:
-				cd.componentSubType = kQTFileTypeAIFF;
-				break;
-			default:
-				cd.componentSubType = kQTFileTypeMovie;
-				break;
-		}
-		cd.componentManufacturer = SoundMediaType;
+        cd.componentSubType = MCrecordformat;
+
+        cd.componentManufacturer = SoundMediaType;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -803,6 +791,31 @@ bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_c
             if (!p_callback(context, t_id, t_label))
                 return false;
         }
+    }
+    
+    return true;
+}
+
+struct FormatTable
+{
+    const char *label;
+    OSType value;
+};
+
+static FormatTable record_formats[] =
+{
+    { "aiff", kQTFileTypeAIFF },
+    { "wave", kQTFileTypeWave },
+    { "ulaw", kQTFileTypeMuLaw },
+    { "movie", kQTFileTypeMovie },
+};
+
+bool MCQTSoundRecorder::ListFormats(MCPlatformSoundRecorderListFormatsCallback p_callback, void *context)
+{
+    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    {
+        if (!p_callback(context, record_formats[i].value, MCSTR(record_formats[i].label)))
+            return false;
     }
     
     return true;

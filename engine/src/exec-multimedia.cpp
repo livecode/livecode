@@ -90,24 +90,116 @@ MC_EXEC_DEFINE_SET_METHOD(Multimedia, Recording, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCExecEnumTypeElementInfo _kMCMultimediaRecordFormatElementInfo[] =
+struct MCMultimediaRecordFormat
 {
-	{ "aiff", EX_AIFF, false },
-	{ "wave", EX_WAVE, false },
-	{ "ulaw", EX_ULAW, false },
-	{ "movie", EX_MOVIE, false },
+    intenum_t format;
 };
 
-static MCExecEnumTypeInfo _kMCMultimediaRecordFormatTypeInfo =
+struct MCMultimediaRecordFormatDataState
 {
-	"Multimedia.RecordFormat",
-	sizeof(_kMCMultimediaRecordFormatElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCMultimediaRecordFormatElementInfo
+    intenum_t format;
+    MCStringRef label;
 };
 
-//////////
+static bool get_record_format_id(void *context, intenum_t p_id, MCStringRef p_label)
+{
+    auto *t_state = static_cast<MCMultimediaRecordFormatDataState *>(context);
+    
+    if (MCStringIsEqualTo(t_state -> label, p_label, kMCCompareCaseless))
+    {
+        t_state -> format = p_id;
+    }
+    
+    return true;
+}
 
-MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo = &_kMCMultimediaRecordFormatTypeInfo;
+static bool get_record_format_label(void *context, intenum_t p_id, MCStringRef p_label)
+{
+    auto *t_state = static_cast<MCMultimediaRecordFormatDataState *>(context);
+    
+    if (t_state -> format == p_id)
+    {
+        t_state -> label = p_label;
+    }
+    
+    return true;
+}
+
+
+static void MCMultimediaRecordFormatParse(MCExecContext& ctxt, MCStringRef p_input, MCMultimediaRecordFormat& r_format)
+{
+    intenum_t t_format = 0;
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCMultimediaRecordFormatDataState t_state = { 0, p_input };
+        MCPlatformSoundRecorderListFormats(MCrecorder, get_record_format_id, &t_state);
+        t_format = t_state.format;
+    }
+#else
+    extern intenum_t MCQTGetRecordFormatId(MCStringRef);
+    t_format = MCQTGetRecordFormatId(p_input);
+#endif
+    
+    r_format.format = t_format;
+}
+
+static void MCMultimediaRecordFormatFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_format, MCStringRef& r_output)
+{
+    MCStringRef t_label = kMCEmptyString;
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCMultimediaRecordFormatDataState t_state = { p_format.format, nil };
+        MCPlatformSoundRecorderListFormats(MCrecorder, get_record_format_label, &t_state);
+        t_label = t_state.label;
+    }
+#else
+    extern MCStringRef MCQTGetRecordFormatLabel(intenum_t);
+    t_label = MCQTGetRecordFormatLabel(p_format.format);
+#endif
+    
+    r_output = MCValueRetain(t_label);
+}
+
+static void MCMultimediaRecordFormatInit(MCExecContext& ctxt, MCMultimediaRecordFormat& r_format)
+{
+    MCMemoryClear(&r_format, sizeof(MCMultimediaRecordFormat));
+}
+
+static void MCMultimediaRecordFormatFree(MCExecContext& ctxt, MCMultimediaRecordFormat& p_format)
+{
+}
+
+static void MCMultimediaRecordFormatCopy(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_source, MCMultimediaRecordFormat& r_target)
+{
+}
+
+static bool MCMultimediaRecordFormatIsEqualTo(const MCMultimediaRecordFormat& p_left, const MCMultimediaRecordFormat& p_right)
+{
+    return p_left . format == p_right . format;
+}
+
+static MCExecCustomTypeInfo _kMCMultimediaRecordFormatTypeInfo =
+{
+    "Multimedia.RecordFormat",
+    sizeof(MCMultimediaRecordFormat),
+    (void *)MCMultimediaRecordFormatParse,
+    (void *)MCMultimediaRecordFormatFormat,
+    (void *)MCMultimediaRecordFormatFree,
+};
+
+MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo = &_kMCMultimediaRecordFormatTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -750,14 +842,14 @@ void MCMultimediaExecPlayLastVideoOperation(MCExecContext& ctxt, int p_operation
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMultimediaGetRecordFormat(MCExecContext& ctxt, intenum_t &r_value)
+void MCMultimediaGetRecordFormat(MCExecContext& ctxt, MCMultimediaRecordFormat& r_value)
 {
-	r_value = (Export_format)MCrecordformat;
+    r_value.format = MCrecordformat;
 }
 
-void MCMultimediaSetRecordFormat(MCExecContext& ctxt, intenum_t p_value)
+void MCMultimediaSetRecordFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_value)
 {
-	MCrecordformat = p_value;
+    MCrecordformat = p_value.format;
 }
 
 void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value)

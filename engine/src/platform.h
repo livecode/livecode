@@ -1191,6 +1191,7 @@ struct MCPlatformSoundRecorderConfiguration
 
 typedef bool (*MCPlatformSoundRecorderListInputsCallback)(void *context, unsigned int input_id, const char *label);
 typedef bool (*MCPlatformSoundRecorderListCompressorsCallback)(void *context, unsigned int compressor_id, const char *label);
+typedef bool (*MCPlatformSoundRecorderListFormatsCallback)(void *context, intenum_t format_id, MCStringRef label);
 
 void MCPlatformSoundRecorderCreate(MCPlatformSoundRecorderRef& r_recorder);
 
@@ -1218,6 +1219,9 @@ bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef recorder, MCPl
 // Call callback for each possible compressor available - if the callback returns 'false' at any point
 // enumeration is cancelled, and the false will be returned.
 bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+// Call callback for each possible output format available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context);
 
 // Get the current sound recording configuration. The caller is responsible for freeing 'extra_info'.
 void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderConfiguration& r_config);
