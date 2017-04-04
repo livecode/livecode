@@ -293,35 +293,25 @@ command revDoSaveAsStandalone pStack, pFolder
    
    revStandaloneProgress "Preparing to build standalone..."
    
-   -- construct list of platforms to build, placing desktop platforms first
+   -- pre build message
    local tHasDesktop
-   local tBuildPlatforms
    repeat for each item tTarget in revSBDesktopTargets()
       if sStandaloneSettingsA[tTarget] then
          put true into tHasDesktop
-         put revSBTargetToPlatform(tTarget) & itemDel after tBuildPlatforms
+         exit repeat
       end if
    end repeat
    
-   repeat for each item tTarget in revSBAdditionalTargets()
-      if sStandaloneSettingsA[tTarget] then
-         put revSBTargetToPlatform(tTarget) & itemDel after tBuildPlatforms
-      end if
-   end repeat
-   
-   // remove trailing delimiter
-   if tBuildPlatforms is not empty then
-      delete char -1 of tBuildPlatforms
-   end if
-   
-   -- pre build message
-   local tStackFileName
+   local tStackFileName, tRestoreFileName
    if tHasDesktop then
       put the effective filename of stack pStack into tStackFileName
       if the mode of stack pStack > 0 then
          put the long name of stack pStack & return after sResetA["Reopen"]
       end if
       __SendSavingStandaloneMessage pStack
+      
+      --Save copy of stack in its post-savingStandalone message state
+      __SaveCopyOfStackInTemporaryLocation pStack, tRestoreFileName
    end if
    
    try
@@ -333,14 +323,21 @@ command revDoSaveAsStandalone pStack, pFolder
          create folder tOutputFolder
       end if
       
+      local tBuildPlatforms, tPlatform
+      repeat for each item tTarget in revSBDesktopTargets() & comma & revSBAdditionalTargets()
+         if sStandaloneSettingsA[tTarget] then
+            put revSBTargetToPlatform(tTarget) into tPlatform
+            put true into tBuildPlatforms[tPlatform]
+         end if
+      end repeat
+      
       -- If we're searching for inclusions, do it here 
       revSearchForInclusions pStack, sStandaloneSettingsA
       
       -- keep a copy of the standalone settings to restore after each build
       local tStandaloneSettingsA
       put sStandaloneSettingsA into tStandaloneSettingsA
-      
-      repeat for each item tPlatform in tBuildPlatforms
+      repeat for each key tPlatform in tBuildPlatforms
          put tStandaloneSettingsA into sStandaloneSettingsA
          
          local tTargetFolder
@@ -370,21 +367,20 @@ command revDoSaveAsStandalone pStack, pFolder
                      pStack, tTargetFolder, sStandaloneSettingsA
                break
             case "MacOSX"
-               revSaveAsMacStandalone pStack, tTargetFolder
+               revSaveAsMacStandalone pStack, tRestoreFileName, tTargetFolder
                break
             case "Windows"
-               revSaveAsWindowsStandalone pStack, tTargetFolder
+               revSaveAsWindowsStandalone pStack, tRestoreFileName, tTargetFolder
                break
             case "Linux"
-               revSaveAsLinuxStandalone pStack, tTargetFolder
+               revSaveAsLinuxStandalone pStack, tRestoreFileName, tTargetFolder
                break
          end switch
       end repeat
       
+      -- post build message
       if tHasDesktop then
-         -- restore original
          __ReloadOriginalStackFile tStackFileName, pStack
-         -- post build message
          __SendStandaloneSavedMessage pStack, tOutputFolder
       end if
       
@@ -589,6 +585,22 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    return tDeployInfo
 end revStandaloneInitialDeployParams
 
+private command __SaveCopyOfStackInTemporaryLocation pStack, @rLocation
+   local tFilename, tTemp
+   put the effective filename of stack pStack into tFilename
+   lock messages
+   put the tempname into tTemp
+   save stack pStack as tTemp
+   set the filename of stack pStack to tFilename
+   unlock messages
+   put tTemp into rLocation
+end __SaveCopyOfStackInTemporaryLocation
+
+private command __RestoreStackFromTemporaryLocation pStack, pLocation, pOriginalFileName
+   __ReloadOriginalStackFile pLocation, pStack
+   set the filename of stack pStack to pOriginalFileName
+end __RestoreStackFromTemporaryLocation
+
 private command  __SendSavingStandaloneMessage pStack
    try
       dispatch "savingStandalone" to stack pStack
@@ -604,7 +616,7 @@ private command __SendStandaloneSavedMessage pStack, pFolder
    end try
 end __SendStandaloneSavedMessage
 
-command revSaveAsMacStandalone pStack, pFolder
+command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
@@ -695,6 +707,9 @@ command revSaveAsMacStandalone pStack, pFolder
       revSetMacOS tStandalonePath, tTarget, tEngineSourceFile
       
       revRedirectMacOSResources tStandalonePath
+      
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
    revStandalonePostBuild pStack, pFolder
@@ -702,7 +717,7 @@ command revSaveAsMacStandalone pStack, pFolder
    return empty
 end revSaveAsMacStandalone
 
-command revSaveAsWindowsStandalone pStack, pFolder
+command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -861,6 +876,9 @@ command revSaveAsWindowsStandalone pStack, pFolder
       end if
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
+      
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
    revStandalonePostBuild pStack, pFolder
@@ -868,7 +886,7 @@ command revSaveAsWindowsStandalone pStack, pFolder
    return empty
 end revSaveAsWindowsStandalone
 
-command revSaveAsLinuxStandalone pStack, pFolder
+command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
    local tDirectory, tStackSourceFile, tName, tStackPath, tOriginalFileName
    
@@ -918,6 +936,9 @@ command revSaveAsLinuxStandalone pStack, pFolder
             tStandalonePath, tEngineSourceFile) into tDeployInfo
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
+      
+      --Restore stack to its post-savingStandalone message state
+      __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
    revStandalonePostBuild pStack, pFolder
