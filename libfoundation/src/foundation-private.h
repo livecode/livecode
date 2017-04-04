@@ -618,6 +618,9 @@ char_t MCNativeCharUppercase(char_t c);
 // Format the given string - the return string is NUL formatted.
 bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *format, va_list args);
 
+// Hash the given string with the specified options.
+hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options);
+
 //////////
 
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);

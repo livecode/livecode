@@ -1306,13 +1306,11 @@ MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
 // hashing sequence (byte_count should be a multiple of 4).
 MC_DLLEXPORT hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
 
-// Returns a hash value for the given sequence of native chars. The chars are
-// folded before being processed.
+// Returns a hash value for the given sequence of native chars.
 MC_DLLEXPORT hash_t MCHashNativeChars(const char_t *chars,
                                       size_t char_count);
 
-// Returns a hash value for the given sequence of code units. The chars are
-// normalized and folded before being processed.
+// Returns a hash value for the given sequence of code units.
 MC_DLLEXPORT hash_t MCHashChars(const unichar_t *chars,
                                 size_t char_count);
 

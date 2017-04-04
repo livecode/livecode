@@ -2843,7 +2843,7 @@ hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
         self = self -> string;
     
     if (__MCStringIsNative(self))
-        return __MCNativeOp_Hash(self -> native_chars,
+        return MCNativeCharsHash(self -> native_chars,
                                  self -> char_count,
                                  p_options);
     

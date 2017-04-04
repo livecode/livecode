@@ -1138,4 +1138,11 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_for
 	return true;
 }
 
+hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
+{
+    return __MCNativeOp_Hash(p_chars,
+                             p_char_count,
+                             p_options);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
