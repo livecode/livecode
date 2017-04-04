@@ -1431,6 +1431,7 @@ LT factor_table[] =
         {"recordcompression", TT_PROPERTY, P_RECORD_COMPRESSION},
         {"recordcompressiontypes", TT_FUNCTION, F_RECORD_COMPRESSION_TYPES},
         {"recordformat", TT_PROPERTY, P_RECORD_FORMAT},
+        {"recordformats", TT_FUNCTION, F_RECORD_FORMATS},
         {"recording", TT_PROPERTY, P_RECORDING},
         {"recordinput", TT_PROPERTY, P_RECORD_INPUT},
         {"recordloudness", TT_FUNCTION, F_RECORD_LOUDNESS},

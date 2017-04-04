@@ -54,6 +54,8 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
+From 9.0, the list of valid <recordFormats> is no longer a fixed list,
+but is determined by the current platform support.
 
 References: record sound (command), play (command)
 property (glossary), compress (glossary), audio clip (glossary),

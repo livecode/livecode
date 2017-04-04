@@ -567,6 +567,20 @@ MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
     }
 }
 
+bool MCQTGetRecordFormatList(MStringRef& r_string)
+{
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable('\n', &t_list))
+        return false;
+    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    {
+        if (!MCListAppendCString(*t_list, record_formats[i].label))
+            return false;
+    }
+    
+    return MCListCopyAsString(*t_list, r_string);
+}
+        
 void MCQTGetRecordCompressionList(MCStringRef &r_string)
 {	
 	if (!MCQTInit())
@@ -1268,6 +1282,13 @@ MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
     return kMCEmptyString;
 }
         
+bool MCQTGetRecordFormatList(MCStringRef &r_format_list)
+{
+    MCresult -> sets("not supported");
+    r_format_list = MCValueRetain(kMCEmptyString);
+    return true;
+}
+
 void MCQTStopRecording(void)
 {
 }

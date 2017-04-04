@@ -694,6 +694,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCRandom;
 	case F_RECORD_COMPRESSION_TYPES:
 		return new MCRecordCompressionTypes;
+    case F_RECORD_FORMATS:
+        return new MCRecordFormats;
 	case F_RECORD_LOUDNESS:
 		return new MCRecordLoudness;
 	case F_REPLACE_TEXT:

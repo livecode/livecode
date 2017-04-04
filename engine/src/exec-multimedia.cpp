@@ -45,6 +45,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, AnswerRecord, 0)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTVersion, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTEffects, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordCompressionTypes, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordFormats, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordLoudness, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Movie, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, MCISendString, 2)
@@ -235,6 +236,13 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
     MCListAppend(*t_state, *t_compressor_info);
     return true;
 }
+
+static bool list_formats_callback(void *context, intenum_t id, MCStringRef label)
+{
+    MCListRef *t_state = static_cast<MCListRef *>(context);
+    MCListAppend(*t_state, label);
+    return true;
+}
 #endif /* FEATURE_PLATFORM_RECORDER */
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
@@ -262,6 +270,36 @@ void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_
 #else
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
+#endif
+}
+
+void MCMultimediaEvalRecordFormats(MCExecContext& ctxt, MCStringRef& r_string)
+{
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCListRef t_state;
+        MCListCreateMutable('\n', t_state);
+        
+        MCPlatformSoundRecorderListFormats(MCrecorder, list_formats_callback, &t_state);
+        
+        MCListCopyAsString(t_state, r_string);
+        MCValueRelease(t_state);
+    }
+    else
+        // PM-2015-10-28: [[ Bug 16292 ]] Prevent crash and return empty if QT is not used
+        r_string = MCValueRetain(kMCEmptyString);
+#else
+    extern bool MCQTGetRecordFormatList(MCStringRef &r_string);
+    if (MCQTGetRecordFormatList(r_string))
+        return;
+    
+    ctxt . Throw();
 #endif
 }
 
