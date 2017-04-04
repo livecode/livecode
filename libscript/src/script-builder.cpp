@@ -355,6 +355,80 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     r_builder = self;
 }
 
+static bool
+MCScriptValidateModuleBytecode(MCScriptModule *self)
+{
+    for(uindex_t i = 0; i < self -> definition_count; i++)
+	{
+        if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
+        {
+			MCScriptHandlerDefinition *t_handler;
+			t_handler = static_cast<MCScriptHandlerDefinition *>(self -> definitions[i]);
+			
+			MCScriptValidateState t_state;
+			t_state.error = false;
+			t_state.module = self;
+			t_state.handler = t_handler;
+			
+			MCScriptHandlerType *t_signature;
+			t_signature = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
+			t_state.register_limit = t_signature->parameter_count +
+										t_handler -> local_type_count;
+            
+			const byte_t *t_bytecode;
+			const byte_t *t_bytecode_limit;
+            t_bytecode = self -> bytecode + t_handler -> start_address;
+            t_bytecode_limit = self -> bytecode + t_handler -> finish_address;
+			
+			// If there is no bytecode, the bytecode is malformed.
+			if (t_bytecode == t_bytecode_limit)
+				return false;
+			
+            while(t_bytecode != t_bytecode_limit)
+			{
+				t_state.current_address = uindex_t(t_bytecode - self-> bytecode);
+				
+                if (!MCScriptBytecodeIterate(t_bytecode,
+											 t_bytecode_limit,
+											 t_state.operation,
+											 t_state.argument_count,
+											 t_state.arguments))
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				if (t_state.operation > kMCScriptBytecodeOp__Last)
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				MCScriptBytecodeValidate(t_state);
+				if (t_state.error)
+				{
+					break;
+				}
+            }
+			
+			// If validation failed for a single operation, the bytecode is
+			// malformed.
+			if (t_state.error)
+				return false;
+			
+			// If we didn't reach the limit, the bytecode is malformed.
+			if (t_bytecode != t_bytecode_limit)
+				return false;
+			
+            // If the last operation was not return, the bytecode is malformed.
+			if (t_state.operation != kMCScriptBytecodeOpReturn)
+				return false;
+        }
+	}
+    
+    return true;
+}
+
 bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
 {
     if (self == nil)
@@ -366,6 +440,14 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
             continue;
         
         self -> valid = false;
+    }
+    
+    if (self->valid)
+    {
+        if (!MCScriptValidateModuleBytecode(&self->module))
+        {
+            self->valid = false;
+        }
     }
     
     bool t_success;

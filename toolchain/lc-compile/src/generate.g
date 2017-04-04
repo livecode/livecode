@@ -1133,8 +1133,9 @@
         
         EmitJump(RepeatHead)
         
-        EmitDestroyRegister(IteratorReg)
         EmitDestroyRegister(TargetReg)
+        EmitDestroyRegister(IterationVarTempReg)
+        EmitDestroyRegister(IteratorReg)
 
         EmitResolveLabel(RepeatTail)
 
@@ -1192,6 +1193,7 @@
     'rule' GenerateBody(Result, Context, get(Position, Value)):
         GenerateExpression(Result, Context, Value -> Reg)
         EmitAssign(Result, Reg)
+        EmitDestroyRegister(Reg)
 
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
