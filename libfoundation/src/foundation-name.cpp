@@ -261,7 +261,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 
 //////////
 
-// This comparator is used to search for native string in the name table.
+// This comparator is used to search for a native string in the name table.
 class __MCNameNativeCharsInput
 {
 public:
@@ -277,8 +277,9 @@ public:
     
     hash_t Hash(void) const
     {
-        return MCHashNativeChars(m_native_chars.data(),
-                                 m_native_chars.length());
+        return MCNativeCharsHash(m_native_chars.data(),
+                                 m_native_chars.length(),
+                                 kMCStringOptionCompareCaseless);
     }
     
     bool IsEquivalentTo(MCStringRef p_other_string) const
@@ -317,7 +318,7 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 
 //////////
 
-// This comparator is used to search for native string in the name table.
+// This comparator is used to search for a unicode string in the name table.
 class __MCNameCharsInput
 {
 public:
@@ -333,8 +334,9 @@ public:
     
     hash_t Hash(void) const
     {
-        return MCHashChars(m_chars.data(),
-                           m_chars.length());
+        return MCUnicodeHash(m_chars.data(),
+                             m_chars.length(),
+                             kMCUnicodeCompareOptionCaseless);
     }
     
     bool IsEquivalentTo(MCStringRef p_other_string) const
@@ -389,6 +391,8 @@ public:
     
     hash_t Hash(void) const
     {
+        /* We can use MCNativeCharsHash here as m_chars will be a sequence of
+         * digits which are already folded. */
         return MCHashNativeChars(m_chars,
                                  m_char_count);
     }

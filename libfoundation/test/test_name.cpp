@@ -19,7 +19,7 @@
 #include "foundation.h"
 #include "foundation-auto.h"
 
-TEST(name, index_equiv_strings)
+TEST(name, index_equal_string)
 {
     static index_t s_test_indicies[] =
     {
@@ -48,5 +48,76 @@ TEST(name, index_equiv_strings)
             // fprintf(stderr, "%s, %s\n", MCStringGetCString(MCNameGetString(*t_index_name)), MCStringGetCString(MCNameGetString(*t_string_name)));
             ASSERT_EQ(*t_index_name, *t_string_name);
         }
+    }
+}
+
+TEST(name, distinct_string)
+{
+    static constexpr const char *s_test_names[] =
+    {
+        "foo",
+        "bar",
+        "baz"
+        "foobar",
+        "foobaz",
+        "foobarbaz",
+    };
+    static constexpr size_t s_test_name_count = sizeof(s_test_names) / sizeof(s_test_names[0]);
+    
+    MCNewAutoNameRef t_names[s_test_name_count];
+    for(size_t i = 0; i < s_test_name_count; i++)
+    {
+        ASSERT_TRUE(MCNameCreateWithNativeChars((const char_t *)s_test_names[i], strlen(s_test_names[i]), &t_names[i]));
+        for(size_t j = 0; j < i; j++)
+            ASSERT_NE(*t_names[i], *t_names[j]);
+    }
+}
+
+TEST(name, equal_string)
+{
+    static constexpr const char *s_test_names[] =
+    {
+        "foo",
+        "foo",
+        "baz",
+        "baz",
+        "foobaz",
+        "foobaz",
+    };
+    static constexpr size_t s_test_name_count = sizeof(s_test_names) / sizeof(s_test_names[0]);
+    
+    MCNewAutoNameRef t_names[s_test_name_count];
+    for(size_t i = 0; i < s_test_name_count; i++)
+    {
+        ASSERT_TRUE(MCNameCreateWithNativeChars((const char_t *)s_test_names[i], strlen(s_test_names[i]), &t_names[i]));
+    }
+    for(size_t i = 0; i < s_test_name_count / 2; i++)
+    {
+        ASSERT_EQ(*t_names[i * 2], *t_names[i * 2 + 1]);
+    }
+}
+
+TEST(name, equiv_string)
+{
+    static constexpr const char *s_test_names[] =
+    {
+        "foo",
+        "FoO",
+        "baz",
+        "baZ",
+        "fooBaz",
+        "Foobaz",
+    };
+    static constexpr size_t s_test_name_count = sizeof(s_test_names) / sizeof(s_test_names[0]);
+    
+    MCNewAutoNameRef t_names[s_test_name_count];
+    for(size_t i = 0; i < s_test_name_count; i++)
+    {
+        ASSERT_TRUE(MCNameCreateWithNativeChars((const char_t *)s_test_names[i], strlen(s_test_names[i]), &t_names[i]));
+    }
+    for(size_t i = 0; i < s_test_name_count / 2; i++)
+    {
+        fprintf(stderr, "%s, %s\n", MCStringGetCString(MCNameGetString(*t_names[i * 2])), MCStringGetCString(MCNameGetString(*t_names[i * 2 + 1])));
+        ASSERT_TRUE(MCNameIsEqualTo(*t_names[i * 2], *t_names[i * 2 + 1]));
     }
 }
