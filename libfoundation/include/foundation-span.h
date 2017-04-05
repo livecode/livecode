@@ -209,6 +209,13 @@ inline MCSpan<ElementType> MCDataGetSpan(MCDataRef p_data)
  * Span-based overloads for pointer+range libfoundation functions
  * ---------------------------------------------------------------- */
 
+template <typename ElementType>
+inline void MCMemoryClearSecure(MCSpan<ElementType> x_span)
+{
+    MCMemoryClearSecure(reinterpret_cast<byte_t*>(x_span.data()),
+                        x_span.sizeBytes());
+}
+
 MC_DLLEXPORT
 hash_t MCHashBytes(MCSpan<const byte_t> bytes);
 
