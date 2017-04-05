@@ -457,6 +457,12 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
     
+    // Emit the dummy function
+    if (0 > fprintf(s_output_code_file,
+                    "void %s_module_loader_dummy(void) { return; }\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
     // Emit the initializer reference.
     if (0 > fprintf(s_output_code_file,
                     "extern \"C\" bool %s_Initialize(void);\n",
