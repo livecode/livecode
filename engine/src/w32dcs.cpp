@@ -312,6 +312,9 @@ Boolean MCScreenDC::close(Boolean force)
 	timeEndPeriod(1);
 	opened = 0;
 
+	DestroyWindow(invisiblehwnd);
+	invisiblehwnd = NULL;
+
 	return True;
 }
 

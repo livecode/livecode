@@ -83,8 +83,6 @@ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_ar
     return nil;
     
 error_exit:
-    MCValueRelease(x_arguments);
-    x_arguments = nil;
     r_value = nil;
     
     MCErrorRef t_error;
