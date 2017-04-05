@@ -1124,11 +1124,11 @@ __join_paths(MCSpan<MCNameRef> p_base,
             new (nothrow) MCNameRef[p_base.size() + p_extra.size()];
     if (t_result)
     {
-        for(int i = 0; i < p_base.size(); i++)
-            t_result[i] = p_base[i];
-    
-        for(int i = 0; i < p_extra.size(); i++)
-            t_result[i + p_base.size()] = p_extra[i];
+        int t_count = 0;
+        for (MCNameRef t_name : p_base)
+            t_result[t_count++] = t_name;
+        for (MCNameRef t_name : p_extra)
+            t_result[t_count++] = t_name;
     }
     
     return std::move(t_result);

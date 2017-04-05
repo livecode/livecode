@@ -1233,11 +1233,11 @@ MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupD
 	MCAutoProperListRef t_args;
 	if (!MCProperListCreateMutable(&t_args))
 		return;
-	
-	for(uindex_t i = 0; i < p_arguments.size(); i++)
-	{
+
+    for (const uindex_t t_argument : p_arguments)
+    {
 		MCValueRef t_value;
-		t_value = FetchRegister(p_arguments[i]);
+		t_value = FetchRegister(t_argument);
 		
 		if (t_value == nil)
 		{
