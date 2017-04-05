@@ -928,20 +928,8 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	lockforexecution();
     MCExecContext ctxt(this, hlist, hptr);
-	if (MCtracestackptr && MCtracereturn)
-	{
-		Boolean oldtrace = MCtrace;
-		if (MCtracestackptr == getstack())
-			MCtrace = True;
-		stat = hptr->exec(ctxt, params);
-		if (MCtrace && !oldtrace)
-		{
-			MCB_done(ctxt);
-			MCtrace = False;
-		}
-	}
-	else
-		stat = hptr->exec(ctxt, params);
+
+    stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
 	{
 		// MW-2011-06-23: [[ SERVER ]] If the handler has a file index, it
