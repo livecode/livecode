@@ -1513,7 +1513,11 @@ bool MCStringCopyReversed(MCStringRef self, MCStringRef& r_new_string)
          * unichar_t codeunits items per grapheme.  In this case, we
          * reverse by iterating over the contents of the original
          * string, copying the graphemes into the new string. */
-        MCStringRef t_original = __MCStringIsIndirect(self) ? self->string : self;
+        MCStringRef t_original = self;
+        if (__MCStringIsIndirect(t_original))
+        {
+            t_original = t_original->string;    
+        }
 
         /* Start of the next grapheme to copy, in the input string */
         uindex_t t_from = 0;
