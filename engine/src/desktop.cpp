@@ -777,11 +777,11 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	int4 si, ei;
 	MCactivefield -> selectedmark(False, si, ei, False);
 	MCactivefield -> unresolvechars(0, si, ei);
-	r_selected_range = MCRangeMake(si, ei - si);
+	r_selected_range = MCRangeMakeMinMax(si, ei);
 	if (MCactivefield -> getcompositionrange(si, ei))
 	{
 		MCactivefield -> unresolvechars(0, si, ei);
-		r_marked_range = MCRangeMake(si, ei - si);
+		r_marked_range = MCRangeMakeMinMax(si, ei);
 	}
 	else
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
@@ -831,7 +831,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 	t_bottom_right = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x + t_rect . width, t_rect . y + t_rect . height));
 	
 	r_first_line_rect = MCRectangleMake(t_top_left . x, t_top_left . y, t_bottom_right . x - t_top_left . x, t_bottom_right . y - t_top_left . y);
-	r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+	r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
@@ -855,7 +855,7 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 	MCactivefield -> unresolvechars(0, t_si, t_ei);
     
     /* UNCHECKED */ MCStringConvertToUnicode(*t_text, r_chars, r_char_count);
-    r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+    r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)

@@ -1519,7 +1519,7 @@ static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter
 			uinteger_t t_d;
         
 			if (t_success)
-				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+				t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_uint_string);
 			
 			if (t_success)
 				t_success = MCU_stoui4(*t_uint_string, t_d);
@@ -1577,7 +1577,7 @@ static bool MCPropertyParseLooseDoubleList(MCStringRef p_input, char_t p_delimit
 			double t_d;
 			
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_double_string);
             
             if (t_success)
                 t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
@@ -1625,7 +1625,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 			t_new_offset = t_length;
         
 		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
+            t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), t_string);
 		
 		if (t_success)
 			t_success = t_list . Push(t_string);
@@ -1684,7 +1684,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
         else
         {
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_point_string);
             
             if (t_success)
                 MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);

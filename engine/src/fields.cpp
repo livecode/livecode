@@ -191,7 +191,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 			{
 				uindex_t t_length = MCStringGetLength(tpgptr->GetInternalStringRef());
 				MCRange t_range, t_where;
-				t_range = MCRangeMake(oldoffset, t_length - oldoffset);
+				t_range = MCRangeMakeMinMax(oldoffset, t_length);
 				while (MCStringFind(tpgptr->GetInternalStringRef(), t_range, tofind, 
 									ctxt.GetStringComparisonType(),
 									&t_where))
@@ -588,7 +588,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 
             MCStringRef t_paragraph_text;
             if (t_pos != t_start)
-                MCStringCopySubstring(p_text, MCRangeMake(t_start, t_pos - t_start), t_paragraph_text);
+                MCStringCopySubstring(p_text, MCRangeMakeMinMax(t_start, t_pos), t_paragraph_text);
             else
                 t_paragraph_text = MCValueRetain(kMCEmptyString);
 

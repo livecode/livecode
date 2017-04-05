@@ -2283,17 +2283,17 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 	MCAutoStringRef t_filename;
 	if (MCStringGetLength(p_url) > 5 && MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url)-5), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadtextfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
@@ -2344,14 +2344,14 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path, t_data;
 		/* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_path);
 		MCS_savetextfile(*t_path, *t_data);
 	}
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_savebinaryfile(*t_path, *t_data);
 	}
@@ -2359,7 +2359,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}

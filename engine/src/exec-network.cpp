@@ -496,9 +496,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 		if (!ctxt . EnsureDiskAccessIsAllowed())
 			return;
 		if (MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
-			MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
+			MCStringCopySubstring(p_target, MCRangeMakeMinMax(5, MCStringGetLength(p_target)), &t_filename);
 		else
-			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+			MCStringCopySubstring(p_target, MCRangeMakeMinMax(8, MCStringGetLength(p_target)), &t_filename);
 		if (!MCS_unlink(*t_filename))
 			ctxt . SetTheResultToStaticCString("can't delete that file");
 		else
@@ -507,7 +507,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 	else if (MCStringGetLength(p_target) > 8 &&
 		MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+		MCStringCopySubstring(p_target, MCRangeMakeMinMax(8, MCStringGetLength(p_target)), &t_filename);
 		MCS_saveresfile(*t_filename, kMCEmptyData);
 	}
 	else if (MCU_couldbeurl(MCStringGetOldString(p_target)))
@@ -758,7 +758,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         // SN-2015-05-19: [[ Bug 15368 ]] Insert the new string at the right
         //  position: might be after or before the chunk, not only into it.
         if (p_where == PT_INTO)
-            t_range = MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start);
+            t_range = MCRangeMakeMinMax(p_chunk . mark . start, p_chunk . mark . finish);
         else if (p_where == PT_BEFORE)
             t_range = MCRangeMake(p_chunk . mark . start, 0);
         else // p_where == PT_AFTER

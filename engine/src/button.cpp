@@ -2201,7 +2201,7 @@ MCRange MCButton::getmenurange()
 		if (!MCStringFind(menustring, t_search, MCSTR("\n"), kMCStringOptionCompareExact, &t_temp))
 		{
 			if (++i == menuhistory)
-				return MCRangeMake(sptr, t_length - sptr);
+				return MCRangeMakeMinMax(sptr, t_length);
 			else
 				return MCRangeMake(0, 0);
 			break;
@@ -2214,7 +2214,7 @@ MCRange MCButton::getmenurange()
 	}
 	while (i < menuhistory);
 		
-	return MCRangeMake(sptr, t_search.offset - sptr);
+	return MCRangeMakeMinMax(sptr, t_search.offset);
 }
 
 void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFontRef fontref)
@@ -2728,7 +2728,7 @@ void MCButton::openmenu(Boolean grab)
 			
 			MCAutoStringRef t_label;
 			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
-												  MCRangeMake(t_offset, t_new_offset - t_offset),
+												  MCRangeMakeMinMax(t_offset, t_new_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
 			flags |= F_LABEL;

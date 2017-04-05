@@ -871,7 +871,7 @@ void MCD_dateformat(MCExecContext &ctxt, Properties p_length, MCStringRef& r_dat
 	if (t_char == '!' || t_char == '^')
 	{
 		MCAutoStringRef t_new;
-		/* UNCHECKED */ MCStringCopySubstring(t_format, MCRangeMake(1, MCStringGetLength(t_format) - 1), &t_new);
+		/* UNCHECKED */ MCStringCopySubstring(t_format, MCRangeMakeMinMax(1, MCStringGetLength(t_format)), &t_new);
 		MCValueAssign(t_format, *t_new);
 	}
 

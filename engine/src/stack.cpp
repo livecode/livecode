@@ -1741,7 +1741,7 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
             // If the relative path begins with "./" or ".\", we must remove this, otherwise
 			// certain system calls will get confused by the path.
 			if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact) || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
-				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMake(2, MCStringGetLength(p_path) - 2));
+				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMakeMinMax(2, MCStringGetLength(p_path)));
 			else
 				/* UNCHECKED */ MCStringAppend(*t_new_filename, p_path);
             
@@ -1773,7 +1773,7 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
     MCS_getcurdir(&t_cur_dir);
 
     MCRange t_range;
-    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    t_range = MCRangeMakeMinMax(t_start_index, MCStringGetLength(p_path));
     return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 

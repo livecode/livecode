@@ -1152,7 +1152,7 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
         return;
     }
     
-    if (!MCStringCopySubstring(t_key, MCRangeMake(t_comma_offset + 1, MCStringGetLength(t_key) - t_comma_offset - 1), &t_handler_name))
+    if (!MCStringCopySubstring(t_key, MCRangeMakeMinMax(t_comma_offset + 1, MCStringGetLength(t_key)), &t_handler_name))
     {
         ctxt . Throw();
         return;

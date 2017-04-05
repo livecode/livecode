@@ -144,7 +144,7 @@ static bool __MCJavaCallNeedsClassInstance(MCJavaCallType p_type)
 static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
 {
     return MCStringCopySubstring(p_in,
-                                 MCRangeMake(1, MCStringGetLength(p_in) - 2),
+                                 MCRangeMakeMinMax(1, MCStringGetLength(p_in) - 1),
                                  r_out);
 }
 
