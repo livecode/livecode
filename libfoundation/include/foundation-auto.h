@@ -96,6 +96,12 @@ public:
 	{
 		return m_value;
 	}
+
+    inline T operator -> (void) const
+    {
+        MCAssert(m_value != nullptr);
+        return m_value;
+    }
     
 	bool IsSet() const
 	{

@@ -406,6 +406,37 @@ public handler TestRepeatChar()
 	test "repeatchar (count)" when tCount is 3
 end handler
 
+handler TestReverse_Inplace(in pDesc as String, \
+		in pForward as String, in pReverse as String)
+
+	variable tReversed
+	put pForward into tReversed
+
+	reverse tReversed
+	test diagnostic tReversed
+	test "reverse in-place (" & pDesc & ")" when tReversed is pReverse
+
+	reverse tReversed
+	test diagnostic tReversed
+	test "rereverse in-place (" & pDesc & ")" when tReversed is pForward
+end handler
+
+public handler TestReverse()
+	TestReverse_Inplace("empty", "", "")
+	TestReverse_Inplace("native, odd", "abc", "cba")
+	TestReverse_Inplace("native, even", "abcd", "dcba")
+	TestReverse_Inplace("trivial, odd", \
+			"\u{039a}\u{03b1}\u{03bb}\u{03b7}\u{03bc}\u{03ad}\u{03c1}\u{03b1}!", \
+			"!\u{03b1}\u{03c1}\u{03ad}\u{03bc}\u{03b7}\u{03bb}\u{03b1}\u{039a}")
+	TestReverse_Inplace("trivial, even", \
+			"\u{039a}\u{03b1}\u{03bb}\u{03b7}\u{03bc}\u{03ad}\u{03c1}\u{03b1}", \
+			"\u{03b1}\u{03c1}\u{03ad}\u{03bc}\u{03b7}\u{03bb}\u{03b1}\u{039a}")
+	TestReverse_Inplace("BMP variation selector, 1", "a\u{fe0e}", "a\u{fe0e}")
+	TestReverse_Inplace("BMP variation selector, even", \
+			"\u{2b55}\u{fe0f}\u{25ef}", "\u{25ef}\u{2b55}\u{fe0f}")
+	TestReverse_Inplace("SMP, odd", "a\u{1d11e}c", "c\u{1d11e}a")
+end handler
+
 ----------------------------------------------------------------
 
 handler TestCharWithCode_Negative()

@@ -955,6 +955,20 @@ bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
     return false;
 }
 
+MC_DLLEXPORT_DEF
+bool MCProperListReverse(MCProperListRef self)
+{
+    MCAssert(MCProperListIsMutable(self));
+
+    // Ensure the list ref is not indirect
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->list, self->length);
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCProperListDestroy(__MCProperList *self)

@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 #include <stdio.h>
-
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -666,6 +666,27 @@ __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 
 #define __MCAssertIsErrorTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsError)
 #define __MCAssertIsForeignTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsForeign)
+
+////////////////////////////////////////////////////////////////////////////////
+// ALGORITHM TEMPLATES
+//
+
+/* Efficiently reverse the order of elements in an array, in-place.
+ * The algorithm works from the middle of the array outwards, swapping
+ * the elements at each end.  The ElementType must be swappable,
+ * either by being trivially copyable or by implementing a
+ * std::swap()-compatible swap operation that can be found by ADL. */
+/* TODO[C++11] Obsolete this macro by using std::reverse from
+ * <algorithm>.  Would require MCSpan to support STL iteration. */
+template <typename ElementType, typename IndexType>
+inline void MCInplaceReverse(ElementType* x_elements, IndexType p_num_elements)
+{
+    using std::swap;
+    MCAssert(x_elements != nullptr || p_num_elements == 0);
+    for (auto t_count = p_num_elements/2; t_count > 0; --t_count)
+        swap(x_elements[t_count - 1],
+             x_elements[p_num_elements - t_count]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

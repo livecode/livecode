@@ -1476,6 +1476,79 @@ bool MCStringMutableCopySubstringAndRelease(MCStringRef self, MCRange p_range, M
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
+bool MCStringCopyReversed(MCStringRef self, MCStringRef& r_new_string)
+{
+    __MCAssertIsString(self);
+
+    if (MCStringGetLength(self) < 2)
+        return MCStringCopy(self, r_new_string);
+
+    /* Make a deep copy of the input string. */
+    /* TODO[2017-03-29] This could be optimised by _not_ copying the
+     * actual string buffer contents during the deep copy, but
+     * reversing directly from the input string's internal buffer to
+     * the result string's buffer. */
+    MCAutoStringRef t_result;
+    if (!MCStringMutableCopy(self, &t_result))
+        return false;
+    if (__MCStringIsIndirect(*t_result))
+        if (!__MCStringResolveIndirect(*t_result))
+            return false;
+
+    if (__MCStringIsNative(*t_result))
+    {
+        /* Native strings have one char_t per grapheme, so they can be
+         * reversed in-place. */
+        MCInplaceReverse(t_result->native_chars, t_result->char_count);
+    }
+    else if (__MCStringIsTrivial(*t_result))
+    {
+        /* Trivial strings have one unichar_t per grapheme, so they
+         * can be reversed in-place. */
+        MCInplaceReverse(t_result->chars, t_result->char_count);
+    }
+    else
+    {
+        /* These strings have some potentially-unbounded number of
+         * unichar_t codeunits items per grapheme.  In this case, we
+         * reverse by iterating over the contents of the original
+         * string, copying the graphemes into the new string. */
+        MCStringRef t_original = self;
+        if (__MCStringIsIndirect(t_original))
+        {
+            t_original = t_original->string;    
+        }
+
+        /* Start of the next grapheme to copy, in the input string */
+        uindex_t t_from = 0;
+        uindex_t t_length = t_original->char_count;
+
+        while (t_from < t_length)
+        {
+            /* Find the end of the current grapheme */
+            uindex_t t_grapheme_end =
+                MCStringGraphemeBreakIteratorAdvance(t_original, t_from);
+
+            if (t_grapheme_end == kMCLocaleBreakIteratorDone)
+                t_grapheme_end = t_length;
+
+            MCAssert(t_grapheme_end <= t_length);
+
+            MCMemoryCopy(t_result->chars + t_length - t_grapheme_end,
+                         t_original->chars + t_from,
+                         (t_grapheme_end - t_from) * sizeof(*t_result->chars));
+
+            t_from = t_grapheme_end;
+        }
+    }
+
+    r_new_string = t_result.Take();
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
 bool MCStringIsMutable(const MCStringRef self)
 {
 	__MCAssertIsString(self);
