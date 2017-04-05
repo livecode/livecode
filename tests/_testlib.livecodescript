@@ -250,8 +250,8 @@ on TestLoadExtension pName
 
    if tExtensionFile is not empty then
       _TestLoadExtension tExtensionFolder, tExtensionFile
+      put the result into tError
    end if
-   put the result into tError
 
    if tError is not empty then
       write tError & return to stderr
@@ -350,7 +350,7 @@ on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
 
     put false into tResult
 
-    local tTimer, tTimeout
+    local tTimer, tTimeout, tTimerStart
     put false into tTimeout
     put the millisecs into tTimerStart
 

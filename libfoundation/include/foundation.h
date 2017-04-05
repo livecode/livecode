@@ -1286,11 +1286,16 @@ extern "C" {
 //   the same from version to version. In particular, never serialize a hash
 //   value - recompute on unserialization of the object.
 
+// Return a hash for the given bool.
+MC_DLLEXPORT hash_t MCHashBool(bool);
+
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
 MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
+MC_DLLEXPORT hash_t MCHashInt64(int64_t);
+MC_DLLEXPORT hash_t MCHashUInt64(uint64_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
@@ -1546,24 +1551,73 @@ MC_DLLEXPORT MCTypeInfoRef MCListTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCProperListTypeInfo(void) ATTRIBUTE_PURE;
 
 MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt64TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt64TypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt64TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt64TypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
-
-MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignFloatTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignDoubleTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignPointerTypeInfo(void) ATTRIBUTE_PURE;
 
-MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntSizeTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntSizeTypeInfo(void) ATTRIBUTE_PURE;
 
-MC_DLLEXPORT MCTypeInfoRef MCForeignSizeTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignSSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntPtrTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntPtrTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntPtrTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntPtrTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCCBoolTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCBoolTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCCCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUShortTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSShortTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCULongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSLongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCULongLongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSLongLongTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUShortTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSShortTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCULongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSLongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCULongLongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSLongLongTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntTypeInfo(void) ATTRIBUTE_PURE;
 
 //////////
 
@@ -2965,6 +3019,9 @@ MC_DLLEXPORT bool MCErrorThrowGenericWithMessage(MCStringRef message, ...);
 //
 //  FOREIGN DEFINITIONS
 //
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignExportErrorTypeInfo;
 
 MC_DLLEXPORT bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 MC_DLLEXPORT bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);

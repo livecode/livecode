@@ -9,6 +9,7 @@
 		'module_test_sources':
 		[
 			'test/environment.cpp',
+            'test/test_foreign.cpp',
 			'test/test_hash.cpp',
 			'test/test_proper-list.cpp',
 			'test/test_string.cpp',

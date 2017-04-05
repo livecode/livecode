@@ -44,8 +44,14 @@ int MCJavaMapTypeCode(MCStringRef p_type_code)
 
 static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
 {
-    if (p_type == kMCIntTypeInfo)
+    if (p_type == kMCSInt8TypeInfo)
+        r_code = kMCJavaTypeByte;
+    else if (p_type == kMCSInt16TypeInfo)
+        r_code = kMCJavaTypeShort;
+    else if (p_type == kMCSInt32TypeInfo)
         r_code = kMCJavaTypeInt;
+    else if (p_type == kMCSInt64TypeInfo)
+        r_code = kMCJavaTypeLong;
     else if (p_type == kMCBoolTypeInfo)
         r_code = kMCJavaTypeBoolean;
     else if (p_type == kMCFloatTypeInfo)
@@ -79,11 +85,6 @@ static bool __MCTypeInfoConformsToJavaType(MCTypeInfoRef p_type, MCJavaType p_co
     MCJavaType t_code;
     if (!__GetExpectedTypeCode(p_type, t_code))
         return false;
-    
-    // Just allow long and int interchangeably for now
-    if (t_code == kMCJavaTypeInt &&
-        p_code == kMCJavaTypeLong)
-        return true;
     
     return t_code == p_code;
 }

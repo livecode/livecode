@@ -90,14 +90,7 @@ extern "C" void EmitDefinedType(long index, long& r_type_index);
 extern "C" void EmitForeignType(long binding, long& r_type_index);
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
-extern "C" void EmitOptionalType(long index, long& r_new_index);
-extern "C" void EmitPointerType(long& r_new_index);
-extern "C" void EmitBoolType(long& r_new_index);
-extern "C" void EmitIntType(long& r_new_index);
-extern "C" void EmitUIntType(long& r_new_index);
-extern "C" void EmitFloatType(long& r_new_index);
-extern "C" void EmitDoubleType(long& r_new_index);
-extern "C" void EmitAnyType(long& r_new_index);
+extern "C" void EmitOptionalType(long index, long& r_new_index);extern "C" void EmitAnyType(long& r_new_index);
 extern "C" void EmitBooleanType(long& r_new_index);
 extern "C" void EmitIntegerType(long& r_new_index);
 extern "C" void EmitRealType(long& r_new_index);
@@ -1078,54 +1071,6 @@ void EmitOptionalType(long base_index, long& r_new_index)
     r_new_index = t_index;
 
     Debug_Emit("OptionalType(%ld -> %ld)", base_index, r_new_index);
-}
-
-void EmitPointerType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("Pointer", r_new_index))
-        return;
-
-    Debug_Emit("PointerType(-> %ld)", r_new_index);
-}
-
-void EmitBoolType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CBool", r_new_index))
-        return;
-
-    Debug_Emit("BoolType(-> %ld)", r_new_index);
-}
-
-void EmitIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CInt", r_new_index))
-        return;
-
-    Debug_Emit("IntType(-> %ld)", r_new_index);
-}
-
-void EmitUIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CUint", r_new_index))
-        return;
-
-    Debug_Emit("UIntType(-> %ld)", r_new_index);
-}
-
-void EmitFloatType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CFloat", r_new_index))
-        return;
-
-    Debug_Emit("FloatType(-> %ld)", r_new_index);
-}
-
-void EmitDoubleType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CDouble", r_new_index))
-        return;
-
-    Debug_Emit("DoubleType(-> %ld)", r_new_index);
 }
 
 void EmitAnyType(long& r_new_index)

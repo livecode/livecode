@@ -585,7 +585,8 @@ MCScriptExecuteContext::CheckedFetchRegisterAsBool(uindex_t p_index)
     {
         t_value_as_bool = (t_value == kMCTrue);
     }
-    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo ||
+             MCValueGetTypeInfo(t_value) == kMCCBoolTypeInfo)
     {
         t_value_as_bool = *(bool *)MCForeignValueGetContentsPtr(t_value);
     }
