@@ -188,20 +188,13 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 
 void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 {
-    /* MCSellist::remove() is called recursively via
-     * MCSellist::del(). MCSellist::del() deletes from the end of the
-     * selection towards the start, so in that case it's optimal to
-     * search from the end of the selection.  In the case where
-     * remove() is being called for an arbitrary selected object, it
-     * doesn't make any difference whether we're searching from the
-     * start or the end.*/
     const auto&& t_found =
-        std::find(m_objects.rbegin(), m_objects.rend(), objptr);
-    if (t_found != m_objects.rend())
+        std::find(m_objects.begin(), m_objects.end(), objptr);
+    if (t_found != m_objects.end())
     {
         if (p_sendmessage)
             (*t_found)->message(MCM_selected_object_changed);
-        m_objects.erase(t_found.base(), t_found.base()+1);
+        m_objects.erase(t_found, t_found+1);
     }
 }
 
@@ -442,14 +435,14 @@ bool MCSellist::clipboard(bool p_is_cut)
         if (p_is_cut)
         {
             MCStack *sptr = m_objects.front()->getstack();
-            /* Because MCObject::del() will call MCSellist::remove(),
-             * iterate backwards over the list of objects, making sure
-             * that when MCObject::del() is called the object is at
-             * the end of the list of selected objects.  See also
-             * comments in MCSellist::del(). */
+
             while (!m_objects.empty())
             {
+                /* Deselect the object before attempting to delete it.
+                 * This ensures that it doesn't try to deselect itself
+                 * while being deleted. */
                 MCObjectHandle t_node = m_objects.back();
+                m_objects.pop_back();
 
                 // MW-2008-06-12: [[ Bug 6466 ]] Make sure we don't still delete an
                 //   object if the stack is protected.
@@ -467,12 +460,7 @@ bool MCSellist::clipboard(bool p_is_cut)
                         t_obj->scheduledelete();
                     }
                 }
-                /* If the object couldn't be deleted, deselect it
-                 * anyway. */
-                if (!m_objects.empty() && m_objects.back() == t_node)
-                    m_objects.pop_back();
             }
-            m_objects.clear();
             sptr->message(MCM_selected_object_changed);
         }
     }
@@ -500,27 +488,14 @@ Boolean MCSellist::del()
     MCundos->freestate();
 
     MCStack *sptr = m_objects.front()->getstack();
-    /* When we delete an object, it removes itself from the selection,
-     * by calling MCSellist::remove().  This not only mutates the
-     * selection, but sends a message that may cause code to run that
-     * further invalidates the selection.  To cope with this,
-     * repeatedly delete the last object in the selection (because
-     * removing objects from the end of the selection is cheap), until
-     * the selection is empty. */
-    /* TODO[2017-04-10] Find some way to prevent user code from
-     * turning this into an infinite loop.  At the moment, a stack can
-     * respond to a deletion-triggered "selected object changed"
-     * message by creating a new object on itself and selecting it, ad
-     * infinitum. */
     while (!m_objects.empty())
     {
-        /* Can't move the object out of the selected list here.  If
-         * the object isn't the last item in m_objects when
-         * MCObject::del() is called, MCSellist::remove() will have to
-         * scan the whole of m_objects rather than getting an
-         * immediate hit.  That would balloon the cost of
-         * MCSellist::del() from O(N) to O(N^2). */
+        /* Deselect the object before attempting to delete it.  This
+         * ensures that it doesn't try to deselect itself while being
+         * deleted. */
         MCObjectHandle t_node = m_objects.back();
+        m_objects.pop_back();
+
         if (t_node && t_node->gettype() >= CT_GROUP)
         {
             MCControl *cptr = t_node.GetAs<MCControl>();
@@ -534,10 +509,6 @@ Boolean MCSellist::del()
 
             cptr->del(true);
         }
-        /* Deselect non-deletable selected objects rather than
-         * deleting thme. */
-        if (!m_objects.empty() && m_objects.back() == t_node)
-            m_objects.pop_back();
     }
     sptr->message(MCM_selected_object_changed);
     return True;
