@@ -1642,10 +1642,11 @@ private function __AvailableScriptLibraries
    return sScriptLibraries
 end __AvailableScriptLibraries
 
-command revSBAddAvailableLibrary pID, pTitle
+command revSBAddAvailableLibrary pID, pTitle, pSettingsA
    local tLibrary
    put pID into tLibrary["id"]
    put pTitle into tLibrary["title"]
+   put pSettingsA into tLibrary["settings"]
    put "script library" into tLibrary["type"]
    put revSBAllDesktopPlatforms() & comma & \ 
          revSBAllMobilePlatforms() into tLibrary["platforms"]
@@ -2720,6 +2721,16 @@ function revSBGetSettings pStack, pDeploy
          end repeat
       end repeat
    end if
+   
+   # set library requirements
+   local tLibraries
+   put __AvailableScriptLibraries() into tLibraries
+   repeat for each element tLibrary in tLibraries
+      if tLibrary["title"] is among the lines of tSettingsA["scriptLibraries"] then
+         union tLibrary["settings"] with tSettingsA recursively
+         put tLibrary["settings"] into tSettingsA
+      end if
+   end repeat
    
    return tSettingsA
 end revSBGetSettings
