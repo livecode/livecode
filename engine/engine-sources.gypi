@@ -1040,7 +1040,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/srvmac.cpp',
 						'src/native-layer-mac.mm',
 					],
 				},
