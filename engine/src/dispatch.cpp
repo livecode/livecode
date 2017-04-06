@@ -2255,8 +2255,8 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 		if (t_objects != NULL)
 		{
-			MCselected -> clear(False);
-			MCselected -> lockclear();
+			MCselected.clear(False);
+			MCselected.lockclear();
 
 			while(t_objects != NULL)
 			{
@@ -2273,7 +2273,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 					r_objptr = t_object;
 			}
 
-			MCselected -> unlockclear();
+			MCselected.unlockclear();
 	
 			return true;
 		}

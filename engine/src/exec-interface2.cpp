@@ -1991,7 +1991,7 @@ void MCInterfaceGetSelectionHandleColor(MCExecContext& ctxt, MCInterfaceNamedCol
 void MCInterfaceSetSelectionHandleColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
 	set_interface_color(MCselectioncolor, MCselectioncolorname, p_color);
-	MCselected->redraw();
+	MCselected.redraw();
 }
 
 void MCInterfaceGetWindowBoundingRect(MCExecContext& ctxt, MCRectangle& r_value)
@@ -2272,7 +2272,7 @@ void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object
 void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     MCObject *t_object;
-    t_object = MCselected -> getfirst();
+    t_object = MCselected.getfirst();
     
     if (t_object != nil)
     {

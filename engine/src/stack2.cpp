@@ -786,7 +786,7 @@ void MCStack::clearbackground()
 
 void MCStack::ungroup(MCGroup *source)
 {
-	MCselected->clear(True);
+	MCselected.clear(True);
 	MCControl *clist = source->getcontrols();
 	if (!curcard->removecontrol(source, False, True))
 		return;
@@ -806,7 +806,7 @@ void MCStack::ungroup(MCGroup *source)
 				tptr->setid(newid());
 			}
 			curcard->newcontrol(tptr, False);
-			MCselected->add(tptr);
+			MCselected.add(tptr);
 			tptr = tptr->next();
 		}
 		while (tptr != clist);
@@ -835,7 +835,7 @@ void MCStack::startedit(MCGroup *group)
 		stopedit();
 	else
 	{
-		MCselected->clear(True);
+		MCselected.clear(True);
 		kunfocus();
 	}
 	curcard->close();
@@ -889,7 +889,7 @@ void MCStack::stopedit()
 {
 	if (editing == NULL)
 		return;
-	MCselected->clear(True);
+	MCselected.clear(True);
 	curcard->close();
 	MCObjptr *clist = curcard->getrefs();
 	MCControl *oldcontrols = controls;
@@ -924,7 +924,7 @@ void MCStack::stopedit()
 	kfocus();
 	dirtywindowname();
 	if (gettool(this) == T_POINTER)
-		MCselected->add(oldediting);
+		MCselected.add(oldediting);
 }
 
 void MCStack::updatemenubar()

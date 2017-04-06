@@ -1095,7 +1095,7 @@ void MCPasteboardExecCopy(MCExecContext& ctxt)
 	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
 	else
-		MCselected -> copy();
+		MCselected.copy();
 }
 
 void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
@@ -1115,7 +1115,7 @@ void MCPasteboardExecCut(MCExecContext& ctxt)
 	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
 	else
-		MCselected -> cut();
+		MCselected.cut();
 }
 
 void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)

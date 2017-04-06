@@ -1154,7 +1154,7 @@ void MCInterfaceEvalSelectedImage(MCExecContext& ctxt, MCStringRef& r_string)
 void MCInterfaceEvalSelectedObject(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
-	if (MCselected->getids(&t_list) && MCListCopyAsString(*t_list, r_string))
+	if (MCselected.getids(&t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
 	ctxt.Throw();
@@ -1967,7 +1967,7 @@ void MCInterfaceExecUngroupSelection(MCExecContext& ctxt)
 	if (MCtopstackptr)
 	{
 		MCObject *t_group;
-		t_group = MCselected->getfirst();
+		t_group = MCselected.getfirst();
 		if (t_group == NULL || t_group->gettype() != CT_GROUP)
 		{
 			ctxt . LegacyThrow(EE_UNGROUP_NOTAGROUP);
@@ -2110,7 +2110,7 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
 {
 	MCGroup *t_group = nil;
-	if (MCselected->group(ctxt.GetLine(), ctxt.GetPos(), t_group) != ES_NORMAL)
+	if (MCselected.group(ctxt.GetLine(), ctxt.GetPos(), t_group) != ES_NORMAL)
 	{
 		ctxt.Throw();
 		return;
@@ -2294,7 +2294,7 @@ void MCInterfaceExecDelete(MCExecContext& ctxt)
 	else if (MCactiveimage)
 		MCactiveimage->delimage();	
 	else
-		MCselected->del();
+		MCselected.del();
 }
 
 void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, uindex_t p_object_count)
@@ -2435,7 +2435,7 @@ void MCInterfaceExecUnhiliteChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr 
 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt)
 {
-	MCselected->clear(True);
+	MCselected.clear(True);
 	if (MCactivefield)
 	{
 		MCactivefield->unselect(False, True);
@@ -2553,9 +2553,9 @@ static void MCInterfaceExecSelectObject(MCExecContext& ctxt, MCObjectPtr p_objec
 	}
 
 	if (p_first)
-		MCselected -> clear(False);
+		MCselected.clear(False);
 
-	MCselected -> add(p_object . object);
+	MCselected.add(p_object . object);
 }
 
 void MCInterfaceExecSelectObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, uindex_t p_object_count)
@@ -4180,7 +4180,7 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
 {
-	MCObject *optr = MCselected->getfirst();
+	MCObject *optr = MCselected.getfirst();
 	if (optr == nil)
 	{
 		MCCard *cardptr = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
