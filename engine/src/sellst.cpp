@@ -131,7 +131,7 @@ void MCSellist::Clean()
     /* Remove any dead objects from the selected list. */
     m_objects.erase(
          std::remove_if(m_objects.begin(), m_objects.end(),
-                        [](const MCSelnode& node) -> bool { return !node; }),
+                        [](const MCSelnode& node) { return bool{!node}; }),
          m_objects.end());
 }
 
@@ -230,11 +230,11 @@ void MCSellist::sort()
 
     std::transform(m_objects.begin(), m_objects.end(),
                    t_items.begin(),
-                   [&](const MCSelnode& t_node) -> SortNode {
+                   [&](const MCSelnode& t_node) {
                        uint2 t_num {};
                        t_card->count(CT_LAYER, CT_UNDEFINED,
                                      t_node, t_num, True);
-                       return {t_node.Get(), t_num};
+                       return SortNode{t_node.Get(), t_num};
                    });
     m_objects.clear();
 
@@ -572,8 +572,8 @@ void MCSellist::continuemove(int2 x, int2 y)
 
     auto t_first_valid =
         std::find_if(m_objects.begin(), m_objects.end(),
-                     [](const MCSelnode& p_node) -> bool {
-                         return p_node;
+                     [](const MCSelnode& p_node) {
+                         return bool{p_node};
                      });
     for (auto&& t_iter = t_first_valid;
          t_iter != std::end(m_objects);
