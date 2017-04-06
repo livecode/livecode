@@ -1,0 +1,13 @@
+--- a-no-nl.txt	2017-01-17 17:07:30.000000000 +0000
++++ b-no-nl.txt	2017-01-17 17:07:35.000000000 +0000
+@@ -1,6 +1,6 @@
+-This file has some text, with the final line NOT terminated by LF
++This file has some text, different from 'a', with the final line NOT terminated by LF
+ 
+ ********
+ 
+ ********
+-Sample text
+\ No newline at end of file
++Alternative sample text
+\ No newline at end of file

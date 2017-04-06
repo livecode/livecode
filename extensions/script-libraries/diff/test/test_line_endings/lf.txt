@@ -1,0 +1,5 @@
+This file uses LF
+
+a
+b
+c

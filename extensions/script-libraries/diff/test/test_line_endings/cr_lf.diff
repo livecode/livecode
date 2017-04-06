@@ -1,0 +1,10 @@
+--- cr.txt	2017-01-06 17:10:24.000000000 +0000
++++ lf.txt	2017-01-06 17:10:08.000000000 +0000
+@@ -1 +1,5 @@
+-This file uses CRabc
+\ No newline at end of file
++This file uses LF
++
++a
++b
++c
