@@ -297,8 +297,6 @@ MCObject::~MCObject()
 
 	if (MCerrorptr == this)
 		MCerrorptr = nil;
-	if (state & CS_SELECTED)
-		MCselected->remove(this);
 	IO_freeobject(this);
 	MCundos->freeobject(this);
 	delete hlist;

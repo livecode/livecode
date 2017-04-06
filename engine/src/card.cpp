@@ -1130,8 +1130,6 @@ Boolean MCCard::del(bool p_check_flag)
 	    return False;
 	
     clean();
-    
-	MCselected->remove(this);
 	
 	// MW-2008-10-31: [[ ParentScripts ]] Make sure we close the controls
 	closecontrols();
