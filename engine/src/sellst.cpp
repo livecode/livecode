@@ -140,12 +140,7 @@ void MCSellist::clear(Boolean message)
 	if (locked)
 		return;
     
-    const MCObjectHandle optr = [this]() -> MCObjectHandle {
-        if (m_objects.empty())
-            return {};
-        else
-            return m_objects.back();
-    }();
+    const MCObjectHandle optr = m_objects.empty() ? MCObjectHandle{} : m_objects.back();
 
     m_objects.clear();
     
