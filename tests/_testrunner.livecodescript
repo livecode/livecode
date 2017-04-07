@@ -219,6 +219,9 @@ end runLoadLibrary
 private command runAllScripts pInfo, pFolder
    local tFile, tAnalysis
    repeat for each element tFile in TesterGetTestFileNames(pFolder)
+      if pFolder is not empty then
+         put pFolder & slash before tFile
+      end if
       runTestScript pInfo, tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
