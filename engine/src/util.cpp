@@ -1884,8 +1884,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     }
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
-    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
-        t_player -> syncbuffering(nil);
+    MCPlayer::SyncPlayers(nil, nil);
     
     MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     

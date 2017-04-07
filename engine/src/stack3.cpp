@@ -1159,9 +1159,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
         {
 #ifdef FEATURE_PLATFORM_PLAYER
             // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> detachplayer();
+            MCPlayer::DetachPlayers(this);
 #endif
                 
             t_error = curcard->message(MCM_preopen_card) == ES_ERROR || curcard != card || !opened;
@@ -1172,9 +1170,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
             t_error = curcard -> opencontrols(true) == ES_ERROR || curcard != card || !opened;
 #ifdef FEATURE_PLATFORM_PLAYER
             // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                 if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> attachplayer();
+             MCPlayer::AttachPlayers(this);
 #endif
         }
         

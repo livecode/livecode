@@ -951,7 +951,12 @@ end revSaveAsLinuxStandalone
 
 private command  __ReloadOriginalStackFile pStackPath, pStack
    if there is a stack pStack then
-      __UnloadStack pStack
+      local tOldLock
+      put the lockMessages into tOldLock
+      lock messages
+      set the cantDelete of stack pStack to false
+      delete stack pStack
+      set the lockMessages to tOldLock
    end if
    
    local tError
@@ -962,29 +967,6 @@ private command  __ReloadOriginalStackFile pStackPath, pStack
    end try
    return it for value
 end __ReloadOriginalStackFile
-
-
-private command __UnloadStack pStack
-   local tOldLock, tStackEntry, tStack
-
-   put the lockMessages into tOldLock
-   lock messages
-
-   repeat for each line tStackEntry in the stackfiles of stack pStack
-      put item 1 of tStackEntry into tStack
-      if tStack is not empty AND there is a stack tStack then
-         set the cantDelete of stack tStack to false
-         delete stack tStack
-      end if
-   end repeat
-
-   -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
-   set the cantDelete of stack pStack to false
-   delete stack pStack
-   set the lockMessages to tOldLock
-
-   return empty
-end __UnloadStack
 
 #####################################################################
 # Check for open stacks, ask to save if need be then close them
@@ -2516,7 +2498,9 @@ command revStandaloneDeployWithParams pTarget, pStackFilePath, pDeployInfo
    lock messages
    lock screen
    save stack pStackFilePath
-   __UnloadStack the short name of stack pStackFilePath
+   -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
+   set the cantDelete of stack pStackFilePath to false
+   delete stack pStackFilePath
    unlock screen
    unlock messages
    

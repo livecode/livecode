@@ -354,6 +354,7 @@ public:
 	virtual void applyrect(const MCRectangle &nrect);
 
     virtual void removereferences(void);
+    Boolean dodel(void);
 	virtual Boolean del(bool p_check_flag);
     virtual bool isdeletable(bool p_check_flag);
     

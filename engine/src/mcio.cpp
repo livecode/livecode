@@ -111,15 +111,17 @@ void IO_cleanprocesses()
 #ifdef X11
 			if (MCprocesses[i].mode == OM_VCLIP)
 			{
-				MCPlayer *tptr = MCplayers;
-				while (tptr != NULL)
+				MCPlayerHandle t_player = MCplayers;
+				while (t_player.IsValid())
 				{
-					if (MCNameIsEqualToCString(MCprocesses[i].name, tptr->getcommand(), kMCCompareExact))
+					if (MCNameIsEqualToCString(MCprocesses[i].name,
+                                               t_player->getcommand(),
+                                               kMCCompareExact))
 					{
-						tptr->playstop(); // removes from linked list
+						t_player->playstop(); // removes from linked list
 						break;
 					}
-					tptr = tptr->getnextplayer();
+					t_player = t_player->getnextplayer();
 				}
 			}
 #endif

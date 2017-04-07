@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcstring.h"
 #include "osspec.h"
+#include "globals.h"
+#include "variable.h"
 
 #include "globals.h"
 #include "variable.h"
@@ -1086,7 +1088,7 @@ MCEmscriptenSystem::LaunchDocument(MCStringRef p_document)
 void
 MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 {
-	/* Successfully do nothing */
+	MCresult -> sets("no association");
 }
 
 void

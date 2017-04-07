@@ -336,7 +336,9 @@ void MCDispatch::removestack(MCStack *sptr)
 void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
-		removestack(sptr);
+    {
+        sptr -> dodel();
+    }
 	if (sptr == MCstaticdefaultstackptr)
 		MCstaticdefaultstackptr = stacks;
 	if (sptr == MCdefaultstackptr)
