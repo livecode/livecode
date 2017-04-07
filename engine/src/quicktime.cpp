@@ -553,20 +553,23 @@ void MCQTGetRecordLoudness(integer_t &r_loudness)
         
 intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
 {
-    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
+    for (auto&& t_format : record_formats)
     {
-        if (MCStringIsEqualToCString(p_string, t_iter.label, kMCCompareCaseless))
-            return t_iter.value;
+        if (MCStringIsEqualToCString(p_string, t_format.label, kMCCompareCaseless))
+            return t_format.value;
     }
+    return 0;
 }
         
 MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
 {
-    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
+    for (auto&& t_format : record_formats)
     {
         if (p_id == t_iter.value)
-            return t_iter.label;
+            return t_format.label;
     }
+    
+    return kMCEmptyString;
 }
 
 bool MCQTGetRecordFormatList(MStringRef& r_string)
@@ -574,9 +577,10 @@ bool MCQTGetRecordFormatList(MStringRef& r_string)
     MCAutoListRef t_list;
     if (!MCListCreateMutable('\n', &t_list))
         return false;
-    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
+    
+    for (auto&& t_format : record_formats)
     {
-        if (!MCListAppendCString(*t_list, t_iter.label))
+        if (!MCListAppendCString(*t_list, t_format.label))
             return false;
     }
     
