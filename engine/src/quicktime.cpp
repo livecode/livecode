@@ -14,6 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <algorithm>
+
 #include "prefix.h"
 
 #include "globdefs.h"
@@ -290,7 +292,7 @@ struct FormatTable
     OSType value;
 };
 
-static FormatTable record_formats[] =
+static const FormatTable record_formats[] =
 {
     { "aiff", kQTFileTypeAIFF },
     { "wave", kQTFileTypeWave },
@@ -551,19 +553,19 @@ void MCQTGetRecordLoudness(integer_t &r_loudness)
         
 intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
 {
-    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
     {
-        if (MCStringIsEqualToCString(p_string, record_formats[i].label, kMCCompareCaseless))
-            return record_formats[i].value;
+        if (MCStringIsEqualToCString(p_string, t_iter.label, kMCCompareCaseless))
+            return t_iter.value;
     }
 }
         
 MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
 {
-    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
     {
-        if (p_id == record_formats[i].value)
-            return record_formats[i].label;
+        if (p_id == t_iter.value)
+            return t_iter.label;
     }
 }
 
@@ -572,9 +574,9 @@ bool MCQTGetRecordFormatList(MStringRef& r_string)
     MCAutoListRef t_list;
     if (!MCListCreateMutable('\n', &t_list))
         return false;
-    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
+    for (auto t_iter = std::begin(record_formats); t_iter != std::end(record_formats); ++t_iter)
     {
-        if (!MCListAppendCString(*t_list, record_formats[i].label))
+        if (!MCListAppendCString(*t_list, t_iter.label))
             return false;
     }
     

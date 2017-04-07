@@ -35,7 +35,7 @@ Use the <recordFormat> <property> to specify what kind of file to create
 when recording a sound, depending on how the file will be used.
 
 The <recordFormat> <property> determines what kind of file is created
-when you use the <record sound> <command> to record sound. Use the 
+when you use the <record sound> <command> to record sound. The 
 <recordFormats> <function> returns a list of supported <recordFormat> 
 values.
 
@@ -57,10 +57,9 @@ bit builds of LiveCode.
 From 9.0, the list of valid <recordFormats> is no longer a fixed list,
 but is determined by the current platform support.
 
-References: record sound (command), play (command)
+References: record sound (command), play (command), function (glossary),
 property (glossary), compress (glossary), audio clip (glossary),
 QuickTime (glossary), file path (glossary), command (glossary),
-codec (glossary), player (keyword),
-recordFormat (property), filename (property), recordFormats (function),
-function (glossary)
+codec (glossary), player (keyword), filename (property), 
+recordFormats (function), recordCompression (property)
 

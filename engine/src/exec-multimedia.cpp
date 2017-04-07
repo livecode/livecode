@@ -240,8 +240,7 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
 static bool list_formats_callback(void *context, intenum_t id, MCStringRef label)
 {
     MCListRef *t_state = static_cast<MCListRef *>(context);
-    MCListAppend(*t_state, label);
-    return true;
+    return MCListAppend(*t_state, label);
 }
 #endif /* FEATURE_PLATFORM_RECORDER */
 
@@ -278,29 +277,30 @@ void MCMultimediaEvalRecordFormats(MCExecContext& ctxt, MCStringRef& r_string)
 #ifdef FEATURE_PLATFORM_RECORDER
     extern MCPlatformSoundRecorderRef MCrecorder;
     
-    if (MCrecorder == nil)
+    if (MCrecorder == nullptr)
         MCPlatformSoundRecorderCreate(MCrecorder);
     
-    if (MCrecorder != nil)
+    if (MCrecorder == nullptr)
     {
-        MCListRef t_state;
-        MCListCreateMutable('\n', t_state);
-        
-        MCPlatformSoundRecorderListFormats(MCrecorder, list_formats_callback, &t_state);
-        
-        MCListCopyAsString(t_state, r_string);
-        MCValueRelease(t_state);
-    }
-    else
-        // PM-2015-10-28: [[ Bug 16292 ]] Prevent crash and return empty if QT is not used
         r_string = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    MCListRef t_state = nullptr;
+    if (MCListCreateMutable('\n', t_state) &&
+        MCPlatformSoundRecorderListFormats(MCrecorder,
+                                           list_formats_callback,
+                                           &t_state) &&
+        MCListCopyAsStringAndRelease(t_state, r_string))
+        return;
+    
+    MCValueRelease(t_state);
 #else
     extern bool MCQTGetRecordFormatList(MCStringRef &r_string);
     if (MCQTGetRecordFormatList(r_string))
         return;
-    
-    ctxt . Throw();
 #endif
+    ctxt . Throw();
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp

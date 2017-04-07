@@ -14,6 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <algorithm>
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -802,7 +804,7 @@ struct FormatTable
     OSType value;
 };
 
-static FormatTable record_formats[] =
+static const FormatTable record_formats[] =
 {
     { "aiff", kQTFileTypeAIFF },
     { "wave", kQTFileTypeWave },
@@ -812,13 +814,10 @@ static FormatTable record_formats[] =
 
 bool MCQTSoundRecorder::ListFormats(MCPlatformSoundRecorderListFormatsCallback p_callback, void *context)
 {
-    for (int i = 0; i < sizeof(record_formats) / sizeof(record_formats[0]); i++)
-    {
-        if (!p_callback(context, record_formats[i].value, MCSTR(record_formats[i].label)))
-            return false;
-    }
-    
-    return true;
+    return std::all_of(std::begin(record_formats), std::end(record_formats),
+                       [&](const FormatTable& p_fmt) {
+                           return p_callback(context, p_fmt.value, MCSTR(p_fmt.label));
+                       });
 }
 
 bool MCQTSoundRecorder::ListCompressors(MCPlatformSoundRecorderListCompressorsCallback p_callback, void *context)
