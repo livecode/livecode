@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sSupportStack, sInsideFolder, sOutsideFolder
 constant kRelativeToMeInside = "_build"
-constant kRelativeToMeOutside = "../../_tests/_build"
+constant kRelativeToMeOutside = "../../../_tests/_build"
 on TestSetup   
    start using stack "revSBLibrary"
 		
@@ -50,7 +50,6 @@ on TestTeardown
    StandaloneBuilderCleanUpStandalones
    stop using stack sSupportStack
    revDeleteFolder sInsideFolder
-   revDeleteFolder sOutsideFolder
    _TestTeardownStacks
 end TestTeardown
 
