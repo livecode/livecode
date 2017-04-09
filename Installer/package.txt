@@ -802,6 +802,7 @@ component Toolset
 		stack ide-support:revsblibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
+		file repo:extensions/script-libraries/dropbox/dropbox.livecodescript
 		file repo:extensions/script-libraries/oauth2/oauth2.livecodescript
 		file repo:extensions/script-libraries/getopt/getopt.livecodescript
 		file repo:extensions/script-libraries/mime/mime.livecodescript

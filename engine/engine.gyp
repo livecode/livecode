@@ -73,6 +73,7 @@
 				'../extensions/script-libraries/oauth2/oauth2.livecodescript',
 				'../extensions/script-libraries/getopt/getopt.livecodescript',
 				'../extensions/script-libraries/mime/mime.livecodescript',
+				'../extensions/script-libraries/dropbox/dropbox.livecodescript',
 			],
 			
 			'actions':
