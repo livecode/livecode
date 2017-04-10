@@ -99,6 +99,7 @@ xcprojects/
 GPATH
 GRTAGS
 GTAGS
+*.aps
 
 # Build folders #
 #################
