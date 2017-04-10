@@ -183,7 +183,7 @@ class UniqueMspdbsrv(object):
         os.environ['_MSPDBSRV_ENDPOINT_'] = str(uuid.uuid4())
 
         mspdbsrv_exe = os.path.join(config.get_program_files_x86(),
-            'Microsoft Visual Studio 10.0\\Common7\\IDE\\mspdbsrv.exe')
+            'Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.10.25017\\bin\\HostX86\\x86\\mspdbsrv.exe')
         args = [mspdbsrv_exe, '-start', '-shutdowntime', '-1']
         print(' '.join(args))
         self.proc = subprocess.Popen(args, close_fds=True)

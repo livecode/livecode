@@ -16,7 +16,7 @@ LIBS_linux=( OpenSSL Curl ICU CEF )
 LIBS_emscripten=( ICU )
 
 SUBPLATFORMS_ios=(iPhoneSimulator8.2 iPhoneSimulator9.2 iPhoneSimulator10.2 iPhoneOS9.2 iPhoneOS10.2)
-SUBPLATFORMS_win32=(v140_static_debug v140_static_release)
+SUBPLATFORMS_win32=(v141_static_debug v141_static_release)
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
