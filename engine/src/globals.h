@@ -147,7 +147,7 @@ extern Boolean MCselectintersect;
 extern MCRectangle MCwbr;
 extern uint2 MCjpegquality;
 extern Export_format MCpaintcompression;
-extern uint2 MCrecordformat;
+extern intenum_t MCrecordformat;
 extern uint2 MCsoundchannel;
 extern uint2 MCrecordsamplesize;
 extern uint2 MCrecordchannels;

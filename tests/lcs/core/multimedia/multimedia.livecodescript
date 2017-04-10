@@ -64,16 +64,3 @@ TestAssert "test", true
 end if
 
 end TestMultimedia4
-
-
-on TestRecordCompressionTypes
-
-  if (the platform is "MacOS" or the platform is "Win32") then
-    if the qtversion is not "0.0" then
-      TestAssert "testRecordCompressionTypesNotEmpty", the recordCompressionTypes is not empty
-    else
-      TestAssert "testRecordCompressionTypesEmpty", the recordCompressionTypes is empty
-    end if
-  end if
-
-end TestRecordCompressionTypes
