@@ -39,9 +39,9 @@ Use the <tokenOffset> function to find which sentence a string occurs
 in. 
 
 The value returned by the <tokenOffset> function is the number of the
-token where the <stringToFind> appears in <stringToSearch>. If the
+token where the <stringToFind> first appears in <stringToSearch>. If the
 <stringToFind> is not in <stringToSearch>, the <tokenOffset> function
-returns zero. If the <stringToFind> is more than one token, the
+returns zero. If the <stringToFind> itself contains more than one token, the
 <tokenOffset> function always returns zero, even if the <stringToFind>
 appears in the <stringToSearch>.
 
