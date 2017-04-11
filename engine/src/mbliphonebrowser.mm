@@ -278,7 +278,7 @@ void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
-	if (t_view != nil)
+	if (t_view != nil && [[t_view request] URL] != nil)
     {
         /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
         return;

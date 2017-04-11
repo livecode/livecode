@@ -635,15 +635,8 @@ void MCStack::stop_externals()
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
-	MCPlayer *tptr = MCplayers;
-	while (tptr != NULL)
-	{
-		MCPlayer *t_next = tptr->getnextplayer();
-		if (tptr->getstack() == this)
-			tptr->playstop();
-
-		tptr = t_next;
-	}
+    
+    MCPlayer::StopPlayers(this);
 
 	if (!MCnoui && window != DNULL)
 	{

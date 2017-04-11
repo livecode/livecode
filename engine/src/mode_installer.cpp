@@ -1581,7 +1581,7 @@ bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-    t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+    t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
     /* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
     return t_do_relaunch;
 #else

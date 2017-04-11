@@ -80,7 +80,7 @@ void MCObjptr::setparent(MCObject *newparent)
 MCObjectHandle MCObjptr::Get()
 {
     // If the object pointer hasn't yet been bound, resolve it using the ID
-    if (!m_objptr.IsBound())
+    if (!m_objptr.IsBound() && m_parent . IsValid())
     {
         // Note that this may return null if the control doesn't exist
         m_objptr = m_parent->getstack()->getcontrolid(CT_LAYER, m_id);
