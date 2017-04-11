@@ -69,10 +69,26 @@ void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStrin
 		r_error_message = nil;
 		return;
 	}
-	
-	r_error_code = -1;
-    if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+
+    r_error_code = -1;
+
+    if (MCresult == nullptr)
+    {
+        /* TODO[2017-04-05] X_init() failed before initialising global
+         * variables.  This could be because something horrible happened, or it
+         * could be because it found "-h" in the arguments.  It's better to
+         * quit without an error message than to crash, but it the future it
+         * would be good to distinguish between the two. */
+        r_error_message = MCValueRetain(kMCEmptyString);
+    }
+    else if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+    {
         r_error_message = (MCStringRef)MCValueRetain(MCresult->getvalueref());
+    }
+    else
+    {
+        r_error_message = MCValueRetain(MCSTR("Unknown error occurred"));
+    }
 }
 
 void MCPlatformHandleApplicationShutdown(int& r_exit_code)
