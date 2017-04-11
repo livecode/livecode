@@ -383,23 +383,23 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.clock
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.colorSwatch
+		rfolder macosx:packaged_extensions/com.livecode.widget.colorswatch
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.gradientRampEditor
+		rfolder macosx:packaged_extensions/com.livecode.widget.gradientrampeditor
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.lineGraph
+		rfolder macosx:packaged_extensions/com.livecode.widget.linegraph
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.headerBar
+		rfolder macosx:packaged_extensions/com.livecode.widget.headerbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.iconPicker
+		rfolder macosx:packaged_extensions/com.livecode.widget.iconpicker
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.library.iconSVG
+		rfolder macosx:packaged_extensions/com.livecode.library.iconsvg
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.json
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.navbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.paletteActions
+		rfolder macosx:packaged_extensions/com.livecode.widget.paletteactions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.segmented
 	into [[ToolsFolder]]/Extensions place
@@ -409,7 +409,7 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.treeView
+		rfolder macosx:packaged_extensions/com.livecode.widget.treeview
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
 	into [[ToolsFolder]]/Extensions place
