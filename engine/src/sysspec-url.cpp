@@ -556,7 +556,11 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusError)
     {
         MCAutoDataRef t_err;
-        MCDataCreateWithBytes((const byte_t *)MCStringGetCString((MCStringRef)p_data), MCStringGetLength((MCStringRef)p_data), &t_err);
+        if (!MCStringEncode(static_cast<MCStringRef>(const_cast<void*>(p_data)),
+                            kMCStringEncodingNative,
+                            false,
+                            &t_err))
+            return false;
 		MCValueAssign(context -> data, *t_err);
     }
 	else if (p_status == kMCSystemUrlStatusLoading)
