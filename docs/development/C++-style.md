@@ -182,6 +182,13 @@ See also [C++ Feature Usage Guidelines for LiveCode](C++-features.md).
 * Avoid using the ternary `/*condition*/ ? /*if_true*/ : /*if_false*/`
   operator.
 
+* When writing lambda expressions, try to avoid return type
+  specification; use inference or, if necessary, cast or construct a
+  value in the `return` statement.
+
+      auto t_valid_handle =
+          [](const ObjectHandle& p_obj) { return bool{p_obj}; }
+
 ## Code layout, indentation and whitespace
 
 * Use spaces for indentation and alignment, with 4 spaces per level of
