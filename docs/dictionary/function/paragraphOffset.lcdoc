@@ -40,9 +40,9 @@ Use the <paragraphOffset> function to find which paragraph a string
 occurs in.
 
 The value returned by the <paragraphOffset> function is the number of
-the paragraph where the <stringToFind> appears in <stringToSearch>. If
+the paragraph where the <stringToFind> first appears in <stringToSearch>. If
 the <stringToFind> is not in <stringToSearch>, the <paragraphOffset>
-function returns zero. If the <stringToFind> is more than one paragraph,
+function returns zero. If the <stringToFind> itself contains more than one paragraph,
 the <paragraphOffset> function always returns zero, even if the
 <stringToFind> appears in the <stringToSearch>.
 
