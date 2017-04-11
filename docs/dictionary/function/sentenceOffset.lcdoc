@@ -40,9 +40,9 @@ Use the <sentenceOffset> function to find which sentence a string occurs
 in. 
 
 The value returned by the <sentenceOffset> function is the number of the
-sentence where the <stringToFind> appears in <stringToSearch>. If the
+sentence where the <stringToFind> first appears in <stringToSearch>. If the
 <stringToFind> is not in <stringToSearch>, the <sentenceOffset> function
-returns zero. If the <stringToFind> is more than one sentence, the
+returns zero. If the <stringToFind> contains more than one sentence, the
 <sentenceOffset> function always returns zero, even if the
 <stringToFind> appears in the <stringToSearch>.
 
