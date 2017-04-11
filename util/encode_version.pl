@@ -9,8 +9,9 @@ sub trim
 	return $trimmed;
 }
 
-my $inputDir = $ARGV[0];
-my $outputDir = $ARGV[1];
+my $gitRevision = $ARGV[0];
+my $inputDir = $ARGV[1];
+my $outputDir = $ARGV[2];
 
 # Open the file containing the variables
 open VARIABLES, "<" . $inputDir . "/../version"
@@ -35,6 +36,8 @@ foreach $variable (@variables)
 	my $varValue = trim($parts[1]);
 	$output =~ s/\$${varName}/${varValue}/g;
 }
+
+$output =~ s/\$GIT_REVISION/${gitRevision}/g;
 
 # Create the output file
 open OUTPUT, ">" . $outputDir . "/include/revbuild.h"
