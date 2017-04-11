@@ -40,9 +40,9 @@ Use the <truewordOffset> function to find which sentence a string occurs
 in. 
 
 The value returned by the <truewordOffset> function is the number of the
-trueword where the <stringToFind> appears in <stringToSearch>. If the
+trueword where the <stringToFind> first appears in <stringToSearch>. If the
 <stringToFind> is not in <stringToSearch>, the <truewordOffset> function
-returns zero. If the <stringToFind> is more than one trueword, the
+returns zero. If the <stringToFind> contains more than one trueword, the
 <truewordOffset> function always returns zero, even if the
 <stringToFind> appears in the <stringToSearch>.
 
