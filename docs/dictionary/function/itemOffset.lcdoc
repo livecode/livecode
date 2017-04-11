@@ -42,7 +42,7 @@ Use the <itemOffset> <function> to find which <item> a <string> occurs
 in. 
 
 The value returned by the <itemOffset> <function> is the number of the
-<item> where <itemToFind> appears in <stringToSearch>. If the
+<item> where <itemToFind> first appears in <stringToSearch>. If the
 <itemToFind> is not in <stringToSearch>, the <itemOffset> <function>
 <return|returns> zero.
 
