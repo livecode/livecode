@@ -3195,27 +3195,14 @@ __MCU_library_map_path(MCStringRef p_path,
         t_mapped_path = *t_base_path;
     }
     
-    // Now compute the engine folder and construct the absolute mapped path.
-    uindex_t t_last_slash;
-    if (!MCStringLastIndexOfChar(MCcmd,
-                                 '/',
-                                 UINDEX_MAX,
-                                 kMCStringOptionCompareExact,
-                                 t_last_slash))
-        t_last_slash = MCStringGetLength(MCcmd);
-    
-    MCRange t_engine_folder =
-            MCRangeMake(0, t_last_slash);
-    
-    // Concatenate the mapped path onto the engine path, and then resolve
+    // Concatenate the mapped path onto the app code path, and then resolve
     // it to ensure that all '.' and '..' type components are removed.
     // (otherwise things might go awry if we have a //?/ type path on
     // Windows).
     MCAutoStringRef t_unresolved_library_path;
     if (!MCStringFormat(&t_unresolved_library_path,
-                        "%*@/%@",
-                        &t_engine_folder,
-                        MCcmd,
+                        "%@/%@",
+                        MCappcodepath,
                         *t_mapped_path) ||
         !MCS_resolvepath(*t_unresolved_library_path,
                          r_mapped_library_path))

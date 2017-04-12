@@ -104,9 +104,15 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-MCStringRef MCcmd;
-MCStringRef MCfiletype;
-MCStringRef MCstackfiletype;
+
+/* The path to the base folder which contains the application's code resources.
+ * This is used to resolve references to code resources. This is added as a
+ * prefix to the (relative) paths computed in MCU_library_load. */
+MCStringRef MCappcodepath = nullptr;
+
+MCStringRef MCcmd = nullptr;
+MCStringRef MCfiletype = nullptr;
+MCStringRef MCstackfiletype = nullptr;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -530,6 +536,7 @@ void X_clear_globals(void)
 	MCquitisexplicit = False;
 	MCidleRate = 200;
 	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+    MCappcodepath = nullptr;
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -1519,6 +1526,10 @@ int X_close(void)
         MCLocaleRelease(kMCSystemLocale);
     if (kMCBasicLocale != nil)
         MCLocaleRelease(kMCBasicLocale);
+    
+    if (MCappcodepath != nullptr)
+        MCValueRelease(MCappcodepath);
+    MCValueRelease(MCcmd);
     
 	return MCretcode;
 }

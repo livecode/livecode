@@ -49,10 +49,6 @@
 
 #if defined(FEATURE_PLATFORM_APPLICATION)
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_main_loop_iteration();
-int X_close();
-
 void X_main_loop(void)
 {
 	while(!MCquit)
@@ -63,7 +59,13 @@ void X_main_loop(void)
 
 void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
-	if (X_init(p_argc, p_argv, p_envp))
+    struct X_init_options t_options;
+    t_options.argc = p_argc;
+    t_options.argv = p_argv;
+    t_options.envp = p_envp;
+    t_options.app_code_path = nullptr;
+
+	if (X_init(t_options))
 	{
 		r_error_code = 0;
 		r_error_message = nil;

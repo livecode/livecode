@@ -59,6 +59,11 @@ extern int MCidleRate;
 
 extern Boolean MCaqua;
 extern MCStringRef MCcmd;
+
+/* The app code path is the folder relative to which the engine can find all
+ * its code resources */
+extern MCStringRef MCappcodepath;
+
 extern MCStringRef MCfiletype;
 extern MCStringRef MCstackfiletype;
 
@@ -433,6 +438,32 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  LIFECYCLE
+//
+
+struct X_init_options
+{
+    /* Standard argc, argv and envp */
+    int argc = 0;
+    MCStringRef *argv = nullptr;
+    MCStringRef *envp = nullptr;
+    
+    /* Specifies the base folder to use to resolve relative library paths */
+    MCStringRef app_code_path = nullptr;
+};
+
+/* These are the main lifecycle functions. They are implemented separately for
+ * desktop, server, mobile and emscripten engines. */
+bool X_init(const X_init_options& p_options);
+bool X_main_loop_iteration(void);
+int X_close(void);
+
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
+void X_clear_globals(void);
+void X_initialize_names(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
