@@ -22,6 +22,30 @@
 #include "foundation.h"
 #include "foundation-auto.h"
 
+TEST(typeconvert, narrowcast)
+{
+    /* MCNarrowCast never does any checking */
+    EXPECT_EQ(MCNarrowCast<int>(4.0), 4);
+    EXPECT_EQ(MCNarrowCast<int>(4.5), 4);
+}
+
+TEST(typeconvert, narrow)
+{
+    uint8_t dummy_uint8_t = 0;
+    EXPECT_TRUE(MCNarrow(INT8_MAX, dummy_uint8_t));
+    EXPECT_EQ(dummy_uint8_t, INT8_MAX);
+    EXPECT_FALSE(MCNarrow(UINT8_MAX + 1, dummy_uint8_t));
+    EXPECT_EQ(dummy_uint8_t, INT8_MAX); /* Unmodified */
+    EXPECT_FALSE(MCNarrow(INT8_MIN, dummy_uint8_t));
+    EXPECT_EQ(dummy_uint8_t, INT8_MAX); /* Unmodified */
+
+    int dummy_int_t = 0;
+    EXPECT_TRUE(MCNarrow(3.0, dummy_int_t));
+    EXPECT_EQ(dummy_int_t, 3);
+    EXPECT_FALSE(MCNarrow(-1.5, dummy_int_t));
+    EXPECT_EQ(dummy_int_t, 3); /* Unmodified */
+}
+
 TEST(typeconvert, string_integer)
 //
 // Checks string-to-integer conversion
