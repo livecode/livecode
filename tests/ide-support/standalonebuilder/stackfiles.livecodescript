@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sSupportStack, sInsideFolder, sOutsideFolder
 constant kRelativeToMeInside = "_build"
-constant kRelativeToMeOutside = "../../../_tests/_build"
+constant kRelativeToMeOutside = "../../../_tests/_build/StandaloneStackfiles"
 on TestSetup   
    start using stack "revSBLibrary"
 		
