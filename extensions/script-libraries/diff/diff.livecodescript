@@ -1,6 +1,6 @@
 ﻿script "com.livecode.script-library.diff"
 /*
-Copyright (C) 2016 LiveCode Ltd.
+Copyright (C) 2016-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,7 +38,9 @@ on revUnloadLibrary
    remove the script of me from back
 end revUnloadLibrary
 
-/* Text comparison library, handling differences in unified diff format */
+/**
+Text comparison library, handling differences in unified diff format
+*/
 
 constant kDiffOperationAdd = "+"
 constant kDiffOperationDelete = "-"
