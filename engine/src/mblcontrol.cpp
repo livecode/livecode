@@ -276,6 +276,8 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"editing", P_EDITING},
     
 	{"minimumfontsize", P_MINIMUM_FONT_SIZE},
+    {"maximumtextlength", P_MAXIMUM_TEXT_LENGTH},
+
 	{"autoclear", P_AUTO_CLEAR},
 	{"clearbuttonmode", P_CLEAR_BUTTON_MODE},
 	{"borderstyle", P_BORDER_STYLE},

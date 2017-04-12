@@ -254,27 +254,10 @@ void MCStack::stop_externals()
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
 	
-	MCPlayer *tptr = MCplayers;
-	
-#ifdef FEATURE_PLATFORM_PLAYER
-    while(tptr != NULL)
-    {
-        if (tptr -> getstack() == this)
-            tptr -> playstop();
-        tptr = tptr -> getnextplayer();
-    }
-#else
-	while (tptr != NULL)
-	{
-		if (tptr->getstack() == this)
-		{
-			if (tptr->playstop())
-				tptr = MCplayers; // was removed, start search over
-		}
-		else
-			tptr = tptr->getnextplayer();
-	}
-#endif
+    MCPlayer::SyncPlayers(this, nil);
+    
+    MCPlayer::StopPlayers(this);
+    
 	destroywindowshape();
 	
 	MClockmessages = oldlock;

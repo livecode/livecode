@@ -129,6 +129,11 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     // If we failed then store the rep and destroy the imp.
     if (!t_success)
     {
+        // Make sure we swallow the error so that it doesn't affect
+        // future execution.
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        
         MCValueRelease(m_widget);
         m_widget = nil;
         
@@ -837,7 +842,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
 MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisible)
 {
 	MCWidget *t_new_widget;
-	t_new_widget = new MCWidget(*this);
+	t_new_widget = new (nothrow) MCWidget(*this);
 	if (p_attach)
 		t_new_widget -> attach(p_position, invisible);
     
@@ -981,7 +986,7 @@ void MCWidget::SendError(void)
 {
     MCExecContext ctxt(this, nil, nil);
     MCExtensionCatchError(ctxt);
-    if (MCerrorptr == NULL)
+    if (!MCerrorptr)
         MCerrorptr = this;
     senderror();
 }
@@ -1001,12 +1006,19 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    MCWidgetOnSave(m_widget, &t_value);
+    if (!MCWidgetOnSave(m_widget,
+                        &t_value))
+    {
+        r_state = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
     {
         CatchError(ctxt);
         return;
     }
+    
     r_state = (MCArrayRef)t_value . Take();
 }
 

@@ -5,14 +5,13 @@ Type: command
 Syntax: revVideoGrabDialog [<settingsType>]
 
 Summary:
-Displays a dialog box for configuring <QuickTime> or <VFW|Video for
-Windows> <video capture>.
+Displays a dialog box for configuring <VFW|Video for Windows> <video capture>.
 
 Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -29,16 +28,12 @@ revVideoGrabDialog the label of button "Dialog Type"
 
 Parameters:
 settingsType (enum):
-
 -   compression: Settings for compression when recording video
 -   format: Video format, dimensions, and image depth
 -   display: Appearance of previewed video in the video grabber
--   source: Video input channels and hue, contrast, and saturation
-    settings 
--   video: Pops up the QT video compression choice dialog for the
-    videograbber 
--   audio: Pops up the QT audio compression choice dialog for the
-    videograbber 
+-   source: Video input channels and hue, contrast, and saturation settings 
+-   video: Pops up the video compression choice dialog for the videograbber 
+-   audio: Pops up the audio compression choice dialog for the videograbber 
 
 
 Description:
@@ -48,16 +43,8 @@ the <video grabber>.
 You must use the revInitializeVideoGrabber <command> to open the <video
 grabber> before you can use the <revVideoGrabDialog> <command>.
 
-If you specified "QT" as the video method when you executed the
-revInitializeVideoGrabber <command>, do not specify a <settingsType>.
-<QuickTime> video recording settings are found in a single <dialog box>,
-which you display with the following <statement> :
-
-    revVideoGrabDialog
-
-
-If you specified "VFW", use the <settingsType> <parameter> to specify
-which <dialog box> you want to show.
+Use the <settingsType> <parameter> to specify which <dialog box> you
+want to show.
 
 >*Note:* Some video camera drivers don't support some <settingsType>
 > values. 
@@ -76,9 +63,10 @@ The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
 longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revVideoGrabSettings (command), command (glossary),
 video capture (glossary), VFW (glossary),

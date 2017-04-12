@@ -24,8 +24,13 @@ get the length of thisDate
 Example:
 put word 12 of it after field "Go On"
 
+Description:
+The <of> <keyword> is used to provide a connection between 
+the <property> <of> an <object (glossary)>, a <parameter> <of> 
+a <function>, or the <chunk expression> <of> a <string>
+
 References: function (control structure), object (glossary),
-property (glossary), custom function (glossary),
+property (glossary), custom function (glossary), keyword (glossary),
 chunk expression (glossary), global (glossary), chunk (glossary),
 keyword (glossary), expression (glossary), parameter (glossary),
 function (glossary), object reference (glossary), string (keyword),
@@ -33,4 +38,3 @@ character (keyword), lines (keyword), the (keyword), in (keyword),
 word (keyword), line (keyword), properties (property)
 
 Tags: text processing
-

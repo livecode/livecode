@@ -15,5 +15,8 @@ OS: ios
 
 Platforms: desktop
 
+Description:
+This message has been deprecated and the message <trackingError> should be used in its place.
+
 References: trackingError (message)
 

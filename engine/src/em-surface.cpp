@@ -208,7 +208,7 @@ MCHtmlCanvasStackSurface::Lock()
     // Allocate a buffer for us to use, if not already done
     if (m_surface == nil)
     {
-        m_surface = new uint8_t[m_rect.size.width * m_rect.size.height * sizeof(uint32_t)];
+        m_surface = new (nothrow) uint8_t[m_rect.size.width * m_rect.size.height * sizeof(uint32_t)];
     }
 
     return m_surface != nil;

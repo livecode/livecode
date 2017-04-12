@@ -4,7 +4,7 @@ Synonyms: is not
 
 Type: operator
 
-Syntax: <value1> <> <value2>
+Syntax: <value1> &lt;&gt; <value2>
 
 Summary:
 Compares two <value|values> and <return|returns> true if they are not

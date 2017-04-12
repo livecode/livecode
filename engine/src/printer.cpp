@@ -37,11 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mode.h"
 
-// SN-2014-08-25: [[ Bug 13187 ]] Added for the MCplayers' syncbuffering call
-#ifdef FEATURE_PLATFORM_PLAYER
-#include "platform.h"
-#endif
-
 extern char *strndup(const char *p_string, unsigned int p_length);
 
 MCPrinter::MCPrinter(void)
@@ -352,7 +347,7 @@ void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCInterval *
 	m_job_range_count = p_count;
 	if (p_count > 0)
 	{
-		m_job_ranges = new MCInterval[p_count];
+		m_job_ranges = new (nothrow) MCInterval[p_count];
 		memcpy(m_job_ranges, p_ranges, sizeof(MCInterval) * p_count);
 	}
 }
@@ -732,9 +727,7 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 		SetStatusFromResult(m_device -> Begin(t_src_printer_rect, t_dst_printer_rect, t_context));
         
         // SN-2014-08-25: [[ Bug 13187 ]] MCplayers' syncbuffering relocated
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == p_card -> getstack())
-                t_player -> syncbuffering(t_context);
+        MCPlayer::SyncPlayers(p_card->getstack(), t_context);
 #ifdef FEATURE_PLATFORM_PLAYER
         MCPlatformWaitForEvent(0.0, true);
 #endif

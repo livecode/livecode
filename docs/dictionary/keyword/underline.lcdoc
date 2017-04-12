@@ -27,13 +27,10 @@ bold), append the <underline> <keyword> to the end of the <textStyle>.
 The following example adds underlining to the styles of a <button> :
 
     if the textStyle of button 1 is empty then
-
-    set the textStyle of button 1 to "underline"
+        set the textStyle of button 1 to "underline"
     else
-
-    set the textStyle of button 1 to \
-
-    (the textStyle of button 1) & comma & "underline"
+        set the textStyle of button 1 to \
+            (the textStyle of button 1) & comma & "underline"
     end if
 
 

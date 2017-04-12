@@ -52,6 +52,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #include "srvscript.h"
 
@@ -118,7 +119,7 @@ MCPropertyTable MCProperty::kModePropertyTable =
 
 IO_stat MCDispatch::startup(void)
 {
-	stacks = new MCServerScript;
+	stacks = new (nothrow) MCServerScript;
 	stacks -> setname_cstring("Home");
 	stacks -> setparent(this);
 
@@ -283,12 +284,6 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
@@ -435,3 +430,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

@@ -34,10 +34,10 @@ The <revBrowserClose> command destroys the browser specified by the
 <instanceId>. The browser is closed and removed from memory.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserSnapshot (command), revBrowserStop (command),
-result (function), revBrowserOpen function (function),
+result (function), function (glossary),
 revBrowserInstances (function), revBrowserOpen (function),
 browserNewInstance (message), browserClosing (message)
 

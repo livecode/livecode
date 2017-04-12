@@ -133,7 +133,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCChunk *newptr = new MCChunk(forset);
+		MCChunk *newptr = new (nothrow) MCChunk(forset);
 		if (newptr->parse(sp, False) != PS_NORMAL)
 		{
 			delete newptr;
@@ -200,7 +200,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCParameter *newptr = new MCParameter;
+		MCParameter *newptr = new (nothrow) MCParameter;
 		if (newptr->parse(sp) != PS_NORMAL)
 		{
 			delete newptr;

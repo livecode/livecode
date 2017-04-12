@@ -63,8 +63,7 @@ function revDocsGetBuiltinModuleList pModuleInterfacePath, pRepoPath
    put pRepoPath & slash & "libscript" & slash & "src" into tScript
    
    local tInstalled
-   set the defaultFolder to tModulePath
-   put the files into tInstalled
+   put files(tModulePath) into tInstalled
    filter tInstalled with "*.lci"
    
    local tSourcePaths
@@ -77,9 +76,8 @@ function revDocsGetBuiltinModuleList pModuleInterfacePath, pRepoPath
    set the itemdelimiter to "."
    local tFiles
    repeat for each element tElement in tSourcePaths
-      set the defaultfolder to tElement
       local tDocsA
-      put the files into tFiles
+      put files(tElement) into tFiles
       filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
       # Check to see if the corresponding interface file exists so that we 
       # don't add anything to the dictionary that isn't actually there.
@@ -92,8 +90,7 @@ function revDocsGetBuiltinModuleList pModuleInterfacePath, pRepoPath
       end repeat
    end repeat
    
-   set the defaultfolder to (pRepoPath & slash & "docs" & slash & "builder")
-   put the files into tFiles
+   put files(pRepoPath & slash & "docs" & slash & "builder") into tFiles
    filter tFiles with "*.lcdoc"
    repeat for each line tFile in tFiles
       put true into tListA[pRepoPath & slash & "docs" & slash & "builder" & slash & tFile]
@@ -110,8 +107,7 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
    put pRepoPath & slash & "libscript" & slash & "src" into tScript
    
    local tInstalled
-   set the defaultFolder to tModulePath
-   put the files into tInstalled
+   put files(tModulePath) into tInstalled
    filter tInstalled with "*.lci"
    
    local tSourcePaths
@@ -124,9 +120,8 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
    set the itemdelimiter to "."
    local tFiles
    repeat for each element tElement in tSourcePaths
-      set the defaultfolder to tElement
       local tDocsA
-      put the files into tFiles
+      put files(tElement) into tFiles
       filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
       # Check to see if the corresponding interface file exists so that we 
       # don't add anything to the dictionary that isn't actually there.
@@ -143,8 +138,7 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
       end repeat
    end repeat
    
-   set the defaultfolder to (pRepoPath & slash & "docs" & slash & "builder")
-   put the files into tFiles
+   put files(pRepoPath & slash & "docs" & slash & "builder") into tFiles
    filter tFiles with "*.lcdoc"
    repeat for each line tFile in tFiles
       local tContents
@@ -259,14 +253,15 @@ function revDocsParseDictionaryToLibraryArray pRootDir
    local tText, tLibraryA, tParsedA
    
    repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
-      set the defaultfolder to tRoot
-      repeat for each line tLine in the folders
+      repeat for each line tLine in folders(tRoot)
          if tLine is ".." then next repeat
-         set the defaultfolder to tRoot & slash & tLine
-         get the files
+         get files(tRoot & slash & tLine)
          filter it with "*.lcdoc"
          repeat for each line tFile in it
-            wait 0 with messages
+            if the environment is "development" and \
+                not revTestEnvironment() then
+               wait 0 with messages
+            end if
             local tFullPath
             put tRoot & slash & tLine & slash & tFile into tFullPath
             put revDocsUtf8FileContents(tFullPath) into tText
@@ -326,11 +321,9 @@ function revDocsParseFileContentsToArray pFile, pText, pType, @xCount, @xLibrary
    return empty
 end revDocsParseFileContentsToArray
 
-function revDocsGenerateDocsFilesFromModularDirectory pDir
-   set the defaultfolder to pDir
-   
+function revDocsGenerateDocsFilesFromModularDirectory pDir  
    local tFiles
-   put the files into tFiles
+   put files(pDir) into tFiles
    filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
    
    local tDocsA, tCount
@@ -539,6 +532,10 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                put true into tEntryData["need_docs"]
                break
             case "on"
+               put "command" into tEntryData["type"]
+               put word 2 of tLine into tEntryData["name"]
+               put false into tEntryData["need_docs"]
+               break
             case "command"
             case "function"
                if tFirstWord is "function" then
@@ -688,8 +685,7 @@ private function __revDocsParseDirectoryToLibraryArray pType, pRootDir, pRecursi
    
    local tFiles, tExtensionRegex
    put extensionsFromType(pType) into tExtensionRegex
-   set the defaultfolder to pRootDir
-   put the files into tFiles
+   put files(pRootDir) into tFiles
    filter tFiles with regex pattern tExtensionRegex
    
    local tCount
@@ -889,13 +885,11 @@ end revDocsFormatInlineComments
 
 function revDocsCollectGlossarySynonyms pRoot
    local tGlossaryA, tText, tName, tSynonyms
-   set the defaultfolder to pRoot & slash & "glossary"
    local tFolders
-   put the folders into tFolders
+   put folders(pRoot & slash & "glossary") into tFolders
    repeat for each line tLine in tFolders
       if tLine is ".." then next repeat
-      set the defaultfolder to pRoot & slash & "glossary" & slash &  tLine
-      get the files
+      get files(pRoot & slash & "glossary" & slash & tLine)
       filter it with "*.lcdoc"
       if it is not empty then
          repeat for each line tFile in it
@@ -2317,12 +2311,8 @@ function revDocsAPIDatabasePath pFolder
 end revDocsAPIDatabasePath
 
 on revDocsOpenAPIDatabase pFolder
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to pFolder
-   
    local tConnection
-   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   put revOpenDatabase("sqlite",revDocsAPIDatabasePath(pFolder),,,,,,) into tConnection
    
    if tConnection is not a number then
       return "unable to create sqlite API database" & return & the result
@@ -2566,16 +2556,10 @@ function revDocsGuideData pFolder, pLocation, pFile
 end revDocsGuideData
 
 function revDocsListGuides pFolder
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to pFolder
-
    local tGuides
-   put the files into tGuides
+   put files(pFolder) into tGuides
    filter tGuides with "*.md"
    filter tGuides without "README.md"
-   
-   set the defaultFolder to tDefaultFolder
    
    return tGuides
 end revDocsListGuides

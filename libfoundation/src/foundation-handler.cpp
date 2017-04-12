@@ -33,7 +33,10 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
     // start of this is a field 'context' in the struct so we must adjust for its
     // length.
     __MCHandler *self;
-    if (!__MCValueCreate(kMCValueTypeCodeHandler, (sizeof(__MCHandler) - sizeof(self -> context)) + p_callbacks -> size, (__MCValue*&)self))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeHandler,
+         /* prevent overflow */  MCMin(p_callbacks -> size - sizeof(self->context),
+                                       p_callbacks -> size),
+                                 self))
         return false;
     
     MCMemoryCopy(MCHandlerGetContext(self), p_context, p_callbacks -> size);
@@ -80,8 +83,6 @@ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_ar
     return nil;
     
 error_exit:
-    MCValueRelease(x_arguments);
-    x_arguments = nil;
     r_value = nil;
     
     MCErrorRef t_error;

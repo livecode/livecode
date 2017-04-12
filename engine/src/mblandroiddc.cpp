@@ -56,8 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
-extern "C" bool MCModulesInitialize();
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -1229,6 +1227,9 @@ static void empty_signal_handler(int)
 {
 }
 
+extern
+bool MCAndroidGetLibraryPath(MCStringRef &r_path);
+
 static void *mobile_main(void *arg)
 {
 	co_enter_engine();
@@ -1255,6 +1256,16 @@ static void *mobile_main(void *arg)
 		co_leave_engine();
 		return (void *)1;
 	}
+    
+    MCAutoStringRef t_lib_path;
+    if (!MCSInitialize() ||
+        !MCAndroidGetLibraryPath(&t_lib_path) ||
+        !(MCSLibraryAndroidSetNativeLibPath(*t_lib_path), true) ||
+        !MCScriptInitialize())
+    {
+        co_leave_engine();
+        return (void *)1;
+    }
     
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
@@ -1971,7 +1982,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 {
     MCInitialize();
     MCSInitialize();
-    MCModulesInitialize();
     MCScriptInitialize();
     
 	MCLog("doCreate called");
@@ -2890,7 +2900,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2908,7 +2918,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		}
 		
 		MCRunOnMainThreadHelper *t_helper;
-		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
+		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
 		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
@@ -2916,7 +2926,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 	// Safe and immediate -> post to front of event queue
 	// Unsafe/Safe and deferred -> post to back of event queue
 	MCRunOnMainThreadEvent *t_event;
-	t_event = new MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
+	t_event = new (nothrow) MCRunOnMainThreadEvent(p_callback, p_callback_state, p_options);
 	if ((p_options & kMCExternalRunOnMainThreadDeferred) != 0)
 		MCEventQueuePostCustom(t_event);
 	else

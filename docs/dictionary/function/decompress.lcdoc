@@ -16,7 +16,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-decompress(receivedString)
+decompress(tReceivedString)
 
 Example:
 put decompress(it) into URL "file:data.txt"
@@ -26,12 +26,9 @@ go stack decompress(URL "binfile:newstuff.gz")
 
 Parameters:
 gzippedString (string):
-
-
-data (string):
 A string of compressed binary data.
 
-Returns:
+Returns(string):
 The <decompress> <function> <return|returns> a <string>.
 
 Description:
@@ -56,4 +53,3 @@ return (glossary), function (glossary), string (keyword),
 inverse (keyword)
 
 Tags: text processing
-

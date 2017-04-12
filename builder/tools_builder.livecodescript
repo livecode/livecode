@@ -106,7 +106,7 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
          filter tArchiveFiles with "Android/External-*"
          revZipCloseArchive pFolder & slash & tLCExt
          
-         if tArchiveFiles is not empty then
+         if tArchiveFiles is empty then
             get shell(merge("rm -fv '[[ tLCExt ]]'"))
          end if
       end repeat
@@ -408,15 +408,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
    end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
-   
-   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revsblibrary.livecodescript")
-   repeat for each line tStackFile in tAuxStackfiles
-      local tTempStackFile
-      put builderMakeTemporaryFile(tTempFolder, "stack") into tTempStackFile
-      revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-      put tTempStackFile & return after tParams["auxiliary_stackfiles"]
-   end repeat
-   delete the last char of tParams["auxiliary_stackfiles"]
+   put tAuxStackfiles into tParams["auxiliary_stackfiles"]
    
    // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
    put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
@@ -553,6 +545,23 @@ private function escapeArg pArg
    return pArg
 end escapeArg
 
+-- Needed on MacOS Sierra
+private command clearExtendedAttributes pAppBundle
+   -- make sure you have permission to clear extended attributes from bundle files
+   get shell("chmod -R u+w" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Setting permissions failed with error:" && it
+      throw "failure"
+   end if
+      
+   -- clear extended attributes from bundle files
+   get shell("xattr -cr" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Clearing extended attributes failed with error:" && it
+      throw "failure"
+   end if
+end clearExtendedAttributes
+
 private function findSigningIdentity
    get shell("/usr/bin/security -q find-identity -v")
    filter it with "*Developer ID Application: Runtime Revolution Ltd*"
@@ -579,7 +588,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Run the installer to generate the raw app bundle
    builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
-   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install -ui -log /dev/stderr -location" && escapeArg(tAppBundle))
    if the result is not zero then
       builderLog "error", "Failed to run macosx installer:" && it
       throw "failure"
@@ -664,6 +673,8 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
             get shell("file" && escapeArg(tFullPath))
             if tFile is "Standalone" or "Mach-O" is not among the words of it then next repeat
 
+            clearExtendedAttributes escapeArg(tFullPath)
+			
             -- Sign the extension
             -- The "--force" parameter strips the existing signature (which was
             -- made using a not-valid-for-distribution profile)
@@ -676,6 +687,8 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
          end repeat
       end repeat
 
+      clearExtendedAttributes escapeArg(tAppBundle)
+    		
       builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
       wait 1 second
       get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--deep --verbose=2" && escapeArg(tAppBundle))

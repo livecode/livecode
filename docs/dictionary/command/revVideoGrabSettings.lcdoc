@@ -8,21 +8,22 @@ Summary:
 Puts the current <video capture> settings, stored as <binary file|binary
 data>, into a <variable>.
 
+Associations: video library
+
 Introduced: 2.0
 
-OS: mac
+Deprecated: 9.0
+
+OS:
 
 Platforms: desktop
 
 Security: disk, privacy
 
 Example:
+local tSettings
 revVideoGrabSettings "tSettings"
-
-Example:
 set the savedVideoSettings of this card to tSettings
-
-Example:
 put tSettings into URL "binfile:/Data/Video Settings.dat"
 
 Parameters:
@@ -30,27 +31,8 @@ dataVariable:
 The name of an existing variable.
 
 Description:
-Use the <revVideoGrabSettings> command to store video-capture settings
-you specify in the video capture dialog box.
-
-The revVideoFrameImage command returns binary data, placing it in the
-<dataVariable>. 
-
-You specify settings for video capture in the video capture dialog box,
-which is displayed by the <revVideoGrabDialog> command. You can get the
-current settings with the <revVideoGrabSettings> command and restore
-them later with the revSetVideoGrabSettings command. This allows you to
-make changes to the video-capture settings under script control.
-
-The value returned by the <revVideoGrabSettings> command consists of
-binary data and is not human-readable, but you can store it in a file or
-custom property and restore your settings later using the
-revSetVideoGrabSettings command.
-
->*Important:*  The <revVideoGrabSettings> command works only for
-> QuickTime video capture. If you are capturing video with Video for
-> Windows, the <revVideoGrabSettings> command does not return a
-> meaningful value.
+The <revVideoGrabSettings> <command> is deprecated, and does not
+return a meaningful value.
 
 >*Important:*  The <revVideoGrabSettings> <command> is part of the 
 > <Video library>. To ensure that the <command> works in a 
@@ -66,9 +48,10 @@ The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
 longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revVideoGrabDialog (command),
 revSetVideoGrabSettings (command), binary file (glossary),

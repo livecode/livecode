@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -130,9 +130,6 @@ static void CALLBACK LoopFiberRoutine(void *p_parameter)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	// MW-2010-05-09: Elevated process handling - if the cmd line begins with '-elevated-slave'
@@ -175,7 +172,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // FG-2014-09-23: [[ Bugfix 12444 ]] Re-arrange command line processing to
     // match behaviour in 6.x and below.
-    WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+    WCHAR* wcFileNameBuf = new (nothrow) WCHAR[MAX_PATH+1];
     DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
     
 	// Windows uses slashes the opposite way around to the other platforms and requires conversion
@@ -218,8 +215,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			++csptr;
 	}
 
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+        !MCSInitialize() ||
+        !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set
@@ -329,7 +327,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MCValueRelease(MCcmdline);
     
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 
 	if (t_tsf_mgr != nil)

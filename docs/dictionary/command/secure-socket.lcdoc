@@ -43,7 +43,7 @@ Use the secure socket command to secure an open socket.
 
 If 'with verification' is specified, when connecting to a remote peer,
 the client verifies the peers certificate during the handshake process.
-The <sslCertificates property> can be used to specify a list of
+The <sslCertificates> <property> can be used to specify a list of
 certificates to verify against. In addition you can place system wide
 certificates in System/Library/OpenSSL/certs. If a verificationhostname
 is specified, the socket will be verified against that
@@ -63,7 +63,7 @@ Once secured:
   be encrypted.
 
 
-If the socket fails secure, a <socketError message> is sent to the
+If the socket fails secure, a <socketError> <message> is sent to the
 object that opened the socket (not the object that attempted to secure
 it). 
 
@@ -79,8 +79,8 @@ it).
 References: open socket (command),
 Standalone Application Settings (glossary), command (glossary),
 LiveCode custom library (glossary), SSL & Encryption library (library),
-socketError message (message), socketError (message),
-sslCertificates property (property), sslCertificates (property)
+message (glossary), socketError (message),
+property (glossary), sslCertificates (property)
 
 Tags: file system
 

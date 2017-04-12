@@ -16,10 +16,12 @@ Platforms: desktop, server, mobile
 Security: disk, network
 
 Example:
-revZipAddItemWithData tArchive, "myZippedItem", "tData"
-
-Example:
-revZipAddItemWithData the cArchive of me, "Test.txt", "This is a test text file"
+-- Add a text file directly to the zip file, using the UTF-8
+-- text encoding
+local tContent, tData
+put "Hello, world!" into tContent
+put textEncode(tContent, "utf-8") into tData
+revZipAddItemWithData tArchive, "hello-world.txt", "tData"
 
 Parameters:
 archivePath:

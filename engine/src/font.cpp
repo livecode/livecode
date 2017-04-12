@@ -135,24 +135,31 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 	// We check the width of ' ', i, l, m and w. If they are all the same width
 	// we assume the font is monospaced and subsequently set the fixed_advance
 	// field to a suitable value.
-	MCGFloat t_last_width;
-	for(uindex_t i = 0; i < 5; i++)
-	{
-		unichar_t t_char;
-		t_char = (unichar_t)((" ilmw")[i]);
-		
-		// MM-2014-04-16: [[ Bug 11964 ]] MCGContextMeasurePlatformText prototype updated to take scale. Pass identity.
-		MCGFloat t_this_width;
-		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 1, t_gfont, MCGAffineTransformMakeIdentity());
-		if (t_this_width == 0.0 ||
-			(i != 0 && t_this_width != t_last_width))
-		{
-			t_last_width = 0;
-			break;
-		}
-		t_last_width = t_this_width;
-	}
-	self -> fixed_advance = floorf(t_last_width + 0.5);
+    MCGAffineTransform t_id = MCGAffineTransformMakeIdentity();
+    auto t_measure_char_func =
+        [&t_gfont, &t_id](unichar_t p_char) -> MCGFloat {
+        return MCGContextMeasurePlatformText(nullptr, &p_char, 1*sizeof(p_char),
+                                             t_gfont, t_id);
+    };
+
+    MCGFloat t_space_width = MCMax(t_measure_char_func(' '), 0.0f);
+    if (t_space_width != 0)
+    {
+        static const unichar_t k_check_chars[] = {'i', 'l', 'm', 'w'};
+        static const int k_check_count = sizeof(k_check_chars)/sizeof(*k_check_chars);
+        for (int i = 0; i < k_check_count; ++i)
+        {
+            /* t_space_width is guaranteed to be non-zero, so if the
+             * character width is measured to be zero it will not be
+             * equal to t_space_width */
+            if (t_measure_char_func(k_check_chars[i]) != t_space_width)
+            {
+                t_space_width = 0.0f;
+                break;
+            }
+        }
+    }
+    self -> fixed_advance = floorf(t_space_width + 0.5);
 	
 	self -> next = s_fonts;
 	s_fonts = self;
@@ -890,7 +897,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 			//   fontname.
 			uindex_t t_offset;
 			if (MCStringFirstIndexOfChar(data, ',', 0, kMCCompareExact, t_offset))
-				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_offset + 1, MCStringGetLength(data) - (t_offset + 1)), fname);
+				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMakeMinMax(t_offset + 1, MCStringGetLength(data)), fname);
 			else
 				fname = MCValueRetain(data);
 		}
@@ -941,7 +948,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
                         t_end_pos = t_comma;
                     
                     MCAutoStringRef tdata;
-                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &tdata);
+                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, t_end_pos), &tdata);
                     t_end_pos++;
                     if (MCF_setweightstring(style, *tdata))
 						continue;

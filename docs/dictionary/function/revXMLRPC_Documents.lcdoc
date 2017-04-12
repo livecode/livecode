@@ -6,7 +6,7 @@ Syntax: revXMLRPC_Documents()
 
 Summary:
 <return|Returns> a list of all <XML-RPC document|XML-RPC documents> in
-memory. 
+memory.
 
 Associations: xml-rpc library
 
@@ -22,9 +22,9 @@ Example:
 revXMLRPC_Documents()
 
 Example:
-if myRequest is not among the lines of revXMLRPC_Documents() then loadRequest myRequest
+if tMyRequest is not among the lines of revXMLRPC_Documents() then loadRequest tMyRequest
 
-Returns:
+Returns (string):
 The <revXMLRPC_Documents> <function> returns a list of document IDs, one
 per <line>.
 
@@ -35,19 +35,19 @@ perform an action on all the <XML-RPC document|XML-RPC documents> you're
 working with.
 
 Each document ID is the number <return|returned> by the
-<revXMLRPC_CreateRequest> when you created the <XML-RPC request>, or the
-successful <revXMLRPC_Execute> <function> when you executed an <XML-RPC
-request>. 
+<revXMLRPC_CreateRequest> when you created the <XML-RPC> request, or the
+successful <revXMLRPC_Execute> <function> when you executed an <XML-RPC>
+request.
 
 If the <revXMLRPC_Documents> <function> encounters an error, it
 <return|returns> an error message starting with "xmlrpcerr".
 
->*Important:*  The <revXMLRPC_Documents> <function> is part of the 
-> <XML-RPC library>. To ensure that the <function> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
+>*Important:*  The <revXMLRPC_Documents> <function> is part of the
+> <XML-RPC library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
 > library checkbox is checked.
 
 References: revXMLRPC_DeleteAllDocuments (command),
@@ -55,9 +55,8 @@ function (control structure), revXMLRPC_Execute (function),
 revXMLRPC_CreateRequest (function),
 Standalone Application Settings (glossary),
 standalone application (glossary), return (glossary),
-XML-RPC request (glossary), XML-RPC document (glossary),
+XML-RPC (glossary), XML-RPC document (glossary),
 LiveCode custom library (glossary), line (keyword),
 XML-RPC library (library)
 
 Tags: networking
-

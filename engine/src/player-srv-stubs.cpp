@@ -50,7 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCPlayer::MCPlayer()
 {	
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
 	rect.width = rect.height = 128;
 	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
@@ -68,7 +68,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-	nextplayer = NULL;
+	nextplayer = nil;
 	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
@@ -86,12 +86,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 
 MCPlayer::~MCPlayer()
 {
-	// OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
-	while (opened)
-		close();
-	
-	playstop();
-	
+    removefromplayers();
+    
 	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
 }
@@ -304,7 +300,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -531,20 +527,20 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
-	if (MCplayers != NULL)
+	if (MCplayers)
 	{
 		if (MCplayers == this)
 			MCplayers = nextplayer;
 		else
 		{
 			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+			while (tptr->nextplayer && tptr->nextplayer != this)
 				tptr = tptr->nextplayer;
 			if (tptr->nextplayer == this)
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = nil;
     
 	if (disposable)
 	{

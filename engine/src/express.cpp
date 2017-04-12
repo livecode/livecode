@@ -60,12 +60,7 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
-MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
-{
-    return NULL;
-}
-
-bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return false;
 }
@@ -361,7 +356,7 @@ Parse_stat MCExpression::getparams(MCScriptPoint &sp, MCParameter **params)
 	while (True)
 	{
 		if (pptr == NULL)
-			*params = pptr = new MCParameter;
+			*params = pptr = new (nothrow) MCParameter;
 		else
 		{
 			pptr->setnext(new MCParameter);
@@ -441,8 +436,8 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 ////////////////////////////////////////////////////////////////////////////////
 
 MCFuncref::MCFuncref(MCNameRef inname)
+    : name(inname)
 {
-	/* UNCHECKED */ MCNameClone(inname, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -457,12 +452,10 @@ MCFuncref::~MCFuncref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
 }
 
 Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 {
-	parent = sp.getobj();
 	initpoint(sp);
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
@@ -470,7 +463,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
     
-    if (MCIsGlobalHandler(name))
+    if (MCIsGlobalHandler(*name))
     {
         global_handler = true;
         resolved = true;
@@ -481,7 +474,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, true);
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, *name, line, pos, global_handler, true);
     
     Exec_stat stat = ctxt . GetExecStat();
     
@@ -489,7 +482,7 @@ void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
 	{
-		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, *name);
 		return;
 	}
 

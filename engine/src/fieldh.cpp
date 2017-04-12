@@ -672,7 +672,7 @@ bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, i
 bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraphStyle *p_style)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
     
     // SN-2014-04-25 [[ Bug 12177 ]] Importing HTML was creating parent-less paragraphs,
     // thus sometimes causing crashing when the parent was accessed - mainly when getfontattrs() was needed
@@ -763,7 +763,7 @@ MCParagraph *MCField::texttoparagraphs(MCStringRef p_text)
 {
     // Create a new list of paragraphs
     MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 
@@ -830,7 +830,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		t_paragraph -> defrag();
 
 		MCParagraph *t_new_paragraph;
-		t_new_paragraph = new MCParagraph;
+		t_new_paragraph = new (nothrow) MCParagraph;
 		t_new_paragraph -> setparent(t_paragraph -> getparent());
 		t_new_paragraph -> inittext();
 
@@ -933,9 +933,12 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
 		char t_derived_font_name[256];
-		if (macmatchfontname(t_font_name, t_derived_font_name))
+		if (*t_font_name != '\0' &&
+            macmatchfontname(t_font_name, t_derived_font_name))
+        {
 			t_font_name = t_derived_font_name;
-		
+        }
+        
 #endif
         
         MCAutoStringRef t_font_name_ref;
@@ -966,7 +969,7 @@ extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_w
 MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 

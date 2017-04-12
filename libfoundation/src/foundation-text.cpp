@@ -271,7 +271,8 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
         if (m_StateLength == 0)
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+            if (MCUnicodeCodepointToSurrogates(t_cp, m_State[m_StateLength],
+                                               m_State[m_StateLength + 1]))
                 m_StateLength++;
             
             m_StateLength++;
@@ -287,7 +288,8 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
         else
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+            if (MCUnicodeCodepointToSurrogates(t_cp, m_State[m_StateLength],
+                                               m_State[m_StateLength+1]))
                 m_StateLength++;
             
             m_StateLength++;
@@ -353,7 +355,9 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
         if (m_StateLength == 0)
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[kMCTextFilterMaxNormLength - 2])))
+            if (MCUnicodeCodepointToSurrogates(t_cp,
+                                               m_State[kMCTextFilterMaxNormLength - 2],
+                                               m_State[kMCTextFilterMaxNormLength - 1]))
                 m_StateLength++;
             else
                 m_State[kMCTextFilterMaxNormLength - 1] = m_State[kMCTextFilterMaxNormLength - 2];
@@ -366,7 +370,10 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
         else
         {
             // Check whether the codepoint we got is a surrogate pair
-            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[kMCTextFilterMaxNormLength - m_StateLength - 2])))
+            if (MCUnicodeCodepointToSurrogates(t_cp,
+                                               m_State[kMCTextFilterMaxNormLength - m_StateLength - 2],
+                                               m_State[kMCTextFilterMaxNormLength - m_StateLength - 1]))
+                
                 m_StateLength++;
             else
                 m_State[kMCTextFilterMaxNormLength - m_StateLength - 1] = m_State[kMCTextFilterMaxNormLength - m_StateLength - 2];
@@ -467,15 +474,15 @@ MCTextFilter* MCTextFilterCreate(const void *p_data, uindex_t p_length, MCString
     
     // Choose the decoder based on the encoding
     if (p_encoding == kMCStringEncodingUTF16)
-        t_chain = new MCTextFilter_DecodeUTF16(reinterpret_cast<const unichar_t*>(p_data), p_length, p_from_end);
+        t_chain = new (nothrow) MCTextFilter_DecodeUTF16(reinterpret_cast<const unichar_t*>(p_data), p_length, p_from_end);
     else
-        t_chain = new MCTextFilter_DecodeNative(reinterpret_cast<const char_t*>(p_data), p_length, p_from_end);
+        t_chain = new (nothrow) MCTextFilter_DecodeNative(reinterpret_cast<const char_t*>(p_data), p_length, p_from_end);
     
     // Add filters based on the options given
     if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
     {
         MCTextFilter *t_filter;
-        t_filter = new MCTextFilter_SimpleCaseFold();
+        t_filter = new (nothrow) MCTextFilter_SimpleCaseFold();
         t_chain->PlaceBefore(t_filter);
         t_chain = t_filter;
     }
@@ -483,7 +490,7 @@ MCTextFilter* MCTextFilterCreate(const void *p_data, uindex_t p_length, MCString
     if (p_encoding == kMCStringEncodingUTF16 && (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral))
     {
         MCTextFilter *t_filter;
-        t_filter = new MCTextFilter_NormalizeNFC(p_from_end);
+        t_filter = new (nothrow) MCTextFilter_NormalizeNFC(p_from_end);
         t_chain->PlaceBefore(t_filter);
         t_chain = t_filter;
     }

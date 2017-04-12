@@ -277,7 +277,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	
 	if (flags & F_LINK_ATTS)
 	{
-		linkatts = new Linkatts;
+		linkatts = new (nothrow) Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -294,9 +294,11 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
 		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return checkloadstat(stat);
-		
-		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
+
+        uint1 t_underline = 0;
+		if ((stat = IO_read_uint1(&t_underline, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
+        linkatts->underline = (t_underline != 0);
         
         // for interface colors, empty name means unset whereas nil name means
         // defer to rgb values. Therefore set values to nil if they are empty.
@@ -333,7 +335,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		{
 		case OT_CARD:
 			{
-				MCCard *newcard = new MCCard;
+				MCCard *newcard = new (nothrow) MCCard;
 				newcard->setparent(this);
 				if ((stat = newcard->load(stream, version)) != IO_NORMAL)
 				{
@@ -347,7 +349,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_GROUP:
 			{
-				MCGroup *newgroup = new MCGroup;
+				MCGroup *newgroup = new (nothrow) MCGroup;
 				newgroup->setparent(this);
 				if ((stat = newgroup->load(stream, version)) != IO_NORMAL)
 				{
@@ -360,7 +362,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_BUTTON:
 			{
-				MCButton *newbutton = new MCButton;
+				MCButton *newbutton = new (nothrow) MCButton;
 				newbutton->setparent(this);
 				if ((stat = newbutton->load(stream, version)) != IO_NORMAL)
 				{
@@ -373,7 +375,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_FIELD:
 			{
-				MCField *newfield = new MCField;
+				MCField *newfield = new (nothrow) MCField;
 				newfield->setparent(this);
 				if ((stat = newfield->load(stream, version)) != IO_NORMAL)
 				{
@@ -386,7 +388,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_IMAGE:
 			{
-				MCImage *newimage = new MCImage;
+				MCImage *newimage = new (nothrow) MCImage;
 				newimage->setparent(this);
 				if ((stat = newimage->load(stream, version)) != IO_NORMAL)
 				{
@@ -400,7 +402,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_SCROLLBAR:
 			{
-				MCScrollbar *newscrollbar = new MCScrollbar;
+				MCScrollbar *newscrollbar = new (nothrow) MCScrollbar;
 				newscrollbar->setparent(this);
 				if ((stat = newscrollbar->load(stream, version)) != IO_NORMAL)
 				{
@@ -412,7 +414,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_GRAPHIC:
 			{
-				MCGraphic *newgraphic = new MCGraphic;
+				MCGraphic *newgraphic = new (nothrow) MCGraphic;
 				newgraphic->setparent(this);
 				if ((stat = newgraphic->load(stream, version)) != IO_NORMAL)
 				{
@@ -424,7 +426,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_PLAYER:
 			{
-				MCPlayer *newplayer = new MCPlayer;
+				MCPlayer *newplayer = new (nothrow) MCPlayer;
 				newplayer->setparent(this);
 				if ((stat = newplayer->load(stream, version)) != IO_NORMAL)
 				{
@@ -437,7 +439,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_MCEPS:
 			{
-				MCEPS *neweps = new MCEPS;
+				MCEPS *neweps = new (nothrow) MCEPS;
 				neweps->setparent(this);
 				if ((stat = neweps->load(stream, version)) != IO_NORMAL)
 				{
@@ -449,7 +451,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
         case OT_WIDGET:
             {
-                MCWidget *newwidget = new MCWidget;
+                MCWidget *newwidget = new (nothrow) MCWidget;
                 newwidget->setparent(this);
                 if ((stat = newwidget->load(stream, version)) != IO_NORMAL)
                 {
@@ -461,7 +463,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
             break;
 		case OT_MAGNIFY:
 			{
-				MCMagnify *newmag = new MCMagnify;
+				MCMagnify *newmag = new (nothrow) MCMagnify;
 				newmag->setparent(this);
 				if ((stat = newmag->load(stream, version)) != IO_NORMAL)
 				{
@@ -473,7 +475,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_COLORS:
 			{
-				MCColors *newcolors = new MCColors;
+				MCColors *newcolors = new (nothrow) MCColors;
 				newcolors->setparent(this);
 				if ((stat = newcolors->load(stream, version)) != IO_NORMAL)
 				{
@@ -485,7 +487,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_AUDIO_CLIP:
 			{
-				MCAudioClip *newaclip = new MCAudioClip;
+				MCAudioClip *newaclip = new (nothrow) MCAudioClip;
 				newaclip->setparent(this);
 				if ((stat = newaclip->load(stream, version)) != IO_NORMAL)
 				{
@@ -497,7 +499,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 			break;
 		case OT_VIDEO_CLIP:
 			{
-				MCVideoClip *newvclip = new MCVideoClip;
+				MCVideoClip *newvclip = new (nothrow) MCVideoClip;
 				newvclip->setparent(this);
 				if ((stat = newvclip->load(stream, version)) != IO_NORMAL)
 				{
@@ -1071,17 +1073,9 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !haswindow())
+	if (!opened)
 	{
-		if (opened)
-		{
-			curcard->close();
-			curcard = card;
-			curcard->open();
-		}
-
-		else
-			curcard = card;
+		curcard = card;
 		return ES_NORMAL;
 	}
 
@@ -1098,10 +1092,10 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	Boolean oldlock = MClockmessages;
 	if (card != oldcard)
 	{
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		
-		if (MCmousestackptr == this)
+		if (MCmousestackptr.IsBoundTo(this))
 			curcard->munfocus();
 		if (state & CS_KFOCUSED)
 		{
@@ -1165,9 +1159,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
         {
 #ifdef FEATURE_PLATFORM_PLAYER
             // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> detachplayer();
+            MCPlayer::DetachPlayers(this);
 #endif
                 
             t_error = curcard->message(MCM_preopen_card) == ES_ERROR || curcard != card || !opened;
@@ -1178,9 +1170,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
             t_error = curcard -> opencontrols(true) == ES_ERROR || curcard != card || !opened;
 #ifdef FEATURE_PLATFORM_PLAYER
             // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                 if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> attachplayer();
+             MCPlayer::AttachPlayers(this);
 #endif
         }
         
@@ -1249,7 +1239,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
  
             if (wasfocused)
 				curcard->kfocus();
-			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+			if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
 		}
 		return ES_NORMAL;
@@ -1277,7 +1267,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
    		
 		if (wasfocused)
 			kfocus();
-		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+		if (MCmousestackptr.IsBoundTo(this) && !mfocus(MCmousex, MCmousey))
 			curcard->message(MCM_mouse_enter);
 	}
     
@@ -1594,7 +1584,7 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
 			{
-				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+				/* UNCHECKED */ tptr->getAVname(type, p_name, optr);
 			}
 			else
 				optr = tptr->getcontrolname(type, p_name);
@@ -1699,9 +1689,9 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
         }
 	}
 
-
-	updatecardsize();
 	cards->setparent(this);
+	updatecardsize();
+	
 	MCControl *cptr = nc;
 	do
 	{
@@ -2032,14 +2022,22 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		if (field->getobj(ctxt, optr, parid, True))
+		// IM-2016-11-15: [[ Bug 14080 ]] Create new execcontext so errors in getobj don't affect subsequent evaluations
+		MCExecContext t_context(ctxt);
+		if (field->getobj(t_context, optr, parid, True))
 		{
+			// IM-2016-11-14: [[ Bug 18666 ]] If the resolved object is not on the current card then don't search it.
+			if (parid != 0 && parid != curcard->getid())
+			{
+				MCerrorlock--;
+				return False;
+			}
+			
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ctxt, curcard->getid(), fmode,
-					                       strings[i], firstword))
+					if (!searchfield->find(t_context, curcard->getid(), fmode, strings[i], firstword))
 					{
 						MCerrorlock--;
 						return False;
@@ -2077,7 +2075,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 	uindex_t nstrings;
 	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
-	Boolean firstcard = MCfoundfield != NULL;
+	Boolean firstcard = MCfoundfield.IsValid();
 	MCField *oldfound = MCfoundfield;
 	do
 	{
@@ -2092,7 +2090,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 			{
 				MCCard *newcard = curcard;
 				curcard = ocard;
-				MCfoundfield = NULL;
+				MCfoundfield = nil;
 				setcard(newcard, True, False);
 				MCfoundfield = newfound;
 			}
@@ -2102,7 +2100,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 			return;
 		}
 		firstcard = False;
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		if (oldfound != NULL)
 		{
@@ -2124,7 +2122,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
-	if (MCfoundfield != NULL)
+	if (MCfoundfield)
 		MCfoundfield->clearfound();
 	MCStringRef *strings = NULL;
 	uindex_t nstrings;
@@ -2143,7 +2141,7 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
     for (uint4 i = 0 ; i < nstrings ; i++)
         MCValueRelease(strings[i]);
 	delete strings;
-	if (MCfoundfield != NULL)
+	if (MCfoundfield)
 		MCfoundfield->clearfound();
 }
 

@@ -82,15 +82,15 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
 	flags = bref.flags;
 	if (flags & F_HAS_ATTS)
 	{
-		atts = new Blockatts;
+		atts = new (nothrow) Blockatts;
 		if (flags & F_HAS_COLOR)
 		{
-			atts->color = new MCColor;
+			atts->color = new (nothrow) MCColor;
 			*atts->color = *bref.atts->color;
 		}
 		if (flags & F_HAS_BACK_COLOR)
 		{
-			atts->backcolor = new MCColor;
+			atts->backcolor = new (nothrow) MCColor;
 			*atts->backcolor = *bref.atts->backcolor;
 		}
 
@@ -193,7 +193,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	flags &= ~F_FLAGGED;
 
 	if (atts == NULL)
-		atts = new Blockatts;
+		atts = new (nothrow) Blockatts;
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If the font flag is present, it means there
 	//   is a font record to read.
@@ -239,7 +239,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
     }
 	if (flags & F_HAS_COLOR)
 	{
-		atts->color = new MCColor;
+		atts->color = new (nothrow) MCColor;
 		if ((stat = IO_read_mccolor(*atts->color, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 		if (flags & F_HAS_COLOR_NAME)
@@ -257,7 +257,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	}
 	if (flags & F_HAS_BACK_COLOR)
 	{
-		atts->backcolor = new MCColor;
+		atts->backcolor = new (nothrow) MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 		if (version < kMCStackFileFormatVersion_2_0 || flags & F_HAS_BACK_COLOR_NAME)
@@ -266,10 +266,8 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so load, delete and unset the flag.
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
 			//   so is legacy,
-			char *backcolorname;
-			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
+			if ((stat = IO_discard_cstring_legacy(stream, 2)) != IO_NORMAL)
 				return checkloadstat(stat);
-			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}
@@ -860,7 +858,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 		else*/
         {
             MCRange t_range;
-            t_range = MCRangeMake(initial_i, i - initial_i);
+            t_range = MCRangeMakeMinMax(initial_i, i);
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             t_width_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
         }
@@ -896,7 +894,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 
 void MCBlock::split(findex_t p_index)
 {
-	MCBlock *bptr = new MCBlock(*this);
+	MCBlock *bptr = new (nothrow) MCBlock(*this);
 	findex_t newlength = m_size - (p_index - m_index);
 	bptr->SetRange(p_index, newlength);
 	m_size -= newlength;
@@ -1076,7 +1074,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
             // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
 			coord_t t_width;
 			MCRange t_range;
-			t_range = MCRangeMake(t_index, t_next_index - t_index);
+			t_range = MCRangeMakeMinMax(t_index, t_next_index);
             if (length > 0 && parent->GetCodepointAtIndex(t_next_index - 1) == '\t')
                 t_range.length--;
             t_width = MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
@@ -1580,7 +1578,7 @@ void MCBlock::setshift(int2 in)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		atts->shift = in;
 		flags |= F_HAS_SHIFT;
 	}
@@ -1615,9 +1613,9 @@ void MCBlock::setcolor(const MCColor *newcolor)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		if (!(flags & F_HAS_COLOR))
-			atts->color = new MCColor;
+			atts->color = new (nothrow) MCColor;
 		*atts->color = *newcolor;
 		flags |= F_HAS_COLOR;
 	}
@@ -1636,9 +1634,9 @@ void MCBlock::setbackcolor(const MCColor *newcolor)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		if (!(flags & F_HAS_BACK_COLOR))
-			atts->backcolor = new MCColor;
+			atts->backcolor = new (nothrow) MCColor;
 		*atts->backcolor = *newcolor;
 		flags |= F_HAS_BACK_COLOR;
 	}
@@ -1767,7 +1765,7 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 					break;
 				
 				MCRange t_range;
-				t_range = MCRangeMake(sptr, eptr - sptr);
+				t_range = MCRangeMakeMinMax(sptr, eptr);
                 // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
                 twidth += MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 

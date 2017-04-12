@@ -68,7 +68,7 @@ char *getdefaultprinter(void)
     MCAutoStringRef t_string;
     char *t_cstring;
 
-	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
+    MCtemplatestack->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 
     /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
     /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
@@ -151,21 +151,12 @@ bool MCPSPrinter::DoResetSettings(MCDataRef p_settings)
 
 void MCPSPrinter::DoFetchSettings(void*& r_buffer, uint4& r_length)
 {
-	bool t_success;
-	t_success = true;
-
 	MCDictionary t_dictionary;
 	
 	if ( m_printersettings . printername != NULL ) 
 		t_dictionary . Set('NMEA', MCString(m_printersettings . printername , strlen(m_printersettings . printername ) + 1 ) );
 
-	if (t_success)
-		t_dictionary . Pickle(r_buffer, r_length);
-	else
-	{
-		r_buffer = NULL;
-		r_length = 0;
-	}
+	t_dictionary . Pickle(r_buffer, r_length);
 }
 
 const char *MCPSPrinter::DoFetchName(void)

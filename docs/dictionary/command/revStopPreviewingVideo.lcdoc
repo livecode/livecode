@@ -12,7 +12,7 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -45,6 +45,10 @@ Standalone Application Settings (glossary),
 standalone application (glossary), video grabber (glossary),
 command (glossary), LiveCode custom library (glossary),
 Video library (library)
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 Tags: multimedia
 

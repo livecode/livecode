@@ -80,7 +80,7 @@ bool MCCefLinuxBrowser::GetXWindow(Window &r_window)
 	Window t_window;
 	t_window = t_browser->GetHost()->GetWindowHandle();
 
-	if (t_window == nil)
+	if (t_window == None)
 		return false;
 
 	r_window = t_window;
@@ -207,7 +207,7 @@ void MCCefLinuxBrowser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_brows
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefLinuxBrowser *t_browser;
-	t_browser = new MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
+	t_browser = new (nothrow) MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
 	
 	if (t_browser == nil)
 		return false;
@@ -219,20 +219,14 @@ bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowser
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define CEF_PATH_PREFIX "Externals/CEF"
-
-const char *MCCefPlatformGetExecutableFolder(void);
-bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
-
-const char *MCCefPlatformGetCefFolder(void)
+bool MCCefPlatformEnableHiDPI()
 {
-	static char *s_cef_path = nil;
-
-	if (s_cef_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), CEF_PATH_PREFIX, s_cef_path);
-	
-	MCLog("libbrowser cef folder: %s", s_cef_path);
-
-	return s_cef_path;
+    return true;
 }
 
+bool MCCefPlatformGetHiDPIEnabled()
+{
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////

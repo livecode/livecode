@@ -2,7 +2,7 @@ Name: columnDelimiter
 
 Type: property
 
-Syntax: set the columnDelimiter to <character|character(s)>
+Syntax: set the columnDelimiter to <character(s)>
 
 Syntax: the columnDelimiter
 
@@ -45,5 +45,4 @@ only for the current handler and setting it in one handler does not
 affect its value in other handlers called.
 
 References: combine command (command), split (command),
-split command (command)
-
+split command (command), character (keyword)

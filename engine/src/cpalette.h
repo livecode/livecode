@@ -22,11 +22,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCColors : public MCControl
+class MCColors;
+typedef MCObjectProxy<MCColors>::Handle MCColorsHandle;
+
+class MCColors : public MCControl, public MCMixinObjectHandle<MCColors>
 {
 public:
     
     enum { kObjectType = CT_COLOR_PALETTE };
+    using MCMixinObjectHandle<MCColors>::GetHandle;
     
 private:
     

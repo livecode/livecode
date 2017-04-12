@@ -6,7 +6,7 @@ Syntax: pixels
 
 Summary:
 The <pixels> <property> is not implemented and is <reserved
-word|reserved>. 
+word|reserved>.
 
 Associations: image
 
@@ -16,6 +16,8 @@ OS: ios, android
 
 Platforms: desktop, server, mobile
 
+Description:
+<reserved word|Reserved> for internal use.
+
 References: property (glossary), reserved word (glossary),
 borderPixel (property), backgroundPixel (property)
-

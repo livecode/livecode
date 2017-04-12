@@ -20,7 +20,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __MC_FOUNDATION__
-#include "foundation.h"
+#include <foundation.h>
+#endif
+
+#ifndef __MC_FOUNDATION_SYSTEM__
+#include <foundation-system.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,14 +39,16 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCScriptResolveSharedLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+typedef bool (*MCScriptForEachBuiltinModuleCallback)(void *p_context, MCScriptModuleRef p_module);
+
+typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
 
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
 
-void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback callback);
+bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback, void *p_context);
 
-bool MCScriptResolveSharedLibrary(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -164,6 +170,9 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
 
 // Load a module from a blob
 MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
+
+// Set initializer / finalizer
+void MCScriptSetModuleLifecycleFunctions(MCScriptModuleRef module, bool (*initializer)(void), void (*finalizer)(void));
 
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
@@ -360,7 +369,7 @@ void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t
 void MCScriptBeginForeignHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t return_type);
 void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerTypeParameterMode mode, MCNameRef name, uindex_t type);
 void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
-void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t base_type);
+void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptContinueRecordTypeInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type);
 void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
 

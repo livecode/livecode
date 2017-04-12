@@ -54,9 +54,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Network, CloseSocket, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, DeleteUrl, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, LoadUrl, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, UnloadUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSocket, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSecureSocket, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenDatagramSocket, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSocket, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSecureSocket, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenDatagramSocket, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, PostToUrl, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptConnectionsOnPort, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptDatagramConnectionsOnPort, 2)
@@ -332,8 +332,8 @@ void MCNetworkEvalHTTPProxyForURL(MCExecContext& ctxt, MCStringRef p_url, MCStri
     t_arguments[0] = t_url;
     t_arguments[1] = t_host;
 
-	MCAutoPointer<char> t_proxies;
-	t_proxies = s_pac_engine -> Call("__FindProxyForURL", t_arguments, 2);
+    /* UNCHECKED */ MCAutoPointer<char[]> t_proxies =
+        s_pac_engine -> Call("__FindProxyForURL", t_arguments, 2);
 
 	if (*t_proxies != nil)
 		/* UNCHECKED */ MCStringCreateWithCString(*t_proxies, r_proxy);
@@ -496,9 +496,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 		if (!ctxt . EnsureDiskAccessIsAllowed())
 			return;
 		if (MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
-			MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
+			MCStringCopySubstring(p_target, MCRangeMakeMinMax(5, MCStringGetLength(p_target)), &t_filename);
 		else
-			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+			MCStringCopySubstring(p_target, MCRangeMakeMinMax(8, MCStringGetLength(p_target)), &t_filename);
 		if (!MCS_unlink(*t_filename))
 			ctxt . SetTheResultToStaticCString("can't delete that file");
 		else
@@ -507,7 +507,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 	else if (MCStringGetLength(p_target) > 8 &&
 		MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+		MCStringCopySubstring(p_target, MCRangeMakeMinMax(8, MCStringGetLength(p_target)), &t_filename);
 		MCS_saveresfile(*t_filename, kMCEmptyData);
 	}
 	else if (MCU_couldbeurl(MCStringGetOldString(p_target)))
@@ -547,7 +547,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_ssl, MCNameRef p_end_hostname)
+void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_ssl, MCNameRef p_end_hostname)
 {
 	if (!ctxt . EnsureNetworkAccessIsAllowed() && !MCModeCanAccessDomain(MCNameGetString(p_name)))
 		return;
@@ -563,24 +563,24 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	MCresult -> clear();
     
     // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
+	MCSocket *s = MCS_open_socket(p_name, p_from_address, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
 	if (s != NULL)
         MCSocketsAppendToSocketList(s);
 }
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, false, false, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, false, false, false, p_end_hostname);
 }
 
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification)
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, true, p_with_verification, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, false, true, p_with_verification, p_end_hostname);
 }
 
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname)
 {
-	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, true, false, false, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_from_address, p_message, true, false, false, p_end_hostname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,7 +758,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         // SN-2015-05-19: [[ Bug 15368 ]] Insert the new string at the right
         //  position: might be after or before the chunk, not only into it.
         if (p_where == PT_INTO)
-            t_range = MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start);
+            t_range = MCRangeMakeMinMax(p_chunk . mark . start, p_chunk . mark . finish);
         else if (p_where == PT_BEFORE)
             t_range = MCRangeMake(p_chunk . mark . start, 0);
         else // p_where == PT_AFTER
@@ -791,7 +791,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	// MW-2008-08-12: Add access to the MCurlresult internal global variable
 	//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
-	r_value = (MCStringRef)MCValueRetain(MCurlresult -> getvalueref());
+    ctxt.ConvertToString(MCurlresult -> getvalueref(), r_value);
 }
 
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)

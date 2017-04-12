@@ -720,7 +720,7 @@ bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef
 	t_rep = nil;
 	
 	if (t_success)
-		t_success = nil != (t_rep = new MCReferencedImageRep(p_filename, p_searchkey));
+		t_success = nil != (t_rep = new (nothrow) MCReferencedImageRep(p_filename, p_searchkey));
 	
 	if (t_success)
 	{
@@ -750,7 +750,7 @@ bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_r
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResidentImageRep(p_data, p_size);
+	MCCachedImageRep *t_rep = new (nothrow) MCResidentImageRep(p_data, p_size);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -766,7 +766,7 @@ bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCVectorImageRep(p_data, p_size);
+	MCCachedImageRep *t_rep = new (nothrow) MCVectorImageRep(p_data, p_size);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -782,7 +782,7 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCCompressedImageRep(p_compressed);
+	MCCachedImageRep *t_rep = new (nothrow) MCCompressedImageRep(p_compressed);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -801,7 +801,7 @@ bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_hor
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
+	MCCachedImageRep *t_rep = new (nothrow) MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -820,7 +820,7 @@ bool MCImageRepGetPixelRep(MCDataRef p_pixel_data, uint32_t p_width, uint32_t p_
 	t_success = true;
 	
 	MCPixelDataImageRep *t_rep;
-	t_rep = new MCPixelDataImageRep(p_pixel_data, p_width, p_height, p_format, p_premultiplied);
+	t_rep = new (nothrow) MCPixelDataImageRep(p_pixel_data, p_width, p_height, p_format, p_premultiplied);
 	
 	t_success = t_rep != nil;
 	if (t_success)

@@ -81,13 +81,6 @@ public:
 		return name;
 	}
 	
-	const char *getname_cstring(void)
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
-		return t_name;
-	}
-	
 	bool hasname(MCNameRef other_name)
 	{
 		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
@@ -108,6 +101,7 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
 	bool getparamnames(MCListRef& r_list);
+	bool getparamnames_as_properlist(MCProperListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
 	bool getvarnames(bool p_all, MCListRef& r_list);

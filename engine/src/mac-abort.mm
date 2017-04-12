@@ -69,6 +69,8 @@
 static volatile bool s_abort_key_pressed = false;
 static volatile bool s_abort_key_checked = false;
 
+static unsigned int s_abort_key_disabled = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCAbortKeyThread: NSThread<NSPortDelegate>
@@ -151,6 +153,11 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 
 static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
+    if (s_abort_key_disabled > 0)
+    {
+        return;
+    }
+
 	s_abort_key_checked = false;
 
 	// Update our period key mapping if the input source has changed / hasn't
@@ -221,6 +228,8 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		// i.e. We have detected Cmd-'.'
 		//
 		s_abort_key_pressed = true;
+        
+		MCPlatformBreakWait();
 	}
 }
 
@@ -290,6 +299,16 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformDisableAbortKey(void)
+{
+    s_abort_key_disabled += 1;
+}
+
+void MCPlatformEnableAbortKey(void)
+{
+    s_abort_key_disabled -= 1;
+}
 
 bool MCPlatformGetAbortKeyPressed(void)
 {

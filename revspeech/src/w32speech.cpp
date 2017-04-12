@@ -18,7 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "revspeech.h"
 
-#include "w32sapi4speech.h"
 #include "w32sapi5speech.h"
 
 INarrator *InstantiateNarrator(NarratorProvider p_provider)
@@ -27,12 +26,12 @@ INarrator *InstantiateNarrator(NarratorProvider p_provider)
 	if (p_provider == kNarratorProviderDefault)
 	{
 		INarrator *t_narrator;
-		t_narrator = new WindowsSAPI5Narrator();
+		t_narrator = new (nothrow) WindowsSAPI5Narrator();
 		if (!t_narrator -> Initialize())
 		{
 			delete t_narrator;
 
-			t_narrator = new WindowsSAPI4Narrator();
+			t_narrator = new (nothrow) WindowsSAPI4Narrator();
 			if (!t_narrator -> Initialize())
 			{
 				delete t_narrator;

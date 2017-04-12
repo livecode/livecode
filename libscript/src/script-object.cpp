@@ -21,9 +21,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
-MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
-MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+MCTypeInfoRef kMCScriptVariableUsedBeforeAssignedErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
@@ -35,6 +33,7 @@ MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+MCTypeInfoRef kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
@@ -44,42 +43,54 @@ MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 
 struct MCBuiltinModule
 {
-    const char *name;
-    unsigned char *data;
-    unsigned long size;
+    MCBuiltinModule *next;
+    MCScriptModuleRef handle;
+    const unsigned char *data;
+    long size;
+    bool (*initializer)(void);
+    void (*finalizer)(void);
 };
 
+static MCBuiltinModule *s_builtin_modules = nil;
 static MCScriptModuleRef s_builtin_module = nil;
-static MCScriptModuleRef *s_builtin_modules = nil;
-static uindex_t s_builtin_module_count = 0;
+static MCScriptLoadLibraryCallback s_load_library_callback = nil;
 
-static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
+extern "C" void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
+{
+    if (p_module -> next != nullptr)
+    {
+        return;
+    }
+    
+    p_module->next = s_builtin_modules;
+    s_builtin_modules = p_module;
+}
 
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
+static MCSLibraryRef s_libscript_library = nullptr;
 
 bool MCScriptInitialize(void)
 {
-    MCBuiltinModule **t_modules;
-    unsigned int t_module_count;
-    if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
-        return true;
-    
-    if (!MCMemoryNewArray(t_module_count, s_builtin_modules))
+    if (!MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCScriptInitialize),
+                                     s_libscript_library))
+    {
         return false;
-    
-    for(uindex_t i = 0; i < t_module_count; i++)
+    }
+
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
     {
         MCStreamRef t_stream;
-        if (!MCMemoryInputStreamCreate(t_modules[i] -> data, t_modules[i] -> size, t_stream))
+        if (!MCMemoryInputStreamCreate(t_module->data, t_module->size, t_stream))
             return false;
         
-        if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[i]))
+        if (!MCScriptCreateModuleFromStream(t_stream, t_module->handle))
             return false;
+        
+        MCScriptSetModuleLifecycleFunctions(t_module->handle,
+                                            t_module->initializer,
+                                            t_module->finalizer);
         
         MCValueRelease(t_stream);
     }
-    
-    s_builtin_module_count = t_module_count;
     
     // This block builds the builtin module - which isn't possible to compile from
     // source as the names of the types we are defining are currently part of the
@@ -141,8 +152,8 @@ bool MCScriptInitialize(void)
         MCScriptAddExportToModule(t_builder, t_bool_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, kMCScriptDefinitionKindType, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignIntTypeInfo"), t_type_index);
-        MCScriptAddTypeToModule(t_builder, MCNAME("int"), t_type_index, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignSIntTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("sint"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_uint_type_index;
@@ -243,11 +254,7 @@ bool MCScriptInitialize(void)
     
     // This block creates all the default errors
     {
-        if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.InParameterNotDefinedError"), MCNAME("runtime"), MCSTR("In parameters must be assigned before calling - parameter %{parameter} of %{module}.%{handler}"), kMCScriptInParameterNotDefinedErrorTypeInfo))
-			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCNAME("runtime"), MCSTR("Out parameters must be assigned before returning - parameter %{parameter} of %{module}.%{handler}"), kMCScriptOutParameterNotDefinedErrorTypeInfo))
-			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCNAME("runtime"), MCSTR("Variables must be assigned before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo))
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableUsedBeforeAssignedError"), MCNAME("runtime"), MCSTR("Variables must be assigned before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeAssignedErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ReturnValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for return - expected type %{type} when returning from %{module}.%{handler}"), kMCScriptInvalidReturnValueErrorTypeInfo))
 			return false;
@@ -269,6 +276,8 @@ bool MCScriptInitialize(void)
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCNAME("runtime"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo))
 			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyUsedBeforeAssignedError"), MCNAME("runtime"), MCSTR("Properties must be set before begin used - property %{module}.%{property}"), kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo))
+			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotAHandlerValueError"), MCNAME("runtime"), MCSTR("Value is not a handler"), kMCScriptNotAHandlerValueErrorTypeInfo))
@@ -279,30 +288,74 @@ bool MCScriptInitialize(void)
 			return false;
     }
 
-    s_resolve_shared_library_callback = nil;
+    // Now make sure all builtin modules are usable.
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        if (!MCScriptEnsureModuleIsUsable(t_module->handle))
+            return false;
+    }
+    
+    s_load_library_callback = nullptr;
     
     return true;
 }
 
 void MCScriptFinalize(void)
 {
-    for(uindex_t i = 0; i < s_builtin_module_count; i++)
-        MCScriptReleaseModule(s_builtin_modules[i]);
-    MCMemoryDeleteArray(s_builtin_modules);
-    MCValueRelease(s_builtin_module);
-}
-
-void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
-{
-    s_resolve_shared_library_callback = p_callback;
-}
-
-bool MCScriptResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
-{
-    if (s_resolve_shared_library_callback == nil)
-        return false;
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        MCScriptReleaseModule(t_module->handle);
+    }
+    MCScriptReleaseModule(s_builtin_module);
     
-    return s_resolve_shared_library_callback(p_module, p_name, r_path);
+    MCValueRelease(s_libscript_library);
+}
+
+void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback p_callback)
+{
+    s_load_library_callback = p_callback;
+}
+
+bool MCScriptLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibraryRef& r_library)
+{
+    // If the library name is empty, then we want libscript's library.
+    if (MCStringIsEmpty(p_name))
+    {
+        r_library = MCValueRetain(s_libscript_library);
+        return true;
+    }
+    
+    // If there is a callback, then use that.
+    if (s_load_library_callback != nullptr)
+    {
+        return s_load_library_callback(p_module,
+                                       p_name,
+                                       r_library);
+    }
+    
+    // Otherwise, just use the name as is.
+    return MCSLibraryCreateWithPath(p_name,
+                                    r_library);
+}
+
+bool
+MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback,
+                             void *p_context)
+{
+    for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module -> next)
+    {
+        if (!p_callback(p_context, t_module->handle))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+MCSLibraryRef MCScriptGetLibrary(void)
+{
+    return s_libscript_library;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,17 +461,3 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern "C"
-{
-    extern MCBuiltinModule* g_builtin_modules[];
-    extern unsigned int g_builtin_module_count;
-}
-
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count)
-{
-	// Use the array defined in the module-helper.cpp file
-    r_modules = g_builtin_modules;
-    r_count = g_builtin_module_count;
-    return true;
-}

@@ -12,7 +12,7 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -40,6 +40,10 @@ has no effect.
 > <Standalone Application Settings> window, make sure the
 > "Video Grabber" 
 > library checkbox is checked.
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revStopPreviewingVideo (command), revRecordVideo (command),
 stop recording (command), video capture (glossary),

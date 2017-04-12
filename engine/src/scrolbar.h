@@ -35,11 +35,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MAC_SCALE_THUMB_SIZE 15 //fixed thumb width for Mac's Scale
 #define FIXED_THUMB_SIZE 17
 
-class MCScrollbar : public MCControl
+typedef MCObjectProxy<MCScrollbar>::Handle MCScrollbarHandle;
+
+class MCScrollbar : public MCControl, public MCMixinObjectHandle<MCScrollbar>
 {
 public:
     
     enum { kObjectType = CT_SCROLLBAR };
+    using MCMixinObjectHandle<MCScrollbar>::GetHandle;
     
 private:
     

@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <string.h>
 #include <math.h>
 
+#include <core.h>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -34,7 +36,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <revolution/support.h>
 
 #include "revvideograbber.h"
+
+#ifndef WIN32
 #include "qtvideograbber.h"
+#endif
 
 #ifdef WIN32
 #include "dsvideograbber.h"
@@ -50,7 +55,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static CVideoGrabber *gvideograbber = NULL;
 
+#ifndef WIN32
 extern CVideoGrabber *CreateQTXVideoGrabber(WindowPtr window);
+#endif
 
 void VideoGrabberDoIdle()
 {
@@ -113,7 +120,7 @@ struct MYBITMAP
 
 MYBITMAP *createmybitmap(uint2 depth, uint2 width, uint2 height)
 {
-  MYBITMAP *image = new MYBITMAP;
+  MYBITMAP *image = new (nothrow) MYBITMAP;
   image->width = width;
   image->height = height;
   image->depth = (uint1)depth;
@@ -180,7 +187,7 @@ void destroymybitmap(MYBITMAP *image)
   delete image;
 }
 
-
+#ifndef WIN32
 Bool InitQT()
 {
 	static Bool QTInited = False;
@@ -194,7 +201,7 @@ Bool InitQT()
 #endif
 	return QTInited;
 }
-
+#endif
 
 
 enum VideoGrabberKeyword
@@ -626,17 +633,18 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
                 // SN-2015-04-23: [[ Bug 15255 ]] Windows now defaults to directX
 #ifdef WIN32
 				if (_strnicmp(args[1], "vfw",strlen("vfw")) == 0)
-                    gvideograbber = new CWinVideoGrabber(windowid);
+                    gvideograbber = new (nothrow) CWinVideoGrabber(windowid);
+				else
+					gvideograbber = new (nothrow) CDirectXVideoGrabber(windowid);
+#else
                 else if (_strnicmp(args[1], "qt",strlen("qt")) == 0)
                 {
-#else
                 if (stricmp(args[1], "qtx") == 0)
                     gvideograbber = CreateQTXVideoGrabber(windowid);
 				else
 				{
-#endif
                     if (InitQT())
-                        gvideograbber = new CQTVideoGrabber(windowid);
+                        gvideograbber = new (nothrow) CQTVideoGrabber(windowid);
                     else
                     {
                         // SN-2015-04-17: [[ Bug 13452 ]] Break if qvideograbber
@@ -645,9 +653,6 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
                         break;
                     }
                 }
-#ifdef WIN32
-                else
-                    gvideograbber = new CDirectXVideoGrabber(windowid);
 #endif
 				int left,top,right,bottom;
                 // SN-2015-04-23: [[ Bug 15255 ]] Checking that qtvideograbber

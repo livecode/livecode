@@ -14,13 +14,15 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <algorithm>
+
 #include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "globals.h"
 #include "osspec.h"
 #include "variable.h"
 
@@ -35,7 +37,6 @@
 #include "util.h"
 
 #ifdef _WINDOWS_DESKTOP
-#include "w32prefix.h"
 #include "w32dc.h"
 
 #include "digitalv.h"
@@ -285,6 +286,20 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 }
 #endif
 
+struct FormatTable
+{
+    const char *label;
+    OSType value;
+};
+
+static const FormatTable record_formats[] =
+{
+    { "aiff", kQTFileTypeAIFF },
+    { "wave", kQTFileTypeWave },
+    { "ulaw", kQTFileTypeMuLaw },
+    { "movie", kQTFileTypeMovie },
+};
+
 static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 {
 	bool t_success = true;
@@ -332,21 +347,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		Component c;
 		ComponentDescription cd;
 		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-			case EX_WAVE:
-				cd.componentSubType = kQTFileTypeWave;
-				break;
-			case EX_ULAW:
-				cd.componentSubType = kQTFileTypeMuLaw;
-				break;
-			case EX_AIFF:
-				cd.componentSubType = kQTFileTypeAIFF;
-				break;
-			default:
-				cd.componentSubType = kQTFileTypeMovie;
-				break;
-		}
+        cd.componentSubType = MCrecordformat;
 		cd.componentManufacturer = AUDIO_MEDIA_TYPE;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
@@ -399,7 +400,7 @@ void MCQTStopRecording(void)
 			sgSoundComp = NULL;
 		}
 #ifdef _WINDOWS
-		if (MCrecordformat == EX_MOVIE)
+        if (MCrecordformat == kQTFileTypeMovie)
         {
             MCAutoStringRefAsWString t_tempfile, t_exportfile;
             /* UNCHECKED */ t_tempfile . Lock(recordtempfile);
@@ -470,7 +471,7 @@ void MCQTRecordSound(MCStringRef fname)
 	UnsignedFixed sampleRate = 44100 << 16;
 #ifdef _WINDOWS
 	
-	if (MCrecordformat == EX_MOVIE)
+    if (MCrecordformat == kQTFileTypeMovie)
 	{
 		short denominator = (short)(MAXINT2 / MCrecordrate);
 		short numerator = (short)(MCrecordrate * denominator);
@@ -549,7 +550,43 @@ void MCQTGetRecordLoudness(integer_t &r_loudness)
 		r_loudness = (uint2)((meterState[1] * 100) / 255);
 	}
 }
+        
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    for (auto&& t_format : record_formats)
+    {
+        if (MCStringIsEqualToCString(p_string, t_format.label, kMCCompareCaseless))
+            return t_format.value;
+    }
+    return 0;
+}
+        
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    for (auto&& t_format : record_formats)
+    {
+        if (p_id == t_iter.value)
+            return t_format.label;
+    }
+    
+    return kMCEmptyString;
+}
 
+bool MCQTGetRecordFormatList(MStringRef& r_string)
+{
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable('\n', &t_list))
+        return false;
+    
+    for (auto&& t_format : record_formats)
+    {
+        if (!MCListAppendCString(*t_list, t_format.label))
+            return false;
+    }
+    
+    return MCListCopyAsString(*t_list, r_string);
+}
+        
 void MCQTGetRecordCompressionList(MCStringRef &r_string)
 {	
 	if (!MCQTInit())
@@ -730,7 +767,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 	}
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-	char *dataptr = new char[datasize];
+	char *dataptr = new (nothrow) char[datasize];
 	long *aLong = (long *)dataptr;
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
@@ -828,7 +865,7 @@ static void QTEffectsQuery(void **effectatomptr)
 	numeffects = QTCountChildrenOfType(effectatom, kParentAtomIsContainer,
 	                                   kEffectNameAtom);
 	neffects = 0;
-	qteffects = new QTEffect[numeffects];
+	qteffects = new (nothrow) QTEffect[numeffects];
 	uint2 i;
 	for (i = 1; i <= numeffects; i++)
 	{
@@ -847,7 +884,7 @@ static void QTEffectsQuery(void **effectatomptr)
 			                    &qteffects[neffects].type, NULL);
 			QTLockContainer(effectatom);
 			QTGetAtomDataPtr(effectatom, nameatom, &datasize, (Ptr *)&sptr);
-			qteffects[neffects].token = new char[datasize+1];
+			qteffects[neffects].token = new (nothrow) char[datasize+1];
 			memcpy(qteffects[neffects].token,sptr,datasize);
 			qteffects[neffects].token[datasize] = '\0';
 			QTUnlockContainer(effectatom);
@@ -1239,6 +1276,23 @@ void MCQTGetRecordCompressionList(MCStringRef &r_compression_list)
 {
 	MCresult -> sets("not supported");
     r_compression_list = MCValueRetain(kMCEmptyString);
+}
+
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    return 0;
+}
+    
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    return kMCEmptyString;
+}
+        
+bool MCQTGetRecordFormatList(MCStringRef &r_format_list)
+{
+    MCresult -> sets("not supported");
+    r_format_list = MCValueRetain(kMCEmptyString);
+    return true;
 }
 
 void MCQTStopRecording(void)

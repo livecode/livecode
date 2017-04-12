@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 #include <AclAPI.h>
 
 #ifdef DeleteFile
@@ -114,7 +114,7 @@ static void legacy_path_to_nt_path(MCStringRef p_legacy, MCStringRef &r_nt)
 		MCStringRef t_temp;
 		/* UNCHECKED */ MCStringCreateMutable(0, t_temp);
 		/* UNCHECKED */ MCStringAppend(t_temp, MCSTR("\\\\?\\UNC\\"));
-		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMake(2, MCStringGetLength(p_legacy) - 2));
+		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMakeMinMax(2, MCStringGetLength(p_legacy)));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_nt);
 	}
 	else
@@ -131,13 +131,13 @@ static void nt_path_to_legacy_path(MCStringRef p_nt, MCStringRef &r_legacy)
 	if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\UNC\\", kMCStringOptionCompareCaseless))
 	{
 		MCStringRef t_temp;
-		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMake(8, MCStringGetLength(p_nt) - 8), t_temp);
+		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMakeMinMax(8, MCStringGetLength(p_nt)), t_temp);
 		/* UNCHECKED */ MCStringPrepend(t_temp, MCSTR("\\\\"));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_legacy);
 	}
 	else if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\", kMCStringOptionCompareCaseless))
 	{
-		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMake(4, MCStringGetLength(p_nt) - 4), r_legacy);
+		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMakeMinMax(4, MCStringGetLength(p_nt)), r_legacy);
 	}
 	else
 	{
@@ -338,9 +338,9 @@ bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef
 		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
 		{
 			if (t_value_offset > t_path_offset)
-				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_path_offset + 1, t_value_offset), r_key);
 		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length - t_value_offset - 1), r_value);
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_value_offset + 1, t_length), r_value);
 	}
 	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
 }
@@ -502,7 +502,7 @@ static DWORD readThread(Streamnode *process)
 {
 	DWORD nread;
 	uint32_t t_bufsize = READ_PIPE_SIZE;
-	char* t_buffer = new char[t_bufsize];
+	char* t_buffer = new (nothrow) char[t_bufsize];
 
 	while (process -> ihandle != NULL)
 	{
@@ -702,7 +702,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 		if (t_chars[i] == ' ' || t_chars[i] == ',' || t_chars[i] == '\n')
 		{
 			MCAutoStringRef t_substring;
-			if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, i - t_start), &t_substring) || 
+			if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, i), &t_substring) || 
 					!MCListAppend(*t_list, *t_substring))
 				return false;
 			t_start = i + 1;
@@ -711,7 +711,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 	if (t_start < t_char_count)
 	{
 		MCAutoStringRef t_final_string;
-		if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, MCStringGetLength(t_string) - t_start), &t_final_string) ||
+		if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, MCStringGetLength(t_string)), &t_final_string) ||
 			!MCListAppend(*t_list, *t_final_string))
 			return false;
 	}
@@ -1574,6 +1574,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual void Debug(MCStringRef p_string)
 	{
+		MCAutoStringRefAsWString t_string;
+		if (t_string.Lock(p_string))
+			OutputDebugStringW(*t_string);
 	}
 
 	virtual real64_t GetCurrentTime()
@@ -1629,7 +1632,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return true;
 		}
         
-        char *buffer = new char[MAXHOSTNAMELEN + 1];
+        char *buffer = new (nothrow) char[MAXHOSTNAMELEN + 1];
         gethostname(buffer, MAXHOSTNAMELEN);
 		buffer[MAXHOSTNAMELEN] = '\0';
         return MCStringFormat(r_address, "%s:%@", buffer, MCcmd);
@@ -1933,21 +1936,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
-        //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
-        //{
-		//char *buf;
-		//ep.reserve(PATH_MAX, buf);
-		//if (GetWindowsDirectoryA(buf, PATH_MAX))
-		//{
-		//	wasfound = True;
-		//	ep.commit(strlen(buf));
-		//}
-        //}
-        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
-                 // so the resources folder is the engine folder.
-                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -2240,12 +2230,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
-					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+					t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                     t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
-					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					t_handle = new (nothrow) MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
                     // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
                     //  file handler open in case the memory mapped file could
                     //  not be allocated. We always close the normal file handle
@@ -2258,13 +2248,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// (for empty files for instance).
 			else
             {
-				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+				t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                 t_close_file_handler = t_handle == NULL;
             }
 		}
 		else
         {
-			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
             t_close_file_handler = t_handle == NULL;
         }
 
@@ -2289,7 +2279,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return nil;
 
 		// Since we can only have an STD fd, we know we have a pipe.
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
+		t_stdio_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -2342,30 +2332,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 		MCStringCopy(*t_tmp_name, r_tmp_name);
 		return true;
-    }
-	
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
-    {
-		MCAutoStringRefAsWString t_path_wstr;
-		if (!t_path_wstr.Lock(p_path))
-			return NULL;
-	
-		// MW-2011-02-28: [[ Bug 9410 ]] Use the Ex form of LoadLibrary and ask it to try
-        //   to resolve dependent DLLs from the folder containing the DLL first.
-        HMODULE t_handle;
-        t_handle = LoadLibraryExW(*t_path_wstr, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-        
-        return (MCSysModuleHandle)t_handle;
-    }
-    
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-        // NOTE: symbol addresses are never Unicode and only an ANSI call exists
-		return (MCSysModuleHandle)GetProcAddress((HMODULE)p_module, MCStringGetCString(p_symbol));
-    }
-	virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-        FreeLibrary((HMODULE)p_module);
     }
 	
 	// Utility function: converts FILETIME to a Unix time
@@ -2461,17 +2427,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		return true;
     }
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-	virtual bool GetExecutablePath(MCStringRef& r_path)
-	{
-		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
-		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
-		
-		MCAutoStringRef t_path;
-		MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_path);
-		return PathFromNative(*t_path, r_path); 
-	}
 
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
@@ -2805,8 +2760,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+        MCprocesses[index].ohandle = new (nothrow) MCMemoryFileHandle;
+		MCprocesses[index].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -3098,12 +3053,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
+				MCprocesses[MCnprocesses].ohandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+				MCprocesses[MCnprocesses].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }
@@ -3916,24 +3871,6 @@ uint2 MCS_charsettolangid(uint1 charset)
 		if (langidtocharsets[i].charset == charset)
 			return langidtocharsets[i].langid;
 	return 0;
-}
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	GUID t_guid;
-	if (CoCreateGuid(&t_guid) == S_OK)
-	{
-		unsigned char __RPC_FAR *t_guid_string;
-		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
-		{
-			strcpy(p_buffer, (char *)t_guid_string);
-			RpcStringFreeA(&t_guid_string);
-		}
-        
-		return true;
-	}
-    
-	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

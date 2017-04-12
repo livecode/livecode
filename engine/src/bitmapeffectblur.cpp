@@ -139,7 +139,7 @@ static float *MCBitmapEffectComputeGaussianKernel(uint4 r)
 	t_width = r * 2 + 1;
 
 	float *lk;
-	lk = new float[t_width];
+	lk = new (nothrow) float[t_width];
 	if (lk == NULL)
 		return NULL;
 
@@ -162,7 +162,7 @@ static uint32_t *MCBitmapEffectComputeBlurKernel(uint4 r)
 	lk = MCBitmapEffectComputeGaussianKernel(r);
 	
 	float *k, t_sum;
-	k = new float[t_width * t_width];
+	k = new (nothrow) float[t_width * t_width];
 	t_sum = 0.0;
 	for(uint4 i = 0; i < t_width; i++)
 		for(uint4 j = 0; j < t_width; j++)
@@ -174,7 +174,7 @@ static uint32_t *MCBitmapEffectComputeBlurKernel(uint4 r)
 		}
 
 	uint32_t *ik;
-	ik = new uint32_t[t_width * t_width];
+	ik = new (nothrow) uint32_t[t_width * t_width];
 	for(uint4 i = 0; i < t_width; i++)
 		for(uint4 j = 0; j < t_width; j++)
 			ik[i * t_width + j] = (uint32_t)(k[i * t_width + j] * 0x1000000 / t_sum);
@@ -332,7 +332,7 @@ bool MCBitmapEffectFastGaussianBlur::Initialize(const MCBitmapEffectBlurParamete
 	if (params . radius != 0)
 	{
 		float *lk = MCBitmapEffectComputeGaussianKernel(t_spread_radius);
-		kernel = new uint32_t[t_width];
+		kernel = new (nothrow) uint32_t[t_width];
 		float t_sum = 0;
 		for (uint32_t i=0; i<(t_spread_radius * 2 + 1); i++)
 		{
@@ -364,7 +364,7 @@ bool MCBitmapEffectFastGaussianBlur::Initialize(const MCBitmapEffectBlurParamete
 
 	buffer_height = t_width;
 	buffer_nextrow = top;
-	buffer = new uint32_t[buffer_height * output_rect.width];
+	buffer = new (nothrow) uint32_t[buffer_height * output_rect.width];
 	buffer_stride = output_rect.width;
 
 	if (radius > 0)
@@ -619,7 +619,7 @@ bool MCBitmapEffectBoxBlur::Initialize(const MCBitmapEffectBlurParameters& param
 	if (t_radius == 0)
 		m_passes = 0;
 
-	pass_info = new MCBitmapEffectBoxBlurPassInfo[m_passes];
+	pass_info = new (nothrow) MCBitmapEffectBoxBlurPassInfo[m_passes];
 
 	int32_t t_maxwidth = 0;
 	for (uint32_t i=0; i<m_passes; i++)
@@ -646,7 +646,7 @@ bool MCBitmapEffectBoxBlur::Initialize(const MCBitmapEffectBlurParameters& param
 		t_pass->stride = t_pass->width + 1;
 		t_pass->height = t_pass->bottom - t_pass->top;
 		t_pass->buffer_height = t_pass->height + 1;
-		t_pass->buffer = new uint32_t[(t_pass->stride) * t_pass->buffer_height];
+		t_pass->buffer = new (nothrow) uint32_t[(t_pass->stride) * t_pass->buffer_height];
 		memset(pass_info[i].buffer, 0, (t_pass->stride) * t_pass->buffer_height * sizeof(uint32_t));
 
 		t_pass->buffer_nextrow = t_pass->top;
@@ -665,7 +665,7 @@ bool MCBitmapEffectBoxBlur::Initialize(const MCBitmapEffectBlurParameters& param
 		t_buff_bottom -= t_pass->radius;
 	}
 
-	row_buffer = new uint32_t[t_maxwidth];
+	row_buffer = new (nothrow) uint32_t[t_maxwidth];
 
 	if (m_passes > 0)
 		pixels = src_pixels + stride * pass_info[0].top;
@@ -795,9 +795,6 @@ void MCBitmapEffectBoxBlur::Process(uint8_t *mask)
 			t_top = MCU_max(-t_pass->radius, t_pass->top - y); // min offset from kernel midpoint
 			t_bottom = MCU_min(t_pass->bottom - y - 1, t_pass->radius); // max offset from kernel midpoint
 
-			int32_t t_vcount;
-			t_vcount = t_bottom - t_top + 1;
-
 			t_pass->buffer_needrow = t_bottom + y ;
 
 			CalculateRows(t_pass_index);
@@ -909,19 +906,19 @@ static bool MCBitmapEffectBlurFactory(MCBitmapEffectFilter p_type, MCBitmapEffec
 	switch(p_type)
 	{
 	case kMCBitmapEffectFilterFastGaussian:
-		r_blur = new MCBitmapEffectFastGaussianBlur;
+		r_blur = new (nothrow) MCBitmapEffectFastGaussianBlur;
 		return true;
 
 	case kMCBitmapEffectFilterOnePassBox:
-		r_blur = new MCBitmapEffectBoxBlur(1);
+		r_blur = new (nothrow) MCBitmapEffectBoxBlur(1);
 		return true;
 
 	case kMCBitmapEffectFilterTwoPassBox:
-		r_blur = new MCBitmapEffectBoxBlur(2);
+		r_blur = new (nothrow) MCBitmapEffectBoxBlur(2);
 		return true;
 
 	case kMCBitmapEffectFilterThreePassBox:
-		r_blur = new MCBitmapEffectBoxBlur(3);
+		r_blur = new (nothrow) MCBitmapEffectBoxBlur(3);
 		return true;
 
 	default:

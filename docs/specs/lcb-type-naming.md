@@ -41,7 +41,7 @@ platform prefix.
 * `UInt<BITS>`: An unsigned integer represented using the specified
   number of bits (e.g. `UInt32`).
 
-* `Int<BITS>`: An signed integer represented using the specified
+* `Int<BITS>`: A signed integer represented using the specified
   number of bits (e.g. `Int8`).
 
 * `IntSize`, `UIntSize`: An (unsigned) integer representing a memory

@@ -82,7 +82,7 @@ MCEPS::MCEPS(const MCEPS &sref) : MCControl(sref)
 	pagecount = sref.pagecount;
 	if (pagecount != 0)
 	{
-		pageIndex = new uint4[pagecount];
+		pageIndex = new (nothrow) uint4[pagecount];
 		uint2 i = pagecount;
 		while (i--)
 			pageIndex[i] = sref.pageIndex[i];
@@ -93,7 +93,7 @@ MCEPS::MCEPS(const MCEPS &sref) : MCControl(sref)
 		image = NULL;
 	else
 	{
-		image = new MCImage(*sref.image);
+		image = new (nothrow) MCImage(*sref.image);
 		image->setparent(this);
 	}
 }
@@ -250,7 +250,7 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p
 
 MCControl *MCEPS::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCEPS *neweps = new MCEPS(*this);
+	MCEPS *neweps = new (nothrow) MCEPS(*this);
 	if (attach)
 		neweps->attach(p, invisible);
 	return neweps;
@@ -340,7 +340,7 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 	delete prolog;
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
-	postscript = new char[size + 1];
+	postscript = new (nothrow) char[size + 1];
 	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
 	postscript[size] = '\0';
@@ -371,7 +371,7 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (flags & F_RETAIN_IMAGE)
 	{
-		image = new MCImage;
+		image = new (nothrow) MCImage;
 		image->setparent(this);
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
 			return checkloadstat(stat);
@@ -384,7 +384,7 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (pagecount > 0)
 		{
-			pageIndex = new uint4[pagecount];
+			pageIndex = new (nothrow) uint4[pagecount];
 			for (i = 0 ; i < pagecount ; i++)
 				if ((stat = IO_read_uint4(&pageIndex[i], stream)) != IO_NORMAL)
 					return checkloadstat(stat);
@@ -409,7 +409,7 @@ void MCEPS::setextents()
 		uint4 t_offset = swap_uint4(&uint4ptr[1]);
 		size = swap_uint4(&uint4ptr[2]);
 		MCswapbytes = !MCswapbytes;
-		char *newps = new char[size];
+		char *newps = new (nothrow) char[size];
 		memcpy(newps, &postscript[t_offset], size);
 		delete postscript;
 		postscript = newps;
@@ -497,14 +497,14 @@ Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	delete postscript;
-	postscript = new char[size + 1];
+	postscript = new (nothrow) char[size + 1];
 	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
 	uindex_t t_sep;
     MCStringRef t_fname;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_sep + 1, MCStringGetLength(fname)), t_fname);
     else
         t_fname = MCValueRetain(fname);
     

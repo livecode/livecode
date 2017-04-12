@@ -198,7 +198,7 @@ bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, SkShader*& 
 	
 	// MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
 	SkShader *t_gradient_shader;
-	t_gradient_shader = new MCGLegacyGradientShader(self, p_clip);
+	t_gradient_shader = new (nothrow) MCGLegacyGradientShader(self, p_clip);
 	t_success = t_gradient_shader != NULL;
 	
 	if (t_success)
@@ -280,36 +280,26 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 		r_path_effect = NULL;
 		return true;
 	}
-	
-	bool t_success;
-	t_success = true;
-	
+
     // Skia won't except odd numbers of dashes, so we must replicate in that case.
-    uint32_t t_dash_count;
-    if (t_success)
-        t_dash_count = (self -> count % 2) == 0 ? self -> count : self -> count * 2;
-        
-	SkScalar *t_dashes;
-	if (t_success)
-		t_success = MCMemoryNewArray(t_dash_count, t_dashes);
-	
-	SkDashPathEffect *t_dash_effect;
-	t_dash_effect = NULL;
-	if (t_success)
-	{
-		for (uint32_t i = 0; i < t_dash_count; i++)
-			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
-	
-		t_dash_effect = new SkDashPathEffect(t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
-		t_success = t_dash_effect != NULL;
-	}
-	
-	if (t_success)
-		r_path_effect = t_dash_effect;
-	
-	MCMemoryDeleteArray(t_dashes);
-	
-	return t_success;	
+    uint32_t t_dash_count =
+        (self -> count % 2) == 0 ? self -> count : self -> count * 2;
+
+    MCAutoPointer<SkScalar[]> t_dashes = new (nothrow) SkScalar[t_dash_count];
+    if (!t_dashes)
+        return false;
+
+    for (uint32_t i = 0; i < t_dash_count; i++)
+        t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
+
+    SkDashPathEffect *t_dash_effect =
+        new (nothrow) SkDashPathEffect(t_dashes.Get(), (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
+
+    if (!t_dash_effect)
+        return false;
+
+    r_path_effect = t_dash_effect;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,35 +398,35 @@ void MCGBlendModesInitialize(void)
 	s_skia_blend_modes[kMCGBlendModeExclusion] = SkXfermode::Create(SkXfermode::kExclusion_Mode);
 	
 	// legacy blend modes
-	s_skia_blend_modes[kMCGBlendModeLegacyClear] = new MCGLegacyBlendMode(kMCGBlendModeLegacyClear);
-	s_skia_blend_modes[kMCGBlendModeLegacyAnd] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAnd);
-	s_skia_blend_modes[kMCGBlendModeLegacyAndReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAndReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopy] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopy);
-	s_skia_blend_modes[kMCGBlendModeLegacyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNoop] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNoop);
-	s_skia_blend_modes[kMCGBlendModeLegacyXor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyXor);
-	s_skia_blend_modes[kMCGBlendModeLegacyOr] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOr);
-	s_skia_blend_modes[kMCGBlendModeLegacyNor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNor);
-	s_skia_blend_modes[kMCGBlendModeLegacyEquiv] = new MCGLegacyBlendMode(kMCGBlendModeLegacyEquiv);
-	s_skia_blend_modes[kMCGBlendModeLegacyInvert] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInvert);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNand] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNand);
-	s_skia_blend_modes[kMCGBlendModeLegacySet] = new MCGLegacyBlendMode(kMCGBlendModeLegacySet);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlend] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlend);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddOver);
-	s_skia_blend_modes[kMCGBlendModeLegacySubPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyTransparent] = new MCGLegacyBlendMode(kMCGBlendModeLegacyTransparent);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMax] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMax);
-	s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);		
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendSource] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendSource);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendDestination] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendDestination);
+	s_skia_blend_modes[kMCGBlendModeLegacyClear] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyClear);
+	s_skia_blend_modes[kMCGBlendModeLegacyAnd] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAnd);
+	s_skia_blend_modes[kMCGBlendModeLegacyAndReverse] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAndReverse);
+	s_skia_blend_modes[kMCGBlendModeLegacyCopy] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyCopy);
+	s_skia_blend_modes[kMCGBlendModeLegacyInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyInverted);
+	s_skia_blend_modes[kMCGBlendModeLegacyNoop] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNoop);
+	s_skia_blend_modes[kMCGBlendModeLegacyXor] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyXor);
+	s_skia_blend_modes[kMCGBlendModeLegacyOr] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOr);
+	s_skia_blend_modes[kMCGBlendModeLegacyNor] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNor);
+	s_skia_blend_modes[kMCGBlendModeLegacyEquiv] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyEquiv);
+	s_skia_blend_modes[kMCGBlendModeLegacyInvert] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyInvert);
+	s_skia_blend_modes[kMCGBlendModeLegacyOrReverse] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOrReverse);
+	s_skia_blend_modes[kMCGBlendModeLegacyCopyInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyCopyInverted);
+	s_skia_blend_modes[kMCGBlendModeLegacyOrInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOrInverted);
+	s_skia_blend_modes[kMCGBlendModeLegacyNand] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNand);
+	s_skia_blend_modes[kMCGBlendModeLegacySet] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySet);
+	s_skia_blend_modes[kMCGBlendModeLegacyBlend] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlend);
+	s_skia_blend_modes[kMCGBlendModeLegacyAddPin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAddPin);
+	s_skia_blend_modes[kMCGBlendModeLegacyAddOver] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAddOver);
+	s_skia_blend_modes[kMCGBlendModeLegacySubPin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySubPin);
+	s_skia_blend_modes[kMCGBlendModeLegacyTransparent] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyTransparent);
+	s_skia_blend_modes[kMCGBlendModeLegacyAdMax] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAdMax);
+	s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
+	s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);		
+	s_skia_blend_modes[kMCGBlendModeLegacyBlendSource] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlendSource);
+	s_skia_blend_modes[kMCGBlendModeLegacyBlendDestination] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlendDestination);
 	
 	// MM-2013-11-11: [[ Bug 11422 ]] Use legacy multiply. Skia's multiply appears to blend differently.
-	s_skia_blend_modes[kMCGBlendModeMultiply] = new MCGLegacyBlendMode(kMCGBlendModeMultiply);
+	s_skia_blend_modes[kMCGBlendModeMultiply] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeMultiply);
 	
 	// TODO: non-separable blend modes and plus darker?
 	// kMCGBlendModeHue

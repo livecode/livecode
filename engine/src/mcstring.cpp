@@ -208,6 +208,9 @@ MCNameRef MCN_gif;
 MCNameRef MCN_jpeg;
 MCNameRef MCN_rtf;
 MCNameRef MCN_html;
+MCNameRef MCN_win_bitmap;
+MCNameRef MCN_win_metafile;
+MCNameRef MCN_win_enh_metafile;
 
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
@@ -215,6 +218,7 @@ MCNameRef MCN_development;
 MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
+MCNameRef MCN_installer_cmdline;
 MCNameRef MCN_mobile;
 MCNameRef MCN_player;
 MCNameRef MCN_server;
@@ -337,6 +341,7 @@ MCNameRef MCN_titled;
 MCNameRef MCN_warning;
 
 MCNameRef MCN_messagename;
+MCNameRef MCM_msgchanged;
 MCNameRef MCN_hcstat;
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
@@ -607,6 +612,7 @@ MCNameRef MCM_input_return_key;
 MCNameRef MCM_input_text_changed;
 MCNameRef MCM_product_details_received;
 MCNameRef MCM_product_request_error;
+MCNameRef MCM_nfc_tag_received;
 
 #endif
 
@@ -674,6 +680,9 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
     /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
     /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
+	/* UNCHECKED */ MCNameCreateWithCString("windows bitmap", MCN_win_bitmap);
+	/* UNCHECKED */ MCNameCreateWithCString("windows metafile", MCN_win_metafile);
+	/* UNCHECKED */ MCNameCreateWithCString("windows enhanced metafile", MCN_win_enh_metafile);
 	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
 	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
 
@@ -683,6 +692,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
+    /* UNCHECKED */ MCNameCreateWithCString("installer command line", MCN_installer_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
 	/* UNCHECKED */ MCNameCreateWithCString("player", MCN_player);
 	/* UNCHECKED */ MCNameCreateWithCString("server", MCN_server);
@@ -805,6 +815,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("warning", MCN_warning);
 
 	/* UNCHECKED */ MCNameCreateWithCString("Message Box", MCN_messagename);
+	/* UNCHECKED */ MCNameCreateWithCString("msgchanged", MCM_msgchanged);
 	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
@@ -1073,6 +1084,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("inputTextChanged", MCM_input_text_changed);
     /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
     /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
+	/* UNCHECKED */ MCNameCreateWithCString("nfcTagReceived", MCM_nfc_tag_received);
 #endif
 	
 #ifdef _IOS_MOBILE
@@ -1137,6 +1149,9 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_png);
     MCNameDelete(MCN_gif);
     MCNameDelete(MCN_jpeg);
+	MCNameDelete(MCN_win_bitmap);
+	MCNameDelete(MCN_win_metafile);
+	MCNameDelete(MCN_win_enh_metafile);
 	MCNameDelete(MCN_rtf);
 	MCNameDelete(MCN_html);
 
@@ -1146,6 +1161,7 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
+	MCNameDelete(MCN_installer_cmdline);
 	MCNameDelete(MCN_mobile);
 	MCNameDelete(MCN_player);
 	MCNameDelete(MCN_server);
@@ -1267,7 +1283,8 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_warning);
 	
 	MCNameDelete(MCN_messagename);
-    MCNameDelete(MCN_hcstat);
+	MCNameDelete(MCM_msgchanged);
+	MCNameDelete(MCN_hcstat);
     
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);
@@ -1527,6 +1544,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_input_end_editing);
 	MCNameDelete(MCM_input_return_key);
 	MCNameDelete(MCM_input_text_changed);
+	MCNameDelete(MCM_nfc_tag_received);
 #endif
 	
 #ifdef _IOS_MOBILE

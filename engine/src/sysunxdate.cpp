@@ -226,7 +226,7 @@ static void cache_locale(void)
 	if (s_datetime_locale != NULL)
 		return;
 
-	s_datetime_locale = new MCDateTimeLocale;
+	s_datetime_locale = new (nothrow) MCDateTimeLocale;
 
 	// OK-2007-05-23: Fix for bug 5035. Adjusted to ensure that first element of weekday names is always Sunday.
 

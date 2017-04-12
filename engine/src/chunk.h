@@ -71,7 +71,7 @@ class MCChunk : public MCExpression
 	MCObject *destobj;
 	Dest_type desttype;
 	Functions function;
-	Boolean marked : 1;
+	bool marked : 1;
     
     // MW-2014-05-28: [[ Bug 11928 ]] This is set to true after 'destvar' has been evaluated
     //   as a chunk. This stops stale chunk information being used in MCChunk::del.
@@ -190,7 +190,8 @@ public:
 };
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
-bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
-bool MCChunkTermHasRange(Chunk_term p_chunk_term);
-
+inline bool MCChunkTermIsControl(Chunk_term p_chunk_term)
+{
+	return p_chunk_term >= CT_FIRST_CONTROL && p_chunk_term <= CT_LAST_CONTROL;
+}
 #endif

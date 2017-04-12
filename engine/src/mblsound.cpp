@@ -73,7 +73,7 @@ private:
 void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle p_object)
 {
     MCCustomEvent *t_event = nil;
-    t_event = new MCSoundFinishedOnChannelEvent(p_object, p_channel, p_sound);
+    t_event = new (nothrow) MCSoundFinishedOnChannelEvent(p_object, p_channel, p_sound);
     if (t_event != nil)
         MCEventQueuePostCustom(t_event);
 }

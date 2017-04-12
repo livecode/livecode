@@ -16,11 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-//#include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-
+#include "globals.h"
 #include "stack.h"
 #include "card.h"
 

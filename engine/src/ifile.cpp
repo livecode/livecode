@@ -173,9 +173,6 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 
 void MCImage::prepareimage()
 {
-	MCStack *t_stack;
-	t_stack = getstack();
-	
 	MCImagePrepareRepForDisplayAtDensity(m_rep, getdevicescale());
 }
 
@@ -215,7 +212,7 @@ void MCImage::openimage()
 		// MW-2011-09-12: [[ Redraw ]] If the rect has changed then notify the layer.
 		//   (note we have to check 'parent' as at the moment MCImage is used for
 		//    the rb* icons which are unowned!).
-		if (parent != nil && !MCU_equal_rect(t_old_rect, rect))
+		if (parent && !MCU_equal_rect(t_old_rect, rect))
 			layer_rectchanged(t_old_rect, false);
 
 		if (m_rep->GetFrameCount() > 1)
@@ -388,7 +385,7 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	// MW-2011-08-17: [[ Layers ]] Notify of the change in rect and invalidate.
 	// MW-2012-04-02: [[ Bug 10144 ]] Crash when pasting into an image - methods called on
 	//   image with no parent, so check parent != nil.
-	if (parent != nil && !resizeparent())
+	if (parent && !resizeparent())
 		layer_rectchanged(orect, true);
 }
 

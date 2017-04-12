@@ -24,12 +24,13 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS': 'NO',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'MACOSX_DEPLOYMENT_TARGET': '10.6',
+		'MACOSX_DEPLOYMENT_TARGET': '10.9',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
-		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
+        'CLANG_CXX_LIBRARY': 'libc++'
 	},
 	
 	'target_defaults':
@@ -119,6 +120,10 @@
 						[ 
 							'-Wall', 
 							'-Wextra', 
+
+							'-Wno-conversion',
+							'-Wno-shorten-64-to-32',
+
 							'-Werror=declaration-after-statement',
 							'-Werror=delete-non-virtual-dtor',
 							'-Werror=overloaded-virtual',
@@ -138,6 +143,8 @@
 							'-Werror=objc-literal-compare',
 							'-Werror=shadow',
 							'-Werror=unreachable-code',
+							'-Werror=enum-compare',
+							'-Werror=switch',
 						],
 					},
 				},

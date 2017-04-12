@@ -848,6 +848,18 @@ bool MCImageDataIsGIF(MCDataRef p_input)
 	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
 }
 
+bool MCImageDataIsBMP(MCDataRef p_input)
+{
+	const byte_t* t_data = MCDataGetBytePtr(p_input);
+	uindex_t t_length = MCDataGetLength(p_input);
+
+	// This only recognises Win32-format BMPs (all other formats are obsolete)
+	if (t_length < 2)
+		return false;
+
+	return memcmp(t_data, "BM", 2) == 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGRaster MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultiplied)

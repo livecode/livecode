@@ -16,7 +16,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-set the listIndent of field 1 to 20
+set the listIndent of line 1 to -1 of field 1 to 20
 
 Example:
 set the listIndent of line 1 of field 1 to 10

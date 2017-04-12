@@ -122,11 +122,14 @@ bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 
 class MCNativeLayer;
 
-class MCWidget: public MCControl
+typedef MCObjectProxy<MCWidget>::Handle MCWidgetHandle;
+
+class MCWidget: public MCControl, public MCMixinObjectHandle<MCWidget>
 {
 public:
     
     enum { kObjectType = CT_WIDGET };
+    using MCMixinObjectHandle<MCWidget>::GetHandle;
     
 	MCWidget(void);
 	MCWidget(const MCWidget& p_other);

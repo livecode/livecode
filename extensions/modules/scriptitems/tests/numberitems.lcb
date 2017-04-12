@@ -1,0 +1,49 @@
+module com.livecode.library.scriptitems.test.numberitems
+use com.livecode.library.scriptitems
+
+handler expectList(in pString as String, in pLength as optional Number, \
+		in pDefault as optional Number, in pValue as List) returns Boolean
+	variable tList
+	put parseItemsAsNumberList(pString, pLength, pDefault) into tList
+	test diagnostic tList
+	return tList is pValue
+end handler
+
+public handler testParseItemsAsNumberList()
+	test "basic, no trailing" when \
+			expectList("-1,1.5", nothing, nothing, [-1, 1.5])
+	test "basic, trailing" when \
+			expectList("-1,1.5,", nothing, nothing, [-1, 1.5])
+
+	test "basic, empty" when \
+			expectList("", nothing, nothing, [])
+
+	test "too short" when \
+			parseItemsAsNumberList("-1,1.5", 3, 8) is [-1, 1.5, 8]
+
+	test "too long" when \
+			parseItemsAsNumberList("-1,1.5", 1, 8) is [(-1)]
+end handler
+
+handler expectString(in pList, in pValue)
+	variable tString
+	put formatNumberListAsItems(pList) into tString
+	test diagnostic tString
+	return tString is pValue
+end handler
+
+public handler testFormatNumberListAsItems()
+	test "basic" when \
+			expectString([1, 2.3], "1,2.3")
+
+	test "basic, empty" when \
+			expectString([], "")
+
+	test "basic, large int" when \
+			expectString([400000000], "400000000")
+
+	test "basic, large real" when \
+			expectString([400000000.000005], "4e+08")
+end handler
+
+end module

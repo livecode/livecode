@@ -68,6 +68,9 @@ private:
 	static int compare_handler(const void *a, const void *b);
 };
 
+typedef bool (*MCHandlerlistListConstantsCallback)(void *p_context, MCHandlerConstantInfo *info);
+typedef bool (*MCHandlerlistListHandlersCallback)(void *p_context, Handler_type p_type, MCHandler*);
+
 class MCHandlerlist
 {
 	// MW-2012-08-08: [[ BeforeAfter ]] The before/after handlers are stored
@@ -132,6 +135,9 @@ public:
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
     bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
+	
+	bool listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context);
+	bool listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context);
 	
 	uint2 getnvars(void)
 	{

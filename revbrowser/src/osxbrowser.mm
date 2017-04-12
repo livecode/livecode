@@ -176,7 +176,7 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 	
 	id myDocument = [[NSDocumentController sharedDocumentController] openUntitledDocumentOfType:@"DocumentType" display:YES];
     [[[myDocument webView] mainFrame] loadRequest:request];
-    return [myDocument webView];
+    return (WebView*)[myDocument webView];
 }
 
 - (void)webViewShow:(WebView *)sender

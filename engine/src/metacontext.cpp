@@ -105,7 +105,7 @@ void MCMetaContext::begin(bool p_overlap)
 	}
 
 	MCMarkState *t_new_state;
-	t_new_state = new MCMarkState;
+	t_new_state = new (nothrow) MCMarkState;
 	
 	MCMark *t_root_mark;
 	t_root_mark = NULL;
@@ -888,6 +888,12 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				t_path -> release();
 			}
 			break;
+				
+			case MARK_TYPE_END:
+			case MARK_TYPE_EPS:
+			case MARK_TYPE_LINK:
+			case MARK_TYPE_GROUP:
+				break;
 		}
 	}
 
@@ -932,7 +938,7 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 					t_success = begincomposite(t_dst_clip, t_context);
 				
 				if (t_success)
-					t_success = nil != (t_gfx_context = new MCGraphicsContext(t_context));
+					t_success = nil != (t_gfx_context = new (nothrow) MCGraphicsContext(t_context));
 				
 				if (t_success)
 				{

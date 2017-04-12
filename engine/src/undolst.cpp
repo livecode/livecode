@@ -86,7 +86,7 @@ MCUndolist::~MCUndolist()
 
 void MCUndolist::savestate(MCObject *objptr, Ustruct *us)
 {
-	MCUndonode *uptr = new MCUndonode(objptr, us);
+	MCUndonode *uptr = new (nothrow) MCUndonode(objptr, us);
 	uptr->appendto(nodes);
 	objptr->message(MCM_undo_changed);
 }

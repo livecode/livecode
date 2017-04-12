@@ -108,7 +108,7 @@ bool MCNotificationPostCustom(MCNameRef p_name, uint32_t p_param_count, ...)
 		t_value = va_arg(t_args, MCValueRef);
 		
 		MCParameter *t_new_param;
-		t_new_param = new MCParameter();
+		t_new_param = new (nothrow) MCParameter();
 		t_success = t_new_param != nil;
 		
 		if (t_success)
@@ -130,7 +130,7 @@ bool MCNotificationPostCustom(MCNameRef p_name, uint32_t p_param_count, ...)
 	
 	if (t_success)
 	{
-		t_event = new MCNotificationEvent(p_name, t_param_list);
+		t_event = new (nothrow) MCNotificationEvent(p_name, t_param_list);
 		t_success = t_event != nil;
 	}
 	

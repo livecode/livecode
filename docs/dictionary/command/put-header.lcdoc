@@ -22,9 +22,6 @@ put tImageData
 
 Parameters:
 header:
-
-
-string (string):
 A string with the following form "header: value".
 
 Description:

@@ -42,7 +42,7 @@ MCXImageCacheNode::MCXImageCacheNode(GdkPixbuf *p_bitmap, GtkThemeWidgetType p_m
 	cached_image = p_bitmap ;
 	total_pixels = gdk_pixbuf_get_width(p_bitmap) * gdk_pixbuf_get_height(p_bitmap);
 	moztype = p_moztype ;
-	state = new GtkWidgetState ;
+	state = new (nothrow) GtkWidgetState ;
 	memcpy((GtkWidgetState*)state, (GtkWidgetState*)p_state, sizeof ( GtkWidgetState )) ;
 	flags = p_flags ;
 
@@ -56,7 +56,7 @@ MCXImageCacheNode::MCXImageCacheNode(GdkPixbuf *p_bitmap, GtkThemeWidgetType p_m
 	cached_image = p_bitmap ;	
 	font = p_font ;
 	total_pixels = ( p_bitmap -> width * p_bitmap -> height ) ;
-	text_string = new char[p_string_length];
+	text_string = new (nothrow) char[p_string_length];
 	memcpy(text_string, p_string, p_string_length);
 	text_string_length = p_string_length;
 	fgColor = p_fgColor ;
@@ -193,7 +193,7 @@ bool MCXImageCache::add_to_cache (GdkPixbuf * p_bitmap, MCThemeDrawInfo& p_info)
 	
 	MCXImageCacheNode * cache_node ;
 	
-	cache_node = new MCXImageCacheNode ( p_bitmap, p_info . moztype, &p_info . state, p_info.flags  ) ;
+	cache_node = new (nothrow) MCXImageCacheNode ( p_bitmap, p_info . moztype, &p_info . state, p_info.flags  ) ;
 
 	if ( cache_tail == NULL )
 		cache_tail = cache_node ;

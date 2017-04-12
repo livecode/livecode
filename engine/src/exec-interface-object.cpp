@@ -817,7 +817,7 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == ' ')
 			t_old_offset++;
 
-		t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_text_style);
+		t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_text_style);
 
 		if (t_success)
 		{
@@ -1121,13 +1121,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 {
     if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
     {
-        r_output . mixed = Mixed;
-        r_output . type = kMCInterfaceTriStateMixed;
+        r_output . value = kMCTristateMixed;
+        return;
     }
-    
-    if (MCTypeConvertStringToBool(p_input, r_output . state))
+
+    bool t_bool = false;
+    if (MCTypeConvertStringToBool(p_input, t_bool))
     {
-        r_output . type = kMCInterfaceTriStateBoolean;
+        r_output . value = t_bool;
         return;
     }
     
@@ -1136,16 +1137,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 
 void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
 {
-    if (p_input . type == kMCInterfaceTriStateBoolean)
+    if (p_input.value.isMixed())
     {
-        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        if (!MCStringCreateWithCString("mixed", r_output))
+            ctxt.Throw();
         return;
     }
-    
-    if (MCStringCreateWithCString("mixed", r_output))
-        return;
-    
-    ctxt . Throw();
+
+    r_output = MCValueRetain(p_input.value.isFalse() ? kMCFalseString : kMCTrueString);
 }
 
 void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)
@@ -1355,7 +1354,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 	
 	// MW-2011-02-08: Don't allow id change if the parent is nil as this means its a template
 	//   object which doesn't really have an id.
-	if (parent == nil)
+	if (!parent)
 		return;
 	
 	MCStack *t_stack;
@@ -1394,7 +1393,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 		t_stack -> visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
 	}
 	else if (parent -> gettype() == CT_CARD)
-		static_cast<MCCard *>(parent) -> resetid(obj_id, p_new_id);
+		parent.GetAs<MCCard>()->resetid(obj_id, p_new_id);
 
 	// MW-2012-10-10: [[ IdCache ]] If the object is in the cache, then remove
 	//   it since its id is changing.
@@ -1520,7 +1519,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 	// the group being edited in edit group mode.
 	
 	uint2 num = 0;
-	if (parent != nil)
+	if (parent)
 	{
 		MCCard *t_card;
 		t_card = getcard(part);
@@ -1543,7 +1542,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 
 void MCObject::SetLayer(MCExecContext& ctxt, uint32_t part, const MCInterfaceLayer& p_layer)
 {
-	if (parent == NULL || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
+	if (!parent || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_OBJECT_BADRELAYER);
 }
 
@@ -1694,13 +1693,11 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	//   target for a chunk is an expression. We first parse the string as a
 	//   chunk expression, then attempt to get the object of it. If the object
 	//   doesn't exist, the set fails.
-	bool t_success;
-	t_success = true;
-
+	
 	// MW-2008-11-02: [[ Bug ]] Setting the parentScript of an object to
 	//   empty should unset the parent script property and not throw an
 	//   error.
-	if (new_parent_script == nil || MCStringGetLength(new_parent_script) == 0)
+	if (MCStringIsEmpty(new_parent_script))
 	{
 		if (parent_script != NULL)
 			parent_script -> Release();
@@ -1713,34 +1710,50 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
-	MCChunk *t_chunk;
-	t_chunk = new MCChunk(False);
+	/* UNCHECKED */ MCAutoPointer<MCChunk> t_chunk = new (nothrow) MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
 	// the end of the string - if there is, its an error. Note the errorlock
 	// here - it stops parse errors being pushed onto MCperror.
 	Symbol_type t_next_type;
 	MCerrorlock++;
-	t_success = (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF);
+	bool t_success = (t_chunk -> parse(sp, False) == PS_NORMAL &&
+	                  sp.next(t_next_type) == PS_EOF);
 	MCerrorlock--;
 
 	// Now attempt to evaluate the object reference - this will only succeed
     // if the object exists.
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	uint32_t t_part_id;
 	if (t_success)
-        t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-    
-    // Check that the object is a button or a stack.
-    if (t_success &&
-        t_object -> gettype() != CT_BUTTON &&
-        t_object -> gettype() != CT_STACK)
-        t_success = false;
-    
+		t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
+	
+	MCObject *t_current_parent = nil;
+	if (parent_script != nil)
+	{
+		t_current_parent = parent_script -> GetParent() -> GetObject();
+	}
+	
+	// Check to see if we are already parent-linked to t_object and if so
+	// do nothing.
+	if (t_current_parent == t_object)
+		return;
+	
+	if (t_current_parent != nil &&
+	    t_current_parent -> getscriptdepth() > 0)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+		return;
+	}
+	
+	// Check that the object is a button or a stack.
+	if (t_success &&
+		t_object -> gettype() != CT_BUTTON &&
+		t_object -> gettype() != CT_STACK)
+		t_success = false;
+	
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
-	bool t_is_cyclic;
-	t_is_cyclic = false;
 	if (t_success)
 	{
 		MCObject *t_parent_object;
@@ -1749,8 +1762,8 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 		{
 			if (t_parent_object == this)
 			{
-				t_is_cyclic = true;
-				break;
+				ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
+				return;
 			}
 			
 			MCParentScript *t_super_parent_script;
@@ -1760,83 +1773,65 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			else
 				t_parent_object = nil;
 		}
+	}
+
+	if (!t_success)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
+		return;
+	}
 		
-		if (t_is_cyclic)
-			t_success = false;
-	}
+	// We have the target object, so extract its rugged id. That is the
+	// (id, stack, mainstack) triple. Note that mainstack is NULL if the
+	// object lies on a mainstack.
+	//
+	uint32_t t_id;
+	t_id = t_object -> getid();
 
+	// If the object is a stack, then it has an id of zero.
+	if (t_object -> gettype() == CT_STACK)
+		t_id = 0;
+	
+	MCNameRef t_stack;
+	t_stack = t_object -> getstack() -> getname();
+
+	// Now attempt to acquire a parent script use object. This can only
+	// fail if memory is exhausted, so in this case just return an error
+	// stat.
+	MCParentScriptUse *t_use;
+	t_use = MCParentScript::Acquire(this, t_id, t_stack);
+	t_success = t_use != nil;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+	//   parent script as pointing to the object (so Inherit works correctly).
 	if (t_success)
+		t_use -> GetParent() -> Resolve(t_object);
+	
+	// MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+	//   inheritence hierarchy is in place (The inherit call will create
+	//   super-uses, and will return false if there is not enough memory).
+	if (t_success)
+		t_success = t_use -> Inherit();
+
+	// We have succeeded in creating a new use of an object as a parent
+	// script, so now release the old parent script this object points
+	// to (if any) and install the new one.
+	if (parent_script != NULL)
+		parent_script -> Release();
+
+	parent_script = t_use;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+	//   uses of this object if it is being used as a parentScript. This
+	//   is because the inheritence hierarchy has been updated and so the
+	//   super_use chains need to be remade.
+	MCParentScript *t_this_parent;
+	if (getisparentscript())
 	{
-		// Check to see if we are already parent-linked to t_object and if so
-		// do nothing.
-		//
-		if (parent_script == NULL || parent_script -> GetParent() -> GetObject() != t_object)
-		{
-			// We have the target object, so extract its rugged id. That is the
-			// (id, stack, mainstack) triple. Note that mainstack is NULL if the
-			// object lies on a mainstack.
-			//
-			uint32_t t_id;
-			t_id = t_object -> getid();
-
-            // If the object is a stack, then it has an id of zero.
-            if (t_object -> gettype() == CT_STACK)
-                t_id = 0;
-            
-			MCNameRef t_stack;
-			t_stack = t_object -> getstack() -> getname();
-
-			// Now attempt to acquire a parent script use object. This can only
-			// fail if memory is exhausted, so in this case just return an error
-			// stat.
-			MCParentScriptUse *t_use;
-			t_use = MCParentScript::Acquire(this, t_id, t_stack);
-			t_success = t_use != nil;
-
-            // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
-			//   parent script as pointing to the object (so Inherit works correctly).
-            if (t_success)
-                t_use -> GetParent() -> Resolve(t_object);
-            
-            // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
-			//   inheritence hierarchy is in place (The inherit call will create
-			//   super-uses, and will return false if there is not enough memory).
-			if (t_success)
-				t_success = t_use -> Inherit();
-
-			// We have succeeded in creating a new use of an object as a parent
-			// script, so now release the old parent script this object points
-			// to (if any) and install the new one.
-			if (parent_script != NULL)
-				parent_script -> Release();
-
-			parent_script = t_use;
-
-			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
-			//   uses of this object if it is being used as a parentScript. This
-			//   is because the inheritence hierarchy has been updated and so the
-			//   super_use chains need to be remade.
-			MCParentScript *t_this_parent;
-			if (getisparentscript())
-			{
-				t_this_parent = MCParentScript::Lookup(this);
-				if (t_success && t_this_parent != nil)
-					t_success = t_this_parent -> Reinherit();
-			}
-		}
+		t_this_parent = MCParentScript::Lookup(this);
+		if (t_success && t_this_parent != nil)
+			t_success = t_this_parent -> Reinherit();
 	}
-	else
-	{
-		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
-		//   is cyclic.
-		if (!t_is_cyclic)
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
-		else
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
-	}
-
-	// Delete our temporary chunk object.
-	delete t_chunk;
 
 	if (t_success)
 		return;
@@ -2110,7 +2105,7 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
         bool t_found;
         t_found = false;
         
-        if (parent != NULL)
+        if (parent)
             t_found = parent -> GetColor(ctxt, which, effective, r_color, true);
         
         if (!t_found && !recursive)
@@ -2371,7 +2366,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
-			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
+			t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_color_string);
 			if (t_success)
 			{
 				MCInterfaceNamedColorParse(ctxt, *t_color_string, t_color);
@@ -2447,7 +2442,7 @@ bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective,
     {
         if (effective)
         {
-            if (parent != NULL)
+            if (parent)
                 return parent->GetPattern(ctxt, which, effective, r_pattern);
             else
             {
@@ -2725,7 +2720,7 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(p_patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)
@@ -2781,7 +2776,7 @@ bool MCObject::TextPropertyMapFont()
 	//   *not* to attempt to mapfonts on it!
 	// MW-2013-03-28: [[ Bug 10791 ]] Exceptions to every rule - the home stack
 	//   can be open but with no font...
-	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent != nil)
+	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent)
 	{
 		mapfont();
 		return true;
@@ -2895,7 +2890,7 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 		//   to ensure substacks update properly.
 		// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 		//   case we don't want to do any font recomputation.
-		if ((gettype() == CT_STACK && parent != nil) || opened)
+		if ((gettype() == CT_STACK && parent) || opened)
 		{
 			if (recomputefonts(parent -> getfontref()))
 			{
@@ -2960,7 +2955,7 @@ void MCObject::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3015,7 +3010,7 @@ void MCObject::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_s
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3034,7 +3029,7 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 {
 	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
 	{
-		if (parent != nil)
+		if (parent)
 			parent -> GetEffectiveTextStyle(ctxt, r_style);
 		else
 			MCdispatcher -> GetDefaultTextStyle(ctxt, r_style);
@@ -3171,7 +3166,13 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
     {
         // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
         if (gettype() >= CT_GROUP)
+		{
             static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+
+			// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object shown / hidden
+			if (getselected())
+				getcard()->dirtyselection(rect);
+		}
     }
     
 	if (dirty)
@@ -3268,25 +3269,25 @@ void MCObject::SetTraversalOn(MCExecContext& ctxt, bool setting)
 
 void MCObject::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetName(ctxt, r_owner);
 }
 
 void MCObject::GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetShortName(ctxt, r_owner);
 }
 
 void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
 void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
         parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
@@ -3707,7 +3708,7 @@ void MCObject::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
 		if (gettype() < CT_GROUP || !static_cast<MCControl *>(this) -> layer_issprite())
 			Redraw();
 		else
-			static_cast<MCCard *>(parent) -> layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
+			parent.GetAs<MCCard>()->layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
 	}
 }
 

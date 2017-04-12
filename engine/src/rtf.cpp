@@ -373,6 +373,9 @@ RTFStatus RTFReader::Parse(void)
 			t_status = ParseLegacyListPrefix(t_token, t_value);
 		break;
 				
+		case kRTFDestinationLegacyListSuffix:
+			break;
+				
 		case kRTFDestinationListTable:
 			t_status = ParseListTable(t_token, t_value);
 		break;

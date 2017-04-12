@@ -27,13 +27,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "paragraf.h"
 
-MCCdata::MCCdata()
+MCCdata::MCCdata() :
+  id(0),
+  data(nil)
 {
-	id = 0;
-	data = NULL;
 }
 
-MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
+MCCdata::MCCdata(const MCCdata &cref) :
+  MCDLlist(cref)
+{
+	// Ensure that the paragraphs of the cloned data have their parent field
+	// set to nil - this will catch attempts to use them without properly
+	// setting the parent first.
+	CloneData(cref, nil);
+}
+
+MCCdata::MCCdata(const MCCdata& cref, MCField* p_new_owner) :
+  MCDLlist(cref)
+{
+	CloneData(cref, p_new_owner);
+}
+
+void MCCdata::CloneData(const MCCdata& cref, MCField* p_new_owner)
 {
 	id = cref.id;
 	if (cref.data != NULL && cref.data != (void *)1)
@@ -46,7 +61,10 @@ MCCdata::MCCdata(const MCCdata &cref) : MCDLlist(cref)
 			MCParagraph *tptr = (MCParagraph *)cref.data;
 			do
 			{
-				MCParagraph *newparagraph = new MCParagraph(*tptr);
+				// Clone the paragraph
+				MCParagraph *newparagraph = new (nothrow) MCParagraph(*tptr);
+				newparagraph->setparent(p_new_owner);
+				
 				newparagraph->appendto(paragraphs);
 				tptr = (MCParagraph *)tptr->next();
 			}
@@ -122,7 +140,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 				case OT_PARAGRAPH:
 				case OT_PARAGRAPH_EXT:
 					{
-						MCParagraph *newpar = new MCParagraph;
+						MCParagraph *newpar = new (nothrow) MCParagraph;
 						newpar->setparent((MCField *)parent);
 						
 						// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph tab was the extended
@@ -146,7 +164,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version)
+IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, MCObject *p_parent, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -177,6 +195,9 @@ IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t
 			if (tptr != NULL)
 				do
 				{
+                    // Ensure field's saved MCCdata paragraphs have a parent when needed
+                    if (p_parent != nil)
+                        tptr -> setparent(MCObjectCast<MCField>(p_parent));
 					if ((stat = tptr->save(stream, p_part, p_version)) != IO_NORMAL)
 						return stat;
 					tptr = (MCParagraph *)tptr->next();
@@ -205,13 +226,15 @@ MCParagraph *MCCdata::getparagraphs()
 		char *eptr = (char *)data;
 		while ((eptr = strtok(eptr, "\n")) != NULL)
 		{
-			MCParagraph *tpgptr = new MCParagraph;
+			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->appendto(paragraphs);
 			uint2 l = strlen(eptr) + 1;
-			char *sptr = new char[l];
-			memcpy(sptr, eptr, l);
+			/* UNCHECKED */ MCAutoPointer<char_t[]> sptr =
+				new (nothrow) char_t[l];
+			memcpy(sptr.Get(), eptr, l);
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
+			/* UNCHECKED */ MCStringCreateWithNativeChars(sptr.Get(), l,
+			                                              &t_string);
 			tpgptr->settext(*t_string);
 			eptr = NULL;
 		}
@@ -220,7 +243,7 @@ MCParagraph *MCCdata::getparagraphs()
 		id &= ~COMPACT_PARAGRAPHS;
 	}
 	if (data == NULL)
-		data = paragraphs = new MCParagraph;
+		data = paragraphs = new (nothrow) MCParagraph;
 	else
 		paragraphs = (MCParagraph *)data;
 	return paragraphs;

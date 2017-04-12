@@ -244,14 +244,8 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
         return NULL;
     
     DATABASEREC *t_result;
-    t_result = new DATABASEREC;
-#if (defined _MACOSX && !defined _MAC_SERVER)
-    t_result -> driverref = (CFBundleRef)t_handle;
-#elif (defined _WINDOWS) || defined _WINDOWS_SERVER
-    t_result -> driverref = (HINSTANCE)t_handle;
-#else
+    t_result = new (nothrow) DATABASEREC;
 	t_result -> driverref = t_handle;
-#endif
     
     void *id_counterref_ptr, *new_connectionref_ptr, *release_connectionref_ptr;
     void *set_callbacksref_ptr;
@@ -269,122 +263,79 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
     t_result -> newconnectionptr = (new_connectionrefptr)new_connectionref_ptr;
     t_result -> releaseconnectionptr = (release_connectionrefptr)release_connectionref_ptr;
     t_result -> setcallbacksptr = (set_callbacksrefptr)set_callbacksref_ptr;
+    
     return t_result;
 }
 
+DATABASEREC *LoadDatabaseDriverInFolder(const char *p_folder,
+                                        const char *p_type)
+{
+    DATABASEREC *t_database_rec = nullptr;
+    
+    char t_libname[256];
+    if (0 > snprintf(t_libname,
+                     sizeof(t_libname),
+                     "%s/db%s",
+                     p_folder,
+                     p_type))
+    {
+        return nullptr;
+    }
+    
+    t_database_rec = LoadDatabaseDriverFromName(t_libname);
+    
+    return t_database_rec;
+}
 
 DATABASEREC *LoadDatabaseDriver(const char *p_type)
 {
-  DATABASEREC *t_database_rec;
-	t_database_rec = NULL;
-	
-#ifndef TARGET_SUBPLATFORM_ANDROID
-    // AL-2015-02-10: [[ SB Inclusions ]] Try to load database driver using new module loading callbacks
-    t_database_rec = LoadDatabaseDriverFromName(p_type);
-#endif
+    DATABASEREC *t_database_rec = nullptr;
     
-    char t_driver_name[32];
-    if (t_database_rec == NULL)
+    if (revdbdriverpaths != nullptr)
     {
-#ifdef TARGET_SUBPLATFORM_ANDROID
-        sprintf(t_driver_name, "libdb%s", p_type);
-        // MW-2011-10-06: [[ Bug 9789 ]] Make sure the driver library name is all lowercase.
-        strlwr(t_driver_name);
-#else
-        if (util_stringcompare(p_type, "VALENTINA", strlen(p_type)) == 0)
-            sprintf(t_driver_name, VXCMD_STRING);
-        else
-        {
-            sprintf(t_driver_name, "db%s", p_type);
-            strlwr(t_driver_name);
-        }
-#endif
+        t_database_rec = LoadDatabaseDriverInFolder(revdbdriverpaths, p_type);
     }
-    char t_driver_path[PATH_MAX];
+    else
+    {
+        t_database_rec = LoadDatabaseDriverInFolder(".", p_type);
+        
+        
+        if (t_database_rec == nullptr)
+            t_database_rec = LoadDatabaseDriverInFolder("./Database Drivers",
+                                                        p_type);
+
+        if (t_database_rec == nullptr)
+            t_database_rec = LoadDatabaseDriverInFolder("./database_drivers",
+                                                        p_type);
+
+        if (t_database_rec == nullptr)
+            t_database_rec = LoadDatabaseDriverInFolder("./drivers",
+                                                        p_type);
+    }
     
-    if (t_database_rec == NULL)
+    if (t_database_rec != nullptr)
     {
-        if (revdbdriverpaths != NULL)
-        {
-            char *t_path;
-            t_path = revdbdriverpaths;
-            
-            while(t_path != NULL && *t_path != '\0')
-            {
-                char *t_next_path = strchr(t_path, '\n');
-                unsigned int t_length;
-                if (t_next_path == NULL)
-                    t_length = strlen(t_path);
-                else
-                    t_length = t_next_path - t_path, t_next_path += 1;
-                
-                if (t_length > 0)
-                {
-                    sprintf(t_driver_path, "%.*s/%s", t_length, t_path, t_driver_name);
-                    t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-                    if (t_database_rec != NULL)
-                        break;
-                }
-                
-                t_path = t_next_path;
-            }
-        }
-    }
-#ifndef _SERVER
-	if (t_database_rec == NULL && GetExternalFolder() != NULL)
-	{
-		sprintf(t_driver_path, "%s/Database Drivers/%s", GetExternalFolder(), t_driver_name);
-		t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-		if (t_database_rec == NULL)
-		{
-			sprintf(t_driver_path, "%s/%s", GetExternalFolder(), t_driver_name);
-			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-		}
-	}
-	
-	if (t_database_rec == NULL && GetApplicationFolder() != NULL)
-	{
-		sprintf(t_driver_path, "%s/%s", GetApplicationFolder(), t_driver_name);
-		t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-	}
-#else
-	if (t_database_rec == NULL && GetExternalFolder() != NULL)
-	{
-		const char *t_last_component;
-		t_last_component = strrchr(GetExternalFolder(), '/');
-		if (t_last_component != NULL)
-		{
-			sprintf(t_driver_path, "%.*s/drivers/%s", (int) (t_last_component - GetExternalFolder()), GetExternalFolder(), t_driver_name);
-			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-		}
-		if (t_database_rec == NULL)
-		{
-			sprintf(t_driver_path, "%s/%s", GetExternalFolder(), t_driver_name);
-			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-		}
-	}
-#endif
-	
-	if (t_database_rec == NULL)
-		t_database_rec = DoLoadDatabaseDriver(t_driver_name);
-		
-	if (t_database_rec != NULL)
-	{
-		databaselist . push_back(t_database_rec);
-		strcpy(t_database_rec -> dbname, p_type);
-		if (t_database_rec -> idcounterptr)
-			(*t_database_rec -> idcounterptr)(&idcounter);
+        databaselist . push_back(t_database_rec);
+        strcpy(t_database_rec -> dbname, p_type);
+        if (t_database_rec -> idcounterptr)
+            (*t_database_rec -> idcounterptr)(&idcounter);
         if (t_database_rec -> setcallbacksptr)
             (*t_database_rec -> setcallbacksptr)(&dbcallbacks);
-	}
+    }
 	
 	return t_database_rec;
+}
+
+void UnloadDatabaseDriver(DATABASEREC *rec)
+{
+    int t_retvalue;
+    UnloadModule(rec->driverref, &t_retvalue);
+    delete rec;
 }
 
 void REVDB_INIT()
 {
 }
-
 
 void REVDB_QUIT()
 {
@@ -404,19 +355,14 @@ void REVDB_QUIT()
 				break;
 			}
 		}
-		if (databaserec && databaserec ->releaseconnectionptr)
-        {
+		if (databaserec != NULL && databaserec ->releaseconnectionptr != NULL)
 			(*databaserec->releaseconnectionptr)(tconnection);
-            break;
-        }
 	}
 	connlist->clear();
 	DATABASERECList::iterator theIterator2;
 	for (theIterator2 = databaselist.begin(); theIterator2 != databaselist.end(); theIterator2++){
 		DATABASEREC *tdatabaserec = (DATABASEREC *)(*theIterator2);
-		FreeDatabaseDriver(tdatabaserec);
-		
-		delete tdatabaserec;
+		UnloadDatabaseDriver(tdatabaserec);
 	}
 	databaselist.clear();
 }
@@ -584,7 +530,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 			qsort(t_map, t_element_count, sizeof(unsigned int), SortKeysCallback);
 
 			// If there are multiple elements...
-			t_values = new DBString[t_element_count];
+			t_values = new (nothrow) DBString[t_element_count];
 			for (int i = 0; i < t_element_count; i++)
 			{
 				char *t_key_buffer;
@@ -634,7 +580,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		}
 	}
 
-	t_values = new DBString[p_argument_count - 2];
+	t_values = new (nothrow) DBString[p_argument_count - 2];
 	for (int i = 2; i < p_argument_count; i++)
 	{
 		Bool t_is_binary;
@@ -663,15 +609,15 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 		free(t_variable_name);
 		free(t_key_name);
 
-		// OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
-		// to problems where the engine overwrites the buffer, leading to the wrong values being
-		// inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
-		char *t_new_buffer;
-		t_new_buffer = (char *)malloc(t_value . length);
-		memcpy(t_new_buffer, t_value . buffer, t_value . length);
-
 		if (t_value . buffer != NULL) 
 		{
+            // OK-2008-12-09: Because the engine retains ownership of t_value . buffer, using it can lead
+            // to problems where the engine overwrites the buffer, leading to the wrong values being
+            // inserted into databases. The problem is fixed by creating duplicates of any buffers returned.
+            char *t_new_buffer;
+            t_new_buffer = (char *)malloc(t_value . length);
+            memcpy(t_new_buffer, t_value . buffer, t_value . length);
+
 			t_values[r_value_count] . Set(t_new_buffer, t_value . length, t_is_binary);
 			r_value_count += 1;
 		}
@@ -749,7 +695,6 @@ inline const char *BooltoStr(Bool b) {return b == True?"True":"False";}
 void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 	       Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = False;
 	*pass = False;
 	if (nargs == 1)
@@ -758,7 +703,7 @@ void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 			free(revdbdriverpaths);
 		revdbdriverpaths = istrdup(args[0]);
 	}
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 void REVDB_GetDriverPath(char *p_arguments[], int p_argument_count, char **r_return_string, Bool *r_pass, Bool *r_error)
@@ -876,7 +821,6 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 /// then REVDB_Disconnect returns an error string.
 void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *result = NULL;
 	*error = True;
 	*pass = False;
 
@@ -926,7 +870,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		}
 	}
 
-	*retstring = (result != NULL ? result : (char *)calloc(1,1));
+	*retstring = static_cast<char*>(calloc(1,1));
 }
 
 /// @brief Commit the last transaction.
@@ -2291,6 +2235,21 @@ void REVDB_GetValentinaDBRef(char *args[], int nargs, char **retstring, Bool *pa
 void REVDB_Valentina(char *args[], int nargs, char **retstring, Bool *pass, Bool *error) 
 {
 
+}
+
+extern "C"
+{
+#ifdef WIN32
+    void __declspec(dllexport) shutdownXtable(void);
+#else
+    void shutdownXtable(void) __attribute__((visibility("default")));
+#endif
+}
+
+void MCCefFinalise(void);
+void shutdownXtable(void)
+{
+    REVDB_QUIT();
 }
 
 EXTERNAL_BEGIN_DECLARATIONS("revDB")

@@ -34,81 +34,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _STDARG_H
 #include <stdarg.h>
-#endif
-
 #include <math.h>
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifndef _WIN32
+#include <stddef.h>
 #include <stdint.h>
-#else
-
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned int uint32_t;
-typedef signed int int32_t;
-
-// MDW 2013-04.15: only typedef if necessary
-#if !defined(uint64_t)
-	#ifdef __LP64__
-		typedef unsigned long int uint64_t;
-	#else
-		typedef unsigned long long int uint64_t;
-	#endif
-#endif
-
-#if !defined(int64_t)
-	#ifdef __LP64__
-		typedef long int int64_t;
-	#else
-		typedef long long int int64_t;
-	#endif
-#endif
-
-#endif
 
 typedef uint32_t uindex_t;
 typedef int32_t index_t;
 typedef uint32_t hash_t;
 typedef int32_t compare_t;
-
-#if (defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_SIZE_T)
-	typedef long unsigned int size_t;
-#endif
-
-#if defined(_LINUX) && !defined(_SIZE_T)
-	// MDW-2013-04-15: [[ x64 ]] make 64-bit safe
-	#ifdef __LP64__
-		typedef long unsigned int size_t;
-	#else
-		typedef unsigned int size_t;
-	#endif
-#endif
-
-#ifndef _UINTPTR_T
-	#define _UINTPTR_T
-	// MDW-2013-04-15: [[ x64 ]] make 64-bit safe
-	#ifdef __LP64__
-		typedef uint64_t uintptr_t;
-	#else
-		typedef uint32_t uintptr_t;
-	#endif
-#endif
-
-#ifndef _INTPTR_T
-	#define _INTPTR_T
-	// MDW-2013-04-15: [[ x64 ]] make 64-bit safe
-	#ifdef __LP64__
-		typedef int64_t intptr_t;
-	#else
-		typedef int32_t intptr_t;
-	#endif
-#endif
 
 typedef char char_t;
 
@@ -125,29 +59,15 @@ typedef const struct __CFData * CFDataRef;
 #endif
 
 #ifndef nil
-#define nil 0
+#  ifdef __cplusplus
+#    define nil nullptr
+#  else
+#    define nil 0
+#  endif
 #endif
 
 #if defined(_MACOSX) && defined(__LP64__)
 #define _MACOSX_NOCARBON
-#endif
-
-#if defined(_WINDOWS)
-typedef char *va_list;
-#elif defined(_MACOSX)
-typedef __builtin_va_list va_list;
-#elif defined(_LINUX)
-typedef __builtin_va_list va_list;
-#elif defined(__EMSCRIPTEN__)
-typedef __builtin_va_list va_list;
-#endif
-
-#if defined(_MOBILE) && defined(TARGET_SUBPLATFORM_ANDROID)
-typedef uint32_t size_t;
-#endif
-
-#if defined(__EMSCRIPTEN__)
-typedef uint32_t size_t;
 #endif
 
 // AL-2014-07-30: [[ Bug 13000 ]] Ensure ___LITTLE_ENDIAN__ is defined appropriately
@@ -281,17 +201,8 @@ void MCMemoryDelete(void *p_record);
 
 //////////
 
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline void *operator new (size_t, void *p_block, bool)
-{
-	return p_block;
-}
+#include <new>
+using std::nothrow;
 
 // This method provides type-safe construction of an object.
 template<typename T> bool MCMemoryNew(T*& r_record)
@@ -302,7 +213,7 @@ template<typename T> bool MCMemoryNew(T*& r_record)
 		// Notice here we use the 'placement-new' operator we defined above to
 		// do the type conversion. This ensures any type-specific initialization
 		// is done.
-		r_record = new(t_record, true) T;
+		r_record = new (t_record) T;
 
 		return true;
 	}
@@ -317,13 +228,6 @@ template<typename T> void MCMemoryDelete(T* p_record)
 
 	MCMemoryDelete(static_cast<void *>(p_record));
 }
-
-#ifdef _DEBUG
-#ifdef redef_new
-#undef redef_new
-#define new new(__FILE__, __LINE__)
-#endif
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

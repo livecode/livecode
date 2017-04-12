@@ -22,11 +22,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCMagnify : public MCControl
+class MCMagnify;
+typedef MCObjectProxy<MCMagnify>::Handle MCMagnifyHandle;
+
+class MCMagnify : public MCControl, public MCMixinObjectHandle<MCMagnify>
 {
 public:
     
     enum { kObjectType = CT_MAGNIFY };
+    using MCMixinObjectHandle<MCMagnify>::GetHandle;
     
 protected:
 	uint2 inside;

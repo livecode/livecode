@@ -25,9 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	include <windows.h>
 #endif
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
 /* Possible exit statuses used by lc-run */
 enum {
 	kMCRunExitStatusSuccess = 0,
@@ -395,27 +392,7 @@ MCRunLoadModulesFromFile (MCStringRef p_filename,
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	size_t t_available = 0;
-	do
-	{
-		MCAutoScriptModuleRef t_module;
-
-		if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
-			return false;
-
-		x_modules.Push(*t_module);
-
-		if (!MCStreamGetAvailableForRead (*t_stream, t_available))
-			return false;
-	}
-	while (t_available > 0);
-
-	return true;
+	return MCScriptCreateModulesFromData(*t_module_data, x_modules);
 }
 
 static bool
@@ -502,7 +479,6 @@ main (int argc,
 	MCInitialize();
 	MCSInitialize();
 	MCScriptInitialize();
-	MCModulesInitialize();
 
 	/* Defaults */
 	MCRunConfiguration t_config;
@@ -543,7 +519,6 @@ main (int argc,
 			MCRunHandlerError();
 	}
 
-	MCModulesFinalize();
 	MCScriptFinalize();
 	MCSFinalize();
 	MCFinalize();

@@ -210,7 +210,7 @@ void MCAndroidCustomFontsLoad()
         if (!MCStringFirstIndexOfChar(*t_file_list, '\n', t_old_offset, kMCCompareExact, t_offset))
             break;
             
-        t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_file);
+        t_success = MCStringCopySubstring(*t_file_list, MCRangeMakeMinMax(t_old_offset, t_offset), &t_file);
         
         if (t_success)
         {
@@ -222,7 +222,7 @@ void MCAndroidCustomFontsLoad()
             if (!MCStringFirstIndexOfChar(*t_file_list, '\n', ++t_old_offset, kMCCompareExact, t_offset))
                 t_offset = t_length;
             
-           t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_is_folder_string);
+           t_success = MCStringCopySubstring(*t_file_list, MCRangeMakeMinMax(t_old_offset, t_offset), &t_is_folder_string);
         }
     
         if (t_success)

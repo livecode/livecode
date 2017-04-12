@@ -191,7 +191,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 			{
 				uindex_t t_length = MCStringGetLength(tpgptr->GetInternalStringRef());
 				MCRange t_range, t_where;
-				t_range = MCRangeMake(oldoffset, t_length - oldoffset);
+				t_range = MCRangeMakeMinMax(oldoffset, t_length);
 				while (MCStringFind(tpgptr->GetInternalStringRef(), t_range, tofind, 
 									ctxt.GetStringComparisonType(),
 									&t_where))
@@ -205,7 +205,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								toffset = t_where.offset;
@@ -234,7 +234,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (first)
 							{
-								if (MCfoundfield != NULL && MCfoundfield != this)
+								if (MCfoundfield && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + t_where.offset;
 								foundlength = MCStringGetLength(tofind);
@@ -248,7 +248,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 					case FM_STRING:
 						if (first)
 						{
-							if (MCfoundfield != NULL && MCfoundfield != this)
+							if (MCfoundfield && MCfoundfield != this)
 								MCfoundfield->clearfound();
 							foundoffset = toffset + t_where.offset;
 							foundlength = MCStringGetLength(tofind);
@@ -588,7 +588,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 
             MCStringRef t_paragraph_text;
             if (t_pos != t_start)
-                MCStringCopySubstring(p_text, MCRangeMake(t_start, t_pos - t_start), t_paragraph_text);
+                MCStringCopySubstring(p_text, MCRangeMakeMinMax(t_start, t_pos), t_paragraph_text);
             else
                 t_paragraph_text = MCValueRetain(kMCEmptyString);
 
@@ -598,7 +598,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
                 MCStringFindAndReplaceChar(t_paragraph_text, '\n', ' ', kMCStringOptionCompareExact);
 			}
 
-			MCParagraph *tpgptr = new MCParagraph;
+			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->setparent(this);
 			tpgptr->appendto(pgptr);
 
@@ -622,7 +622,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 	}
 	else
 	{
-		pgptr = new MCParagraph;
+		pgptr = new (nothrow) MCParagraph;
 		pgptr->setparent(this);
 	}
 	setparagraphs(pgptr, parid);
@@ -908,11 +908,11 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 {
 	if (!opened || !(flags & F_TRAVERSAL_ON))
 		return ES_NORMAL;
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
 		if (MCactivefield != this && focus && !(state & CS_KFOCUSED))
 			MCactivefield->kunfocus();
-		if (MCactivefield != NULL)
+		if (MCactivefield)
 			MCactivefield->unselect(True, True);
 		if (focusedparagraph != NULL)
 			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
@@ -1654,7 +1654,7 @@ MCParagraph *MCField::cloneselection()
 		{
 			if (pgptr->gethilite())
 			{
-				MCParagraph *tpgptr = new MCParagraph(*pgptr);
+				MCParagraph *tpgptr = new (nothrow) MCParagraph(*pgptr);
 				tpgptr->appendto(cutptr);
 			}
 			pgptr = pgptr->next();
@@ -1771,7 +1771,7 @@ void MCField::pastetext(MCParagraph *newtext, Boolean dodel)
 		Ustruct *us = MCundos->getstate();
 		if (us == NULL || MCundos->getobject() != this)
 		{
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			findex_t si, ei;
 			selectedmark(False, si, ei, False);
 			us->ud.text.index = si;
@@ -1819,7 +1819,7 @@ void MCField::movetext(MCParagraph *newtext, findex_t p_to_index)
 		Ustruct *us = MCundos->getstate();
 		if (us == NULL || MCundos->getobject() != this)
 		{
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->ud.text.index = si;
 			us->ud.text.newline = False;
 			us->ud.text.data = NULL;
@@ -1858,7 +1858,7 @@ void MCField::deletetext(findex_t si, findex_t ei)
 		return;
 
 	Ustruct *us;
-	us = new Ustruct;
+	us = new (nothrow) Ustruct;
 	us->type = UT_DELETE_TEXT;
 	us->ud.text.index=si;
 	us->ud.text.data = t_deleted_text;
@@ -1915,7 +1915,7 @@ void MCField::insertparagraph(MCParagraph *newtext)
 		oldstack = NULL;
 	do
 	{
-		MCParagraph *newptr = new MCParagraph(*pgptr);
+		MCParagraph *newptr = new (nothrow) MCParagraph(*pgptr);
 		newptr->setparent(this);
 		newptr->open(m_font);
 		tfptr->append(newptr);

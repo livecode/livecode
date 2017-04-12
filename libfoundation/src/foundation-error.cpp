@@ -155,12 +155,114 @@ MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
 }
 
 MC_DLLEXPORT_DEF
+bool MCErrorCreateWithMessageV(MCErrorRef& r_error,
+							   MCTypeInfoRef p_error_type,
+							   MCStringRef p_message,
+							   va_list p_args)
+{
+	__MCAssertIsErrorTypeInfo(p_error_type);
+	__MCAssertIsString(p_message);
+	MCAutoArrayRef t_info;
+	if (!MCArrayCreateMutable(&t_info))
+		return false;
+	
+	for(;;)
+	{
+		const char *t_key;
+		t_key = va_arg(p_args, const char *);
+		if (t_key == nil)
+			break;
+		
+		MCValueRef t_value;
+		t_value = va_arg(p_args, MCValueRef);
+		
+		// If a value is nil, then it means don't include it.
+		if (t_value == nil)
+			continue;
+		
+		MCNewAutoNameRef t_name;
+		if (!MCNameCreateWithNativeChars((const char_t *)t_key,
+										 strlen(t_key),
+										 &t_name))
+			return false;
+		
+		if (!MCArrayStoreValue(*t_info,
+							   true,
+							   *t_name,
+							   t_value))
+		{
+			return false;
+		}
+	}
+	
+	if (!MCErrorCreateWithMessage(p_error_type,
+								  p_message,
+								  *t_info,
+								  r_error))
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+MC_DLLEXPORT_DEF
+bool MCErrorCreateWithMessageS(MCErrorRef& r_error,
+							   MCTypeInfoRef p_error_type,
+							   MCStringRef p_message,
+							   ...)
+{
+	va_list t_args;
+	va_start(t_args, p_message);
+	
+	bool t_result;
+	t_result = MCErrorCreateWithMessageV(r_error,
+										 p_error_type,
+										 p_message,
+										 t_args);
+	
+	va_end(t_args);
+	
+	return t_result;
+	
+}
+
+MC_DLLEXPORT_DEF
 bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
 {
 	return MCErrorCreateWithMessage (p_typeinfo,
 	                                 MCErrorTypeInfoGetMessage (p_typeinfo),
 	                                 p_info,
 	                                 r_error);
+}
+
+MC_DLLEXPORT_DEF
+bool MCErrorCreateV(MCErrorRef& r_error,
+					MCTypeInfoRef p_typeinfo,
+					va_list p_args)
+{
+	return MCErrorCreateWithMessageV(r_error,
+									 p_typeinfo,
+									 MCErrorTypeInfoGetMessage (p_typeinfo),
+									 p_args);
+}
+
+MC_DLLEXPORT_DEF
+bool MCErrorCreateS(MCErrorRef& r_error,
+					MCTypeInfoRef p_typeinfo,
+					...)
+{
+	va_list t_args;
+	va_start(t_args, p_typeinfo);
+	
+	bool t_result;
+	t_result = MCErrorCreateV(r_error,
+							  p_typeinfo,
+							  t_args);
+	
+	va_end(t_args);
+	
+	return t_result;
 }
 
 MC_DLLEXPORT_DEF
@@ -307,6 +409,13 @@ bool MCErrorCatch(MCErrorRef& r_error)
 }
 
 MC_DLLEXPORT_DEF
+void MCErrorReset(void)
+{
+    MCAutoErrorRef t_error;
+    MCErrorCatch(&t_error);
+}
+
+MC_DLLEXPORT_DEF
 MCErrorRef MCErrorPeek(void)
 {
     return s_last_error;
@@ -325,38 +434,16 @@ MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
                                    MCStringRef p_message,
                                    va_list p_args)
 {
-	__MCAssertIsErrorTypeInfo(p_error_type);
-	__MCAssertIsString(p_message);
-    MCAutoArrayRef t_info;
-    if (!MCArrayCreateMutable(&t_info))
-        return false;
-    
-    for(;;)
-    {
-        const char *t_key;
-        t_key = va_arg(p_args, const char *);
-        if (t_key == nil)
-            break;
-        
-        MCValueRef t_value;
-        t_value = va_arg(p_args, MCValueRef);
-        
-        // If a value is nil, then it means don't include it.
-        if (t_value == nil)
-            continue;
-        
-        MCNewAutoNameRef t_name;
-        if (!MCNameCreateWithNativeChars((const char_t *)t_key, strlen(t_key), &t_name))
-            return false;
-        
-        if (!MCArrayStoreValue(*t_info, true, *t_name, t_value))
-            return false;
-    }
-    
-    MCAutoErrorRef t_error;
-    if (!MCErrorCreateWithMessage(p_error_type, p_message, *t_info, &t_error))
-        return false;
-    
+	
+	MCAutoErrorRef t_error;
+	if (!MCErrorCreateWithMessageV(&t_error,
+								   p_error_type,
+								   p_message,
+								   p_args))
+	{
+		return false;
+	}
+	
     return MCErrorThrow(*t_error);
 }
 
@@ -397,18 +484,17 @@ MCErrorCreateAndThrow (MCTypeInfoRef p_error_type, ...)
 MC_DLLEXPORT_DEF
 bool MCErrorThrowOutOfMemory(void)
 {
-    if (s_out_of_memory_error == nil &&
-        !MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
+    if (s_out_of_memory_error == nil)
     {
-        exit(-1);
-        return false;
+	    /* This function may be being called from within
+	     * MCMemoryNew().  If there is no error structure already
+	     * allocated, calling MCErrorCreate() to obtain one will call
+	     * MCMemoryNew()... which will re-enter this function,
+	     * probably recursively until the stack overflows. */
+	    abort();
     }
     
-    MCErrorThrow(s_out_of_memory_error);
-    MCValueRelease(s_out_of_memory_error);
-    s_out_of_memory_error = nil;
-    
-    return false;
+    return MCErrorThrow(s_out_of_memory_error);
 }
 
 MC_DLLEXPORT_DEF

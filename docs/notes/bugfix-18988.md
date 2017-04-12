@@ -1,0 +1,1 @@
+# Deal with stack id cache correctly on stack delete

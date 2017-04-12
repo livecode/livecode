@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_SCRIPT_AUTO__
 
 #include "script.h"
+#include "foundation-span.h"
 
 /* ================================================================ */
 
@@ -58,6 +59,13 @@ public:
 	T operator * (void) const
 	{
 		return m_value;
+	}
+
+	T Release(void)
+	{
+		T t_value = m_value;
+		m_value = nil;
+		return t_value;
 	}
 
 private:
@@ -125,12 +133,25 @@ public:
 		return true;
 	}
 
+	MCSpan<T> Span()
+	{
+		return MCMakeSpan(Ptr(), Size());
+	}
+
 	T & operator [] (const int p_index)
 	{
 		MCAssert (nil != m_values);
 		MCAssert (p_index >= 0);
 		return m_values[p_index];
 	}
+
+    MCSpan<T> Release(void)
+    {
+        MCSpan<T> t_value = Span();
+        m_values = nullptr;
+        m_count = 0;
+        return t_value;
+    }
 
 private:
 	T *m_values;
@@ -140,6 +161,22 @@ private:
 typedef MCAutoScriptObjectRefArrayBase<MCScriptModuleRef, MCScriptRetainModule, MCScriptReleaseModule> MCAutoScriptModuleRefArray;
 typedef MCAutoScriptObjectRefArrayBase<MCScriptInstanceRef, MCScriptRetainInstance, MCScriptReleaseInstance> MCAutoScriptInstanceRefArray;
 
-/* ================================================================ */
+/* ================================================================
+ * libscript functions relying on managed-lifetime types
+ * ================================================================
+ *
+ * This header declares some libscript functions in addition to those
+ * declared in "script.h".  These functions rely on the managed
+ * lifetime types declared in this header but not available in
+ * "script.h".
+ */
+
+/* ----------------------------------------------------------------
+ * Module-related functions
+ * ---------------------------------------------------------------- */
+MC_DLLEXPORT bool MCScriptCreateModulesFromStream(MCStreamRef p_stream,
+                                                  MCAutoScriptModuleRefArray& x_modules);
+MC_DLLEXPORT bool MCScriptCreateModulesFromData(MCDataRef p_data,
+                                                MCAutoScriptModuleRefArray& x_modules);
 
 #endif /* !__MC_SCRIPT_AUTO__ */

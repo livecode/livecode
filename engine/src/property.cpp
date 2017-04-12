@@ -121,6 +121,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_SCRIPT_EXECUTION_ERRORS, String, Engine, ScriptExecutionErrors)
 	DEFINE_RO_PROPERTY(P_SCRIPT_PARSING_ERRORS, String, Engine, ScriptParsingErrors)
 	
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, License, RevLicenseInfoByKey)
+	DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, License, RevLicenseInfo)
+	DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, License, RevLicenseLimits)
 	DEFINE_RW_PROPERTY(P_REV_RUNTIME_BEHAVIOUR, UInt16, Legacy, RevRuntimeBehaviour)
 	DEFINE_RW_PROPERTY(P_HC_IMPORT_STAT, String, Legacy, HcImportStat)
 	DEFINE_RW_PROPERTY(P_SCRIPT_TEXT_FONT, String, Legacy, ScriptTextFont)
@@ -144,7 +147,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_RECORD_SAMPLESIZE, UInt16, Multimedia, RecordSampleSize)
 	DEFINE_RW_PROPERTY(P_RECORD_RATE, Double, Multimedia, RecordRate)
 	DEFINE_RW_PROPERTY(P_RECORD_CHANNELS, UInt16, Multimedia, RecordChannels)
-	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat) 
+	DEFINE_RW_CUSTOM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat)
 	DEFINE_RW_PROPERTY(P_RECORD_COMPRESSION, String, Multimedia, RecordCompression)
 	DEFINE_RW_PROPERTY(P_RECORD_INPUT, String, Multimedia, RecordInput)
 
@@ -460,25 +463,17 @@ MCProperty::MCProperty()
 	ptype = CT_UNDEFINED;
 	which = P_UNDEFINED;
 	function = F_UNDEFINED;
-	target = NULL;
-	destvar = NULL;
 	effective = False;
-	customindex = NULL;
-	customprop = nil;
 }
 
 MCProperty::~MCProperty()
 {
-	delete target;
-	delete destvar;
-	delete customindex;
-	MCNameDelete(customprop);
 }
 
 MCObject *MCProperty::getobj(MCExecContext &ctxt)
 {
 	MCObject *objptr = NULL;
-	MCChunk *tchunk = new MCChunk(False);
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
 	MCerrorlock++;
 	MCScriptPoint sp(ctxt);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
@@ -498,7 +493,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	Boolean lp = False;
 
 	initpoint(sp);
-	parent = sp.getobj();
 
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_EFFECTIVE) == PS_NORMAL)
 		effective = True;
@@ -511,7 +505,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	{
 		// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 		//   execution outwith a handler.
-		if (sp . findvar(sp.gettoken_nameref(), &destvar) == PS_NORMAL)
+		if (sp . findvar(sp.gettoken_nameref(), &(&destvar)) == PS_NORMAL)
 		{
 			destvar->parsearray(sp);
 			which = P_CUSTOM_VAR;
@@ -519,10 +513,10 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		else
 		{
 			which = P_CUSTOM;
-			/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), customprop);
+			/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), &customprop);
 			if (sp.next(type) == PS_NORMAL && type == ST_LB)
 			{
-				if (sp.parseexp(False, True, &customindex) != PS_NORMAL
+				if (sp.parseexp(False, True, &(&customindex)) != PS_NORMAL
 				        || sp.next(type) != PS_NORMAL || type != ST_RB)
 				{
 					MCperror->add(PE_PROPERTY_BADINDEX, sp);
@@ -883,8 +877,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// MM-2011-07-14: Add support for listing avaiable network interfaces
 	case P_NETWORK_INTERFACES:
 
-	case P_REV_MESSAGE_BOX_LAST_OBJECT: // DEVELOPMENT only
-	case P_REV_MESSAGE_BOX_REDIRECT: // DEVELOPMENT only
+	case P_MESSAGE_BOX_LAST_OBJECT:
 	case P_REV_LICENSE_LIMITS: // DEVELOPMENT only
 
 	// MW-2010-06-04: Add support for dock menu and status icon separation.
@@ -958,7 +951,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 			sp.backup();
 			break;
 		}
-		if (sp.parseexp(False, True, &customindex) != PS_NORMAL)
+		if (sp.parseexp(False, True, &(&customindex)) != PS_NORMAL)
 		{
 			MCperror->add(PE_VARIABLE_BADINDEX, sp);
 			return PS_ERROR;
@@ -1037,7 +1030,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
         {
             if (type == ST_LB)
             {
-                if (sp.parseexp(False, True, &customindex) != PS_NORMAL
+                if (sp.parseexp(False, True, &(&customindex)) != PS_NORMAL
                         || sp.next(type) != PS_NORMAL || type != ST_RB)
                 {
                     MCperror->add(PE_PROPERTY_BADINDEX, sp);
@@ -1058,7 +1051,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 				
 				// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 				//   execution outwith a handler.
-				if (sp . finduqlvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
+				if (sp . finduqlvar(sp.gettoken_nameref(), &(&destvar)) != PS_NORMAL)
 				{
 					MCperror->add(PE_PROPERTY_NOTOF, sp);
 					return PS_ERROR;
@@ -1110,7 +1103,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 				{
 					if (tocount < CT_LINE)
 					{
-						target = new MCChunk(False);
+						/* UNCHECKED */ target.Reset(new (nothrow) MCChunk(False));
 						break;
 					}
 					else
@@ -1126,7 +1119,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 					if (tocount < CT_LINE)
 					{
 						sp.backup();
-						target = new MCChunk(False);
+						/* UNCHECKED */ target.Reset(new (nothrow) MCChunk(False));
 						break;
 					}
 					else
@@ -1142,7 +1135,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 		else
 			sp.backup();
-		target = new MCChunk(False);
+		/* UNCHECKED */ target.Reset(new (nothrow) MCChunk(False));
 		if (target->parse(sp, doingthe) != PS_NORMAL)
 		{
 			MCperror->add
@@ -1188,7 +1181,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   simplify code.
 	if (which == P_CUSTOM)
     {
-        if (!MCNameClone(customprop, t_prop_name))
+        if (!MCNameClone(*customprop, t_prop_name))
             return false;
     }
 	
@@ -1199,7 +1192,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	if (which == P_CUSTOM_VAR)
 	{
         MCAutoStringRef t_string;
-        if (!ctxt  . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
+        if (!ctxt  . EvalExprAsStringRef(destvar.Get(), EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
 
         // AL-2015-08-27: [[ Bug 15798 ]] Parse into index and property name before determining
@@ -1228,7 +1221,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
                 t_end_offset--;
             }
             
-            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+            if (!MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_offset + 1, t_end_offset), &t_icarray))
                 return false;
         }
         else
@@ -1257,9 +1250,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			t_prop = P_CUSTOM;
 		}
 	}
-	else if (customindex != nil)
+	else if (customindex)
     {
-        if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name))
+        if (!ctxt . EvalExprAsNameRef(customindex.Get(), EE_PROPERTY_BADEXPRESSION,
+                                      t_index_name))
             return false;
     }
     
@@ -1429,8 +1423,9 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
     bool t_is_array_prop;
     MCNewAutoNameRef t_index;
     
-    if (customindex != nil)
-        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    if (customindex)
+        ctxt . EvalExprAsNameRef(customindex.Get(), EE_PROPERTY_BADEXPRESSION,
+                                 &t_index);
     
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
@@ -1493,13 +1488,13 @@ void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	ctxt . SetLineAndPos(line, pos);
     
-	if (destvar != nil && which != P_CUSTOM_VAR)
+	if (destvar && which != P_CUSTOM_VAR)
 		return eval_variable_ctxt(ctxt, r_value);
 	
 	if (function != F_UNDEFINED)
 		return eval_function_ctxt(ctxt, r_value);
 	
-	if (target == nil)
+	if (!target)
 		return eval_global_property_ctxt(ctxt, r_value);
 	
 	if (tocount == CT_UNDEFINED)
@@ -1518,8 +1513,9 @@ void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
     bool t_is_array_prop;
     MCNewAutoNameRef t_index;
     
-    if (customindex != nil)
-        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    if (customindex)
+        ctxt . EvalExprAsNameRef(customindex.Get(), EE_PROPERTY_BADEXPRESSION,
+                                 &t_index);
     
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
@@ -1572,9 +1568,9 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
 
 void MCProperty::set(MCExecContext& ctxt, MCExecValue p_value)
 {
-    if (destvar != NULL && which != P_CUSTOM_VAR)
+    if (destvar && which != P_CUSTOM_VAR)
         set_variable(ctxt, p_value);
-    else if (target == nil)
+    else if (!target)
         set_global_property(ctxt, p_value);
     else
         set_object_property(ctxt, p_value);

@@ -1,0 +1,126 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST ParseTrivialPackage
+foreign package java.test
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ParseMultiplePackages
+foreign package java.test
+end package
+foreign package java.test2
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ParseNontrivialPackages
+foreign package java.b
+
+use java.a.MyClass
+use java.a.MyInterface
+use java.a.MyNewInterface
+use java.a.SomeException
+
+interface MyOtherInterface
+end interface
+
+class MySubClass<MyClass<T>> inherits MyClass<SomeException> implements MyOtherInterface
+
+	constructor MyString()
+	constructor MyNewString(data as byte) named StringFromBytes
+
+	method charAt(index as int) returns T[]
+
+	final method compareTo(string as String) returns int
+
+	class method copyValueOf(data as char[], start as int, length as int) returns String
+
+	method getBytes(charsetName as String) throws SomeException returns byte[]
+
+	protected transient volatile class variable tVar as short[][][]
+	
+	constant adfdsf as String is "sdfsdgsdfgdfg"
+
+end class
+
+class MySpecialSubClass inherits MySubClass<MyClass<SomeException>>
+
+end class
+
+interface AnInterface inherits MyOtherInterface
+
+	method charAt(index as int) returns char
+
+	default method compareTo(string as String) returns int
+
+	class method copyValueOf(data as char[], start as int, length as int) returns String
+
+end interface
+
+class ThisClass
+end class
+
+class byteClass
+
+	constructor constructyMan()
+	constant falfmsf as MyClass<ThisClass>[]
+	
+end class
+
+end package
+
+foreign package java.a
+
+class SomeException
+end class
+
+class MyOtherClass
+end class
+
+class SubstituteClass
+end class
+
+class MyClass<T>
+end class
+
+class AnotherClass inherits MyClass<SubstituteClass>
+	method getSome() returns SubstituteClass[]
+end class
+
+interface MyInterface<T, U>
+	constant myConstant as T is 0.5
+end interface
+
+interface MyOtherInterface
+	constant aNumber as int is 3
+end interface
+
+class A
+end class
+class B
+end class
+
+interface MyNewInterface inherits MyInterface<A,B>, MyOtherInterface
+end interface
+
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

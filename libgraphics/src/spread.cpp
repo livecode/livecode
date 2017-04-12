@@ -64,7 +64,7 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
     
 	// Compute the x distance of each pixel from the nearest set pixel.
 	uint8_t *xd;
-	xd = new uint8_t[new_width * height];
+	xd = new (nothrow) uint8_t[new_width * height];
 	for(int y = 0; y < height; y++)
 	{
 		uint8_t *xdptr;

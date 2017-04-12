@@ -160,7 +160,7 @@ bool MCBitmapEffectsAssign(MCBitmapEffectsRef& self, MCBitmapEffectsRef src)
 	if (src != NULL)
 	{
 		// Allocate, returning false if it fails.
-		t_new_self = new MCBitmapEffects;
+		t_new_self = new (nothrow) MCBitmapEffects;
 		if (t_new_self == NULL)
 			return false;
 
@@ -437,7 +437,7 @@ IO_stat MCBitmapEffectsUnpickle(MCBitmapEffectsRef& self, MCObjectInputStream& p
 {
 	// Create a new instance
 	MCBitmapEffects *t_new_self;
-	t_new_self = new MCBitmapEffects;
+	t_new_self = new (nothrow) MCBitmapEffects;
 	if (t_new_self == NULL)
 		return IO_ERROR;
 
@@ -878,6 +878,9 @@ static void MCBitmapEffectsSetUIntProperty(MCBitmapEffect& x_effect, MCBitmapEff
             }
         }
             break;
+		default:
+			MCUnreachableReturn();
+			break;
     }
 }
 
@@ -1041,7 +1044,7 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
         // If we are currently empty, then allocate a new object
         if (self == nil)
         {
-            self = new MCBitmapEffects;
+            self = new (nothrow) MCBitmapEffects;
             if (self == nil)
                 return false;
             
@@ -1252,7 +1255,7 @@ static void MCBitmapEffectRender(MCBitmapEffectRenderState& state, MCBitmapEffec
 	
 	// Allocate a run of mask pixels
 	uint8_t *t_mask_pixels;
-	t_mask_pixels = new uint8_t[dst . bounds . width];
+	t_mask_pixels = new (nothrow) uint8_t[dst . bounds . width];
 
 	// Calculate the attenuation bounds
 	int32_t t_left, t_top, t_right, t_bottom, t_count;

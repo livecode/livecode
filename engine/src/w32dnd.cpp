@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -109,7 +109,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
 	t_drop_source = NULL;
 	if (t_success)
 	{
-		t_drop_source = new DropSource;
+		t_drop_source = new (nothrow) DropSource;
 		if (t_drop_source != NULL)
 			t_drop_source -> AddRef();
 		else

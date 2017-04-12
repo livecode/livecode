@@ -570,7 +570,7 @@ void MCLine::SegmentLine()
             }
             
             // Create a segment covering the text up to this tab character
-            MCSegment *new_segment = new MCSegment(this);
+            MCSegment *new_segment = new (nothrow) MCSegment(this);
             new_segment->AddBlockRange(segment_start, bptr);
             if (firstsegment == NULL)
             {
@@ -600,7 +600,7 @@ void MCLine::SegmentLine()
     // Create a segment covering the remaining text
     if (t_segment_length > 0)
     {
-        MCSegment *new_segment = new MCSegment(this);
+        MCSegment *new_segment = new (nothrow) MCSegment(this);
         new_segment->AddBlockRange(segment_start, lastblock);
         if (firstsegment == NULL)
         {

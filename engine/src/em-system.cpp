@@ -23,12 +23,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcstring.h"
 #include "osspec.h"
+#include "globals.h"
+#include "variable.h"
+
+#include "globals.h"
+#include "variable.h"
 
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <emscripten.h>
+
+// These functions are implemented in javascript
+extern "C" int32_t MCEmscriptenSystemEvaluateJavaScript(const unichar_t* p_script, size_t p_script_length, unichar_t** r_result, size_t* r_result_length);
 
 /* ================================================================
  * System abstraction layer
@@ -207,13 +215,6 @@ MCEmscriptenSystem::GetProcessId()
 	/* Emscripten usually returns 42.  The PID is a fairly meaningless
 	 * value. */
 	return getpid();
-}
-
-bool
-MCEmscriptenSystem::GetExecutablePath(MCStringRef & r_path)
-{
-	MCEmscriptenNotImplemented();
-	return false;
 }
 
 /* ----------------------------------------------------------------
@@ -1014,33 +1015,6 @@ MCEmscriptenSystem::TextConvertToUnicode(uint32_t p_input_encoding,
 }
 
 /* ----------------------------------------------------------------
- * Loadable modules
- * ---------------------------------------------------------------- */
-
-/* Emscripten doesn't support dynamic linking */
-
-MCSysModuleHandle
-MCEmscriptenSystem::LoadModule(MCStringRef p_path)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-MCSysModuleHandle
-MCEmscriptenSystem::ResolveModuleSymbol(MCSysModuleHandle p_module,
-                                        MCStringRef p_symbol)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-void
-MCEmscriptenSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	/* Successfully do nothing */
-}
-
-/* ----------------------------------------------------------------
  * Subprocesses
  * ---------------------------------------------------------------- */
 
@@ -1114,21 +1088,50 @@ MCEmscriptenSystem::LaunchDocument(MCStringRef p_document)
 void
 MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 {
-	/* Successfully do nothing */
+	MCresult -> sets("no association");
 }
 
 void
 MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
                     MCStringRef p_language)
 {
-	/* Successfully do nothing */
+	if (!MCStringIsEqualToCString(p_language, "javascript", kMCStringOptionCompareCaseless))
+	{
+		MCresult -> sets("alternate language not found");
+		return;
+	}
+
+	MCAutoStringRefAsUTF16String t_script_u16;
+	t_script_u16.Lock(p_script);
+
+	unichar_t* t_result_u16;
+	size_t t_result_length;
+
+	bool t_success;
+	t_success = MCEmscriptenSystemEvaluateJavaScript(t_script_u16.Ptr(), t_script_u16.Size(), &t_result_u16, &t_result_length);
+
+	if (!t_success)
+	{
+		MCresult->sets("execution error");
+		return;
+	}
+
+	MCAutoStringRef t_result;
+	MCStringCreateWithBytesAndRelease((byte_t*)t_result_u16, t_result_length, kMCStringEncodingUTF16, false, &t_result);
+
+	MCresult->setvalueref(*t_result);
 }
 
 bool
 MCEmscriptenSystem::AlternateLanguages(MCListRef & r_list)
 {
-	/* No alternate languages available */
-	return false;
+	MCAutoListRef t_list;
+	MCAutoStringRef t_js_string;
+
+	return MCStringCreateWithCString("javascript", &t_js_string) && \
+		MCListCreateMutable('\n', &t_list) && \
+		MCListAppend(*t_list, *t_js_string) && \
+		MCListCopy(*t_list, r_list);
 }
 
 bool

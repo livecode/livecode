@@ -130,18 +130,18 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	markerlsize = gref.markerlsize;
 	if (gref.dashes != NULL)
 	{
-		dashes = new uint1[ndashes];
+		dashes = new (nothrow) uint1[ndashes];
 		memcpy(dashes, gref.dashes, ndashes);
 	}
 	else
 		dashes = NULL;
 	points = NULL;
 	if (gref.realpoints != NULL)
-		realpoints = new MCPoint[nrealpoints];
+		realpoints = new (nothrow) MCPoint[nrealpoints];
 	else
 		realpoints = NULL;
 	if (gref.markerpoints != NULL)
-		markerpoints = new MCPoint[nmarkerpoints];
+		markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 	else
 		markerpoints = NULL;
 	uint2 i;
@@ -247,7 +247,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        && (getstyleint(flags) == F_CURVE || getstyleint(flags) == F_POLYGON
 	            || getstyleint(flags) == F_LINE))
 	{
-		realpoints = new MCPoint[MCscreen->getmaxpoints()];
+		realpoints = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		MCU_snap(rect.x);
 		MCU_snap(rect.y);
 		startx = rect.x;
@@ -296,8 +296,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		}
 		MCRectangle drect = rect;
 		compute_minrect();
-		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
-		layer_rectchanged(drect, true);
+		Redraw(drect);
 		message_with_args(MCM_mouse_move, x, y);
         
         // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
@@ -437,7 +436,7 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 			MCRectangle trect = reduce_minrect(nrect);
 			if (oldpoints == NULL)
 			{
-				oldpoints = new MCPoint[nrealpoints];
+				oldpoints = new (nothrow) MCPoint[nrealpoints];
 				uint2 i = nrealpoints;
 				while (i--)
 					oldpoints[i] = realpoints[i];
@@ -523,30 +522,38 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
-bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_roundrect(MCPoint* &r_points, uindex_t &r_point_count)
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
-	return (true);
+	return MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 }
 
-bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_rect(MCPoint* &r_points, uindex_t &r_point_count)
 {
-	r_points[0].x = rect.x;
-	r_points[0].y = rect.y;
-	r_points[1].x = rect.x + rect.width;
-	r_points[1].y = rect.y;
-	r_points[2].x = rect.x + rect.width;
-	r_points[2].y = rect.y + rect.height;
-	r_points[3].x = rect.x;
-	r_points[3].y = rect.y + rect.height;
-	return (true);
+	MCAutoArray<MCPoint> t_points;
+	if (!t_points.New(4))
+		return false;
+	
+	t_points[0].x = rect.x;
+	t_points[0].y = rect.y;
+	t_points[1].x = rect.x + rect.width;
+	t_points[1].y = rect.y;
+	t_points[2].x = rect.x + rect.width;
+	t_points[2].y = rect.y + rect.height;
+	t_points[3].x = rect.x;
+	t_points[3].y = rect.y + rect.height;
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
-bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_point_count)
 {
-	MCPoint fakepoint;
+	MCAutoArray<MCPoint> t_points;
+	
+	if (!t_points.New(nsides + 1))
+		return false;
 	
 	real8 dx = (real8)((rect.width >> 1) - 1);
 	real8 dy = (real8)((rect.height >> 1) - 1);
@@ -559,20 +566,20 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	for (i = 0 ; i < nsides ; i++)
 	{
 		real8 iangle = rangle + (real8)i * factor;
-		fakepoint.x = cx + (int2)(cos(iangle) * dx);
-		fakepoint.y = cy + (int2)(sin(iangle) * dy);
-		r_points[i] = fakepoint;
+		t_points[i].x = cx + (int2)(cos(iangle) * dx);
+		t_points[i].y = cy + (int2)(sin(iangle) * dy);
 	}
     
     // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
     // regular polygon.
-	r_points[nsides] = r_points[0];
-	r_point_count = nsides + 1;
-	return (true);
+	t_points[nsides] = t_points[0];
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
 // MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
-bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uindex_t& r_point_count)
 {
 	int	tRadius;
 	
@@ -582,14 +589,14 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
-	return (true);
+	
+	return MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCGraphic *newgraphic = new MCGraphic(*this);
+	MCGraphic *newgraphic = new (nothrow) MCGraphic(*this);
 	if (attach)
 		newgraphic->attach(p, invisible);
 	return newgraphic;
@@ -1045,7 +1052,7 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 		
         if (t_count)
 		{
-			MCPoint *newpts = new MCPoint[npts+t_count] ;
+			MCPoint *newpts = new (nothrow) MCPoint[npts+t_count] ;
 			startpt = pts ;
 			MCPoint *currentpt = newpts ;
 			*(currentpt++) = pts[0] ;
@@ -1136,15 +1143,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (linesize != 0)
 			trect = MCU_reduce_rect(trect, linesize >> 1);
 		
-		if (npoints <= nsides)
-		{
-			npoints = nsides + 1;
-			if (points != NULL)
-				delete points;
-			points = new MCPoint[npoints];
-		}
 		// MDW-2014-06-18: [[ rect_points ]] refactored
-		get_points_for_regular_polygon(points, npoints);
+		uindex_t t_count;
+		/* UNCHECKED */ get_points_for_regular_polygon(points, t_count);
+		npoints = t_count;
 	}
 	if (points == NULL && getstyleint(flags) == F_OVAL)
 	{
@@ -1468,6 +1470,7 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 				if (resizeparent())
 					return;
 			}
+			Redraw(drect);
 			if (opened)
 			{
 				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.
@@ -1892,7 +1895,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
-			markerpoints = new MCPoint[nmarkerpoints];
+			markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
@@ -1909,7 +1912,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
-			realpoints = new MCPoint[nrealpoints];
+			realpoints = new (nothrow) MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
@@ -1931,7 +1934,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
-			dashes = new uint1[ndashes];
+			dashes = new (nothrow) uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
 					return checkloadstat(stat);

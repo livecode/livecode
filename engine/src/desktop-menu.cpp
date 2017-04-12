@@ -534,7 +534,7 @@ struct MCMainMenuInfo
 };
 
 static MCPlatformMenuRef s_menubar = nil;
-static MCObjectHandle *s_menubar_targets = nil;
+static MCButtonHandle *s_menubar_targets = nil;
 static uindex_t s_menubar_target_count = 0;
 static uindex_t s_menubar_lock_count = 0;
 
@@ -573,10 +573,10 @@ void MCScreenDC::updatemenubar(Boolean force)
 	
 	MCGroup *newMenuGroup; //pointer to the menu group
 	static MCGroup *curMenuGroup = NULL; //current menu bar handle
-	if (MCdefaultmenubar == NULL)   // the menu of first stack opened becomes
+	if (!MCdefaultmenubar)   // the menu of first stack opened becomes
 		MCdefaultmenubar = MCmenubar; // the default menu bar automatically
 	//get current menu group
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		newMenuGroup = MCmenubar;
 	else
 		newMenuGroup = MCdefaultmenubar;
@@ -595,7 +595,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	t_menu_index = 0;
 	
 	// We construct the new menubar as we go along.
-	MCObjectHandle *t_new_menubar_targets;
+	MCButtonHandle *t_new_menubar_targets;
 	uindex_t t_new_menubar_target_count;
 	t_new_menubar_targets = nil;
 	t_new_menubar_target_count = 0;
@@ -829,7 +829,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 				;
 			
 			MenuItemDescriptor *t_item;
-			t_item = new MenuItemDescriptor;
+			t_item = new (nothrow) MenuItemDescriptor;
 			if (t_item == NULL)
 				break;
             
@@ -892,7 +892,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// If the menu is the icon menu, send an 'iconMenuOpening' message.
 	if (((MCScreenDC *)MCscreen) -> isiconmenu(p_menu))
 	{
-		if (MCdefaultstackptr != NULL)
+		if (MCdefaultstackptr)
 			MCdefaultstackptr -> getcard() -> message(MCM_icon_menu_opening);
 		return;
 	}
@@ -926,25 +926,38 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
         MCRedrawLockScreen();
         s_menubar_lock_count += 1;
         // SN-2014-11-06: [[ Bug 13836 ]] MCmenubar (or MCdefaultmenubar) should get mouseDown, not the target (it gets menuPick)
-        if (MCmenubar != nil)
+        if (MCmenubar)
             MCmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
-        else if (MCdefaultmenubar != nil)
+        else if (MCdefaultmenubar)
             MCdefaultmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		s_menubar_lock_count -= 1;
         MCRedrawUnlockScreen();
 	}
 	
-    // SN-2014-11-10: [[ Bug 13836 ]] Make sure that
-	// Now we've got the menu to update, process the new menu spec, but only if the
-	// menu button still exists!
-	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index].IsValid())
-	{
-		MCButton *t_button = s_menubar_targets[t_parent_menu_index].GetAs<MCButton>();
-		
-		MCPlatformRemoveAllMenuItems(p_menu);
-		MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
-		populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, t_button);
-	}
+    // We only send one message - to the group - to rebuild the menus. Therefore,
+    // after this is done we must rebuild all menubar menus at once.
+	if (!t_update_menubar)
+    {
+        uindex_t t_count;
+        MCPlatformCountMenuItems(s_menubar, t_count);
+        for(uindex_t i = 0; i < t_count; i++)
+        {
+            MCPlatformMenuRef t_menu;
+            MCPlatformGetMenuItemProperty(s_menubar, i, kMCPlatformMenuItemPropertySubmenu, kMCPlatformPropertyTypeMenuRef, &t_menu);
+            
+            // Always remove all items - we can't delete the menu if the button has
+            // been deleted as it might be referenced by Cocoa still.
+            MCPlatformRemoveAllMenuItems(t_menu);
+            
+            // Only rebuild the menu if the button still exists.
+            if (s_menubar_targets[i].IsValid())
+            {
+                MCButton *t_button = s_menubar_targets[i];
+                MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
+                populate_menubar_menu_from_button(s_menubar, i, t_menu, t_button);
+            }
+        }
+    }
 }
 
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
@@ -993,15 +1006,15 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	{
 		if (s_menubar_targets[t_current_menu_index].IsValid())
 		{
-			s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->setmenuhistoryprop(t_last_menu_index + 1);
-            s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->handlemenupick(*t_result, nil);
+			s_menubar_targets[t_current_menu_index]->setmenuhistoryprop(t_last_menu_index + 1);
+            s_menubar_targets[t_current_menu_index]->handlemenupick(*t_result, nil);
 		}
 	}
 	else
 	{
 		if (((MCScreenDC *)MCscreen) -> isiconmenu(t_last_menu))
 		{
-			if (MCdefaultstackptr != NULL)
+			if (MCdefaultstackptr)
 				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, *t_result);
 		}
 		else

@@ -21,11 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <CoreFoundation/CoreFoundation.h>
 
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec)
-{
-	dlclose(tdatabaserec -> driverref);
-}
-
 void MCU_path2std(char *p_path)
 {
   if (p_path == NULL || !*p_path)
@@ -90,7 +85,7 @@ void MCU_fix_path(char *cstr)
 
 char *MCS_getcurdir()
 {
-  char *t_path = new char[PATH_MAX + 2];
+  char *t_path = new (nothrow) char[PATH_MAX + 2];
   getcwd(t_path, PATH_MAX);
   return t_path;
 }
@@ -126,7 +121,7 @@ char *MCS_resolvepath(const char *path)
       pw = getpwnam(tpath + 1);
     if (pw == NULL)
       return NULL;
-    tildepath = new char[strlen(pw->pw_dir) + strlen(tptr) + 2];
+    tildepath = new (nothrow) char[strlen(pw->pw_dir) + strlen(tptr) + 2];
     strcpy(tildepath, pw->pw_dir);
     if (*tptr) {
       strcat(tildepath, "/");
@@ -150,7 +145,7 @@ char *MCS_resolvepath(const char *path)
   if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
     return tildepath;
   int size;
-  char *newname = new char[PATH_MAX + 2];
+  char *newname = new (nothrow) char[PATH_MAX + 2];
 
   if ((size = readlink(tildepath, newname, PATH_MAX)) < 0) {
     delete tildepath;
@@ -160,7 +155,7 @@ char *MCS_resolvepath(const char *path)
   delete tildepath;
   newname[size] = '\0';
   if (newname[0] != '/') {
-    char *fullpath = new char[strlen(path) + strlen(newname) + 2];
+    char *fullpath = new (nothrow) char[strlen(path) + strlen(newname) + 2];
     strcpy(fullpath, path);
     char *sptr = strrchr(fullpath, '/');
     if (sptr == NULL)
@@ -175,102 +170,3 @@ char *MCS_resolvepath(const char *path)
   return newname;
 }
 
-
-// DoLoadDatabaseDriver
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
-{
-	char *t_filename;
-    // SN-2015-05-12: [[ Bug 14972 ]] We don't want to write somewhere we don't
-    //  own the memory
-	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 7);
-	sprintf(t_filename, "%s.dylib", p_path);
-
-#if defined(__i386__) || defined(__x86_64__)
-	void *t_driver_handle;
-	t_driver_handle = dlopen(t_filename, RTLD_NOW);
-
-	if (t_driver_handle == NULL)
-	{
-		free(t_filename);
-		return NULL;
-	}
-		
-
-	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
-
-	t_result -> driverref = t_driver_handle;
-	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
-	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
-	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
-    t_result -> setcallbacksptr = (set_callbacksrefptr)dlsym(t_driver_handle, "setcallbacksref");
-	free(t_filename);
-	return t_result;
-#else
-	void *t_driver_handle;
-	t_driver_handle = load_module(t_filename);
-	
-	if (t_driver_handle == NULL)
-	{
-		free(t_filename);
-		return NULL;
-	}
-	
-	
-	DATABASEREC *t_result;
-	t_result = new DATABASEREC;
-	
-	t_result -> driverref = t_driver_handle;
-	t_result -> idcounterptr = (idcounterrefptr)resolve_symbol(t_driver_handle, "setidcounterref");
-	t_result -> newconnectionptr = (new_connectionrefptr)resolve_symbol(t_driver_handle, "newdbconnectionref");
-	t_result -> releaseconnectionptr = (release_connectionrefptr)resolve_symbol(t_driver_handle, "releasedbconnectionref");
-    t_result -> setcallbacksptr = (set_callbacksrefptr)resolve_symbol(t_driver_handle, "setcallbacksref");
-	free(t_filename);
-	return t_result;
-#endif
-}
-
-const char *GetExternalFolder(void)
-{
-	return NULL;
-}
-
-char *GetBundleFolder(CFBundleRef p_bundle)
-{
-	CFURLRef t_bundle_url;
-	t_bundle_url = CFBundleCopyBundleURL(p_bundle);
-	if (t_bundle_url == NULL)
-		return NULL;
-	
-	CFStringRef t_bundle_folder_path;
-	t_bundle_folder_path = CFURLCopyFileSystemPath(t_bundle_url, kCFURLPOSIXPathStyle);
-	CFRelease(t_bundle_url);
-	if (t_bundle_folder_path == NULL)
-		return NULL;
-	
-	CFIndex t_length;
-	t_length = CFStringGetMaximumSizeForEncoding(CFStringGetLength(t_bundle_folder_path), kCFStringEncodingUTF8);
-	
-	char *t_result;
-	t_result = (char *)malloc(t_length + 1);
-	CFStringGetCString(t_bundle_folder_path, t_result, t_length + 1, kCFStringEncodingUTF8);
-	CFRelease(t_bundle_folder_path);
-	t_result = (char *)realloc(t_result, strlen(t_result) + 1);
-	
-	return t_result;
-}
-
-const char *GetApplicationFolder(void)
-{
-	static char *s_folder = NULL;
-	if (s_folder == NULL)
-	{		
-		CFBundleRef t_bundle;
-		t_bundle = CFBundleGetMainBundle();
-		if (t_bundle != NULL)
-			s_folder = GetBundleFolder(t_bundle);
-	}
-	return s_folder;
-}

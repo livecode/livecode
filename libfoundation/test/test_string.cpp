@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "gtest/gtest.h"
 
 #include "foundation.h"
+#include "foundation-unicode.h"
 #include "foundation-auto.h"
 
 
@@ -138,3 +139,39 @@ TEST(string, format_everything)
 	ASSERT_STREQ(MCStringGetCString(*t_string), "Test: hello?! 42 012 0.007");
 }
 
+static void check_bidi_of_surrogate_range(int p_lower, int p_upper)
+{
+    int t_size = p_upper - p_lower;
+
+		MCAutoArray<unichar_t> t_pua_chars;
+		ASSERT_TRUE(t_pua_chars.Resize(t_size * 2));
+    for(int i = 0; i < t_size; i++)
+    {
+        MCUnicodeCodepointToSurrogates(i + p_lower,
+                                       t_pua_chars[i*2], t_pua_chars[i*2 + 1]);
+    }
+
+		MCAutoArray<uint8_t> t_props;
+		ASSERT_TRUE(t_props.Resize(t_size));
+    MCUnicodeGetProperty(t_pua_chars.Ptr(), t_size, kMCUnicodePropertyBidiClass, kMCUnicodePropertyTypeUint8, t_props.Ptr());
+
+    for(int i = 0; i < t_size; i++)
+    {
+            ASSERT_TRUE(t_props[i] == kMCUnicodeDirectionLeftToRight);
+    }
+}
+
+TEST(string, surrogate_unicode_props)
+//
+// Checks that MCUnicodeGetProperty correctly deals with surrogates
+// (Regression test for Bug 19045)
+//
+{
+    const int kSPUA_A_Lower = 0xF0000;
+    const int kSPUA_A_Upper = 0xFFFFD + 1; // non-inclusive
+    check_bidi_of_surrogate_range(kSPUA_A_Lower, kSPUA_A_Upper);
+
+    const int kSPUA_B_Lower = 0x100000;
+    const int kSPUA_B_Upper = 0x10FFFD + 1; // non-inclusive
+    check_bidi_of_surrogate_range(kSPUA_B_Lower, kSPUA_B_Upper);
+}

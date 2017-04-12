@@ -12,7 +12,11 @@ the system.
 
 Introduced: 1.1
 
-OS: mac, windows
+Changes:
+- Support for running JavaScript on HTML5 systems was added in version
+  9.0.0
+
+OS: mac, windows, html5
 
 Platforms: desktop
 
@@ -41,6 +45,9 @@ command.
 Windows systems support scripting through the "active scripting"
 functionality of the Windows Script Host. You can write statements in
 any "active scripting" language and execute them using the do command.
+
+HTML5 systems support executing JavaScript within the context of the
+browser host.
 
 References: do (command), function (control structure),
 LiveCode (glossary), return (glossary)

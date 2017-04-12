@@ -36,148 +36,128 @@ value:
 The value to set the <property> to.
 
 Description:
-Use the <mobileControlSet> command to set properties of a native mobile
-control created using <mobileControlCreate>.
+Use the <mobileControlSet> command to set <property|properties>
+of a native mobile control created using <mobileControlCreate>.
 
 **<propertyName> listing: **
+
 **Global properties (All native mobile controls)**
 
 - "rect": the bounds of the control, relative to the top-left of the
-
 card. For example "0,0,100,100".
 
 - "visible": set to true or false to determine whether the control
-
 should be displayed.
 
 - "alpha": set to an integer value between 0 and 255 to blend the
-  control with any controls underneath it.
+control with any controls underneath it.
 - "backgroundColor": Set to either a standard color name, or a string of
-
 the form red,green,blue or red,green,blue,alpha. Where the components
 are integers in the range 0 to 255.
 
 **Global properties (All native iOS controls)**
 
 - "opaque": set to false if the control should be rendered with
-
 transparency. In particular, set this control to true if you set a
 <backgroundColor> that is not fully opaque.
 
 - "ignoreVoiceOverSensitivity": set to true or false to determine
-
 whether the control should be accessible through Voice Over.
+
 >*Note*: When setting the "ignoreVoiceOverSensitivity" <property> of a
-> native iOS
-control to "true", then this control can interact with Voice Over. 
-Remember to set this <property> back to "false" when this control is no
-longer on the current view.
+native iOS control to "true", then this control can interact with 
+Voice Over. Remember to set this <property> back to "false" when this 
+control is no longer on the current view.
 
 **Browser Specific Properties**
 
 - "URL": the URL to be loaded into the web-view.
 - "autoFit" (iOS Only): set to true or false to determine whether the
-
 page is scaled to fit the rect of the control (wraps the scalesPageToFit
 property of UIWebView).
 
 - "delayRequests" (iOS Only): set to true to cause the loadRequest
-
 message to be sent. Note: In this mode, web-pages that trigger
 sub-document loads (such as those containing iframes) do not load
 correctly.
 
 - "dataDetectorTypes" (iOS Only): Use this property to specify the types
-
 of data that should be automatically converted to clickable URLs in the
 web-view. This property wraps the dataDetectorTypes property of
 UIWebView. It is specified as a comma-delimited list of one or more of
 the following properties:
 
-	- "phone number": 
-	- "calendar event": iOS4.0+
-	- "link": 
-	- "address": iOS4.0+
-- "allowsInlinePlayback" (iOS Only): set to true if the web-view should
+ - "phone number": 
+ - "calendar event": iOS4.0+
+ - "link": 
+ - "address": iOS4.0+
 
+
+- "allowsInlinePlayback" (iOS Only): set to true if the web-view should
 allow media files to be played 'inline' in the page (wraps the
 allowsInlineMediaPlayback property of the UIWebView). This property is
 only available on iOS4.0 and later
 
 - "mediaPlaybackRequiresUserAction" (iOS Only): set to false to allow
-
 media files to play automatically in the webview (wraps the
 mediaPlaybackRequiresUserAction property of the UIWebView). This
 property is only available on iOS4.0 and later.
 
 - "scrollingEnabled": specifies whether or not the browser can be
-
 scrolled (boolean).
 
 - "canBounce": determines whether the scroller 'bounces' when it hits
-
 the edge of the contentRect.
 
 **Scroller Specific Properties**
 
 - "contentRect": The rectangle over which the scroller scrolls. This is
-
 distinct from the scroller's rect. The minimum/maximum values of the
 scroll properties (adjusted for the size of the scroller). This is a
 comma-separated list of four integers, describing a rectangle. For
 example "0,0,100,100".
 
 - "hScroll": The horizontal scroll offset. This is an integer value
-
 ranging between the left and right of the contentRect, adjusting
 appropriately for the size of the scroller (i.e. contentRect.left to
 contentRect.right - rect.width).
 
 - "vScroll": The vertical scroll offset. This is an integer value
-
 ranging between the top and bottom of the contentRect, adjusting
 appropriately for the size of the scroller (i.e. contentRect.top to
 contentRect.bottom - rect.height).
 
 - "hIndicator": Determines whether the horizontal indicator should be
-
 displayed when scrolling (maps to the UIScrollView
 showsHorizontalScrollIndicator property). This is a boolean value.
 
 - "vIndicator": Determines whether the vertical indicator should be
-
 displayed when scrolling (maps to the UIScrollView
 showsVerticalScrollIndicator property). This is a boolean value.
 
 - "canBounce" (iOS Only): Determines whether the scroller 'bounces' when
-
 it hits the edge of the contentRect (maps to the UIScrollView bounces
 property). This is a boolean value.
 
 - "canScrollToTop" (iOS Only): Determines whether a touch on the status
-
 bar causes the scroll to scroll to the top (maps to the UIScrollView
 scrollsToTop property). This is a boolean value.
 
 - "canCancelTouches" (iOS Only): Determines whether the scroller is
-
 allowed to cancel a touch that has been passed through to the underlying
 controls when it thinks it is a scroll gesture (maps to the UIScrollView
 canCancelContentTouches property).
 
 - "delayTouches" (iOS Only): Determines whether the scroller delays
-
 passing on touch-down events until it has determined whether it is the
 start of a scroll gesture or not (maps to the UIScrollView
 delaysContentTouches property). This is a boolean value.
 
 - "pagingEnabled" (iOS Only): Determines whether scrolling stops on
-
 multiples of the scroller's bounds (maps to the UIScrollView
 pagingEnabled property). This is a boolean value.
 
 - "decelerationRate" (iOS Only): Determines the rate at which scrolling
-
 decelerates when a finger is lifted (maps to the UIScrollView
 decelerationRate property). This can be either normal, fast or a real
 number*. Setting the real number currently has little effect above the
@@ -185,460 +165,412 @@ number*. Setting the real number currently has little effect above the
 translates the number to one of those two settings.
 
 - "indicatorStyle" (iOS Only): Determines the style of indicators to
-
 display (maps to the UIScrollView indicatorStyle property).
 
-	- "default": 
-	- "white": 
-	- "black": 
-- "indicatorInsets" (iOS Only): Determines how far from the edge of the
+ - "default"
+ - "white"
+ - "black"
 
+
+- "indicatorInsets" (iOS Only): Determines how far from the edge of the
 scroller's bounds, the indicators are inset (maps to the UIScrollView
 scrollIndicatorInsets property). This is a comma-separated list of four
 integers, describing the left, top, right and bottom inset distances.
 For example "0,0,100,100".
 
 - "scrollingEnabled" (iOS Only): Determines whether touches on the
-
 scroller cause scrolling (maps to the UIScrollView scrollEnabled
 property). This is a boolean value.
 
 - "lockDirection" (iOS Only): Determines whether scrolling is locked to
-
 the initial direction a drag occurs in (maps to the UIScrollView
 directionalLockEnabled property). This is a boolean value.
 
 **Player Specific Properties**
 
 - "filename": The filename of URL of the media to play. Setting the
-
 filename of the player automatically 'prepares' the movie for playback.
 
 - "showController": Determines whether the controller is displayed over
-
 the content. This is a boolean value.
 
 - "currentTime": The current position of the playhead, measured in
-
 milliseconds (maps to the native currentPlaybackTime property). This is
 an integer value.
 
 - "looping": Determines whether the playback of the movie should loop
-
 indefinitely. This is a boolean value.
 
 - "fullscreen" (iOS Only): Determines whether the player's content is
-
 played fullscreen. This is a boolean value.
 
 - "preserveAspect" (iOS Only): Determines whether the player's content
-
 should preserve its aspect ratio when scaled to fit within the control's
 bounds. This is a boolean value.
 
 - "useApplicationAudioSession" (iOS Only): Determines whether the movie
-
 uses a system-supplied audio session or not (maps to the native
 useApplicationAudioSession property). This is a boolean value.
 
 - "shouldAutoplay" (iOS Only): Determines whether the playback of
-
 network-based content begins automatically when there is enough buffered
 data to ensure uninterrupted playback (maps to the native shouldAutoplay
 property). This is a boolean value.
 
 - "allowsAirPlay" (iOS Only): Determines whether a control should be
-
 presented to allow the user to choose AirPlay-enabled hardware for
 playback (maps to the native allowsAirPlay property). This is a boolean
 value. This property is only supported on iOS 4.3 and later.
 
 - "playableDuration" (iOS Only): The amount of currently playable
-
 content, measured in milliseconds (maps to the native playableDuration
 property). This is an integer value.
 
 - "startTime" (iOS Only): The position at which playback should start,
-
 measured in milliseconds (maps to the native initialPlaybackTime
 property). This is an integer value.
 
 - "endTime" (iOS Only): The position at which playback should end,
-
 measured in milliseconds (maps to the native endPlaybackTime property).
 This is an integer value. Set to -1 to make the video to play to the
 end.
 
 - "playRate" (iOS Only): The current playback rate for the player (maps
-
 to the native currentPlaybackRate property). This represents a
 multiplier for the default playback rate of the current content. A value
 of 0.0 indicates playback is stopped, while a value of 1.0 indicates
 normal speed. Positive values indicate forward playback, while negative
-values indicate reverse playback. This is real value.
+values indicate reverse playback. This is a real value.
+
 
 **Text Input Specific Properties**
 
 - "text": The content of the control (maps to the native text property).
-
 This is a string value.
 
 - "unicodeText": The content of control encoded as UTF-16 (maps to the
-
 native text property). This is a binary value.
 
 - "textColor": The color to use for the text in control (maps to the
-
 native textColor property). This is either a standard color name, or a
 string of the form red,green,blue or red,green,blue,alpha. Where the
 components are integers in the range 0 to 255.
 
 - "fontName" (iOS only): The name of the font to use for text in the
-
 control. This is a string value.
 
 - "fontSize": The size of the font to use for text in the control. This
-
 is an integer value.
 
 - "textAlign": The alignment to use for text in the control (maps to the
-
 native textAlignment property). One of:
 
-	- "left": 
-	- "center": 
-	- "right": 
-- "autoFit" (iOS only): Determines whether the size of the text is
+ - "left"
+ - "center"
+ - "right
 
+
+- "autoFit" (iOS only): Determines whether the size of the text is
 scaled so that it fits within the width of the control down to the size
 specified by the minimumFontSize property (maps to the native
 adjustsFontSizeToFitWidth property). This is a boolean value.
 
 - "minimumFontSize" (iOS only): The minimum size text should be shrunk
-
 to satisfy autoFit requirements (maps to the native minimumFontSize
 property). This is an integer value.
 
-- "autoClear" (iOS only): Determines whether the control is emptied
+- "maximumTextLength" (iOS only): The maximum number of characters that
+can be entered in the field. This is an integer value.
 
+- "autoClear" (iOS only): Determines whether the control is emptied
 automatically when editing begins (maps to the native
 clearsOnBeginEditing property). This is a boolean.
 
 - "clearButtonMode" (iOS only): The display mode of the standard 'clear'
-
 button overlay (maps to the native clearButtonMode property). This is
 one of the following:
 
-	- "never": never display the clear button
-	- "while editing": only display the clear button while editing
-	- "unless editing": only display the clear button when not editing
-	- "always": always display the clear button
+ - "never": never display the clear button
+ - "while editing": only display the clear button while editing
+ - "unless editing": only display the clear button when not editing
+ - "always": always display the clear button
+
+
 - "borderStyle" (iOS only): The type of border to draw around the
-
 control (maps to the native borderStyle property). This is one of the
-following:	- "none": do not draw a border
+following:
+ - "none": do not draw a border
+ - "line": draw a thin line around the control
+ - "bezel": draw a bezel-style border around the control
+ - "rounded": draw a rounded rectangle style border around the control
 
-	- "line": draw a thin line around the control
-	- "bezel": draw a bezel-style border around the control
-	- "rounded": draw a rounded rectangle style border around the control
+
 - "autoCapitalizationType": Determines when the shift-key is
-
 automatically enabled (maps to the native autocapitalizationType
 property). This is one of the following:
 
-	- "none": the shift-key is never automatically enabled
-	- "words": the shift-key is enabled at the start of words
-	- "sentences": the shift-key is enabled at the start of sentences
-	- "all characters": the shift-key is enabled at the start of each
-
+ - "none": the shift-key is never automatically enabled
+ - "words": the shift-key is enabled at the start of words
+ - "sentences": the shift-key is enabled at the start of sentences
+ - "all characters": the shift-key is enabled at the start of each
 character
 
-- "autoCorrectionType": Determines whether auto-correct behavior should
 
+- "autoCorrectionType": Determines whether auto-correct behavior should
 be enabled (maps to the native autocorrectionType property). This is one
 of the following:
 
-	- "default": use the appropriate auto-correct behavior for the current
-
+ - "default": use the appropriate auto-correct behavior for the current
 script system
+ - "no": disable auto-correct behavior
+ - "yes": enable auto-correct behavior
 
-	- "no": disable auto-correct behavior
-	- "yes": enable auto-correct behavior
+
 - "manageReturnKey" (iOS only): Determines whether the return key should
-
 be automatically enabled or disabled based on whether the control has
 content or not (maps to the native enablesReturnKeyAutomatically
 property). This is a boolean value.
 
 - "keyboardStyle" (iOS only): Determines what kind of appearance the
-
 keyboard has (maps to the native keyboardAppearance property). This is
 one of the following:
 
-	- "default": the standard keyboard appearance
-	- "alert": the keyboard that is suitable for an alert panel
-
+ - "default": the standard keyboard appearance
+ - "alert": the keyboard that is suitable for an alert panel
 (iPhone/iPod only)
 
+
 - "keyboardType": Determines what kind of keyboard should be displayed
-
 (maps to the native keyboardType property). This is one of the
-following:	- "default": the normal keyboard
+following:
+ - "default": the normal keyboard
+ - "alphabet": the alphabetic keyboard
+ - "numeric": the numeric keyboard with punctuation
+ - "URL": the URL entry keyboard
+ - "number": the number pad keyboard
+ - "phone": the phone number pad keyboard
+ - "contact": the phone contact pad keyboard
+ - "email": the email keyboard
+ - "decimal": the decimal numeric pad keyboard (iOS 4.1+)
 
-	- "alphabet": the alphabetic keyboard
-	- "numeric": the numeric keyboard with punctuation
-	- "URL": the URL entry keyboard
-	- "number": the number pad keyboard
-	- "phone": the phone number pad keyboard
-	- "contact": the phone contact pad keyboard
-	- "email": the email keyboard
-	- "decimal": the decimal numeric pad keyboard (iOS 4.1+)
+
 - "returnKeyType": Determines what kind of return-key the keyboard
-
 should have (maps to the native returnKeyType property). This is one of
 the following:
+ - "default": the normal return key
+ - "go": the 'Go' return key
+ - "google": the 'Google' return key
+ - "join": the 'Join' return key
+ - "next": the 'Next' return key
+ - "route": the 'Route' return key
+ - "search": the 'Search' return key
+ - "send": the 'Send' return key
+ - "yahoo": the 'Yahoo' return key
+ - "done": the 'Done' return key
+ - "emergency call": the 'emergency call' return key
 
-	- "default": the normal return key
-	- "go": the 'Go' return key
-	- "google": the 'Google' return key
-	- "join": the 'Join' return key
-	- "next": the 'Next' return key
-	- "route": the 'Route' return key
-	- "search": the 'Search' return key
-	- "send": the 'Send' return key
-	- "yahoo": the 'Yahoo' return key
-	- "done": the 'Done' return key
-	- "emergency call": the 'emergency call' return key
+
 - "contentType": Determines what kind of content the control contains.
-
 This is one of the following:
+ - "plain": plain, unstyled text
+ - "password": plain text displayed in the standard iOS password style
 
-	- "plain": plain, unstyled text
-	- "password": plain text displayed in the standard iOS password style
+
 - "enabled": Determines whether the control is enabled or not. This is a
-
 boolean value.
 
 - "multiline" (Android only): A boolean value which determines whether
-
 the control can contain multiple lines of text, wraps text to fit
 horizontally, and scrolls vertically. If false, the field contains a
 single line of text which can scroll horizontally.
 
+
 **Multi-line Text Input Specific Properties**
 
 - "text": The content of the control (maps to the native text property).
-
 This is a string value.
 
 - "unicodeText": The content of control encoded as UTF-16 (maps to the
-
 native text property). This is a binary value.
 
 - "textColor": The color to use for the text in control (maps to the
-
 native textColor property). This is either a standard color name, or a
 string of the form red,green,blue or red,green,blue,alpha. Where the
 components are integers in the range 0 to 255.
 
 - "fontName" (iOS only): The name of the font to use for text in the
-
 control. This is a string value.
 
 - "fontSize": The size of the font to use for text in the control. This
-
 is an integer value.
 
 - "textAlign": The alignment to use for text in the control (maps to the
-
 native textAlignment property). One of:
+ - "left" 
+ - "center" 
+ - "right" 
 
-	- "left": 
-	- "center": 
-	- "right": 
+
 - "autoCapitalizationType": Determines when the shift-key is
-
 automatically enabled (maps to the native autocapitalizationType
 property). This is one of the following:
-
-	- "none": the shift-key is never automatically enabled
-	- "words": the shift-key is enabled at the start of words
-	- "sentences": the shift-key is enabled at the start of sentences
-	- "all characters": the shift-key is enabled at the start of each
-
+ - "none": the shift-key is never automatically enabled
+ - "words": the shift-key is enabled at the start of words
+ - "sentences": the shift-key is enabled at the start of sentences
+ - "all characters": the shift-key is enabled at the start of each
 character
 
-- "autoCorrectionType": Determines whether auto-correct behavior should
 
+- "autoCorrectionType": Determines whether auto-correct behavior should
 be enabled (maps to the native autocorrectionType property). This is one
 of the following:
-
-	- "default": use the appropriate auto-correct behavior for the current
-
+ - "default": use the appropriate auto-correct behavior for the current
 script system
+ - "no": disable auto-correct behavior
+ - "yes": enable auto-correct behavior
 
-	- "no": disable auto-correct behavior
-	- "yes": enable auto-correct behavior
+
 - "manageReturnKey" (iOS only): Determines whether the return key should
-
 be automatically enabled or disabled based on whether the control has
 content or not (maps to the native enablesReturnKeyAutomatically
 property). This is a boolean value.
 
 - "keyboardStyle" (iOS only): Determines what kind of appearance the
-
 keyboard has (maps to the native keyboardAppearance property). This is
 one of the following:
-
-	- "default": the standard keyboard appearance
-	- "alert": the keyboard that is suitable for an alert panel
-
+ - "default": the standard keyboard appearance
+ - "alert": the keyboard that is suitable for an alert panel
 (iPhone/iPod only)
 
+
 - "keyboardType": Determines what kind of keyboard should be displayed
-
 (maps to the native keyboardType property). This is one of the
-following:	- "default": the normal keyboard
+following:
+ - "default": the normal keyboard
+ - "alphabet": the alphabetic keyboard
+ - "numeric": the numeric keyboard with punctuation
+ - "URL": the URL entry keyboard
+ - "number": the number pad keyboard
+ - "phone": the phone number pad keyboard
+ - "contact": the phone contact pad keyboard
+ - "email": the email keyboard
+ - "decimal": the decimal numeric pad keyboard (iOS 4.1+)
 
-	- "alphabet": the alphabetic keyboard
-	- "numeric": the numeric keyboard with punctuation
-	- "URL": the URL entry keyboard
-	- "number": the number pad keyboard
-	- "phone": the phone number pad keyboard
-	- "contact": the phone contact pad keyboard
-	- "email": the email keyboard
-	- "decimal": the decimal numeric pad keyboard (iOS 4.1+)
+
 - "returnKeyType": Determines what kind of return-key the keyboard
-
 should have (maps to the native returnKeyType property). This is one of
 the following:
+ - "default": the normal return key
+ - "go": the 'Go' return key
+ - "google": the 'Google' return key
+ - "join": the 'Join' return key
+ - "next": the 'Next' return key
+ - "route": the 'Route' return key
+ - "search": the 'Search' return key
+ - "send": the 'Send' return key
+ - "yahoo": the 'Yahoo' return key
+ - "done": the 'Done' return key
+ - "emergency call": the 'emergency call' return key
 
-	- "default": the normal return key
-	- "go": the 'Go' return key
-	- "google": the 'Google' return key
-	- "join": the 'Join' return key
-	- "next": the 'Next' return key
-	- "route": the 'Route' return key
-	- "search": the 'Search' return key
-	- "send": the 'Send' return key
-	- "yahoo": the 'Yahoo' return key
-	- "done": the 'Done' return key
-	- "emergency call": the 'emergency call' return key
+
 - "contentType": Determines what kind of content the control contains.
-
 This is one of the following:
+ - "plain": plain, unstyled text
+ - "password": plain text displayed in the standard iOS password style
 
-	- "plain": plain, unstyled text
-	- "password": plain text displayed in the standard iOS password style
+
 - "editable": Determines if the text field can be edited. This is one of
-
 the following:
+ - "false": the text field cannot be edited
+ - "true": the text field can be edited
 
-	- "false": the text field cannot be edited
-	- "true": the text field can be edited
+
 - "dataDetectorTypes": Determines what types of data should be detected
-
 and automatically converted to clikckable URLs. This is a comma
 delimited list of none or more of the following:
-
 	- "phone number": 
 	- "calendar event": iOS4.0+
 	- "link": 
 	- "address": iOS4.0+
-- "selectedRange": Determines the start index and the length of the text
 
+
+- "selectedRange": Determines the start index and the length of the text
 that is to appear as selected.
 
 - "contentRect" (iOS only): This value cannot be set. It isIs read-only
-
 for the multi-line text input control, as it is automatically set to
 contain the text.
 
 - "hScroll" (iOS only): The horizontal scroll offset. This is an integer
-
 value ranging between the left and right of the contentRect, adjusting
 appropriately for the size of the scroller (i.e. contentRect.left to
 contentRect.right - rect.width).
 
 - "vScroll" (iOS only): The vertical scroll offset. This is an integer
-
 value ranging between the top and bottom of the contentRect, adjusting
 appropriately for the size of the scroller (i.e. contentRect.top to
 contentRect.bottom - rect.height).
 
 - "canBounce" (iOS only): Determines whether the scroller 'bounces' when
-
 it hits the edge of the contentRect (maps to the UIScrollView bounces
 property). This is a boolean value.
 
 - "canScrollToTop" (iOS only): Determines whether a touch on the status
-
 bar causes the scroll to scroll to the top (maps to the UIScrollView
 scrollsToTop property). This is a boolean value.
 
 - "canCancelTouches" (iOS only): Determines whether the scroller is
-
 allowed to cancel a touch that has been passed through to the underlying
 controls when it thinks it is a scroll gesture (maps to the UIScrollView
 canCancelContentTouches property).
 
 - "delayTouches" (iOS only): Determines whether the scroller delays
-
 passing on touch-down events until it has determined whether it is the
 start of a scroll gesture or not (maps to the UIScrollView
 delaysContentTouches property). This is a boolean value.
 
 - "pagingEnabled" (iOS only): Determines whether scrolling stops on
-
 multiples of the scroller's bounds (maps to the UIScrollView
 pagingEnabled property). This is a boolean value.
 
 - "decelerationRate" (iOS only): Determines the rate at which scrolling
-
 decelerates when a finger is lifted (maps to the UIScrollView
 decelerationRate property). This can be either normal, fast or a real
 number.
 
 - "indicatorStyle" (iOS only): Determines the style of indicators to
+display (maps to the UIScrollView indicatorStyle property). 
+ - "default" 
+ - "white" 
+ - "black" 
 
-display (maps to the UIScrollView indicatorStyle property).
 
-	- "default": 
-	- "white": 
-	- "black": 
 - "indicatorInsets" (iOS only): Determines how far from the edge of the
-
 scroller's bounds, the indicators are inset (maps to the UIScrollView
 scrollIndicatorInsets property). This is a comma-separated list of four
 integers, describing the left, top, right and bottom inset distances.
 For example "0,0,100,100".
 
 - "scrollingEnabled": Determines whether touches on the scroller cause
-
 scrolling (maps to the UIScrollView scrollEnabled property). This is a
 boolean value.
 
 - "hIndicator" (iOS only): Determines whether the horizontal indicator
-
 should be displayed when scrolling (maps to the UIScrollView
 showsHorizontalScrollIndicator property). This is a boolean value.
 
 - "vIndicator" (iOS only): Determines whether the vertical indicator
-
 should be displayed when scrolling (maps to the UIScrollView
 showsVerticalScrollIndicator property). This is a boolean value.
 
 - "lockDirection" (iOS only): Determines whether scrolling is locked to
-
 the initial direction a drag occurs in (maps to the UIScrollView
 directionalLockEnabled property). This is a boolean value.
 
 - "enabled": Determines whether the control is enabled or not. This is a
-
 boolean value.
 
 - "multiline" (Android only): A boolean value which determines whether
-
 the control can contain multiple lines of text, wraps text to fit
 horizontally, and scrolls vertically. If false, the field contains a
 single line of text which can scroll horizontally.

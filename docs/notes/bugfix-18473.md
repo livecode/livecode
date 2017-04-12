@@ -1,0 +1,1 @@
+# Prevent hang when adjusting field pixmap offset 

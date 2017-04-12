@@ -7,6 +7,40 @@
 	'targets':
 	[
 		{
+			'target_name': 'libopenssl_headers',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'fetch.gyp:fetch',
+			],
+
+			'direct_dependent_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
+				],
+			},
+		},
+		{
 			'target_name': 'libopenssl',
 			'type': 'none',
 
@@ -17,9 +51,26 @@
 
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'conditions':
 				[
-					'../thirdparty/libopenssl/include',
+					[
+						'OS == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'OS != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 
@@ -87,7 +138,7 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

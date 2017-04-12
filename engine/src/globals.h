@@ -27,6 +27,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sysdefs.h"
 #include "mcsemaphore.h"
 
+#include "object.h"
+#include "card.h"
+#include "group.h"
+#include "aclip.h"
+#include "stack.h"
+#include "player.h"
+#include "image.h"
+#include "magnify.h"
+#include "field.h"
+#include "tooltip.h"
+
 #include "foundation-locale.h"
 
 typedef struct _Streamnode Streamnode;
@@ -136,7 +147,7 @@ extern Boolean MCselectintersect;
 extern MCRectangle MCwbr;
 extern uint2 MCjpegquality;
 extern Export_format MCpaintcompression;
-extern uint2 MCrecordformat;
+extern intenum_t MCrecordformat;
 extern uint2 MCsoundchannel;
 extern uint2 MCrecordsamplesize;
 extern uint2 MCrecordchannels;
@@ -174,23 +185,23 @@ extern MCStacklist *MCtodestroy;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
-extern MCStack *MCtopstackptr;
-extern MCStack *MCdefaultstackptr;
-extern MCStack *MCstaticdefaultstackptr;
-extern MCStack *MCmousestackptr;
-extern MCStack *MCclickstackptr;
-extern MCStack *MCfocusedstackptr;
+extern MCStackHandle MCtopstackptr;
+extern MCStackHandle MCdefaultstackptr;
+extern MCStackHandle MCstaticdefaultstackptr;
+extern MCStackHandle MCmousestackptr;
+extern MCStackHandle MCclickstackptr;
+extern MCStackHandle MCfocusedstackptr;
 extern MCObjectPtr MCtargetptr;
-extern MCObject *MCmenuobjectptr;
-extern MCCard *MCdynamiccard;
+extern MCObjectHandle MCmenuobjectptr;
+extern MCCardHandle MCdynamiccard;
 extern Boolean MCdynamicpath;
-extern MCObject *MCerrorptr;
-extern MCObject *MCerrorlockptr;
 extern MCGroup *MCsavegroupptr;
-extern MCGroup *MCdefaultmenubar;
-extern MCGroup *MCmenubar;
-extern MCAudioClip *MCacptr;
-extern MCPlayer *MCplayers;
+extern MCObjectHandle MCerrorptr;
+extern MCObjectHandle MCerrorlockptr;
+extern MCGroupHandle MCdefaultmenubar;
+extern MCGroupHandle MCmenubar;
+extern MCAudioClipHandle MCacptr;
+extern MCPlayerHandle MCplayers;
 
 extern MCStack *MCtemplatestack;
 extern MCAudioClip *MCtemplateaudio;
@@ -205,19 +216,19 @@ extern MCPlayer *MCtemplateplayer;
 extern MCImage *MCtemplateimage;
 extern MCField *MCtemplatefield;
 
-extern MCImage *MCmagimage;
-extern MCMagnify *MCmagnifier;
-extern MCObject *MCdragsource;
-extern MCObject *MCdragdest;
-extern MCField *MCactivefield;
-extern MCField *MCclickfield;
-extern MCField *MCfoundfield;
-extern MCField *MCdropfield;
+extern MCImageHandle MCmagimage;
+extern MCMagnifyHandle MCmagnifier;
+extern MCObjectHandle MCdragsource;
+extern MCObjectHandle MCdragdest;
+extern MCFieldHandle MCactivefield;
+extern MCFieldHandle MCclickfield;
+extern MCFieldHandle MCfoundfield;
+extern MCFieldHandle MCdropfield;
 extern int4 MCdropchar;
-extern MCImage *MCactiveimage;
-extern MCImage *MCeditingimage;
-extern MCTooltip *MCtooltip;
-extern MCStack *MCmbstackptr;
+extern MCImageHandle MCactiveimage;
+extern MCImageHandle MCeditingimage;
+extern MCTooltipHandle MCtooltip;
+extern MCStackHandle MCmbstackptr;
 
 extern MCUIDC *MCscreen;
 extern MCPrinter *MCprinter;
@@ -381,7 +392,7 @@ extern Window MCgtkthemewindow;
 extern uint4 MCruntimebehaviour;
 
 extern MCDragAction MCdragaction;
-extern MCObject *MCdragtargetptr;
+extern MCObjectHandle MCdragtargetptr;
 extern MCDragActionSet MCallowabledragactions;
 extern uint4 MCdragimageid;
 extern MCPoint MCdragimageoffset;

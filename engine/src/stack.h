@@ -156,11 +156,14 @@ struct MCStackAttachment
     MCStackAttachmentCallback callback;
 };
 
-class MCStack : public MCObject
+typedef MCObjectProxy<MCStack>::Handle MCStackHandle;
+
+class MCStack : public MCObject, public MCMixinObjectHandle<MCStack>
 {
 public:
     
     enum { kObjectType = CT_STACK };
+    using MCMixinObjectHandle<MCStack>::GetHandle;
 
 protected:
     
@@ -220,7 +223,7 @@ protected:
 #endif
 
 	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
-	MCObjectHandle m_parent_stack;
+	MCStackHandle m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -350,12 +353,14 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
 
+    virtual void removereferences(void);
+    Boolean dodel(void);
 	virtual Boolean del(bool p_check_flag);
     virtual bool isdeletable(bool p_check_flag);
     
 	virtual void paste(void);
 
-	virtual MCStack *getstack();
+	virtual MCStackHandle getstack();
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
@@ -834,7 +839,7 @@ public:
 	{
 		if (!MCStringIsEmpty(title))
 			return title;
-		return MCNameGetString(_name);
+		return MCNameGetString(getname());
 	}
 	MCControl *getcontrols()
 	{

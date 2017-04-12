@@ -2,7 +2,7 @@ Name: revXMLRPC_SetMethod
 
 Type: command
 
-Syntax: revXMLRPC_SetMethod <XML-RPC document>,<method name>
+Syntax: revXMLRPC_SetMethod <XMLRPCdocumentID>,<methodName>
 
 Summary:
 Sets the name of the method in an XML-RPC document structure.
@@ -21,12 +21,15 @@ Example:
 revXMLRPC_SetMethod theRequest,"sample.elizabethanInsult"
 
 Parameters:
-documentID:
-The number returned by the revXMLRPC_CreateRequest when you created the
-XML-RPC request. method name: The the method name to be called upon
-execution of the XML-RPC document documentID.
+XMLRPCdocumentID (integer):
+The number returned by the <revXMLRPC_CreateRequest> when you created the
+<XML-RPC> request.
 
-The result:
+methodName (string):
+The the method name to be called upon execution of the XML-RPC
+documents documentID.
+
+The result (string):
 If the <revXMLRPC_SetMethod> <command> encounters an error, the <result>
 is set to an error message beginning with "xmlerr" or "xmlrpcerr".
 
@@ -35,20 +38,13 @@ Use the <revXMLRPC_SetMethod> <command> to set the method name to be
 called upon execution of an existing <XML-RPC document>.
 
 Where the path of the <XML-RPC document> tells the server which resource
-will handle the request, the <method name> tells that resource which
+will handle the request, the method name tells that resource which
 method is being called specifically within that resource.
 
->*Important:*  The <revXMLRPC_SetMethod> <command> is part of the 
-> <XML-RPC library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
-> <LiveCode custom library|custom library> when you create your 
-> <standalone application|standalone>. In the Inclusions pane of the 
-> <Standalone Application Settings> window, make sure the "XML-RPC" 
-> library checkbox is checked.
 
 References: revXMLRPC_SetPath (command), revXMLRPC_GetMethod (command),
 result (function), LiveCode custom library (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
-XML-RPC document (glossary), XML-RPC library (library)
-
+XML-RPC document (glossary), XML-RPC library (library),
+XML-RPC (glossary), revXMLRPC_CreateRequest (function)

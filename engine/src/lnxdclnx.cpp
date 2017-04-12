@@ -57,9 +57,9 @@ static Boolean dragclick;
 void MCScreenDC::setupcolors()
 {
 	ncolors = MCU_min(vis->colormap_size, MAX_CELLS);
-	colors = new MCColor[ncolors];
-    colornames = new MCStringRef[ncolors];
-	allocs = new int2[ncolors];
+	colors = new (nothrow) MCColor[ncolors];
+    colornames = new (nothrow) MCStringRef[ncolors];
+	allocs = new (nothrow) int2[ncolors];
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
@@ -299,7 +299,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             {
                 // Handled separately
                 //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
-                MCEventnode *t_node = new MCEventnode(gdk_event_copy(t_event));
+                MCEventnode *t_node = new (nothrow) MCEventnode(gdk_event_copy(t_event));
                 t_node->appendto(pendingevents);
                 expose();
                 break;
@@ -316,7 +316,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     {
                         m_application_has_focus = true;
                         hidebackdrop(true);
-                        if (MCdefaultstackptr != NULL)
+                        if (MCdefaultstackptr)
                             MCdefaultstackptr->getcard()->message(MCM_resume);
                         
                         MCstacks->hidepalettes(false);
@@ -361,7 +361,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                             // Another application gained focus
                             m_application_has_focus = false;
                             hidebackdrop(true);
-                            if (MCdefaultstackptr != NULL)
+                            if (MCdefaultstackptr)
                                 MCdefaultstackptr->getcard()->message(MCM_suspend);
                             
                             MCstacks->hidepalettes(true);
@@ -408,7 +408,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     {
                         // Let the IME have the key event first
                         bool t_ignore = false;
-                        if (dispatch && MCactivefield != NULL && m_im_context != nil)
+                        if (dispatch && MCactivefield && m_im_context != nil)
                         {
                             t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
                         }
@@ -451,13 +451,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 {
                     // Update which stack currently contains the mouse
                     MCmousestackptr = MCdispatcher->findstackd(t_event->crossing.window);
-                    if (MCmousestackptr != NULL)
+                    if (MCmousestackptr)
                         MCmousestackptr->resetcursor(True);
                 }
                 else
                 {
                     // The mouse is not within any of our stacks
-                    MCmousestackptr = NULL;
+                    MCmousestackptr = nil;
                 }
                 if (dispatch)
                 {
@@ -465,7 +465,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     {
                         if (t_event->type == GDK_ENTER_NOTIFY)
                         {
-                            if (MCmousestackptr != NULL)
+                            if (MCmousestackptr)
                             {
                                 // Send a window focus event
                                 MCdispatcher->enter(t_event->crossing.window);
@@ -514,7 +514,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // In certain types of modal loops (e.g. drag-and-drop) we may
                 // be receiving events from other windows - in that case, the
                 // window won't be found and some massaging is required
-                if (t_mousestack == NULL && MCmousestackptr != NULL)
+                if (t_mousestack == NULL && MCmousestackptr)
                 {
                     // Retain the current mouse stack and adjust the coordinates
                     // to be relative to it
@@ -600,7 +600,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         MCeventtime = t_event->button.time;
                         
                         // Is this a mouse scroll event?
-                        if (MCmousestackptr != NULL && t_event->type == GDK_SCROLL)
+                        if (MCmousestackptr && t_event->type == GDK_SCROLL)
                         {
                             // Find the object that should receive the scroll
                             MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
@@ -805,7 +805,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 if (t_event->selection.time != MCeventtime)
                 {
                     // Clear the active selection
-                    if (MCactivefield != NULL)
+                    if (MCactivefield)
                         MCactivefield->unselect(False, False);
                 }
                 
@@ -974,7 +974,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         // Queue the message if required. Otherwise, dispose of it
         if (t_queue)
         {
-            MCEventnode *tptr = new MCEventnode(t_event);
+            MCEventnode *tptr = new (nothrow) MCEventnode(t_event);
             tptr->appendto(pendingevents);
             t_event = NULL;
         }
@@ -1018,7 +1018,7 @@ void MCScreenDC::EnqueueGdkEvents(bool p_block)
         // GTK hasn't had a chance at this event yet
         //gtk_main_do_event(t_event);
         
-        MCEventnode *t_eventnode = new MCEventnode(t_event);
+        MCEventnode *t_eventnode = new (nothrow) MCEventnode(t_event);
         t_eventnode->appendto(pendingevents);
     }
 }
@@ -1053,7 +1053,7 @@ bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent
 
 void MCScreenDC::EnqueueEvent(GdkEvent* p_event)
 {
-    MCEventnode *t_node = new MCEventnode(p_event);
+    MCEventnode *t_node = new (nothrow) MCEventnode(p_event);
     t_node->appendto(pendingevents);
 }
 
@@ -1084,7 +1084,7 @@ bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_le
 
 void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
 {
-    if (MCactivefield == NULL)
+    if (!MCactivefield)
         return;
     
     // Get the string. We ignore the attributes list entirely.
@@ -1106,7 +1106,7 @@ void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
 {
-    if (MCactivefield == NULL)
+    if (!MCactivefield)
         return;
     
     MCactivefield->stopcomposition(True, False);
@@ -1114,7 +1114,7 @@ void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
 
 void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
 {
-    if (MCactivefield == NULL)
+    if (!MCactivefield)
         return;
     
     MCactivefield->startcomposition();
@@ -1183,7 +1183,7 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
         {
             // Handled separately
             //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
-            MCEventnode *t_node = new MCEventnode(gdk_event_copy(p_event));
+            MCEventnode *t_node = new (nothrow) MCEventnode(gdk_event_copy(p_event));
             t_node->appendto(pendingevents);
             expose();
             break;

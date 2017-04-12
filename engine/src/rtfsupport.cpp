@@ -44,7 +44,7 @@ RTFStatus RTFState::Save(void)
 	t_new_entry = NULL;
 	if (t_status == kRTFStatusSuccess)
 	{
-		t_new_entry = new Entry;
+		t_new_entry = new (nothrow) Entry;
 		if (t_new_entry == NULL)
 			t_status = kRTFStatusOverflow;
 	}

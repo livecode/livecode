@@ -70,7 +70,7 @@ MCVideoClip::MCVideoClip(const MCVideoClip &mref) : MCObject(mref)
 	size = mref.size;
 	if (mref.frames != NULL)
 	{
-		frames = new uint1[size];
+		frames = new (nothrow) uint1[size];
 		memcpy((char *)frames, (char *)mref.frames, size);
 	}
 	else
@@ -143,7 +143,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
     uindex_t t_last_slash;
     MCStringRef t_path;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_last_slash))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_last_slash + 1, MCStringGetLength(fname) - t_last_slash - 1), t_path);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(fname)), t_path);
     else
         t_path = MCValueRetain(fname);
     
@@ -151,7 +151,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
     /* UNCHECKED */ MCNameCreateAndRelease(t_path, &t_path_name);
 	setname(*t_path_name);
 	size = (uint4)MCS_fsize(fstream);
-	frames = new uint1[size];
+	frames = new (nothrow) uint1[size];
 	if (MCS_readfixed(frames, size, fstream) != IO_NORMAL)
 		return False;
 	return True;
@@ -198,7 +198,7 @@ IO_stat MCVideoClip::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (size != 0)
 	{
-		frames = new uint1[size];
+		frames = new (nothrow) uint1[size];
 		if ((stat = IO_read(frames, size, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}

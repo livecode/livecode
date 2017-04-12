@@ -76,7 +76,7 @@ extern "C" boolean fill_input_buffer(j_decompress_ptr cinfo)
 	MC_jpegsrc_ptr src = (MC_jpegsrc_ptr) cinfo->src;
 	src->pub.next_input_byte = src->buffer;
 	src->pub.bytes_in_buffer = src->buffersize;
-	return True;
+	return TRUE;
 }
 
 extern "C" void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
@@ -360,22 +360,24 @@ static bool apply_exif_orientation(uint32_t p_orientation, MCImageBitmap *p_bitm
 static boolean
 marker_is_icc (jpeg_saved_marker_ptr marker)
 {
-  return
-    marker->marker == ICC_MARKER &&
-    marker->data_length >= ICC_OVERHEAD_LEN &&
-    /* verify the identifying string */
-    GETJOCTET(marker->data[0]) == 0x49 &&
-    GETJOCTET(marker->data[1]) == 0x43 &&
-    GETJOCTET(marker->data[2]) == 0x43 &&
-    GETJOCTET(marker->data[3]) == 0x5F &&
-    GETJOCTET(marker->data[4]) == 0x50 &&
-    GETJOCTET(marker->data[5]) == 0x52 &&
-    GETJOCTET(marker->data[6]) == 0x4F &&
-    GETJOCTET(marker->data[7]) == 0x46 &&
-    GETJOCTET(marker->data[8]) == 0x49 &&
-    GETJOCTET(marker->data[9]) == 0x4C &&
-    GETJOCTET(marker->data[10]) == 0x45 &&
-    GETJOCTET(marker->data[11]) == 0x0;
+	if (marker->marker == ICC_MARKER &&
+	    marker->data_length >= ICC_OVERHEAD_LEN &&
+	    /* verify the identifying string */
+	    GETJOCTET(marker->data[0]) == 0x49 &&
+	    GETJOCTET(marker->data[1]) == 0x43 &&
+	    GETJOCTET(marker->data[2]) == 0x43 &&
+	    GETJOCTET(marker->data[3]) == 0x5F &&
+	    GETJOCTET(marker->data[4]) == 0x50 &&
+	    GETJOCTET(marker->data[5]) == 0x52 &&
+	    GETJOCTET(marker->data[6]) == 0x4F &&
+	    GETJOCTET(marker->data[7]) == 0x46 &&
+	    GETJOCTET(marker->data[8]) == 0x49 &&
+	    GETJOCTET(marker->data[9]) == 0x4C &&
+	    GETJOCTET(marker->data[10]) == 0x45 &&
+	    GETJOCTET(marker->data[11]) == 0x0)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 
@@ -510,7 +512,7 @@ boolean srcmgr_fill_input_buffer(j_decompress_ptr p_jpeg)
 	t_src->src.bytes_in_buffer = t_bytes_read;
 	t_src->src.next_input_byte = t_src->buffer;
 
-	return True;
+	return TRUE;
 }
 
 void srcmgr_skip_input_data(j_decompress_ptr p_jpeg, long p_count)
@@ -586,7 +588,6 @@ private:
 	JOCTET *m_icc;
 	uint32_t m_icc_length;
 	uint32_t m_orientation;
-	bool m_invert_cmyk;
 };
 
 MCJPEGImageLoader::MCJPEGImageLoader(IO_handle p_stream) : MCImageLoader(p_stream)
@@ -595,7 +596,6 @@ MCJPEGImageLoader::MCJPEGImageLoader(IO_handle p_stream) : MCImageLoader(p_strea
 	m_icc = nil;
 	m_icc_length = 0;
 	m_orientation = 0;
-	m_invert_cmyk = false;
 	
 	MCMemoryClear(&m_jpeg, sizeof(m_jpeg));
 }
@@ -632,10 +632,6 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 	if (t_success)
 	{
 		m_jpeg.src = (jpeg_source_mgr*)m_src;
-
-		// MW-2009-12-09: [[ Bug 2983 ]] Add support for CMYK jpegs. We need this to
-		//   determine whether to invert the CMYK data.
-		jpeg_save_markers(&m_jpeg, JPEG_APP0 + 14, 256);
 		
 		// MW-2012-09-04: [[ Exif ]] Save any APP1 markers so we can see if there is
 		//   any orientation flags.
@@ -677,15 +673,6 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 		if (m_jpeg.jpeg_color_space == JCS_CMYK ||
 			m_jpeg.jpeg_color_space == JCS_YCCK)
 		{
-			// We need to check to see if the CMYK image was produced by Adobe
-			// software. If it is, then the values need to be inverted.
-			for(jpeg_saved_marker_ptr t_marker = m_jpeg . marker_list; t_marker != nil; t_marker = t_marker -> next)
-				if ((t_marker->marker == (JPEG_APP0 + 14)) && (t_marker->data_length >= 12) && (!strncmp ((const char *)t_marker->data, "Adobe", 5)))
-				{
-					m_invert_cmyk = true;
-					break;
-				}
-
 			m_jpeg.out_color_space = JCS_CMYK;
 		}
 		else
@@ -768,8 +755,10 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 				for (uindex_t x = 0; x < m_jpeg.output_width; x++)
 				{
 					uint32_t t_pixel;
-					t_pixel = (t_src_ptr[3] << 24) | (t_src_ptr[2] << 16) | (t_src_ptr[1] << 8) | t_src_ptr[0];
-					if (m_invert_cmyk)
+
+					t_pixel = (t_src_ptr[3] << 24) | (t_src_ptr[2] << 16) | (t_src_ptr[1] << 8) | (t_src_ptr[0] << 0);
+					
+					if (m_jpeg.saw_Adobe_marker)
 						t_pixel ^= 0xFFFFFFFF;
 
 					*t_dst_ptr++ = t_pixel;
@@ -847,7 +836,7 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForJPEGStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCJPEGImageLoader *t_loader;
-	t_loader = new MCJPEGImageLoader(p_stream);
+	t_loader = new (nothrow) MCJPEGImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -882,7 +871,7 @@ boolean destmgr_empty_output_buffer(j_compress_ptr p_jpeg_info)
 	t_manager->byte_count += JPEG_BUF_SIZE;
 	t_manager->dest.next_output_byte = t_manager->buffer;
 	t_manager->dest.free_in_buffer = JPEG_BUF_SIZE;
-	return True;
+	return TRUE;
 }
 
 void destmgr_term_destination(j_compress_ptr p_jpeg_info)
@@ -961,7 +950,7 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_h
 		t_jpeg.in_color_space = JCS_RGB;
 
 		jpeg_set_defaults(&t_jpeg);
-		jpeg_set_quality(&t_jpeg, MCjpegquality, True);
+		jpeg_set_quality(&t_jpeg, MCjpegquality, TRUE);
         
         if (p_metadata != nil)
         {
@@ -977,7 +966,7 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_h
             }
         }
 
-		jpeg_start_compress(&t_jpeg, True);
+		jpeg_start_compress(&t_jpeg, TRUE);
 	}
 
 	//Allocate array of pixel RGB values

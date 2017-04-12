@@ -34,6 +34,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "param.h"
 
+#include "chunk.h"
+#include "scriptpt.h"
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Breakpoint, 2)
@@ -58,7 +62,9 @@ MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
 MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
 MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
 
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Assert, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Assert, 3)
+
+MC_EXEC_DEFINE_EXEC_METHOD(Debugging, PutIntoMessage, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,7 +140,7 @@ void MCDebuggingSetTraceReturn(MCExecContext& ctxtm, bool p_value)
 
 void MCDebuggingGetTraceStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCtracestackptr == nil)
+	if (!MCtracestackptr)
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 		return;
@@ -455,4 +461,12 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	t_object.setvalueref_argument(*t_long_id);
 	
 	ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
+{
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }

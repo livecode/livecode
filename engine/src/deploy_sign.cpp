@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/x509.h>
 #include <openssl/pkcs7.h>
 #include <openssl/asn1t.h>
+#include <openssl/bn.h>
+#include <openssl/rsa.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1144,10 +1146,10 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// The various ASN.1 structures we are going to use require a number of ObjectIDs.
 	// We register them all here, to save having to check the return value of OBJ_txt2obj.
 	if (t_success)
-		if (!OBJ_create(SPC_INDIRECT_DATA_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_PE_IMAGE_DATA_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_STATEMENT_TYPE_OBJID, NULL, NULL) ||
-			!OBJ_create(SPC_SP_OPUS_INFO_OBJID, NULL, NULL))
+		if (!OBJ_create(SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID) ||
+			!OBJ_create(SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID) ||
+			!OBJ_create(SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID) ||
+			!OBJ_create(SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadSignature);
 
 	// Authenticode signatures require a single SignerInfo structure to be present.
@@ -1488,27 +1490,27 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		// Compute the passkey. This is done by taking the first 16 bytes
 		// of SHA1(salt & passphrase).
 		uint8_t t_passkey[EVP_MAX_KEY_LENGTH];
-        EVP_MD_CTX t_md;
-		if (t_success && EVP_DigestInit(&t_md, EVP_sha1()))
+        MCAutoCustomPointer<EVP_MD_CTX, EVP_MD_CTX_free> t_md = EVP_MD_CTX_new();
+		if (t_success && EVP_DigestInit(*t_md, EVP_sha1()))
         {
             MCAutoStringRefAsCString t_passphrase;
             t_success = t_passphrase . Lock(p_passphrase);
 
-			EVP_DigestUpdate(&t_md, t_salt, t_header . salt_length);
-            EVP_DigestUpdate(&t_md, *t_passphrase, strlen(*t_passphrase));
-			EVP_DigestFinal(&t_md, t_passkey, NULL);
+			EVP_DigestUpdate(*t_md, t_salt, t_header . salt_length);
+            EVP_DigestUpdate(*t_md, *t_passphrase, strlen(*t_passphrase));
+			EVP_DigestFinal(*t_md, t_passkey, NULL);
 		}
 
 		// Now, first we see if the PVK can be decrypted using the strong form
 		// of password generation - that is the first 16 bytes of the hash we
 		// just made.
-		EVP_CIPHER_CTX t_cipher;
+		MCAutoCustomPointer<EVP_CIPHER_CTX, EVP_CIPHER_CTX_free> t_cipher = EVP_CIPHER_CTX_new();
 		int t_cipher_output;
 		t_cipher_output = 0;
-		if (t_success && EVP_DecryptInit(&t_cipher, EVP_rc4(), t_passkey, nil))
+		if (t_success && EVP_DecryptInit(*t_cipher, EVP_rc4(), t_passkey, nil))
 		{
-			EVP_DecryptUpdate(&t_cipher, t_new_key_data, &t_cipher_output, t_key_data, t_header . key_length);
-			EVP_DecryptFinal(&t_cipher, t_new_key_data + t_cipher_output, &t_cipher_output);
+			EVP_DecryptUpdate(*t_cipher, t_new_key_data, &t_cipher_output, t_key_data, t_header . key_length);
+			EVP_DecryptFinal(*t_cipher, t_new_key_data + t_cipher_output, &t_cipher_output);
 		}
 
 		// Check to see if 'RSA2' is the first four bytes of the output, and if
@@ -1518,10 +1520,10 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		{
 			t_cipher_output = 0;
 			MCMemoryClear(t_passkey + 5, 11);
-			if (EVP_DecryptInit(&t_cipher, EVP_rc4(), t_passkey, nil))
+			if (EVP_DecryptInit(*t_cipher, EVP_rc4(), t_passkey, nil))
 			{
-				EVP_DecryptUpdate(&t_cipher, t_new_key_data, &t_cipher_output, t_key_data, t_header . key_length);
-				EVP_DecryptFinal(&t_cipher, t_new_key_data + t_cipher_output, &t_cipher_output);
+				EVP_DecryptUpdate(*t_cipher, t_new_key_data, &t_cipher_output, t_key_data, t_header . key_length);
+				EVP_DecryptFinal(*t_cipher, t_new_key_data + t_cipher_output, &t_cipher_output);
 			}
 		}
 
@@ -1575,24 +1577,36 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	// byte sequences in little-endian order.
 
 	// The exponent is first - this is just a 32-bit number, so we deal with it explicitly.
+    typedef MCAutoCustomPointer<BIGNUM, BN_free> MCAutoBignum;
+    MCAutoBignum t_rsa_e;
 	if (t_success)
 	{
-		t_rsa -> e = BN_new();
-		if (t_rsa -> e == nil ||
-			!BN_set_word(t_rsa -> e, t_rsa_header . exponent))
+        t_rsa_e = BN_new();
+		if (!t_rsa_e || !BN_set_word(*t_rsa_e, t_rsa_header.exponent))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoMemory);
 	}
 	
 	// The rest of the numbers for the RSA2 key need special processing.
+    MCAutoBignum t_rsa_n;
+    MCAutoBignum t_rsa_p;
+    MCAutoBignum t_rsa_q;
+    MCAutoBignum t_rsa_dmp1;
+    MCAutoBignum t_rsa_dmq1;
+    MCAutoBignum t_rsa_iqmp;
+    MCAutoBignum t_rsa_d;
 	if (t_success)
-		if (!read_le_bignum(t_rsa_data, t_key_byte_length, t_rsa -> n) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, t_rsa -> p) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, t_rsa -> q) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, t_rsa -> dmp1) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, t_rsa -> dmq1) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, t_rsa -> iqmp) ||
-			!read_le_bignum(t_rsa_data, t_key_byte_length, t_rsa -> d))
+		if (!read_le_bignum(t_rsa_data, t_key_byte_length, &t_rsa_n) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, &t_rsa_p) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, &t_rsa_q) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, &t_rsa_dmp1) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, &t_rsa_dmq1) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length / 2, &t_rsa_iqmp) ||
+			!read_le_bignum(t_rsa_data, t_key_byte_length, &t_rsa_d))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoMemory);
+    
+    RSA_set0_key(t_rsa, t_rsa_n.Release(), t_rsa_e.Release(), t_rsa_d.Release());
+    RSA_set0_factors(t_rsa, t_rsa_p.Release(), t_rsa_q.Release());
+    RSA_set0_crt_params(t_rsa, t_rsa_dmp1.Release(), t_rsa_dmq1.Release(), t_rsa_iqmp.Release());
 
 	// We now have the RSA key, so wrap it in an EVP_PKEY and return.
 	EVP_PKEY *t_pkey;

@@ -131,13 +131,13 @@ UIViewController *MCIPhoneGetViewController(void);
         r_event.allDay = p_event_data.mcallday;
     
     if (MCStringGetLength(p_event_data.mctitle) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.title = [NSString stringWithMCStringRef: p_event_data.mctitle];
+        r_event.title = MCStringConvertToAutoreleasedNSString(p_event_data.mctitle);
 
     if (MCStringGetLength(p_event_data.mcnote) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.notes = [NSString stringWithMCStringRef: p_event_data.mcnote];
+        r_event.notes = MCStringConvertToAutoreleasedNSString(p_event_data.mcnote);
 
     if (MCStringGetLength(p_event_data.mclocation) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.location = [NSString stringWithMCStringRef: p_event_data.mclocation];
+        r_event.location = MCStringConvertToAutoreleasedNSString(p_event_data.mclocation);
     
     // Set up the dates
 	MCAutoValueRef t_start;
@@ -383,7 +383,7 @@ UIViewController *MCIPhoneGetViewController(void);
     EKEvent *t_event;
     if (MCStringGetLength(p_new_event_data.mceventid) > 0)
     {
-        t_event = [m_event_store eventWithIdentifier:[NSString stringWithMCStringRef: p_new_event_data.mceventid]];
+        t_event = [m_event_store eventWithIdentifier:MCStringConvertToAutoreleasedNSString(p_new_event_data.mceventid)];
         const char *t_temp_string = [((NSString*) t_event.calendar.title) UTF8String];
     }
     else
@@ -535,7 +535,7 @@ bool MCSystemShowEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = nil;
-    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
+    NSString* t_ns_event = MCStringConvertToAutoreleasedNSString(p_event_id);
     com_runrev_livecode_MCIPhonePickEventDelegate *t_show_event;
     t_show_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 	[t_show_event showViewEvent:t_ns_event withResult: t_ns_result];
@@ -563,7 +563,7 @@ bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = nil; 
-    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
+    NSString* t_ns_event = MCStringConvertToAutoreleasedNSString(p_event_id);
     com_runrev_livecode_MCIPhonePickEventDelegate *t_update_event;
     t_update_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 
@@ -583,7 +583,7 @@ bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
 bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_event_id, MCArrayRef &r_event_data)
 {
     bool t_result = false;
-    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
+    NSString* t_ns_event = MCStringConvertToAutoreleasedNSString(p_event_id);
     MCCalendar t_event_result;
     com_runrev_livecode_MCIPhonePickEventDelegate *t_get_event;
     t_get_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
@@ -599,7 +599,7 @@ bool MCSystemRemoveEvent(MCStringRef p_event_id, bool p_reocurring, MCStringRef&
 {
     bool t_result = false;
     NSString* t_ns_result = NULL;
-    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
+    NSString* t_ns_event = MCStringConvertToAutoreleasedNSString(p_event_id);
     com_runrev_livecode_MCIPhonePickEventDelegate *t_delete_event;
     t_delete_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
     [t_delete_event deleteEvent: t_ns_event withInstances:p_reocurring withResult: t_ns_result];

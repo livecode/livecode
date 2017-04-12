@@ -60,11 +60,11 @@ void MCQuit(void)
 {
 	// IM-2013-05-01: [[ BZ 10586 ]] send shutdown message when closing due
 	// to unhandled backKey message
-	if (MCdefaultstackptr != nil)
+	if (MCdefaultstackptr)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down);
 	MCquit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
 	// IM-2013-05-01: [[ BZ 10586 ]] No longer call finishActivity from here,

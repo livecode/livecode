@@ -1,0 +1,1 @@
+# Don't include incorrectly copied resource forks in standalones

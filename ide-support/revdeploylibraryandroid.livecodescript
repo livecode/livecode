@@ -45,7 +45,7 @@ command deployDo pTargetStack, pTargetDevice
    put empty into tError
    
    local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   put revSBGetSettings(pTargetStack, true) into tSettings
    
    local tIdentifier
    put tSettings["android,identifier"] into tIdentifier

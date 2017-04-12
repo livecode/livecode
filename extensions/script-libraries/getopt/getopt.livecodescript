@@ -17,8 +17,25 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>. 
 */
 
-/*
-Syntax: GetOpt(<grammar> [, <argumentArray>)
+on revLoadLibrary
+   if the target is not me then
+      pass revLoadLibrary
+   end if
+
+   insert the script of me into back
+
+   if the environment contains "development" then
+      set the _ideoverride of me to true
+      revSBAddAvailableLibrary the short name of me, "GetOpt"
+   end if
+end revLoadLibrary
+
+/**
+Command-line argument parser library.
+*/
+
+/**
+Syntax: GetOpt(<grammar> [, <argumentArray>])
 
 Summary: Parse options from command line arguments
 
@@ -30,7 +47,7 @@ put GetOpt("h,help") into tInfo
 if the number of elements in tInfo["errors"] > 0 then
    write "ERROR:" && tInfo["errors"][1] to stderr
 else if "help" is among the keys of tInfo["options"] then
-   write "Usage: my-program [--help] 
+   write "Usage: my-program [--help]" to stderr
 end if
 
 Parameters:
@@ -72,7 +89,7 @@ parsing options and all subsequent arguments are returned as they are.
 option ends option parsing, but is otherwise ignored.  This makes it
 possible to pass filenames on the command line that
 are named the same as options.  For example, `-- --help`
-will treat `--help` as a normal arguemnt, not an option.
+will treat `--help` as a normal argument, not an option.
 
 Short options can be run together.  For example, if <grammar> is
 `h,help v,verbose`, then `-hv` is treated as if both `--help` and

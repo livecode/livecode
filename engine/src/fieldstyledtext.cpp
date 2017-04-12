@@ -174,6 +174,11 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
         /* UNCHECKED */ MCNumberCreateWithInteger(p_style . padding, &t_padding);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("padding"), *t_padding);
     }
+    
+    if (p_style . hidden  || p_effective)
+    {
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("hidden"), p_style . hidden == True ? kMCTrue : kMCFalse);
+    }
 }
 
 
@@ -259,13 +264,6 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
             /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("metadata"), p_event_data . paragraph_style . metadata);
 		}
 		
-		// MW-2012-03-05: [[ HiddenText ]] If the paragraph is hidden, mark it as such in the
-		//   array.
-		if (p_event_data . paragraph_style . hidden)
-		{
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("hidden"), kMCTrue);
-		}
-
 		// Now create the 'runs' entry in the paragraph array.
 		/* UNCHECKED */ MCArrayCreateMutable(ctxt . runs_array);
 
@@ -436,7 +434,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
 	t_new_paragraph -> setparent(this);
 	t_new_paragraph -> inittext();
 	
@@ -662,24 +660,19 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
         
 		if (MCStringFirstIndexOfChar(*t_temp, '\n', t_start_index, kMCStringOptionCompareExact, t_text_end_index))
 		{
-			// MW-2012-05-17: [[ Bug ]] Make sure we reduce the remaining text length since
-			//   we are advancing ptr - otherwise we get random chars at the end of paragraph
-			//   sometimes.
 			t_start_index = t_text_end_index + 1;
-			t_text_length -= (t_text_end_index - t_text_initial_start_index);
 			t_add_paragraph = true;
 		}
 		else
 		{
 			t_start_index += t_text_length;
-			t_text_length = 0;
 			t_text_end_index = t_start_index;
 			t_add_paragraph = false;
 		}
 
 		// We now add the range initial...final as a block.
         MCAutoStringRef t_substring;
-        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+        MCStringCopySubstring(*t_temp, MCRangeMakeMinMax(t_text_initial_start_index, t_text_end_index), &t_substring);
 		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.

@@ -356,7 +356,7 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 	
     //MCLog("posting new update event", p_purchase);
 	MCCustomEvent *t_event;
-	t_event = new MCPurchaseUpdateEvent(p_purchase);
+	t_event = new (nothrow) MCPurchaseUpdateEvent(p_purchase);
 	MCEventQueuePostCustom(t_event);
 }
 

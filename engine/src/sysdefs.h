@@ -119,6 +119,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION TYPES
+//
+
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-unicode.h>
+#include <foundation-bidi.h>
+
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  COMPILER AND CODE GENERATION DEFINES
 //
 
@@ -138,26 +159,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #error Unknown compiler being used.
 #endif
 
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION TYPES
-//
-
-#include <foundation.h>
-#include <foundation-auto.h>
-#include <foundation-unicode.h>
-#include <foundation-bidi.h>
-
-#ifdef __OBJC__
-#include <foundation-objc.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION SYSTEM LIBRARY
-//
-
-#include <foundation-system.h>
+// The engine is implemented assuming that 'bool' is at most one byte in size
+static_assert(sizeof(bool) <= 1, "Bool size is not at most 1 byte");
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -279,10 +282,10 @@ typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define _DEBUG_MEMORY
 
-inline void *operator new(size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
-inline void *operator new[](size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new(size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new[](size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 
-inline void *operator new(size_t, void *p, const char *, int)
+inline void *operator new(size_t, void *p, const char *, long)
 {
 	return p;
 }
@@ -553,21 +556,6 @@ struct MCFontStruct
 
 //////////////////////////////////////////////////////////////////////
 //
-//  NEW / DELETE REDEFINTIONS
-//
-
-#include <new>
-
-// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
-void *operator new (size_t size) throw();
-void *operator new[] (size_t size) throw();
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
 //  INTERVAL DEFINITIONS
 //
 
@@ -635,6 +623,8 @@ struct MCRectangle
 	int2 x, y;
 	uint2 width, height;
 };
+
+const MCRectangle kMCEmptyRectangle = {0, 0, 0, 0};
 
 struct MCPoint32
 {
@@ -1243,10 +1233,7 @@ class MCVariable;
 class MCExpression;
 class MCContainer;
 struct MCPickleContext;
-/*
-class MCVariableValue;
-class MCVariableArray;
-*/
+
 class MCExternal;
 class MCExternalHandlerList;
 
@@ -1327,7 +1314,10 @@ enum Chunk_term {
     CT_POPUP,
     CT_OPTION,
 
+	// The name table used for MCU_matchname *must* be updated if any
+	// chunk terms are added between CT_STACK and CT_LAST_CONTROL here
     CT_STACK,
+    CT_TOOLTIP,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
     CT_BACKGROUND,
@@ -1348,6 +1338,7 @@ enum Chunk_term {
     CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+	
     CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,

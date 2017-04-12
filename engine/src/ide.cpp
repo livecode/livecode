@@ -92,7 +92,7 @@ MCIdeState *MCIdeState::s_states = NULL;
 MCIdeState *MCIdeState::s_cache = NULL;
 
 MCIdeState::MCIdeState(void)
-	: f_next(NULL), f_line_count(0), f_line_properties(0)
+	: f_next(NULL), f_field(nullptr), f_line_count(0), f_line_properties(0)
 {
 }
 
@@ -115,7 +115,7 @@ MCIdeState *MCIdeState::Find(MCField *p_field)
 			return t_state;
 		}
 
-	t_state = new MCIdeState;
+	t_state = new (nothrow) MCIdeState;
 	t_state -> f_next = s_states;
 	t_state -> f_field = p_field;
 	s_states = t_state;
@@ -189,7 +189,7 @@ Parse_stat MCIdeScriptAction::parse_target(MCScriptPoint& p_script,MCChunk*& r_t
 
 	if (t_status == PS_NORMAL)
 	{
-		r_target = new MCChunk(True);
+		r_target = new (nothrow) MCChunk(True);
 		t_status = r_target -> parse(p_script, False);
 	}
 	
@@ -467,7 +467,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
     case TYPE_CLASSES:
         {
             if (s_script_class_styles == NULL)
-                s_script_class_styles = new uint1[__COLOURIZE_CLASS_COUNT__];
+                s_script_class_styles = new (nothrow) uint1[__COLOURIZE_CLASS_COUNT__];
             else
             {
                 for(uint4 t_class = 0; t_class < __COLOURIZE_CLASS_COUNT__; ++t_class)
@@ -513,7 +513,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
     case TYPE_KEYWORDS:
         {
             if (s_script_keyword_styles == NULL)
-                s_script_keyword_styles = new uint1[SCRIPT_KEYWORD_COUNT];
+                s_script_keyword_styles = new (nothrow) uint1[SCRIPT_KEYWORD_COUNT];
             else
             {
                 for(uint4 t_keyword = 0; t_keyword < SCRIPT_KEYWORD_COUNT; ++t_keyword)
@@ -706,7 +706,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				}
 				else
 					return false;
-				break;
 			}
 
 			case ST_COM:
@@ -715,7 +714,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 					;
 				
 				return true;
-				break;
 
 			case ST_OP:
 			{
@@ -766,7 +764,6 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				}
 				else
 					return false;
-				break;
 			}
 			default:
 				return false;
@@ -831,8 +828,8 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		uint4 t_class_index;
 		t_class_index = 0;
 
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
 
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
@@ -1063,7 +1060,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 				}
 				else
 					return false;
-				break;
 			}
                 
 			case ST_COM:
@@ -1072,7 +1068,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
                     ;
 				
 				return true;
-				break;
                 
 			case ST_OP:
 			{
@@ -1123,7 +1118,6 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 				}
 				else
 					return false;
-				break;
 			}
 			default:
 				return false;
@@ -1200,8 +1194,8 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 		uint4 t_class_index;
 		t_class_index = 0;
         
-		uint4 t_start, t_end;
-		t_start = t_index;
+		uint4 t_start = t_index;
+		uint4 t_end = t_index;
         
 		MCColourizeClass t_comment_class;
 		uint4 t_nesting_delta;
@@ -1549,7 +1543,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 	t_state = MCIdeState::Find(t_target);
 
 
-    if (t_target && t_target -> getparagraphs() != NULL)
+    if (t_target && t_target -> getparagraphs() != NULL && t_target -> getopened())
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
 }
 
@@ -1810,7 +1804,7 @@ Parse_stat MCIdeScriptTokenize::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_script = new MCChunk(True);
+		m_script = new (nothrow) MCChunk(True);
 		t_stat = m_script -> parse(sp, False);
 	}
 
@@ -1992,7 +1986,7 @@ Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
 	
 	if (t_status == PS_NORMAL)
 	{
-		m_target = new MCChunk(False);
+		m_target = new (nothrow) MCChunk(False);
 		t_status = m_target -> parse(p_script, False);
 	}
 
@@ -2147,7 +2141,11 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     uint32_t t_part_id;
     t_object = nil;
 
-    t_success = m_target -> getobj(ctxt, t_object, t_part_id, True);
+	if (!m_target -> getobj(ctxt, t_object, t_part_id, True))
+	{
+		ctxt.SetTheResultToValue(MCSTR("invalid object"));
+		return;
+	}
 
     // Evaluate the script.
     MCAutoStringRef t_script;
@@ -2156,7 +2154,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
 
     // First try a (command) call.
     MCAutoStringRef t_call_error;
-    uint2 t_call_pos;
+    uint2 t_call_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2184,7 +2182,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
                     Handler_type t_htype;
                     if (searchforhandler(t_object, sp.gettoken_nameref(), t_htype) &&
                         t_htype == HT_MESSAGE)
-                        t_call = new MCComref(sp.gettoken_nameref());
+                        t_call = new (nothrow) MCComref(sp.gettoken_nameref());
                 }
             }
         }
@@ -2309,7 +2307,7 @@ Parse_stat MCIdeSyntaxTokenize::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_script = new MCChunk(True);
+		m_script = new (nothrow) MCChunk(True);
 		t_stat = m_script -> parse(sp, False);
 	}
 
@@ -2381,7 +2379,7 @@ Parse_stat MCIdeSyntaxCompile::parse(MCScriptPoint& sp)
 	
 	if (t_stat == PS_NORMAL)
 	{
-		m_target = new MCChunk(False);
+		m_target = new (nothrow) MCChunk(False);
 		t_stat = m_target -> parse(sp, False);
 	}
 	
@@ -2399,7 +2397,7 @@ void MCIdeSyntaxCompile::exec_ctxt(MCExecContext &ctxt)
     }
 
     MCHandlerlist *t_hlist;
-    t_hlist = new MCHandlerlist;
+    t_hlist = new (nothrow) MCHandlerlist;
     if (t_hlist -> parse(optr, optr -> _getscript()) == PS_NORMAL)
     {
         MCSyntaxFactoryRef t_factory;
@@ -2488,6 +2486,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
             case kMCIdeFilterPropertyType:
                 MCStringCreateWithNativeChars((char_t*)p_object -> gettypestring(), strlen(p_object -> gettypestring()), (MCStringRef&)&t_left_value);
                 break;
+			case kMCIdeFilterPropertyNone:
+				break;
         }
 
         bool t_accept;
@@ -2545,6 +2545,10 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 
             }
             break;
+				
+			case kMCIdeFilterOperatorNone:
+				break;
+				
         }
 
         if (t_accept)
@@ -2580,7 +2584,7 @@ Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
 
 	if (t_stat == PS_NORMAL)
 	{
-		m_stack = new MCChunk(false);
+		m_stack = new (nothrow) MCChunk(false);
 		t_stat = m_stack -> parse(sp, False);
 	}
 	

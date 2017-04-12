@@ -465,7 +465,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 		&& (t_length - t_tag) > 1)
 	{
 		MCStringRef t_tag_str = nil;
-		/* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMake(t_tag + 1, t_length - t_tag - 1), t_tag_str);
+		/* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_tag + 1, t_length), t_tag_str);
 		MCValueAssign(p_menuitem->tag, t_tag_str);
 		MCValueRelease(t_tag_str);
 		
@@ -516,7 +516,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 		else if ((t_length - x_offset) > 1)
 		{
 			MCStringRef t_key_string;
-			MCStringCopySubstring(p_string, MCRangeMake(x_offset, t_length - x_offset), t_key_string);
+			MCStringCopySubstring(p_string, MCRangeMakeMinMax(x_offset, t_length), t_key_string);
 			t_key = MCLookupAcceleratorKeysym(t_key_string);
 			if (t_key != 0)
 				MCValueAssign(t_keyname, t_key_string);

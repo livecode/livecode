@@ -14,10 +14,13 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <algorithm>
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "globals.h"
 
 #include "graphics.h"
 #include "stack.h"
@@ -34,8 +37,10 @@
 #include "variable.h"
 
 #include <Cocoa/Cocoa.h>
-#include <QTKit/QTKit.h>
-#include <QuickTime/QuickTime.h>
+#if defined(FEATURE_QUICKTIME)
+#   include <QTKit/QTKit.h>
+#   include <QuickTime/QuickTime.h>
+#endif
 #include <CoreAudioKit/CoreAudioKit.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
@@ -79,6 +84,7 @@ public:
     
     virtual bool ListInputs(MCPlatformSoundRecorderListInputsCallback callback, void *context);
     virtual bool ListCompressors(MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+    virtual bool ListFormats(MCPlatformSoundRecorderListFormatsCallback callback, void *context);
     
     void Idle(void);
     
@@ -252,22 +258,9 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		Component c;
 		ComponentDescription cd;
 		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-			case EX_WAVE:
-				cd.componentSubType = kQTFileTypeWave;
-				break;
-			case EX_ULAW:
-				cd.componentSubType = kQTFileTypeMuLaw;
-				break;
-			case EX_AIFF:
-				cd.componentSubType = kQTFileTypeAIFF;
-				break;
-			default:
-				cd.componentSubType = kQTFileTypeMovie;
-				break;
-		}
-		cd.componentManufacturer = SoundMediaType;
+        cd.componentSubType = MCrecordformat;
+
+        cd.componentManufacturer = SoundMediaType;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -675,7 +668,7 @@ bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
             fclose(t_file);
         
         NSString *t_capture_path;
-        t_capture_path = [NSString stringWithMCStringRef:m_temp_file];
+        t_capture_path = MCStringConvertToAutoreleasedNSString(m_temp_file);
         
         Handle t_data_ref = nil;
         OSType t_data_ref_type = 0;
@@ -803,6 +796,28 @@ bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_c
     }
     
     return true;
+}
+
+struct FormatTable
+{
+    const char *label;
+    OSType value;
+};
+
+static const FormatTable record_formats[] =
+{
+    { "aiff", kQTFileTypeAIFF },
+    { "wave", kQTFileTypeWave },
+    { "ulaw", kQTFileTypeMuLaw },
+    { "movie", kQTFileTypeMovie },
+};
+
+bool MCQTSoundRecorder::ListFormats(MCPlatformSoundRecorderListFormatsCallback p_callback, void *context)
+{
+    return std::all_of(std::begin(record_formats), std::end(record_formats),
+                       [&](const FormatTable& p_fmt) {
+                           return p_callback(context, p_fmt.value, MCSTR(p_fmt.label));
+                       });
 }
 
 bool MCQTSoundRecorder::ListCompressors(MCPlatformSoundRecorderListCompressorsCallback p_callback, void *context)

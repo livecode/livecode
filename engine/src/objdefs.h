@@ -737,7 +737,8 @@ enum Field_translations {
 	FT_SCROLLPAGEUP,
 	FT_SCROLLBOTTOM,
 	FT_SCROLLPAGEDOWN,
-    FT_IMEINSERT
+    FT_IMEINSERT,
+	FT_SELECTALL,
 };
 
 inline uint4 getstyleint(uint4 flags)

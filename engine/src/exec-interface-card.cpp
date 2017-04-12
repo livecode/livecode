@@ -57,7 +57,7 @@ void MCCard::GetLayer(MCExecContext &ctxt, MCInterfaceLayer &r_layer)
 
 void MCCard::SetLayer(MCExecContext &ctxt, const MCInterfaceLayer &p_layer)
 {
-	if (parent != NULL)
+	if (parent)
 		getstack()->renumber(this, p_layer.layer);
 }
 

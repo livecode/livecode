@@ -58,9 +58,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bsdiff.h"
 #include "osspec.h"
 
-#if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
-#elif defined(_MAC_DESKTOP)
+#if defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #include <sys/stat.h>
 #include <unistd.h>
@@ -211,27 +209,22 @@ public:
 			return;
 		
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
-        MCAutoStringRef t_string;
-		const char *t_filename;
-		t_filename = nil;
-		if (m_filename != nil)
-		{
-            if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
-                return;
-
-            char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-			t_filename = temp;
-		}
 
 		const void *t_payload_data;
 		t_payload_data = nil;
 		uint32_t t_payload_size;
 
 		// MM-2011-03-23: If a file is specified, fetch the payload from the file.
-		if(t_filename != nil)
+		if (m_filename != nullptr)
 		{
-			mmap_payload_from_file(t_filename, t_payload_data, t_payload_size);
+            MCAutoStringRef t_string;
+            if (!ctxt.EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+                return;
+
+            MCAutoStringRefAsCString t_filename;
+            /* UNCHECKED */ t_filename.Lock(*t_string);
+
+			mmap_payload_from_file(*t_filename, t_payload_data, t_payload_size);
 			if (t_payload_data == nil)
 			{
 				ctxt . SetTheResultToCString("could not load paylod from file");
@@ -550,6 +543,8 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
+                
+                ctxt.SetTheResultToEmpty();
                 ctxt . SetItToValue(*t_string);
 			}
 			else
@@ -614,19 +609,19 @@ public:
         if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
 		
-
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr . object -> GetHandle();
 			t_context . name = *t_item;
-            t_context . var = ctxt . GetIt() -> evalvar(ctxt);
+            if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
+                return;
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
 				t_context . stream = MCS_open(*t_file, kMCOpenFileModeWrite, False, False, 0);
 
-			t_context . var -> clear();
+			t_context.var.clear();
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
@@ -650,7 +645,7 @@ private:
 		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
-		MCVariable *var;
+		MCContainer var;
 	};
 
 	static bool extract_item(void *p_context, const void *p_data, uint32_t p_data_length, uint32_t p_data_offset, uint32_t p_data_total)
@@ -668,15 +663,7 @@ private:
 			MCExecContext ctxt;
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCStringRef t_value;
-            MCAutoValueRef t_valueref;
-            context -> var -> copyasvalueref(&t_valueref);
-			/* UNCHECKED */ ctxt . ConvertToString(*t_valueref, t_value);
-			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			if (!MCStringAppend(t_value, *t_data))
-				return false;
-            context -> var ->setvalueref(t_value);
-			MCValueRelease(t_value);
+            context->var.set(ctxt, *t_data, kMCVariableSetAfter);
 		}
         
 		if (context->target.IsValid())
@@ -1189,7 +1176,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 
-	case kMCCapsuleSectionTypeStack:
+	case kMCCapsuleSectionTypeMainStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read project stack");
@@ -1200,6 +1187,18 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         //   the startup script and such work.
         MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyMainStack:
+        if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read project stack");
+            return false;
+        }
+        
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
+        break;
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
@@ -1218,7 +1217,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
-        t_script = new char[p_length];
+        t_script = new (nothrow) char[p_length];
         if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read startup script");
@@ -1238,11 +1237,35 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeAuxiliaryStack:
     {
         MCStack *t_aux_stack;
-        if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
+        const char *t_result;
+        if (MCdispatcher -> trytoreadbinarystack(kMCEmptyString,
+                                                 kMCEmptyString,
+                                                 p_stream, nullptr,
+                                                 t_aux_stack, t_result) != IO_NORMAL)
         {
             MCresult -> sets("failed to read auxillary stack");
             return false;
         }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+        break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadscriptonlystackofsize(kMCEmptyString,
+                                                           p_stream,
+                                                           p_length,
+                                                           nullptr,
+                                                           t_aux_stack,
+                                                           t_result)
+            != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
 			
@@ -1479,10 +1502,12 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	return IO_NORMAL;
 }
 
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
+// In installer mode, the environment depends on the command line args
 MCNameRef MCModeGetEnvironment(void)
 {
+    if (MCnoui)
+        return MCN_installer_cmdline;
+    
 	return MCN_installer;
 }
 
@@ -1551,18 +1576,12 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-    t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+    t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
     /* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
     return t_do_relaunch;
 #else
@@ -1583,14 +1602,6 @@ bool MCModeCanLoadHome(void)
 
 MCStatement *MCModeNewCommand(int2 which)
 {
-	switch(which)
-	{
-	case S_INTERNAL:
-		return new MCInternal;
-	default:
-		break;
-	}
-
 	return NULL;
 }
 
@@ -1618,7 +1629,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1846,8 +1857,8 @@ static void *MCExecutableFindSection(const char *p_name)
 			if (MCMemoryEqual(t_segment -> segname, p_name, MCMin(16, strlen(p_name) + 1)))
 			{
 				const section *t_section;
-				t_section = (const section *)(t_segment + 1);
-				return (void *)t_section -> addr;
+                t_section = (const section *)(t_segment + 1);
+				return reinterpret_cast<char *>(t_section -> addr) + _dyld_get_image_vmaddr_slide(0);
 			}
 		}
 		
@@ -1903,7 +1914,7 @@ static void *MCExecutableFindSection(const char *p_name)
 		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
 			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
@@ -1922,7 +1933,7 @@ static void *MCExecutableFindSection(const char *p_name)
 	// Now we can search for our section
 	void *t_address;
 	t_address = NULL;
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 		if (strcmp(p_name, t_strings + t_sections[i] . sh_name) == 0)
 		{
 			t_address = (void *)t_sections[i] . sh_addr;

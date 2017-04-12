@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef _UNICODE
 
 #include <revolution/external.h>
+#include <core.h>
 
 #include "dsvideograbber.h"
 #include "Vfw.h"
@@ -2307,7 +2308,7 @@ BOOL CDirectXVideoGrabber::Snapshot(DWORD *pdwSize, LPBYTE *pBuff)
 	*pdwSize = lBufferSize;
 
 	//*pBuff = (LPBYTE)malloc(lBufferSize);
-	*pBuff = new BYTE[lBufferSize];
+	*pBuff = new (nothrow) BYTE[lBufferSize];
 	hr = m_pGrabber->GetCurrentBuffer(&lBufferSize, (long*)*pBuff);
 	if (FAILED(hr))	{
         Error( TEXT("Failed to GetCurrentBuffer!"), hr);

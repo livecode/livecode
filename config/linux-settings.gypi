@@ -67,11 +67,13 @@
 				[
 					'-Wall',
 					'-Wextra',
+					'-Wno-deprecated-register',	# Fix when we move to C++17
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
 					'-Werror=uninitialized',
 					'-Wno-error=maybe-uninitialized',
 					'-Werror=conversion-null',
+					'-Werror=empty-body',
 				],
 
 				'cflags_cc':
@@ -117,7 +119,6 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
-		'-fcheck-new',
 	],
 	
 	'configurations':

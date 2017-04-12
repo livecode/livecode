@@ -572,7 +572,7 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
 
 void MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 	
 	if (window == DNULL)

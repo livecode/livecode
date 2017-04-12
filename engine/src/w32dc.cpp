@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -190,7 +190,7 @@ LPWSTR MCScreenDC::convertutf8towide(const char *p_utf8_string)
 	t_new_length = UTF8ToUnicode(p_utf8_string, strlen(p_utf8_string), NULL, 0);
 
 	LPWSTR t_result;
-	t_result = new WCHAR[t_new_length + 2];
+	t_result = new (nothrow) WCHAR[t_new_length + 2];
 
 	t_new_length = UTF8ToUnicode(p_utf8_string, strlen(p_utf8_string), (uint2*)t_result, t_new_length);
 	t_result[t_new_length / 2] = 0;
@@ -207,7 +207,7 @@ LPCSTR MCScreenDC::convertutf8toansi(const char *p_utf8_string)
 	t_length = WideCharToMultiByte(CP_ACP, 0, t_wide, -1, NULL, 0, NULL, NULL);
 
 	LPSTR t_result;
-	t_result = new CHAR[t_length];
+	t_result = new (nothrow) CHAR[t_length];
 	WideCharToMultiByte(CP_ACP, 0, t_wide, -1, t_result, t_length, NULL, NULL);
 
 	delete t_wide;

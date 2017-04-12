@@ -2,7 +2,7 @@ Name: send
 
 Type: command
 
-Syntax: send <message> [ to <object> [in <time> [seconds | ticks | milliseconds]] ]
+Syntax: send <message> [ to <object> [in <time> [{seconds | ticks | milliseconds}] ] ]
 
 Summary:
 Sends a <message> to an <object(glossary)>.

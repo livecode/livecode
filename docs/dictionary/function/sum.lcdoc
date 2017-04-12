@@ -14,31 +14,26 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-sum(1,5,2,3) -- returns 11
+put sum(1,5,2,3) -- returns 11
 
 Parameters:
-numbersList:
-
-
-numberList:
-
+numbersList(numbers):
 * a sequence of parameters, each a number or evaluating to a number or
-  * a single parameter which is or evaluates to * a comma-separated list
-    of numbers or * an array containing only numbers
+* a single parameter which is or evaluates to
+    * a comma-separated list of numbers or
+    * an array containing only numbers
 
-
-Returns:
+Returns(number):
 The <sum> <function> <return|returns> a number.
 
 Description:
 Use the <sum> function to add a <group> of <value|values> together.
 
 The <sum> <function> is equivalent to the following
-<statement|statements>: 
+<statement|statements>:
 
     repeat with x = 1 to the number of items of numbersList
-    add item x of numbersList to sumValue
-
+        add item x of numbersList to sumValue
     end repeat
     return sumValue
 
@@ -53,4 +48,3 @@ References: add (command), group (command), function (control structure),
 standardDeviation (function), min (function), max (function),
 extents (function), statement (glossary), return (glossary),
 value (glossary), + (operator)
-

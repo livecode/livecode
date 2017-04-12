@@ -2,7 +2,14 @@ Name: try
 
 Type: control structure
 
-Syntax: try  <statementList> catch <errorVariable> <errorStatementsList> [finally  <cleanupStatementsList>]end try
+Syntax:
+try
+   <statementList>
+catch <errorVariable>
+   <errorStatementsList>
+[ finally
+   <cleanupStatementsList> ]
+end try
 
 Summary:
 <execute|Executes> a list of <statement|statements>, sending any

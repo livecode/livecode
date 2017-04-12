@@ -8,6 +8,7 @@ on revLoadLibrary
    if the target is me then
       insert the script of me into back
       
+      __InitialiseScriptLibraries
       __InitialiseInclusionDependencies
       __InitialiseBuiltInInclusions
    end if
@@ -18,6 +19,8 @@ on revUnloadLibrary
       remove the script of me from back
    end if
 end revUnloadLibrary
+
+local sScriptLibraries
 
 -- Some higher level wrappers..
 
@@ -300,7 +303,7 @@ end __revSBCopyFolder
 # Marcus van Houdt
 private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
    -- Stat the source file
-   local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
+   local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
    
    if tResult is empty then
@@ -317,15 +320,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       get the detailed files
       filter it with (the urlEncode of item -1 of pSourceFile) & "*"
       set the itemDelimiter to ","
-      put item 2 of it into tDataForkSize
-      put item 3 of it into tRsrcForkSize
+      put item 2 of it into tSize
       put item 8 of it into tUser
       put item 9 of it into tGroup
       put item 10 of it into tPermissions
       put item 11 of it into tFileType
-      
-      local tTotalSize
-      put tDataForkSize + tRsrcForkSize into tTotalSize
       
       if there is a file pTargetFile then
          delete file pTargetFile
@@ -362,7 +361,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    local tAmountCopied
    if tResult is empty then
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-         send pCallback && 0, tTotalSize to pCallbackTarget
+         send pCallback && 0, tSize to pCallbackTarget
       end if
       repeat forever
          read from file pSourceFile for 1048576
@@ -380,7 +379,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
          end if
          add the number of chars of it to tAmountCopied
          if pCallbackTarget is not empty and there is a pCallbackTarget then
-            send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+            send pCallback && tAmountCopied, tSize to pCallbackTarget
          end if
       end repeat
    end if
@@ -390,19 +389,6 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    if pSourceFile is among the lines of the openFiles then
       close file pSourceFile
-   end if
-   
-   if tResult is empty then
-      if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
-         set the itemDelimiter to ","
-         repeat for each line tRsrcDetails in getResources(pSourceFile)
-            get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
-            add item 4 of tRsrcDetails to tAmountCopied
-            if pCallbackTarget is not empty and there is a pCallbackTarget then
-               send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-            end if
-         end repeat
-      end if
    end if
    
    # OK-2007-11-30 : Modified to work for Linux too
@@ -850,8 +836,8 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    if xSettingsA["UNIX,printerChooser"] = "" then put true into xSettingsA["UNIX,printerChooser"]
    if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
    if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
-   -- build for every platform we have engines for
    
+   -- build for every platform we have engines for
    repeat for each item tTarget in kInitialTargets
       if xSettingsA[tTarget] = "" then
          put revEngineCheck(tTarget) into xSettingsA[tTarget]
@@ -878,6 +864,20 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    end if
 end revSBDefaultStandaloneSettings
 
+function revSBRemoveUnlicensedTargetsFromSettings @xSettingsA
+   -- don't build for any platform we are not licensed for
+   local tRemoved
+   repeat for each item tTarget in kDesktopTargets, kAdditionalTargets
+      if xSettingsA[tTarget] then
+         if not revSBLicensedToDeployToTarget(tTarget) then
+            put false into xSettingsA[tTarget]
+            put true into tRemoved[tTarget]
+         end if
+      end if
+   end repeat
+   return the keys of tRemoved
+end revSBRemoveUnlicensedTargetsFromSettings
+
 command revSBRelativeStackFilesList pStack, @rStackFiles
    local tLine,tChars,tMainStackPath
    
@@ -887,8 +887,9 @@ command revSBRelativeStackFilesList pStack, @rStackFiles
    local tRelativeStackFiles
    set the itemDelimiter to slash
    put item 1 to -2 of line 1 of tFullStackFiles & "/" into tMainStackPath
-   put the number of chars of tMainStackPath into tChars
+   
    repeat for each line tLine in tFullStackFiles
+      put utilityMakePathRelative(tLine, tMainStackPath) into tLine
       appendToStringList tLine, tRelativeStackFiles
    end repeat
    
@@ -1005,9 +1006,9 @@ function utilityChooseIconFile pTargetPlatform
   
   # Roughly preserves old behavior, just using answer file with type instead of filter.
   local tIconFile
-  if pTargetPlatform is "Mac OS X" and ((the platform is "MacOS" and char 1 of the systemVersion is "1") or (the platform is "Win32") or (the platform is "Linux")) then
+  if pTargetPlatform is "Mac OS X" then
     put "Icon Resource Files|icns|ICNS" after tTypes
-  else if pTargetPlatform is "Windows" and (the platform is "Win32" or the platform is "Linux" or (the platform is "MacOS" and char 1 of the systemVersion is "1")) then
+  else if pTargetPlatform is "Windows" then
     put "Icon Files|ico|ICO" after tTypes
   end if
   
@@ -1053,22 +1054,6 @@ end utilityMakePathRelative
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-command revSBResaveScriptOnlyStackAsProperStackFile pStackName, pStackFilePath, pOutputStackFilePath
-   lock messages
-   if there is a stack pStackName then
-      set the name of stack pStackName to "__keep_this_around__"
-   end if
-   create invisible stack "__temp_real_stack__"
-   set the script of stack "__temp_real_stack__" to the script of stack pStackFilePath
-   set the name of stack "__temp_real_stack__" to pStackName
-   save stack pStackName as pOutputStackFilePath
-   delete stack pStackName
-   if there is a stack "__keep_this_around__" then
-      set the name of stack "__keep_this_around__" to pStackName
-   end if
-   unlock messages
-end revSBResaveScriptOnlyStackAsProperStackFile
-
 # AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
 # this function to return the 'common' name of each of the libraries.
 function revSBScriptLibraryNameFromStackName pStack
@@ -1079,6 +1064,13 @@ function revSBScriptLibraryNameFromStackName pStack
       case "revPrintLibrary"
          return "Printing"
       default
+         local tLibrary
+         repeat for each element tLibrary in sScriptLibraries
+            if tLibrary["id"] is pStack then
+               return tLibrary["title"]
+            end if
+         end repeat
+         
          if pStack begins with "rev" then
             delete char 1 to 3 of pStack
             if pStack ends with "Library" then
@@ -1100,13 +1092,19 @@ function revSBStackNameFromScriptLibraryName pLib
       case "Printing"
          return "revPrintLibrary"
       default
+         local tLibrary
+         repeat for each element tLibrary in sScriptLibraries
+            if tLibrary["title"] is pLib then
+               return tLibrary["id"]
+            end if
+         end repeat
+         
          return "rev" & pLib & "Library"
    end switch
-   return pLib
 end revSBStackNameFromScriptLibraryName
 
 constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
-private function revSBScriptLibraries
+private function __ScriptLibraries
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
    // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
@@ -1130,7 +1128,7 @@ private function revSBScriptLibraries
    end repeat
    
    return tLibs
-end revSBScriptLibraries
+end __ScriptLibraries
 
 private function revSBPlatformToRuntimeFolderName pPlatform
    -- Ensure folder casing is correct
@@ -1153,7 +1151,7 @@ private function revSBPlatformToRuntimeFolderName pPlatform
 end revSBPlatformToRuntimeFolderName
 
 function revSBExternalsMapping
-   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip"
 end revSBExternalsMapping
 
 function revSBDatabaseDriversMapping
@@ -1519,7 +1517,11 @@ function revSBAdditionalExternalsList pPlatform
          local tExternalFolder
          repeat for each line tExternalFolder in folders(tFolder)
             if tExternalFolder begins with "." then next repeat
-           
+            
+            if there is a file (tFolder & slash & tExternalFolder & slash & "ide_only") then
+               next repeat
+            end if
+            
             local tContents
             put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
             
@@ -1625,20 +1627,31 @@ private function revSBAvailableExtensions pType
    return tInclusions
 end revSBAvailableExtensions
 
-private function revSBAvailableScriptLibraries
-   local tLibraries, tInclusions
-   put revSBScriptLibraries() into tLibraries
+private command __InitialiseScriptLibraries
+   local tLibraries
+   put __ScriptLibraries() into tLibraries
    repeat for each line tLine in tLibraries
-      local tLibrary
-      put tLine into tLibrary["id"]
-      put tLine into tLibrary["title"]
-      put "script library" into tLibrary["type"]
-      put revSBAllDesktopPlatforms() & comma & \ 
-            revSBAllMobilePlatforms() into tLibrary["platforms"]
-      addToList tLibrary, tInclusions
+      revSBAddAvailableLibrary revSBStackNameFromScriptLibraryName(tLine), tLine
    end repeat
-   return tInclusions
-end revSBAvailableScriptLibraries
+end __InitialiseScriptLibraries
+
+private function __AvailableScriptLibraries
+   if sScriptLibraries is not an array then
+      __InitialiseScriptLibraries
+   end if
+   return sScriptLibraries
+end __AvailableScriptLibraries
+
+command revSBAddAvailableLibrary pID, pTitle, pSettingsA
+   local tLibrary
+   put pID into tLibrary["id"]
+   put pTitle into tLibrary["title"]
+   put pSettingsA into tLibrary["settings"]
+   put "script library" into tLibrary["type"]
+   put revSBAllDesktopPlatforms() & comma & \ 
+         revSBAllMobilePlatforms() into tLibrary["platforms"]
+   addToList tLibrary, sScriptLibraries
+end revSBAddAvailableLibrary
 
 constant kResources = "Cursors|cursors,Answer Dialog|answerDialog,Ask Dialog|askDialog,Brushes|brushes,Magnify|magnify,PDF Printer|pdfPrinter,Print Dialogs|revolutionPrintDialogs"
 private function revSBAvailableResources
@@ -1730,7 +1743,7 @@ function revSBAvailableInclusions
       addToList tInclusion, tInclusions
    end repeat
    
-   repeat for each element tInclusion in revSBAvailableScriptLibraries()
+   repeat for each element tInclusion in __AvailableScriptLibraries()
       addToList tInclusion, tInclusions
    end repeat
    
@@ -1913,7 +1926,10 @@ function revSBIncludedExternalPath pTarget, pName
    return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
-private command __ResolveIncludedExternal pTarget, @xFiles
+private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
+   local tHasResources
+   put false into tHasResources
+   
    -- Added to support Ext inclusion
    if xFiles begins with "!" then
       
@@ -1940,36 +1956,49 @@ private command __ResolveIncludedExternal pTarget, @xFiles
             
             if tContents is not empty then
                appendToStringList tContents, xFiles
+               put true into tHasResources
             end if
          end if
          
       end if
    end if
+   put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
-   local tManifest
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      local tResolvedFile
-      __ResolveIncludedExternal pTarget, tFile
+      local tResolvedFile, tHasResources
+      __ResolveIncludedExternal pTarget, tFile, tHasResources
+      
       -- tFile may now list multiple files if it was an external with a resources directory
       repeat for each line tResolvedFile in tFile
+         local tDataA, tFlattenStructure
+         
          if tResolvedFile ends with "/" then
             delete char -1 of tResolvedFile
          end if
          
          if the last item of tResolvedFile is "*" then
-            delete the last item of tFile
+            delete the last item of tResolvedFile
          end if
          
          local tIsAbsolute, tName
          put tResolvedFile begins with "/" or char 2 to 3 of tResolvedFile is ":/" into tIsAbsolute
+         
+         # Flatten structure of external resources
+         if tIsAbsolute or tHasResources then
+            put item -1 of tResolvedFile into tDataA["name"]
+         else
+            put tResolvedFile into tDataA["name"]
+         end if
+         
          if not tIsAbsolute then
             put pBaseFolder & slash before tResolvedFile
          end if
+         put tResolvedFile into tDataA["resolved"]
          
-         appendToStringList tResolvedFile, rFiles
+         addToList tDataA, rFileData
       end repeat
    end repeat
 end revSBResolveCopyFilesList
@@ -1997,7 +2026,7 @@ private command prependToStringList pValue, @xList
 end prependToStringList
 
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
-   local tModules, tAuxiliaryStackfiles, tStartupScript
+   local tModules, tAuxiliaryStackfiles, tStartupScript, tGeneratedStartupScript
    
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
@@ -2023,6 +2052,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       if there is a stack tLibraryStack then
          appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
          appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
+         
+         -- allow libraries to generate some additional startup script
+         dispatch "revLibraryStartupScript" to stack tLibraryStack
+         if it is "handled" then
+            appendToStringList the result, tGeneratedStartupScript
+         end if
       end if
    end repeat
    
@@ -2043,10 +2078,18 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
             if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
                appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
                appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
+               
+               -- allow libraries to generate some additional startup script
+               dispatch "revLibraryStartupScript" to stack tLibrary
+               if it is "handled" then
+                  appendToStringList the result, tGeneratedStartupScript
+               end if
             end if
          end repeat
       end if
    end repeat
+   
+   appendToStringList tGeneratedStartupScript, tStartupScript
    
    -- Make sure we include the initialisation library (at the top of the list) if needed
    if tAuxiliaryStackFiles is not empty then
@@ -2058,23 +2101,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       prependToStringList tInitScript, tStartupScript
    end if
    
-   -- Resave all aux stack files as non-script-only files 
-   local tResavedAux
-   if tAuxiliaryStackFiles is not empty then
-      repeat for each line tStackFile in tAuxiliaryStackFiles
-         local tTempStackFile
-         put the tempname into tTempStackFile
-         revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-         appendToStringList tTempStackFile, tResavedAux
-      end repeat
-   end if
-   
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
+      appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
    end if
    
-   put tResavedAux into xDeployParams["auxiliary_stackfiles"]
+   put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
 end revSBUpdateDeployParams
@@ -2110,7 +2142,7 @@ command revSBRemoveInclusions pStack, pPlatform, pConfirm, @xSettings
                put xSettings["overrideInclusions"] into tOverride
                put tInclude into tOverride[tName]
                set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
-               revSetEdited the short name of stack pStack
+               revIDESetEdited pStack
             end if
          end if
          
@@ -2172,9 +2204,6 @@ function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMult
    else
       put pFolder & tFolderName & "/" into tDirectory
    end if
-   if pPlatform contains "MacOSX" then 
-      put pName & ".app/Contents/MacOS/" after tDirectory
-   end if
    return tDirectory
 end revSBStandaloneOutputDirectory
 
@@ -2223,6 +2252,22 @@ command revSBUpdateForDependencies @xSettings
                end repeat
             end repeat
          end if
+      end repeat
+   end repeat
+   
+   -- Update the settings with any additional extension dependencies
+   repeat for each line tExtension in xSettings["extensions"]
+      local tPermissions, tFeatures
+      put revIDEExtensionProperty(tExtension, "android.permissions") into tPermissions
+      put revIDEExtensionProperty(tExtension, "android.features") into tFeatures
+      repeat for each item tPermission in tPermissions
+         put true into xSettings["android,application permissions"][tPermission]
+      end repeat
+      repeat for each item tFeature in tFeatures
+         local tIsRequired, tRequiredMetadata
+         put "android." & tFeature & ".required" into tRequiredMetadata
+         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
+         put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
    end repeat
 end revSBUpdateForDependencies
@@ -2317,10 +2362,6 @@ on initialiseSearchForInclusions
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
    put "scriptLibraries" into sPatternsA["Browser"]["Key"]
-   
-   # revFont
-   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
-   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
    
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
@@ -2615,3 +2656,86 @@ function revSBEnginePath pPlatform
       end switch
    end if
 end revSBEnginePath
+
+function revSBLicensedToDeployToTarget pTarget
+   -- We can only check the license parameters in development mode,
+   -- and they are only set in UI mode. So just return true unless
+   -- the mode is development.
+   if the environment is not "development" then
+      return true
+   end if
+   
+   -- In development mode, check the revLicenseInfo
+   local tLicensedTargets
+   put line 5 of revLicenseInfo into tLicensedTargets
+   
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   local tLicensePlatform
+   switch tPlatform
+      case "MacOSX"
+         put "Mac OS X" into tLicensePlatform
+         break
+      case "Emscripten"
+         put "HTML5" into tLicensePlatform
+         break
+      default
+         put tPlatform into tLicensePlatform
+         break
+   end switch
+   
+   return tLicensePlatform is among the items of tLicensedTargets
+end revSBLicensedToDeployToTarget
+
+function revSBNoPlatforms pSettings
+   repeat for each item tTarget in kDesktopTargets, kAdditionalTargets
+      if pSettings[tTarget] then
+         return false
+      end if
+   end repeat
+   
+   return true
+end revSBNoPlatforms
+
+local sDeployInclusions
+
+command revSBAddDeployInclusion pInclusion, pKey
+   put empty into sDeployInclusions[pKey][pInclusion]
+end revSBAddDeployInclusion
+
+-- Standalone settings are always set on the mainstack
+function revSBGetSettings pStack, pDeploy
+   local tSettingsA
+   put the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) into tSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, tSettingsA
+   
+   if pDeploy then
+      local tKey, tInclusion
+      repeat for each key tKey in sDeployInclusions
+         repeat for each key tInclusion in sDeployInclusions[tKey]
+            revSBAddInclusion tInclusion, tKey, tSettingsA
+         end repeat
+      end repeat
+   end if
+   
+   # set library requirements
+   local tLibraries
+   put __AvailableScriptLibraries() into tLibraries
+   repeat for each element tLibrary in tLibraries
+      if tLibrary["title"] is among the lines of tSettingsA["scriptLibraries"] then
+         union tLibrary["settings"] with tSettingsA recursively
+         put tLibrary["settings"] into tSettingsA
+      end if
+   end repeat
+   
+   return tSettingsA
+end revSBGetSettings
+
+command revSBSetSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end revSBSetSettings

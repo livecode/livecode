@@ -15,5 +15,8 @@ OS: ios
 
 Platforms: mobile
 
+Description:
+This message is no longer in use and should be replaced with the new message, <trackingError>
+
 References: trackingError (message)
 

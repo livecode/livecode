@@ -26,3 +26,26 @@ on TestImportScientific
 	put JsonImport(tJson) into tArray
 	TestAssert "import number in scientific notation", tExpected is tArray
 end TestImportScientific
+
+-- Bug 18697
+on __TestImportLonelyInt_Minus pParam
+   get JSONImport("-")
+end __TestImportLonelyInt_Minus
+on TestImportLonelyInt
+	local tJson, tExpected, tValue
+
+	TestPlan 2
+
+	put "42" into tJson
+	put 42 into tExpected
+	put JsonImport(tJson) into tValue
+	TestAssert "import lonely multi-digit integer", tExpected is tValue
+
+	put "2" into tJson
+	put 2 into tExpected
+	put JsonImport(tJson) into tValue
+	TestAssert "import lonely single-digit integer", tExpected is tValue
+
+	TestAssertThrow "import lonely minus sign", "__TestImportLonelyInt_Minus", \
+		the long id of me, 863, ""
+end TestImportLonelyInt

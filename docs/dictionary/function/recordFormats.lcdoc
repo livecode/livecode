@@ -6,21 +6,17 @@ Syntax: the recordFormats
 
 Syntax: recordFormats()
 
-Summary:
-Removed in version 2.0.
+Summary: Returns a list of available record formats
 
-Introduced: 1.1
+Introduced: 9.0
 
 Platforms: desktop, server
 
 Description:
-The <recordFormats> <function> reported information about the most
-recent <execution error>.
+Use the <recordFormats> <function> to obtain a list of the supported 
+<recordFormat> values for storing audio data after using the 
+<record sound> <command>. 
 
-For the information formerly returned by the <recordFormats> <function>,
-see the <recordCompressionTypes> <function>.
-
-References: function (control structure),
-recordCompressionTypes (function), QTVersion (function),
-execution error (glossary)
-
+References: record sound (command), command (glossary), 
+function (glossary), recordFormat (property), 
+recordCompressionTypes (function)

@@ -29,8 +29,6 @@ public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Sta
 
 public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
-
 public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
@@ -290,27 +288,6 @@ syntax DeleteLastCodeunitOf is statement
 	"delete" "the" "last" "codeunit" "of" <Target: Expression>
 begin
 	MCCodeunitExecDeleteLastCodeunitOf(Target)
-end syntax
-
---
-
-/**
-Summary:            Determines whether <Needle> is in <Target>.
-Needle: 			An expression which evaluates to a codeunit.
-Target: 			An expression which evaluates to a string.
-
-Returns: 	True if <Needle> is among the codeunits of <Target>, and false otherwise.
-
-Description:
->*Note:* It is an error if <Needle> evaluates to a string consisting of more than one codeunit.
-
-Tags: Strings
-*/
-
-syntax CodeunitIsInString is neutral binary operator with comparison precedence
-    <Needle: Expression> "is" "in" <Source: Expression>
-begin
-    MCCodeunitEvalIsAmongTheCodeunitsOf(Needle, Source, output)
 end syntax
 
 --

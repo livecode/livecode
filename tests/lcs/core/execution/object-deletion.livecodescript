@@ -21,6 +21,35 @@ on TestSetup
    create stack "test"
 end TestSetup
 
+on TestDeleteLibrary
+   start using stack "test"
+   delete stack "test"
+   TestAssert "Delete library stack", "test" is not among the lines of the stacksInUse
+end TestDeleteLibrary
+
+on TestDeleteFrontScript
+   local tID
+   put the long id of stack "test" into tID
+   insert the script of stack "test" into front
+   delete stack "test"
+   TestAssert "Delete front script", tID is not among the lines of the frontScripts
+end TestDeleteFrontScript
+
+on TestDeleteBackScripts
+   local tID
+   put the long id of stack "test" into tID
+   insert the script of stack "test" into back
+   delete stack "test"
+   TestAssert "Delete back scripts", tID is not among the lines of the backScripts
+end TestDeleteBackScripts
+
+on TestDeleteObjectWithPendingMessage
+   local tID
+   put the long id of stack "test" into tID
+   send "TestMessage" to stack "test" in 10 seconds
+   delete stack "test"
+   TestAssert "Delete object with pending message", tID is not in the pendingMessages
+end TestDeleteObjectWithPendingMessage
 
 on TestDeleteObjectInNestedGroup
    set the defaultStack to "test"
@@ -53,6 +82,39 @@ on TestDeleteThisCard
    TestAssert "Delete card from button in shared group on card", there is not a button "test" of card 1 of stack "test"
 end TestDeleteThisCard
 
-on TestTeardown
+on TestDeleteStackWithCantDelete
+   set the cantDelete of stack "test" to true
+   TestAssertThrow "Delete stack with cantDelete", "__TestDeleteStack", the long id me, 347
+   set the cantDelete of stack "test" to false
+end TestDeleteStackWithCantDelete
+
+on TestDeleteSubstackWithCantDelete
+   create stack "test substack"
+   set the mainstack of stack "test substack" to "test"
+   set the cantDelete of stack "test substack" to true
    delete stack "test"
+   TestAssert "Delete stack with cantDelete substack", true
+end TestDeleteSubstackWithCantDelete
+
+on TestDeleteObjectInBehaviorOfNonTarget
+   create button "behavior"
+   set the script of button "behavior" to \
+         "on DeleteIt" & return & \
+         "delete stack "& quote & "lib" & quote  & return & \
+         "end DeleteIt"
+   create stack "lib"
+   set the behavior of stack "lib" to the long id of button "behavior"
+   start using stack "lib"
+   TestAssertThrow "Delete object from its behavior when not target", "DeleteIt", the long id of stack "test", 347
+end TestDeleteObjectInBehaviorOfNonTarget
+
+
+on __TestDeleteStack
+      delete stack "test"
+end __TestDeleteStack
+
+on TestTeardown
+   if there is a stack "test" then
+      delete stack "test"
+   end if
 end TestTeardown

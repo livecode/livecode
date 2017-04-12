@@ -474,12 +474,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- Externals to reference
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
-   repeat for each element tExternal in tCopiedExternals
-      if tExternal["type"] is among the words of "external external-tmp" then
-         put tExternal["location"] & return after tDeploy["externals"]
+   repeat for each key tExternalName in tCopiedExternals
+      local tExternalRec
+      put tCopiedExternals[tExternalName] into tExternalRec
+      if tExternalRec["type"] is among the words of "external external-tmp" then
+         put tExternalName & return after tDeploy["externals"]
       end if
+      put tExternalName & ":" & "./" & tExternalRec["location"] & return after tDeploy["library"]
    end repeat
    delete the last char of tDeploy["externals"]
+   delete the last char of tDeploy["library"]
    
    -- Put the redirects if any
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
@@ -603,7 +607,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
-         throw "extracting debug symbols failed with" && it
+         revStandaloneProgress "Extracting debug symbols failed"
       end if
       
       // Reinstate env var MallocNanoZone if it was set.
@@ -746,7 +750,7 @@ end revSaveAsMobileDeployer
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
    revStandaloneProgress "Copying icons..."    
    repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & \
-         "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152")
+         "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152" & return & "iPad Pro 12.9 icon,-167")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -771,6 +775,7 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    -- PM-2015-03-19: [[ Bug 13969 ]] Make sure we use the correct names for the splash images in iphone6/6+
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
+         return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
          return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x")
       get pSettings["ios," & item 1 of tType]
@@ -949,8 +954,8 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- Start with an empty redirects list
    put empty into rRedirects
    
-   local tFiles
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFiles
+   local tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
@@ -958,26 +963,15 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    --
    local tManifest
    set the itemDelimiter to slash
-   repeat for each line tFile in tFiles
-      local tIsAbsolute, tName
-      put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
-      if the last item of tFile is "*" then
-         delete the last item of tFile
-      end if
-      if tFile begins with pBaseFolder then
-         put item (the number of items of pBaseFolder + 1) to -1 of tFile  into tName
-      else
-         put item -1 of tFile into tName
-      end if
-      
-      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tName
+   repeat for each element tFile in tFileData
+      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tFile["name"]
       
       -- MW-2010-12-16: [[ Bug 9238 ]] Check for 'resources' folder
-      if item 1 of tName is "Resources" then
+      if item 1 of tFile["name"] is "Resources" then
          throw "iOS apps that contain a top-level folder called 'Resources' will fail to run"
       end if
       
-      addToManifest tFile, tName, pAppBundle, tManifest, rRedirects
+      addToManifest tFile["resolved"], tFile["name"], pAppBundle, tManifest, rRedirects
    end repeat
    
    -- Remove trailing delimiter
@@ -1181,12 +1175,12 @@ end revCopyMobileStackFiles
 
 private function revGetMinimumOSByArch pMinimumOS 
    local tMinimumOSByArch  
-   -- MM-2013-09-23: We only support iOS 4.3 and later
    -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
-   --  same for all archs, and we only support version >= 5.1.1
+   --  same for all archs
+   -- We only support version >= 6.0
    --
-   if pMinimumOS is empty or pMinimumOS <= "5.1" then
-      put "5.1.1" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS < "6.0" then
+      put "6.0" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS after tMinimumOSByArch["i386"]
    end if
@@ -1349,7 +1343,9 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in pPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
+   		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
+   		
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
@@ -1410,7 +1406,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
-   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152"
+   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152,-167"
       if there is a file (pAppBundle & slash & "Icon" & tItem & ".png") then
          put "<string>" & "Icon" & tItem & ".png</string>" after it
       end if
@@ -1646,7 +1642,12 @@ function mapFilePath pPath
    else
       put "/Release" after tBuild
    end if
-   put the editionType into tSuffix
+   
+   if the editionType is "community" then
+      put "community" into tSuffix
+   else
+      put "commercial" into tSuffix
+   end if
    
    local tPath
    switch the last item of pPath

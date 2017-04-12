@@ -26,58 +26,102 @@ Description:
 Use the <mode> <property> to determine how the user can interact with
 the <stack>.
 
-The <mode> of a <stack> is one of the following numbers:
+The <mode> of a <stack> is a number describing the state of the stack.
+The possible states are:
 
-Mode | Meaning | Description
-:----------:|:---------|:---------
-0|closed but loaded|The stack window is closed, but the stack is still
-in memory. A stack can have this <mode> if its <destroyStack> <property>
-is set to false and the stack has been opened, then closed. 1|editable
-window|The stack is open and displayed in an editable window. A stack
-has this <mode> if its <style> is "topLevel" or if it was opened with
-the <topLevel> <command>. 2|non-editable window|The stack is open and
-displayed in a normal window, but is not editable. A stack has this
-<mode> if its <style> is "topLevel" or if it was opened with the
-<topLevel> <command>, and the <stack|stack's> <cantModify> <property> is
-set to true. 3|modeless dialog|The stack is open and displayed as a
-modeless dialog box. A stack has this <mode> if its <style> is
-"modeless" or if it was opened with the <modeless> command 4|palette|The
-stack is open and displayed as a palette. A <stack> has this <mode> if
-its <style> is "palette" or if it was opened with the <palette>
-<command>. 5|modal dialog|The stack is open and displayed as a modal
-dialog box. A stack has this <mode> if its <style> is "modal" or if it
-was opened with the <modal> <command>. 6|sheet|The stack is open and
-displayed as a sheet. A stack has this <mode> if it was opened with the
-<sheet> <command>. (If the <sheet> <command> was used on a <platform>
-other than <OS X>, the <stack> is displayed as a <modal dialog box>
-instead of a <sheet>. In this case, its <mode> is 5.) 7|pulldown stack
-menu|The stack is open and displayed as a pulldown menu. A stack has
-this <mode> if it was opened with the <pulldown> <command>, or if it is
-the menuStack of a <button> whose <style> is set to "menu" and whose
-<menuMode> is set to pulldown. 8|popup stack menu|The stack is open and
-displayed as a <popup menu>. A <stack> has this <mode> if it was opened
-with the <popup> <command>, or if it is the menuStack of a <button>
-whose <style> is set to "menu" and whose <menuMode> is set to "popup".
-9|option stack menu|The stack is open and displayed as an option menu. A
-stack has this <mode> if it is the menuStack of a <button> whose <style>
-is set to "menu" and whose <menuMode> is set to "option". 10|submenu in
-a stack menu|The stack is open and displayed as a cascading menu. A
-stack has this <mode> if it is the menuStack of a <button> whose <style>
-is set to "menu" and whose <menuMode> is set to "cascade". 11|combo box
-stack menu|The stack is open and displayed as a combo box. A stack has
-this <mode> if it is the menuStack of a <button> whose <style> is set to
-"menu" and whose <menuMode> is set to "comboBox". 12|collapsed|The stack
-is open but has been collapsed (Mac OS), iconified (Unix), or minimized
-(Windows). 13|drawer|The stack is open as a drawer beside another
-window. A stack has this <mode> if it was opened with the <drawer>
-<command>. 
+- **Mode 0: closed but loaded**
 
-If two stacks with different modes are open, the stack whose <mode> 
-<property> is lower takes precedence when determining which <stack> is 
-the <topStack>. This means, for example, that menu items (such as 
-Object menu > Stack Properties that act on the current <stack> may not 
-be able to operate correctly with a stack whose <cantModify> is set to 
-true (and whose <mode> is therefore 2) as long as another, modifiable 
+  The stack window is closed, but the stack is still in memory. A
+  stack can have this <mode> if its <destroyStack> <property> is set
+  to false and the stack has been opened, then closed.
+
+- **Mode 1: editable window**
+
+  The stack is open and displayed in an editable window. A stack has
+  this <mode> if its <style> is "topLevel" or if it was opened with
+  the <topLevel> <command>.
+
+- **Mode 2: non-editable window**
+
+  The stack is open and displayed in a normal window, but is not
+  editable. A stack has this <mode> if its <style> is "topLevel" or if
+  it was opened with the <topLevel> <command>, and the <stack|stack's>
+  <cantModify> <property> is set to true.
+
+- **Mode 3: modeless dialog**
+
+  The stack is open and displayed as a modeless dialog box. A stack
+  has this <mode> if its <style> is "modeless" or if it was opened
+  with the <modeless> command
+
+- **Mode 4: palette**
+
+  The stack is open and displayed as a palette. A <stack> has this
+  <mode> if its <style> is "palette" or if it was opened with the
+  <palette> <command>.
+
+- **Mode 5: modal dialog**
+
+  The stack is open and displayed as a modal dialog box. A stack has
+  this <mode> if its <style> is "modal" or if it was opened with the
+  <modal> <command>.
+
+- **Mode 6: sheet**
+
+  The stack is open and displayed as a sheet. A stack has this <mode>
+  if it was opened with the <sheet> <command>. (If the <sheet>
+  <command> was used on a <platform> other than <OS X>, the <stack> is
+  displayed as a <modal dialog box> instead of a <sheet>. In this
+  case, its <mode> is 5.)
+
+- **Mode 7: pulldown stack menu**
+
+  The stack is open and displayed as a pulldown menu. A stack has this
+  <mode> if it was opened with the <pulldown> <command>, or if it is
+  the menuStack of a <button> whose <style> is set to "menu" and whose
+  <menuMode> is set to pulldown.
+
+- **Mode 8: popup stack menu**
+
+  The stack is open and displayed as a <popup menu>. A <stack> has
+  this <mode> if it was opened with the <popup> <command>, or if it is
+  the menuStack of a <button> whose <style> is set to "menu" and whose
+  <menuMode> is set to "popup".
+
+- **Mode 9: option stack menu**
+
+  The stack is open and displayed as an option menu. A stack has this
+  <mode> if it is the menuStack of a <button> whose <style> is set to
+  "menu" and whose <menuMode> is set to "option".
+
+- **Mode 10: submenu in a stack menu**
+
+  The stack is open and displayed as a cascading menu. A stack has
+  this <mode> if it is the menuStack of a <button> whose <style> is
+  set to "menu" and whose <menuMode> is set to "cascade".
+
+- **Mode 11: combo box stack menu**
+
+  The stack is open and displayed as a combo box. A stack has this
+  <mode> if it is the menuStack of a <button> whose <style> is set to
+  "menu" and whose <menuMode> is set to "comboBox".
+
+- **Mode 12: collapsed**
+
+  The stack is open but has been collapsed (Mac OS), iconified (Unix),
+  or minimized (Windows).
+
+- **Mode 13: drawer**
+
+  The stack is open as a drawer beside another window. A stack has
+  this <mode> if it was opened with the <drawer> <command>.
+
+If two stacks with different modes are open, the stack whose <mode>
+<property> is lower takes precedence when determining which <stack> is
+the <topStack>. This means, for example, that menu items (such as
+'Object → Stack Properties') that act on the current <stack> may not
+be able to operate correctly with a stack whose <cantModify> is set to
+true (and whose <mode> is therefore 2) as long as another, modifiable
 stack (<mode> equal to 1) is open.
 
 References: palette (command), topLevel (command), popup (command),

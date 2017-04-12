@@ -251,17 +251,17 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		t_found_comma = MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma);
 		if (t_found_comma)
 		{
-			if (MCStringSubstringContains(p_input, MCRangeMake(t_pos, t_comma - t_pos), MCSTR("-"), kMCCompareExact))
+			if (MCStringSubstringContains(p_input, MCRangeMakeMinMax(t_pos, t_comma), MCSTR("-"), kMCCompareExact))
 			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash);
 
 				MCAutoStringRef t_substring_from;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_dash), &t_substring_from);
 				t_error = !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring_to);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_comma), &t_substring_to);
 				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = t_comma;
 			}
@@ -269,7 +269,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			else
 			{
 				MCAutoStringRef t_substring;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_comma), &t_substring);
 				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;
@@ -279,17 +279,17 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		else
 		{
 			//case dash found after t_pos
-			if (MCStringSubstringContains(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), MCSTR("-"), kMCCompareExact))
+			if (MCStringSubstringContains(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), MCSTR("-"), kMCCompareExact))
 			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash);
 
 				MCAutoStringRef t_substring_from;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_dash), &t_substring_from);
 				t_error =  !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring_to);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), &t_substring_to);
 				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = MCStringGetLength(p_input);
 			}
@@ -297,7 +297,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			else
 			{
 				MCAutoStringRef t_substring;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), &t_substring);
 				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;
@@ -349,26 +349,26 @@ static void MCPrintingPrinterPageRangeFormat(MCExecContext& ctxt, const MCPrinti
 		{
 			const MCInterval *t_ranges;
 			t_ranges = MCprinter -> GetJobRanges();
-			
-			bool t_success;
-			t_success = true;
-			
-			MCAutoStringRef t_output;
-			t_success = MCStringCreateMutable(0, &t_output);
-			for(index_t i = 0; i < p_input . count && t_success; i++)
-			{
-				if (t_success && i > 0)
-					t_success = MCStringAppendNativeChar(&t_output, ',');
-				
-				if (t_ranges[i] . from == t_ranges[i] . to)
-					t_success = MCStringAppendFormat(&t_output, "%d", t_ranges[i] . from);
-				else
-					t_success = MCStringAppendFormat(&t_output, "%d-%d", t_ranges[i] . from, t_ranges[i] . to);
-			}
-			
-			if (t_success &&
-				MCStringCopy(*t_output, r_output))
-				return;
+
+            MCAutoListRef t_list;
+            if (!MCListCreateMutable(',', &t_list))
+                break;
+            for (index_t i = 0; i < p_input . count; ++i)
+            {
+                if (t_ranges[i].from == t_ranges[i].to)
+                {
+                    if (!MCListAppendFormat(*t_list, "%d", t_ranges[i].from))
+                        break;
+                }
+                else
+                {
+                    if (!MCListAppendFormat(*t_list, "%d-%d",
+                                            t_ranges[i].from, t_ranges[i].to))
+                        break;
+                }
+            }
+            if (MCListCopyAsString(*t_list, r_output))
+                return;
 		}
 		break;
 	}

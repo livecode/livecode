@@ -15,4 +15,17 @@ public handler TestUnitTestHandlerThrows()
 	MCUnitTestHandlerThrows(_Throws2, "unit tests expecting errors (multiple)")
 end handler
 
+handler _DoesntThrow() returns nothing
+
+end handler
+
+handler _DoesntThrow2() returns nothing
+
+end handler
+
+public handler TestUnitTestHandlerDoesntThrow()
+	MCUnitTestHandlerDoesntThrow(_DoesntThrow, "unit tests expecting no errors")
+	MCUnitTestHandlerDoesntThrow(_DoesntThrow2, "unit tests expecting no errors (multiple)")
+end handler
+
 end module

@@ -32,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include <windows.h>
 #include <sys/timeb.h>
 #include <iphlpapi.h>
 #include <shellapi.h>
@@ -152,7 +151,7 @@ public:
 			return NULL;
 		
 		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
+		t_handle = new (nothrow) MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
 		
 		return t_handle;
@@ -170,7 +169,7 @@ public:
 			setbuf(t_stream, NULL);
 		
 		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
+		t_handle = new (nothrow) MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
 		
 		return t_handle;
@@ -333,14 +332,14 @@ struct MCWindowsSystem: public MCSystemInterface
 
 		if (t_value == NULL)
 		{
-			char *dptr = new char[strlen(t_name) + 2];
+			char *dptr = new (nothrow) char[strlen(t_name) + 2];
 			sprintf(dptr, "%s=", t_name);
 			_putenv(dptr);
 			delete[] dptr;
 		}
 		else
 		{
-			char *dptr = new char[strlen(t_name) + strlen(t_value) + 2];
+			char *dptr = new (nothrow) char[strlen(t_name) + strlen(t_value) + 2];
 			sprintf(dptr, "%s=%s", t_name, t_value);
 			_putenv(dptr);
 			delete[] dptr;
@@ -436,7 +435,7 @@ struct MCWindowsSystem: public MCSystemInterface
 	
 	virtual void ResolveAlias(MCStringRef p_source, MCStringRef& r_dest)
 	{
-		char *t_dest = new char[PATH_MAX];
+		char *t_dest = new (nothrow) char[PATH_MAX];
 		HRESULT hres;
 		IShellLinkA* psl;
 		char szGotPath[PATH_MAX];
@@ -597,7 +596,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		{
 			// newpath is of form "<driveletter>:"
 			char *t_modified_path;
-			t_modified_path = new char[strlen(path) + 2];
+			t_modified_path = new (nothrow) char[strlen(path) + 2];
 			strcpy(t_modified_path, path);
 			strcat(t_modified_path, "\\");
 			newpath = t_modified_path;
@@ -725,30 +724,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 		return fname;
 	}
-	
-	//////////
-	
-	virtual void *LoadModule(MCStringRef p_path)
-	{
-		MCAutoStringRef t_resolved_path;
-		/* UNCHECKED */ ResolveNativePath(p_path, &t_resolved_path);
-	
-		HMODULE t_handle;
-		t_handle = LoadLibraryExA(MCStringGetCString(*t_resolved_path), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 
-		return t_handle;
-	}
-	
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
-	{
-		return GetProcAddress((HMODULE)p_module, p_symbol);
-	}
-	
-	virtual void UnloadModule(void *p_module)
-	{
-		FreeLibrary((HMODULE)p_module);
-	}
-	
 	////
 	
 	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -757,7 +733,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		MCS_resolvepath(p_path, &t_newpath_string);
 
 		char *shortpath = strdup(MCStringGetCString(*t_newpath_string));
-		char *longpath = new char[PATH_MAX];
+		char *longpath = new (nothrow) char[PATH_MAX];
 		char *p, *pStart;
 		char buff[PATH_MAX];
 		WIN32_FIND_DATAA wfd;
@@ -834,7 +810,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	char *ShortFilePath(const char *p_path)
 	{
-		char *shortpath = new char[PATH_MAX];
+		char *shortpath = new (nothrow) char[PATH_MAX];
 		MCAutoStringRef t_newpath_string;
 		MCAutoStringRef t_path_string;
 		/* UNCHECKED */ MCStringCreateWithCString(p_path, &t_path_string);
@@ -914,7 +890,7 @@ struct MCWindowsSystem: public MCSystemInterface
 			&tpath_ref = MCValueRetain (p_folder);
 
 		char *tpath = strdup(MCStringGetCString(*tpath_ref));
-		char *spath = new char [strlen(tpath) + 5];//path to be searched
+		char *spath = new (nothrow) char [strlen(tpath) + 5];//path to be searched
 		strcpy(spath, tpath);
 		if (tpath[strlen(tpath) - 1] != '\\')
 			strcat(spath, "\\");
@@ -934,7 +910,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		 * path, a path separator character, and any possible filename. */
 		size_t t_path_len = strlen(tpath);
 		size_t t_entry_path_len = t_path_len + 1 + MAX_PATH;
-		char *t_entry_path = new char[t_entry_path_len + 1];
+		char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 		strcpy (t_entry_path, tpath);
 		if (tpath[t_path_len - 1] != '\\')
 		{
@@ -1172,7 +1148,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		t_ulength = TextConvert(p_string, p_string_length, NULL, 0, p_from_charset, LCH_UNICODE);
 
 		char *t_ubuffer;
-		t_ubuffer = new char[t_ulength];
+		t_ubuffer = new (nothrow) char[t_ulength];
 		TextConvert(p_string, p_string_length, t_ubuffer, t_ulength, p_from_charset, LCH_UNICODE);
 
 		uint32_t t_used;

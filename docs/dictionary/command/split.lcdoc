@@ -34,17 +34,17 @@ put "apple;;orange;;grape" into line 3 of tData
 set the columndel to ";;"
 split tData by column
 # RESULT
-# tData[1] = 
+# tData[1] =
 # one
-# two
-# three
-# tData[2] = 
 # ben
-# fraser
-# elanor
-# tData[3] = 
 # apple
+# tData[2] =
+# two
+# fraser
 # orange
+# tData[3] =
+# three
+# elanor
 # grape
 
 Parameters:

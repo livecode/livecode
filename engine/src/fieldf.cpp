@@ -124,6 +124,8 @@ Keytranslations MCField::std_keys[] =
 	{XK_Tab, {FT_TAB, FT_TAB, FT_TAB, FT_TAB}},
 	{XK_Return, {FT_PARAGRAPH, FT_FOCUSNEXT, FT_PARAGRAPH, FT_FOCUSNEXT}},
 	{XK_KP_Enter, {FT_PARAGRAPH, FT_FOCUSNEXT, FT_PARAGRAPH, FT_FOCUSNEXT}},
+	{XK_A, {FT_UNDEFINED, FT_SELECTALL, FT_UNDEFINED, FT_UNDEFINED}},
+	{XK_a, {FT_UNDEFINED, FT_SELECTALL, FT_UNDEFINED, FT_UNDEFINED}},
 	{XK_C, {FT_UNDEFINED, FT_COPY, FT_UNDEFINED, FT_UNDEFINED}},
 	{XK_c, {FT_UNDEFINED, FT_COPY, FT_UNDEFINED, FT_UNDEFINED}},
 	{XK_V, {FT_UNDEFINED, FT_PASTE, FT_UNDEFINED, FT_UNDEFINED}},
@@ -183,18 +185,28 @@ struct MCKeyBinding
 
 static MCKeyBinding s_mac_keybindings[] =
 {
+	// Selection
+	{ XK_A, MK_CMD | MK_IGNORE_SHIFT, FT_SELECTALL },
+	{ XK_a, MK_CMD | MK_IGNORE_SHIFT, FT_SELECTALL },
+
 	// Insertion
 	{ XK_Tab, MK_ANY, FT_TAB },
 	{ XK_Return, MK_ANY, FT_PARAGRAPH },
 	{ XK_KP_Enter, MK_ANY, FT_PARAGRAPH },
 	{ XK_O, MK_CTRL, FT_PARAGRAPHAFTER },
+	{ XK_o, MK_CTRL, FT_PARAGRAPHAFTER },
 
 	// Clipboard
-	{ XK_C, MK_CMD, FT_COPY },
-	{ XK_X, MK_CMD, FT_CUT },
-	{ XK_V, MK_CMD, FT_PASTE },
-	{ XK_Y, MK_CMD, FT_PASTE },
-	{ XK_Z, MK_CMD, FT_UNDO },
+	{ XK_C, MK_CMD | MK_IGNORE_SHIFT, FT_COPY },
+	{ XK_c, MK_CMD | MK_IGNORE_SHIFT, FT_COPY },
+	{ XK_X, MK_CMD | MK_IGNORE_SHIFT, FT_CUT },
+	{ XK_x, MK_CMD | MK_IGNORE_SHIFT, FT_CUT },
+	{ XK_V, MK_CMD | MK_IGNORE_SHIFT, FT_PASTE },
+	{ XK_v, MK_CMD | MK_IGNORE_SHIFT, FT_PASTE },
+	{ XK_Y, MK_CMD | MK_IGNORE_SHIFT, FT_PASTE },
+	{ XK_y, MK_CMD | MK_IGNORE_SHIFT, FT_PASTE },
+	{ XK_Z, MK_CMD | MK_IGNORE_SHIFT, FT_UNDO },
+	{ XK_z, MK_CMD | MK_IGNORE_SHIFT, FT_UNDO },
 
 	// Scroll Wheel
 	{ XK_WheelDown, MK_ANY, FT_SCROLLDOWN },
@@ -204,28 +216,36 @@ static MCKeyBinding s_mac_keybindings[] =
 
 	// Local Navigation
 	{ XK_P, MK_CTRL | MK_IGNORE_SHIFT, FT_UP },
+	{ XK_p, MK_CTRL | MK_IGNORE_SHIFT, FT_UP },
 	{ XK_Up, MK_NONE | MK_IGNORE_SHIFT, FT_UP },
 	{ XK_Up, MK_CMD | MK_IGNORE_SHIFT, FT_BOF },
 	{ XK_Up, MK_CTRL, FT_SCROLLPAGEUP },
 	{ XK_Up, MK_OPT | MK_IGNORE_SHIFT, FT_BACKPARA },
 	{ XK_A, MK_CTRL | MK_IGNORE_SHIFT, FT_BOP },
+	{ XK_a, MK_CTRL | MK_IGNORE_SHIFT, FT_BOP },
 
 	{ XK_N, MK_CTRL | MK_IGNORE_SHIFT, FT_DOWN },
+	{ XK_n, MK_CTRL | MK_IGNORE_SHIFT, FT_DOWN },
 	{ XK_Down, MK_NONE | MK_IGNORE_SHIFT, FT_DOWN },
 	{ XK_Down, MK_CMD | MK_IGNORE_SHIFT, FT_EOF },
 	{ XK_Down, MK_CTRL, FT_SCROLLPAGEDOWN },
 	{ XK_Down, MK_OPT | MK_IGNORE_SHIFT, FT_FORWARDPARA },
 	{ XK_E, MK_CTRL | MK_IGNORE_SHIFT, FT_EOP },
+	{ XK_e, MK_CTRL | MK_IGNORE_SHIFT, FT_EOP },
 
 	{ XK_B, MK_CTRL | MK_IGNORE_SHIFT, FT_BACKCHAR },
+	{ XK_b, MK_CTRL | MK_IGNORE_SHIFT, FT_BACKCHAR },
 	{ XK_B, MK_CTRL | MK_OPT | MK_IGNORE_SHIFT, FT_BACKWORD },
+	{ XK_b, MK_CTRL | MK_OPT | MK_IGNORE_SHIFT, FT_BACKWORD },
 	{ XK_Left, MK_NONE | MK_IGNORE_SHIFT, FT_LEFTCHAR },
 	{ XK_Left, MK_CMD | MK_IGNORE_SHIFT, FT_BOL },
 	{ XK_Left, MK_CTRL | MK_IGNORE_SHIFT, FT_BOL },
 	{ XK_Left, MK_OPT | MK_IGNORE_SHIFT, FT_LEFTWORD },
 
 	{ XK_F, MK_CTRL | MK_IGNORE_SHIFT, FT_FORWARDCHAR },
+	{ XK_f, MK_CTRL | MK_IGNORE_SHIFT, FT_FORWARDCHAR },
 	{ XK_F, MK_CTRL | MK_OPT | MK_IGNORE_SHIFT, FT_FORWARDWORD },
+	{ XK_f, MK_CTRL | MK_OPT | MK_IGNORE_SHIFT, FT_FORWARDWORD },
 	{ XK_Right, MK_NONE | MK_IGNORE_SHIFT, FT_RIGHTCHAR },
 	{ XK_Right, MK_CMD | MK_IGNORE_SHIFT, FT_EOL },
 	{ XK_Right, MK_CTRL | MK_IGNORE_SHIFT, FT_EOL },
@@ -250,7 +270,9 @@ static MCKeyBinding s_mac_keybindings[] =
 	{ XK_Delete, MK_NONE, FT_DELFCHAR },
 	{ XK_Delete, MK_OPT, FT_DELFWORD },
 	{ XK_D, MK_CTRL, FT_DELFCHAR },
+	{ XK_d, MK_CTRL, FT_DELFCHAR },
 	{ XK_K, MK_CTRL, FT_DELEOP },
+	{ XK_k, MK_CTRL, FT_DELEOP },
 
 	// Backward Deletion
 	// PM-2015-09-16: [[ Bug 15934 ]] Make sure pressing Backspace key works as expected, even if Shift key is down
@@ -261,7 +283,9 @@ static MCKeyBinding s_mac_keybindings[] =
 	{ XK_BackSpace, MK_OPT | MK_CTRL, FT_DELBWORD },
 
 	// Misc
+	{ XK_L, MK_CTRL, FT_CENTER },
 	{ XK_l, MK_CTRL, FT_CENTER },
+	{ XK_T, MK_CTRL, FT_TRANSPOSE },
 	{ XK_t, MK_CTRL, FT_TRANSPOSE },
 
 	// END
@@ -379,7 +403,7 @@ MCCdata *MCField::getcarddata(MCCdata *&list, uint4 parid, Boolean create)
 	}
 	if (foundptr == NULL && create)
 	{
-		foundptr = new MCCdata(parid);
+		foundptr = new (nothrow) MCCdata(parid);
 		foundptr->appendto(list);
 	}
 	return foundptr;
@@ -884,60 +908,20 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
+	
+	// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+	uint32_t t_width, t_height;
+	if (!MCPatternGetGeometry(t_current_pixmap, t_width, t_height))
+		return;
 
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
 	t_offset_y = t_current_y - texty + dy;
-
-    // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
-    // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
-
-    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-    uint32_t t_width, t_height;
-    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
-	
-	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
-	//   pixmap tile in this case to ensure the offset falls within 32767.
-	if (MCU_abs(t_offset_y) > INT16_MAX)
-    {
-        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
-        if (t_offset_y > INT16_MAX)
-            t_offset_y %= INT16_MAX;
-        else
-        {
-            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
-            //  is implementation-defined.
-            int4 t_positive_offset;
-            t_positive_offset = -t_offset_y;
-            t_positive_offset %= INT16_MAX;
-            t_offset_y = -t_positive_offset;
-        }
-		
-		t_offset_y %= t_height;
-		if (t_offset_y < 0)
-			t_offset_y += t_height;
-	}
-
-    if (MCU_abs(t_offset_x) > INT16_MAX)
-    {
-        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
-        if (t_offset_x > INT16_MAX)
-            t_offset_x %= INT16_MAX;
-        else
-        {
-            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
-            //  is implementation-defined.
-            int4 t_positive_offset;
-            t_positive_offset = -t_offset_x;
-            t_positive_offset %= INT16_MAX;
-            t_offset_x = -t_positive_offset;
-        }
-        
-        t_offset_x %= t_width;
-        if (t_offset_x < 0)
-            t_offset_x += t_width;
-    }
-
+    
+    // Ensure the offsets are in the 16-bit signed int range.
+    t_offset_y = MCSgn(t_offset_y) * (MCAbs(t_offset_y) % t_height);
+    t_offset_x = MCSgn(t_offset_x) * (MCAbs(t_offset_x) % t_width);
+    
 	dc -> setfillstyle(t_current_style, t_current_pixmap, t_offset_x, t_offset_y);
 }
 
@@ -1397,7 +1381,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	removecursor();
 	extendwords = words;
 	extendlines = MCscreen->istripleclick();
-	if (MCactivefield != NULL && MCactivefield != this)
+	if (MCactivefield && MCactivefield != this)
 		MCactivefield->unselect(True, True);
 	if (MCmodifierstate & MS_SHIFT
 	        && (!(flags & F_LIST_BEHAVIOR) || flags & F_MULTIPLE_HILITES))
@@ -1584,7 +1568,7 @@ void MCField::unselect(Boolean clear, Boolean internal)
             MCselection->Clear();
     }
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
-		MCactivefield = NULL;
+		MCactivefield = nil;
 	if (!opened || focusedparagraph == NULL)
 		return;
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
@@ -1652,7 +1636,7 @@ Boolean MCField::deleteselection(Boolean force)
 
 		findex_t si, ei;
 		selectedmark(False, si, ei, False);
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_DELETE_TEXT;
 		us->ud.text.index = si;
 		us->ud.text.data = cloneselection();
@@ -1732,7 +1716,7 @@ void MCField::clearfound()
 	{
 		foundoffset = 0;
 		foundlength = 0;
-		MCfoundfield = NULL;
+		MCfoundfield = nil;
 		if (opened)
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -1877,7 +1861,7 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		else
 		{
 			MCundos->freestate();
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->type = UT_TYPE_TEXT;
 			
 			// MW-UNDO-FIX: Store the index this record starts at
@@ -1930,7 +1914,7 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				focusedy -= focusedparagraph->getheight(fixedheight);
 				joinparagraphs();
 				firstparagraph = lastparagraph = NULL;
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.newline = True;
 				us->ud.text.data = NULL;
 			}
@@ -1949,14 +1933,14 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				{
 					joinparagraphs();
 					firstparagraph = lastparagraph = NULL;
-					us = new Ustruct;
+					us = new (nothrow) Ustruct;
 					us->ud.text.newline = True;
 					us->ud.text.data = NULL;
 				}
 			}
 			else
 			{
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.data = undopgptr;
 				us->ud.text.newline = False;
 				updateparagraph(True, False);
@@ -2017,7 +2001,7 @@ void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym
 		joinparagraphs();
 		if (focusedparagraph->gettextsize())
 			state &= ~CS_PARTIAL;
-		cutptr = new MCParagraph;
+		cutptr = new (nothrow) MCParagraph;
 		cutptr->setparent(this);
 	}
 	else

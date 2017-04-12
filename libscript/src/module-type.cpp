@@ -107,6 +107,16 @@ extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNotEqualToNothing(MCValueRef p_l
     r_output = p_left != nil;
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNothingEqualToNothing(MCValueRef, MCValueRef, bool& r_output)
+{
+    r_output = true;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNothingNotEqualToNothing(MCValueRef, MCValueRef, bool& r_output)
+{
+    r_output = false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" bool com_livecode_type_Initialize (void)

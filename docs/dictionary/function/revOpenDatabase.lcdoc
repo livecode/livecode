@@ -3,16 +3,17 @@ Name: revOpenDatabase
 Synonyms: revdb_connect
 
 Type: function
+Syntax: revOpenDatabase(<databaseType>, {<hostAddress>, <databaseName>, [<userName>],[<passWord>],{[<useSSL>], [<socketAddr>], [<rwTimeout>], [<autoReconnect>] | [<cursorType>] | [<sslOption>],...} | <filePath>,[<sqliteOptions>]})
 
-Syntax: revOpenDatabase("mysql", <host> [: <port>], <databaseName>, [<userName>],[<password>],[<useSSL>], [<socket>], [<timeout>], [<autoReconnect>])
+Syntax: revOpenDatabase("mysql", <hostAddress>, <databaseName>, [<userName>],[<passWord>],[<useSSL>], [<socketAddr>], [<rwTimeout>], [<autoReconnect>])
 
-Syntax: revOpenDatabase("odbc", <host> [: <port>], <databaseName>, [<userName>],[<password>],[<cursorType>])
+Syntax: revOpenDatabase("odbc", <hostAddress>, <databaseName>, [<userName>],[<passWord>],[<cursorType>])
 
-Syntax: revOpenDatabase("sqlite",filepath,[<sqliteOptions>])
+Syntax: revOpenDatabase("sqlite",<filePath>,[<sqliteOptions>])
 
-Syntax: revOpenDatabase("postgresql", <host> [: <port>], <databaseName>, [<userName>], [<password>], [<sslOption>],...)
+Syntax: revOpenDatabase("postgresql", <hostAddress>, <databaseName>, [<userName>], [<passWord>], [<sslOption>],...)
 
-Syntax: revOpenDatabase("oracle", <host> [: <port>], <databaseName>, [<userName>],[<password>])
+Syntax: revOpenDatabase("oracle", <hostAddress>, <databaseName>, [<userName>],[<passWord>])
 
 Summary:
 Connects to a MySQL, SQLite, PostgreSQL, ODBC or Oracle database.
@@ -50,16 +51,13 @@ Example:
 get revOpenDatabase("postgresql", "192.168.1.100", "dbName", myUsr, myPass, "sslmode=require", "sslcompression=0")
 
 Parameters:
-host (string):
+hostAddress (string):
 A string specifying the IP address or domain name of the system hosting
-the database. For SQLite databases, the host should be the full path to
-the database file.
-
-port:
-A number specifying the port number you want to connect to, and is used
-only for MySQL and PostgreSQL databases. If no port is specified, MySQL
-database connections use port 3306 and PostgreSQL database connections
-use port 5432.
+the database followed optionally with a number specifying the port number
+you want to connect to, and is used only for MySQL and PostgreSQL databases. 
+If no port is specified, MySQL database connections use port 3306 and 
+PostgreSQL database connections use port 5432. For SQLite databases, the 
+host should be the full path to the database file.
 
 databaseName (string):
 A string specifying the the name of the database to connect to. For
@@ -69,28 +67,28 @@ userName (string):
 A string specifying your authorized user name for the database (Some
 databases do not require a user name).
 
-password (string):
+passWord (string):
 A string specifying the authentication password for the userName (Some
 databases do not require a password).
 
-useSSL:
+useSSL (bool):
 (MySQL Only) A boolean specifying whether to use SSL to secure the
 socket connection when connecting to a MySQL database. If you use this
 feature in a standalone application, remember to select 'SSL Encryption'
 from among the available 'script libraries' in the standalone
 application settings panel.
 
-socket:
+socketAddr (string):
 (MySQL Only) A string specifying the socket or named pipe the driver
 should use to connect with. If empty, the default for the host will be
-used. 
+used.
 
-timeout:
+rwTimeout (integer):
 (MySQL Only)  A number specifying the database read/write timeout in
 whole seconds. Defaults to 20 seconds if empty or not a positive
 integer. If 0, the connection never times out.
 
-autoReconnect:
+autoReconnect (bool):
 (MySQL Only) A boolean specifying if the driver should attempt to
 automatically reconnect to the database when the connection is lost. A
 reconnection attempt will be made the next time a command is executed.
@@ -136,7 +134,7 @@ A string specifying the database type to use. One of the following:
 - "sqlite"
 
 
-filename:
+filePath (string):
 (SQLite Only) A string specifying the path to the SQLite database.
 
 sslOption (string):
@@ -147,44 +145,48 @@ number of key value pairs can be specified, each in a new parameter. The
 set of recognized SSL option and their expected values are as follows:
 
 - **"sslmode"**: A string specifying the SSL connection mode to use.
-  There are 6 options:
+  If no SSL mode is specified, the default will be "prefer" if the
+  security library can be loaded, "disable" if not. If you use SSL
+  connections in a standalone application, remember to select
+  'SSL Encryption' from among the available 'script libraries' in the
+  standalone application settings panel. There are 6 options:
   - "disable": Only try a non-SSL connection.
   - "allow": First try a non-SSL connection; if that fails, try an SSL
-    connection. 
+    connection.
   - "prefer": First try an SSL connection; if that fails, try a non-SSL
-    connection. 
+    connection.
   - "require": Only try an SSL connection. If a root CA file is present,
     verify the certificate in the same way as if verify-ca was
-    specified. 
+    specified.
   - "verify-ca": Only try an SSL connection, and verify that the server
     certificate is issued by a trusted certificate authority (CA).
   - "verify-full": Only try an SSL connection, verify that the server
     certificate is issued by a trusted CA and that the server host name
     matches that in the certificate.
+- **"sslcompression"**: A string specifying the any SSL compression to
+  use. If set to "1" (default), data sent over SSL connections will be
+  compressed. If set to "0", compression will be disabled. This parameter
+  is ignored if a connection without SSL is made. Compression uses CPU
+  time, but can improve throughput if the network is the bottleneck.
+  Disabling compression can improve response time and throughput if CPU
+  performance is the limiting factor.
+- **"sslcert"**: A string specifying the file name of the client SSL
+  certificate, replacing the default ~/.postgresql/postgresql.crt. This
+  parameter is ignored if an SSL connection is not made.
+- **"sslkey"**: A string specifying the location for the secret key
+  used for the client certificate. This parameter is ignored if an SSL
+  connection is not made.
+- **sslrootcert"**: A string specifying the name of a file containing
+  SSL certificate authority (CA) certificate(s). If the file exists,
+  the server's certificate will be verified \ to be signed by one of
+  these authorities. The default is ~/.postgresql/root.crt.
+- **"sslcrl"**: A string specifying the file name of the SSL
+  certificate revocation list (CRL). Certificates listed in this file,
+  if it exists, will be rejected while attempting \ to authenticate
+  the server's certificate. The default is ~/.postgresql/root.crl.
 
 
-    If no SSL mode is specified, the default will be "prefer" if the security library can be loaded, "disable" if not. If you use SSL connections in a standalone application, remember \
-          to select 'SSL Encryption' from among the available 'script libraries' in the standalone application settings panel.
-    **"sslcompression"**: A string specifying the any SSL compression \
-          to use. If set to "1" (default), data sent over SSL connections will be compressed. If set to "0", compression will be disabled. This parameter is ignored if a connection without SSL is made. Compression uses CPU time, but can improve throughput if the network is the bottleneck. Disabling compression can improve response time and throughput if CPU performance is the limiting factor.
-    **"sslcert"**: A string specifying the file name \
-          of the client SSL certificate, replacing the default
-          ~/.postgresql/postgresql.crt. This parameter is ignored if an
-          SSL connection is not made.
-    **"sslkey"**: A string specifying the location for the secret key
-    used for the client certificate. This parameter is ignored if an SSL
-    connection is not made.
-    **sslrootcert"**: A string specifying the name of a file containing
-    SSL certificate authority (CA) certificate(s). If the file exists,
-    the server's certificate will be verified \ to be signed by one of
-    these authorities. The default is ~/.postgresql/root.crt.
-    **"sslcrl"**: A string specifying the file name of the SSL
-    certificate revocation list (CRL). Certificates listed in this file,
-    if it exists, will be rejected while attempting \ to authenticate
-    the server's certificate. The default is ~/.postgresql/root.crl.
-
-
-Returns:
+Returns (integer):
 The <revOpenDatabase> function returns a database ID which can be used
 to refer to the database in other Database library commands and
 functions. The database ID is always an integer. If the database is not
@@ -212,9 +214,9 @@ Use the <revOpenDatabase> function to start working with a database.
 > 'SSL Encryption' from among the available 'script libraries' in the
 > standalone application settings panel.
 
-The version of SQLite has been updated to 3.8.2.
+The version of SQLite has been updated to 3.15.0.
 
-The SQLite RTREE module is now available.
+The SQLite RTREE and FTS5 modules are now available.
 
 SQLite loadable extensions are now supported. To utilize loadable
 extensions, the 'extensions' option must be passed to the
@@ -240,4 +242,3 @@ revDatabaseConnectResult (function), revDatabaseTableNames (function),
 revQueryIsAtStart (function), Database library (library)
 
 Tags: database
-

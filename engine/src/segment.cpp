@@ -33,6 +33,10 @@
 
 
 MCSegment::MCSegment(MCLine *p_parent)
+    : m_FirstVisualBlock(),
+      m_LastVisualBlock(),
+      m_HAlign(),
+      m_VAlign()
 {
     m_Parent = p_parent;
     m_FirstBlock = m_LastBlock = NULL;
@@ -48,6 +52,8 @@ MCSegment::MCSegment(MCLine *p_parent)
 
 
 MCSegment::MCSegment(const MCSegment *sg)
+    : m_FirstVisualBlock(),
+      m_LastVisualBlock()
 {
     m_Parent = sg->m_Parent;
     m_FirstBlock = m_LastBlock = NULL;
@@ -304,7 +310,7 @@ MCLine *MCSegment::Fit(coord_t p_max_width)
         else if (t_break_block != m_LastBlock)
         {
             // Split this segment
-            t_split_segment = new MCSegment(this);
+            t_split_segment = new (nothrow) MCSegment(this);
             append(t_split_segment);
             t_split_segment->AddBlockRange(t_break_block->next(), m_LastBlock);
             
@@ -328,7 +334,7 @@ MCLine *MCSegment::Fit(coord_t p_max_width)
             m_LastBlock = t_break_block;
         
         // Create a new line containing the segments and blocks that don't fit
-        t_newline = new MCLine(*m_Parent);
+        t_newline = new (nothrow) MCLine(*m_Parent);
         t_newline->appendsegments(t_split_segment, t_parent_line->lastsegment);
         
         // Update the parent line's block and segment pointers

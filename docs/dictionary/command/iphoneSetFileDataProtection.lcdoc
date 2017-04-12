@@ -21,26 +21,24 @@ iphoneSetFileDataProtection specialFolderPath("documents") & "/appointments.txt"
 
 Parameters:
 filename:
-The fulle path to the file to be protected.
+The full path to the file to be protected.
 
 dataProtection (enum):
 The level of protection to apply to the file
 
 -   "none": No protection
--   "complete": The file is not accessible, for read or write, while the
-    device is locked.
--   "complete unless open": The file is fully protected when the device
-    is locked, unless it was already open
--   "complete until first user authentication": The file is fully
-    protected until the user unlocks the device for this first time.
+-   "complete": The file is not accessible, for read or write, while the device is locked.
+-   "complete unless open": The file is fully protected when the device is locked, unless it was already open
+-   "complete until first user authentication": The file is fully protected until the user unlocks the device for this first time.
 
 
 Description:
-Use the <iphoneSetFileDataProtection> command to set the data protectio
+Use the <iphoneSetFileDataProtection> command to set the data protection 
 level of a file.
 
 The  <iphoneSetFileDataProtection> command sets the level of data
-protection applied to a file.
+protection applied to a file. The files protection level can be checked 
+using the <iphoneFileDataProtection> function.
 
 References: iphoneSetDoNotBackupFile (command),
 iphoneFileDataProtection (function), iphoneDoNotBackupFile (function),

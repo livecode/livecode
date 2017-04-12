@@ -6,6 +6,7 @@
 		[
 			'src/arithmetic.lcb',
 			'src/array.lcb',
+			'src/assert.lcb',
 			'src/binary.lcb',
 			'src/bitwise.lcb',
 			'src/byte.lcb',
@@ -16,6 +17,7 @@
 			'src/file.lcb',
 			'src/foreign.lcb',
 			#'src/item.lcb',
+			'src/java.lcb',
 			#'src/line.lcb',
 			'src/list.lcb',
 			'src/logic.lcb',
@@ -42,6 +44,7 @@
 		[
 			'src/module-arithmetic.cpp',
 			'src/module-array.cpp',
+			'src/module-assert.cpp',
 			'src/module-binary.cpp',
 			'src/module-bitwise.cpp',
 			'src/module-byte.cpp',
@@ -51,6 +54,7 @@
 			'src/module-encoding.cpp',
 			'src/module-file.cpp',
 			'src/module-foreign.cpp',
+			'src/module-java.cpp',
 			'src/module-list.cpp',
 			'src/module-logic.cpp',
 			'src/module-map.cpp',

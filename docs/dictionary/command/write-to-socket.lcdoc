@@ -2,7 +2,7 @@ Name: write to socket
 
 Type: command
 
-Syntax: write <value> to socket <socket> [with message <callbackMessage>]
+Syntax: write <dataString> to socket <socketID> [with message <callbackMessage>]
 
 Summary:
 Sends data to a <socket>.
@@ -23,9 +23,9 @@ write "test" & linefeed to socket "www.google.com:80"
 
 Example:
 on mouseUp
-   open socket "www.google.com:80"
-   write "test" \
-         to socket "www.google.com:80" with message "socketFinishedWriting"
+    open socket "www.google.com:80"
+    write "test" \
+        to socket "www.google.com:80" with message "socketFinishedWriting"
 end mouseUp
 
 on socketFinishedWriting pSocketID
@@ -34,24 +34,24 @@ on socketFinishedWriting pSocketID
 end socketFinishedWriting
 
 Parameters:
-value (string):
+dataString (string):
+The data to be sent through the socket connection.
 
-
-socket:
-
-
-callbackMessage:
-The name of a message to be sent to the current object when the write is
-successfully completed.
-
-socketID:
-The identifier (set when you opened the socket) of the socket you want
-to send data to. The socket identifier starts with the IP address of the
+socketID (string):
+The identifier (set when you opened the socket with the <open socket>
+command) of the socket you want to send data to.
+The socket identifier starts with the IP address of the
 host the socket is connected to, and may optionally include a port
 number (separated from the IP address by a colon). If there is more than
 one socket connected to that host and port, you can specify which socket
 by appending the connection name or number that was assigned when the
 socket was opened, separated from the port number by a vertical bar (|).
+
+
+callbackMessage (string):
+The name of a message to be sent to the current object when the write is
+successfully completed.
+
 
 Description:
 Use the <write to socket> <command> to send data to another system via a
@@ -67,6 +67,7 @@ write has been completed, or until the time set in the
 <socketTimeoutInterval> <property> has passed.
 
 References: accept (command), write to driver (command), post (command),
+open socket (command), read from socket (command),
 arrayEncode (function), property (glossary), handler (glossary),
 message (glossary), socket (glossary), parameter (glossary),
 command (glossary), TCP (glossary), object (glossary),
@@ -74,4 +75,3 @@ socketTimeout (message), socketTimeoutInterval (property),
 script (property)
 
 Tags: networking
-

@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -171,8 +171,6 @@ bool MCWin32HRGNToMCGRegion(HRGN p_region, MCGRegionRef &r_region)
 	s_rect_count = 0;
 	if (MCWin32RegionForEachRect(p_region, HRGNToMCGRegionCallback, t_region))
 	{
-		MCLog("convert HRGN with %d rects", s_rect_count);
-
 		r_region = t_region;
 		return true;
 	}

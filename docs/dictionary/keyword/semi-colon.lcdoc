@@ -22,7 +22,7 @@ local x
 repeat with x = 1 to 10; put x after field 1; end repeat
 
 Description:
-Use the ; character to compress code into fewer visible <line|lines> for
+Use the <;> character to compress code into fewer visible <line|lines> for
 easier reading.
 
 Lines that are split with <;> are shown in the <script editor> as a
@@ -32,10 +32,19 @@ single <line>, but when <execute|executed>, are treated as multiple
 
     go card 1; beep 2; answer the date
 
+is the same as:
+
+    go card 1
+    beep 2
+    answer the date
 
 A <;> character which is used within a <literal string> does not signal
 a new <line>, because the <;> is treated as part of the <string> instead
 of being treated as a line break.
+
+The advantage of using the <;> character are fewer physical lines of code
+which can mean marginally smaller stack file sizes. The disadvantage is 
+that it can be harder to read and debug the code.
 
 References: line (glossary), string (glossary), literal string (glossary),
 statement (glossary), script editor (glossary), execute (glossary),

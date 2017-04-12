@@ -342,6 +342,40 @@ do "set the cDidThis of this stack to 100"
 TestAssert "Do command", the cDidThis of this stack is 100
 end TestDo
 
+local kDoAsMessage_ExecutionError = "execution error"
+on TestDoAsJavaScript
+    if the platform is not "HTML5" then
+		exit TestDoAsJavaScript
+	end if
+	
+	do "1 + '4';" as "javascript"
+	TestAssert "Do as JavaScript", the result is "14"
+	
+	do "undefined;" as "javascript"
+	TestAssert "Undefined values return empty", the result is empty
+	
+	do "function(x) { return x; }" as "javascript"
+	TestAssert "Function return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "{ key1: 'value1', key2: 2 };" as "javascript"
+	TestAssert "Object return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "[ 1, 2, 3, 4 ];" as "javascript"
+	TestAssert "Array return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "6.02e23;" as "javascript"
+	TestAssert "Number return value", the result is a number
+	
+	do "'Hello, World!';" as "javascript"
+	TestAssert "String return value", the result is "Hello, World!"
+	
+end TestDoAsJavaScript
+
+on TestAlternateLanguages
+	if the platform is "HTML5" then
+		TestAssert "JavaScript in HTML5 alternateLanguages", "javascript" is among the lines of the alternateLanguages
+	end if
+end TestAlternateLanguages
 
 on TestFrontScriptBackScriptCall
 create button

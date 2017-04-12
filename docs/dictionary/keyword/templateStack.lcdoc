@@ -23,10 +23,8 @@ used for any new <stacks> you create.
 
 The <templateStack> can be thought of as a special, abstract
 <object(glossary)>. It is not an actual <stack>, but it has all the
-<properties> of a <stack>. The <ID> <property> of the <templateStack> is
-
-1001. 
-
+<properties> of a <stack>. The <ID> <property> of the <templateStack> 
+is 1001. 
 
 You can use the <set> <command> to set the <properties> of the
 <templateStack> before creating a <stack>. The new <stack> has the

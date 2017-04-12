@@ -30,6 +30,7 @@
 					[
 						'<@(perl)',
 						'../util/encode_version.pl',
+						'-<(git_revision)',
 						'.',
 						'<(SHARED_INTERMEDIATE_DIR)',
 					],

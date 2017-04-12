@@ -33,3 +33,9 @@ on TestStrictUInt
    local tEmpty
    TestAssert "empty variable does not convert to 0 in object ID", not exists(button id tEmpty)
 end TestStrictUInt
+
+on TestJunkAfterNumber -- Bug 18651
+   TestAssert "whitespace after number", "0    " is a number
+   TestAssert "digits after number", "0 9" is not a number
+   TestAssert "junk after number", "0 foo" is not a number
+end TestJunkAfterNumber

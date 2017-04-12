@@ -1601,7 +1601,7 @@ end syntax
 public foreign handler MCWidgetGetMyNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetMyNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as optional Pointer) returns nothing binds to "<builtin>"
 
 /**
 Summary: Get the current widget's native layer pointer

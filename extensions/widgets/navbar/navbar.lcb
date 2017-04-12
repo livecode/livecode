@@ -111,7 +111,7 @@ widget com.livecode.widget.navbar
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 --
 
@@ -1258,19 +1258,20 @@ public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
 end handler
 
 public handler setNavSelectedItemName(in pName as String) returns nothing
-	variable tCount as Number
+	variable tCount as Integer
 	variable tItem as Array
-
+	
 	-- Find the item index corresponding to pName and set it as the
 	-- currently-highlighted item.
-	put 0 into tCount
-	repeat for each element tItem in mNavData
-		add 1 to tCount
-		if mNavData["name"] is pName then
+	
+	repeat with tCount from 1 up to the number of elements in mNavData
+		put mNavData[tCount] into tItem
+		if tItem["name"] is pName then
 			setNavSelectedItem(tCount)
 			exit repeat
 		end if
 	end repeat
+
 end handler
 
 public handler getNavSelectedItemName() returns String

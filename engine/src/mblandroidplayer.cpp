@@ -317,7 +317,7 @@ void MCAndroidPlayerControl::DeleteView(jobject p_view)
 
 bool MCNativePlayerControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidPlayerControl();
+    r_control = new (nothrow) MCAndroidPlayerControl();
     return true;
 }
 
@@ -413,7 +413,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
         }
         MCAndroidPlayerControl *t_player = (MCAndroidPlayerControl*)t_control;
         MCCustomEvent *t_event;
-        t_event = new MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
+        t_event = new (nothrow) MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
         MCEventQueuePostCustom(t_event);
     }
 }

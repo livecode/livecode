@@ -52,11 +52,11 @@ bool MCAndroidSystem::Initialize(void)
     
     // Initialize our case mapping tables
     
-    MCuppercasingtable = new uint1[256];
+    MCuppercasingtable = new (nothrow) uint1[256];
     for(uint4 i = 0; i < 256; ++i)
         MCuppercasingtable[i] = (uint1)toupper((uint1)i);
     
-    MClowercasingtable = new uint1[256];
+    MClowercasingtable = new (nothrow) uint1[256];
     for(uint4 i = 0; i < 256; ++i)
         MClowercasingtable[i] = (uint1)tolower((uint1)i);
     
@@ -81,34 +81,6 @@ void MCAndroidSystem::Debug(MCStringRef p_string)
     MCAutoStringRefAsUTF8String t_utf8_string;
     /* UNCHECKED */ t_utf8_string . Lock(p_string);
 	__android_log_print(ANDROID_LOG_INFO, "LiveCode", "%s", *t_utf8_string);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCSysModuleHandle MCAndroidSystem::LoadModule(MCStringRef p_path)
-{
-	MCAutoStringRef t_resolved_path;
-	/* UNCHECKED */ MCAndroidResolveLibraryPath(p_path, &t_resolved_path);
-	
-	MCAutoStringRefAsUTF8String t_utf8_path;
-	/* UNCHECKED */ t_utf8_path . Lock(*t_resolved_path);
-	
-	void *t_result;
-	t_result = dlopen(*t_utf8_path, RTLD_LAZY);
-	MCLog("LoadModule(%s) - %p\n", *t_utf8_path, t_result);
-	return (MCSysModuleHandle)t_result;
-}
-
-MCSysModuleHandle MCAndroidSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-{
-    MCAutoStringRefAsUTF8String t_utf8_symbol;
-    /* UNCHECKED */ t_utf8_symbol . Lock(p_symbol);
-	return (MCSysModuleHandle)dlsym((void*)p_module, *t_utf8_symbol);
-}
-
-void MCAndroidSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	dlclose((void*)p_module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -785,7 +785,7 @@ static MCPlayerRatePopup *s_rate_popup = nil;
 MCPlayer::MCPlayer()
 {
 	flags |= F_TRAVERSAL_ON;
-	nextplayer = NULL;
+	nextplayer = nil;
     rect.width = rect.height = 128;
     filename = MCValueRetain(kMCEmptyString);
     resolved_filename = MCValueRetain(kMCEmptyString);
@@ -826,7 +826,7 @@ MCPlayer::MCPlayer()
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
-    nextplayer = NULL;
+    nextplayer = nil;
     filename = MCValueRetain(sref.filename);
     resolved_filename = MCValueRetain(sref.resolved_filename);
 	istmpfile = False;
@@ -867,27 +867,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 
 MCPlayer::~MCPlayer()
 {
-	// OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
-	while (opened)
-		close();
-	
-	playstop();
-    
-    // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
-	if (MCplayers != NULL)
-	{
-		if (MCplayers == this)
-			MCplayers = nextplayer;
-		else
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
-				tptr = tptr->nextplayer;
-			if (tptr->nextplayer == this)
-                tptr->nextplayer = nextplayer;
-		}
-	}
-	nextplayer = NULL;
+    removefromplayers();
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
@@ -1173,7 +1153,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -1728,22 +1708,6 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
-    /*
-	if (MCplayers != NULL)
-	{
-		if (MCplayers == this)
-			MCplayers = nextplayer;
-		else
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
-				tptr = tptr->nextplayer;
-			if (tptr->nextplayer == this)
-                tptr->nextplayer = nextplayer;
-		}
-	}
-	nextplayer = NULL;*/
-    
 	if (disposable)
 	{
 		//if (needmessage)
@@ -2140,7 +2104,7 @@ void MCPlayer::markerchanged(MCPlatformPlayerDuration p_time)
             MCExecContext ctxt(nil, nil, nil);
             
             MCParameter *t_param;
-            t_param = new MCParameter;
+            t_param = new (nothrow) MCParameter;
             t_param -> set_argument(ctxt, m_callbacks[i] . parameter);
             MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
             
@@ -2181,7 +2145,7 @@ void MCPlayer::currenttimechanged(void)
         state |= CS_CTC_PENDING;
         
         MCParameter *t_param;
-        t_param = new MCParameter;
+        t_param = new (nothrow) MCParameter;
         t_param -> setn_argument(getmoviecurtime());
         MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
         
@@ -2245,7 +2209,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         
         // SN-2014-07-28: [[ Bug 12984 ]] MCNumberParseOffset expects the string to finish after the number
         MCAutoStringRef t_callback_substring;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_callback_substring);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_start_index, t_comma_index), &t_callback_substring);
         
         // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
         if (MCNumberParse(*t_callback_substring, &t_time))
@@ -2266,7 +2230,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
             if (isspace(MCStringGetCharAtIndex(*t_callback, t_space_index)))
             {
                 MCAutoStringRef t_param;
-                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_space_index, t_end_index - t_space_index), &t_param);
+                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_space_index, t_end_index), &t_param);
                 /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
                 break;
             }
@@ -2274,14 +2238,14 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         }
         
         MCAutoStringRef t_message;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_callback_index, t_space_index), &t_message);
         /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
         if (m_callbacks[m_callback_count - 1] . parameter == nil)
         {
             MCAutoStringRef t_param;
-            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
+            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMakeMinMax(t_start_index, t_comma_index), &t_param);
             /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
         }
 		
@@ -3255,7 +3219,7 @@ void MCPlayer::handle_mdown(int p_which)
             {
                 if (s_volume_popup == nil)
                 {
-                    s_volume_popup = new MCPlayerVolumePopup;
+                    s_volume_popup = new (nothrow) MCPlayerVolumePopup;
                     s_volume_popup -> setparent(MCdispatcher);
                     MCdispatcher -> add_transient_stack(s_volume_popup);
                 }
@@ -3723,7 +3687,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
             if (s_rate_popup == nil)
             {
-                s_rate_popup = new MCPlayerRatePopup;
+                s_rate_popup = new (nothrow) MCPlayerRatePopup;
                 s_rate_popup -> setparent(MCdispatcher);
                 MCdispatcher -> add_transient_stack(s_rate_popup);
             }

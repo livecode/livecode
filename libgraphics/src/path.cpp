@@ -53,7 +53,7 @@ bool MCGPathCreateMutable(MCGPathRef& r_path)
 	
 	if (t_success)
 	{
-		t_path -> path = new SkPath();
+		t_path -> path = new (nothrow) SkPath();
 		t_success = t_path -> path != NULL;
 	}
 	
@@ -1163,13 +1163,10 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 {
 	if (!MCGPathIsValid(self))
 		return false;
-	
-	bool t_success;
-	t_success = true;
-	
+
 	MCGPoint t_points[3];
-	uint32_t t_point_count;
-	MCGPathCommand t_command;
+	uint32_t t_point_count = 0;
+	MCGPathCommand t_command = kMCGPathCommandEnd;
 	
 	SkPath::Iter t_iter(*self->path, false);
 	SkPath::Verb t_verb;
@@ -1177,8 +1174,9 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 	
 	// IM-2015-03-20: [[ Bug 15035 ]] The first point returned by SkPath::Iter::next() is
 	//  always the last moveTo point; the points for the current verb start at index 1.
-	while (t_success && (t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
+	while ((t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
 	{
+
 		switch(t_verb)
 		{
 			case SkPath::kMove_Verb:
@@ -1219,15 +1217,11 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 				
 			default:
 				// Unknown path instruction
-				t_success = false;
-				break;
+				return false;
 		}
-		
-		t_success = p_callback(p_context, t_command, t_points, t_point_count);
+		if (!p_callback(p_context, t_command, t_points, t_point_count))
+			return false;
 	}
 	
-	if (t_success)
-		t_success = p_callback(p_context, kMCGPathCommandEnd, nil, 0);
-	
-	return t_success;
+	return p_callback(p_context, kMCGPathCommandEnd, nil, 0);
 }

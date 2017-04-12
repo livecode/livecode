@@ -21,219 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "express.h"
 #endif
 
-#define VAR_PAD 16
-#define VAR_MASK 0xFFFFFFF0
-#define VAR_APPEND_MAX (MAXUINT2 * 4)
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// The MCVariableArray class represents LiveCode's 'hash' value.
-// It is intended to be used by another class that controls construction and
-// destruction (notice it has no constructor/destructor). The reason behind
-// this is that we want to be able to put it in 'union' constructs and have
-// another class control its discrimination.
-
-#define TABLE_SIZE 8
-#define EXTENT_NONNUM 0
-#define EXTENT_RECALC 1
-#define EXTENT_ALLOCEVAL 2
-#define ROW_DIM  0
-#define COL_DIM 1
-
-// MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
-typedef struct
-{
-	int32_t minimum;
-	int32_t maximum;
-}
-arrayextent;
-
-struct MCHashentry;
-
-class MCVariableArray
-{
-	MCHashentry **table;
-	uint32_t tablesize;
-	uint32_t nfilled;
-	uint32_t keysize;
-	uint8_t dimensions;
-	arrayextent *extents;
-
-public:
-    // Initialize the array to empty
-    void clear(void);
-    
-	// Initialize the hash to the given size
-	bool presethash(uint4 p_size);
-
-	// Increase the size of the hash to the next power of two
-	bool resizehash(uint32_t p_new_size = 0);
-
-	// Free the array's memory
-	void freehash(void);
-
-	//
-
-	// Return the number of entrys in the array
-	uint32_t getnfilled(void) const;
-
-	//
-	// Copy any keys from v not present in this
-	// PRECONDITION: this is initialized
-    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-	Exec_stat unionarray(MCVariableArray& v, bool p_recursive);
-
-	// Remove any keys in this not present in v
-	// PRECONDITION: this is initialized
-	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-    Exec_stat intersectarray(MCVariableArray& v, bool p_recursive);
-
-	// Set the value of the variable to the transpose of the value contained in v.
-	// PRECONDITION: this is uninitialized
-	Exec_stat transpose(MCVariableArray& v);
-
-	// Return True if the variable is a dense numerically indexed array of some dimension.
-	Boolean isnumeric(void);
-
-	// Return True if the variable is a sequence...
-	///  ... which is a dense numerically indexed array of some dimension.
-	Boolean issequence(void);
-
-	// Lookup the given key in the array potentially adding it if it is not present
-	// PRECONDITION: this is initialized
-	MCHashentry *lookuphash(const MCString &, Boolean cs, Boolean add);
-	
-	// Lookup the given index in the sequence.
-	// PRECONDITION: this is initialized and issequence() == True
-	MCHashentry *lookupindex(uint32_t p_index, Boolean add);
-
-	// Lookup the given key and remove it if it is present
-	// PRECONDITION: this is initialized
-	void removehash(const MCString&, Boolean cs);
-	
-	// Remove the given hashentry directly.
-	// PRECONDITION: this is initialized and p_hash is a direct child
-	void removehash(MCHashentry *p_entry);
-	
-	// Steal the given variable's hashtable
-	// PRECONDITION: this is uninitialized
-	void taketable(MCVariableArray *v);
-
-	// Copy the given variable's hashtable
-	// PRECONDITION: this is uninitialized
-	bool copytable(const MCVariableArray &v);
-
-	// Return a list of keys of the array (used by xcommands)
-	// PRECONDITION: this is initialized
-	void getkeys(char **keylist, uint4 kcount);
-
-	// Iterate over the keys in the array
-	// PRECONDITION: this is initialized
-	MCHashentry *getnextkey(uint4& l, MCHashentry *e) const;
-
-	// Alternative form of iteration - uses the entry's hash element to compute
-	// the next entry.
-	// PRECONDITION: this is initialized
-	MCHashentry *getnextkey(MCHashentry *e) const;
-
-	// Set the array to the result of splitting the given value.
-	// PRECONDITION: this is uninitialized
-	void split(const MCString& s, char e, char k);
-
-	// Set the array to the result of splitting the given value column-wise
-	// PRECONDITION: this is uninitialized
-	void split_column(const MCString& s, char r, char c);
-
-	// Set the array to the result of splitting the given value as a set.
-	// PRECONDITION: this is uninitialized
-	void split_as_set(const MCString& s, char e);
-	
-	// Load the keys of the array from the given stream
-	// PRECONDITION: this is uninitialized
-	IO_stat loadkeys(IO_handle stream, bool p_merge);
-
-	// Save the keys of the array to the given stream
-	// PRECONDITION: this is initialized
-	IO_stat savekeys(IO_handle stream);
-
-	// Set the properties of the given object to those listed in this array
-	// PRECONDITION: this is initialized
-	Exec_stat setprops(uint4 parid, MCObject *optr);
-
-	// Returns true if the array has arrays as sub-keys
-	// PRECONDITION: this is initialized
-	bool isnested(void);
-
-	// Fill the given buffer with an unordered list of the hashentries
-	void listelements(MCHashentry** elements);
-	
-	// Returns the serialized length of the array (in total)
-	uint4 measure(bool p_only_nested);
-
-	IO_stat save(MCObjectOutputStream& p_stream, bool p_only_nested);
-	IO_stat load(MCObjectInputStream& p_stream, bool p_merge);
-
-private:
-	// Compute the hash value of the given string
-	uint4 computehash(const MCString &);
-
-	// Update the extents on the array appropriately using the given key
-	void extentfromkey(char *skey);
-
-	// Recalculate the extents
-	void calcextents(void);
-
-	// Get the extent of the given dimension
-    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
-	uint32_t getextent(uint1 tdimension) const;
-
-	// Return True if the extents and number of keys do not match up
-	Boolean ismissingelement(void) const;
-};
-
-inline uint32_t MCVariableArray::getnfilled(void) const
-{
-	return nfilled;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// The MCVariableValue class represents a value that can be stored in a 
-// LiveCode variable, or container (such as a hash).
-//
-// A value has one of 5 states:
-//   - UNDEFINED: no value has been set, this is evaluated as *both* 0.0 and
-//       the empty string
-//   - STRING: only a string value has been set
-//   - NUMBER: only a numeric value has been set
-//   - BOTH: the string value has been converted to a number or vice-versa
-//   - ARRAY: an array value is set
-//
-// Note that arrays are always non-empty, if an array has all its keys deleted
-// it reverts to the empty string.
-//
-// If the value is both or a string, then strnum . svalue . string is always
-// non-NULL (even it is the constant "" empty string).
-//
-// The value class uses a buffer when in string or both mode. This buffer is
-// used for fast appending and modification of the string.
-//
-// The following implicit conversions take place:
-//   - undefined -> 0.0
-//   - undefined -> ""
-//   - "" -> 0.0 (when used in numeric context - not for comparison)
-//   - array -> empty
-//   - array -> 0.0
-//   - empty -> empty array
-//
-
 #define kMCEncodedValueTypeUndefined 1
 #define kMCEncodedValueTypeEmpty 2
 #define kMCEncodedValueTypeString 3
 #define kMCEncodedValueTypeNumber 4
 #define kMCEncodedValueTypeLegacyArray 5
 #define kMCEncodedValueTypeArray 6
-
 
 typedef enum
 {
@@ -245,7 +38,7 @@ typedef enum
 class MCVariable
 {
 protected:
-	MCNameRef name;
+	MCNewAutoNameRef name;
 	MCExecValue value;
 	MCVariable *next;
 
@@ -267,7 +60,15 @@ protected:
 
 	// The correct way to create variables is with the static 'create' methods
 	// which can catch a failure.
-	MCVariable(void) {}
+    MCVariable()
+        : next(nullptr),
+          is_msg(false),
+          is_env(false),
+          is_global(false),
+          is_deferred(false),
+          is_uql(false)
+    {}
+
 	MCVariable(const MCVariable& other) {}
     
     // Returns true if the existing value of the variable is can become or remain
@@ -428,12 +229,12 @@ public:
 
 	MCNameRef getname(void)
 	{
-		return name;
+		return *name;
 	}
 
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualTo(*name, other_name, kMCCompareCaseless);
 	}
 
 	//////////
@@ -480,14 +281,33 @@ public:
 class MCContainer
 {
 public:
+    MCContainer(void)
+        : m_variable(nullptr),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
+    MCContainer(MCVariable *var)
+        : m_variable(var),
+          m_path(nullptr),
+          m_length(0),
+          m_case_sensitive(false)
+    {
+    }
+    
 	~MCContainer(void);
 
 	//
 
+    bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-	bool remove(MCExecContext& ctxt);
+    bool eval_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
+    
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool set_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef p_value);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -507,9 +327,9 @@ public:
         r_length = m_length;
     }
 
-	static bool createwithvariable(MCVariable *var, MCContainer*& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer*& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container);
+	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
+	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
+    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
     
     MCVariable *getvar()
     {
@@ -537,11 +357,11 @@ protected:
 	};
 	unsigned index : 16;
 	unsigned dimensions : 8;
-	Boolean isparam : 1;
+	bool isparam : 1;
 
 	// MW-2008-10-28: [[ ParentScripts ]] This boolean flag is True if this
 	//   varref refers to a script local.
-	Boolean isscriptlocal : 1;
+	bool isscriptlocal : 1;
 	
 	// MW-2012-03-15: [[ Bug ]] This boolean flag is true if this varref is
 	//   a plain var and doesn't require synching.
@@ -587,23 +407,15 @@ public:
 	}
     virtual ~MCVarref();
     
-    bool needsContainer(void) const {return dimensions != 0;}
-    
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-    bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
+    virtual bool evalcontainer(MCExecContext &ctxt, MCContainer& r_container);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_in(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);
 	virtual void compile_inout(MCSyntaxFactoryRef);
 
-	//virtual MCVariable *getvar();
 	virtual MCVarref *getrootvarref(void);
-
-	// This method returns true if p_other refers to the same root
-	// variable as self.
-	bool rootmatches(MCVarref *p_other) const;
 
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
@@ -623,7 +435,7 @@ private:
     MCVariable *fetchvar(MCExecContext& ctxt);
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
-    bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
+    bool resolve(MCExecContext& ctxt, MCContainer& r_container);
     
     void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
 };
@@ -660,8 +472,7 @@ public:
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
-    virtual MCVariable *evalvar(MCExecContext& ctxt);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

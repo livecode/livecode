@@ -110,63 +110,63 @@ extern Boolean tripleclick;
 
 class MCScreenDC : public MCUIDC
 {
-	GdkGC* gc;		// This is the GC in "Native" (i.e. actual screen) depth
+	GdkGC* gc = nullptr;		// This is the GC in "Native" (i.e. actual screen) depth
 	
-	bool m_application_has_focus ; // This allows us to track if the application is at the front.
+	bool m_application_has_focus = false; // This allows us to track if the application is at the front.
 	
-	Atom statusatom;
-	Atom selectionatom;
+	Atom statusatom = GDK_NONE;
+	Atom selectionatom = GDK_NONE;
 
-	uint2 destdepth; //
+	uint2 destdepth = 0; //
 	
-	Boolean opened;
+	Boolean opened = false;
 	
-	Window Xwin; //
-	Window NULLWindow ;
+	Window Xwin = None; //
+	Window NULLWindow = None;
 	
-	MCEventnode *pendingevents;
+	MCEventnode *pendingevents = nullptr;
 	
-	Boolean ownselection;
+	Boolean ownselection = False;
 	MCString selectiontext;
-	Boolean doubleclick;
+	Boolean doubleclick = False;
 
-	GdkColormap *cmap;			// Native colourmap
-	GdkColormap *cmap32 ;		// 32-bit colourmap
+	GdkColormap *cmap = nullptr;			// Native colourmap
+	GdkColormap *cmap32 = nullptr;		// 32-bit colourmap
 
-	GdkVisual *vis;		// Native visual
-	GdkVisual *vis32 ;	// 32-bit visual
+	GdkVisual *vis = nullptr;		// Native visual
+	GdkVisual *vis32 = nullptr;	// 32-bit visual
 
-	bool backdrop_active;
-	bool backdrop_hard;
-	Window backdrop;
-	MCColor backdropcolor;
+	bool backdrop_active = false;
+	bool backdrop_hard = false;
+	Window backdrop = None;
+	MCColor backdropcolor {0, 0, 0};
 	// IM-2014-04-15: [[ Bug 11603 ]] Store converted backdrop pattern pixmap
-	Pixmap m_backdrop_pixmap;
+	Pixmap m_backdrop_pixmap = nullptr;
 
-	Window last_window ; 	//XDND - Used for the moment to shunt the ID
+	Window last_window = None; 	//XDND - Used for the moment to shunt the ID
 	
-	bool m_has_native_theme;
-	bool m_has_native_color_dialogs;
-	bool m_has_native_print_dialogs;
-	bool m_has_native_file_dialogs;
+	bool m_has_native_theme = false;
+	bool m_has_native_color_dialogs = false;
+	bool m_has_native_print_dialogs = false;
+	bool m_has_native_file_dialogs = false;
     
     // Set if GTK is available
-    bool m_has_gtk;
+    bool m_has_gtk = false;
     
     // Input context for IME integration
-    GtkIMContext *m_im_context;
+    GtkIMContext *m_im_context = nullptr;
 
 public:
 	
-	char * syslocale ;
+	char * syslocale = nullptr;
 	
-	GdkDisplay *dpy;
-	Boolean has_composite_wm ;
-	Drawable dest; //
+	GdkDisplay *dpy = nullptr;
+	Boolean has_composite_wm = false;
+	Drawable dest = None; //
 
-	MCNameRef displayname;
-	MCNameRef vendorname;
-	uint4 savedpixel; // Move into per-context
+	MCNewAutoNameRef displayname;
+	MCNewAutoNameRef vendorname;
+	uint4 savedpixel = 0; // Move into per-context
 
 	MCScreenDC();
 	virtual ~MCScreenDC();

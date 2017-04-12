@@ -9,7 +9,7 @@ Syntax: floor(<number>)
 Summary:
 <return|Returns> the greatest integer less than or equal to number.
 
-Introduced: 6.7
+Introduced: 7.1
 
 OS: mac, windows, linux, ios, android
 
@@ -34,12 +34,12 @@ equal to a number.
 
 The <floor> <function> is different from <round> in that floor
 completely ignores the fractional part of the number. For example,
-floor(5.1) <return(glossary)|returns> 5, but floor(4.99)
-<return(glossary)|returns> 4. This means that the <floor> function does
-not always <return(constant)> the <integer> closest to the <number>.
+`floor(5.1)` <return|returns> 5, but `floor(4.99)` <return|returns> 4.
+This means that the <floor> function does not always <return> the
+<integer> closest to the <number>.
 
-References: return (constant), function (control structure),
-ceil (function), round (function), abs (function), trunc (function),
+References: function (control structure),
+ceiling (function), round (function), abs (function), trunc (function),
 return (glossary), integer (keyword)
 
 Tags: math

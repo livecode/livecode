@@ -698,7 +698,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
         else
         {
             // We have a named key, we just add the name to the path.
-            if (!MCStringCopySubstring(t_raw_key_str, MCRangeMake(t_subkey_start, t_subkey_end - t_subkey_start), &t_subkey_str))
+            if (!MCStringCopySubstring(t_raw_key_str, MCRangeMakeMinMax(t_subkey_start, t_subkey_end), &t_subkey_str))
                 return false;
         }
 
@@ -723,19 +723,27 @@ static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, MCDataRef
 {
     MCStringEncoding t_encoding;
 
-    if (p_encoding == kMCSOutputTextEncodingUTF8)
-        t_encoding = kMCStringEncodingUTF8;
-    else if (p_encoding == kMCSOutputTextEncodingWindows1252)
-        t_encoding = kMCStringEncodingWindows1252;
-    else if (p_encoding == kMCSOutputTextEncodingMacRoman)
-        t_encoding = kMCStringEncodingMacRoman;
-    else if (p_encoding == kMCSOutputTextEncodingISO8859_1)
-        t_encoding = kMCStringEncodingISO8859_1;
-    else if (p_encoding == kMCSOutputTextEncodingNative)
-        t_encoding = kMCStringEncodingNative;
-    else // kMCSOutputTextEncodingUndefined
-        return false;
-
+	if (kMCSOutputTextEncodingNative == p_encoding)
+		t_encoding = kMCStringEncodingNative;
+	else
+	{
+		switch(p_encoding)
+		{
+			case kMCSOutputTextEncodingUTF8:
+				t_encoding = kMCStringEncodingUTF8;
+				break;
+			case kMCSOutputTextEncodingWindows1252:
+				t_encoding = kMCStringEncodingWindows1252;
+				break;
+			case kMCSOutputTextEncodingISO8859_1:
+				t_encoding = kMCStringEncodingISO8859_1;
+				break;
+			case kMCSOutputTextEncodingMacRoman:
+				t_encoding = kMCStringEncodingMacRoman;
+				break;
+		}
+	}
+	
     if (MCStringDecode(p_text, t_encoding, false, r_native_text))
     {
         MCStringNativize(r_native_text);
@@ -778,7 +786,7 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
         MCAutoDataRef t_key;
         MCNewAutoNameRef t_key_as_name;
         MCAutoStringRef t_key_as_string;
-        cgi_unescape_url(p_data, MCRangeMake(t_encoded_index, t_encoded_key_end - t_encoded_index), &t_key);
+        cgi_unescape_url(p_data, MCRangeMakeMinMax(t_encoded_index, t_encoded_key_end), &t_key);
 
         // The key should be native
         /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_key), MCDataGetLength(*t_key), &t_key_as_string);
@@ -792,7 +800,7 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 				t_encoded_value_end--;
 		
         MCAutoDataRef t_value;
-        cgi_unescape_url(p_data, MCRangeMake(t_encoded_value_index, t_encoded_value_end - t_encoded_value_index), &t_value);
+        cgi_unescape_url(p_data, MCRangeMakeMinMax(t_encoded_value_index, t_encoded_value_end), &t_value);
 
 		// MM-2011-07-13: Added p_native_encoding flag that specifies if the text should 
 		//   be converted from the outputTextEncoding to the native character set.
@@ -973,7 +981,7 @@ static bool cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 // $_POST_RAW contains the entire post message and is read from stdin on access
 static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 {
-	MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+	MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 	
 	bool t_success = true;
 
@@ -987,7 +995,7 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 		uint32_t t_read = 0;
 		
 		char *t_data;
-		t_data = new char[t_length];
+		t_data = new (nothrow) char[t_length];
 		t_success = t_stdin->Read(t_data, t_length, t_read) && t_length == t_read;
 
 		// Store the raw POST data
@@ -1057,7 +1065,7 @@ static bool cgi_compute_post_variables()
 	}
 	else if (gotenv && MCStringBeginsWithCString(*t_content_type, (const char_t *)"multipart/form-data;", kMCStringOptionCompareCaseless))
     {
-		MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		MCCacheHandle *t_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
         IO_handle t_stdin_handle = t_stdin;
 		
         cgi_store_form_multipart(t_stdin_handle);
@@ -1528,12 +1536,12 @@ bool cgi_initialize()
 	// without conflicting
 	if (t_success)
 	{
-		s_cgi_stdin_cache = new MCStreamCache(IO_stdin);
+		s_cgi_stdin_cache = new (nothrow) MCStreamCache(IO_stdin);
 		t_success = s_cgi_stdin_cache != nil;
 	}
 	if (t_success)
 	{
-		IO_stdin = new MCCacheHandle(s_cgi_stdin_cache);
+		IO_stdin = new (nothrow) MCCacheHandle(s_cgi_stdin_cache);
 		t_success = IO_stdin != nil;
 	}
 	
@@ -1541,7 +1549,7 @@ bool cgi_initialize()
 	// before any content.
 	if (t_success)
 	{
-		IO_stdout = new cgi_stdout;
+		IO_stdout = new (nothrow) cgi_stdout;
 		t_success = IO_stdout != nil;
 	}
 	
@@ -1633,7 +1641,11 @@ bool cgi_initialize()
 				if (t_success)
 					t_success = MCNameCreate(*t_key, &t_key_name);
 				if (t_success)
-					t_success = s_cgi_server->setvalueref(&!t_key_name, 1, false, *t_value);
+				{
+					// Because MCVariable::setvalueref takes an MCNameRef*...
+					MCNameRef t_key_name_temp = *t_key_name;
+					t_success = s_cgi_server->setvalueref(&t_key_name_temp, 1, false, *t_value);
+				}
 			}
 		}
 	}

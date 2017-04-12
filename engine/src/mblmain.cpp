@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "system.h"
 #include "font.h"
+#include "debug.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,17 +105,8 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 	MCFontInitialize();
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
-
-    // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
-#if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef& r_filename);
-    MCAutoStringRef t_filename;
-    revandroid_loadExternalLibrary(MCSTR("revsecurity"), &t_filename);
-#endif
     
 	////
-	
-	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
@@ -146,7 +138,12 @@ bool X_main_loop_iteration(void)
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-    if (!MCtodestroy -> isempty())
+	if (MCtracedobject)
+	{
+		MCtracedobject->message(MCM_trace_done);
+		MCtracedobject = nil;
+	}
+	if (!MCtodestroy -> isempty())
     {
         MCtooltip -> cleartip();
         MCtodestroy -> destroy();

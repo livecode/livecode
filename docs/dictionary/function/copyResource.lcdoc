@@ -9,6 +9,8 @@ Copies a <resource> from one <Mac OS> <file> to another.
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac
 
 Platforms: desktop
@@ -68,6 +70,11 @@ If you don't specify a <newID>, the new <resource> has the same ID as
 the original <resource>. Specifying a <newID> does not change the
 resource ID of the original <resource> in the <file>; it only affects
 the copy in the <destinationFile>.
+
+Changes:
+The <copyResource> function was deprecated in LiveCode 8.1, since the
+versions of MacOS supported by LiveCode no longer support resource
+forks.  It should not be used in any new code.
 
 References: copy (command), function (control structure),
 result (function), setResource (function), resource fork (glossary),

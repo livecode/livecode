@@ -91,7 +91,7 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 		else
 		{
 			sp.backup();
-			stack = new MCChunk(False);
+			stack = new (nothrow) MCChunk(False);
 			if (stack->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add
@@ -538,7 +538,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 	else
 	{
 		sp.backup();
-		image = new MCChunk(False);
+		image = new (nothrow) MCChunk(False);
 		if (image->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_EXPORT_BADTYPE, sp);
@@ -571,7 +571,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 				// MW-2006-05-04: Bug 3506 - crash in specific case due to not checking result of sp.lookup
 				// MW-2007-09-11: [[ Bug 5242 ]] - the alternate of this if used to fail if te == NULL, this
 				//   can happen though if we are looking at a variable chunk.
-				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && t_te -> which == CT_STACK)
+				if (sp.next(t_type) == PS_NORMAL && sp.lookup(SP_FACTOR, t_te) == PS_NORMAL && t_te -> type == TT_CHUNK && Chunk_term(t_te -> which) == CT_STACK)
 				{
 					if (sp.parseexp(False, True, &exsstack) != PS_NORMAL)
 					{
@@ -590,7 +590,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 				else if (t_te == NULL || t_te -> type != TT_TO)
 				{
 					sp . backup();
-					image = new MCChunk(False);
+					image = new (nothrow) MCChunk(False);
 					if (image -> parse(sp, False) != PS_NORMAL)
 					{
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
@@ -658,7 +658,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
     if (!t_is_image &&
         sp.skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
     {
-        dest = new MCChunk(True);
+        dest = new (nothrow) MCChunk(True);
         if (dest->parse(sp, False) != PS_NORMAL)
         {
             MCperror->add(PE_EXPORT_NOARRAY, sp);
@@ -678,7 +678,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
         }
         else
         {
-            dest = new MCChunk(True);
+            dest = new (nothrow) MCChunk(True);
             if (dest->parse(sp, False) != PS_NORMAL)
             {
                 MCperror->add(PE_EXPORT_NOFILE, sp);
@@ -1126,7 +1126,7 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 	{
 		MCerrorlock++;
 		MCScriptPoint tsp(sp);
-		container = new MCChunk(True);
+		container = new (nothrow) MCChunk(True);
 		if (container->parse(sp, False) != PS_NORMAL)
 		{
 			sp = tsp;
@@ -1178,7 +1178,7 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 	{
 		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_INTO) == PS_NORMAL)
 		{
-			target = new MCChunk(True);
+			target = new (nothrow) MCChunk(True);
 			if (target->parse(sp, False) != PS_NORMAL)
 				t_error = PE_FILTER_BADDEST;
         }
@@ -1435,7 +1435,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 				else
 				{
 					sp . backup();
-					container = new MCChunk(False);
+					container = new (nothrow) MCChunk(False);
 					if (container -> parse(sp, False) != PS_NORMAL)
 					{
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
@@ -1515,7 +1515,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL
 	        || sp.skip_token(SP_FACTOR, TT_PREP) == PS_NORMAL)
 	{
-		container = new MCChunk(False);
+		container = new (nothrow) MCChunk(False);
 		if (container->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_CREATE_BADBGORCARD, sp);
@@ -1840,7 +1840,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	{
 		sp.backup();
 		MCerrorlock++;
-		go = new MCGo;
+		go = new (nothrow) MCGo;
 		if (go->parse(sp) != PS_NORMAL)
 		{
 			MCerrorlock--;
@@ -1894,6 +1894,14 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 		return PS_NORMAL;
 	}
+    if (arg == OA_SOCKET && sp.skip_token(SP_FACTOR, TT_FROM, PT_FROM) == PS_NORMAL)
+    {
+        if (sp.parseexp(False, True, &(&fromaddress)) != PS_NORMAL)
+        {
+            MCperror->add(PE_OPEN_NOFROM, sp);
+            return PS_ERROR;
+        }
+    }
 	sp.skip_token(SP_FACTOR, TT_TO, PT_TO);
 	if (sp.parseexp(False, True, &fname) != PS_NORMAL)
 	{
@@ -2131,17 +2139,21 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
                 return;
             
+            MCNewAutoNameRef t_from_address;
+            if (!ctxt . EvalOptionalExprAsNameRef(fromaddress.Get(), kMCEmptyName, EE_OPEN_BADFROMADDRESS, &t_from_address))
+                return;
+
             // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
             MCNewAutoNameRef t_end_hostname;
             if (!ctxt . EvalOptionalExprAsNameRef(verifyhostname, kMCEmptyName, EE_OPEN_BADHOST, &t_end_hostname))
                 return;
 
 			if (datagram)
-				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname);
 			else if (secure)
-				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, *t_end_hostname, secureverify);
+				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname, secureverify);
 			else
-				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+				MCNetworkExecOpenSocket(ctxt, *t_name, *t_from_address, *t_message_name, *t_end_hostname);
 			break;
         }
 		default:

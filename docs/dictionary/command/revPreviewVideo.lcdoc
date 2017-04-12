@@ -11,7 +11,7 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
@@ -38,11 +38,6 @@ save the video as a <file> while displaying it, use the <revRecordVideo>
 If the video grabber was already recording video to a file, the
 <revPreviewVideo> <command> stops the recording.
 
->*Important:*  If you are using <QuickTime> for video capture, <execute>
-> the <revVideoGrabIdle> <command> periodically while previewing or
-> recording video. Otherwise, you may experience poor quality in the
-> video capture.
-
 To stop displaying the video input, use the <revStopPreviewingVideo>
 <command>. 
 
@@ -60,9 +55,10 @@ The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
 longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revVideoFrameImage (command), revRecordVideo (command),
 revVideoGrabIdle (command), revStopPreviewingVideo (command),

@@ -36,11 +36,11 @@ archive. If the archive is empty, or an error has occurred then
 Description:
 Use the <revZipEnumerateItems> function to obtain a list of the items
 currently in an open zip archive. The archive must first have been
-opened with the <revZipOpenArchive command>.
+opened with the <revZipOpenArchive> <command>.
 
 References: revZipDeleteItem (command),
 revZipExtractItemToVariable (command),
-revZipOpenArchive command (command)
+revZipOpenArchive (command), command (glossary)
 
 Tags: text processing
 

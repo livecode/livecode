@@ -1,0 +1,33 @@
+module com.livecode.array.tests
+
+use com.livecode.__INTERNAL._testlib
+
+handler testExpect_Pass()
+	expect true is true
+	return true
+end handler
+
+handler testExpect_Fail()
+	expect false is true
+	return true
+end handler
+
+handler testExpectReason_Pass()
+	expect that true is true because "reasons"
+	return true
+end handler
+
+handler testExpectReason_Fail()
+	expect that false is true because "reasons"
+	return true
+end handler
+
+public handler testExpect()
+	test "expect success" when testExpect_Pass()
+	MCUnitTestHandlerThrows(testExpect_Fail, "expect failure")
+
+	test "expect success with reason" when testExpectReason_Pass()
+	MCUnitTestHandlerThrows(testExpectReason_Fail, "expect failure with reason")
+end handler
+
+end module

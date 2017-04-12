@@ -4,6 +4,9 @@ Type: command
 
 Syntax: libURLSetExpect100 <limit>
 
+Summary:
+Allows for a '100 Continue' header response to be received from the server
+
 Associations: internet library
 
 Introduced: 2.5
@@ -16,11 +19,9 @@ Security: network
 
 Parameters:
 limit:
-
+A number of bytes.
 
 Description:
-<limit> is a number of bytes. 
-
 When called, subsequent <POST> requests will add an
 "Expect: 100-continue" field to the http headers when the data to be
 posted excedes the limit. The data won't be written to the socket until

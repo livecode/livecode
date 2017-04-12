@@ -283,7 +283,7 @@ private:
 void MCAndroidControl::PostNotifyEvent(MCNameRef p_message)
 {
     MCCustomEvent *t_event;
-    t_event = new MCAndroidControlNotifyEvent(this, p_message);
+    t_event = new (nothrow) MCAndroidControlNotifyEvent(this, p_message);
     MCEventQueuePostCustom(t_event);
 }
 

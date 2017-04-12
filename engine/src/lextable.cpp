@@ -226,11 +226,11 @@ extern const uint4 constant_table_size = ELEMENTS(constant_table);
 
 static LT accept_table[] =
     {
-        {"connections", TT_UNDEFINED, AC_UNDEFINED},
+        {"connections", TT_UNDEFINED, AC_CONNECTIONS},
         {"datagram", TT_UNDEFINED, AC_DATAGRAM},
         {"datagrams", TT_UNDEFINED, AC_DATAGRAM},
-        {"on", TT_UNDEFINED, AC_UNDEFINED},
-        {"port", TT_UNDEFINED, AC_UNDEFINED},
+        {"on", TT_UNDEFINED, AC_ON},
+        {"port", TT_UNDEFINED, AC_PORT},
         {"secure", TT_UNDEFINED, AC_SECURE}
     };
 
@@ -276,9 +276,7 @@ static LT ask_table[] =
 
 LT command_table[] =
     {
-#if defined(MODE_DEVELOPMENT) || defined(MODE_INSTALLER) || defined(_TEST)
 		{"_internal", TT_STATEMENT, S_INTERNAL},
-#endif
         {"accept", TT_STATEMENT, S_ACCEPT},
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},
@@ -1217,7 +1215,8 @@ LT factor_table[] =
         {"menuobject", TT_FUNCTION, F_MENU_OBJECT},
         {"menus", TT_FUNCTION, F_MENUS},
         {"merge", TT_FUNCTION, F_MERGE},
-        {"messagemessages", TT_PROPERTY, P_MESSAGE_MESSAGES},
+        {"messagedigest", TT_FUNCTION, F_MESSAGE_DIGEST},
+		{"messagemessages", TT_PROPERTY, P_MESSAGE_MESSAGES},
 		{"metadata", TT_PROPERTY, P_METADATA},
         {"metal", TT_PROPERTY, P_METAL},
         {"mid", TT_CHUNK, CT_MIDDLE},
@@ -1432,6 +1431,7 @@ LT factor_table[] =
         {"recordcompression", TT_PROPERTY, P_RECORD_COMPRESSION},
         {"recordcompressiontypes", TT_FUNCTION, F_RECORD_COMPRESSION_TYPES},
         {"recordformat", TT_PROPERTY, P_RECORD_FORMAT},
+        {"recordformats", TT_FUNCTION, F_RECORD_FORMATS},
         {"recording", TT_PROPERTY, P_RECORDING},
         {"recordinput", TT_PROPERTY, P_RECORD_INPUT},
         {"recordloudness", TT_FUNCTION, F_RECORD_LOUDNESS},
@@ -1462,16 +1462,12 @@ LT factor_table[] =
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif
-#ifdef MODE_DEVELOPMENT
 		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
-		{"revmessageboxlastobject", TT_PROPERTY, P_REV_MESSAGE_BOX_LAST_OBJECT},
-		{"revmessageboxredirect", TT_PROPERTY, P_REV_MESSAGE_BOX_REDIRECT},
+#if defined(MODE_DEVELOPMENT)
 #ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-09-05: [[ Property Listener ]] Returns the list of all active object property listeners
 		{"revobjectlisteners", TT_PROPERTY, P_REV_OBJECT_LISTENERS},
-#endif
-#ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-11-06: [[ Property Listener ]] Minimum number of milliseconds between propertyChanged messages.
 		{"revpropertylistenerthrottle", TT_PROPERTY, P_REV_PROPERTY_LISTENER_THROTTLE_TIME},
 #endif

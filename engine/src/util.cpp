@@ -16,10 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
-#endif
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -60,7 +56,7 @@ static MCPoint qa_points[QA_NPOINTS + 1];
 static void MCU_play_message()
 {
 	MCAudioClip *acptr = MCacptr;
-	MCacptr = NULL;
+	MCacptr = nil;
     // PM-2014-12-22: [[ Bug 14269 ]] Nil checks to prevent a crash
 	MCStack *sptr = (acptr != NULL ? acptr->getmessagestack() : NULL);
 	if (sptr != NULL)
@@ -74,13 +70,13 @@ static void MCU_play_message()
 
 void MCU_play()
 {
-	if (MCacptr != NULL && !MCacptr->play())
+	if (MCacptr && !MCacptr->play())
 		MCU_play_message();
 }
 
 void MCU_play_stop()
 {
-	if (MCacptr != NULL)
+	if (MCacptr)
 	{
 		MCacptr->stop(True);
 		MCU_play_message();
@@ -124,7 +120,7 @@ void MCU_watchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = True;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr->resetcursor(force);
 	}
 }
@@ -135,7 +131,7 @@ void MCU_unwatchcursor(MCStack *sptr, Boolean force)
 	{
 		MCwatchcursor = False;
 		if (sptr == NULL)
-			sptr = MCmousestackptr == NULL ? MCdefaultstackptr : MCmousestackptr;
+			sptr = MCmousestackptr ? MCmousestackptr : MCdefaultstackptr;
 		sptr -> resetcursor(force);
 	}
 }
@@ -149,7 +145,7 @@ void MCU_resetprops(Boolean update)
 			if (!MClockcursor)
 				MCcursor = None;
 			MCwatchcursor = False;
-			if (MCmousestackptr != NULL)
+			if (MCmousestackptr)
 				MCmousestackptr->resetcursor(True);
 			else
 				MCdefaultstackptr->resetcursor(True);
@@ -172,10 +168,10 @@ void MCU_resetprops(Boolean update)
 	MCerrorlock.Reset();
 	MClockerrors = MClockmessages = MClockrecent = False;
 	MCscreen->setlockmoves(False);
-	MCerrorlockptr = NULL;
+	MCerrorlockptr = nil;
 	MCinterrupt = False;
 	MCdragspeed = 0;
-	MCdynamiccard = NULL;
+	MCdynamiccard = nil;
 	MCdynamicpath = False;
 	MCexitall = False;
     
@@ -621,7 +617,7 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 	if (d == NULL || s <  R8L)
 	{
 		delete d;
-		d = new char[R8L];
+		d = new (nothrow) char[R8L];
 		s = R8L;
 	}
 	if (n < 0.0 && n >= -MC_EPSILON)
@@ -898,10 +894,11 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 
 bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 {
-    char *t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, t_string);
-    const char *sptr = t_string;
-	uint4 l = MCStringGetLength(p_string);
+    MCAutoStringRefAsCString t_string;
+    if (!t_string.Lock(p_string))
+        return false;
+    const char *sptr = *t_string;
+    uint4 l = t_string.Size();
 	Boolean done;
 	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
 	if (!done || l == 0)
@@ -1100,7 +1097,7 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 #if !defined(_DEBUG_MEMORY)
 void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 {
-	char *ndata = new char[nsize * csize];
+	char *ndata = new (nothrow) char[nsize * csize];
 	if (data != NULL)
 	{
 		if (nsize > osize)
@@ -1130,18 +1127,31 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
 // IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
 // so use pointers to the globals rather than their value and dereference later.
+
+// This *must* be updated if any chunk terms are added between CT_STACK
+// and CT_LAST_CONTROL in the Chunk_term enum
 static const char **nametable[] =
 {
-    &MCstackstring, &MCaudiostring,
-    &MCvideostring, &MCbackgroundstring,
-    &MCcardstring, &MCnullstring,
-    &MCgroupstring, &MCnullstring,
-    &MCbuttonstring, &MCnullstring,
-    &MCnullstring, &MCscrollbarstring,
-    &MCimagestring, &MCgraphicstring,
-    &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCwidgetstring,
-    &MCfieldstring
+	&MCstackstring,			/* CT_STACK */
+	&MCnullstring,			/* CT_TOOLTIP */
+	&MCaudiostring,			/* CT_AUDIO_CLIP */
+	&MCvideostring,			/* CT_VIDEO_CLIP */
+	&MCbackgroundstring,	/* CT_BACKGROUND */
+	&MCcardstring,			/* CT_CARD */
+	&MCnullstring,			/* CT_MARKED */
+	&MCgroupstring,			/* CT_GROUP */
+	&MCnullstring,			/* CT_LAYER */
+	&MCbuttonstring,		/* CT_BUTTON */
+	&MCnullstring,			/* CT_MENU */
+	&MCnullstring,			/* CT_SCROLLBAR */
+	&MCscrollbarstring,		/* CT_PLAYER */
+	&MCimagestring,			/* CT_IMAGE */
+	&MCgraphicstring,		/* CT_GRAPHIC */
+	&MCepsstring,			/* CT_EPS */
+	&MCmagnifierstring,		/* CT_MAGNIFY */
+	&MCcolorstring,			/* CT_COLOR_PALETTE */
+	&MCwidgetstring,		/* CT_WIDGET */
+	&MCfieldstring			/* CT_FIELD */
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1152,6 +1162,8 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
 		return true;
 
+	MCAssert(type - CT_STACK < (sizeof(nametable) / sizeof(nametable[0])));
+	
     bool match = false;
 
     MCStringRef t_name, t_test;
@@ -1180,19 +1192,17 @@ void MCU_snap(int2 &p)
 
 // MDW-2014-07-09: [[ oval_points ]] need to factor in startAngle and arcAngle
 // this is now used for both roundrects and ovals
-void MCU_roundrect(MCPoint *&points, uint2 &npoints,
+bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
 	uint2 t_x, t_y;
 	bool ignore = false;
 
-	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
-	{
-		delete[] points;
-		points = new MCPoint[4 * QA_NPOINTS + 1];
-	}
-
+	MCAutoArray<MCPoint> t_points;
+	if (!t_points.New(4 * QA_NPOINTS + 1))
+		return false;
+	
 	MCRectangle tr = rect;
 	tr . width--;
 	tr . height--;
@@ -1267,10 +1277,10 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 		if (ignore == false)
 		{
-			if (t_x != points[i-1] . x || t_y != points[i-1] . y)
+			if (i == 0 || t_x != t_points[i-1] . x || t_y != t_points[i-1] . y)
 			{
-				points[i] . x = t_x;
-				points[i] . y = t_y;
+				t_points[i] . x = t_x;
+				t_points[i] . y = t_y;
 				i++;
 			}
 		}
@@ -1282,7 +1292,10 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		if (k > QA_NPOINTS)
 			k = 1;
 	}
-	npoints = i;
+	
+	t_points.Shrink(i);
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
@@ -1838,7 +1851,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	if (t_new_tool == MCcurtool)
 		return;
 
-	if (MCeditingimage != NULL)
+	if (MCeditingimage)
 		MCeditingimage -> canceldraw();
 
 	MCcurtool = t_new_tool;
@@ -1846,16 +1859,16 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	MCundos->freestate();
 	if (MCcurtool != T_POINTER)
 		MCselected->clear(True);
-	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
+	if (MCactiveimage && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
-	MCeditingimage = NULL;
-	if (MCactivefield != NULL
+	MCeditingimage = nil;
+	if (MCactivefield
 	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
 		MCactivefield->getstack()->kunfocus();
 	ctxt . GetObject()->getstack()->resetcursor(True);
 	if (MCcurtool == T_BROWSE)
 		MCstacks->restartidle();
-	if (MCtopstackptr != NULL)
+	if (MCtopstackptr)
 		MCtopstackptr->updatemenubar();
     
     MCStacknode *t_node, *t_first_node;
@@ -1871,8 +1884,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     }
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
-    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
-        t_player -> syncbuffering(nil);
+    MCPlayer::SyncPlayers(nil, nil);
     
     MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     
@@ -1892,7 +1904,7 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 			{
 				// MW-2011-01-05: Make sure dynamicpath global is sensible.
 				Boolean olddynamic = MCdynamicpath;
-				MCdynamicpath = MCdynamiccard != NULL;
+				MCdynamicpath = MCdynamiccard.IsValid();
 
 				// PASS STATE FIX
 				Exec_stat oldstat = stat;
@@ -1978,7 +1990,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 
 	unichar_t *t_dst;
 	uindex_t t_length;
-    t_dst = new unichar_t[t_length + 1];
+    t_dst = new (nothrow) unichar_t[t_length + 1];
 	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
@@ -2041,7 +2053,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
     uindex_t t_length;
     t_length = MCStringGetLength(in);
     
-    t_unicode_str = new unichar_t[t_length + 1];
+    t_unicode_str = new (nothrow) unichar_t[t_length + 1];
     t_length = MCStringGetChars(in, MCRangeMake(0, t_length), t_unicode_str);
     t_unicode_str[t_length] = 0;
 
@@ -2270,17 +2282,17 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 	MCAutoStringRef t_filename;
 	if (MCStringGetLength(p_url) > 5 && MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url)-5), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadtextfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
@@ -2331,14 +2343,14 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path, t_data;
 		/* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_path);
 		MCS_savetextfile(*t_path, *t_data);
 	}
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_savebinaryfile(*t_path, *t_data);
 	}
@@ -2346,7 +2358,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
@@ -2728,7 +2740,7 @@ void MCDictionary::Set(uint4 p_id, MCString p_value)
 	t_node = Find(p_id);
 	if (t_node == NULL)
 	{
-		t_node = new Node;
+		t_node = new (nothrow) Node;
 		t_node -> next = m_nodes;
 		t_node -> key = p_id;
 		m_nodes = t_node;
@@ -2759,7 +2771,7 @@ void MCDictionary::Pickle(void*& r_buffer, uint4& r_length)
 		t_size += ((t_node -> length + 3) & ~3) + 8;
 
 	char *t_buffer;
-	t_buffer = new char[t_size];
+	t_buffer = new (nothrow) char[t_size];
 	
 	char *t_buffer_ptr;
 	t_buffer_ptr = t_buffer;
@@ -2868,129 +2880,269 @@ uint32_t MCDictionary::Checksum(const void *p_data, uint32_t p_length)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// SN-2015-04-07: [[ Bug 15164 ]] MCU_loadmodule is now a wrapper of MCU_loadmodule_stringref
-//  to keep consistent its use from the externals.
-void* MCU_loadmodule(const char* p_module)
+static bool
+MCU_path_is_absolute(MCStringRef p_path)
 {
-    MCAutoStringRef t_module;
-    if (!MCStringCreateWithCString(p_module, &t_module))
-        return NULL;
-
-    return MCU_loadmodule_stringref(*t_module);
-}
-
-// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
-//  p_module can be a universal module name, where a mapping from module names to
-// relative paths has been provided.
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void* MCU_loadmodule_stringref(MCStringRef p_module)
-{
-    MCSysModuleHandle t_handle;
-    t_handle = nil;
-#if defined(_MACOSX)
-    MCAutoPointer<char> t_module_cstring;
-    // SN-2015-04-07: [[ Bug 15164 ]] NSAddImage understands UTF-8.
-    if (!MCStringConvertToUTF8String(p_module, &t_module_cstring))
-        return NULL;
-    t_handle = (MCSysModuleHandle)NSAddImage(*t_module_cstring, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
-    if (t_handle != nil)
-        return t_handle;
-    // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
-    uint32_t t_buffer_size;
-    t_buffer_size = 0;
-    _NSGetExecutablePath(NULL, &t_buffer_size);
-    char *t_module_path;
-    t_module_path = (char *) malloc(t_buffer_size + strlen(*t_module_cstring) + 1);
-    if (t_module_path != NULL)
+#ifdef __WINDOWS__
+    if ((MCStringGetLength(p_path) > 1 && MCStringGetCharAtIndex(p_path, 1) == ':') ||
+        (MCStringGetLength(p_path) > 2 && MCStringGetCharAtIndex(p_path, 0) == '/' && MCStringGetCharAtIndex(p_path, 1) == '/'))
     {
-        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
-        {
-            char *t_last_slash;
-            t_last_slash = t_module_path + t_buffer_size;
-            for (uint32_t i = 0; i < t_buffer_size; i++)
-            {
-                if (*t_last_slash == '/')
-                {
-                    *(t_last_slash + 1) = '\0';
-                    break;
-                }
-                t_last_slash--;
-            }
-            strcat(t_module_path, *t_module_cstring);
-            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
-        }
-        free(t_module_path);
-        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
-        if (t_handle != nil)
-            return t_handle;
+        return true;
     }
 #endif
+    
+    return MCStringGetCharAtIndex(p_path,
+                                  0) == '/';
+}
 
+static bool
+MCU_path_has_extension(MCStringRef p_path)
+{
+    uindex_t t_sep;
+    if (!MCStringLastIndexOfChar(p_path,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_sep))
+    {
+        t_sep = 0;
+    }
+    
+    uindex_t t_ext;
+    return MCStringFirstIndexOfChar(p_path,
+                                    '.',
+                                    t_sep,
+                                    kMCStringOptionCompareExact,
+                                    t_ext);
+}
+
+static bool
+__MCU_library_load_verbatim(MCStringRef p_path,
+                            MCSLibraryRef& r_library)
+{
+    if (!MCSLibraryCreateWithPath(p_path,
+                                  r_library))
+    {
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        MCLog("MCU_library_load failed for %@", p_path);
+        return false;
+    }
+    
+    return true;
+}
+
+static bool
+__MCU_library_load_adding_extension(MCStringRef p_path,
+                                    const char *p_extension,
+                                    MCSLibraryRef& r_library)
+{
+    MCAutoStringRef t_library_path;
+    if (!MCStringFormat(&t_library_path,
+                        "%@.%s",
+                        p_path,
+                        p_extension))
+    {
+        return false;
+    }
+    return __MCU_library_load_verbatim(*t_library_path,
+                                       r_library);
+}
+
+static bool
+__MCU_library_map_path(MCStringRef p_path,
+                       MCStringRef& r_mapped_library_path)
+{
+    // If the path does not begin with './', then we are done.
+    if (!MCStringBeginsWithCString(p_path,
+                                   reinterpret_cast<const char_t *>("./"),
+                                   kMCStringOptionCompareExact))
+    {
+        r_mapped_library_path = MCValueRetain(p_path);
+        return true;
+    }
+    
+    // Extract the base path (i.e. remove the ./)
+    MCAutoStringRef t_base_path;
+    if (!MCStringCopySubstring(p_path,
+                               MCRangeMake(2, UINDEX_MAX),
+                               &t_base_path))
+    {
+        return false;
+    }
+    
+    // Apply any mappings which are present.
+    MCAutoStringRef t_mapped_path;
+    if (MCdispatcher == nullptr ||
+        !MCdispatcher->fetchlibrarymapping(*t_base_path,
+                                           &t_mapped_path))
+    {
+        t_mapped_path = *t_base_path;
+    }
+    
+    // Now compute the engine folder and construct the absolute mapped path.
+    uindex_t t_last_slash;
+    if (!MCStringLastIndexOfChar(MCcmd,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_last_slash))
+        t_last_slash = MCStringGetLength(MCcmd);
+    
+    MCRange t_engine_folder =
+            MCRangeMake(0, t_last_slash);
+    
+    // Concatenate the mapped path onto the engine path, and then resolve
+    // it to ensure that all '.' and '..' type components are removed.
+    // (otherwise things might go awry if we have a //?/ type path on
+    // Windows).
+    MCAutoStringRef t_unresolved_library_path;
+    if (!MCStringFormat(&t_unresolved_library_path,
+                        "%*@/%@",
+                        &t_engine_folder,
+                        MCcmd,
+                        *t_mapped_path) ||
+        !MCS_resolvepath(*t_unresolved_library_path,
+                         r_mapped_library_path))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+MCSLibraryRef MCU_library_load(MCStringRef p_path)
+{
+    // If the path is not absolute, apply the internal mapping to the name.
+    // This uses any mapping section in the standalone capsule, and ensures
+    // that revsecurity and revpdfprinter map correctly.
+    MCAutoStringRef t_library_path;
+    if (!__MCU_library_map_path(p_path,
+                                &t_library_path))
+    {
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        return nullptr;
+    }
+
+    MCLog("MCU_library_load %@ -> %@",
+        p_path,
+        *t_library_path);
+    
+    // If the path already has an extension, we don't need to add one. Otherwise
+    // we try the various appropriate extensions per-platform.
+    MCSAutoLibraryRef t_library;
+    if (MCU_path_has_extension(*t_library_path))
+    {
+        __MCU_library_load_verbatim(*t_library_path,
+                                    &t_library);
+    }
+    else
+    {
+#if defined(__MAC__) || defined(__IOS__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "framework",
+                                            &t_library);
+        if (!t_library.IsSet())
+            __MCU_library_load_adding_extension(*t_library_path,
+                                                "bundle",
+                                                &t_library);
+        if (!t_library.IsSet())
+            __MCU_library_load_adding_extension(*t_library_path,
+                                                "dylib",
+                                                &t_library);
+#elif defined(__WINDOWS__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "dll",
+                                            &t_library);
+#elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "so",
+                                            &t_library);
+#else
+#       error MCU_library_load not implemented for this platform
+#endif
+    }
+    
+    return t_library.Take();
+}
+
+void MCU_library_unload(MCSLibraryRef p_module)
+{
+    if (p_module != nullptr)
+        MCValueRelease(p_module);
+}
+
+void *MCU_library_lookup(MCSLibraryRef p_module,
+                         MCStringRef p_symbol)
+{
+    return MCSLibraryLookupSymbol(p_module,
+                                  p_symbol);
+}
+
+//////////
+
+void *MCSupportLibraryLoad(const char *p_name_cstr)
+{
+    MCAutoStringRef t_name;
+    if (!MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_name_cstr),
+                                 strlen(p_name_cstr),
+                                 kMCStringEncodingUTF8,
+                                 false,
+                                 &t_name))
+    {
+        return nullptr;
+    }
+
+    return MCU_library_load(*t_name);
+}
+
+void MCSupportLibraryUnload(void *p_handle)
+{
+    MCU_library_unload(static_cast<MCSLibraryRef>(p_handle));
+}
+
+char *MCSupportLibraryCopyNativePath(void *p_handle)
+{
     MCAutoStringRef t_path;
-    
-    if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
+    if (!MCSLibraryCopyPath(static_cast<MCSLibraryRef>(p_handle),
+                            &t_path))
     {
-        if (!MCStringCopy(p_module, &t_path))
-            return nil;
+        return nullptr;
     }
 
-    t_handle = MCS_loadmodule(*t_path);
-    
-    if (t_handle != nil)
-        return t_handle;
-    
-    MCAutoStringRef t_filename;
-    if (MCStringGetCharAtIndex(*t_path ,0) == '/')
+    MCAutoStringRef t_native_path;
+    if (!MCS_pathtonative(*t_path,
+                          &t_native_path))
     {
-        if (!MCStringCopy(*t_path, &t_filename))
-            return nil;
-    }
-    else if (MCcmd)
-    {
-        uindex_t t_last_slash_index;
-        if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
-            t_last_slash_index = MCStringGetLength(MCcmd);
-
-        MCRange t_range;
-        t_range = MCRangeMake(0, t_last_slash_index);
-        if (!MCStringFormat(&t_filename, "%*@/%@", &t_range, MCcmd, *t_path))
-            return nil;
+        return nullptr;
     }
 
-	if (*t_filename != nil)
-    	t_handle = MCS_loadmodule(*t_filename);
-    
-    return t_handle;
+    char *t_path_str;
+    if (!MCStringConvertToUTF8String(*t_native_path,
+                                     t_path_str))
+    {
+        return nullptr;
+    }
+
+    return t_path_str;
 }
 
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void MCU_unloadmodule(void *p_module)
+void *MCSupportLibraryLookupSymbol(void *p_handle,
+                                   const char *p_symbol_cstr)
 {
-    // SN-2015-03-04: [[ Broken module unloading ]] NSAddImage, used on Mac in
-    //  MCU_loadmodule, does not need any unloading of the module -
-    //  but the other platforms do.
-#if !defined(_MACOSX)
-    MCS_unloadmodule((MCSysModuleHandle)p_module);
-#endif
-}
-
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
-{
-#if defined(_MACOSX)
-    NSSymbol t_symbol;
-    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_symbol, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
-    if (t_symbol != NULL)
-        return NSAddressOfSymbol(t_symbol);
-#endif
-    MCAutoStringRef t_symbol_str;
-    if (!MCStringCreateWithCString(p_symbol, &t_symbol_str))
-        return nil;
-
-    return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+    MCAutoStringRef t_symbol;
+    if (!MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_symbol_cstr),
+                                 strlen(p_symbol_cstr),
+                                 kMCStringEncodingUTF8,
+                                 false,
+                                 &t_symbol))
+    {
+        return nullptr;
+    }
+ 
+    return MCU_library_lookup(static_cast<MCSLibraryRef>(p_handle),
+                              *t_symbol);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3025,54 +3177,3 @@ MCU_is_token(MCStringRef p_string)
 
 	return true;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifndef _DEBUG_MEMORY
-
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if defined __VISUALC__ || TARGET_IPHONE_SIMULATOR
-void *operator new (size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete (void *p)
-{
-    free(p);
-}
-
-void *operator new[] (size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p)
-{
-    free(p);
-}
-#else
-void *operator new (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete (void *p) throw()
-{
-    free(p);
-}
-
-void *operator new[] (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p) throw()
-{
-    free(p);
-}
-#endif
-
-#endif
-

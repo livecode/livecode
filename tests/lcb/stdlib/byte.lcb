@@ -273,6 +273,40 @@ return
 end handler
 
 ----------------------------------------------------------------
+-- Other manipulations
+----------------------------------------------------------------
+
+public handler TestReverse()
+	variable kFOdd
+	put EncodeUTF8("abc") into kFOdd
+	variable kROdd
+	put EncodeUTF8("cba") into kROdd
+	variable kFEven
+	put EncodeUTF8("0123") into kFEven
+	variable kREven
+	put EncodeUTF8("3210") into kREven
+
+	variable tReversed
+
+	put kFOdd into tReversed
+	reverse tReversed
+	test "reverse in-place (odd)" when tReversed is kROdd
+	reverse tReversed
+	test "rereverse in-place (odd)" when tReversed is kFOdd
+
+	put kFEven into tReversed
+	reverse tReversed
+	test "reverse in-place (even)" when tReversed is kREven
+	reverse tReversed
+	test "rereverse in-place (even)" when tReversed is kFEven
+
+	put the empty data into tReversed
+	reverse tReversed
+	test "reverse in-place (empty)" when tReversed is empty
+
+end handler
+
+----------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------
 

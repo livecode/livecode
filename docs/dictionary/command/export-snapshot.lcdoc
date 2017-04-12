@@ -2,14 +2,18 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot [from rect[angle] <rectangle>] [of <object(glossary)>] [(with | without) effects] ... | [from <object>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
-
-Syntax: export snapshot [from rect[angle] <rectangle>] of <object(glossary)> [(with | without) effects] ... | [from <object>] [at size width, height] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object(glossary)>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
 
 Introduced: 2.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, mobile
+
+Security: privacy
 
 Example:
 export snapshot to file "Test.ppm"
@@ -38,7 +42,10 @@ given in relative (window) coordinates; otherwise, it is given in
 absolute coordinates.
 
 object:
+Any valid <object reference>.
 
+size:
+The width,height of the snapshot in pixels.
 
 metadata (array):
 The <metadata> is an array of metadata. Currently the only key supported
@@ -61,15 +68,9 @@ The desired file format to save.
 -   GIF: Graphics Interchange Format
 -   PNG: Portable Network Graphics
 
-
 maskFile:
 Specifies the name and location of a file to export as an image mask.
 You can use a maskFile only when exporting in PBM format (paint).
-
-effect:
-Specifies whether graphic effects and a blendLevel should be applied to
-the object before rendering export. ...: Denotes the usual possible
-suffixes for the export snapshot command.
 
 Description:
 Use the <export snapshot> <command> to export a screenshot to a <file>
@@ -82,6 +83,9 @@ can specify a location for the mask file.) The <export snapshot> ... as
 JPEG form exports as a JPEG file, and the <export snapshot> ... as PNG
 form exports as a PNG file. If you do not specify a <format>, the file
 is exported as <PBM>, PGM, or <PPM>.
+
+Using 'with' or 'without effects' specifies whether graphic effects and a 
+blendLevel should be applied to the object before rendering export.
 
 iOS supports both the object and screen snapshot variants of the export
 snapshot command. In the screen snapshot case, coordinates are given
@@ -121,24 +125,29 @@ Where 'chunk' is any chunk expression resolving to a control, or any
 expression evaluating to a control reference.
 
 To export a snapshot of an object in iOS use the form:
-<export snapshot> from [rectangle rect of] <object(glossary)> 
+
+    <export snapshot> from [rectangle rect of] <object(glossary)> 
 
 To export a snapshot of the screen in iOS use the form:
-<export snapshot> from rectangle rect
+
+    <export snapshot> from rectangle rect
 
 >*Note:*  There is no way to render the status bar without using private
 > features of the iOS API. Therefore, if your snapshot rectangle
 > includes part of the screen where the status bar is, it will be
 > clipped out.
 
->*Important:*  The 'at size' variant of the export snaptshot command is
+>*Important:*  The 'at size' variant of the export snapshot command is
 > currently only when creating snapshots of objects.
+
+Changes: The `at size` variant, which allows resizing of the exported 
+snapshot to specified dimensions, was added in version 6.0.
 
 References: export (command), import snapshot (command), select (command),
 screenRect (function), PPM (glossary), command (glossary),
 container (glossary), PBM (glossary), alpha channel (glossary),
 file (keyword), image (keyword), cursor (property), rectangle (property),
-windowID (property)
+windowID (property), object reference (glossary)
 
-Tags: file system
+Tags: file system, multimedia
 

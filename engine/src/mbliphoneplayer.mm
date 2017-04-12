@@ -270,13 +270,13 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 	t_url = nil;
     
 	if (MCStringBeginsWith(p_file, MCSTR("http://"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("https://"), kMCCompareExact))
-		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_file ]];
+		t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_file )];
 	else if (!MCStringIsEmpty(p_file))
 	{
 		MCAutoStringRef t_path;
 		
         MCS_resolvepath(p_file, &t_path);
-		t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_path ]];
+		t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(*t_path )];
 	}
 	else
 		t_url = [NSURL URLWithString: @""];
@@ -445,12 +445,9 @@ void MCiOSPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller initialPlaybackTime];
+        t_time = (integer_t)([m_controller initialPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 
 void MCiOSPlayerControl::SetEndTime(MCExecContext& ctxt, integer_t p_time)
@@ -465,12 +462,9 @@ void MCiOSPlayerControl::GetEndTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller endPlaybackTime];
+        t_time = (integer_t)([m_controller endPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 void MCiOSPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time)
 {
@@ -488,12 +482,9 @@ void MCiOSPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller currentPlaybackTime];
+        t_time = (integer_t)([m_controller currentPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 
 void MCiOSPlayerControl::SetShouldAutoplay(MCExecContext& ctxt, bool p_value)

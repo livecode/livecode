@@ -143,6 +143,9 @@ static bool ParserReport(ParserRef self, Position p_where, ParserError p_error, 
 			fprintf(stderr, "%s'%s' expected\n", i == 0 ? "" : " or ", p_hints[i]);
 		}
 		break;
+	case kParserErrorNone:
+		MCUnreachableReturn(false);
+		break;
 	}
 	
 	self -> syntax_error = true;
@@ -281,8 +284,9 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 		return false;
     
 	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Check for a 'boolean' constant.
-    bool t_is_bool;
-	t_is_bool = t_token -> type == kTokenTypeIdentifier;
+	bool t_is_bool = (t_token->type == kTokenTypeIdentifier);
+	bool t_success = true;
+	ValueRef t_bool_value = nil;
     if (t_is_bool)
     {
         bool t_bool;
@@ -300,23 +304,33 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
         }
         
         if (t_is_bool)
-            BooleanCreateWithBool(t_bool, r_value);
+            t_success = BooleanCreateWithBool(t_bool, t_bool_value);
     }
-    
-    if (!(t_token -> type == kTokenTypeString ||
-         t_token -> type == kTokenTypeNumber ||
-        t_is_bool))
+	else if (!(t_token -> type == kTokenTypeString ||
+	           t_token -> type == kTokenTypeNumber))
+	{
 		return ParserReport(self, t_token -> start, kParserErrorConstantExpected, nil);
-		
-	if (!ScannerAdvance(self -> scanner))
-		return false;
-		
+	}
+
+	if (t_success)
+		t_success = ScannerAdvance(self -> scanner);
+
 	self -> position = t_token -> start;
-	
-    if (!t_is_bool)
-        r_value = ValueRetain(t_token -> value);
-	
-	return true;
+
+	if (t_success)
+	{
+		if (t_is_bool)
+			r_value = t_bool_value;
+		else
+			r_value = ValueRetain(t_token -> value);
+	}
+	else
+	{
+		if (t_bool_value != nil)
+			ValueRelease(t_bool_value);
+	}
+
+	return t_success;
 }
 
 static bool ParserMatchKeyword(ParserRef self, ParserKeyword p_keyword)

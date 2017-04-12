@@ -27,6 +27,3 @@ The location where the $_SESSION array is stored is configured using the
 References: start session (command), delete session (command),
 sessionSavePath (property), sessionLifetime (property),
 sessionId (property), sessionName (property)
-
-Tags: multimedia
-

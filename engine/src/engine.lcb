@@ -1,16 +1,16 @@
 /* Copyright (C) 2003-2015 LiveCode Ltd.
- 
+
  This file is part of LiveCode.
- 
+
  LiveCode is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License v3 as published by the Free
  Software Foundation.
- 
+
  LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
  WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
@@ -31,6 +31,8 @@ Description:
 Use the <ResolveScriptObject|resolve script object>, or <MyScriptObject|my script object> to obtain an object of type <ScriptObject>
 
 References: ResolveScriptObject(statement), MyScriptObject(expression)
+
+Tags: Script Engine
 */
 
 module com.livecode.engine
@@ -53,21 +55,29 @@ public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage a
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptWithArguments(in pScript as String, in pArguments as List) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptInScriptObject(in pScript as String, in pTarget as ScriptObject) returns any binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScriptInScriptObjectWithArguments(in pScript as String, in pTarget as ScriptObject, in pArguments as List) returns any binds to "<builtin>"
 public foreign handler MCEngineExecLog(in pMessage as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) returns nothing binds to "<builtin>"
 
 public type MCRunloopActionCallback is Pointer
 public type MCRunloopActionRef is Pointer
-public foreign handler MCEngineAddRunloopAction(in pCallback as MCRunloopActionCallback, in pContext as Pointer, out rAction as MCRunloopActionRef) returns CBool binds to "<builtin>"
+public foreign handler MCEngineAddRunloopAction(in pCallback as MCRunloopActionCallback, in pContext as optional Pointer, out rAction as MCRunloopActionRef) returns CBool binds to "<builtin>"
 public foreign handler MCEngineRemoveRunloopAction(in pAction as MCRunloopActionRef) returns nothing binds to "<builtin>"
 public foreign handler MCEngineRunloopWait() returns CBool binds to "<builtin>"
 public foreign handler MCEngineRunloopBreakWait() returns nothing binds to "<builtin>"
+
+public foreign handler MCEngineEvalTheColumnDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheRowDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheLineDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalTheItemDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
 
 /**
 Summary:	Resolves a string to a script object.
 Object:		The string describing the script object.
 
-The result:	The resolved script object. 
+The result:	The resolved script object.
 
 Example:
 	variable tObject as ScriptObject
@@ -78,13 +88,15 @@ Example:
 		log the result
 	else
 		log "No such button"
-	end if	
-	
+	end if
+
 Description:
 Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 
 syntax ResolveScriptObject is statement
@@ -107,12 +119,14 @@ Example:
 		set property "name" of tObject to "Card5"
 	else
 		log "No such card"
-	end if	
-	
+	end if
+
 Description:
 Use to test the existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject | resolve script object>
 
 References: ResolveScriptObject(statement)
+
+Tags: Script Engine
 */
 
 syntax ScriptObjectExists is postfix operator with comparison precedence
@@ -133,12 +147,14 @@ Example:
 	put the result into tObject
 	if tObject does not exist then
 		log "No such card"
-	end if	
-	
+	end if
+
 Description:
 Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject|resolve script object>
 
 References: ResolveScriptObject(statement)
+
+Tags: Script Engine
 */
 
 syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
@@ -162,7 +178,7 @@ Example:
 	resolve script object "this stack"
 	set property "invisible" of the result to true
     get property "script" of my script object
-	
+
 Description:
 Use to manipulate properties of a script object.
 
@@ -170,6 +186,8 @@ Use to manipulate properties of a script object.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 
 syntax PropertyOfScriptObject is prefix operator with property precedence
@@ -199,6 +217,8 @@ Description:
 	Use to get the script object that contains a script object.
 
 >*Note:* An error is thrown if the script object does not exist.
+
+Tags: Script Engine
 */
 
 syntax OwnerOfScriptObject is prefix operator with property precedence
@@ -230,6 +250,8 @@ Description:
 	Use to get the script objects contained within a script object.
 
 >*Note:* An error is thrown if the script object does not exist.
+
+Tags: Script Engine
 */
 
 syntax ChildrenOfScriptObject is prefix operator with property precedence
@@ -251,7 +273,7 @@ Example:
 		// Send a message to the script so it can handle it.
 		send "buttonClicked" to my script object
 	end handler
-	
+
 Example:
 	// myScriptFunction takes three arguments and performs some kind of calculation
 
@@ -259,9 +281,9 @@ Example:
 	resolve script object "this stack"
 	put the result into tObject
 	send function "myScriptFunction" to tObject with [ 2, 3, 4 ]
-	
+
 	// the result contains the return value of 'myScriptFunction'
-    
+
 Description:
 Sends a message to the given script object and waits for it to finish so that it
 can return a value.
@@ -271,6 +293,8 @@ message passed through the message path untouched.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+Tags: Script Engine
 */
 syntax SendToScriptObject is statement
     "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
@@ -290,11 +314,13 @@ Example:
 		// Send a message to the script so it can handle it.
 		post "buttonClicked" to my script object
 	end handler
-    
+
 Description:
 Post a message to the given script object and returns immediately. Posting a message
 will cause the message to be sent at the next wait point (usually when the current
 event has finished being handled).
+
+Tags: Script Engine
 */
 syntax PostToScriptObject is statement
     "post" <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
@@ -311,12 +337,14 @@ Example:
 		dispatch "buttonClicked" to my script object
 		if the message was handled then
 			return
-		end if	
+		end if
 		log "The message was not handled"
 	end handler
-	
+
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
+
+Tags: Script Engine
 */
 
 syntax MessageWasHandled is expression
@@ -333,11 +361,13 @@ Example:
 		dispatch "buttonClicked" to my script object
 		if the message was not handled then
 			log "The message was not handled"
-		end if	
+		end if
 	end handler
-	
+
 Description:
 Determines if a dispatched message was handled by any script objects in the message path.
+
+Tags: Script Engine
 */
 
 syntax MessageWasNotHandled is expression
@@ -347,8 +377,10 @@ begin
 end syntax
 
 /**
-Summary: 	Executes some LiveCode script.
-Script: 	The script to execute.
+Summary: Executes some LiveCode script.
+Script:  The script to execute.
+Object:  The object to execute the script in.
+Arguments:  A list of arguments for the script.
 
 Example:
 	public handler SnapshotMe() returns nothing
@@ -360,17 +392,40 @@ Example:
 		execute script "import snapshot from rect (the rect of widget " & tVar & ") of widget " & tVar
 	end handler
 
+Example:
+   public handler SnapshotMeAtSize(in pWidth as Integer, in pHeight as Integer) returns nothing
+		variable tVar as String
+		get property "number" of my script object
+		put the result formatted as string into tVar
+
+		// Create a snapshot from the rect of the widget
+		execute script "import snapshot from me at size at size param(1),param(2)" \
+            with [ pWidth, pHeight ]
+	end handler
+
 Description:
-Executes the given piece of LiveCode script in the context of the current script
-object.
+Executes the given fragment of LiveCode script in the context of the target
+script object, or `this card of the defaultStack` if none is specified. The list
+of arguments is accessible from the script fragment using the `paramCount()` and
+`param()` functions.
+
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
+
+>*Note:* The `execute script` command is subject to Anomaly 19137. It is
+recommended to always use targetted forms of the command, as the default target
+might change in a future release.
+
+Tags: Script Engine
 */
 
 syntax ExecuteScript is statement
-    "execute" "script" <Script: Expression>
+	"execute" "script" <Script: Expression> [ "in" <Object: Expression> ] [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecExecuteScript(Script)
+	MCEngineExecExecuteScript(Script)
+	MCEngineExecExecuteScriptInScriptObject(Script, Object)
+	MCEngineExecExecuteScriptWithArguments(Script, Arguments)
+	MCEngineExecExecuteScriptInScriptObjectWithArguments(Script, Object, Arguments)
 end syntax
 
 /**
@@ -382,10 +437,10 @@ Example:
 	variable tList as List
 	get property "name" of my script object
 	push the result onto tList
-	
+
 	get property "id" of my script object
 	push the result onto tList
-	
+
 	log "Widget %@ has id %@" with tList
 
 Description:
@@ -397,6 +452,7 @@ on logChanged pLog
 end logChanged
 ```
 
+Tags: Script Engine
 */
 
 syntax Log is statement
@@ -404,6 +460,102 @@ syntax Log is statement
 begin
     MCEngineExecLog(Message)
     MCEngineExecLogWithValues(Message, Arguments)
+end syntax
+
+/**
+Summary: 	Fetches the `columnDelimiter` property from script context
+
+Example:
+   -- Split a string into a list using the column delimiter
+   variable tItems
+   put "alice\tbob\teve" into tItems
+   split tItems by the column delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
+
+Description:
+Fetches the calling (script) handler's `columnDelimiter` property, or horizontal
+tab (U+0009) if no script context is available.
+
+Related: TheRowDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
+
+Tags: Script Engine
+*/
+syntax TheColumnDelimiter is expression
+    "the" "column" "delimiter"
+begin
+    MCEngineEvalTheColumnDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the `rowDelimiter` property from script context
+
+Example:
+  -- Split a string into a list using the row delimiter
+   variable tItems
+   put "alice\nbob\neve" into tItems
+   split tItems by the row delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
+
+Description:
+Fetches the calling (script) handler's `rowDelimiter` property, or linefeed
+(U+000A) if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheLineDelimiter (expression)
+
+Tags: Script Engine
+*/
+syntax TheRowDelimiter is expression
+    "the" "row" "delimiter"
+begin
+    MCEngineEvalTheRowDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the `lineDelimiter` property from script context
+
+Example:
+  -- Split a string into a list using the line delimiter
+   variable tItems
+   put "alice\nbob\neve" into tItems
+   split tItems by the line delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
+
+Description:
+Fetches the calling (script) handler's `lineDelimiter` property, or linefeed
+(U+000A) if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheItemDelimiter (expression), TheRowDelimiter (expression)
+
+Tags: Script Engine
+*/
+syntax TheLineDelimiter is expression
+    "the" "line" "delimiter"
+begin
+    MCEngineEvalTheLineDelimiter(output)
+end syntax
+
+/**
+Summary: 	Fetches the `itemDelimiter` property from script context
+
+Example:
+  -- Split a string into a list using the item delimiter
+   variable tItems
+   put "alice,bob,eve" into tItems
+   split tItems by the item delimiter
+   -- tItems is now a list: ["alice", "bob", "eve"]
+
+Description:
+Fetches the calling (script) handler's `itemDelimiter` property, or the comma
+char if no script context is available.
+
+Related: TheColumnDelimiter (expression), TheLineDelimiter (expression), TheRowDelimiter (expression)
+
+Tags: Script Engine
+*/
+syntax TheItemDelimiter is expression
+    "the" "item" "delimiter"
+begin
+    MCEngineEvalTheItemDelimiter(output)
 end syntax
 
 end module

@@ -300,39 +300,122 @@ public:
 };
 
 extern "C" int initialise_weak_link_cef(void);
-extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
+
+// These come from the engine we link to.
+extern "C" void *MCSupportLibraryLoad(const char *p_path);
+extern "C" void *MCSupportLibraryUnload(void *p_handle);
+extern "C" char *MCSupportLibraryCopyNativePath(void *p_handle);
+
+#if defined(WIN32)
+static const char *kCefProcessName = "libbrowser-cefprocess.exe";
+static const char *kCefPathSeparatorStr = "\\";
+static const char kCefPathSeparator = '\\';
+#else
+static const char *kCefProcessName = "libbrowser-cefprocess";
+static const char *kCefPathSeparatorStr = "/";
+static const char kCefPathSeparator = '/';
+#endif
+
+static bool __MCCefGetLibraryPath(char*& r_path)
+{
+    void *t_module = nullptr;
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./CEF/libcef");
+    /* TODO[Bug 19381] On Linux and Windows, the in-git-checkout
+     * location of CEF is "./CEF" but once LiveCode is installed it's
+     * in "./Externals/CEF". */
+#if defined(WIN32) || defined(TARGET_PLATFORM_LINUX)
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./Externals/CEF/libcef");
+#endif
+
+    char *t_module_path =
+            t_module != nullptr ? MCSupportLibraryCopyNativePath(t_module)
+                                : nullptr;
+    
+    MCSupportLibraryUnload(t_module);
+
+    if (t_module_path == nullptr)
+    {
+        return false;
+    }
+
+    char *t_last_sep =
+        strrchr(t_module_path,
+                kCefPathSeparator);
+
+    if (t_last_sep == nullptr)
+    {
+        free(t_module_path);
+        return false;
+    }
+
+    *t_last_sep = '\0';
+
+    r_path = t_module_path;
+
+    return true;
+}
+
+static bool __MCCefAppendPath(const char *p_base, const char *p_path, char *&r_path)
+{
+    if (p_base == nil)
+        return MCCStringClone(p_path, r_path);
+    else if (MCCStringEndsWith(p_base, kCefPathSeparatorStr) ||
+             *p_path == '\0')
+        return MCCStringFormat(r_path, "%s%s", p_base, p_path);
+    else
+        return MCCStringFormat(r_path, "%s%s%s", p_base, kCefPathSeparatorStr, p_path);
+}
+
+static bool __MCCefBuildPath(const char *p_library_path,
+                             const char *p_suffix,
+                             cef_string_t* r_string)
+{
+    char *t_process_path = nullptr;
+    if (!__MCCefAppendPath(p_library_path,
+                           p_suffix,
+                           t_process_path) ||
+        !MCCefStringFromUtf8String(t_process_path,
+                                   r_string))
+    {
+        free(t_process_path);
+        return false;
+    }
+
+    return true;
+}
 
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
 {
 	if (s_cef_initialised)
 		return true;
-	
+
+    ////////
+
+    char *t_library_path = nullptr;
+    if (!__MCCefGetLibraryPath(t_library_path))
+        return false;
+
+    ////////
+
 	CefMainArgs t_args;
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
-	t_settings.log_severity = LOGSEVERITY_DISABLE;
+	t_settings.log_severity = LOGSEVERITY_VERBOSE;
 	
-	bool t_success;
-	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
+    bool t_success = true;
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, kCefProcessName, &t_settings.browser_subprocess_path);
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, "", &t_settings.resources_dir_path);
 	
-	if (t_success)
-	{
-		// IM-2014-03-25: [[ revBrowserCEF ]] Allow per-platform locale path settings
-		const char *t_locale_path, *t_resource_path;
-		t_locale_path = MCCefPlatformGetLocalePath();
-		t_resource_path = MCCefPlatformGetResourcesDirPath();
-		
-		if (t_locale_path != nil)
-			t_success = MCCefStringFromUtf8String(t_locale_path, &t_settings.locales_dir_path);
-		
-		if (t_resource_path != nil)
-			t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
-	}
-	
-	CefRefPtr<CefApp> t_app = new MCCefBrowserApp();
+	CefRefPtr<CefApp> t_app = new (nothrow) MCCefBrowserApp();
 	
 	if (t_success)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
@@ -355,6 +438,8 @@ bool MCCefInitialise(void)
 	}
 	
 	s_cef_initialised = t_success;
+
+    free(t_library_path);
 	
 	return s_cef_initialised;
 }
@@ -368,17 +453,9 @@ bool MCCefBrowserInitialise(void)
 	bool t_success;
 	t_success = true;
 	
-	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
 	if (t_success)
 	{
-		const char *t_lib_path;
-		t_lib_path = MCCefPlatformGetCefLibraryPath();
-		
-		// IM-2014-03-25: [[ revBrowserCEF ]] Look for libcef in platform-defined location
-		if (t_lib_path != nil)
-			t_success = initialise_weak_link_cef_with_path(t_lib_path);
-		else
-			t_success = initialise_weak_link_cef();
+		t_success = initialise_weak_link_cef();
 	}
 	
 	if (t_success)
@@ -1053,7 +1130,7 @@ public:
 bool MCCefBrowserBase::Initialize()
 {
 	// create client and browser
-	m_client = new MCCefBrowserClient(this);
+	m_client = new (nothrow) MCCefBrowserClient(this);
 	
 	CefWindowInfo t_window_info;
 	CefBrowserSettings t_settings;
@@ -1343,7 +1420,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_result.Clear();
 	
 	CefRefPtr<CefStringVisitor> t_visitor;
-	t_visitor = new MCStringVisitor(t_result);
+	t_visitor = new (nothrow) MCStringVisitor(t_result);
 	
 	m_browser->GetMainFrame()->GetSource(t_visitor);
 	
@@ -1799,7 +1876,7 @@ bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MC
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 {
 	MCCefBrowserFactory *t_factory;
-	t_factory = new MCCefBrowserFactory();
+	t_factory = new (nothrow) MCCefBrowserFactory();
 	
 	if (t_factory == nil)
 		return false;

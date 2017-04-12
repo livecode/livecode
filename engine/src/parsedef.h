@@ -33,8 +33,10 @@ constant;
 #define ELEMENTS(table) (sizeof(table) / sizeof(table[0]))
 
 enum Accept_constants {
-    AC_UNDEFINED,
-    AC_DATAGRAM,
+    AC_CONNECTIONS,
+	AC_ON,
+	AC_PORT,
+	AC_DATAGRAM,
     AC_SECURE
 };
 
@@ -489,6 +491,7 @@ enum Functions {
     F_QUERY_REGISTRY,
     F_RANDOM,
     F_RECORD_COMPRESSION_TYPES,
+    F_RECORD_FORMATS,
     F_RECORD_LOUDNESS,
     F_REPLACE_TEXT,
     F_RESULT,
@@ -580,6 +583,7 @@ enum Functions {
 	F_ARRAY_DECODE,
 	F_RANDOM_BYTES,
 	F_SHA1_DIGEST,
+    F_MESSAGE_DIGEST,
 	
 	// MW-2012-10-08: [[ HitTest ]] New functions for returning control at a point.
 	F_CONTROL_AT_LOC,
@@ -605,9 +609,16 @@ enum Functions {
     F_EVENT_SHIFT_KEY,
 };
 
+/* The HT_MIN and HT_MAX elements of the enum delimit the range of the handler
+ * arrays in MCHandlerlst so iteration over the type should be
+ * HT_MIN <= i <= HT_MAX */
 enum Handler_type {
+    
     HT_UNDEFINED = 0,
-    HT_MESSAGE,
+
+    HT_MIN,
+    
+    HT_MESSAGE = HT_MIN,
     HT_FUNCTION,
     HT_GETPROP,
     HT_SETPROP,
@@ -1557,12 +1568,11 @@ enum Properties {
     // color palette properties
     P_SELECTED_COLOR,
 
-    P_REV_LICENSE_LIMITS, // DEVELOPMENT only
+    P_REV_LICENSE_LIMITS,
 	P_REV_CRASH_REPORT_SETTINGS, // DEVELOPMENT only
 	P_REV_AVAILABLE_HANDLERS, // DEVELOPMENT only
-	P_REV_MESSAGE_BOX_LAST_OBJECT, // DEVELOPMENT only
-	P_REV_MESSAGE_BOX_REDIRECT, // DEVELOPMENT only
-	P_REV_LICENSE_INFO, // DEVELOPMENT only
+	P_MESSAGE_BOX_LAST_OBJECT,
+	P_REV_LICENSE_INFO,
 
 	P_REV_RUNTIME_BEHAVIOUR,
 	
@@ -1681,6 +1691,7 @@ enum Properties {
     P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION,
     P_MANAGE_RETURN_KEY,
     P_MINIMUM_FONT_SIZE,
+    P_MAXIMUM_TEXT_LENGTH,
     P_AUTO_CLEAR,
     P_CLEAR_BUTTON_MODE,
     P_BORDER_STYLE,
@@ -1734,6 +1745,8 @@ enum Properties {
     P_THEME_CONTROL_TYPE,
     
     P_SCRIPT_STATUS,
+    
+    P_LONG_NAME_NO_FILENAME,
     
     __P_LAST,
 };

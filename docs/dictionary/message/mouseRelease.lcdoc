@@ -10,7 +10,7 @@ clicked.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -24,12 +24,11 @@ Parameters:
 mouseButtonNumber (enum):
 The mouseButtonNumber specifies which mouse button was pressed:
 
--  1 is the mouse button on Mac OS systems and the left button on
-   Windows and Unix systems.
--  2 is the middle button on Unix systems.
--  3 is the right button on Windows and Unix systems and Control-click
-   on Mac OS systems.
-
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 Handle the <mouseRelease> <message> to perform an action when the user
@@ -46,18 +45,18 @@ being used.
 If an unlocked field is clicked with mouse button 1 or 2, no
 <mouseRelease> <message> is sent.
 
-If the control is a field with its listBehavior <property> set to true,
+If the <control> is a <field> with its <listBehavior> <property> set to true,
 the <mouseRelease> <message> is sent when the <mouse button> is released
 and the mouse is not over a text line in the <field>, even if the mouse
 is still over the <field>.
 
-If the mouse is released while it's still within the control that was
+If the mouse is released while it's still within the <control> that was
 clicked, a mouseUp <message> is sent instead of <mouseRelease>.
 
-References: property (glossary), mouse button (glossary),
-Browse tool (glossary), message (glossary), card (glossary),
-field (glossary), mouse pointer (glossary), control (keyword),
-dragEnd (message), mouseStillDown (message)
+References: Browse tool (glossary), card (glossary), control (glossary), 
+dragEnd (message), field (glossary), listBehavior (property), 
+message (glossary), mouse button (glossary), mouse pointer (glossary), 
+mouseStillDown (message), property (glossary), send (command)
 
 Tags: ui
 

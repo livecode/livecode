@@ -22,15 +22,14 @@ Example:
 set the lockLocation of group ID 4455 to false
 
 The result:
-Use the <lockLocation> <property> to protect a <control(keyword)> from
-being moved by the user, or to change the result of setting the <height>
-or <width> <property>, or to prevent an <image> or <player> from
-changing its size to fit the contents.
+Use the <lockLocation> <property> to protect a <control> from being
+moved by the user, or to change the result of setting the <height> or
+<width> <property>, or to prevent an <image> or <player> from changing
+its size to fit the contents.
 
 Value (bool):
-The <lockLocation> of a <control> is true or false.
-By default, the <lockLocation> property of a newly created <control> is
-set to false.
+The <lockLocation> of a <control> is true or false.  By
+default, the <lockLocation> property of a newly created <control> is set to false.
 
 Description:
 If the <lockLocation> <property> of an <object(glossary)> is false, the
@@ -54,12 +53,12 @@ ensure that the <group(command)> does not automatically resize to fit
 its contents.
 
 If a control's <lockLocation> <property> is false, when you change its
-height, it shrinks or grows from the center: the
-<control(object)|control's> top and bottom edges both shift, while its
-<location> <property> stays the same. If the <control(object)|control's>
-<lockLocation> <property> is true, it shrinks or grows from the top left
-corner: the <control(object)|control's> top edge stays in the same
-place, and the bottom edge moves.
+height, it shrinks or grows from the center: the <control|control's>
+top and bottom edges both shift, while its <location> <property> stays
+the same. If the <control|control's> <lockLocation> <property> is
+true, it shrinks or grows from the top left corner: the
+<control|control's> top edge stays in the same place, and the bottom
+edge moves.
 
 >*Note:* Changing a control's <width> or <height> in the property
 > inspector always preserves its location, regardless of the
@@ -72,7 +71,7 @@ References: revChangeWindowSize (command), group (command),
 object (glossary), property (glossary), handler (glossary),
 Pointer tool (glossary), group (glossary), file (keyword),
 player (keyword), image (keyword), scrollbar (keyword), card (keyword),
-control (keyword), control (object), height (property),
+control (glossary), height (property),
 lockCursor (property), lockLocation (property), width (property),
 location (property)
 

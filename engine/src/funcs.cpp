@@ -144,7 +144,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -163,7 +163,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 			}
 			if (!needone && sp.skip_token(SP_FACTOR, TT_RPAREN) == PS_NORMAL)
 				return PS_NORMAL;
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add
@@ -339,14 +339,14 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             {
                 // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
                 // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-                MCAutoPointer<MCContainer> t_container;
-                if (!t_params->evalcontainer(ctxt, &t_container))
+                MCContainer t_container;
+                if (!t_params->evalcontainer(ctxt, t_container))
                 {
                     ctxt . LegacyThrow(EE_BINARYD_BADDEST);
                     return;
                 }
                 
-                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+                /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             }
             else
             {
@@ -575,8 +575,32 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	case CT_WORD:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordOffsetMethodInfo);
 		break;
+	case CT_TOKEN:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokenOffsetMethodInfo);
+		break;
 	case CT_CHARACTER:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
+		break;
+	case CT_PARAGRAPH:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalParagraphOffsetMethodInfo);
+		break;
+	case CT_SENTENCE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalSentenceOffsetMethodInfo);
+		break;
+	case CT_TRUEWORD:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTrueWordOffsetMethodInfo);
+		break;
+	case CT_CODEPOINT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodepointOffsetMethodInfo);
+		break;
+	case CT_CODEUNIT:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCodeunitOffsetMethodInfo);
+		break;
+	case CT_BYTE:
+		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalByteOffsetMethodInfo);
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
 }
@@ -1034,8 +1058,8 @@ Parse_stat MCIntersect::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
 	
-	o1 = new MCChunk(False);
-	o2 = new MCChunk(False);
+	o1 = new (nothrow) MCChunk(False);
+	o2 = new (nothrow) MCChunk(False);
 	
 	Symbol_type stype;
 	if (o1->parse(sp, False) != PS_NORMAL
@@ -1339,14 +1363,14 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         {
             // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
             // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-            MCAutoPointer<MCContainer> t_container;
-            if (!t_result_params->evalcontainer(ctxt, &t_container))
+            MCContainer t_container;
+            if (!t_result_params->evalcontainer(ctxt, t_container))
             {
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
 
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+            /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             
             t_result_params = t_result_params->getnext();
         }
@@ -1542,7 +1566,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SELECTEDBUTTON_NOOBJECT, sp);
@@ -2281,7 +2305,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 		}
 		if (type == ST_SEP)
 		{
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_VALUE_BADOBJECT, sp);
@@ -2366,7 +2390,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FACTOR_NOLPAREN, sp);
 		return PS_ERROR;
 	}
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_WITHIN_NOOBJECT, sp);
@@ -2494,11 +2518,11 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(key, EE_QUERYREGISTRY_BADEXP, &t_key))
         return;
 
-	MCAutoPointer<MCContainer> t_container;
+    MCContainer t_container;
     MCAutoStringRef t_type;
 	if (type != NULL)
 	{
-		if (!type -> evalcontainer(ctxt, &t_container))
+		if (!type -> evalcontainer(ctxt, t_container))
 		{
 			ctxt . LegacyThrow(EE_QUERYREGISTRY_BADDEST);
 			return;
@@ -2515,8 +2539,8 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	if (!ctxt.HasError())
 	{
-		if (*t_container != nil)
-			/* UNCHECKED */ t_container->set_valueref(*t_type);
+        if (type != NULL)
+            /* UNCHECKED */ t_container.set_valueref(*t_type);
 	}
 }
 
@@ -3074,7 +3098,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 	}
 	
 	Symbol_type type;
-	m_object = new MCChunk(False);
+	m_object = new (nothrow) MCChunk(False);
 	if (sp.next(type) != PS_NORMAL || type != ST_SEP
         || m_object->parse(sp, False) != PS_NORMAL)
 	{
@@ -3137,6 +3161,50 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+Parse_stat
+MCMessageDigestFunc::parse(MCScriptPoint &sp,
+                           Boolean the)
+{
+    MCExpression *t_params[MAX_EXP];
+    uint2 t_param_count = 0;
+
+    if (getexps(sp, t_params, t_param_count) != PS_NORMAL ||
+        (t_param_count != 2))
+    {
+        /* Wrong number of parameters or some other probleem */
+        freeexps(t_params, t_param_count);
+
+        MCperror->add(PE_MESSAGEDIGEST_BADPARAM, sp);
+    }
+
+    m_data.Reset(t_params[0]);
+    m_type.Reset(t_params[1]);
+    return PS_NORMAL;
+}
+
+void
+MCMessageDigestFunc::eval_ctxt(MCExecContext &ctxt,
+                               MCExecValue &r_value)
+{
+    MCNewAutoNameRef t_name;
+    if (!ctxt.EvalExprAsNameRef(m_type.Get(), EE_MESSAGEDIGEST_BADTYPE, &t_name))
+        return;
+    MCAutoDataRef t_data;
+    if (!ctxt.EvalExprAsDataRef(m_data.Get(), EE_MESSAGEDIGEST_BADDATA, &t_data))
+        return;
+    MCAutoDataRef t_digest;
+    MCFiltersEvalMessageDigest(ctxt, *t_data, *t_name, &t_digest);
+    if (!ctxt.HasError())
+    {
+        r_value.dataref_value = t_digest.Take();
+        r_value.type = kMCExecValueTypeDataRef;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
 #include "test.h"

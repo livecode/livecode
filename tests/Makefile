@@ -49,13 +49,25 @@ LCC_LOG = _compiler_test_suite.log
 LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
 LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
+LC_RUN_LOG = _lc_run_test_suite.log
+
+########## lc-compile-ffi-java test parameters
+
+LC_COMPILE_FFI_JAVA ?= $(bin_dir)/lc-compile-ffi-java
+
+LC_COMPILE_FFI_JAVA_TESTRUNNER ?= $(top_srcdir)/tests/_lc_compile_ffi_java_testrunner.livecodescript
+
+LC_COMPILE_FFI_JAVA_CMD = $(LCS_ENGINE) -ui $(LC_COMPILE_FFI_JAVA_TESTRUNNER) run
+
+LC_COMPILE_FFI_JAVA_LOG = _lc-compile-ffi-java_test_suite.log
+
 ################################################################
 # Top-level targets
 ################################################################
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check
+check: lcs-check lcb-check compiler-check lc-compile-ffi-java-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -68,7 +80,8 @@ clean:
 
 LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
 LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
-LCM_TEST_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
+
+LCM_TEST_SOURCES ?= $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
 
 LCM_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_SOURCES))
 LCM_TEST_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_TEST_SOURCES))
@@ -118,7 +131,8 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 
 lcs-check: $(LCS_ENGINE) lcm_compile
 	@rm -f $(LCS_LOG)
-	@cmd="$(LCS_CMD)"; \
+	@export TEST_SUITE_LOG_FILE="$(LCS_LOG)"; \
+	cmd="$(LCS_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 
@@ -132,6 +146,7 @@ compiler-check: $(LC_COMPILE)
 	@rm -f $(LCC_LOG)
 	@export LC_COMPILE="$(LC_COMPILE)"; \
 	export LCC_VERBOSE="$(LCC_VERBOSE)"; \
+	export TEST_SUITE_LOG_FILE="$(LCC_LOG)"; \
 	cmd="$(LCC_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
@@ -143,6 +158,7 @@ compiler-check: $(LC_COMPILE)
 lc-run-check: $(LC_RUN) lcm_compile
 	@export LC_RUN="$(LC_RUN)"; \
 	export LCM_DIR="$(LCM_DIR)/lc-run"; \
+	export TEST_SUITE_LOG_FILE="$(LC_RUN_LOG)"; \
 	cmd="$(LC_RUN_TEST_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
@@ -159,10 +175,30 @@ LC_RUN_FLAGS += -l $(LCB_TESTLIB)
 
 lcb-check: lcm_compile
 	@set -e; \
+	export TEST_SUITE_LOG_FILE="$(LCB_LOG)"; \
 	for lcbfile in $(LCM_TEST_SOURCES); do \
 	    lcmfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:lcb$$:lcm:'`" ; \
 	    logfile="$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:log:'`" ; \
+	    parent="`echo $$lcbfile | sed -e 's:.*/\([^/]*\)/tests.*$$:\1:'`"; \
+	    loadfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:tests/.*\.lcb$$::'`$$parent.lcm"; \
 	    mkdir -p `dirname $$logfile`; \
-	    $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    if [ -e $$loadfile ] ; then \
+	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) --load $$loadfile $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    else \
+	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    fi; \
 	done; \
 	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
+
+################################################################
+# lc-compile-ffi-java tests
+################################################################
+
+lc-compile-ffi-java-check: $(LC_COMPILE_FFI_JAVA)
+	@rm -f $(LC_COMPILE_FFI_JAVA_LOG)
+	@export LC_COMPILE_FFI_JAVA="$(LC_COMPILE_FFI_JAVA)"; \
+	export LCC_VERBOSE="$(LC_COMPILE_FFI_JAVA_VERBOSE)"; \
+	export TEST_SUITE_LOG_FILE="$(LC_COMPILE_FFI_JAVA_LOG)"; \
+	cmd="$(LC_COMPILE_FFI_JAVA_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd

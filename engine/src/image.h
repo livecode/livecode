@@ -302,11 +302,14 @@ private:
 	MCImageNeed *m_next;
 };
 
-class MCImage : public MCControl
+typedef MCObjectProxy<MCImage>::Handle MCImageHandle;
+
+class MCImage : public MCControl, public MCMixinObjectHandle<MCImage>
 {
 public:
     
     enum { kObjectType = CT_IMAGE };
+    using MCMixinObjectHandle<MCImage>::GetHandle;
 
 private:
     

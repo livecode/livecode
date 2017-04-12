@@ -21,23 +21,11 @@
 #include <foundation.h>
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-
 #import <Foundation/NSString.h>
-
-@interface NSString (com_runrev_livecode_foundation_NSStringAdditions)
-	+ (NSString *)stringWithMCStringRef: (MCStringRef)value;
-    + (NSString *)stringWithMCNameRef: (MCNameRef)value;
-@end
-
-////////////////////////////////////////////////////////////////////////////////
-
 #import <Foundation/NSData.h>
 
-@interface NSData (com_runrev_livecode_foundation_NSDataAdditions)
-+ (NSData *)dataWithMCDataRef: (MCDataRef)value;
-@end
-
-////////////////////////////////////////////////////////////////////////////////
+NSString *MCStringConvertToAutoreleasedNSString(MCStringRef string);
+NSString *MCNameConvertToAutoreleasedNSString(MCNameRef name);
+NSData *MCDataConvertToAutoreleasedNSData(MCDataRef data);
 
 #endif

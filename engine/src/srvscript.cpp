@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "stack.h"
 #include "cmds.h"
+#include "variable.h"
 
 
 #include "system.h"
@@ -66,8 +67,6 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
-        // SN-2015-07-09: [[ Merge 6.7.7 RC 1 ]] Avoid memory leak
-        MCValueRelease(t_file -> filename);
 		delete t_file;
 	}
 	
@@ -82,7 +81,7 @@ void MCServerScript::ListFiles(MCStringRef &r_string)
 	MCListRef t_list;
 	/* UNCHECKED */ MCListCreateMutable('\n', t_list);
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		/* UNCHECKED */ MCListAppend(t_list, t_file->filename);
+		/* UNCHECKED */ MCListAppend(t_list, *t_file->filename);
 	
 	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_string);
 }
@@ -108,7 +107,7 @@ bool MCServerScript::GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 	
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
 		if (t_file -> index == t_file_index)
-            return MCStringCopy(t_file -> filename, r_file);
+            return MCStringCopy(*t_file -> filename, r_file);
 	
     return false;
 }
@@ -120,7 +119,15 @@ uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
 
 	if (t_file == NULL)
 		return 0;
-	
+
+    /* If the file was newly-created, link it into the MCServerScript
+     * instance's list of files so that it doesn't get leaked. */
+    /* TODO[2017-02-06] This is fragile; FindFile() should be
+     * refactored so that it's not necessary to guess whether the
+     * caller owns the returned pointer or not. */
+    if (t_file->next == m_files)
+        m_files = t_file;
+
 	return t_file -> index;
 }
 
@@ -140,7 +147,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact))
+        if (MCStringIsEqualTo(*t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact))
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
@@ -151,7 +158,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	}
 
 	// Create a new entry.
-	t_file = new File;
+	t_file = new (nothrow) File;
 	t_file -> next = m_files;
     t_file -> filename = MCValueRetain(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
@@ -184,7 +191,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 			if (t_type == ST_DATA)
 			{
 				// A data token turns into an Echo command.
-				t_statement = new MCEcho;
+				t_statement = new (nothrow) MCEcho;
 				if (t_statement != NULL && t_statement -> parse(sp) != PS_NORMAL)
 				{
 					MCperror->add(PE_SCRIPT_BADECHO, sp);
@@ -211,7 +218,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 					if (t_symbol != nil && (t_symbol -> which == HT_MESSAGE || t_symbol -> which == HT_FUNCTION))
 					{
 						MCHandler *t_new_handler;
-						t_new_handler = new MCHandler((uint1)t_symbol -> which, t_is_private);
+						t_new_handler = new (nothrow) MCHandler((uint1)t_symbol -> which, t_is_private);
 						t_new_handler -> setfileindex(m_current_file -> index);
 						if (t_new_handler -> parse(sp, false) == PS_NORMAL && !hlist -> hashandler((Handler_type)t_symbol -> which, t_new_handler -> getname()))
 						{
@@ -238,13 +245,13 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 					switch (t_symbol -> which)
 					{
 						case S_GLOBAL:
-							t_statement = new MCGlobal;
+							t_statement = new (nothrow) MCGlobal;
 							break;
 						case S_LOCAL:
-							t_statement = new MCLocalVariable;
+							t_statement = new (nothrow) MCLocalVariable;
 							break;
 						case S_CONSTANT:
-							t_statement = new MCLocalConstant;
+							t_statement = new (nothrow) MCLocalConstant;
 							break;
 						default:
 							t_statement = NULL;
@@ -280,7 +287,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 			else if (t_type == ST_ID)
 			{
 				// Treat it as a call
-				t_statement = new MCComref(sp . gettoken_nameref());
+				t_statement = new (nothrow) MCComref(sp . gettoken_nameref());
 				if (t_statement -> parse(sp) != PS_NORMAL)
 				{
 					MCperror -> add(PE_SCRIPT_BADCOMMAND, sp);
@@ -332,12 +339,12 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 
 	if (hlist == NULL)
 	{
-		hlist = new MCHandlerlist;
+		hlist = new (nothrow) MCHandlerlist;
 	}
 	
 	if (m_ctxt == NULL)
 	{
-		m_ctxt = new MCExecContext(this, hlist, NULL);
+		m_ctxt = new (nothrow) MCExecContext(this, hlist, NULL);
 		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
 		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
 	}
@@ -350,7 +357,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
     {
 		// Set the default folder to the folder containing the current script
 		MCAutoStringRef t_full_path;
-        /* UNCHECKED */ MCsystem->LongFilePath(m_current_file -> filename, &t_full_path);
+        /* UNCHECKED */ MCsystem->LongFilePath(*m_current_file -> filename, &t_full_path);
 		
 		uindex_t t_last_separator;
 		if (MCStringLastIndexOfChar(*t_full_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator))
@@ -366,7 +373,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	t_file = FindFile(p_filename, true);
 	if (t_file -> index == 1)
 	{
-		setfilename(t_file -> filename);
+		setfilename(*t_file -> filename);
 	}
 
 	// Set back the old default folder
@@ -384,17 +391,17 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	{
 		MCAutoDataRef t_file_contents;
 
-		if (!MCS_loadbinaryfile (t_file->filename,
+		if (!MCS_loadbinaryfile (*t_file->filename,
 								 &t_file_contents))
 		{
-			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
+			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, *t_file -> filename);
 			delete t_file;
 			return false;
 		}
 
 		uindex_t t_length;
 		t_length = MCDataGetLength (*t_file_contents);
-		t_file -> script = new char[t_length + 1];
+		t_file -> script = new (nothrow) char[t_length + 1];
 
 		MCMemoryCopy (t_file -> script,
 					  MCDataGetBytePtr (*t_file_contents),

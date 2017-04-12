@@ -83,7 +83,7 @@ extern void MCMacEnableScreenUpdates();
 void MCStack::setgeom()
 {
 	//set stack(window) size or position from script
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 	
 	// MW-2009-09-25: Ensure things are the right size when doing

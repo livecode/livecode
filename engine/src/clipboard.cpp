@@ -23,6 +23,7 @@
 #include "object.h"
 #include "stack.h"
 #include "styledtext.h"
+#include "globals.h"
 
 
 class MCClipboard::AutoLock
@@ -49,17 +50,9 @@ private:
 MCClipboard::MCClipboard(MCRawClipboard* p_clipboard) :
   m_clipboard(p_clipboard),
   m_lock_count(0),
-  m_private_data(NULL),
   m_dirty(false)
 {
     ;
-}
-
-MCClipboard::~MCClipboard()
-{
-    // Delete the private data, if any
-    if (m_private_data != NULL)
-        MCValueRelease(m_private_data);
 }
 
 bool MCClipboard::IsOwned() const
@@ -103,11 +96,7 @@ bool MCClipboard::IsLocked() const
 void MCClipboard::Clear()
 {
     // Clear the private data
-    if (m_private_data != NULL)
-    {
-        MCValueRelease(m_private_data);
-        m_private_data = NULL;
-    }
+	ClearPrivateData();
     
     // Pass on the request
     Lock();
@@ -125,7 +114,11 @@ void MCClipboard::ReleaseData()
 
 bool MCClipboard::PullUpdates() const
 {
-    // Pass on the request
+    // If ownership has changed, the private clipboard data needs to be cleared
+	if (!this->IsDragboard() && !m_clipboard->IsOwned())
+		const_cast<MCClipboard*>(this)->ClearPrivateData();
+	
+	// Pass on the request
     return m_clipboard->PullUpdates();
 }
 
@@ -370,14 +363,21 @@ bool MCClipboard::AddLiveCodeStyledText(MCDataRef p_pickled_text)
     if (t_success && (t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML)) != NULL)
     {
         // This type is optional as it may not be a faithful representation
-        MCAutoDataRef t_html(ConvertStyledTextToHTML(p_pickled_text));
+        MCAutoStringRef t_html(ConvertStyledTextToHTML(p_pickled_text));
         if (*t_html != NULL)
 		{
-			MCAutoDataRef t_encoded;
-			t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(*t_html);
-			t_success = *t_encoded != nil;
+			// All platforms accept UTF-8 as an encoding for HTML on the clipboard
+			MCAutoDataRef t_html_utf8;
+			t_success = MCStringEncode(*t_html, kMCStringEncodingUTF8, false, &t_html_utf8);
+			
 			if (t_success)
-	            t_success = t_item->AddRepresentation(t_type_string, *t_encoded);
+			{
+				MCAutoDataRef t_encoded;
+				t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(*t_html_utf8);
+				t_success = *t_encoded != nil;
+				if (t_success)
+					t_success = t_item->AddRepresentation(t_type_string, *t_encoded);
+			}
 		}
     }
     
@@ -403,14 +403,14 @@ bool MCClipboard::AddLiveCodeStyledTextArray(MCArrayRef p_styled_text)
     return AddLiveCodeStyledText(*t_pickled_text);
 }
 
-bool MCClipboard::AddHTMLText(MCDataRef p_html_data)
+bool MCClipboard::AddHTMLText(MCStringRef p_html_string)
 {
     // Adding HTML to the clipboard is done by converting the HTML to LiveCode's
     // internal styled-text format and then adding it to the clipboard in that
     // format.
     //
     // This is a lossy process but preserves legacy behaviour.
-    MCAutoDataRef t_pickled_text(ConvertHTMLToStyledText(p_html_data));
+    MCAutoDataRef t_pickled_text(ConvertHTMLToStyledText(p_html_string));
     if (*t_pickled_text == NULL)
         return false;
     
@@ -424,7 +424,7 @@ bool MCClipboard::AddRTFText(MCDataRef p_rtf_data)
     // format.
     //
     // This is a lossy process but preserves legacy behaviour.
-    MCAutoDataRef t_pickled_text(ConvertHTMLToStyledText(p_rtf_data));
+    MCAutoDataRef t_pickled_text(ConvertRTFToStyledText(p_rtf_data));
     if (*t_pickled_text == NULL)
         return false;
     
@@ -452,10 +452,15 @@ bool MCClipboard::AddRTF(MCDataRef p_rtf)
     return t_item->AddRepresentation(t_type_string, p_rtf);
 }
 
-bool MCClipboard::AddHTML(MCDataRef p_html)
+bool MCClipboard::AddHTML(MCStringRef p_html)
 {
     AutoLock t_lock(this);
     
+	// All platforms support UTF-8 as a text encoding for HTML on the clipboard
+	MCAutoDataRef t_html_utf8;
+	if (!MCStringEncode(p_html, kMCStringEncodingUTF8, false, &t_html_utf8))
+		return false;
+
     // Clear the contents if the clipboard contains external data
     if (m_clipboard->IsExternalData())
         Clear();
@@ -464,10 +469,10 @@ bool MCClipboard::AddHTML(MCDataRef p_html)
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
         return false;
-    
+
 	// Encode the HTML in the required format for the clipboard
 	MCAutoDataRef t_encoded;
-	t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(p_html);
+	t_encoded = m_clipboard->EncodeHTMLFragmentForTransfer(*t_html_utf8);
 	if (*t_encoded == nil)
 		return false;
 
@@ -476,7 +481,7 @@ bool MCClipboard::AddHTML(MCDataRef p_html)
     if (t_type_string == NULL)
         return false;
     
-    return t_item->AddRepresentation(t_type_string, p_html);
+    return t_item->AddRepresentation(t_type_string, *t_encoded);
 }
 
 bool MCClipboard::AddPNG(MCDataRef p_png)
@@ -542,6 +547,72 @@ bool MCClipboard::AddJPEG(MCDataRef p_jpeg)
     return t_item->AddRepresentation(t_type_string, p_jpeg);
 }
 
+bool MCClipboard::AddBMP(MCDataRef p_bmp)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIBv5);
+	if (t_type_string == NULL)
+		return false;
+
+	// Encode the BMP for transfer
+	MCAutoDataRef t_bmp(m_clipboard->EncodeBMPForTransfer(p_bmp));
+
+	return t_item->AddRepresentation(t_type_string, *t_bmp);
+}
+
+bool MCClipboard::AddWinMetafile(MCDataRef p_wmf)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinMF);
+	if (t_type_string == NULL)
+		return false;
+
+	return t_item->AddRepresentation(t_type_string, p_wmf);
+}
+
+bool MCClipboard::AddWinEnhMetafile(MCDataRef p_emf)
+{
+	AutoLock t_lock(this);
+
+	// Clear contents if the clipboard contains external data
+	if (m_clipboard->IsExternalData())
+		Clear();
+
+	// Get the first item on the clipboard
+	MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	// Add the objects to the clipboard under the correct type
+	MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinEMF);
+	if (t_type_string == NULL)
+		return false;
+
+	return t_item->AddRepresentation(t_type_string, p_emf);
+}
+
 bool MCClipboard::AddImage(MCDataRef p_image_data)
 {
     // Examine the data to see if it matches any of the formats that we handle
@@ -551,6 +622,8 @@ bool MCClipboard::AddImage(MCDataRef p_image_data)
         return AddGIF(p_image_data);
     if (MCImageDataIsJPEG(p_image_data))
         return AddJPEG(p_image_data);
+	if (MCImageDataIsBMP(p_image_data))
+		return AddBMP(p_image_data);
     
     return false;
 }
@@ -562,9 +635,7 @@ bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
         Clear();
     
     // Update the stored private data
-    if (m_private_data != NULL)
-        MCValueRelease(m_private_data);
-    m_private_data = MCValueRetain(p_private_data);
+    m_private_data.Reset(p_private_data);
     
     // Ensure that an item is always on the clipboard, even if it is empty
     if (m_clipboard->GetItemCount() == 0)
@@ -704,11 +775,48 @@ bool MCClipboard::HasJPEG() const
     return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG));
 }
 
+bool MCClipboard::HasBMP() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIB))
+		|| t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinDIBv5));
+}
+
+bool MCClipboard::HasWinMetafile() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinMF));
+}
+
+bool MCClipboard::HasWinEnhMetafile() const
+{
+	AutoLock t_lock(this);
+
+	// Check for the corresponding type
+	MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+	if (t_item == NULL)
+		return false;
+
+	return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeWinEMF));
+}
+
 bool MCClipboard::HasImage() const
 {
     // Images are any of PNG, GIF or JPEG
     AutoLock t_lock(this);
-    return HasPNG() || HasGIF() || HasJPEG();
+	return HasPNG() || HasGIF() || HasJPEG() || HasBMP();
 }
 
 bool MCClipboard::HasTextOrCompatible() const
@@ -728,7 +836,7 @@ bool MCClipboard::HasLiveCodeStyledTextOrCompatible() const
 
 bool MCClipboard::HasPrivateData() const
 {
-    return m_private_data != NULL;
+    return m_private_data.IsSet();
 }
 
 bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
@@ -812,16 +920,18 @@ bool MCClipboard::CopyAsText(MCStringRef& r_text) const
     if (t_item == NULL)
         return false;
     
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF8, kMCStringEncodingUTF8, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF16, kMCStringEncodingUTF16, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeISO8859_1, kMCStringEncodingISO8859_1, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeMacRoman, kMCStringEncodingMacRoman, r_text))
-        return true;
-    if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text))
-        return true;
+	// IM-2016-11-21: [[ Bug 18652 ]] If we should be able to fetch using a text encoding then return
+	//    false if conversion fails instead of falling through to other encodings.
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF8)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF8, kMCStringEncodingUTF8, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeUTF16, kMCStringEncodingUTF16, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeISO8859_1, kMCStringEncodingISO8859_1, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeMacRoman, kMCStringEncodingMacRoman, r_text);
+	if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252)))
+		return CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text);
     
     // As a fallback, try to convert a list of file paths into text
     if (CopyAsFileList(r_text))
@@ -858,21 +968,15 @@ bool MCClipboard::CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const
     }
     
     // Could not grab as either styled text or RTF. Try with HTML.
-    MCAutoDataRef t_html;
-    if (CopyAsData(kMCRawClipboardKnownTypeHTML, &t_html))
+    MCAutoStringRef t_html;
+    if (CopyAsHTML(&t_html))
     {
-		MCAutoDataRef t_decodedhtml;
-		t_decodedhtml.Reset(m_clipboard->DecodeTransferredHTML(*t_html));
-
-		if (*t_decodedhtml != nil)
+		// Convert to LiveCode styled text
+		MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_html);
+		if (t_pickled_text != NULL)
 		{
-			// Convert to LiveCode styled text
-			MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_decodedhtml);
-			if (t_pickled_text != NULL)
-			{
-				r_pickled_text = t_pickled_text;
-				return true;
-			}
+			r_pickled_text = t_pickled_text;
+			return true;
 		}
     }
     
@@ -928,7 +1032,7 @@ bool MCClipboard::CopyAsRTFText(MCDataRef& r_rtf) const
     return true;
 }
 
-bool MCClipboard::CopyAsHTMLText(MCDataRef& r_html) const
+bool MCClipboard::CopyAsHTMLText(MCStringRef& r_html) const
 {
     AutoLock t_lock(this);
     
@@ -938,11 +1042,12 @@ bool MCClipboard::CopyAsHTMLText(MCDataRef& r_html) const
     if (!CopyAsLiveCodeStyledText(&t_pickled_text))
         return false;
     
-    MCDataRef t_html = ConvertStyledTextToHTML(*t_pickled_text);
-    if (t_html == NULL)
+	MCAutoStringRef t_html;
+	t_html.Give(ConvertStyledTextToHTML(*t_pickled_text));
+    if (*t_html == nil)
         return false;
     
-    r_html = t_html;
+    r_html = t_html.Take();
     return true;
 }
 
@@ -951,18 +1056,24 @@ bool MCClipboard::CopyAsRTF(MCDataRef& r_rtf_data) const
     return CopyAsData(kMCRawClipboardKnownTypeRTF, r_rtf_data);
 }
 
-bool MCClipboard::CopyAsHTML(MCDataRef& r_html_data) const
+bool MCClipboard::CopyAsHTML(MCStringRef& r_html) const
 {
 	MCAutoDataRef t_data;
 	if (!CopyAsData(kMCRawClipboardKnownTypeHTML, &t_data))
 		return false;
 
-	MCDataRef t_decoded = nil;
-	t_decoded = m_clipboard->DecodeTransferredHTML(*t_data);
-	if (t_decoded == nil)
+	MCAutoDataRef t_decoded;
+	t_decoded.Give(m_clipboard->DecodeTransferredHTML(*t_data));
+	if (*t_decoded == nil)
 		return false;
 
-	r_html_data = t_decoded;
+	// Convert the decoded HTML data into a string
+	MCStringEncoding t_encoding = GuessHTMLEncoding(*t_decoded);
+	MCAutoStringRef t_html_string;
+	if (!MCStringDecode(*t_decoded, t_encoding, false, &t_html_string))
+		return false;
+
+	r_html = t_html_string.Take();
 	return true;
 }
 
@@ -996,20 +1107,50 @@ bool MCClipboard::CopyAsJPEG(MCDataRef& r_jpeg) const
     return CopyAsData(kMCRawClipboardKnownTypeJPEG, r_jpeg);
 }
 
+bool MCClipboard::CopyAsBMP(MCDataRef& r_bmp) const
+{
+	// Copy and decode the BMP file
+	MCAutoDataRef t_bmp;
+	if (!CopyAsData(kMCRawClipboardKnownTypeWinDIBv5, &t_bmp))
+		return false;
+	
+	MCDataRef t_decoded = m_clipboard->DecodeTransferredBMP(*t_bmp);
+	if (t_decoded == nil)
+		return false;
+
+	r_bmp = t_decoded;
+	return true;
+}
+
+bool MCClipboard::CopyAsWinMetafile(MCDataRef& r_wmf) const
+{
+	return CopyAsData(kMCRawClipboardKnownTypeWinMF, r_wmf);
+}
+
+bool MCClipboard::CopyAsWinEnhMetafile(MCDataRef& r_emf) const
+{
+	return CopyAsData(kMCRawClipboardKnownTypeWinEMF, r_emf);
+}
+
 bool MCClipboard::CopyAsImage(MCDataRef& r_image) const
 {
     // The order here is fairly arbitrary
     AutoLock t_lock(this);
-    return CopyAsPNG(r_image) || CopyAsJPEG(r_image) || CopyAsGIF(r_image);
+    return CopyAsPNG(r_image) || CopyAsJPEG(r_image) || CopyAsGIF(r_image) || CopyAsBMP(r_image);
 }
 
 bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const
 {
-    if (m_private_data == NULL)
+    if (!m_private_data.IsSet())
         return false;
     
-    r_data = MCValueRetain(m_private_data);
+    r_data = MCValueRetain(*m_private_data);
     return true;
+}
+
+void MCClipboard::ClearPrivateData()
+{
+    m_private_data.Reset();
 }
 
 // Wrapper for MCStringIsEqualTo that handles NULL parameters
@@ -1069,15 +1210,14 @@ MCParagraph* MCClipboard::CopyAsParagraphs(MCField* p_via_field) const
     if (CopyAsLiveCodeStyledText(&t_pickled_text))
     {
         // Turn the pickled text into a StyledText object
-        MCObject *t_object = MCObject::unpickle(*t_pickled_text, p_via_field -> getstack());
-        if (t_object == NULL)
+	    MCAutoPointer<MCObject> t_object = MCObject::unpickle(*t_pickled_text, p_via_field -> getstack());
+        if (!t_object)
             return NULL;
         
         // And from that, get the paragraph structures that the field can deal with
         MCParagraph *t_paragraphs;
-        t_paragraphs = (static_cast<MCStyledText*>(t_object))->grabparagraphs(p_via_field);
-        
-        delete t_object;
+        t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->grabparagraphs(p_via_field);
+
         return t_paragraphs;
     }
     
@@ -1133,67 +1273,71 @@ const MCRawClipboardItem* MCClipboard::GetItem() const
 MCStringRef MCClipboard::ConvertStyledTextToText(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+	MCAutoPointer<MCObject> t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as plain text
     MCAutoStringRef t_text;
-    bool t_success = MCtemplatefield->exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportasplaintext(t_paragraphs, 0, INT32_MAX,
+                                            &t_text))
         return NULL;
-    
-    return MCValueRetain(*t_text);
+
+    return t_text.Take();
 }
 
-MCDataRef MCClipboard::ConvertStyledTextToHTML(MCDataRef p_pickled_text)
+MCStringRef MCClipboard::ConvertStyledTextToHTML(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as HTML
     MCAutoDataRef t_html;
-    bool t_success = MCtemplatefield->exportashtmltext(t_paragraphs, 0, INT32_MAX, false, &t_html);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportashtmltext(t_paragraphs, 0, INT32_MAX,
+                                           false, &t_html))
         return NULL;
-    
-    return MCValueRetain(*t_html);
+
+	// Convert the HTML into a string
+	// exportashtmltext always returns native-encoded data (where non-ASCII chars are entity-encoded)
+	MCAutoStringRef t_html_string;
+	if (!MCStringDecode(*t_html, kMCStringEncodingNative, false, &t_html_string))
+		return nil;
+
+	return t_html_string.Take();
 }
 
 MCDataRef MCClipboard::ConvertStyledTextToRTF(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // And from that, get the paragraph structures that the field can deal with
     MCParagraph *t_paragraphs;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs == NULL)
         return NULL;
     
     // Export the field contents as RTF
     MCAutoStringRef t_text;
-    bool t_success = MCtemplatefield->exportasrtftext(t_paragraphs, 0, INT32_MAX, &t_text);
-    delete t_object;
-    if (!t_success)
+    if (!MCtemplatefield->exportasrtftext(t_paragraphs, 0, INT32_MAX, &t_text))
         return NULL;
     
     // The RTF format description specifies that only 7-bit ASCII characters are
@@ -1204,7 +1348,7 @@ MCDataRef MCClipboard::ConvertStyledTextToRTF(MCDataRef p_pickled_text)
     if (!MCStringEncode(*t_text, kMCStringEncodingNative, false, &t_rtf))
         return NULL;
     
-    return MCValueRetain(*t_rtf);
+    return t_rtf.Take();
 }
 
 MCDataRef MCClipboard::ConvertRTFToStyledText(MCDataRef p_rtf_data)
@@ -1232,10 +1376,10 @@ MCDataRef MCClipboard::ConvertRTFToStyledText(MCDataRef p_rtf_data)
     return t_pickled_text;
 }
 
-MCDataRef MCClipboard::ConvertHTMLToStyledText(MCDataRef p_html_data)
+MCDataRef MCClipboard::ConvertHTMLToStyledText(MCStringRef p_html_string)
 {
     // Turn the HTML into paragraphs
-    MCParagraph *t_paragraphs = MCtemplatefield->importhtmltext(p_html_data);
+    MCParagraph *t_paragraphs = MCtemplatefield->importhtmltext(p_html_string);
     if (t_paragraphs == NULL)
         return NULL;
     
@@ -1254,26 +1398,25 @@ MCDataRef MCClipboard::ConvertHTMLToStyledText(MCDataRef p_html_data)
 MCArrayRef MCClipboard::ConvertStyledTextToStyledTextArray(MCDataRef p_pickled_text)
 {
     // Turn the pickled text into a StyledText object
-    MCObject *t_object = MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
-    if (t_object == NULL)
+    MCAutoPointer<MCObject> t_object =
+        MCObject::unpickle(p_pickled_text, MCtemplatefield -> getstack());
+    if (!t_object)
         return NULL;
     
     // Grab the paragraphs from the object and turn them into a text styles
     // array.
     MCParagraph* t_paragraphs;
     MCAutoArrayRef t_style_array;
-    t_paragraphs = (static_cast<MCStyledText*>(t_object))->getparagraphs();
+    t_paragraphs = (static_cast<MCStyledText*>(t_object.Get()))->getparagraphs();
     if (t_paragraphs != NULL)
         MCtemplatefield->exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_style_array);
-
-    delete t_object;
     
     // If generating the array failed, return NULL
     if (*t_style_array == NULL)
         return NULL;
     
-    // Return a copy of the styled text array
-    return MCValueRetain(*t_style_array);
+    // Return the styled text array
+    return t_style_array.Take();
 }
 
 MCDataRef MCClipboard::ConvertStyledTextArrayToStyledText(MCArrayRef p_styles)
@@ -1324,6 +1467,10 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     
     // Get the data for this representation and decode it
     MCAutoDataRef t_encoded(t_rep->CopyData());
+
+	// IM-2016-11-21: [[ Bug 18652 ]] Check for null return from CopyData()
+	if (!t_encoded.IsSet())
+		return false;
     
     MCAutoStringRef t_string;
     if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))
@@ -1368,8 +1515,26 @@ MCClipboard* MCClipboard::CreateSystemSelectionClipboard()
 MCClipboard* MCClipboard::CreateSystemDragboard()
 {
     // Drag boards are created in a locked state
-    MCClipboard* t_dragboard = new MCClipboard(MCRawClipboard::CreateSystemDragboard());
+    MCClipboard* t_dragboard = new (nothrow) MCClipboard(MCRawClipboard::CreateSystemDragboard());
     t_dragboard->Lock(true);
     t_dragboard->Clear();
     return t_dragboard;
+}
+
+MCStringEncoding MCClipboard::GuessHTMLEncoding(MCDataRef p_html_data)
+{
+	// All of our platforms (seem to) use UTF-8 as the text encoding for HTML
+	// data transferred via the clipboard. Windows guarantees this; for Mac and
+	// Linux the situation is unclear (but various places in the engine seem to
+	// assume this anyway).
+	//
+	// If it turns out that non-UTF-8 HTML gets passed via the clipboard, this
+	// function should be updated to detect it if possible.
+
+	return kMCStringEncodingUTF8;
+}
+
+bool MCClipboard::IsDragboard() const
+{
+	return this == MCdragboard;
 }

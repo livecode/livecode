@@ -72,6 +72,8 @@ the contents of the <datagram>.
   assignments](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml)
   and [RFC 6335](https://tools.ietf.org/html/rfc6335)
 
+> **Note:** The <defaultNetworkInterface> <property> can be used to
+specify the interface to accept connections on.
 
 References: read from socket (command), write to socket (command),
 close socket (command), open socket (command), openSockets (function),
@@ -81,7 +83,6 @@ IP address (glossary), TCP (glossary), port (glossary),
 command (glossary), socket (glossary), UDP (glossary), host (glossary),
 server (glossary), message (glossary), parameter (glossary),
 process (glossary), object (glossary), HTTPProxy (property),
-script (property)
+script (property), defaultNetworkInterface (property)
 
 Tags: networking
-

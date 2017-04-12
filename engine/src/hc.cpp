@@ -430,7 +430,7 @@ static uint2 convert_style(uint2 istyle)
 static char *convert_string(const char *string)
 {
 	const uint1 *sptr = (const uint1 *)string;
-	char *newstring = new char[strlen(string) + 1];
+	char *newstring = new (nothrow) char[strlen(string) + 1];
 	uint1 *dptr = (uint1 *)newstring;
 	while (*sptr)
 	{
@@ -475,7 +475,7 @@ static char *convert_script(const char *string)
 		sptr++;
 	}
 	sptr = (const uint1 *)string;
-	char *newstring = new char[length + conversions + 1];
+	char *newstring = new (nothrow) char[length + conversions + 1];
 	uint1 *dptr = (uint1 *)newstring;
 	while (*sptr)
 	{
@@ -587,7 +587,7 @@ Boolean MCHcsnd::import(uint4 inid, MCNameRef inname, char *sptr)
 		size = get_uint4(&sptr[hsize + 4]);
 	}
 	rate = (uint2)((real8)rate / pow(1.05946309434, (real8)baserate));
-	data = new int1[size];
+	data = new (nothrow) int1[size];
 	memcpy(data, sptr + hsize + 22, size);
 	uint1 *dptr = (uint1 *)data;
 	uint4 i = size;
@@ -598,7 +598,7 @@ Boolean MCHcsnd::import(uint4 inid, MCNameRef inname, char *sptr)
 
 MCAudioClip *MCHcsnd::build()
 {
-	MCAudioClip *aptr = new MCAudioClip;
+	MCAudioClip *aptr = new (nothrow) MCAudioClip;
 	aptr->size = size;
     aptr->setname(m_name);
 	aptr->samples = (int1 *)data;
@@ -647,7 +647,7 @@ IO_stat MCHctext::parse(char *sptr)
 			tsize -= natts;
 			offset = natts + 4;
 			natts = (natts >> 1) - 1;
-			atts = new uint2[natts + 1];
+			atts = new (nothrow) uint2[natts + 1];
 			uint2 i;
 			for (i = 0 ; i < natts ; i++)
 				atts[i] = swap_uint2(&uint2ptr[i + 3]);
@@ -658,7 +658,7 @@ IO_stat MCHctext::parse(char *sptr)
 			tsize--;
 			offset = 5;
 		}
-		char *newstring = new char[tsize + 1];
+		char *newstring = new (nothrow) char[tsize + 1];
 		strncpy(newstring, &sptr[offset], tsize);
 		newstring[tsize] = '\0';
 		string = convert_string(newstring);
@@ -669,7 +669,7 @@ IO_stat MCHctext::parse(char *sptr)
 
 MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 {
-	MCCdata *fptr = new MCCdata(cid);
+	MCCdata *fptr = new (nothrow) MCCdata(cid);
 	if (string == NULL)
 		string = MCU_empty();
 	char *eptr = string;
@@ -694,7 +694,7 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 		if (eptr != NULL)
 			*eptr++ = '\0';
 		uint2 length = strlen(sptr);
-		MCParagraph *pgptr = new MCParagraph;
+		MCParagraph *pgptr = new (nothrow) MCParagraph;
 		pgptr->setparent(parent);
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, length, &t_string);
@@ -751,7 +751,7 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 
 MCCdata *MCHctext::buildb()
 {
-	MCCdata *bptr = new MCCdata(cid);
+	MCCdata *bptr = new (nothrow) MCCdata(cid);
 	bptr->setset(string[0] == '1');
 	return bptr;
 }
@@ -911,7 +911,7 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 		if (!(fptr->flags & F_VSCROLLBAR))
 		{
 			fptr->flags |= F_VSCROLLBAR;
-			fptr->vscrollbar = new MCScrollbar(*MCtemplatescrollbar);
+			fptr->vscrollbar = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 			fptr->vscrollbar->setparent(fptr);
 			fptr->vscrollbar->allowmessages(False);
 			fptr->vscrollbar->setflag(False, F_TRAVERSAL_ON);
@@ -922,10 +922,10 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 	if (hctstyle & HC_TSTYLE_OUTLINE)
 	{
 		fptr->ncolors = 1;
-		fptr->colors = new MCColor;
+		fptr->colors = new (nothrow) MCColor;
 		fptr->colors[0].red = fptr->colors[0].green
 		                      = fptr->colors[0].blue = MAXUINT2;
-		fptr->colornames = new MCStringRef[1];
+		fptr->colornames = new (nothrow) MCStringRef[1];
 		fptr->colornames[0] = nil;
 		fptr->dflags |= DF_FORE_COLOR;
 	}
@@ -1096,7 +1096,7 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	uint4 iid = hcsptr->geticon(icon);
 	if (iid != 0)
 	{
-		bptr->icons = new iconlist;
+		bptr->icons = new (nothrow) iconlist;
 		memset(bptr->icons, 0, sizeof(iconlist));
 		bptr->icons->iconids[CI_DEFAULT] = iid;	
 		bptr->flags |= F_SHOW_ICON;
@@ -1124,16 +1124,15 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	if (hctstyle & HC_TSTYLE_OUTLINE)
 	{
 		bptr->ncolors = 1;
-		bptr->colors = new MCColor;
-		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue
-		                      = bptr->colors[0].blue = MAXUINT2;
-		bptr->colornames = new MCStringRef[1];
+		bptr->colors = new (nothrow) MCColor;
+		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue = MAXUINT2;
+		bptr->colornames = new (nothrow) MCStringRef[1];
 		bptr->colornames[0] = nil;
 		bptr->dflags |= DF_FORE_COLOR;
 	}
 	if (bptr->flags & F_SHARED_HILITE)
 	{
-		MCCdata *newbdata = new MCCdata(0);
+		MCCdata *newbdata = new (nothrow) MCCdata(0);
 		newbdata->setset(atts & HC_B_HILITED);
 		newbdata->appendto(bptr->bdata);
 	}
@@ -1432,7 +1431,7 @@ IO_stat MCHccard::parse(char *sptr)
 		offset = 27;
 	}
 	if (nobjects)
-		objects = new uint2[nobjects];
+		objects = new (nothrow) uint2[nobjects];
 	uint2 i;
 	for (i = 0 ; i < nobjects ; i++)
 	{
@@ -1441,7 +1440,7 @@ IO_stat MCHccard::parse(char *sptr)
 		{
 		case HC_OTYPE_BUTTON:
 			{
-				MCHcbutton *newbutton = new MCHcbutton;
+				MCHcbutton *newbutton = new (nothrow) MCHcbutton;
 				newbutton->appendto(hcbuttons);
 				if (newbutton->parse(&sptr[offset * 2]) != IO_NORMAL)
 					return IO_ERROR;
@@ -1449,7 +1448,7 @@ IO_stat MCHccard::parse(char *sptr)
 			break;
 		case HC_OTYPE_FIELD:
 			{
-				MCHcfield *newfield = new MCHcfield;
+				MCHcfield *newfield = new (nothrow) MCHcfield;
 				newfield->appendto(hcfields);
 				if (newfield->parse(&sptr[offset * 2]) != IO_NORMAL)
 					return IO_ERROR;
@@ -1465,7 +1464,7 @@ IO_stat MCHccard::parse(char *sptr)
 	offset <<= 1;
 	while (ntext--)
 	{
-		MCHctext *newtext = new MCHctext;
+		MCHctext *newtext = new (nothrow) MCHctext;
 		newtext->cid = id;
 		newtext->appendto(hctexts);
 		if (newtext->parse(&sptr[offset]) != IO_NORMAL)
@@ -1503,13 +1502,13 @@ MCCard *MCHccard::build(MCHcstak *hcsptr, MCStack *sptr)
 		cptr->flags |= F_G_DONT_SEARCH;
 	if (atts & HC_BC_CANT_DELETE)
 		cptr->flags |= F_G_CANT_DELETE;
-	newoptr = new MCObjptr;
+	newoptr = new (nothrow) MCObjptr;
 	newoptr->setparent(cptr);
 	newoptr->setid(bkgdid);
 	newoptr->appendto(cptr->objptrs);
 	if (bmapid != 0)
 	{
-		newoptr = new MCObjptr;
+		newoptr = new (nothrow) MCObjptr;
 		newoptr->setparent(cptr);
 		newoptr->setid(bmapid);
 		newoptr->appendto(cptr->objptrs);
@@ -1561,7 +1560,7 @@ MCCard *MCHccard::build(MCHcstak *hcsptr, MCStack *sptr)
 				MCControl *newbutton = bptr->build(hcsptr, sptr);
 				newbutton->setparent(sptr);
 				newbutton->appendto(sptr->controls);
-				newoptr = new MCObjptr;
+				newoptr = new (nothrow) MCObjptr;
 				newoptr->setparent(cptr);
 				newoptr->setid(newbutton->getid());
 				newoptr->appendto(cptr->objptrs);
@@ -1575,7 +1574,7 @@ MCCard *MCHccard::build(MCHcstak *hcsptr, MCStack *sptr)
 				MCControl *newfield = fptr->build(hcsptr, sptr);
 				newfield->setparent(sptr);
 				newfield->appendto(sptr->controls);
-				newoptr = new MCObjptr;
+				newoptr = new (nothrow) MCObjptr;
 				newoptr->setparent(cptr);
 				newoptr->setid(newfield->getid());
 				newoptr->appendto(cptr->objptrs);
@@ -1646,7 +1645,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 		offset = 25;
 	}
 	if (nobjects)
-		objects = new uint2[nobjects];
+		objects = new (nothrow) uint2[nobjects];
 	uint2 i;
 	for (i = 0 ; i < nobjects ; i++)
 	{
@@ -1655,7 +1654,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 		{
 		case HC_OTYPE_BUTTON:
 			{
-				MCHcbutton *newbutton = new MCHcbutton;
+				MCHcbutton *newbutton = new (nothrow) MCHcbutton;
 				newbutton->appendto(hcbuttons);
 				if (newbutton->parse(&sptr[offset * 2]) != IO_NORMAL)
 					return IO_ERROR;
@@ -1663,7 +1662,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 			break;
 		case HC_OTYPE_FIELD:
 			{
-				MCHcfield *newfield = new MCHcfield;
+				MCHcfield *newfield = new (nothrow) MCHcfield;
 				newfield->appendto(hcfields);
 				if (newfield->parse(&sptr[offset * 2]) != IO_NORMAL)
 					return IO_ERROR;
@@ -1679,7 +1678,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 	offset <<= 1;
 	while (ntext--)
 	{
-		MCHctext *newtext = new MCHctext;
+		MCHctext *newtext = new (nothrow) MCHctext;
 		newtext->cid = 0;
 		newtext->appendto(hctexts);
 		if (newtext->parse(&sptr[offset]) != IO_NORMAL)
@@ -1776,25 +1775,29 @@ MCGroup *MCHcbkgd::build(MCHcstak *hcsptr, MCStack *sptr)
 }
 
 MCHcstak::MCHcstak(char *inname)
+	: rect(kMCEmptyRectangle),
+	  name(inname),
+	  script(nullptr),
+	  fullbuffer(nullptr),
+	  buffer(nullptr),
+	  pages(nullptr),
+	  marks(nullptr),
+	  npages(0),
+	  fonts(nullptr),
+	  atts(nullptr),
+	  nfonts(0),
+	  natts(0),
+	  pagesize(0),
+	  npbuffers(0),
+	  pbuffersizes(nullptr),
+	  pbuffers(nullptr),
+	  hcbkgds(nullptr),
+	  hccards(nullptr),
+	  hcbmaps(nullptr),
+	  icons(nullptr),
+	  cursors(nullptr),
+	  snds(nullptr)
 {
-	name = inname;
-	script = NULL;
-	fullbuffer = NULL;
-	pages = NULL;
-	marks = NULL;
-	npages = 0;
-	fonts = NULL;
-	atts = NULL;
-	nfonts = natts = 0;
-	npbuffers = 0;
-	pbuffersizes = NULL;
-	pbuffers = NULL;
-	hcbkgds = NULL;
-	hcbmaps = NULL;
-	hccards = NULL;
-	icons = NULL;
-	cursors = NULL;
-	snds = NULL;
 }
 
 MCHcstak::~MCHcstak()
@@ -1963,7 +1966,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				return IO_ERROR;
 			filetype = HC_MACBIN;
 			delete name;
-			name = new char[strlen(&header[2]) + 1];
+			name = new (nothrow) char[strlen(&header[2]) + 1];
 			strcpy(name, &header[2]);
 			uint1 *uint1ptr = (uint1 *)header;
 			roffset = uint1ptr[83] << 24 | uint1ptr[84] << 16
@@ -1989,7 +1992,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				MCS_seek_set(stream, ++foffset);
 				uint4 fsize = (uint4)MCS_fsize(stream) - foffset;
-				char *tbuffer = new char[fsize * 3 / 4];
+				char *tbuffer = new (nothrow) char[fsize * 3 / 4];
 				uint1 *uint1ptr = (uint1 *)tbuffer;
 				uint1 byte;
 				uint2 tcount = 0;
@@ -1998,23 +2001,29 @@ IO_stat MCHcstak::read(IO_handle stream)
 				while (tsize--)
 				{
 					if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+					{
+						delete[] tbuffer;
 						return IO_ERROR;
+					}
 					while ((byte == '\n' || byte == '\r') && tsize--)
 						if (IO_read_uint1(&byte, stream) != IO_NORMAL)
+						{
+							delete[] tbuffer;
 							return IO_ERROR;
+						}
 					if (byte == ':')
 						break;
 					tbuf[tcount++] = hqx[byte - '!'];
 					if (tcount == 4)
 					{
-						uint1ptr[boffset++] = tbuf[0] << 2 | tbuf[1] >> 4;
-						uint1ptr[boffset++] = tbuf[1] << 4 | tbuf[2] >> 2;
-						uint1ptr[boffset++] = tbuf[2] << 6 | tbuf[3];
+						uint1ptr[boffset++] = uint1(tbuf[0] << 2 | tbuf[1] >> 4);
+						uint1ptr[boffset++] = uint1(tbuf[1] << 4 | tbuf[2] >> 2);
+						uint1ptr[boffset++] = uint1(tbuf[2] << 6 | tbuf[3]);
 						tcount = 0;
 					}
 				}
 				uint4 fullsize = fsize;
-				fullbuffer = new char[fullsize];
+				fullbuffer = new (nothrow) char[fullsize];
 				uint4 doffset = 0;
 				uint1 *eptr = uint1ptr + boffset;
 				while (uint1ptr < eptr)
@@ -2054,7 +2063,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				uint1ptr = (uint1 *)fullbuffer;
 				delete name;
-				name = new char[uint1ptr[0] + 1];
+				name = new (nothrow) char[uint1ptr[0] + 1];
 				strcpy(name, &tbuffer[1]);
 				delete[] tbuffer;
 
@@ -2096,7 +2105,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				return IO_ERROR;
 			if (type == HC_BUGS)
 				size = 512;
-			fullbuffer = new char[size];
+			fullbuffer = new (nothrow) char[size];
 			if (IO_read(&fullbuffer[8], size - 8, stream) != IO_NORMAL)
 				return IO_ERROR;
 			t_buffer = fullbuffer;
@@ -2133,12 +2142,12 @@ IO_stat MCHcstak::read(IO_handle stream)
 			MCU_realloc((char **)&pbuffersizes, npbuffers,
 			            npbuffers + 1, sizeof(uint2));
 			pbuffersizes[npbuffers] = size;
-			pbuffers[npbuffers] = new char[size];
+	        pbuffers[npbuffers] = new (nothrow) char[size];
 			memcpy(pbuffers[npbuffers++], t_buffer, size);
 			break;
 		case HC_BKGD:
 			{
-				MCHcbkgd *newbkgd = new MCHcbkgd;
+				MCHcbkgd *newbkgd = new (nothrow) MCHcbkgd;
 				newbkgd->appendto(hcbkgds);
 				if (newbkgd->parse(buffer) != IO_NORMAL)
 					return IO_ERROR;
@@ -2146,7 +2155,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			break;
 		case HC_CARD:
 			{
-				MCHccard *newcard = new MCHccard;
+				MCHccard *newcard = new (nothrow) MCHccard;
 				newcard->appendto(hccards);
 				if (newcard->parse(t_buffer) != IO_NORMAL)
 					return IO_ERROR;
@@ -2154,7 +2163,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			break;
 		case HC_BMAP:
 			{
-				MCHcbmap *newbmap = new MCHcbmap;
+				MCHcbmap *newbmap = new (nothrow) MCHcbmap;
 				newbmap->appendto(hcbmaps);
 				if (newbmap->parse(buffer) != IO_NORMAL)
 					return IO_ERROR;
@@ -2163,7 +2172,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 		case HC_STBL:
 			if ((natts = swap_uint2(&uint2buff[9])) != 0)
 			{
-				atts = new Hcatts[natts];
+				atts = new (nothrow) Hcatts[natts];
 				offset = 13;
 				for (i = 0 ; i < natts ; i++)
 				{
@@ -2178,7 +2187,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 		case HC_FTBL:
 			if ((nfonts = swap_uint2(&uint2buff[9])) != 0)
 			{
-				fonts = new Hcfont[nfonts];
+				fonts = new (nothrow) Hcfont[nfonts];
 				offset = 12;
 				for (i = 0 ; i < nfonts ; i++)
 				{
@@ -2218,7 +2227,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	}
 	if (filetype == HC_MACBIN)
 	{
-		fullbuffer = new char[rsize];
+		fullbuffer = new (nothrow) char[rsize];
 		MCS_seek_set(stream, roffset);
 		if (MCS_readfixed(fullbuffer, rsize, stream) != IO_NORMAL)
 			return IO_ERROR;
@@ -2258,21 +2267,21 @@ IO_stat MCHcstak::read(IO_handle stream)
 			{
 			case HC_ICON:
 				{
-					MCHcbmap *newicon = new MCHcbmap;
+					MCHcbmap *newicon = new (nothrow) MCHcbmap;
 					newicon->appendto(icons);
 					newicon->icon(id, *t_name, &rdata[offset + 4]);
 				}
 				break;
 			case HC_CURS:
 				{
-					MCHcbmap *newcurs = new MCHcbmap;
+					MCHcbmap *newcurs = new (nothrow) MCHcbmap;
 					newcurs->appendto(cursors);
 					newcurs->cursor(id, *t_name, &rdata[offset + 4]);
 				}
 				break;
 			case HC_SND:
 				{
-					MCHcsnd *newsnd = new MCHcsnd;
+					MCHcsnd *newsnd = new (nothrow) MCHcsnd;
 					if (newsnd->import(id, *t_name, &rdata[offset + 4]))
 						newsnd->appendto(snds);
 					else
@@ -2474,10 +2483,12 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 	MCValueAssign(MChcstat, kMCEmptyString);
 
     char* t_name;
-    /* UNCHECKED */ MCStringConvertToCString(name, t_name);
-	MCHcstak *hcstak = new MCHcstak(t_name);
+    if(!MCStringConvertToCString(name, t_name))
+		return IO_ERROR;
+	
+    MCHcstak *hcstak = new (nothrow) MCHcstak(t_name);
 	hcstat_append("Loading stack %s...", t_name);
-	uint2 startlen = MCStringGetLength(MChcstat);
+	uindex_t startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();

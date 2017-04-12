@@ -17,101 +17,137 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "libscript/script.h"
+#include <libscript/script.h>
+
 #include "script-private.h"
+
+#include "script-bytecode.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Each bytecode which the VM understands is described by its own 'info' entry.
-//
-// The opcode is that which is used in the module file.
-// The name is the human readable form of the opcode.
-// The format is a string describing the parameters to the opcode:
-//   l - label
-//   r - register (param, local or temp)
-//   c - constant pool index
-//   d - fetchable definition (variable, constant, handler)
-//   h - handler definition
-//   v - variable definition
-// The final char of the description string can be one of:
-//   ? - the final parameter is optional
-//   * - the final parameter type is expected 0-n times
-//   % - the final parameter type is expected 0-2n times
-
-struct MCScriptBytecodeInfo
+// Utility functor, used to fetch the bytecode info struct for the given
+// opcode.
+struct MCScriptDescribeBytecodeOp_Impl
 {
-    MCScriptBytecodeOp opcode;
-    const char *name;
-    const char *format;
+public:
+	template<typename OpStruct>
+	bool Visit(const MCScriptBytecodeOpInfo*& r_info) const
+	{
+		r_info = &OpStruct::Describe();
+		return true;
+	}
 };
 
-static const MCScriptBytecodeInfo kBytecodeInfo[] =
+static bool
+MCScriptDescribeBytecodeOp(uindex_t p_opcode,
+						   const MCScriptBytecodeOpInfo*& r_info)
 {
-    { kMCScriptBytecodeOpJump,              "jump",             "l" },
-    { kMCScriptBytecodeOpJumpIfFalse,       "jump_if_false",    "rl" },
-    { kMCScriptBytecodeOpJumpIfTrue,        "jump_if_true",     "rl" },
-    { kMCScriptBytecodeOpAssignConstant,    "assign_constant",  "rc" },
-    { kMCScriptBytecodeOpAssign,            "assign",           "rr" },
-    { kMCScriptBytecodeOpReturn,            "return",           "r?" },
-    { kMCScriptBytecodeOpInvoke,            "invoke",           "hrr*" },
-    { kMCScriptBytecodeOpInvokeIndirect,    "invoke_indirect",  "rrr*" },
-    { kMCScriptBytecodeOpFetch,             "fetch",            "rd" },
-    { kMCScriptBytecodeOpStore,             "store",            "rv" },
-    { kMCScriptBytecodeOpAssignList,        "assign_list",      "rr*" },
-    { kMCScriptBytecodeOpAssignArray,       "assign_array",     "rr%" },
-    { kMCScriptBytecodeOpReset,             "reset",            "rr*" },
+	if (p_opcode > kMCScriptBytecodeOp__Last ||
+		!MCScriptBytecodeDispatchR((MCScriptBytecodeOp)p_opcode,
+								   MCScriptDescribeBytecodeOp_Impl(),
+								   r_info))
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+//////////
+
+class MCScriptCopyBytecodeNames_Impl
+{
+public:
+	template<typename OpStruct>
+	bool Visit(MCProperListRef x_bytecode_names) const
+	{
+		if (!MCProperListPushElementOntoBack(x_bytecode_names,
+											 MCSTR(OpStruct::Describe().name)))
+			return false;
+		
+		return true;
+	}
 };
-static const int kBytecodeCount = sizeof(kBytecodeInfo) / sizeof(kBytecodeInfo[0]);
 
 bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 {
-    MCAutoProperListRef t_bytecode_names;
-    if (!MCProperListCreateMutable(&t_bytecode_names))
-        return false;
-    
-    for(int i = 0; i < kBytecodeCount; i++)
-    {
-        MCNewAutoNameRef t_name;
-        if (!MCProperListPushElementOntoBack(*t_bytecode_names,
-                                             MCSTR(kBytecodeInfo[i].name)))
-            return false;
-    }
-    
-    r_bytecode_names = t_bytecode_names.Take();
-    
-    return true;
+	MCAutoProperListRef t_bytecode_names;
+	if (!MCProperListCreateMutable(&t_bytecode_names))
+		return false;
+	
+	MCProperListRef t_bytecode_names_arg = *t_bytecode_names;
+	if (!MCScriptBytecodeForEach(MCScriptCopyBytecodeNames_Impl(),
+								 t_bytecode_names_arg))
+		return false;
+	
+	r_bytecode_names = t_bytecode_names.Take();
+	
+	return true;
 }
+
+//////////
+
+struct MCScriptLookupBytecode_Impl
+{
+public:
+	struct Args
+	{
+		const char *name;
+		uindex_t& _opcode;
+		
+		Args(const char *p_name,
+			 uindex_t& r_opcode)
+			: name(p_name),
+			  _opcode(r_opcode)
+		{
+		}
+	};
+	
+	template<typename OpStruct>
+	bool Visit(Args p_args) const
+	{
+		if (0 != strcmp(p_args.name, OpStruct::Describe().name))
+			return true;
+		
+		p_args._opcode = (uindex_t)OpStruct::Describe().code;
+		
+		return false;
+	}
+};
 
 bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 {
-    for(uindex_t i = 0; i < kBytecodeCount; i++)
-    {
-        if (0 != strcmp(p_name, kBytecodeInfo[i] . name))
-            continue;
-        
-        r_opcode = i;
-        
-        return true;
-    }
-    
-    return false;
+	// If we get all the way through the bytecodes without returning false, then
+	// it means it wasn't found.
+	MCScriptLookupBytecode_Impl::Args t_args(p_name,
+											 r_opcode);
+	if (MCScriptBytecodeForEach(MCScriptLookupBytecode_Impl(),
+								t_args))
+		return false;
+	
+	return true;
 }
+
+//////////
 
 const char *MCScriptDescribeBytecode(uindex_t p_opcode)
 {
-    if (p_opcode >= kBytecodeCount)
-        return "<unknown>";
-    
-    return kBytecodeInfo[p_opcode].name;
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return "<unknown>";
+	return t_info->name;
 }
+
+//////////
 
 MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t p_opcode, uindex_t p_index)
 {
-    if (p_opcode >= kBytecodeCount)
-        return kMCScriptBytecodeParameterTypeUnknown;
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return kMCScriptBytecodeParameterTypeUnknown;
     
     const char *t_desc;
-    t_desc = kBytecodeInfo[p_opcode].format;
+    t_desc = t_info->format;
     
     size_t t_desc_length;
     t_desc_length = strlen(t_desc);
@@ -163,11 +199,12 @@ MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t p_opcod
 
 bool MCScriptCheckBytecodeParameterCount(uindex_t p_opcode, uindex_t p_proposed_count)
 {
-    if (p_opcode >= kBytecodeCount)
-        return false;
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return kMCScriptBytecodeParameterTypeUnknown;
 
     const char *t_desc;
-    t_desc = kBytecodeInfo[p_opcode].format;
+    t_desc = t_info->format;
     
     size_t t_desc_length;
     t_desc_length = strlen(t_desc);
@@ -318,6 +355,80 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     r_builder = self;
 }
 
+static bool
+MCScriptValidateModuleBytecode(MCScriptModule *self)
+{
+    for(uindex_t i = 0; i < self -> definition_count; i++)
+	{
+        if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
+        {
+			MCScriptHandlerDefinition *t_handler;
+			t_handler = static_cast<MCScriptHandlerDefinition *>(self -> definitions[i]);
+			
+			MCScriptValidateState t_state;
+			t_state.error = false;
+			t_state.module = self;
+			t_state.handler = t_handler;
+			
+			MCScriptHandlerType *t_signature;
+			t_signature = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
+			t_state.register_limit = t_signature->parameter_count +
+										t_handler -> local_type_count;
+            
+			const byte_t *t_bytecode;
+			const byte_t *t_bytecode_limit;
+            t_bytecode = self -> bytecode + t_handler -> start_address;
+            t_bytecode_limit = self -> bytecode + t_handler -> finish_address;
+			
+			// If there is no bytecode, the bytecode is malformed.
+			if (t_bytecode == t_bytecode_limit)
+				return false;
+			
+            while(t_bytecode != t_bytecode_limit)
+			{
+				t_state.current_address = uindex_t(t_bytecode - self-> bytecode);
+				
+                if (!MCScriptBytecodeIterate(t_bytecode,
+											 t_bytecode_limit,
+											 t_state.operation,
+											 t_state.argument_count,
+											 t_state.arguments))
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				if (t_state.operation > kMCScriptBytecodeOp__Last)
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				MCScriptBytecodeValidate(t_state);
+				if (t_state.error)
+				{
+					break;
+				}
+            }
+			
+			// If validation failed for a single operation, the bytecode is
+			// malformed.
+			if (t_state.error)
+				return false;
+			
+			// If we didn't reach the limit, the bytecode is malformed.
+			if (t_bytecode != t_bytecode_limit)
+				return false;
+			
+            // If the last operation was not return, the bytecode is malformed.
+			if (t_state.operation != kMCScriptBytecodeOpReturn)
+				return false;
+        }
+	}
+    
+    return true;
+}
+
 bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
 {
     if (self == nil)
@@ -329,6 +440,14 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
             continue;
         
         self -> valid = false;
+    }
+    
+    if (self->valid)
+    {
+        if (!MCScriptValidateModuleBytecode(&self->module))
+        {
+            self->valid = false;
+        }
     }
     
     bool t_success;
@@ -881,7 +1000,7 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
     __add_script_type(self, t_type, r_new_type);
 }
 
-void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_base_type)
+void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self)
 {
     if (self == nil ||
         !self -> valid)
@@ -895,7 +1014,6 @@ void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_b
     }
     
     t_type -> kind = kMCScriptTypeKindRecord;
-    t_type -> base_type = p_base_type;
     
     self -> current_type = t_type;
 }
@@ -937,9 +1055,6 @@ void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_ne
         t_other_type = static_cast<MCScriptRecordType *>(self -> module . types[i]);
         
         if (t_type -> field_count != t_other_type -> field_count)
-            continue;
-        
-        if (t_type -> base_type != t_other_type -> base_type)
             continue;
         
         bool t_equal;
@@ -1615,13 +1730,14 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
 {
     if (self == nil || !self -> valid)
         return;
-    
-    if (p_opcode >= kBytecodeCount ||
-        !MCScriptCheckBytecodeParameterCount(p_opcode, p_argument_count))
-    {
-        self -> valid = false;
-        return;
-    }
+	
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info) ||
+		!MCScriptCheckBytecodeParameterCount(p_opcode, p_argument_count))
+	{
+		self -> valid = false;
+		return;
+	}
     
     for(uindex_t i = 0; i < p_argument_count; i++)
     {
@@ -1630,14 +1746,14 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                                                          i);
         switch(t_param_type)
         {
-            case kMCScriptBytecodeParameterTypeUnknown:
+			case kMCScriptBytecodeParameterTypeUnknown:
                 self -> valid = false;
                 return;
                 
             case kMCScriptBytecodeParameterTypeLabel:
                 if (p_arguments[i] == 0 ||
                     p_arguments[i] > self -> label_count)
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1649,7 +1765,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeConstant:
                 if (p_arguments[i] >= self -> module . value_count)
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1657,7 +1773,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeDefinition:
                 if (!__is_valid_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1665,7 +1781,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeVariable:
                 if (!__is_valid_variable_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1673,7 +1789,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeHandler:
                 if (!__is_valid_handler_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1682,7 +1798,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
     }
     
     __begin_instruction(self,
-                        kBytecodeInfo[p_opcode] . opcode);
+                        t_info->code);
     for(uindex_t i = 0; i < p_argument_count; i++)
         __continue_instruction(self,
                                p_arguments[i]);

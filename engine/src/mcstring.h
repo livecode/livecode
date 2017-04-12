@@ -159,6 +159,9 @@ extern MCNameRef MCN_gif;
 extern MCNameRef MCN_jpeg;
 extern MCNameRef MCN_rtf;
 extern MCNameRef MCN_html;
+extern MCNameRef MCN_win_bitmap;
+extern MCNameRef MCN_win_metafile;
+extern MCNameRef MCN_win_enh_metafile;
 
 extern MCNameRef MCN_browser;
 extern MCNameRef MCN_command_line;
@@ -166,6 +169,7 @@ extern MCNameRef MCN_development;
 extern MCNameRef MCN_development_cmdline;
 extern MCNameRef MCN_helper_application;
 extern MCNameRef MCN_installer;
+extern MCNameRef MCN_installer_cmdline;
 extern MCNameRef MCN_mobile;
 extern MCNameRef MCN_player;
 extern MCNameRef MCN_server;
@@ -288,6 +292,7 @@ extern MCNameRef MCN_titled;
 extern MCNameRef MCN_warning;
 
 extern MCNameRef MCN_messagename;
+extern MCNameRef MCM_msgchanged;
 extern MCNameRef MCN_hcstat;
 
 extern MCNameRef MCM_apple_event;
@@ -588,6 +593,8 @@ extern MCNameRef MCM_input_return_key;
 extern MCNameRef MCM_input_text_changed;
 extern MCNameRef MCM_product_details_received;
 extern MCNameRef MCM_product_request_error;
+
+extern MCNameRef MCM_nfc_tag_received;
 #endif
 
 #ifdef _IOS_MOBILE

@@ -270,10 +270,11 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
-        MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+        MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
         MCdefaultstackptr = getstack();
 		MCObjectPtr oldtargetptr = MCtargetptr;
 		MCtargetptr . object = this;
@@ -289,7 +290,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
         
         if (t_old_defaultstack.IsValid())
-            MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+            MCdefaultstackptr = t_old_defaultstack;
         
         MCtargetptr = oldtargetptr;
 		if (added)
@@ -357,13 +358,14 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler()->hasname(t_setprop_name)))
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1, p2;
 		p1.setnext(&p2);
         
 		p1.setvalueref_argument(t_param_name);
 		p2.setvalueref_argument(p_value);
 		
-		MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+		MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 		MCdefaultstackptr = getstack();
 		MCObjectPtr oldtargetptr = MCtargetptr;
 		MCtargetptr . object = this;
@@ -383,7 +385,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 			MCnexecutioncontexts--;
         
         if (t_old_defaultstack.IsValid())
-            MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+            MCdefaultstackptr = t_old_defaultstack;
         
         MCtargetptr = oldtargetptr;
 	}
@@ -797,7 +799,7 @@ MCInterfaceTheme MCObject::gettheme() const
 {
     if (m_theme != kMCInterfaceThemeEmpty)
         return m_theme;
-    else if (parent != nil)
+    else if (parent)
         return parent->gettheme();
     else
         return kMCInterfaceThemeNative;

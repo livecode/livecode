@@ -89,7 +89,7 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 			MCdefaultstackptr->getcard()->message(MCM_shut_down);
 			MCquit = True;
 			MCexitall = True;
-			MCtracestackptr = NULL;
+			MCtracestackptr = nil;
 			MCtraceabort = True;
 			MCtracereturn = True;
 			r_terminate = true;
@@ -269,7 +269,7 @@ void MCPlatformHandleMouseEnter(MCPlatformWindowRef p_window)
 	if (t_stack == nil)
 		return;
 	
-	if (t_stack != MCmousestackptr)
+	if (!MCmousestackptr.IsBoundTo(t_stack))
 	{
 		MCmousestackptr = t_stack;
 		MCmousestackptr -> enter();
@@ -293,7 +293,7 @@ void MCPlatformHandleMouseLeave(MCPlatformWindowRef p_window)
 	if (t_stack == nil)
 		return;
 	
-	if (t_stack == MCmousestackptr)
+	if (MCmousestackptr.IsBoundTo(t_stack))
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = nil;
@@ -310,7 +310,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCeventtime = MCPlatformGetEventTime();
 		
@@ -349,7 +349,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCbuttonstate |= (1 << p_button);
 		
@@ -400,14 +400,14 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		MCbuttonstate &= ~(1 << p_button);
 		
 		MCeventtime = MCPlatformGetEventTime();
     
         // PM-2015-03-30: [[ Bug 15091 ]] When we "go to card X" on mouseDown, MCclickstackptr becomes nil because of MCStack::close().  
-        if (MCclickstackptr == nil)
+        if (!MCclickstackptr)
             MCclickstackptr = MCmousestackptr;
         
 		MCObject *t_target;
@@ -443,7 +443,7 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 	MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	
-	if (MCmousestackptr == t_stack || t_menu != nil)
+	if (MCmousestackptr.IsBoundTo(t_stack) || t_menu != nil)
 	{
 		tripleclick = False;
 		
@@ -488,7 +488,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 	if (t_stack == nil)
 		return;
 	
-	if (MCmousestackptr != t_stack)
+	if (!MCmousestackptr.IsBoundTo(t_stack))
 		return;
 	
 	MCObject *mfocused;
@@ -619,7 +619,7 @@ void MCKeyMessageClear(MCKeyMessage *&p_message_queue)
 void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, bool p_needs_mapping = true)
 {
     MCKeyMessage *t_new;
-    t_new = new MCKeyMessage;
+    t_new = new (nothrow) MCKeyMessage;
     
     t_new -> key_code = p_key_code;
     t_new -> mapped_codepoint = p_mapped_codepoint;
@@ -722,7 +722,7 @@ void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode 
     
     // SN-2014-09-15: [[ Bug 13423 ]] Clear the key sequence if needed, then append
     // the new key typed.
-    if (!MCactivefield -> getcompositionrange(si, ei))
+    if (MCactivefield && !MCactivefield -> getcompositionrange(si, ei))
         MCKeyMessageClear(s_pending_key_down);
     
     MCKeyMessageAppend(s_pending_key_down, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
@@ -767,7 +767,7 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 
 void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
 		r_selected_range = MCRangeMake(UINDEX_MAX, 0);
@@ -777,11 +777,11 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	int4 si, ei;
 	MCactivefield -> selectedmark(False, si, ei, False);
 	MCactivefield -> unresolvechars(0, si, ei);
-	r_selected_range = MCRangeMake(si, ei - si);
+	r_selected_range = MCRangeMakeMinMax(si, ei);
 	if (MCactivefield -> getcompositionrange(si, ei))
 	{
 		MCactivefield -> unresolvechars(0, si, ei);
-		r_marked_range = MCRangeMake(si, ei - si);
+		r_marked_range = MCRangeMakeMinMax(si, ei);
 	}
 	else
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
@@ -789,7 +789,7 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 
 void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_index = 0;
 		return;
@@ -809,7 +809,7 @@ void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoi
 
 void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_first_line_rect = MCRectangleMake(0, 0, 0, 0);
 		r_actual_range = MCRangeMake(UINDEX_MAX, 0);
@@ -831,12 +831,12 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 	t_bottom_right = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x + t_rect . width, t_rect . y + t_rect . height));
 	
 	r_first_line_rect = MCRectangleMake(t_top_left . x, t_top_left . y, t_bottom_right . x - t_top_left . x, t_bottom_right . y - t_top_left . y);
-	r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+	r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
 {
-    if (MCactivefield == nil)
+    if (!MCactivefield)
     {
         r_chars = nil;
         r_char_count = 0;
@@ -855,12 +855,12 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 	MCactivefield -> unresolvechars(0, t_si, t_ei);
     
     /* UNCHECKED */ MCStringConvertToUnicode(*t_text, r_chars, r_char_count);
-    r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+    r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
     // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
@@ -1077,7 +1077,7 @@ static void synthesize_move_with_shift(MCField *p_field, Field_translations p_ac
 // and dispatch them rather than go through actions.
 void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	switch(p_action)
@@ -1332,7 +1332,7 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+	for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
             return t_player;
@@ -1408,13 +1408,13 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
-    if (MCacptr != nil)
+    if (MCacptr)
     {
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
         // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
         MCacptr->stop(True);
         // PM-2014-12-22: [[ Bug 14269 ]] Nullify MCacptr to prevent looping when play audioclip is followed by wait until the sound is done
-        MCacptr = NULL;
+        MCacptr = nil;
     }
 }
 

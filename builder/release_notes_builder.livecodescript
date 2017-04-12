@@ -768,6 +768,10 @@ end V2NotesExtractSectionInfo
 -- section in <xCollated> with <pName>.  If there is already a section
 -- named <pName> in <xCollated>, generate an error.
 private command V2NotesAppendSection pName, pCollatedSection, @xCollated
+   if pCollatedSection is not an array then
+      exit V2NotesAppendSection
+   end if
+
    local tId
    repeat with tId = 1 to xCollated["__count"]
       if xCollated[tId]["__name"] is pName then
@@ -782,20 +786,22 @@ private command V2NotesAppendSection pName, pCollatedSection, @xCollated
    put pName into xCollated[tId]["__name"]
 end V2NotesAppendSection
 
-private function V2NotesHaveContent pCollated, pBugInfo   
-   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
-      return true
-   end if
-   
-   -- Recurse into child nodes
-   local tId
-   repeat with tId = 1 to pCollated["__count"]
-      if V2NotesHaveContent(pCollated[tId]) then
+private function V2NotesHaveContent pCollated, pBugInfo
+   if pCollated is an array then
+      if (word 1 to -1 of pCollated["__markdown"]) is not empty then
          return true
       end if
-   end repeat
    
-   if the number of elements in pBugInfo > 0 then
+      -- Recurse into child nodes
+      local tId
+      repeat with tId = 1 to pCollated["__count"]
+         if V2NotesHaveContent(pCollated[tId]) then
+            return true
+         end if
+      end repeat
+   end if
+
+   if pBugInfo is an array and the number of elements in pBugInfo > 0 then
       return true
    end if
    
@@ -847,21 +853,29 @@ end V2NotesGenerateContent
 -- Extension release notes
 ----------------------------------------------------------------
 
-constant kExtensionTypes = "widgets,libraries,modules"
-constant kExtensionStrings = "widget,library,module"
+constant kExtensionLcbTypes = "widgets,libraries,modules"
+constant kExtensionLcbStrings = "widget,library,module"
+constant kExtensionScriptTypes = "script-libraries"
 
 private command ExtensionsCreate
    BuilderLog "report", "Creating extension release notes"
    
    local tType, tTypePath, tFolder
    local tCollated, tBugInfo
-   repeat for each item tType in kExtensionTypes
+   repeat for each item tType in kExtensionLcbTypes
       put FileGetPath("extensions") & slash & tType into tTypePath
       
       repeat for each line tFolder in FileGetSubFolders(tTypePath)
-         ExtensionsCreatePath tFolder, tCollated, tBugInfo
+         ExtensionsCreateLcbPath tFolder, tCollated, tBugInfo
       end repeat
-      
+   end repeat
+
+   repeat for each item tType in kExtensionScriptTypes
+      put FileGetPath("extensions") & slash & tType into tTypePath
+
+      repeat for each line tFolder in FileGetSubFolders(tTypePath)
+         ExtensionsCreateScriptPath tFolder, tCollated, tBugInfo
+      end repeat
    end repeat
 
    if V2NotesHaveContent(tCollated, tBugInfo) then
@@ -873,59 +887,52 @@ private command ExtensionsCreate
    end if
 end ExtensionsCreate
 
-private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
+private command ExtensionsCreateLcbPath pExtPath, @xCollated, @xBugInfo
    set the itemdelimiter to slash
    
    -- Skip the extension if it doesn't appear to have been compiled
    if there is not a file ExtensionsGetManifestPath(pExtPath) then
       builderLog "report", "Skipping uncompiled extension" && item -1 of pExtPath
-      exit ExtensionsCreatePath
+      exit ExtensionsCreateLcbPath
    end if
 
    builderLog "report", "Creating release notes for" && item -1 of pExtPath
 
    -- Scan and collate all information for this particular extension
-   local tNotesPath
-   put pExtPath & "/notes" into tNotesPath
-   if there is not a folder tNotesPath then
-      exit ExtensionsCreatePath
-   end if
-   
-   local tScan, tExtCollated
-   put V2NotesScan(tNotesPath) into tScan
-   V2NotesCollate pExtPath, tScan, tExtCollated, xBugInfo
+   local tExtCollated
+   ExtensionsScanAndCollatePath pExtPath, tExtCollated, xBugInfo
    
    -- Add the collated info in the top-level collation structure
    try
       local tName
-      put ExtensionsGetSectionName(pExtPath) into tName
+      put ExtensionsGetLcbSectionName(pExtPath) into tName
    catch tError
       builderLog "warning", tError
-      exit ExtensionsCreatePath
+      exit ExtensionsCreateLcbPath
    end try
       
    V2NotesAppendSection tName, tExtCollated, xCollated
-end ExtensionsCreatePath
+end ExtensionsCreateLcbPath
 
-private function ExtensionsGetSectionName pExtPath
+private function ExtensionsGetLcbSectionName pExtPath
    local tName, tType, tTypeOffset, tPrettyType
    
    set the itemdelimiter to slash
    put item -2 of pExtPath into tType
    set the itemdelimiter to comma
    
-   put itemoffset(tType, kExtensionTypes) into tTypeOffset
-   put item tTypeOffset of kExtensionStrings into tPrettyType
+   put itemoffset(tType, kExtensionLcbTypes) into tTypeOffset
+   put item tTypeOffset of kExtensionLcbStrings into tPrettyType
    
-   put ExtensionsGetName(pExtPath) into tName
+   put ExtensionsGetLcbName(pExtPath) into tName
    if word -1 of tName is not tPrettyType then
       put space & tPrettyType after tName
    end if
    
    return tName
-end ExtensionsGetSectionName
+end ExtensionsGetLcbSectionName
 
-private function ExtensionsGetName pExtPath
+private function ExtensionsGetLcbName pExtPath
    local tManifest, tXmlId
    put FileGetContents(ExtensionsGetManifestPath(pExtPath)) into tManifest
    put revXMLCreateTree(tManifest, true, true, false) into tXmlId
@@ -940,7 +947,7 @@ private function ExtensionsGetName pExtPath
       return empty
    end if
    return tTargetName
-end ExtensionsGetName
+end ExtensionsGetLcbName
 
 private function ExtensionsGetKind pExtPath
    -- Horrible-ish hack for extracting the "real" name of the LiveCode
@@ -968,6 +975,33 @@ private function ExtensionsGetManifestPath pExtPath
    put slash & "manifest.xml" after tManifestFile
    return tManifestFile
 end ExtensionsGetManifestPath
+
+private command ExtensionsCreateScriptPath pExtPath, @xCollated, @xBugInfo
+   set the itemDelimiter to slash
+
+   local tShortName
+   put item -1 of pExtPath into tShortName
+
+   builderLog "report", merge("Creating release notes for [[tShortName]]")
+
+   local tExtCollated
+   ExtensionsScanAndCollatePath pExtPath, tExtCollated, xBugInfo
+
+   -- FIXME use human-friendly names for script-only library extensions
+   V2NotesAppendSection tShortName && "script library", tExtCollated, xCollated
+end ExtensionsCreateScriptPath
+
+private command ExtensionsScanAndCollatePath pExtPath, @xCollated, @xBugInfo
+   local tNotesPath
+   put merge("[[pExtPath]]/notes") into tNotesPath
+   if there is not a folder tNotesPath then
+      exit ExtensionsScanAndCollatePath
+   end if
+
+   local tScan
+   put V2NotesScan(tNotesPath) into tScan
+   V2NotesCollate pExtPath, tScan, xCollated, xBugInfo
+end ExtensionsScanAndCollatePath
 
 ----------------------------------------------------------------
 -- Dictionary change generation

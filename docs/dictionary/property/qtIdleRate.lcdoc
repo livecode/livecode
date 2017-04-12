@@ -26,7 +26,7 @@ Value:
 The <qtIdleRate> is an integer between 1 and 65535.
 
 Description:
-Use the <qtIdleRate> in conjunction with the global <idleRate property>
+Use the <qtIdleRate> in conjunction with the global <idleRate> <property>
 to control updating of QT movies. Increasing the <qtIdleRate> causes
 less frequent updates, and decreases the amount of CPU time the
 application uses.
@@ -61,8 +61,8 @@ Interactive movies are ones such as QTVR and Flash that need to
 periodically check for input and update themselves.
 
 >*Note:* The <qtIdleRate> property has no effect on Windows if the
-> <dontUseQT property> is true.
+> <dontUseQT> <property> is true.
 
-References: QTVersion (function), dontUseQT property (property),
-idleRate property (property)
+References: QTVersion (function), dontUseQT (property),
+idleRate (property), property (glossary)
 

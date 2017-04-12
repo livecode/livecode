@@ -155,12 +155,12 @@ static void MCMacPlatformBeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSave
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_folder != nil)
-		t_initial_folder = [NSString stringWithMCStringRef: p_folder];
+		t_initial_folder = MCStringConvertToAutoreleasedNSString(p_folder);
 	
 	NSString *t_initial_file;
 	t_initial_file = nil;
 	if (p_file != nil)
-		t_initial_file = [NSString stringWithMCStringRef: p_file];
+		t_initial_file = MCStringConvertToAutoreleasedNSString(p_file);
 	
 	
 	if (p_owner == nil)
@@ -215,11 +215,11 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
     t_panel = [NSOpenPanel openPanel];
     if (p_title != nil && MCStringGetLength(p_title) != 0)
     {
-        [t_panel setTitle: [NSString stringWithMCStringRef: p_title]];
-        [t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+        [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_title)];
+        [t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
     }
     else
-        [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+        [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
     [t_panel setPrompt: @"Choose"];
     [t_panel setCanChooseFiles: NO];
     [t_panel setCanChooseDirectories: YES];
@@ -439,7 +439,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 		{
 			MCListPushBack(m_filters, t_filter);
 			if (t_filter -> tag != nil)
-				[ m_options addItemWithTitle: [ NSString stringWithMCStringRef: t_filter -> tag ]];
+				[ m_options addItemWithTitle: MCStringConvertToAutoreleasedNSString(t_filter -> tag)];
 		}
 	}
 	m_filter = m_filters;
@@ -611,16 +611,16 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	
 	if (p_title != nil && !MCStringIsEmpty(p_title))
 	{
-		[t_panel setTitle: [NSString stringWithMCStringRef: p_title]];
-		[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+		[t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_title)];
+		[t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
 	}
 	else
 	{
 		extern uint4 MCmajorosversion;
 		if (MCmajorosversion >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
-			[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+			[t_panel setMessage: MCStringConvertToAutoreleasedNSString(p_prompt)];
 		else
-			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+			[t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
 	}
 	
     // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
@@ -645,12 +645,6 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for save dialogs
 	else 
 		[t_panel setCanCreateDirectories: YES];
-	
-	if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
-	{
-		// show accessory view when dialog opens
-		[t_panel setAccessoryViewDisclosed: YES];
-	}
 	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
 }
@@ -965,7 +959,7 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
     // as modal mode breaks the color picker
     //[NSApp runModalForWindow: t_colorPicker];
     [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
-    [NSApp becomePseudoModalFor: t_colorPicker];
+	MCMacPlatformApplicationBecomePseudoModalFor(t_colorPicker);
 }
 
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
@@ -975,8 +969,8 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
     {
         if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
             r_color = s_color_dialog_color;
-        
-        [NSApp becomePseudoModalFor: nil];
+		
+		MCMacPlatformApplicationBecomePseudoModalFor(nil);
         [s_color_dialog_delegate dealloc];
         s_color_dialog_delegate = NULL;
     }

@@ -57,8 +57,8 @@ public:
 	MCGroup *getrefasgroup(void)
 	{
 		MCControl* t_ref = getref();
-        if (t_ref->gettype() != CT_GROUP)
-            return nullptr;
+        if (t_ref == nil || t_ref->gettype() != CT_GROUP)
+            return nil;
         
         return static_cast<MCGroup*>(t_ref);
 	}

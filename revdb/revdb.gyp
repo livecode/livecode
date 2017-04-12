@@ -8,6 +8,17 @@
 	{
 		'revdb_sources':
 		[
+            'src/revdb.h',
+            'src/revdbapi.h',
+            'src/database.h',
+            'src/dbcursor.h',
+            'src/dbdriver.h',
+            'src/iossupport.h',
+            'src/osxsupport.h',
+            'src/unxsupport.h',
+            'src/w32support.h',
+            'src/large_buffer.h',
+        
 			'src/revdb.cpp',
 			'src/iossupport.cpp',
 			'src/osxsupport.cpp',
@@ -19,6 +30,7 @@
 		
 		'dbmysql_sources':
 		[
+            'src/dbmysql.h',
 			'src/dbdrivercommon.cpp',
 			'src/database.cpp',
 			'src/dbmysqlapi.cpp',
@@ -28,7 +40,8 @@
 		],
 		
 		'dbodbc_sources':
-		[
+        [
+            'src/dbodbc.h',
 			'src/dbdrivercommon.cpp',
 			'src/database.cpp',
 			'src/dbodbcapi.cpp',
@@ -37,7 +50,8 @@
 		],
 		
 		'dbpostgresql_sources':
-		[
+        [
+            'src/dbpostgresql.h',
 			'src/dbdrivercommon.cpp',
 			'src/database.cpp',
 			'src/dbpostgresqlapi.cpp',
@@ -48,6 +62,7 @@
 		
 		'dbsqlite_sources':
 		[
+            'src/dbsqlite.h',
 			'src/dbdrivercommon.cpp',
 			'src/database.cpp',
 			'src/dbsqliteapi.cpp',
@@ -476,6 +491,16 @@
 					},
 				],
 				[
+					'OS == "linux"',
+					{
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
+					},
+				],
+				[
 					'OS == "mac" or OS == "ios"',
 					{
 						'xcode_settings':
@@ -484,6 +509,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},
@@ -554,6 +580,12 @@
 						[
 							'-fexceptions',
 						],
+	
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
 					},
 				],
 				[
@@ -565,6 +597,7 @@
 							[
 								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 								'-Werror=return-type',
+								'-Werror=switch',
 							],
 						},
 					},
@@ -593,6 +626,11 @@
 				'../libexternal/libexternal.gyp:libExternal-symbol-exports',
 			],
 			
+			'defines':
+			[
+				'REVDB_BUILD',
+			],
+
 			'include_dirs':
 			[
 				'src',
@@ -663,6 +701,11 @@
 				'../libexternal/libexternal.gyp:libExternal',
 			],
 			
+			'defines':
+			[
+				'REVDB_BUILD',
+			],
+
 			'include_dirs':
 			[
 				'src',

@@ -158,15 +158,18 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
+    : utf16_script(MCValueRetain(kMCEmptyData)),
+      length(MCDataGetLength(utf16_script)/sizeof(unichar_t)),
+      curptr(reinterpret_cast<const unichar_t*>(MCDataGetBytePtr(utf16_script))),
+      tokenptr(curptr),
+      backupptr(curptr),
+      endptr(curptr + length)
 {
-    utf16_script = MCValueRetain(kMCEmptyData);
     codepoint = '\0';
     curlength = 1;
     curobj = ctxt . GetObject();
     curhlist = ctxt . GetHandlerList();
     curhandler = ctxt . GetHandler();
-    curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
-    endptr = curptr + length;
     line = pos = 0;
     escapes = False;
     tagged = False;
@@ -1371,15 +1374,15 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
                     MCAutoStringRef t_nul_string;
                     /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)"", 1, kMCStringEncodingASCII, false, &t_nul_string);
                     
-                    *dest = new MCConstant(*t_nul_string, BAD_NUMERIC);
+                    *dest = new (nothrow) MCConstant(*t_nul_string, BAD_NUMERIC);
 				}
                 else if (token.getlength() == 5 && MCU_strncasecmp(token_cstring, "empty", 5) == 0)
                 {
                     // Uses the kMCNull as a StringRef - that's what is expected from 'empty'
-                    *dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
+                    *dest = new (nothrow) MCConstant(kMCEmptyString, BAD_NUMERIC);
                 }
 				else
-					*dest = new MCConstant(MCSTR(constant_table[mid].svalue),
+					*dest = new (nothrow) MCConstant(MCSTR(constant_table[mid].svalue),
 					                       constant_table[mid].nvalue);
 				return PS_NORMAL;
 			}
@@ -1681,7 +1684,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					}
 					break;
 				case TT_CHUNK:
-					newfact = new MCChunk(False);
+					newfact = new (nothrow) MCChunk(False);
 					backup();
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1726,7 +1729,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								return PS_ERROR;
 							}
 							else
-								newfact = new MCLiteral(gettoken_nameref());
+								newfact = new (nothrow) MCLiteral(gettoken_nameref());
 						newfact->parse(*this, doingthe);
 					}
 					insertfactor(newfact, curfact, top);
@@ -1735,7 +1738,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				case TT_PROPERTY:
 					thesp = *this;
 					backup();
-					newfact = new MCProperty;
+					newfact = new (nothrow) MCProperty;
 					MCerrorlock++;
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1747,7 +1750,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
 							return PS_ERROR;
 						}
-						newfact = new MCLiteral(gettoken_nameref());
+						newfact = new (nothrow) MCLiteral(gettoken_nameref());
 					}
 					MCerrorlock--;
 					insertfactor(newfact, curfact, top);
@@ -1765,7 +1768,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				{
 					backup();
 					thesp = *this;
-					newfact = new MCProperty;
+					newfact = new (nothrow) MCProperty;
 					MCerrorlock++;
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1779,7 +1782,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							return PS_ERROR;
 						}
 
-						newfact = new MCFuncref(gettoken_nameref());
+						newfact = new (nothrow) MCFuncref(gettoken_nameref());
 						newfact->parse(*this, doingthe);
 					}
 					else
@@ -1825,7 +1828,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newfact = newvar;
 							}
 						else if (type == ST_LP)
-								newfact = new MCFuncref(t_name);
+								newfact = new (nothrow) MCFuncref(t_name);
 						if (newfact == NULL)
 						{
 							if (MCexplicitvariables)

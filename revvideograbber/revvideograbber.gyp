@@ -9,15 +9,9 @@
 		{
 			'target_name': 'external-revvideograbber',
 			'type': 'loadable_module',
-			'mac_bundle': 1,
 			'product_prefix': '',
 			'product_name': 'revvideograbber',
 
-			'variables':
-			{
-				'enable_revvideograbber%': '1',
-			},
-			
 			'dependencies':
 			[
 				'../libcore/libcore.gyp:libCore',
@@ -54,7 +48,7 @@
 			'conditions':
 			[
 				[
-					'(OS != "mac" and OS != "win") or enable_revvideograbber == 0',
+					'OS != "win"',
 					{
 						'type': 'none',
 						'mac_bundle': '0',
@@ -77,34 +71,16 @@
 							['exclude', '^src/(ds|mci).*\\.cpp$'],
 						],
 					},
-				],
-				[
-					'OS == "mac" and enable_revvideograbber != 0',
 					{
-						'libraries':
+						'sources/':
 						[
-							'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
-							'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-							'$(SDKROOT)/System/Library/Frameworks/CoreVideo.framework',
-							'$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
-							'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
-							'$(SDKROOT)/System/Library/Frameworks/QuickTime.framework',
+							['exclude', '^src/(qt).*\\.cpp$'],
 						],
 					},
 				],
 				[
-					'OS == "win" and enable_revvideograbber != 0',
+					'OS == "win"',
 					{
-						'include_dirs':
-						[
-							'<(quicktime_sdk)/CIncludes',
-						],
-						
-						'library_dirs':
-						[
-							'<(quicktime_sdk)/Libraries',
-						],
-						
 						'libraries':
 						[
 							'-lgdi32',
@@ -114,27 +90,10 @@
 							'-loleaut32',
 							'-lstrmiids',
 							'-lvfw32',
-							'-lQTMLClient'
 						],
 					},
 				],
 			],
-			
-			'xcode_settings':
-			{
-				'INFOPLIST_FILE': 'rsrc/revvideograbber-Info.plist',
-				'EXPORTED_SYMBOLS_FILE': 'revvideograbber.exports',
-				
-				# The QuickTime support we need was dropped after 10.6. Correspondingly, it doesn't
-				# work when built for 64-bit either.
-				'SDKROOT': 'macosx10.6',
-				'ARCHS': 'i386',
-				
-				# Gyp adds "-x c++" to the build process, which is a problem as one of the .cpp files
-				# contains some Objective-C code. Changing it to .mm would be the obvious solution, but
-				# we also need to compile that file on Windows. Force using Objective-C++
-				'OTHER_CPLUSPLUSFLAGS': '-x objective-c++',
-			},
 		},
 	],
 }

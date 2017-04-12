@@ -272,7 +272,7 @@ char * get_filter_mask ( uint4 p_mask_id, char * p_masks )
 void make_front_widget ( GtkWidget *p_widget)
 {
 	Window t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == DNULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 
 	gtk_widget_realize( GTK_WIDGET( p_widget )) ;
@@ -668,7 +668,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
             else
             {
                 MCAutoStringRef t_tmp_folder;
-                MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - (t_last_slash+1)), &t_name);
+                MCStringCopySubstring(p_initial, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(p_initial)), &t_name);
                 MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash), &t_tmp_folder);
 
                 if (MCS_exists(*t_tmp_folder, False))

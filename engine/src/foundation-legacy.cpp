@@ -32,10 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
-#ifdef __WINDOWS__
-#include <windows.h>
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCCStringClone(const char *p_string, char *& r_new_string)

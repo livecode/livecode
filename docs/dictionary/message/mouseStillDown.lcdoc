@@ -9,7 +9,7 @@ Sent periodically while the <mouse button> is being held down.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -17,12 +17,11 @@ Parameters:
 mouseButtonNumber (enum):
 The mouseButtonNumber specifies which mouse button was pressed:
 
--  1 is the mouse button on Mac OS systems and the left button on
-   Windows and Unix systems.
--  2 is the middle button on Unix systems.
--  3 is the right button on Windows and Unix systems and Control-click
-   on Mac OS systems.
-
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 You can handle the <mouseStillDown> message to perform an action when
@@ -39,7 +38,7 @@ The <mouseStillDown> <message> is sent only when the <Browse tool> is
 being used. If an <unlock|unlocked> <field> is clicked with <mouse
 button> 1 or 2, no <mouseStillDown> <message> is sent.
 
-Usually, it is easier and more efficient to use the mouseMove <message>
+Usually, it is easier and more efficient to use the <mouseMove> <message>
 to track the movement of the mouse while the <mouse button> is being
 held down.
 
@@ -48,14 +47,15 @@ held down.
 > even if there is a <mouseStillDown> <handler> in an <object(glossary)>
 > that's further along the <message path>.
 
-References: click (command), clickLoc (function), mouse (function),
-handler (glossary), mouse button (glossary), Browse tool (glossary),
-message (glossary), message path (glossary), unlock (glossary),
-card (glossary), field (glossary), mouse pointer (glossary),
-object (glossary), control (keyword), mouseUp (message),
-mouseDoubleDown (message), mouseDown (message), mouseRelease (message),
-idleTicks (property), script (property), properties (property),
-repeatDelay (property), idleRate (property)
+References: Browse tool (glossary), card (glossary), click (command), 
+clickLoc (function), control (keyword), field (glossary), 
+handler (glossary), idleRate (property), idleTicks (property), 
+message (glossary), message path (glossary), mouse (function), 
+mouse button (glossary), mouse pointer (glossary), 
+mouseDoubleDown (message), mouseDown (message), mouseRelease (message), 
+mouseUp (message), mouseMove (message), object (glossary), 
+properties (property), repeatDelay (property), script (property), 
+unlock (glossary)
 
 Tags: ui
 

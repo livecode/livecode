@@ -28,13 +28,10 @@ bold), add the <italic> <keyword> to the end of the <textStyle>. The
 following example adds italic to the styles of a <button> :
 
     if the textStyle of button 1 is empty then
-
-    set the textStyle of button 1 to "italic"
+        set the textStyle of button 1 to "italic"
     else
-
-    set the textStyle of button 1 to \
-
-    (the textStyle of button 1) & comma & "italic"
+        set the textStyle of button 1 to \
+            (the textStyle of button 1) & comma & "italic"
     end if
 
 

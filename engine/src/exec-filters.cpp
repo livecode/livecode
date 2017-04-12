@@ -47,6 +47,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniEncode, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniDecode, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, MD5Digest, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Filters, SHA1Digest, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Filters, MessageDigest, 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -335,7 +336,7 @@ static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &c
             // No ending curly brace: error
             return false;
         
-        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMake(x_offset, t_brace_end - x_offset), &t_encoding_string);
+        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMakeMinMax(x_offset, t_brace_end), &t_encoding_string);
         
         x_offset = t_brace_end + 1;
         
@@ -1235,44 +1236,3 @@ void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCFiltersMD5Digest(MCDataRef p_src, MCDataRef& r_digest)
-{
-	md5_state_t state;
-	md5_byte_t digest[16];
-	md5_init(&state);
-	md5_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
-	md5_finish(&state, digest);
-
-	return MCDataCreateWithBytes(digest, 16, r_digest);
-}
-
-bool MCFiltersSHA1Digest(MCDataRef p_src, MCDataRef& r_digest)
-{
-	sha1_state_t state;
-	uint8_t digest[20];
-	sha1_init(&state);
-	sha1_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
-	sha1_finish(&state, digest);
-
-	return MCDataCreateWithBytes(digest, 20, r_digest);
-}
-
-void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
-{
-	if (MCFiltersMD5Digest(p_src, r_digest))
-		return;
-
-	ctxt.Throw();
-}
-
-void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
-{
-	if (MCFiltersSHA1Digest(p_src, r_digest))
-		return;
-
-	ctxt.Throw();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-

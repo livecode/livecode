@@ -25,3 +25,11 @@ on TestSetReadOnlyProperty
 	TestAssertThrow "setting read-only global property throws", \
 		 "_TestSetReadOnlyProperty", the long id of me, kCantSetPropertyCode
 end TestSetReadOnlyProperty
+
+on TestGetSetSecurityPermissions
+   TestAssert "Getting default securityPermissions", the securityPermissions is the securityCategories
+   local tNewPermissions
+   put "disk,network" into tNewPermissions
+   set the securityPermissions to tNewPermissions
+   TestAssert "Getting new securityPermissions correctly", the securityPermissions is tNewPermissions
+end TestGetSetSecurityPermissions

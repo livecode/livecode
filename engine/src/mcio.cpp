@@ -111,15 +111,17 @@ void IO_cleanprocesses()
 #ifdef X11
 			if (MCprocesses[i].mode == OM_VCLIP)
 			{
-				MCPlayer *tptr = MCplayers;
-				while (tptr != NULL)
+				MCPlayerHandle t_player = MCplayers;
+				while (t_player.IsValid())
 				{
-					if (MCNameIsEqualToCString(MCprocesses[i].name, tptr->getcommand(), kMCCompareExact))
+					if (MCNameIsEqualToCString(MCprocesses[i].name,
+                                               t_player->getcommand(),
+                                               kMCCompareExact))
 					{
-						tptr->playstop(); // removes from linked list
+						t_player->playstop(); // removes from linked list
 						break;
 					}
-					tptr = tptr->getnextplayer();
+					t_player = t_player->getnextplayer();
 				}
 			}
 #endif
@@ -435,33 +437,31 @@ IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handl
 		}
 	}
 	
-	char *t_string = nil;
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_string;
 	if (t_bytes != 0)
 	{
 		t_length = p_includes_null ? t_bytes - 1 : t_bytes;
-		if (!MCMemoryAllocate(t_bytes, t_string))
+		if (!MCMemoryAllocate(t_bytes, &t_string))
 			return IO_ERROR;
-		stat = MCStackSecurityRead(t_string, t_length, p_stream);
+		stat = MCStackSecurityRead(*t_string, t_length, p_stream);
 		if (stat == IO_NORMAL && p_includes_null)
-			stat = IO_read_uint1((uint1*)t_string + t_length, p_stream);
+			stat = IO_read_uint1(reinterpret_cast<uint1*>(*t_string) + t_length,
+                                 p_stream);
 		if (stat != IO_NORMAL)
-		{
-			delete t_string;
 			return stat;
-		}
 
 		if (MCtranslatechars && p_translate)
 		{
 #ifdef __MACROMAN__
-			IO_iso_to_mac(t_string, t_length);
+			IO_iso_to_mac(*t_string, t_length);
 #else
-			IO_mac_to_iso(t_string, t_length);
+			IO_mac_to_iso(*t_string, t_length);
 #endif
 			
 		}
 	}
 	
-	r_string = t_string;
+	r_string = t_string.Release();
 	r_length = t_length;
 	
 	return IO_NORMAL;
@@ -471,6 +471,15 @@ IO_stat IO_read_cstring_legacy(char *&r_string, IO_handle stream, uint1 size)
 {
 	uint32_t t_length = 0;
 	return IO_read_string_legacy_full(r_string, t_length, stream, size, true, true);
+}
+
+IO_stat IO_discard_cstring_legacy(IO_handle stream, uint1 size)
+{
+    /* TODO[2017-02-06] Refactor so that this doesn't allocate any
+     * memory, rather than inefficiently allocating a buffer and then
+     * immediately freeing it. */
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_discarded;
+	return IO_read_cstring_legacy(&t_discarded, stream, size);
 }
 
 #if 0
@@ -787,7 +796,7 @@ IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, u
 		return stat;
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
 	{
-		delete[] t_bytes;
+		MCMemoryDeallocate (t_bytes);
 		return IO_ERROR;
 	}
 	

@@ -379,7 +379,7 @@ bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCO
 	bool t_found;
 	t_found = false;
 	
-	MCChunk *tchunk = new MCChunk(False);
+	MCChunk *tchunk = new (nothrow) MCChunk(False);
 	MCerrorlock++;
 	MCScriptPoint sp(long_id);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
@@ -564,7 +564,7 @@ void MCInterfaceEvalClickLoc(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickChar(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -578,7 +578,7 @@ void MCInterfaceEvalClickChar(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -594,7 +594,7 @@ void MCInterfaceEvalClickText(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -608,7 +608,7 @@ void MCInterfaceEvalClickCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -622,7 +622,7 @@ void MCInterfaceEvalClickChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -638,7 +638,7 @@ void MCInterfaceEvalClickLine(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickfield == nil)
+	if (!MCclickfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -661,7 +661,7 @@ void MCInterfaceEvalClickField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalClickStack(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCclickstackptr == nil)
+	if (!MCclickstackptr)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -711,7 +711,7 @@ void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseChar(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
@@ -730,7 +730,7 @@ void MCInterfaceEvalMouseChar(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
@@ -751,7 +751,7 @@ void MCInterfaceEvalMouseText(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
@@ -772,7 +772,7 @@ void MCInterfaceEvalMouseCharChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
@@ -793,7 +793,7 @@ void MCInterfaceEvalMouseChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
@@ -815,7 +815,7 @@ void MCInterfaceEvalMouseLine(MCExecContext& ctxt, MCStringRef& r_string)
 void MCInterfaceEvalMouseControl(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCControl *t_focused = nil;
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 		t_focused = MCmousestackptr->getcard()->getmousecontrol();
 
 	if (t_focused == nil)
@@ -837,7 +837,7 @@ void MCInterfaceEvalMouseControl(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouseStack(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCmousestackptr == nil)
+	if (!MCmousestackptr)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -850,7 +850,7 @@ void MCInterfaceEvalMouseStack(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -864,7 +864,7 @@ void MCInterfaceEvalFoundChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -880,7 +880,7 @@ void MCInterfaceEvalFoundText(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -896,7 +896,7 @@ void MCInterfaceEvalFoundLine(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -921,7 +921,7 @@ void MCInterfaceEvalFoundField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalFoundLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfoundfield == nil)
+	if (!MCfoundfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -937,7 +937,7 @@ void MCInterfaceEvalFoundLoc(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalSelectedChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -986,7 +986,7 @@ void MCInterfaceEvalSelectedChunkOf(MCExecContext& ctxt, MCObjectPtr p_target, M
 
 void MCInterfaceEvalSelectedLine(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1028,7 +1028,7 @@ void MCInterfaceEvalSelectedLineOf(MCExecContext& ctxt, MCObjectPtr p_target, MC
 
 void MCInterfaceEvalSelectedText(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1070,7 +1070,7 @@ void MCInterfaceEvalSelectedTextOf(MCExecContext& ctxt, MCObjectPtr p_target, MC
 
 void MCInterfaceEvalSelectedLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == NULL)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1111,7 +1111,7 @@ void MCInterfaceEvalSelectedLocOf(MCExecContext& ctxt, MCObjectPtr p_target, MCS
 
 void MCInterfaceEvalSelectedField(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1132,7 +1132,7 @@ void MCInterfaceEvalSelectedField(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalSelectedImage(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCactiveimage == nil)
+	if (!MCactiveimage)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1274,7 +1274,7 @@ void MCInterfaceEvalMouseColor(MCExecContext& ctxt, MCColor& r_color)
 
 void MCInterfaceEvalFocusedObject(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCfocusedstackptr == nil)
+	if (!MCfocusedstackptr)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -1493,7 +1493,7 @@ void MCInterfaceExecBeep(MCExecContext& ctxt, integer_t p_count)
 
 void MCInterfaceExecFocusOnNothing(MCExecContext &ctxt)
 {
-	if (MCfocusedstackptr != NULL && MCfocusedstackptr -> getcard() != NULL)
+	if (MCfocusedstackptr && MCfocusedstackptr -> getcard() != NULL)
 		MCfocusedstackptr -> getcard() -> kunfocus();
 #ifdef _MOBILE
 	// Make sure the IME is forced closed if explicitly asked to be.
@@ -1532,43 +1532,43 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 	{
 		case RT_TEMPLATE_AUDIO_CLIP:
 			delete MCtemplateaudio;
-			MCtemplateaudio = new MCAudioClip;
+			MCtemplateaudio = new (nothrow) MCAudioClip;
 			break;
 		case RT_TEMPLATE_BUTTON:
 			delete MCtemplatebutton;
-			MCtemplatebutton = new MCButton;
+			MCtemplatebutton = new (nothrow) MCButton;
 			break;
 		case RT_TEMPLATE_CARD:
 			delete MCtemplatecard;
-			MCtemplatecard = new MCCard;
+			MCtemplatecard = new (nothrow) MCCard;
 			break;
 		case RT_TEMPLATE_EPS:
 			delete MCtemplateeps;
-			MCtemplateeps = new MCEPS;
+			MCtemplateeps = new (nothrow) MCEPS;
 			break;
 		case RT_TEMPLATE_FIELD:
 			delete MCtemplatefield;
-			MCtemplatefield = new MCField;
+			MCtemplatefield = new (nothrow) MCField;
 			break;
 		case RT_TEMPLATE_GRAPHIC:
 			delete MCtemplategraphic;
-			MCtemplategraphic = new MCGraphic;
+			MCtemplategraphic = new (nothrow) MCGraphic;
 			break;
 		case RT_TEMPLATE_GROUP:
 			delete MCtemplategroup;
-			MCtemplategroup = new MCGroup;
+			MCtemplategroup = new (nothrow) MCGroup;
 			break;
 		case RT_TEMPLATE_IMAGE:
 			delete MCtemplateimage;
-			MCtemplateimage = new MCImage;
+			MCtemplateimage = new (nothrow) MCImage;
 			break;
 		case RT_TEMPLATE_SCROLLBAR:
 			delete MCtemplatescrollbar;
-			MCtemplatescrollbar = new MCScrollbar;
+			MCtemplatescrollbar = new (nothrow) MCScrollbar;
 			break;
 		case RT_TEMPLATE_PLAYER:
 			delete MCtemplateplayer;
-			MCtemplateplayer = new MCPlayer;
+			MCtemplateplayer = new (nothrow) MCPlayer;
 			break;
 		case RT_TEMPLATE_STACK:
 			delete MCtemplatestack;
@@ -1576,7 +1576,7 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 			break;
 		case RT_TEMPLATE_VIDEO_CLIP:
 			delete MCtemplatevideo;
-			MCtemplatevideo = new MCVideoClip;
+			MCtemplatevideo = new (nothrow) MCVideoClip;
 			break;
 		default:
 			break;
@@ -1737,7 +1737,6 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
     
 	MCdefaultstackptr->kfocus();
 	uint2 i;
-	MCStringRef t_string = nil;
 	real8 nexttime = MCS_time();
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
@@ -1757,23 +1756,30 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			if (keysym == 0x0A)
 				keysym = 0x0D;
 			keysym |= 0xFF00;
-			t_string = kMCEmptyString;
 		}
 		else if (keysym > 0x7F)
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
-			t_string = *t_char;
+            if (!MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char))
+			{
+				ctxt . Throw();
+				break;
+			}
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
-        t_string = (*t_char != nil ? *t_char : kMCEmptyString);
-		MCdefaultstackptr->kdown(t_string, keysym);
-		MCdefaultstackptr->kup(t_string, keysym);
+		if (*t_char == nil)
+			t_char = kMCEmptyString;
+		
+		MCdefaultstackptr->kdown(*t_char, keysym);
+		MCdefaultstackptr->kup(*t_char, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
+		{
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
+			break;
+		}
 		
 		// If the codepoint was in SMP, then make sure we bump two codeunit
 		// indicies.
@@ -1783,7 +1789,6 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
     // AL-2014-01-07 return lock mods to false
     MCscreen -> setlockmods(False);
 	MCmodifierstate = oldstate;
-	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1868,9 +1873,10 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	MCmodifierstate = p_modifiers;
 	MCbuttonstate |= 0x1L << (p_button - 1);
 	MCdispatcher->wmdown_stack(MCdefaultstackptr, p_button);
-	// **** NULL POINTER FIX
-	if (MCmousestackptr != NULL)
+
+	if (MCmousestackptr)
 		MCscreen->sync(MCmousestackptr->getw());
+    
 	Boolean abort = MCscreen->wait(CLICK_INTERVAL, False, False);
     
 	MCscreen->setclickloc(MCdefaultstackptr, t_view_clickloc);
@@ -1958,7 +1964,7 @@ void MCInterfaceExecUngroupObject(MCExecContext& ctxt, MCObject *p_group)
 
 void MCInterfaceExecUngroupSelection(MCExecContext& ctxt)
 {
-	if (MCtopstackptr != NULL)
+	if (MCtopstackptr)
 	{
 		MCObject *t_group;
 		t_group = MCselected->getfirst();
@@ -2162,7 +2168,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				t_object -> getstack() -> removeaclip(t_aclip);
 			}
 			else
-				t_aclip = new MCAudioClip(*static_cast<MCAudioClip *>(t_object));
+				t_aclip = new (nothrow) MCAudioClip(*static_cast<MCAudioClip *>(t_object));
 
 			t_new_object = t_aclip;
 			p_dst . object -> getstack() -> appendaclip(t_aclip);
@@ -2178,7 +2184,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				t_object -> getstack() -> removevclip(t_aclip);
 			}
 			else
-				t_aclip = new MCVideoClip(*static_cast<MCVideoClip *>(t_object));
+				t_aclip = new (nothrow) MCVideoClip(*static_cast<MCVideoClip *>(t_object));
 
 			t_new_object = t_aclip;
 			p_dst . object -> getstack() -> appendvclip(t_aclip);
@@ -2189,7 +2195,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 		{
 			if (!p_cut)
 			{
-                MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+                MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
                 MCdefaultstackptr = static_cast<MCStack *>(p_dst . object);
 				MCdefaultstackptr -> stopedit();
 
@@ -2199,7 +2205,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				t_new_object = t_card -> clone(True, True);
 
                 if (t_old_defaultstack.IsValid())
-                    MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+                    MCdefaultstackptr = t_old_defaultstack;
 
 			}
 		}
@@ -2283,9 +2289,9 @@ void MCInterfaceExecCutObjectsToContainer(MCExecContext& ctxt, MCObjectPtr *p_ta
 
 void MCInterfaceExecDelete(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield->deleteselection(False);
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage->delimage();	
 	else
 		MCselected->del();
@@ -2317,7 +2323,7 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
 			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish));
 			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
 			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 			MCValueRelease(t_value);
@@ -2430,10 +2436,10 @@ void MCInterfaceExecUnhiliteChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt)
 {
 	MCselected->clear(True);
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
 		MCactivefield->unselect(False, True);
-		if (MCactivefield != NULL)
+		if (MCactivefield)
 			MCactivefield->getcard()->kunfocus();
 	}
 }
@@ -2676,7 +2682,7 @@ void MCInterfaceExecMoveObject(MCExecContext& ctxt, MCObject *p_target, MCPoint 
 		break;
 	}
 
-	MCPoint *t_motion = new MCPoint[p_motion_count];
+	MCPoint *t_motion = new (nothrow) MCPoint[p_motion_count];
 	for (uindex_t i = 0; i < p_motion_count; i++)
 		t_motion[i] = p_motion[i];
 
@@ -2928,11 +2934,12 @@ void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *
 
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at)
 {
-	if (MCmousestackptr == NULL)
+	if (!MCmousestackptr)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_NOSTACK);
 		return;
 	}
+    
 	if (p_at != nil)
 	{
 		MCmousex = p_at -> x;
@@ -2968,7 +2975,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
         
 	// MW-2007-05-01: Reverting this as it causes problems :o(
 	//stackptr -> setflag(True, F_VISIBLE);
-    MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
     Boolean oldtrace = MCtrace;
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
@@ -2981,13 +2988,16 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		added = True;
 	}
     
-	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
+	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned) != ES_NORMAL)
+    {
+        ctxt.Throw();
+    }
 
 	if (MCwatchcursor)
 	{
 		MCwatchcursor = False;
 		p_target->resetcursor(True);
-		if (MCmousestackptr != NULL && MCmousestackptr != p_target)
+		if (MCmousestackptr && !MCmousestackptr.IsBoundTo(p_target))
 			MCmousestackptr->resetcursor(True);
 	}
     
@@ -2997,7 +3007,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	MCtrace = oldtrace;
     
 	if (p_mode > WM_TOP_LEVEL && t_old_defaultstack.IsValid())
-		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+		MCdefaultstackptr = t_old_defaultstack;
 }
 
 void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
@@ -3030,7 +3040,7 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
             // AL-2014-11-24: [[ Bug 14076 ]] Don't override window mode with WM_DRAWER
 			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, p_mode);
 	}
-	else if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
+	else if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode);
 	else
 		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, p_mode);
@@ -3083,10 +3093,12 @@ void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNa
 
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
 {
-	if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
+	if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCdefaultstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else
+	else if (MCtopstackptr && MCtopstackptr->isvisible())
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
+	else
+		MCInterfaceExecSubwindow(ctxt, p_target, nil, p_target->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 }
 
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
@@ -3149,7 +3161,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_new_name, bool p_force_invisible, bool p_with_group)
 {
-	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	Boolean wasvisible = MCtemplatestack->isvisible();
 
 	/* Check that a specified parent stack has a usable name before
@@ -3194,7 +3206,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	MCObject *t_object = MCdefaultstackptr;
     
     if (t_old_defaultstack.IsValid())
-        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        MCdefaultstackptr = t_old_defaultstack;
 	
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
@@ -3264,7 +3276,7 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 	case CT_BUTTON:
 		return MCtemplatebutton;
 	case CT_MENU:
-		r_parent = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
+		r_parent = MCmenubar ? MCmenubar : MCdefaultmenubar;
 		return MCtemplatebutton;
 	case CT_SCROLLBAR:
 		return MCtemplatescrollbar;
@@ -3330,7 +3342,7 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
         return;
     }
     
-    MCWidget* t_widget = new MCWidget();
+    MCWidget* t_widget = new (nothrow) MCWidget();
     if (t_widget == NULL)
         return;
     t_widget -> bind(p_kind, nil);
@@ -3360,7 +3372,7 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible)
 {
-    MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
     
 	MCObject *t_object = nil;
 	switch (p_target->gettype())
@@ -3458,7 +3470,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	ctxt . SetItToValue(*t_id);
 
     if (t_old_defaultstack.IsValid())
-        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        MCdefaultstackptr = t_old_defaultstack;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3558,7 +3570,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
         if (ctxt . HasError() || !MCStringMutableCopy(*t_text, &t_string))
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), p_string);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
@@ -3597,7 +3609,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
         if (ctxt . HasError())
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), *t_string_value);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), *t_string_value);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
@@ -3802,7 +3814,7 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 
 	if (t_stream != NULL)
 	{
-		MCAudioClip *aptr = new MCAudioClip;
+		MCAudioClip *aptr = new (nothrow) MCAudioClip;
 		if (!aptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
@@ -3828,7 +3840,7 @@ void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename)
 
 	if (t_stream != NULL)
 	{
-		MCVideoClip *vptr = new MCVideoClip;
+		MCVideoClip *vptr = new (nothrow) MCVideoClip;
 		if (!vptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
@@ -3908,7 +3920,7 @@ void MCInterfaceExecImportObjectFromArray(MCExecContext& ctxt, MCArrayRef p_arra
     }
     
     MCWidget *t_widget;
-    t_widget = new MCWidget;
+    t_widget = new (nothrow) MCWidget;
     if (t_widget == NULL)
         return;
     
@@ -4285,12 +4297,9 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	                             kMCStringOptionCompareExact))
 		return false;
 
+	extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+	
     MCAutoStringRefArray t_chunks;
-    MCStringRef *t_sorted;
-    uindex_t t_sorted_count;
-    
-    extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
-    
     if (!MCStringsSplit(p_data, t_delimiter, t_chunks . PtrRef(), t_chunks . CountRef()))
         return false;
     
@@ -4303,25 +4312,34 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
         t_trailing_delim = true;
         t_item_count--;
 	}
-    
-	// Sort the array
-	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form, *t_chunks, t_item_count, p_by, t_sorted, t_sorted_count);
-
+	
+	// MCStringsExecSort allocates memory for the sorted string array,
+	// but does not retain the string pointers passed to it. Hence we
+	// use an MCAutoArray of MCStringRefs so that only the array is
+	// deallocated in the destructor of t_sorted. The strings themselves
+	// need to be released in the destructor of t_chunks, hence its use
+ 	// of an MCAutoStringRefArray.
+	MCAutoArray<MCStringRef> t_sorted;
+	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form,
+	                  *t_chunks, t_item_count, p_by,
+	                  t_sorted . PtrRef(), t_sorted . SizeRef());
+	
 	// Build the output string
 	MCAutoListRef t_list;
-    MCListCreateMutable(t_delimiter, &t_list);
+	if (!MCListCreateMutable(t_delimiter, &t_list))
+		return false;
 
     uindex_t i;
-    for (i = 0; i < t_sorted_count; i++)
-        MCListAppend(*t_list, t_sorted[i]);
+    for (i = 0; i < t_sorted . Size(); i++)
+	{
+        if (!MCListAppend(*t_list, t_sorted[i]))
+			return false;
+	}
 
     MCAutoStringRef t_list_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
-
-    // SN-2014-07-09: [[ MemoryLeak ]] Delete the array generated.
-    //  The strings stored in t_sorted are only pointers though, not new strings
-    MCMemoryDeleteArray(t_sorted);
-    
+	if (!MCListCopyAsString(*t_list, &t_list_string))
+		return false;
+	
     if (t_trailing_delim)
     {
         return MCStringCreateWithStrings(r_output, *t_list_string, t_delimiter);
@@ -4440,7 +4458,7 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 {
 	if (MCStringGetLength(p_needle) == 0)
 	{
-		if (MCfoundfield != NULL)
+		if (MCfoundfield)
 			MCfoundfield->clearfound();
 		ctxt .SetTheResultToCString(MCnotfoundstring);
 		return;
@@ -4486,7 +4504,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	else
 	{
 		// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
-		if (ctxt . GetObject()->getstack()->getopened() || MCtopstackptr == NULL)
+		if (ctxt . GetObject()->getstack()->getopened() || !MCtopstackptr)
 			parentptr = ctxt . GetObject() -> getstack();
 		else
 			parentptr = MCtopstackptr;
@@ -4552,14 +4570,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 			oldstack->kunfocus();
 			t_stack->close();
 			
-			MCPlayer *tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				MCPlayer *oldptr = tptr;
-				tptr = tptr->getnextplayer();
-				if (oldptr->getstack() == oldstack)
-					oldptr->close();
-			}
+            MCPlayer::ClosePlayers(oldstack);
 
 			if (!t_stack->takewindow(oldstack))
 			{
@@ -4658,7 +4669,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	MCtrace = oldtrace;
 	if (t_stack->getmode() == WM_TOP_LEVEL || t_stack->getmode() == WM_TOP_LEVEL_LOCKED)
 		MCdefaultstackptr = t_stack;
-	if (MCmousestackptr != NULL)
+	if (MCmousestackptr)
 		MCmousestackptr->resetcursor(True);
 	if (MCabortscript)
 		stat = ES_ERROR;
@@ -4708,12 +4719,12 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 {
 	MCEffectList *effectptr = MCcur_effects;
 	if (effectptr == nil)
-		MCcur_effects = effectptr = new MCEffectList;
+		MCcur_effects = effectptr = new (nothrow) MCEffectList;
 	else
 	{
 		while (effectptr->next != NULL)
 			effectptr = effectptr->next;
-		effectptr->next = new MCEffectList;
+		effectptr->next = new (nothrow) MCEffectList;
 		effectptr = effectptr->next;
 	}
 	
@@ -4733,7 +4744,7 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 	{
         t_arg = p_effect . arguments[i];
 		MCEffectArgument *t_kv;
-		t_kv = new MCEffectArgument;
+		t_kv = new (nothrow) MCEffectArgument;
 		t_kv -> next = t_arguments;
 		t_kv -> key = MCValueRetain(t_arg . key);
 		t_kv -> value = MCValueRetain(t_arg . value);

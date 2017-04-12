@@ -123,8 +123,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	// Make sure certain things are already created before MCS_init. This is
 	// required right now because the Windows MCS_init uses MCS_query_registry
 	// which needs these things.
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::create(MCresult);
 #endif
 
@@ -137,10 +137,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	delete MCeerror;
 	delete MCresult;
 #endif
-	
-    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
-    // since ResolvePath must behave differently on Linux
-	MCsystem -> GetExecutablePath(MCcmd);
 
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
@@ -184,17 +180,16 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			MCsecuremode = MC_SECUREMODE_ALL;
 			continue;
 		}
-		
+
+		/* TODO Remove -g,-geometry flag because it's not used any more */
 		if (MCStringIsEqualToCString(argv[i], "-g", kMCCompareExact)
 			|| MCStringIsEqualToCString(argv[i], "-geometry", kMCCompareExact))
 		{
-			char *geometry = NULL;
 			if (++i >= argc)
 			{
 				fprintf(stderr, "%s: bad geometry\n", *t_mccmd_utf8);
 				return False;
 			}
-            /* UNCHECKED */ MCStringConvertToCString(argv[i], geometry);
 			continue;
 		}
 		
@@ -302,7 +297,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
             MCValueRelease(MCstacknames[i]);
 		}
         MCnstacks = 0;
-		delete MCstacknames;
+        delete[] MCstacknames; /* Allocated with new[] */
 		MCstacknames = NULL;
 		MCeerror->clear();
 	}
@@ -330,10 +325,10 @@ void X_main_loop_iteration()
 	// MW-2011-08-19: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-	if (MCtracedobject != NULL)
+	if (MCtracedobject)
 	{
 		MCtracedobject->message(MCM_trace_done);
-		MCtracedobject = NULL;
+		MCtracedobject = nil;
 	}
     if (!MCtodestroy -> isempty())
     {

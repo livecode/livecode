@@ -6,7 +6,7 @@ Syntax: selectedColor
 
 Summary:
 The <selectedColor> <property> is <reserved word|reserved> for internal
-use. 
+use.
 
 Introduced: 1.0
 
@@ -14,5 +14,7 @@ OS: ios, android
 
 Platforms: desktop, server, mobile
 
-References: property (glossary), reserved word (glossary)
+Description:
+<reserved word|Reserved> for internal use.
 
+References: property (glossary), reserved word (glossary)

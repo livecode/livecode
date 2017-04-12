@@ -4,7 +4,7 @@ Type: command
 
 Syntax: wait {until | while} <condition> [with messages]
 
-Syntax: wait [for] <number> [seconds | ticks | milliseconds] [with messages]
+Syntax: wait [for] <number> [{seconds | ticks | milliseconds}] [with messages]
 
 Syntax: wait for messages
 
@@ -58,7 +58,7 @@ cards.
 
 >*Tip:* To complete a process after a pause while allowing LiveCode to
 > run normally until that time, you can use the send in time form of the
-> <send command> instead of using the wait...with messages form of the
+> <send> <command> instead of using the wait...with messages form of the
 > <wait> command.
 
 The wait for messages form waits until any message has been sent and the
@@ -66,7 +66,7 @@ message has been handled. After any message handler runs, the handler
 containing the wait for messages statement resumes executing. Wait for
 messages handles at least one message but can handle more.
 
-References: open socket (command), send command (command),
+References: open socket (command), send (command),
 repeat (control structure), seconds (function), waitDepth (function),
 milliseconds (function), ticks (function), handler (glossary),
 statement (glossary), message (glossary), command (glossary),

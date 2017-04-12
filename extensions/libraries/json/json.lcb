@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,15 +16,17 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This library provides support for generating and parsing JavaScript Object
-Notation (JSON) data.  See also <http://json.org>.
+
+This library provides support for generating and parsing JavaScript
+Object Notation (JSON) data.  See also <http://json.org> and
+<https://tools.ietf.org/html/rfc7159>.
 
 Tags: JSON, Library
 */
 
 library com.livecode.library.json
 
-metadata version is "1.0.0"
+metadata version is "2.0.0"
 metadata author is "LiveCode"
 metadata title is "JSON Library"
 
@@ -45,6 +47,17 @@ private handler FormatInt(in pNumber as Number) returns String
 	end if
 
 	return tNumberString
+end handler
+
+-- Format a character for inclusion in error messages.  Control
+-- characters are shown in "\uXXXX" format, and other characters are
+-- shown literally.
+private handler FormatChar(in pChar as String) returns String
+   if the code of pChar > 0x1f then
+      return pChar
+   else
+      return "\\u" & (the code of pChar converted to base 16)
+   end if
 end handler
 
 private handler JsonSyntaxError(in pLine as Number, in pColumn as Number, \
@@ -68,6 +81,7 @@ constant kScanInNumber is 30
 -- Parser states
 constant kParseTop is 0
 constant kParseEndValue is 1
+constant kParseDone is 2
 constant kParseArrayStart is 10
 constant kParseArrayValue is 11
 constant kParseArrayNext is 12
@@ -77,6 +91,8 @@ constant kParseObjectColon is 22
 constant kParseObjectValue is 23
 constant kParseObjectNext is 24
 
+-- Maximum nesting depth
+constant kMaxRecursion is 500
 
 /**
 Summary: Parse JSON text into a LiveCode value.
@@ -102,7 +118,7 @@ of the file:
 
 Tags: JSON
 */
-public handler JsonImport(in pJson as String) returns any
+public handler JsonImport(in pJson as String) returns optional any
 
   -- These variables track the cursor position
   variable tLine as Number
@@ -132,9 +148,40 @@ public handler JsonImport(in pJson as String) returns any
   variable tStateStack as List
   put [] into tStateStack
 
-  -- Loop over all the charaters in the JSON input in a single pass
+  -- Loop over all the characters in the JSON input in a single pass.
+  --
+  -- The single "repeat" loop is needed because LCB strings are
+  -- grapheme-based, and a single grapheme may be composed of multiple
+  -- codepoints.  LiveCode has to run a grapheme break iterator from
+  -- the start of "pJson" for every "char N of pJson", which requires
+  -- O(N) time.  Looping over all the graphemes using offsets
+  -- therefore requires O(N^2) time.  However, using a "repeat for
+  -- each char" loop only runs the grapheme iterator once, and so
+  -- needs only O(N) time to run over the JSON, and this turns out to
+  -- be a massive saving.
+  --
+  -- The structure of the parser is a dual finite state machine,
+  -- composed of a scanner and a parser, with a stack on the heap for
+  -- dealing with nested structures.
+  --
+  -- Numbers are a big source of complexity for the parser, because
+  -- the only values in JSON that are _not_ self-delimiting.  It is
+  -- necessary to read one character beyond the end of a number
+  -- literal to know whether the number has ended.  This extra
+  -- character is often a whole additional token (e.g. "["), which in
+  -- turn requires the scanner to be able to hand two tokens off to
+  -- the parser at once.  Despite not using the current offset into
+  -- the input data to implement the loop, the offset still has to be
+  -- tracked so that the scanner doesn't try to scan one char beyond
+  -- the end of the input JSON for valid "lonely integer" JSON inputs
+  -- such as "1234".
+  variable tJsonLength as Number
+  put the number of chars in pJson into tJsonLength
+  variable tCharCount as Number
+
   variable tChar as String
   repeat for each char tChar in pJson
+    add 1 to tCharCount
 
     -- Update cursor position
     if tChar is in "\r\n" then
@@ -152,6 +199,13 @@ public handler JsonImport(in pJson as String) returns any
         next repeat
       end if
 
+      -- Reject non-whitespace characters after first top-level datum
+      if tParseState is kParseDone then
+         return JsonSyntaxError(tLine, tColumn, \
+               "Unexpected character '" & FormatChar(tChar) & \
+               "' after JSON data")
+      end if
+
       if tChar is in "{}[]:," then
         put tChar into tToken
         put nothing into tTokenValue
@@ -164,13 +218,24 @@ public handler JsonImport(in pJson as String) returns any
         put tChar into tToken
         put tChar into tTokenValue
         put kScanInLiteral into tScanState
-      else if tChar is in "-0123456789" then
+      else if tChar is "-" then
+         -- If a number begins with a "-" then it *must* be contain at
+         -- least one further character
+         put "0" into tToken
+         put tChar into tTokenValue
+         put kScanInNumber into tScanState
+      else if tChar is in "0123456789" then
+        -- A number is permitted to be a single digit
         put "0" into tToken
         put tChar into tTokenValue
-        put kScanInNumber into tScanState
+        if tCharCount < tJsonLength then
+           put kScanInNumber into tScanState
+        else
+           put kScanEndToken into tScanState
+        end if
       else
         return JsonSyntaxError(tLine, tColumn, \
-                               "Unexpected character '" & tChar & "'")
+              "Unexpected character '" & FormatChar(tChar) & "'")
       end if
 
         -- String support is complicated
@@ -179,6 +244,13 @@ public handler JsonImport(in pJson as String) returns any
         put kScanEndToken into tScanState
       else if tChar is "\\" then
         put kScanInStringEscape into tScanState
+      else if the code of tChar <= 0x1f then
+        -- RFC 7159 requires control characters inside string literals
+        -- to be escaped.  Control characters are those within the
+        -- range U+0000 to U+001F inclusive
+        return JsonSyntaxError(tLine, tColumn, \
+              "Unescaped control character '" & FormatChar(tChar) & \
+              "' in string")
       else
         put tChar after tTokenValue
       end if
@@ -206,14 +278,15 @@ public handler JsonImport(in pJson as String) returns any
         put kScanInString into tScanState
       else
         return JsonSyntaxError(tLine, tColumn, \
-                               "illegal escape sequence '\\" & tChar & "'")
+              "illegal escape sequence '\\" & FormatChar(tChar) & "'")
       end if
     else if tScanState is kScanInStringUnicode then
-      put tChar after tStringUniHex
       if not (tChar is in "0123456789abcdefABCDEF") then
         return JsonSyntaxError(tLine, tColumn, \
-                        "illegal escape sequence '\\u" & tStringUniHex & "'")
+              "illegal escape sequence '\\u" & tStringUniHex & \
+              FormatChar(tChar) & "'")
       end if
+      put tChar after tStringUniHex
       if the number of chars in tStringUniHex >= 4 then
         put the char with code (tStringUniHex converted from base 16) after tTokenValue
         put kScanInString into tScanState
@@ -241,20 +314,27 @@ public handler JsonImport(in pJson as String) returns any
         put kScanEndToken into tScanState
       end if
 
-    -- Numbers are a massive pain.  Because you can't tell from examining a
-    -- single character whether it ends the number, you have to wait until the
-    -- character after the *end* of the number -- which might be the start of
-    -- another token.
     else if tScanState is kScanInNumber then
       if tChar is in ".+-eE0123456789" then
+        -- The only case in which we're guaranteed to have got to the
+        -- end of a number after reading a number constituent char is
+        -- when we've reached the end of input.  Otherwise, we need to
+        -- read one char further.
         put tChar after tTokenValue
-        next repeat
+        if tCharCount < tJsonLength then
+           next repeat
+        else
+           put kScanEndToken into tScanState
+        end if
       else
         put kScanEndToken into tScanState
         if tChar is in "]}," then
+           -- It's possible for the character that terminates a number
+           -- literal to be a whole token in its own right.
           put tChar into tExtraToken
         else if not (tChar is in " \t\r\n") then
-          return JsonSyntaxError(tLine, tColumn, "bad number terminal '" & tChar & "'")
+          return JsonSyntaxError(tLine, tColumn, \
+                "bad number terminal '" & FormatChar(tChar) & "'")
         end if
       end if
 
@@ -313,6 +393,12 @@ public handler JsonImport(in pJson as String) returns any
       else if tToken is "[" then
         if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
                               kParseObjectColon, kParseObjectNext] then
+
+          if the number of elements in tValueStack > kMaxRecursion then
+             return JsonSyntaxError(tLine, tColumn, \
+                   "too many nested values")
+          end if
+
           push [] onto tValueStack
           push tParseState onto tStateStack
           put kParseArrayStart into tParseState
@@ -332,6 +418,11 @@ public handler JsonImport(in pJson as String) returns any
       else if tToken is "{" then
         if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
                               kParseObjectColon, kParseObjectNext] then
+          if the number of elements in tValueStack > kMaxRecursion then
+             return JsonSyntaxError(tLine, tColumn, \
+                   "too many nested values")
+          end if
+
           push the empty array onto tValueStack
           push tParseState onto tStateStack
           put kParseObjectStart into tParseState
@@ -397,7 +488,7 @@ public handler JsonImport(in pJson as String) returns any
 
       -- Top level
       else if tParseState is kParseTop then
-        return tValue
+        put kParseDone into tParseState
 
       else
         return JsonSyntaxError(tLine, tColumn, "bad parse state" && FormatInt(tParseState) && "at token '" & tToken & "'")
@@ -405,7 +496,11 @@ public handler JsonImport(in pJson as String) returns any
     end repeat
   end repeat
 
-  return JsonSyntaxError(tLine, tColumn, "unexpected end of input")
+  if tParseState is kParseDone then
+     return tValue
+  else
+     return JsonSyntaxError(tLine, tColumn, "unexpected end of input")
+  end if
 end handler
 
 --================================================================

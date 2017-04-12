@@ -405,7 +405,7 @@ void MCMutableImageRep::startdraw()
 	starty = my;
 	MCRectangle brect;
 	brect.width = brect.height = 0;
-	if (MCactiveimage != NULL && MCactiveimage != m_owner
+	if (MCactiveimage && MCactiveimage != m_owner
 	        && t_tool == T_SELECT)
 		MCactiveimage->endsel();
 
@@ -413,7 +413,7 @@ void MCMutableImageRep::startdraw()
 	if (!MCscreen->getlockmods())
 	{
 		MCundos->freestate();
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_PAINT;
 		MCundos->savestate(m_owner, us);
 		MCImageFreeBitmap(m_undo_image);
@@ -442,7 +442,7 @@ void MCMutableImageRep::startdraw()
 	case T_CURVE:
 		if (points != NULL)
 			delete points;
-		points = new MCPoint[MCscreen->getmaxpoints()];
+		points = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		npoints = MCscreen->getmaxpoints();
 		points[0].x = mx;
 		points[0].y = my;
@@ -476,7 +476,7 @@ void MCMutableImageRep::startdraw()
 		brect = drawroundrect();
 		break;
 	case T_SELECT:
-		if (MCactiveimage != NULL && MCactiveimage != m_owner)
+		if (MCactiveimage && MCactiveimage != m_owner)
 			MCactiveimage->endsel();
 		if (state & CS_OWN_SELECTION)
 		{
@@ -879,7 +879,7 @@ void MCMutableImageRep::endsel()
 		m_selection_image = nil;
 	}
 	state &= ~(CS_BEEN_MOVED | CS_OWN_SELECTION);
-	MCactiveimage = NULL;
+	MCactiveimage = nil;
 	selrect.x += rect.x;
 	selrect.y += rect.y;
 	// MW-2011-08-18: [[ Layers ]] Invalidate the selected rect.
@@ -1114,7 +1114,7 @@ void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaste
 	if (!gotpoint)
 		return;
 
-	MCstacktype *pstack = new MCstacktype[PSTACKSIZE];
+	MCstacktype *pstack = new (nothrow) MCstacktype[PSTACKSIZE];
 	uint2 pstackptr = 0;
 	uint2 pstacktop = 1;
 	bool collision;
@@ -1669,7 +1669,7 @@ void MCMutableImageRep::selimage()
 	MCeditingimage = m_owner;
 	state |= CS_EDITED;
 	MCundos->freestate();
-	Ustruct *us = new Ustruct;
+	Ustruct *us = new (nothrow) Ustruct;
 	us->type = UT_PAINT;
 
 	MCundos->savestate(m_owner, us);
@@ -1832,7 +1832,7 @@ void MCMutableImageRep::rotatesel(int2 angle)
 	if (clearundo)
 	{
 		MCundos->freestate();
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_PAINT;
 		MCundos->savestate(m_owner, us);
 		MCImageFreeBitmap(m_undo_image);

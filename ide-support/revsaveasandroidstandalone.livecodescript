@@ -229,7 +229,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    
    try
       ------- Create the build folder
-      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder, tClassesBuildFolder, tLibsBuildFolder, tArmLibsBuildFolder
+      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder, tClassesBuildFolder, tLibsBuildFolder, tArmLibsBuildFolder, tXMLResBuildFolder
       put tempName() into tBuildFolder
       create folder tBuildFolder
       if the platform is "win32" then
@@ -244,16 +244,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tBuildFolder & slash & "res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
+      put tResBuildFolder & slash & "xml" into tXMLResBuildFolder
       create folder tClassesBuildFolder
       create folder tLibsBuildFolder
       create folder tArmLibsBuildFolder
       create folder tResBuildFolder
       create folder tDrawableResBuildFolder
       create folder tLayoutResBuildFolder
+      create folder tXMLResBuildFolder
       if there is no folder tBuildFolder or there is no folder tClassesBuildFolder or \
             there is no folder tLibsBuildFolder or there is no folder tArmLibsBuildFolder or \
             there is no folder tResBuildFolder or there is no folder tDrawableResBuildFolder  or \
-            there is no folder tLayoutResBuildFolder then
+            there is no folder tLayoutResBuildFolder or there is no folder tXMLResBuildFolder then
          throw "could not create build folders"
       end if
       
@@ -272,35 +274,32 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       set the itemDelimiter to "."
       
-      local tResolvedFiles
-      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFiles
+      local tResolvedFileData
+      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFileData
       
-      repeat for each line tFile in tResolvedFiles
-         local tFilePath, tFileName
-         computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
-         
+      repeat for each element tFile in tResolvedFileData
          -- Look for manifest template
          local tManifest
-         if tFilePath ends with "AndroidManifest.xml" then
-            put url ("binfile:" & tFilePath) into tManifest
+         if tFile["name"] ends with "AndroidManifest.xml" then
+            put url ("binfile:" & tFile["resolved"]) into tManifest
          end if
          
          -- Only look for lcext files.
-         if the last item of tFilePath is not "lcext" then
+         if the last item of tFile["name"] is not "lcext" then
             next repeat
          end if
          
          -- Only process if the target exists
-         if there is no file tFilePath then
-            throw "could not find referenced external -" && tFile
+         if there is no file tFile["resolved"] then
+            throw "could not find referenced external -" && tFile["resolved"]
          end if
          
          -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
          --   extracted.
          -- Now attempt to process the external
-         if addExternalFromFile(tFilePath, tClassesBuildFolder, tLibsBuildFolder) then
+         if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tLibsBuildFolder) then
             -- Add the external to the list to load
-            put char 1 to -7 of tFileName & return after tExternals
+            put char 1 to -7 of tFile["name"] & return after tExternals
          end if
       end repeat
       delete the last char of tExternals
@@ -399,6 +398,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put tAmazonReceiver after tReceiver
          end if
       end if
+      
+      local tNFCIntentFilter
+      if pSettings["android,nfc"] then
+         put "<intent-filter>" & return & \
+               "<action android:name=" & quote & "android.nfc.action.TECH_DISCOVERED" & quote & " />" & return & \
+               "</intent-filter>" & return & \
+               "<meta-data android:name=" & quote & "android.nfc.action.TECH_DISCOVERED" & quote & \
+               " android:resource=" & quote & "@xml/nfc_tech_filter" & quote & " />" & return into tNFCIntentFilter
+               
+         put "<uses-permission android:name=" & quote & "android.permission.NFC" & quote & " />" & return after tPermissions
+      end if
+      replace "${NFC_FILTER}" with tNFCIntentFilter in tManifest
       
       replace "${SERVICE}" with tService in tManifest
       replace "${RECEIVER}" with tReceiver in tManifest
@@ -659,8 +670,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
       -- Externals to reference (on Android we include drivers in this list)
+      put "revsecurity:./librevsecurity" into tDeploy["library"]
       repeat for each line tEntry in tExternals
-         put tEntry & return after tDeploy["externals"]
+         if not (tEntry begins with "db") then
+            put tEntry & return after tDeploy["externals"]
+         end if
+         put return & tEntry & ":" & "./lib" & tEntry after tDeploy["library"]
       end repeat
       delete the last char of tDeploy["externals"]
       
@@ -703,6 +718,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       put tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml" & return after tAssetFiles
       
+      local tNFCTechFilter
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "nfc_tech_filter.xml") into tNFCTechFilter
+      put url ("binfile:" & tNFCTechFilter) into url ("binfile:" & tXMLResBuildFolder & slash & "nfc_tech_filter.xml")
+      if the result is not empty then
+         throw "could not copy NFC tech filter file '" & tNFCTechFilter & "'"
+      end if
+      put tXMLResBuildFolder & slash & "nfc_tech_filter.xml" & return after tAssetFiles
+      
       if there is a file tIcon then
          put url ("binfile:" & tIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "icon.png")
          if the result is not empty then
@@ -743,7 +766,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          throw "could not open asset archive"
       end if
       
-      addAssetsToArchive tResolvedFiles, tBaseFolder, tAssetArchive
+      addAssetsToArchive tResolvedFileData, tBaseFolder, tAssetArchive
       
       revZipCloseArchive tAssetArchive
       if the result is not empty then
@@ -895,26 +918,7 @@ end revSaveAsMobileStandaloneMain
 
 ################################################################################
 
-private command computeAssetLocation pBaseFolder, pFile, @rPath, @rName
-   local tIsAbsolute
-   put pFile begins with "/" or char 2 to 3 of pFile is ":/" into tIsAbsolute
-   
-   set the itemDelimiter to slash
-   if the last item of pFile is "*" then
-      delete the last item of pFile
-   end if
-   
-   if tIsAbsolute then
-      put item -1 of pFile into rName
-      put pFile into rPath
-   else
-      -- MM-2011-09-07 [[ Bug 10345 ]] Use the full path to the file (rather than just name), ensureing we create sub-folders.
-      put pFile into rName
-      put pBaseFolder & slash & pFile into rPath
-   end if
-end computeAssetLocation
-
-private command addAssetsToArchive pFiles, pBaseFolder, pArchive
+private command addAssetsToArchive pFileData, pBaseFolder, pArchive
    local tDeviceConfig, tConfigFile, tCustomConfigFile, tFonts
    
    put mapFIlePath(revMobileRuntimeFolder() & slash & "lc_device_config.txt") into tConfigFile
@@ -922,27 +926,25 @@ private command addAssetsToArchive pFiles, pBaseFolder, pArchive
       put empty into tConfigFile
    end if
    
-   repeat for each line tFile in pFiles
-      local tName
-      computeAssetLocation pBaseFolder, tFile, tFile, tName
-      if there is a file tFile then
-         if tConfigFile is not empty and tName is "lc_device_config.txt" then
+   repeat for each element tFile in pFileData
+      if there is a file tFile["resolved"] then
+         if tConfigFile is not empty and tFile["name"] ends with "lc_device_config.txt" then
             // need to merge config files
-            put tFile into tCustomConfigFile
-         else if tFile ends with ".ttf" or tFile ends with ".ttc" then
+            put tFile["resolved"] into tCustomConfigFile
+         else if tFile["name"] ends with ".ttf" or tFile["name"] ends with ".ttc" then
             -- MM-2012-03-07: [[ Custom fonts ]] If any fonts are found, add to the list so that they are handled correctly
-            put tFile & return after tFonts
-         else if tFile ends with ".lcext" or tFile ends with ".dylib" then
+            put tFile["resolved"] & return after tFonts
+         else if tFile["name"] ends with ".lcext" or tFile["name"] ends with ".dylib" then
             -- MW-2012-07-05: [[ Externals ]] If an 'lcext' file or dylib file is found then we ignore it.
-         else if tFile ends with "AndroidManifest.xml" then
+         else if tFile["name"] ends with "AndroidManifest.xml" then
             -- MW-2015-04-24: [[ TemplateAppMetadata ]] If an template manifest is found then we ignore it.
          else
-            revZipAddUncompressedItemWithFile pArchive, "assets/" & tName, tFile
+            revZipAddUncompressedItemWithFile pArchive, "assets/" & tFile["name"], tFile["resolved"]
          end if
-      else if there is a folder tFile then
-         addAssetsFromFolderToArchive tFile, "assets" & slash & tName, pArchive, tFonts
+      else if there is a folder tFile["resolved"] then
+         addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
       else
-         throw "could not find referenced asset to include -" && tFile
+         throw "could not find referenced asset to include -" && tFile["resolved"]
       end if
    end repeat
    
@@ -1281,14 +1283,22 @@ function mapFilePath pPath
    end if
    
    put the last item of pPath into tComponent
-   put the editionType into tSuffix
-   put toUpper(char 1 of tSuffix) into char 1 of tSuffix
+   
+   if the editionType is "community" then
+      put "Community" into tSuffix
+   else
+      put "Commercial" into tSuffix
+   end if
+   
    switch tComponent
       case "notify_icon.png"
          put merge("[[tBinariesFolder]]/notify_icon.png") into tPath
          break
       case "Manifest.xml"
          put merge("[[tBinariesFolder]]/Manifest.xml") into tPath
+         break
+      case "nfc_tech_filter.xml"
+         put merge("[[tBinariesFolder]]/nfc_tech_filter.xml") into tPath
          break
       case "livecode_inputcontrol.xml"
          put merge("[[tBinariesFolder]]/livecode_inputcontrol.xml") into tPath
@@ -1313,6 +1323,12 @@ function mapFilePath pPath
          break
       case "dbmysql"
          put merge("[[tBinariesFolder]]/DbMysql") into tPath
+         break
+      case "revsecurity"
+         put merge("[[tBinariesFolder]]/RevSecurity") into tPath
+         break
+      case "revpdfprinter"
+         put merge("[[tBinariesFolder]]/RevPdfPrinter") into tPath
          break
       default
          put pPath into tPath

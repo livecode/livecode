@@ -224,6 +224,21 @@ MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void
+MCDataExecReverseBytesOf(MCDataRef &x_data)
+{
+    MCAutoDataRef t_data;
+    if (!MCDataMutableCopy(x_data, &t_data))
+        return;
+    if (!MCDataReverse(*t_data))
+        return;
+    if (!t_data.MakeImmutable())
+        return;
+    MCValueAssign(x_data, *t_data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT_DEF void
 MCByteEvalByteWithCode (uinteger_t p_value,
                         MCDataRef & r_data)
 {

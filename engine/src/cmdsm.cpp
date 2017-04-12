@@ -37,28 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////
 
-//
-
-inline bool MCMathOpCommandComputeOverlap(MCExpression *p_source, MCExpression *p_dest, MCVarref *p_destvar)
-{
-	MCVarref *t_src_ref;
-	t_src_ref = p_source -> getrootvarref();
-	if (t_src_ref == NULL)
-		return false;
-
-	if (p_destvar != NULL)
-		return t_src_ref -> rootmatches(p_destvar);
-
-	MCVarref *t_dst_ref;
-	t_dst_ref = p_dest -> getrootvarref();
-	if (t_dst_ref == NULL)
-		 return false;
-
-	return t_src_ref -> rootmatches(t_dst_ref);
-}
-
-//
-
 MCAdd::~MCAdd()
 {
 	delete source;
@@ -88,7 +66,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	if (sp.next(type) != PS_NORMAL || type != ST_ID || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_ADD_BADDEST, sp);
@@ -101,8 +79,6 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -121,20 +97,11 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     }
 	
 	MCExecValue t_dst;
-    MCAutoPointer<MCContainer> t_dst_container;
+    MCContainer t_dst_container;
 	if (destvar != nil)
 	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
             MCExecTypeRelease(t_src);
@@ -186,13 +153,7 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-            bool t_success;
-            if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
 		}
 		else
@@ -242,7 +203,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_DIVIDE_BADDEST, sp);
@@ -265,8 +226,6 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -283,22 +242,13 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_DIVIDE_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt.HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
             MCExecTypeRelease(t_src);
@@ -346,19 +296,12 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{
             if (dest->set(ctxt, PT_INTO, t_result))
@@ -407,7 +350,7 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -433,8 +376,6 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -451,22 +392,13 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_MULTIPLY_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
             MCExecTypeRelease(t_src);
@@ -514,19 +446,12 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success = t_dst_container -> give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{            
 			if (dest->set(ctxt, PT_INTO, t_result))
@@ -587,7 +512,7 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	        || type != ST_ID || sp . findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL)
 	{
 		sp.backup();
-		dest = new MCChunk(True);
+		dest = new (nothrow) MCChunk(True);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -601,8 +526,6 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
 		destvar = dest -> getrootvarref();
-	
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
 }
@@ -619,22 +542,13 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 		ctxt.LegacyThrow(EE_SUBTRACT_BADSOURCE);
         return;
     }
-	
-	MCExecValue t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != nil)
-	{
-        bool t_success;
-        if (destvar -> needsContainer())
-            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
-                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
-        else
-        {
-            destvar -> eval_ctxt(ctxt, t_dst);
-            t_success = !ctxt . HasError();
-        }
-        
-        if (!t_success)
+    
+    MCExecValue t_dst;
+    MCContainer t_dst_container;
+    if (destvar != nil)
+    {
+        if (!destvar->evalcontainer(ctxt, t_dst_container) ||
+            !t_dst_container.eval_ctxt(ctxt, t_dst))
         {
             ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
             MCExecTypeRelease(t_src);
@@ -682,19 +596,12 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
     MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
-            bool t_success;
-            
-            if (destvar -> needsContainer())
-                t_success =  t_dst_container -> give_value(ctxt, t_result);
-            else
-                t_success = destvar -> give_value(ctxt, t_result);
-            
-            if (!t_success)
+    {
+        if (destvar != nil)
+        {
+            if (!t_dst_container.give_value(ctxt, t_result))
                 ctxt . Throw();
-		}
+        }
 		else
 		{
 			if (dest->set(ctxt, PT_INTO, t_result))
@@ -833,18 +740,17 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		default:
             ctxt . Throw();
             return;
-		break;
 	}
 
-	MCAutoPointer<MCContainer> t_container;
+	MCContainer t_container;
     MCAutoValueRef t_container_value;
-    if (!destvar -> evalcontainer(ctxt, &t_container))
+    if (!destvar -> evalcontainer(ctxt, t_container))
 	{
         ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
         return;
     }
 
-    if (!t_container -> eval(ctxt, &t_container_value))
+    if (!t_container.eval(ctxt, &t_container_value))
     {
         ctxt . Throw();
         return;
@@ -872,7 +778,7 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 			MCArraysExecCombineAsSet(ctxt, *t_array, *t_element_del, &t_string);
 
         if (!ctxt . HasError())
-            t_container -> set(ctxt, *t_string);
+            t_container.set(ctxt, *t_string);
 	}
 	else
 	{
@@ -892,7 +798,7 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 			MCArraysExecSplitAsSet(ctxt, *t_string, *t_element_del, &t_array);
 
 		if (!ctxt . HasError())
-            t_container -> set(ctxt, *t_array);
+            t_container.set(ctxt, *t_array);
     }
 }
 
@@ -991,15 +897,15 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . EvalExprAsValueRef(source, EE_ARRAYOP_BADEXP, &t_src))
         return;
     
-	MCAutoPointer<MCContainer> t_container;
-    if (!destvar -> evalcontainer(ctxt, &t_container))
+	MCContainer t_container;
+    if (!destvar -> evalcontainer(ctxt, t_container))
 	{
         ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
         return;
 	}
 
     MCAutoValueRef t_dst;
-    if (!t_container -> eval(ctxt, &t_dst))
+    if (!t_container.eval(ctxt, &t_dst))
         return;
 
     MCAutoValueRef t_dst_value;
@@ -1021,7 +927,7 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     }
 
 	if (!ctxt . HasError())
-        t_container -> set(ctxt, *t_dst_value);
+        t_container.set(ctxt, *t_dst_value);
 }
 
 void MCSetOp::compile(MCSyntaxFactoryRef ctxt)

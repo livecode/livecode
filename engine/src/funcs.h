@@ -699,6 +699,14 @@ public:
 
 };
 
+class MCRecordFormats: public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalRecordFormats>
+{
+public:
+    // virtual Exec_stat eval(MCExecPoint &);
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordFormatsMethodInfo; }
+    
+};
+
 class MCRecordLoudness : public MCConstantFunctionCtxt<integer_t, MCMultimediaEvalRecordLoudness>
 {
 public:
@@ -2393,6 +2401,17 @@ class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersE
 public:
 	MCSHA1Digest(){}
 	virtual ~MCSHA1Digest(){}
+};
+
+class MCMessageDigestFunc: public MCFunction
+{
+	MCAutoPointer<MCExpression> m_data;
+	MCAutoPointer<MCExpression> m_type;
+
+public:
+	virtual ~MCMessageDigestFunc(void) {};
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 class MCMinFunction : public MCParamFunctionCtxt<MCMathEvalMin, EE_MIN_BADSOURCE, PE_MIN_BADPARAM, kMCMathEvalMinMethodInfo>

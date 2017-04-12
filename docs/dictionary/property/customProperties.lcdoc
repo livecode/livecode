@@ -51,7 +51,7 @@ property named "changedDate" :
 
 
 >*Note:* You can also set <custom property|custom properties>
-> individually using the <set command>.
+> individually using the <set> <command>.
 
 To refer to a custom property set that is not the current
 <customPropertySet>, use <array> notation. For example, to get an
@@ -62,7 +62,7 @@ following:
     get the customProperties["MyProps"] of this card
 
 
-References: set command (command), setProp (control structure),
+References: set (command), command (glossary), setProp (control structure),
 propertyNames (function), object (glossary), property (glossary),
 key (glossary), value (glossary), custom property (glossary),
 statement (glossary), customPropertySet (glossary),

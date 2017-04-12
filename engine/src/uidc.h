@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "graphics.h"
 #include "imagebitmap.h"
+#include "object.h"
 
 enum
 {
@@ -106,15 +107,80 @@ enum Transfer_mode {
 // Converts a keysym to its lower-case equivalent
 KeySym MCKeySymToLower(KeySym p_key);
 
-typedef struct
+class MCPendingMessage
 {
-	MCObject *object;
-	MCNameRef message;
-	real8 time;
-	MCParameter *params;
-	uint4 id;
-}
-MCMessageList;
+public:
+    
+    MCObjectHandle      m_object;
+    MCNewAutoNameRef    m_message;
+    real64_t            m_time = 0;
+    MCParameter*        m_params = nullptr;
+    uint32_t            m_id = 0;
+
+    constexpr MCPendingMessage() = default;
+
+    MCPendingMessage(const MCPendingMessage& other) = default;
+
+    // [[ C++11 ]] Replace with `MCPendingMessage(MCObject*, MCNameRef, real64_t, MCParameter*, uint32_t) = default;`
+    MCPendingMessage(MCObject* p_object, MCNameRef p_message, real64_t p_time, MCParameter* p_params, uint32_t p_id) :
+      m_object(p_object),
+      m_message(p_message),
+      m_time(p_time),
+      m_params(p_params),
+      m_id(p_id)
+    {
+    }
+
+    MCPendingMessage& operator= (const MCPendingMessage& other)
+    {
+        m_object = other.m_object;
+        m_message.Reset(*other.m_message);
+        m_time = other.m_time;
+        m_params = other.m_params;
+        m_id = other.m_id;
+        
+        return *this;
+    }
+    
+    void DeleteParameters();
+};
+
+// [[ C++ ]] This should probably be a std::vector
+class MCPendingMessagesList
+{
+public:
+    
+    MCPendingMessagesList() :
+      m_array(nil),
+      m_capacity(0),
+      m_count(0)
+    {
+    }
+    
+    ~MCPendingMessagesList();
+    
+    const MCPendingMessage& operator[] (size_t offset) const
+    {
+        MCAssert(offset < m_count);
+        return m_array[offset];
+    }
+    
+    bool InsertMessageAtIndex(size_t index, const MCPendingMessage&);
+    void DeleteMessage(size_t index, bool delete_params);
+    void ShiftMessageTo(size_t to, size_t from, real64_t newtime);
+    
+    size_t GetCount() const
+    {
+        return m_count;
+    }
+    
+private:
+    
+    MCPendingMessage*   m_array;
+    
+    size_t m_capacity;
+    size_t m_count;
+};
 
 // IM-2014-01-23: [[ HiDPI ]] Add screen pixelScale field to display info
 // IM-2014-01-23: [[ HiDPI ]] Remove device-coordinate versions of viewport & workarea rects
@@ -176,7 +242,7 @@ typedef void *MCColorTransformRef;
 class MCMovingList : public MCDLlist
 {
 public:
-	MCObject *object;
+	MCObjectHandle object;
 	MCPoint *pts;
 	uint2 lastpt;
 	uint2 curpt;
@@ -271,14 +337,11 @@ public:
     };
     
 protected:
-	MCMessageList *messages;
+	MCPendingMessagesList m_messages;
 	MCMovingList *moving;
 	Boolean lockmoves;
 	real8 locktime;
 	uint4 messageid;
-    // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
-	uint32_t nmessages;
-	uint32_t maxmessages;
 	MCColor *colors;
 	MCStringRef *colornames;
 	int2 *allocs;
@@ -595,12 +658,12 @@ public:
     //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
-	void cancelmessageindex(uint2 i, Boolean dodelete);
+	void cancelmessageindex(size_t i, bool dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
-    int doshiftmessage(int index, real8 newtime);
+    size_t doshiftmessage(size_t index, real8 newtime);
     
     void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
     void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);
@@ -608,6 +671,9 @@ public:
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    
+    // Returns true if there are any pending messages to dispatch right now.
+    bool hasmessagestodispatch(void);
     
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	Boolean getlockmoves() const;
@@ -628,9 +694,10 @@ public:
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
 
+    
 	Boolean hasmessages()
 	{
-		return nmessages != 0;
+		return m_messages.GetCount() != 0;
 	}
 	void closemodal()
 	{

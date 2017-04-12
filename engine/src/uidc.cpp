@@ -203,6 +203,95 @@ MCMovingList::~MCMovingList()
 	delete pts;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCPendingMessagesList::~MCPendingMessagesList()
+{
+    // Delete all messages remaining on the queue
+    for (size_t i = GetCount(); i > 0; i--)
+        DeleteMessage(i - 1, true);
+    
+    MCMemoryDelete(m_array);
+}
+
+void MCPendingMessage::DeleteParameters()
+{
+    while (m_params != NULL)
+    {
+        MCParameter *t_param = m_params;
+        m_params = m_params->getnext();
+        delete t_param;
+    }
+}
+
+bool MCPendingMessagesList::InsertMessageAtIndex(size_t p_index, const MCPendingMessage& p_msg)
+{
+    MCAssert(p_index <= m_count);
+    
+    // Extend the array if necessary
+    if (m_count + 1 > m_capacity)
+    {
+        if (!MCMemoryReallocate(m_array, (m_count + 1) * sizeof(MCPendingMessage), m_array))
+            return false;
+        
+        // Ensure that the memory has been initialised
+        new (&m_array[m_count]) MCPendingMessage;
+        
+        m_capacity = m_count + 1;
+    }
+    
+    // Move all the messages in the range [p_index, m_count) up one
+    for (size_t i = m_count; i > p_index; i--)
+    {
+        m_array[i] = m_array[i - 1];
+    }
+    
+    // Insert the message into the newly-created space
+    m_array[p_index] = p_msg;
+    m_count += 1;
+    return true;
+}
+
+void MCPendingMessagesList::DeleteMessage(size_t p_index, bool p_delete_params)
+{
+    MCAssert(p_index < m_count);
+    
+    if (p_delete_params)
+        m_array[p_index].DeleteParameters();
+    
+    // Shift the remaining messages to cover the hole
+    for (size_t i = p_index; i < m_count - 1; i++)
+    {
+        m_array[i] = m_array[i + 1];
+    }
+    
+    // Clear the vacated entry at the end
+    m_array[m_count - 1] = MCPendingMessage();
+    
+    m_count -= 1;
+}
+
+void MCPendingMessagesList::ShiftMessageTo(size_t p_to, size_t p_from, real64_t p_newtime)
+{
+    MCAssert(p_to < m_count);
+    MCAssert(p_from < m_count);
+    
+    // Capture the message that needs moving
+    MCPendingMessage t_msg = m_array[p_from];
+    
+    // Move all messages in the range [from + 1, to) down one
+    for (size_t i = p_from; i < p_to; i++)
+    {
+        m_array[i] = m_array[i + 1];
+    }
+    
+    // Move the message into place
+    m_array[p_to] = t_msg;
+    m_array[p_to].m_time = p_newtime;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCUIDC::MCUIDC()
 {
 #if defined(FEATURE_NOTIFY)
@@ -210,8 +299,6 @@ MCUIDC::MCUIDC()
 #endif
     
 	messageid = 0;
-	nmessages = maxmessages = 0;
-	messages = NULL;
 	moving = NULL;
 	lockmoves = False;
 	locktime = 0.0;
@@ -252,10 +339,6 @@ MCUIDC::MCUIDC()
 
 MCUIDC::~MCUIDC()
 {
-	while (nmessages != 0)
-		cancelmessageindex(0, True);
-	delete[] messages; /* Allocated with new[] */
-
 #if defined(FEATURE_NOTIFY)
 	MCNotifyFinalize();
 #endif
@@ -376,7 +459,7 @@ void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCmousestackptr;
 	r_loc = MCPointMake(MCmousex, MCmousey);
 
-	if (MCmousestackptr != nil)
+	if (MCmousestackptr)
 		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
 }
 
@@ -398,7 +481,7 @@ void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 	r_target = MCclickstackptr;
 	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
 
-	if (MCclickstackptr != nil)
+	if (MCclickstackptr)
 		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
 }
 
@@ -1034,11 +1117,11 @@ void MCUIDC::configureIME(int32_t x, int32_t y)
 
 void MCUIDC::updatemenubar(Boolean force)
 {
-	if (MCdefaultmenubar == NULL)
+	if (!MCdefaultmenubar)
 		MCdefaultmenubar = MCmenubar;
 
 	MCGroup *newMenuGroup;
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		newMenuGroup = MCmenubar;
 	else
 		newMenuGroup = MCdefaultmenubar;
@@ -1061,59 +1144,29 @@ void MCUIDC::updatemenubar(Boolean force)
 //   message in the right place.
 void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
 {
-    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
-    
-    // If we are at capacity, then extend the message list.
-	if (nmessages == maxmessages)
-	{
-		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
-	}
-    
     // Find where in the list to insert the pending message.
-    uint32_t t_index;
-    for(t_index = 0; t_index < nmessages; t_index++)
-        if (messages[t_index] . time > time)
+    size_t t_index;
+    for(t_index = 0; t_index < m_messages.GetCount(); t_index++)
+        if (m_messages[t_index].m_time > time)
             break;
     
-    // Move all messages in the range [t_index, nmessages) up one.
-    MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
-    
-	messages[t_index].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
-	messages[t_index].time = time;
-	messages[t_index].id = id;
-	messages[t_index].params = params;
-    
-    nmessages += 1;
+    m_messages.InsertMessageAtIndex(t_index, MCPendingMessage(optr, mptr, time, params, id));
 }
 
 // MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
-int MCUIDC::doshiftmessage(int index, real8 newtime)
+size_t MCUIDC::doshiftmessage(size_t index, real8 newtime)
 {
-    assert(index < nmessages);
-    
-    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
-    
     // Find the first message after the new time.
-    uindex_t t_index;
-    for(t_index = index; t_index < nmessages - 1; t_index++)
-        if (messages[t_index + 1] . time > newtime)
+    size_t t_index;
+    for(t_index = index; t_index < m_messages.GetCount() - 1; t_index++)
+        if (m_messages[t_index + 1].m_time > newtime)
             break;
     
+    // If the message is already in the correct place, do nothing
     if (t_index == index)
         return index;
     
-    // Save the current message.
-    MCMessageList t_msg;
-    t_msg = messages[index];
-    
-    // Move all messages in the range [index + 1, t_index) down one.
-    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index) * sizeof(MCMessageList));
-    
-    // Move the target message to its new location.
-    messages[t_index] = t_msg;
-    messages[t_index] . time = newtime;
+    m_messages.ShiftMessageTo(t_index, index, newtime);
     
     return t_index;
 }
@@ -1123,7 +1176,7 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
 	MCParameter *params = NULL;
 	if (p1 != NULL)
 	{
-		params = new MCParameter;
+		params = new (nothrow) MCParameter;
 		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
@@ -1158,7 +1211,7 @@ void MCUIDC::addsubtimer(MCObject *optr, MCValueRef suboptr, MCNameRef mptr, uin
     cancelmessageobject(optr, mptr, suboptr);
     
     MCParameter *t_param;
-    t_param = new MCParameter;
+    t_param = new (nothrow) MCParameter;
     t_param -> setvalueref_argument(suboptr);
     doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, t_param);
 }
@@ -1168,44 +1221,44 @@ void MCUIDC::cancelsubtimer(MCObject *optr, MCNameRef mptr, MCValueRef suboptr)
     cancelmessageobject(optr, mptr, suboptr);
 }
 
-void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
+void MCUIDC::cancelmessageindex(size_t i, bool dodelete)
 {
-	if (dodelete)
-	{
-		while (messages[i].params != NULL)
-		{
-			MCParameter *tmp = messages[i].params;
-			messages[i].params = messages[i].params->getnext();
-			delete tmp;
-		}
-		MCNameDelete(messages[i] . message);
-	}
-    
-    // MW-2014-05-14: [[ Bug 12294 ]] Use a memmove here (more efficient as the MCMessageList struct can be moved).
-    MCMemoryMove(&messages[i], &messages[i + 1], (nmessages - (i + 1)) * sizeof(MCMessageList));
-    
-	nmessages--;
+	m_messages.DeleteMessage(i, dodelete);
 }
 
 void MCUIDC::cancelmessageid(uint4 id)
 {
-	for(uindex_t i = 0 ; i < nmessages ; i++)
-		if (messages[i].id == id)
+	for(size_t i = 0 ; i < m_messages.GetCount(); i++)
+    {
+		if (m_messages[i].m_id == id)
 		{
 			cancelmessageindex(i, True);
 			return;
 		}
+    }
 }
 
 void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subobject)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
-	for (uindex_t i = nmessages ; i > 0 ; i--)
-		if (messages[i - 1].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless))
-                && (subobject == NULL || (messages[i - 1] . params != nil &&
-                                          messages[i - 1] . params -> getvalueref_argument() == subobject)))
-			cancelmessageindex(i - 1, True);
+	for (size_t i = m_messages.GetCount(); i > 0; i--)
+    {
+        const MCPendingMessage& t_msg = m_messages[i - 1];
+        
+	// If this message refers to a dead object, take this opportunity to
+	// prune it from the pending queue
+	if (!t_msg.m_object.IsValid())
+	{
+	    cancelmessageindex(i - 1, true);
+	    continue;
+	}
+        
+        if (t_msg.m_object.Get() == optr
+		        && (mptr == NULL || MCNameIsEqualTo(*t_msg.m_message, mptr, kMCCompareCaseless))
+                && (subobject == NULL || (t_msg.m_params != nil &&
+                                          t_msg.m_params -> getvalueref_argument() == subobject)))
+			cancelmessageindex(i - 1, true);
+    }
 }
 
 bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
@@ -1214,9 +1267,11 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
-	for (uinteger_t i = 0 ; i < nmessages ; i++)
+	for (size_t i = 0; i < m_messages.GetCount(); i++)
 	{
-		if (messages[i].id != 0)
+		const MCPendingMessage& t_msg = m_messages[i];
+        
+        if (t_msg.m_id != 0)
 		{
 			MCAutoListRef t_msg_info;
 			MCAutoValueRef t_id_string;
@@ -1225,17 +1280,17 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;
 
-			if (!MCListAppendUnsignedInteger(*t_msg_info, messages[i].id))
+			if (!MCListAppendUnsignedInteger(*t_msg_info, t_msg.m_id))
 				return false;
 
-			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
+			if (!ctxt.FormatReal(t_msg.m_time, &t_time_string)
 				|| !MCListAppend(*t_msg_info, *t_time_string))
 				return false;
 
-			if (!MCListAppend(*t_msg_info, messages[i].message))
+			if (!MCListAppend(*t_msg_info, *t_msg.m_message))
 				return false;
 
-			if (!messages[i].object->names(P_LONG_ID, &t_id_string) ||
+			if (!t_msg.m_object->names(P_LONG_ID, &t_id_string) ||
 				!MCListAppend(*t_msg_info, *t_id_string))
 				return false;
 
@@ -1253,7 +1308,8 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 //   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
 bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
 {
-    if (nmessages >= 65536)
+    // Arbitrary limit on the number of pending messages
+    if (m_messages.GetCount() >= UINT16_MAX)
         return false;
     
     addmessage(optr, name, time, params);
@@ -1266,42 +1322,56 @@ bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParame
     return true;
 }
 
+bool MCUIDC::hasmessagestodispatch(void)
+{
+    if (m_messages.GetCount() == 0)
+    {
+        return false;
+    }
+    
+    return m_messages[0].m_time <= MCS_time();
+}
+
 // MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
 //   of messages[] now being a sorted list.
 Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
 {
     Boolean t_handled;
     t_handled = False;
-    for(uindex_t i = 0; i < nmessages; i++)
+    for(uindex_t i = 0; i < m_messages.GetCount(); i++)
     {
+        MCPendingMessage t_msg = m_messages[i];
+        
         // If the next message is later than curtime, we've not processed a message.
-        if (messages[i] . time > curtime)
+        if (t_msg.m_time > curtime)
             break;
         
-        if (!dispatch && messages[i] . id == 0 && MCNameIsEqualTo(messages[i] . message, MCM_idle, kMCCompareCaseless))
+        if (!dispatch && t_msg.m_id == 0 && MCNameIsEqualTo(*t_msg.m_message, MCM_idle, kMCCompareCaseless))
         {
             doshiftmessage(i, curtime + MCidleRate / 1000.0);
             continue;
         }
         
-        if (dispatch || messages[i] . id == 0)
+        if (dispatch || t_msg.m_id == 0)
         {
-            MCParameter *p = messages[i].params;
-            MCNameRef m = messages[i].message;
-            MCObject *o = messages[i].object;
-            cancelmessageindex(i, False);
-            MCSaveprops sp;
-            MCU_saveprops(sp);
-            MCU_resetprops(False);
-            o->timer(m, p);
-            MCU_restoreprops(sp);
-            while (p != NULL)
+            // Remove this message from the queue
+            cancelmessageindex(i, false);
+            
+            // If the object is still live, dispatch the message to it
+            if (t_msg.m_object.IsValid())
             {
-                MCParameter *tmp = p;
-                p = p->getnext();
-                delete tmp;
+                MCSaveprops sp;
+                MCU_saveprops(sp);
+                MCU_resetprops(False);
+                t_msg.m_object->timer(*t_msg.m_message, t_msg.m_params);
+                MCU_restoreprops(sp);
+                t_msg.DeleteParameters();
             }
-            MCNameDelete(m);
+            
+            // A message has been removed from the queue, so don't increment the
+            // counter on this iteration.
+            i -= 1;
+            
             curtime = MCS_time();
             
             t_handled = True;
@@ -1317,10 +1387,10 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         eventtime = stime;
     
     // SN-2014-12-12: [[ Bug 13360 ]] We don't want to change the eventtime if the message is not forced to be dispatched nor internal
-    if (nmessages > 0
-            && (dispatch || messages[0] . id == 0)
-            && messages[0] . time < eventtime)
-        eventtime = messages[0] . time;
+    if (m_messages.GetCount() > 0
+            && (dispatch || m_messages[0].m_id == 0)
+            && m_messages[0].m_time < eventtime)
+        eventtime = m_messages[0].m_time;
     
     return t_handled;
 }
@@ -1359,7 +1429,7 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
 {
 	stopmove(optr, False);
-	MCMovingList *mptr = new MCMovingList;
+	MCMovingList *mptr = new (nothrow) MCMovingList;
 	mptr->appendto(moving);
 	mptr->object = optr;
 	mptr->pts = pts;
@@ -1420,11 +1490,14 @@ bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
 		MCMovingList *mptr = moving;
 		do
 		{
-			MCAutoValueRef t_string;
-			if (!mptr->object->names(P_LONG_ID, &t_string))
-				return false;
-			if (!MCListAppend(*t_list, *t_string))
-				return false;
+            if (mptr->object)
+            {
+                MCAutoValueRef t_string;
+                if (!mptr->object->names(P_LONG_ID, &t_string))
+                    return false;
+                if (!MCListAppend(*t_list, *t_string))
+                    return false;
+            }
 			mptr = mptr->next();
 		}
 		while (mptr != moving);
@@ -1439,7 +1512,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 		MCMovingList *mptr = moving;
 		do
 		{
-			if (mptr->object == optr)
+			if (mptr->object.IsBoundTo(optr))
 			{
 				mptr->remove(moving);
 				if (finish)
@@ -1455,7 +1528,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 						// MW-2011-08-18: [[ Layers ]] Notify of position change.
 						if (mptr->object -> gettype() >= CT_GROUP)
-							static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+							mptr->object.GetAs<MCControl>()->layer_setrect(newrect, false);
 						else
 							mptr->object->setrect(newrect);
 					}
@@ -1479,34 +1552,47 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 	Boolean done = False;
 	do
 	{
-		MCRectangle rect = mptr->object->getrect();
-		MCRectangle newrect = rect;
-		real8 dt = 0.0;
-		if (curtime >= mptr->starttime + mptr->duration
-		        || (rect.x == mptr->donex && rect.y == mptr->doney))
-		{
-			newrect.x = mptr->donex;
-			newrect.y = mptr->doney;
-			dt = curtime - (mptr->starttime + mptr->duration);
-			done = True;
-		}
-		else
-		{
-			newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
-			            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
-			newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
-			            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
-		}
-		if (newrect.x != rect.x || newrect.y != rect.y)
-		{
-			moved = True;
-		
-			// MW-2011-08-18: [[ Layers ]] Notify of position change.
-			if (mptr->object -> gettype() >= CT_GROUP)
-				static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
-			else
-				mptr->object->setrect(newrect);
-		}
+        if (!mptr->object)
+        {
+            moving = mptr->prev();
+            mptr->remove(moving);
+            delete mptr;
+            if (moving == NULL)
+                mptr = NULL;
+            else
+                mptr = moving->next();
+            continue;
+        }
+        
+        MCRectangle rect = mptr->object->getrect();
+        MCRectangle newrect = rect;
+        real8 dt = 0.0;
+        if (curtime >= mptr->starttime + mptr->duration
+            || (rect.x == mptr->donex && rect.y == mptr->doney))
+        {
+            newrect.x = mptr->donex;
+            newrect.y = mptr->doney;
+            dt = curtime - (mptr->starttime + mptr->duration);
+            done = True;
+        }
+        else
+        {
+            newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
+                        + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
+            newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
+                        + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
+        }
+        if (newrect.x != rect.x || newrect.y != rect.y)
+        {
+            moved = True;
+        
+            // MW-2011-08-18: [[ Layers ]] Notify of position change.
+            if (mptr->object -> gettype() >= CT_GROUP)
+                mptr->object.GetAs<MCControl>()->layer_setrect(newrect, false);
+            else
+                mptr->object->setrect(newrect);
+        }
+
 		if (done)
 		{
 			if (mptr->curpt < mptr->lastpt - 1)
@@ -1582,8 +1668,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 		return false;
 
     uint4 slength = strlen(*t_cstring);
-    MCAutoPointer<char[]> startptr;
-    startptr = new char[slength + 1];
+    /* UNCHECKED */ MCAutoPointer<char[]> startptr = new (nothrow) char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);
 

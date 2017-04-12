@@ -71,6 +71,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <gtk/gtk.h>
 
+#include <syslog.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This is in here so we do not need GLIBC2.4
@@ -341,7 +343,7 @@ static iconv_t fetch_converter(const char *p_encoding)
         t_converter = iconv_open("UTF-16LE", p_encoding);
 
         ConverterRecord *t_record;
-        t_record = new ConverterRecord;
+        t_record = new (nothrow) ConverterRecord;
         t_record -> next = s_records;
         t_record -> encoding = p_encoding;
         t_record -> converter = t_converter;
@@ -457,27 +459,27 @@ static void handle_signal(int sig)
     case SIGCHLD:
         {
 #if defined(_LINUX_DESKTOP)
-            MCPlayer *tptr = MCplayers;
+            MCPlayerHandle t_player = MCplayers;
             // If we have some players waiting then deal with these first
             waitedpid = -1;
-            if ( tptr != NULL)
+            if (t_player.IsValid())
             {
                 waitedpid = wait(NULL);
                 // Moving these two lines half fixes bug 5966 - however it still isn't quite right
                 // as there will still be some interaction between a player and shell command
-                while(tptr != NULL)
+                while(t_player.IsValid())
                 {
-                    if ( waitedpid == tptr -> getpid())
+                    if (t_player.IsValid() && waitedpid == t_player->getpid())
                     {
-                        if (tptr->isdisposable())
-                            tptr->playstop();
+                        if (t_player->isdisposable())
+                            t_player->playstop();
                         else
-                            MCscreen->delaymessage(tptr, MCM_play_stopped, NULL, NULL);
+                            MCscreen->delaymessage(t_player, MCM_play_stopped, NULL, NULL);
 
-                        tptr->shutdown();
+                        t_player->shutdown();
                         break;
                     }
-                    tptr = tptr -> getnextplayer() ;
+                    t_player = t_player -> getnextplayer() ;
                 }
             }
             else
@@ -513,38 +515,6 @@ static void handle_signal(int sig)
         break;
     }
     return;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-    typedef void (*uuid_generate_ptr)(unsigned char uuid[16]);
-    typedef void (*uuid_unparse_ptr)(unsigned char uuid[16], char *out);
-    static void *s_uuid_generate = NULL, *s_uuid_unparse = NULL;
-
-    if (s_uuid_generate == NULL && s_uuid_unparse == NULL)
-    {
-        void *t_libuuid;
-        t_libuuid = dlopen("libuuid.so", RTLD_LAZY);
-        if (t_libuuid == NULL)
-            t_libuuid = dlopen("libuuid.so.1", RTLD_LAZY);
-        if (t_libuuid != NULL)
-        {
-            s_uuid_generate = dlsym(t_libuuid, "uuid_generate");
-            s_uuid_unparse = dlsym(t_libuuid, "uuid_unparse");
-}
-    }
-
-    if (s_uuid_generate != NULL && s_uuid_unparse != NULL)
-    {
-        unsigned char t_uuid[16];
-        ((uuid_generate_ptr)s_uuid_generate)(t_uuid);
-        ((uuid_unparse_ptr)s_uuid_unparse)(t_uuid, p_buffer);
-        return true;
-    }
-
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,7 +733,9 @@ public:
 
     virtual void Debug(MCStringRef p_string)
     {
-        // TODO implement?
+		MCAutoStringRefAsSysString t_string;
+		if (t_string.Lock(p_string))
+			syslog(LOG_DEBUG, "%s", *t_string);
     }
 
     virtual real64_t GetCurrentTime(void)
@@ -868,7 +840,7 @@ public:
     virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
     {
 #ifdef NOSETENV
-        char *dptr = new char[strlen(p_name) + strlen(p_value) + 2];
+        char *dptr = new (nothrow) char[strlen(p_name) + strlen(p_value) + 2];
         sprintf(dptr, "%s=%s", p_name, p_value);
         putenv(dptr);
 #else
@@ -1169,7 +1141,7 @@ public:
         fptr = fopen(*t_path_utf, "wb+");
 
         if (fptr != nil)
-            t_handle = new MCStdioFileHandle(fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(fptr);
 
         return t_handle;
     }
@@ -1199,7 +1171,7 @@ public:
                     //   rather than '-1'.
                     if (t_buffer != MAP_FAILED)
                     {
-                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
+                        t_handle = new (nothrow) MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
                     }
                 }
@@ -1227,7 +1199,7 @@ public:
 
         if (t_fptr != NULL)
         {
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
         }
 
         return t_handle;
@@ -1261,7 +1233,7 @@ public:
             setbuf(t_fptr, NULL);
 
         if (t_fptr != NULL)
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
 
         return t_handle;
     }
@@ -1290,7 +1262,7 @@ public:
         {
             configureSerialPort((short)fileno(t_fptr));
 
-            t_handle = new MCStdioFileHandle(t_fptr);
+            t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
         }
 
         return t_handle;
@@ -1300,34 +1272,6 @@ public:
     virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
         return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
-    }
-
-    virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
-    {
-        // dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
-        // spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
-        //
-        // Because converting to a sys string allocates memory, this alignment will always be satisfied.
-        // (malloc/new always return alignment >= int/pointer alignment)
-        MCAutoStringRefAsSysString t_filename_sys;
-        /* UNCHECKED */ t_filename_sys.Lock(p_path);
-
-        MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)dlopen(*t_filename_sys, (RTLD_NOW | RTLD_LOCAL));
-
-        return t_result ;
-    }
-
-    virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-        MCAutoStringRefAsSysString t_symbol_sys;
-        /* UNCHECKED */ t_symbol_sys.Lock(p_symbol);
-        return (MCSysModuleHandle)(dlsym(p_module, *t_symbol_sys));
-    }
-
-    virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-        dlclose(p_module);
     }
 
     virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
@@ -1354,7 +1298,7 @@ public:
 		 * path, a path separator character, and any possible filename. */
 		size_t t_path_len = strlen(*t_path);
 		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
-		char *t_entry_path = new char[t_entry_path_len + 1];
+		char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 		strcpy (t_entry_path, *t_path);
 		if ((*t_path)[t_path_len - 1] != '/')
 		{
@@ -1399,19 +1343,6 @@ public:
         closedir(dirptr);
 
         return t_success;
-    }
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-    virtual bool GetExecutablePath(MCStringRef &r_executable)
-    {
-        char t_executable[PATH_MAX];
-		ssize_t t_size;
-        t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-		if (t_size >= PATH_MAX || t_size < 0)
-            return false;
-        
-        t_executable[t_size] = 0;
-        return MCStringCreateWithSysString(t_executable, r_executable);
     }
 
     virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -1462,7 +1393,7 @@ public:
 
                 if (!MCStringCreateMutable(0, &t_tilde_path) ||
                     !MCStringAppend(*t_tilde_path, *t_pw_dir) ||
-                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMakeMinMax(t_user_end, MCStringGetLength(p_path))))
                     return false;
             }
             else
@@ -1673,7 +1604,7 @@ public:
 
     virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
-        uint32_t t_used;
+        uint32_t t_used = 0;
         if (p_to_charset == LCH_UNICODE)
         {
             if (p_buffer_length == 0)
@@ -1799,23 +1730,24 @@ public:
 
     virtual void CheckProcesses(void)
     {
-        uint2 i;
-        bool cleanPID = false;
-
-        int wstat;
-        for (i = 0 ; i < MCnprocesses ; i++)
+        for (int i = 0; i < MCnprocesses; ++i)
         {
-            cleanPID = (MCprocesses[i].pid != 0 && MCprocesses[i].pid != -1 ) ;
-            if (waitedpid == -1  || (waitedpid != -1 && MCprocesses[i].pid != waitedpid))
-                cleanPID = cleanPID && (waitpid(MCprocesses[i].pid, &wstat, WNOHANG) > 0) ;
+            pid_t t_pid = MCprocesses[i].pid;
+            if (t_pid <= 0)
+                continue; /* No PID in this table slot */
 
-            if (cleanPID)
-            {
-                if (MCprocesses[i].ihandle != NULL)
-                    clearerr((FILE*)MCprocesses[i].ihandle->GetFilePointer());
-                MCprocesses[i].pid = 0;
-                MCprocesses[i].retcode = WEXITSTATUS(wstat);
-            }
+            if (t_pid == waitedpid)
+                continue; /* This PID was already dealt with in signal handler */
+
+            int t_wait_status = 0;
+            pid_t t_wait_pid = waitpid(t_pid, &t_wait_status, WNOHANG);
+            if (t_wait_pid != t_pid)
+                continue; /* Process hasn't exited or is not a child */
+
+            if (MCprocesses[i].ihandle != nullptr)
+                clearerr(static_cast<FILE*>(MCprocesses[i].ihandle->GetFilePointer()));
+            MCprocesses[i].pid = 0;
+            MCprocesses[i].retcode = WEXITSTATUS(t_wait_status);
         }
     }
 
@@ -1895,7 +1827,7 @@ public:
                     {
                         /* UNCHECKED */ t_doc_sys.Lock(p_doc);
 
-                        argv = new char *[3];
+                        argv = new (nothrow) char *[3];
                         argv[0] = t_name_copy;
                         argv[1] = (char *)*t_doc_sys;
                         argc = 2;

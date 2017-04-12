@@ -15,9 +15,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 #include <foundation-stdlib.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
+#include "foundation-string-hash.h"
+
+#if defined(__WINDOWS__)
+#   include <Windows.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +84,9 @@ bool MCInitialize(void)
     if (!__MCStreamInitialize())
         return false;
     
+    if (!__MCJavaInitialize())
+        return false;
+    
 	return true;
 }
 
@@ -96,8 +106,11 @@ void MCFinalize(void)
     __MCErrorFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
-	__MCValueFinalize();
     __MCUnicodeFinalize();
+    __MCJavaFinalize();
+    
+    // Finalize values last
+	__MCValueFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,131 +219,140 @@ void MCMemoryDeleteArray(void *p_array)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// These hash functions are taken from CoreFoundation - if they are good enough
-// for Apple, they should be good enough for us :)
-
-#define HASHFACTOR 2654435761U
-
-/* Templates for hashing arbitrary-sized integers */
-template <typename T>
-static inline hash_t
-MCHashUInt(T i)
+/* Securely clear the memory located at dst, using volatile to try to
+ * ensure that the compiler doesn't optimise it out. */
+MC_DLLEXPORT
+void MCMemoryClearSecure(byte_t* dst,
+                         size_t size)
 {
-	hash_t h = 0;
-	for (unsigned int o = 0; o < sizeof(T); o += sizeof(hash_t))
-		h += HASHFACTOR * (hash_t) (i >> (o << 3));
-	return h;
+#if defined(__WINDOWS__)
+    SecureZeroMemory(dst, size);
+#else
+    MCMemoryClear(dst, size);
+    /* Add a barrier to prevent the compiler from optimizing the above
+     * MCMemoryClear() call away.  Without this, both clang and GCC
+     * will optimise out the memory clear.*/
+    __asm__ __volatile__ ( "" : : "r"(dst) : "memory" );
+#endif
 }
 
-template <typename T>
-static inline hash_t
-MCHashInt(T i)
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
+hash_t MCHashBool(bool b)
 {
-	return MCHashUInt((i >= 0) ? i : (-i));
+    return hash_t(b);
 }
 
 MC_DLLEXPORT_DEF
 hash_t MCHashInteger(integer_t i)
 {
-	return MCHashInt (i);
+	return MCHashInt(i);
 }
 
 MC_DLLEXPORT_DEF
 hash_t
 MCHashUInteger (uinteger_t i)
 {
-	return MCHashUInt(i);
+	return MCHashInt(i);
 }
 
 MC_DLLEXPORT_DEF
 hash_t
 MCHashSize (ssize_t i)
 {
-	return MCHashInt (i);
-}
-
-hash_t
-MCHashUSize (size_t i)
-{
-	return MCHashUInt (i);
+	return MCHashInt(i);
 }
 
 MC_DLLEXPORT_DEF
-hash_t MCHashPointer(void *p)
+hash_t
+MCHashUSize (size_t i)
 {
-	return MCHashUInt((uintptr_t) p);
+	return MCHashInt(i);
+}
+
+MC_DLLEXPORT_DEF
+hash_t
+MCHashInt64(int64_t i)
+{
+	return MCHashInt(i);
+}
+
+hash_t
+MCHashUInt64(uint64_t i)
+{
+	return MCHashInt(i);
+}
+MC_DLLEXPORT_DEF
+hash_t MCHashPointer(const void *p)
+{
+	return MCHashInt(reinterpret_cast<uintptr_t>(p));
 }
 
 MC_DLLEXPORT_DEF
 hash_t MCHashDouble(double d)
 {
-	double i;
-	if (d < 0)
-		d = -d;
-	i = floor(d + 0.5);
-	
-	hash_t t_integral_hash;
-	t_integral_hash = HASHFACTOR * (hash_t)fmod(i, (double)UINT32_MAX);
-
-	return (hash_t)(t_integral_hash + (hash_t)((d - i) * UINT32_MAX));
+    return MCHashFloatingPoint(d);
 }
-
-#define ELF_STEP(B) T1 = (H << 4) + B; T2 = T1 & 0xF0000000; if (T2) T1 ^= (T2 >> 24); T1 &= (~T2); H = T1;
 
 MC_DLLEXPORT_DEF
 hash_t MCHashBytes(const void *p_bytes, size_t length)
 {
-	MCAssert(nil != p_bytes || 0 == length);
+    MCHashBytesContext t_context;
+    t_context.consume(reinterpret_cast<const byte_t *>(p_bytes), length);
+    return t_context;
+}
 
-	uint8_t *bytes = (uint8_t *)p_bytes;
-
-    /* The ELF hash algorithm, used in the ELF object file format */
-    uint32_t H = 0, T1, T2;
-    int32_t rem = length;
-
-    while (3 < rem)
-	{
-		ELF_STEP(bytes[length - rem]);
-		ELF_STEP(bytes[length - rem + 1]);
-		ELF_STEP(bytes[length - rem + 2]);
-		ELF_STEP(bytes[length - rem + 3]);
-		rem -= 4;
-    }
-
-    switch (rem)
-	{
-    case 3:  ELF_STEP(bytes[length - 3]);
-    case 2:  ELF_STEP(bytes[length - 2]);
-    case 1:  ELF_STEP(bytes[length - 1]);
-    case 0:  ;
-    }
-
-    return H;
+MC_DLLEXPORT_DEF
+hash_t MCHashBytes(MCSpan<const byte_t> p_bytes)
+{
+    return MCHashBytes(p_bytes.data(), p_bytes.size());
 }
 
 MC_DLLEXPORT_DEF
 hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
 {
-	MCAssert(p_bytes != nil || length == 0);
-    MCAssert((length % 4) == 0);
-    uint8_t *bytes = (uint8_t *)p_bytes;
-    
-    /* The ELF hash algorithm, used in the ELF object file format */
-    uint32_t H = p_start, T1, T2;
-    int32_t rem = length;
-    
-    while (3 < rem)
-	{
-		ELF_STEP(bytes[length - rem]);
-		ELF_STEP(bytes[length - rem + 1]);
-		ELF_STEP(bytes[length - rem + 2]);
-		ELF_STEP(bytes[length - rem + 3]);
-		rem -= 4;
-    }
-    
-    return H;
+    MCHashBytesContext t_context(p_start);
+    t_context.consume(reinterpret_cast<const byte_t *>(p_bytes), length);
+    return t_context;
 }
 
-#undef ELF_STEP
+MC_DLLEXPORT_DEF
+hash_t MCHashBytesStream(hash_t p_start, MCSpan<const byte_t> p_bytes)
+{
+    return MCHashBytesStream(p_start, p_bytes.data(), p_bytes.size());
+}
+
+template <typename CodeUnit>
+static hash_t hash_chars(CodeUnit *p_chars, size_t char_count)
+{
+    MCHashCharsContext t_context;
+    while (char_count-- > 0) t_context.consume(*p_chars++);
+    return t_context;
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashNativeChars(const char_t *chars, size_t char_count)
+{
+    return hash_chars(chars, char_count);
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashNativeChars(MCSpan<const char_t> p_chars)
+{
+    return hash_chars(p_chars.data(), p_chars.size());
+}
+
+MC_DLLEXPORT
+hash_t MCHashChars(const unichar_t *chars, size_t char_count)
+{
+    return hash_chars(chars, char_count);
+}
+
+MC_DLLEXPORT_DEF
+hash_t MCHashChars(MCSpan<const unichar_t> p_chars)
+{
+    return hash_chars(p_chars.data(), p_chars.size());
+}
 
 ////////////////////////////////////////////////////////////////////////////////

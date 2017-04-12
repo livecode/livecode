@@ -39,7 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define USE_PTHREADS
 #define USE_PIPE
 #elif defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-#include "w32prefix.h"
 #define USE_WINTHREADS
 #elif defined(_IOS_MOBILE)
 #include <pthread.h>
@@ -121,7 +120,7 @@ static MCNotifySyncEvent *MCNotifySyncEventCreate(void)
 		return MCListPopFront(s_sync_events);
 
 	MCNotifySyncEvent *t_event;
-	t_event = new MCNotifySyncEvent;
+	t_event = new (nothrow) MCNotifySyncEvent;
 	t_event -> next = NULL;
 
 #if defined(USE_WINTHREADS)
@@ -377,7 +376,7 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	MCNotification *t_notification;
 	t_notification = NULL;
 	if (t_success)
-		t_notification = new MCNotification;
+		t_notification = new (nothrow) MCNotification;
 
 	// Fill it in.
 	if (t_success)
@@ -547,4 +546,9 @@ void MCNotifyPing(bool p_high_priority)
 #else
 #error Threading API not specified
 #endif
+}
+
+bool MCNotifyPending(void)
+{
+	return s_notifications != nil || s_safe_notifications != nil;
 }

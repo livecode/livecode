@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -233,10 +233,10 @@ bool WindowsGetPrinterPaperSize(MCStringRef p_name, DEVMODEW *p_devmode, POINT& 
 		return false;
 
 	WORD *t_papers;
-	t_papers = new WORD[t_papers_size];
+	t_papers = new (nothrow) WORD[t_papers_size];
 
 	POINT *t_papersizes;
-	t_papersizes = new POINT[t_papersizes_size];
+	t_papersizes = new (nothrow) POINT[t_papersizes_size];
 
 	DWORD t_papers_count;
 	t_papers_count = DeviceCapabilitiesW(*t_name_wstr, NULL, DC_PAPERS, (LPWSTR)t_papers, p_devmode);
@@ -278,10 +278,10 @@ bool WindowsGetPrinterPaperIndex(MCStringRef p_name, DEVMODEW *p_devmode, uint32
 		return false;
 
 	WORD *t_papers;
-	t_papers = new WORD[t_papers_size];
+	t_papers = new (nothrow) WORD[t_papers_size];
 
 	POINT *t_papersizes;
-	t_papersizes = new POINT[t_papersizes_size];
+	t_papersizes = new (nothrow) POINT[t_papersizes_size];
 
 	DWORD t_papers_count;
 	t_papers_count = DeviceCapabilitiesW(*t_name_wstr, NULL, DC_PAPERS, (LPWSTR)t_papers, p_devmode);
@@ -483,7 +483,7 @@ static void resolve_dashes(int2 p_offset, uint1* p_data, uint4 p_length, DWORD*&
 	uint2 t_start;
 	t_start = 0;
 	
-	r_out_data = new DWORD[p_length + 2];
+	r_out_data = new (nothrow) DWORD[p_length + 2];
 
 	while(p_offset >= p_data[t_start])
 	{
@@ -761,7 +761,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		case MARK_TYPE_POLYGON:
 		{
 			POINT *t_points;
-			t_points = new POINT[p_mark -> polygon . count];
+			t_points = new (nothrow) POINT[p_mark -> polygon . count];
 			if (t_points == NULL)
 				break;
 
@@ -1298,7 +1298,7 @@ MCPrinterResult MCWindowsPrinterDevice::Begin(const MCPrinterRectangle& p_src_re
 	// rectangle
 	//
 	MCGDIMetaContext *t_context;
-	t_context = new MCGDIMetaContext(t_src_rect_hull);
+	t_context = new (nothrow) MCGDIMetaContext(t_src_rect_hull);
 	r_context = t_context;
 
 	m_src_rect = p_src_rect;
@@ -1436,7 +1436,7 @@ void MCWindowsPrinter::DoFetchSettings(void*& r_buffer, uint4& r_length)
 	EncodeSettings(m_name, m_devmode, &t_data);
 
 	// This is ugly. Hopefully printing will get sorted out soon...
-	void *t_buffer = new byte_t[MCDataGetLength(*t_data)];
+	void *t_buffer = new (nothrow) byte_t[MCDataGetLength(*t_data)];
 	memcpy(t_buffer, MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
 	r_buffer = t_buffer;
 	r_length = MCDataGetLength(*t_data);
@@ -1460,7 +1460,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 	t_range_count = MCU_max(0, GetJobRangeCount());
 
 	PRINTPAGERANGE *t_ranges;
-	t_ranges = new PRINTPAGERANGE[64];
+	t_ranges = new (nothrow) PRINTPAGERANGE[64];
 	for(int i = 0; i < t_range_count; ++i)
 	{
 		t_ranges[i] . nFromPage = GetJobRanges()[i] . from;
@@ -1738,7 +1738,7 @@ MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPr
 		return PRINTER_RESULT_ERROR;
 
 	MCWindowsPrinterDevice *t_device;
-	t_device = new MCWindowsPrinterDevice;
+	t_device = new (nothrow) MCWindowsPrinterDevice;
 
 	MCPrinterResult t_result;
     // SN-2014-12-22: [[ Bug 14278 ]] Updated to Unicode name and location

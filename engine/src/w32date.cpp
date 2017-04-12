@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32dsk-legacy.h"
 
 #include "globdefs.h"
@@ -162,7 +162,7 @@ static MCStringRef windows_query_locale(uint4 t_index)
 	// Allocate a buffer for the locale information
 	int t_buf_size;
 	t_buf_size = GetLocaleInfoW(LOCALE_USER_DEFAULT, t_index, NULL, 0);
-	wchar_t* t_buffer = new wchar_t[t_buf_size];
+	wchar_t* t_buffer = new (nothrow) wchar_t[t_buf_size];
 	
 	// Get the locale information and create a StringRef from it
 	if (GetLocaleInfoW(LOCALE_USER_DEFAULT, t_index, t_buffer, t_buf_size) == 0)
@@ -361,7 +361,7 @@ static void windows_cache_locale(void)
 	if (s_datetime_locale != NULL)
 		return;
 
-	s_datetime_locale = new MCDateTimeLocale;
+	s_datetime_locale = new (nothrow) MCDateTimeLocale;
 
 	// OK-2007-05-23: Fix for bug 5035. Adjusted to ensure that first element of weekday names is always Sunday.
 	s_datetime_locale -> weekday_names[0] = windows_query_locale(LOCALE_SDAYNAME7);

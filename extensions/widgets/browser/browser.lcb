@@ -416,7 +416,7 @@ private unsafe handler InitBrowserView()
 		throw "error getting browser factory"
 	end if
 
-	variable tDisplay as Pointer
+	variable tDisplay as optional Pointer
 	MCWidgetGetMyStackNativeDisplay(tDisplay)
 
 	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then

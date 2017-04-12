@@ -30,6 +30,7 @@ The HTML5 engine in this release of LiveCode has a limited range of features.  Y
 * use most of the engine's built-in controls and graphics capabilities.
 * read and write temporary files in a special virtual filesystem (which is erased when the user navigates away from the page)
 * use LiveCode Builder widgets and extensions
+* interact with JavaScript code in the web page using `do <script> as "JavaScript"`
 
 Several important features are not yet supported:
 

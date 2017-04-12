@@ -170,30 +170,28 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 		
 	do
     {
-        char* t_key;
+        MCAutoCustomPointer<char,MCMemoryDeleteArray> t_key;
 		MCExpression *t_value = NULL;
 		bool t_has_id = false;
-        t_key = nil;
 	
         if (sp . next(type) == PS_NORMAL && type == ST_ID)
-            MCStringConvertToCString(sp . gettoken_stringref(), t_key);
+            MCStringConvertToCString(sp . gettoken_stringref(), &t_key);
 		
 		if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID) == PS_NORMAL)
 			t_has_id = true;
 		
-        if (t_key != NULL && sp . parseexp(True, False, &t_value) == PS_NORMAL)
+        if (t_key && sp . parseexp(True, False, &t_value) == PS_NORMAL)
 		{
 			KeyValue *t_kv;
-			t_kv = new KeyValue;
+			t_kv = new (nothrow) KeyValue;
             t_kv -> next = parameters;
-            t_kv -> key = t_key;
+            t_kv -> key = t_key.Release();
 			t_kv -> value = t_value;
 			t_kv -> has_id = t_has_id;
 			parameters = t_kv;
 		}
 		else
 		{
-			delete[] t_key;
 			MCperror -> add(PE_VISUAL_BADPARAM, sp);
 		}
 	}

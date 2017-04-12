@@ -1,0 +1,1 @@
+# Fix data loss when cr inserted into a styledText run

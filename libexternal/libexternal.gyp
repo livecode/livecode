@@ -15,6 +15,11 @@
 				'library_for_module': 1,
 			},
 
+			'dependencies':
+			[
+				'../libcore/libcore.gyp:libCore',
+			],
+
 			'include_dirs':
 			[
 				'include',

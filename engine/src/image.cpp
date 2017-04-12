@@ -415,6 +415,8 @@ Boolean MCImage::mdown(uint2 which)
 
 							return True;
 						}
+					default:
+						break;
 					}
 
 					if (isediting() &&
@@ -702,7 +704,7 @@ void MCImage::freeundo(Ustruct *us)
 MCControl *MCImage::clone(Boolean attach, Object_pos p, bool invisible)
 {
 	recompress();
-	MCImage *newiptr = new MCImage(*this);
+	MCImage *newiptr = new (nothrow) MCImage(*this);
 	if (attach)
 		newiptr->attach(p, invisible);
 	return newiptr;
@@ -1034,8 +1036,8 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
             if (t_stat == IO_NORMAL)
 			{
-				s_control_colors = new MCColor[s_control_color_count];
-				s_control_color_names = new MCStringRef[s_control_color_count];
+				s_control_colors = new (nothrow) MCColor[s_control_color_count];
+				s_control_color_names = new (nothrow) MCStringRef[s_control_color_count];
 				if (nil == s_control_colors || nil == s_control_color_names)
 					t_stat = checkloadstat(IO_ERROR);
 			}
@@ -1296,7 +1298,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 
 IO_stat MCImage::load(IO_handle stream, uint32_t version)
 {
-	IO_stat stat;
+	IO_stat stat = IO_NORMAL;
 
 	resizequality = INTERPOLATION_BOX;
 	
@@ -1335,95 +1337,123 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
 		{
 			MCImageCompressedBitmap *t_compressed = nil;
-			/* UNCHECKED */ MCImageCreateCompressedBitmap(flags & F_COMPRESSION, t_compressed);
+			if (!MCImageCreateCompressedBitmap(flags & F_COMPRESSION, t_compressed))
+				return IO_ERROR;
+			
 			if (ncolors > MAX_PLANES || flags & F_COMPRESSION
 			        || flags & F_TRUE_COLOR)
 			{
-				// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
-				repeatcount = -1;
-				if (flags & F_REPEAT_COUNT)
-					if ((stat = IO_read_int2(&repeatcount, stream)) != IO_NORMAL)
-						return stat;
-
-				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
-					return stat;
-				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
-				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
-					return IO_ERROR;
-				if (version == kMCStackFileFormatVersion_1_4)
+				if (IO_NORMAL == stat)
 				{
-					if ((ncolors == 16 || ncolors == 256) && noblack())
-						flags |= F_NEED_FIXING;
-					/* UNCHECKED */ MCMemoryReallocate(colors, sizeof(MCColor) * (ncolors + 1), colors);
-					MCColorSetPixel(colors[ncolors], 0);
+					// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
+					repeatcount = -1;
+					if (flags & F_REPEAT_COUNT)
+						stat = IO_read_int2(&repeatcount, stream);
+				}
+				
+				if (IO_NORMAL == stat)
+					stat = IO_read_uint4(&t_compressed->size, stream);
+					 
+				if (IO_NORMAL == stat)
+				{
+					 if (!MCMemoryAllocate(t_compressed->size, t_compressed->data))
+						stat = IO_ERROR;
+				}
+				
+				if (IO_NORMAL == stat)
+					stat = IO_read(t_compressed->data, t_compressed->size, stream);
+				
+				if (IO_NORMAL == stat)
+				{
+					if (version == kMCStackFileFormatVersion_1_4)
+					{
+						if ((ncolors == 16 || ncolors == 256) && noblack())
+							flags |= F_NEED_FIXING;
+						if (MCMemoryReallocate(colors, sizeof(MCColor) * (ncolors + 1), colors))
+							MCColorSetPixel(colors[ncolors], 0);
+					}
 				}
 			}
 			else
 			{
-				t_compressed->color_count = ncolors;
-				if (!MCMemoryNewArray(ncolors, t_compressed->planes) ||
-					!MCMemoryNewArray(ncolors, t_compressed->plane_sizes))
+				if (IO_NORMAL == stat)
 				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
+					t_compressed->color_count = ncolors;
+					if (!MCMemoryNewArray(ncolors, t_compressed->planes) ||
+						!MCMemoryNewArray(ncolors, t_compressed->plane_sizes))
+						stat = IO_ERROR;
 				}
 
-				uint2 i;
-				for (i = 0 ; i < ncolors ; i++)
+				if (IO_NORMAL == stat)
 				{
-					if ((stat = IO_read_uint4(&t_compressed->plane_sizes[i], stream)) != IO_NORMAL)
+					uint2 i;
+					for (i = 0 ; i < ncolors ; i++)
 					{
-						MCImageFreeCompressedBitmap(t_compressed);
-						return stat;
-					}
-					if (t_compressed->plane_sizes[i] != 0)
-					{
-						if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]) ||
-							IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+						if (IO_NORMAL == stat)
+							stat = IO_read_uint4(&t_compressed->plane_sizes[i], stream);
+						
+						
+						if (IO_NORMAL == stat && t_compressed->plane_sizes[i] != 0)
 						{
-							MCImageFreeCompressedBitmap(t_compressed);
-							return IO_ERROR;
+							if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]))
+								stat = IO_ERROR;
+							
+							if (IO_NORMAL == stat)
+								stat = IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream);
 						}
+						
+						if (IO_NORMAL != stat)
+							break;
 					}
 				}
 			}
-			if (t_compressed->compression == F_RLE && ncolors != 0 && (flags & F_TRUE_COLOR) == 0)
+			if (IO_NORMAL == stat && t_compressed->compression == F_RLE && ncolors != 0 && (flags & F_TRUE_COLOR) == 0)
 			{
 				t_compressed->color_count = ncolors;
 				if (!MCMemoryAllocateCopy(colors, sizeof(MCColor) * ncolors, t_compressed->colors))
+					stat = IO_ERROR;
+			}
+
+			if (IO_NORMAL == stat)
+				stat = IO_read_uint4(&t_compressed->mask_size, stream);
+			
+			if (IO_NORMAL == stat && t_compressed->mask_size != 0)
+			{
+				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask))
+					stat = IO_ERROR;
+					
+				if (IO_NORMAL == stat)
+					stat = IO_read(t_compressed->mask, t_compressed->mask_size, stream);
+			}
+
+			if (IO_NORMAL == stat)
+			{
+				uint16_t t_pixwidth, t_pixheight;
+				t_pixwidth = rect.width;
+				t_pixheight = rect.height;
+			
+				if (flags & F_SAVE_SIZE)
 				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
+					stat = IO_read_uint2(&t_pixwidth, stream);
+					
+					if (IO_NORMAL == stat)
+						stat = IO_read_uint2(&t_pixheight, stream);
+				}
+				
+				if (IO_NORMAL == stat)
+				{
+					t_compressed->width = t_pixwidth;
+					t_compressed->height = t_pixheight;
 				}
 			}
-
-			if ((stat = IO_read_uint4(&t_compressed->mask_size, stream)) != IO_NORMAL)
-				return stat;
-			if (t_compressed->mask_size != 0)
-			{
-				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask) ||
-					IO_read(t_compressed->mask, t_compressed->mask_size, stream) != IO_NORMAL)
-				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
-				}
-			}
-
-			uint16_t t_pixwidth, t_pixheight;
-			t_pixwidth = rect.width;
-			t_pixheight = rect.height;
-			if (flags & F_SAVE_SIZE)
-			{
-				if ((stat = IO_read_uint2(&t_pixwidth, stream)) != IO_NORMAL)
-					return stat;
-				if ((stat = IO_read_uint2(&t_pixheight, stream)) != IO_NORMAL)
-					return stat;
-			}
-			t_compressed->width = t_pixwidth;
-			t_compressed->height = t_pixheight;
-
-			/* UNCHECKED */ setcompressedbitmap(t_compressed);
+			
+			if (IO_NORMAL == stat && !setcompressedbitmap(t_compressed))
+				stat = IO_ERROR;
+			
 			MCImageFreeCompressedBitmap(t_compressed);
+			
+			if (IO_NORMAL != stat)
+				return stat;
 		}
 	if ((stat = IO_read_int2(&xhot, stream)) != IO_NORMAL)
 		return stat;
@@ -1599,7 +1629,7 @@ bool MCImage::convert_to_mutable()
 	{
 		t_success = lockbitmap(t_bitmap, true);
 		if (t_success)
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		unlockbitmap(t_bitmap);
 	}
 	else
@@ -1608,7 +1638,7 @@ bool MCImage::convert_to_mutable()
 		if (t_success)
 		{
 			MCImageBitmapClear(t_bitmap);
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		}
 		MCImageFreeBitmap(t_bitmap);
 	}
@@ -2151,7 +2181,7 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 
 MCGFloat MCImage::getdevicescale(void)
 {
-	if (getstack() == nil)
+	if (!getstack())
 		return 1.0;
 	else
 		return getstack()->getdevicescale();

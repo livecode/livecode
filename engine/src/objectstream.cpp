@@ -219,8 +219,8 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 {
 	if (!p_supports_unicode)
 	{
-		MCStringRef t_string;
-		if (!MCStringCreateMutable(0, t_string))
+        MCAutoStringRef t_string;
+        if (!MCStringCreateMutable(0, &t_string))
 			return IO_ERROR;
 		
 		bool t_finished;
@@ -244,7 +244,7 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 					break;
 				}
 
-			if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
+            if(!MCStringAppendNativeChars(*t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
 				return IO_ERROR;
 
 			m_frontier += t_offset;
@@ -252,12 +252,12 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 		
 		m_frontier += 1;
 
-		if (!MCStringCopyAndRelease(t_string, r_value))
-		{
-			MCValueRelease(t_string);
-			return IO_ERROR;
-		}
+        if (!t_string.MakeImmutable())
+        {
+            return IO_ERROR;
+        }
 
+        r_value = t_string.Take();
 		return IO_NORMAL;
 	}
 	
@@ -387,7 +387,7 @@ IO_stat MCObjectInputStream::Fill(void)
 	IO_stat t_stat;
 
 	if (m_buffer == nil)
-		m_buffer = new char[16384];
+		m_buffer = new (nothrow) char[16384];
 	
 	if (m_buffer == nil)
 		return IO_ERROR;
@@ -422,7 +422,7 @@ MCObjectOutputStream::MCObjectOutputStream(IO_handle p_stream)
 {
 	m_stream = p_stream;
 
-	m_buffer = new char[16384];
+	m_buffer = new (nothrow) char[16384];
 	m_frontier = 0;
 	m_mark = 0;
 }

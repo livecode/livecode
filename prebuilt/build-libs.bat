@@ -1,4 +1,4 @@
-REM @ECHO OFF
+@ECHO OFF
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
 REM ############################################################################
@@ -6,15 +6,40 @@ REM #
 REM #   CONFIGURE VERSIONS AND FOLDERS
 REM #
 
-SET _ROOT_DIR=C:\Builds\libraries
-SET _INSTALL_DIR=%_ROOT_DIR%\prefix
-SET _WINSDK_ROOT=c:\program files\microsoft sdks\windows\v6.1
+REM If called with no arguments ICU, OpenSSL and Curl will be built.
+REM Otherwise it can be called with one or two arguments. The first argument is
+REM the library to build, the second is either not present or 'prepare'. If
+REM 'prepare', then the source will be downloaded and unpacked into a unique
+REM library/toolset/crt folder reading for building.
 
-echo "Will build into %_ROOT_DIR%"
-cmd.exe /V:ON /E:ON /C mkdir %_ROOT_DIR%
+REM All libs can be built with three distinct options define in env vars:
+REM   ARCH := x86 or x86_64 -- default x86
+REM   MODE := debug or release -- default debug
+REM   TOOL := any valid VS tool version
+REM
+REM The defaults for these variables if they are unset are x86, debug, 14.
+REM
+REM The resulting built libraries are packaged into archives containing a lib
+REM and include folder. The naming of the archives follows the GNU triple
+REM convention:
+REM   ARCH-win32-SDK
+REM Where:
+REM   ARCH := x86 or x86_64
+REM   SDK := TOOLSET_CRT
+REM Here TOOLSET is the VS PlatformToolset string - e.g. v140 for VS2015; and
+REM CRT is the one of MT, MTd, MD, MDd. This corresponds to static, static debug
+REM dynamic, and dynamic debug variants.
 
-echo "Will install into %_INSTALL_DIR%"
-cmd.exe /V:ON /E:ON /C mkdir %_INSTALL_DIR%
+REM This script checks for bash in the path. If it is not present it assumes it
+REM is installed as part of 64-bit cygwin at C:\Cygwin\bin
+
+REM This script checks for nasm in the path. If it is not present it assumes it
+REM is installed at C:\Program Files (x86)\NASM
+
+SET _ROOT_DIR=C:\LiveCode\Prebuilt\libraries
+
+echo Will build into %_ROOT_DIR%
+IF NOT EXIST %_ROOT_DIR% MKDIR %_ROOT_DIR%
 
 REM # get the drive & path of the folder this script lives in
 REM # (note: ends with \ path delimiter)
@@ -22,94 +47,111 @@ FOR /F "delims=" %%A IN ("%0") DO SET _TOOLS_DIR=%%~dpA
 
 REM Get the libraries version variables set from scripts/lib_versions.bat
 CALL "scripts\lib_versions.bat"
-CALL "%_WINSDK_ROOT%\bin\setenv.cmd" /x86 /release /xp
 
-REM ############################################################################
-REM #
-REM #   BUILD OPENSSL
-REM #
-
-SET OPENSSL_TGZ=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%.tar.gz
-SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%
-SET OPENSSL_CONFIG=no-hw no-idea no-rc5 no-asm enable-static-engine --prefix=%_INSTALL_DIR% VC-WIN32
-
-cd "%_ROOT_DIR%"
-
-if not exist %OPENSSL_TGZ% (
-	echo "Fetching openssl-%OPENSSL_VERSION%
-	perl -MLWP::Simple -e "getstore('http://www.openssl.org/source/openssl-%OpenSSL_VERSION%.tar.gz', '%OPENSSL_TGZ%')"
+REM Architecture defaults to x86
+IF NOT DEFINED ARCH (
+  SET ARCH=x86
 )
 
-if not exist %OPENSSL_SRC% (
-	echo "Unpacking openssl-%OPENSSL_VERSION%"
-	perl -MArchive::Tar -e "$Archive::Tar::FOLLOW_SYMLINK=1;Archive::Tar->extract_archive('%OpenSSL_TGZ%', 1);"
+IF NOT DEFINED MODE (
+  SET MODE=debug
 )
 
-cd "%OPENSSL_SRC%"
-
-perl Configure %OPENSSL_CONFIG%
-CALL ms\do_ms.bat
-SET _MERGE_FILTER="ENGINE_load_(4758cca|aep|atalla|chil|cswift|nuron|padlock|sureware|ubsec)"
-%_TOOLS_DIR%Revolution.exe %_TOOLS_DIR%apply_filter.rev %_MERGE_FILTER% ms\libeay32.def > tmp_libeay32.def
-move /Y tmp_libeay32.def ms\libeay32.def
-nmake -f ms\nt.mak tmp32 out32 inc32\openssl headers lib
-rem merge ssl & eay module def files
-%_TOOLS_DIR%Revolution.exe %_TOOLS_DIR%merge_dll_def.rev --name REVSECURITY ms\ssleay32.def ms\libeay32.def > revsecurity.def
-rem link objs into revsecurity.dll
-@ECHO ON
-link /nologo /subsystem:console /opt:ref /dll /release /out:revsecurity.dll /def:revsecurity.def tmp32\*.obj ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib libcmt.lib
-IF EXIST revsecurity.manifest mt -nologo -manifest revsecurity.dll.manifest -outputresource:revsecurity.dll;2
-
-IF NOT EXIST "%_INSTALL_DIR%\include" mkdir "%_INSTALL_DIR%\include"
-IF NOT EXIST "%_INSTALL_DIR%\lib\win32\i386" mkdir "%_INSTALL_DIR%\lib\win32\i386"
-
-XCOPY /E /Y inc32\* "%_INSTALL_DIR%\include"
-COPY /Y revsecurity.dll "%_INSTALL_DIR%\lib\win32\i386"
-COPY /Y revsecurity.lib "%_INSTALL_DIR%\lib\win32\i386"
-COPY /Y revsecurity.exp "%_INSTALL_DIR%\lib\win32\i386"
-COPY /Y out32\libeay32.lib "%_INSTALL_DIR%\lib\win32\i386"
-COPY /Y out32\ssleay32.lib "%_INSTALL_DIR%\lib\win32\i386"
-COPY /Y revsecurity.def "%_INSTALL_DIR%\lib\win32\i386"
-
-REM Additional copy of SSL libs so Curl can find them
-COPY /Y out32\libeay32.lib "%_INSTALL_DIR%\lib"
-COPY /Y out32\ssleay32.lib "%_INSTALL_DIR%\lib"
-
-REM ############################################################################
-REM #
-REM #   BUILD CURL
-REM #
-
-SET CURL_TGZ=%_ROOT_DIR%\curl-%CURL_VERSION%.tar.gz
-SET CURL_SRC=%_ROOT_DIR%\curl-%CURL_VERSION%
-SET CURL_CONFIG=VC=9 WITH_DEVEL="%_INSTALL_DIR%" WITH_SSL=static DEBUG=no GEN_PDB=no RTLIBCFG=static ENABLE_IDN=no
-
-cd "%_ROOT_DIR%"
-
-if not exist %CURL_TGZ% (
-	echo "Fetching curl-%CURL_VERSION%
-	perl -MLWP::Simple -e "getstore('http://curl.haxx.se/download/curl-%CURL_VERSION%.tar.gz', '%CURL_TGZ%')"
+IF NOT DEFINED TOOL (
+	SET TOOL=14
 )
 
-if not exist %CURL_SRC% (
-	echo "Unpacking curl-%CURL_VERSION%"
-	perl -MArchive::Tar -e "$Archive::Tar::FOLLOW_SYMLINK=1;Archive::Tar->extract_archive('%CURL_TGZ%', 1);"
+REM Check variable values
+IF %ARCH%==x86 (
+	REM
+) ELSE (
+	IF %ARCH%==x86_64 (
+		REM
+	) ELSE (
+		ECHO ARCH variable must be x86 or x86_64
+		EXIT /B 1
+	)
 )
 
-cd "%CURL_SRC%"
+IF %MODE%==debug (
+	REM
+) ELSE (
+	IF %MODE%==release (
+		REM
+	) ELSE (
+		ECHO MODE variable must be debug or release
+		EXIT /B 1
+	)
+)
 
-cd winbuild
+REM Compute the mode suffix - MD, MDd, MT, MTd - these correspond
+REM to the CRT options available: DLL, DLL debug, Static, Static debug.
+IF %MODE%==debug (
+	SET CRT=static_debug
+) ELSE (
+	SET CRT=static_release
+)
 
-# NOTE: Will produce errors because $(PROGRAM_NAME) target in MakefileBuild.vc has
-#   unsatisfied dependencies. For now just execute make in 'ignore errors' (/I) mode.
-nmake /I /f Makefile.vc MODE=static %CURL_CONFIG%
+REM Set the suffix that should be used by all libraries
+SET BUILDTRIPLE=%ARCH%-win32-v%TOOL%0_%CRT%
 
-XCOPY /E /Y ..\builds\libcurl-vc9-x86-release-static-ssl-static-ipv6-sspi\include\* "%_INSTALL_DIR%\include"
-COPY /Y ..\builds\libcurl-vc9-x86-release-static-ssl-static-ipv6-sspi\lib\libcurl_a.lib "%_INSTALL_DIR%\lib\win32\i386"
+REM Compute path to VS version
+IF %ARCH%==x86 (
+	SET ARCH_STRING=x86
+) ELSE (
+	SET ARCH_STRING=amd64
+)
 
-REM ############################################################################
-REM #
-REM #   BUILD ICU
-REM #
+SET VSCONFIGTOOL="C:\Program Files (x86)\Microsoft Visual Studio %TOOL%.0\VC\vcvarsall.bat"
 
-CALL "%_TOOLS_DIR%scripts\build-icu.bat"
+REM Ensure the desired vsvarsall.bat file exists for the chosen options
+IF NOT EXIST %VSCONFIGTOOL% (
+	ECHO Cannot find Visual Studio configuration tool config batch file at %VSCONFIGTOOL%
+	EXIT /B 1
+)
+
+REM Configure the visual studio tools
+CALL %VSCONFIGTOOL% %ARCH_STRING%
+WHERE /Q cl 1>NUL 2>NUL
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO Configuration of Visual Studio tools failed
+	EXIT /B 1
+)
+
+REM Ensure Cygwin and NASM are in the path
+WHERE /Q bash 1>NUL 2>NUL
+IF %ERRORLEVEL% NEQ 0 (
+  SET "PATH=%PATH%;C:\Cygwin64\bin"
+)
+WHERE /Q bash 1>NUL 2>NUL
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO Cannot find 'bash'. Make sure Cygwin64 is installed with root C:\Cygwin64 and bash is present.
+	EXIT /B 1
+)
+
+WHERE /Q nasm 1>NUL 2>NUL
+IF %ERRORLEVEL% NEQ 0 (
+   SET "PATH=%PATH%;C:\Program Files (x86)\NASM"
+)
+WHERE /Q nasm 1>NUL 2>NUL
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO Cannot find 'nasm'. Make sure nasm is installed with root "C:\Program Files (x86)\NASM".
+	EXIT /B 1
+)
+
+IF %1=="" (
+	REM Build OpenSSL
+	CALL "scripts\build-openssl.bat"
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+	REM Build Curl
+	CALL "scripts\build-curl.bat"
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+	REM Build ICU
+	CALL "scripts\build-icu.bat"
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+) ELSE (
+	CALL "scripts\build-%1.bat" %2
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+)

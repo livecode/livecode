@@ -386,13 +386,11 @@ template<typename T> struct VectorFieldPropType
 
     static bool equal(const stack_type& a, const stack_type& b)
     {
-        if (a . list . count == 0 && a . list . count == 0)
-            return true;
-        else if (a . list . count != b . list . count)
+        if (a . list . count != b . list . count)
             return false;
         else
         {
-            for (unsigned int i = 0; i < a . list . count && i < b . list . count; ++i)
+            for (unsigned int i = 0; i < a . list . count; ++i)
                 if (a . list . elements[i] != b . list . elements[i])
                     return false;
         }
@@ -987,7 +985,7 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
         bptr->GetRange(t_block_index, t_block_length);
         if (t_block_index < si)
         {
-            MCBlock *tbptr = new MCBlock(*bptr);
+            MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
             bptr->append(tbptr);
             bptr->SetRange(t_block_index, si - t_block_index);
             tbptr->SetRange(si, t_block_length - (si - t_block_index));
@@ -999,7 +997,7 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
             bptr->close();
         if (t_block_index + t_block_length > ei)
         {
-            MCBlock *tbptr = new MCBlock(*bptr);
+            MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
             // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
             //   fontref so it can compute its.
             if (p_paragraph -> getopened())
@@ -1065,7 +1063,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     bptr->GetRange(t_block_index, t_block_length);
                     if (t_block_index < si)
                     {
-                        MCBlock *tbptr = new MCBlock(*bptr);
+                        MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
                         bptr->append(tbptr);
                         bptr->SetRange(t_block_index, si - t_block_index);
                         tbptr->SetRange(si, t_block_length - (si - t_block_index));
@@ -1077,7 +1075,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                         bptr->close();
                     if (t_block_index + t_block_length > t_ei)
                     {
-                        MCBlock *tbptr = new MCBlock(*bptr);
+                        MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
                         // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                         //   fontref so it can compute its.
                         if (pgptr -> getopened())
@@ -1176,7 +1174,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                     bptr->GetRange(t_block_index, t_block_length);
                     if (t_block_index < si)
                     {
-                        MCBlock *tbptr = new MCBlock(*bptr);
+                        MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
                         bptr->append(tbptr);
                         bptr->SetRange(t_block_index, si - t_block_index);
                         tbptr->SetRange(si, t_block_length - (si - t_block_index));
@@ -1188,7 +1186,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                         bptr->close();
                     if (t_block_index + t_block_length > t_ei)
                     {
-                        MCBlock *tbptr = new MCBlock(*bptr);
+                        MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
                         // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                         //   fontref so it can compute its.
                         if (pgptr -> getopened())
@@ -1268,7 +1266,7 @@ template<typename T, int Min, int Max> static void setparagraphattr_int(MCParagr
         t_clamped_field = MCMin(MCMax((int)*p_value, Min), Max);
 
         if (attrs == nil)
-            attrs = new MCParagraphAttrs;
+            attrs = new (nothrow) MCParagraphAttrs;
 
         attrs -> flags |= p_flag;
         ((T *)((char *)attrs + p_field_offset))[0] = t_clamped_field;
@@ -1308,7 +1306,7 @@ static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, si
         t_color = p_color . color;
 
     if (attrs == nil)
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
 
     attrs -> flags |= p_flag;
     ((uint32_t *)((char *)attrs + p_field_offset))[0] = MCColorGetPixel(t_color);
@@ -1327,7 +1325,7 @@ static void setparagraphattr_bool(MCParagraphAttrs*& attrs, uint32_t p_flag, boo
     else
     {
         if (attrs == nil)
-            attrs = new MCParagraphAttrs;
+            attrs = new (nothrow) MCParagraphAttrs;
 
         attrs -> flags |= p_flag;
         r_new_value = *p_value;
@@ -1402,8 +1400,11 @@ void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::SetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef r_value)
 {
     MCAutoStringRef t_string;
-    /* UNCHECKED */ MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string);
-    /* UNCHECKED */ settextindex(p_part_id, p_start, p_finish, *t_string, false);
+	if (MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string) &&
+		settextindex(p_part_id, p_start, p_finish, *t_string, false))
+		return;
+	
+	ctxt . Throw();
 }
 
 void MCField::GetPlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
@@ -1665,7 +1666,7 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
         r_value = 0;
 }
 
-void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle& r_value)
+void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle32& r_value)
 {
     // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
     if (opened)
@@ -1678,8 +1679,8 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         coord_t yoffset = getcontenty() + paragraphtoy(sptr);
         coord_t minx, maxx;
         coord_t maxy = y;
-        minx = MCinfinity;
-        maxx = -MCinfinity;
+        minx = FLT_MAX;
+        maxx = FLT_MIN;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the
@@ -1690,12 +1691,15 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         }
         while (ei > 0 && sptr != pgptr);
 
+        /* Make sure minx is sensible if it is not set in getxextents() and there is only one
+         * line. */
+        if (minx > maxx)
+            minx = maxx;
+        
         // MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
-        r_value . height = (maxy - 2*y);
-        // AL-2014-10-28: [[ Bug 13829 ]] The left and width of the formattedRect should be
-        // floorf'd and ceilf'd respectively, to give the correct integer bounds.
+        r_value . height = maxy - 2*y;
         r_value . width = ceilf(maxx - minx);
-        r_value . x = floorf(minx + getcontentx());
+        r_value . x = floorf(minx) + getcontentx();
         r_value . y = y + yoffset;
     }
     else
@@ -2481,7 +2485,7 @@ void MCField::SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
 
 void MCParagraph::GetEncoding(MCExecContext &ctxt, intenum_t &r_encoding)
 {
-    if (MCStringIsNative(m_text))
+    if (MCStringIsNative(*m_text))
         r_encoding = 0; // nativestring
     else
         r_encoding = 1; // unicode
@@ -2519,7 +2523,7 @@ void MCParagraph::SetTextAlign(MCExecContext& ctxt, intenum_t* p_value)
         t_value = *p_value >> F_ALIGNMENT_SHIFT;
         
         if (attrs == nil)
-            attrs = new MCParagraphAttrs;
+            attrs = new (nothrow) MCParagraphAttrs;
         attrs -> flags |= PA_HAS_TEXT_ALIGN;
         attrs -> text_align = t_value;
     }
@@ -2566,7 +2570,7 @@ void MCParagraph::SetListDepth(MCExecContext& ctxt, uinteger_t* p_depth)
     }
 
     if (attrs == nil)
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
 
     if ((attrs -> flags & PA_HAS_LIST_STYLE) == 0)
     {
@@ -2723,7 +2727,7 @@ void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const v
     MCInterfaceTabStopsParse(ctxt, p_is_relative, p_tabs . elements, p_tabs . count, t_new_tabs, t_new_count);
 
     if (attrs == nil)
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
     else
         delete attrs -> tabs;
 
@@ -2841,7 +2845,7 @@ void MCParagraph::GetEffectiveTabAlignments(MCExecContext& ctxt, MCInterfaceFiel
 void MCParagraph::SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments& p_alignments)
 {
     if (attrs == nil)
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
     else
         delete attrs -> alignments;
     
@@ -3064,7 +3068,7 @@ void MCParagraph::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
     else
     {
         if (attrs == nil)
-            attrs = new MCParagraphAttrs;
+            attrs = new (nothrow) MCParagraphAttrs;
 
         attrs -> flags |= PA_HAS_METADATA;
         MCValueInter(p_metadata, attrs -> metadata);
@@ -3115,7 +3119,7 @@ void MCBlock::SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext)
     else
     {
         if (atts == nil)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
 
         /* UNCHECKED */ MCValueInter(p_linktext, atts -> linktext);
 
@@ -3143,7 +3147,7 @@ void MCBlock::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
     else
     {
         if (atts == nil)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
 
         /* UNCHECKED */ MCValueInter((MCStringRef)p_metadata, atts -> metadata);
 
@@ -3175,7 +3179,7 @@ void MCBlock::SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source)
     else
     {
         if (atts == NULL)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
 
         /* UNCHECKED */ MCValueInter(p_image_source, atts -> imagesource);
 
@@ -3237,7 +3241,7 @@ void MCBlock::SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname)
     else
     {
         if (atts == nil)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
         
         flags |= F_HAS_FNAME;
         /* UNCHECKED */ MCNameCreate(p_fontname, atts -> fontname);
@@ -3260,7 +3264,7 @@ void MCBlock::SetTextSize(MCExecContext& ctxt, uinteger_t* p_size)
     else
     {
         if (atts == NULL)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
         flags |= F_HAS_FSIZE;
         atts -> fontsize = *p_size;
     }
@@ -3280,7 +3284,7 @@ void MCBlock::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     else
     {
         if (atts == NULL)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
         flags |= F_HAS_FSTYLE;
         atts -> fontstyle = p_style . style;
     }
@@ -3302,7 +3306,7 @@ void MCBlock::SetTextShift(MCExecContext& ctxt, integer_t* p_shift)
     else
     {
         if (atts == NULL)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
         atts->shift = *p_shift;
         flags |= F_HAS_SHIFT;
     }
@@ -3388,7 +3392,7 @@ void MCBlock::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p
     if (MCF_parsetextstyle(MCNameGetString(p_index), t_text_style) == ES_NORMAL)
     {
         if (atts == NULL)
-            atts = new Blockatts;
+            atts = new (nothrow) Blockatts;
         
         // AL-2014-09-23 [[ Bug 13509 ]] Check F_HAS_FSTYLE when adding block attribute
         if (!getflag(F_HAS_FSTYLE))

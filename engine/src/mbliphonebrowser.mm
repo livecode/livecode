@@ -199,7 +199,7 @@ void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     if (t_view != nil)
     {
         [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]]];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]]];
     }
 }
 
@@ -278,7 +278,7 @@ void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
-	if (t_view != nil)
+	if (t_view != nil && [[t_view request] URL] != nil)
     {
         /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
         return;
@@ -435,7 +435,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 	t_view = (UIWebView *)GetView();
     
     NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithMCStringRef: p_script]];
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: MCStringConvertToAutoreleasedNSString(p_script)];
     
     if (t_result == nil)
     {
@@ -458,7 +458,7 @@ void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStr
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: [NSString stringWithMCStringRef: p_html] baseURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]];
+    [t_view loadHTMLString: MCStringConvertToAutoreleasedNSString(p_html) baseURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

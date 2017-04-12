@@ -146,7 +146,7 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 		SendMessage(m_hwnd, WM_PRINT, (WPARAM)t_hdc, PRF_CHILDREN|PRF_CLIENT);
 
 		// Get the information we need to turn this into a bitmap the engine can use
-		GetObject(m_cached, sizeof(BITMAP), &t_bitmap);
+		GetObjectW(m_cached, sizeof(BITMAP), &t_bitmap);
 
 		// Allocate some memory for capturing the bits from the bitmap
 		t_success = MCMemoryAllocate(t_bitmap.bmWidth * t_bitmap.bmHeight * 4, t_bits);
@@ -198,7 +198,7 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	if (t_success)
 	{
 		// At last - we can draw it!
-		MCGRectangle rect = {{0, 0}, {t_rect.width, t_rect.height}};
+		MCGRectangle rect = {{0, 0}, {MCGFloat(t_rect.width), MCGFloat(t_rect.height)}};
 		MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
 	}
 

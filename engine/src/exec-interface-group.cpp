@@ -173,7 +173,7 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(part))
+                    && !bptr->gethilite(part).isFalse())
                 {
                     t_found = true;
 					break;
@@ -492,7 +492,7 @@ void MCGroup::SetBackgroundBehavior(MCExecContext& ctxt, bool setting)
 void MCGroup::GetSharedBehavior(MCExecContext& ctxt, bool& r_setting)
 {
 	// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-	r_setting = isshared() && (parent == nil || parent -> gettype() == CT_CARD);
+	r_setting = isshared() && (!parent || parent -> gettype() == CT_CARD);
 }
 
 void MCGroup::SetSharedBehavior(MCExecContext& ctxt, bool setting)
@@ -806,16 +806,4 @@ void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
 void MCGroup::SetVisible(MCExecContext &ctxt, uinteger_t part, bool setting)
 {
 	MCControl::SetVisible(ctxt, part, setting);
-#ifdef PLATFORM_PLAYER
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-	{
-		if (t_player -> getparent() == this)
-		{
-			if (setting)
-				t_player -> attachplayer();
-			else
-				t_player -> detachplayer();
-		}
-	}
-#endif
 }

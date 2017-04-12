@@ -387,10 +387,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
         return false;
     
     ////
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
-    // since ResolvePath must behave differently on Linux
-	MCsystem -> GetExecutablePath(MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -573,10 +569,10 @@ void X_main_loop(void)
 		if (t_stat == ES_NOT_HANDLED && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
 			MCHandlerlist *t_handlerlist;
-			t_handlerlist = new MCHandlerlist;
+			t_handlerlist = new (nothrow) MCHandlerlist;
 			
 			MCHandler *t_handler;
-			t_handler = new MCHandler(HT_MESSAGE, true);
+			t_handler = new (nothrow) MCHandler(HT_MESSAGE, true);
 			
 			MCScriptPoint sp(MCserverscript, t_handlerlist, MCSTR(s_default_error_handler));
 			
@@ -612,13 +608,11 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int platform_main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() ||
+        !MCSInitialize() ||
+	    !MCScriptInitialize())
 		exit(-1);
     
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
@@ -672,7 +666,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	MCMemoryDeleteArray(t_new_envp);
 
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);

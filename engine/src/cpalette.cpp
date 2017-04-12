@@ -185,7 +185,7 @@ Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 MCControl *MCColors::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCColors *newcolors = new MCColors(*this);
+	MCColors *newcolors = new (nothrow) MCColors(*this);
 	if (attach)
 		newcolors->attach(p, invisible);
 	return newcolors;

@@ -126,3 +126,12 @@ on TestFoldersInEmptyFolder
    delete folder tNewFolder
    set the defaultFolder to tOldCwd
 end TestFoldersInEmptyFolder
+
+on TestFoldersOfTilde
+	TestAssert "folders(~) is the same as folders($HOME)", folders($HOME) is folders("~")
+end TestFoldersOfTilde
+
+on TestFilesOfTilde
+	TestAssert "files(~) is the same as files($HOME)", files($HOME) is files("~")
+end TestFilesOfTilde
+

@@ -151,7 +151,7 @@ bool BrowserInstances::FindInstanceById(int p_id, BrowserInstance *&r_instance)
 void BrowserInstances::Add(CWebBrowserBase *p_browser, bool p_is_xbrowser)
 {
 	BrowserInstance *t_instance;
-	t_instance = new BrowserInstance;
+	t_instance = new (nothrow) BrowserInstance;
 	t_instance -> next = m_instances;
 	t_instance -> instance_id = ++m_last_instance_id;
 	t_instance -> stack_id = NULL;
@@ -511,7 +511,7 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	SendCardMessageUTF8(t_message, &t_retval);
 	t_instance -> callback_depth -= 1;
 	
-    delete t_message;
+    MCCStringFree (t_message);
     
 	if (t_instance -> stack_id != NULL)
 		free(t_instance -> stack_id);

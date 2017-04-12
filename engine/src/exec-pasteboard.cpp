@@ -178,6 +178,9 @@ enum MCTransferType
     TRANSFER_TYPE_PNG,
     TRANSFER_TYPE_GIF,
     TRANSFER_TYPE_JPEG,
+	TRANSFER_TYPE_BMP,
+	TRANSFER_TYPE_WIN_METAFILE,
+	TRANSFER_TYPE_WIN_ENH_METAFILE,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +369,7 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
         else if (p_as_type == TRANSFER_TYPE_HTML_TEXT)
         {
             // Copy as the round-tripped form of HTML
-            return p_clipboard->CopyAsHTMLText((MCDataRef&)r_value);
+            return p_clipboard->CopyAsHTMLText((MCStringRef&)r_value);
         }
     }
     
@@ -432,6 +435,15 @@ MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy =
     if (MCNameIsEqualTo(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
 
+	if (MCNameIsEqualTo(p_key, MCN_win_bitmap))
+		return TRANSFER_TYPE_BMP;
+
+	if (MCNameIsEqualTo(p_key, MCN_win_metafile))
+		return TRANSFER_TYPE_WIN_METAFILE;
+
+	if (MCNameIsEqualTo(p_key, MCN_win_enh_metafile))
+		return TRANSFER_TYPE_WIN_ENH_METAFILE;
+
 	return TRANSFER_TYPE_NULL;
 }
 
@@ -463,6 +475,12 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
         return MCN_gif;
     case TRANSFER_TYPE_JPEG:
         return MCN_jpeg;
+	case TRANSFER_TYPE_BMP:
+		return MCN_win_bitmap;
+	case TRANSFER_TYPE_WIN_METAFILE:
+		return MCN_win_metafile;
+	case TRANSFER_TYPE_WIN_ENH_METAFILE:
+		return MCN_win_enh_metafile;
 	case TRANSFER_TYPE_FILES:
 		return MCN_files;
 	case TRANSFER_TYPE_PRIVATE:
@@ -612,30 +630,34 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
     MCAutoRefcounted<const MCRawClipboardItem> t_item = p_clipboard->GetRawClipboard()->GetItemAtIndex(0);
     if (t_item == NULL)
     {
-        r_string = kMCEmptyString;
-        MCValueRetain(kMCEmptyString);
+        r_string = MCValueRetain(kMCEmptyString);
+		return;
     }
-    else
-    {
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
-        
-        uindex_t t_type_count = t_item->GetRepresentationCount();
-        for (uindex_t i = 0; i < t_type_count; i++)
-        {
-            MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
-            /* UNCHECKED */ MCListAppend(*t_list, *t_type);
-        }
-        
-        /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
-    }
+	
+	MCAutoListRef t_list;
+	bool t_success = MCListCreateMutable('\n', &t_list);
+	
+	uindex_t t_type_count = t_item->GetRepresentationCount();
+	for (uindex_t i = 0; t_success && i < t_type_count; i++)
+	{
+		MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+		t_success = MCListAppend(*t_list, *t_type);
+	}
+	
+	if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_string);
+	
+	if (t_success)
+		return;
+	
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdropfield == nil)
+	if (!MCdropfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -649,7 +671,7 @@ void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragdest == nil)
+	if (!MCdragdest)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -660,7 +682,7 @@ void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragsource == nil)
+	if (!MCdragsource)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -808,6 +830,12 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
         t_success = MCListAppend(*t_list, MCN_gif);
     if (t_success && p_clipboard->HasJPEG())
         t_success = MCListAppend(*t_list, MCN_jpeg);
+	if (t_success && p_clipboard->HasBMP())
+		t_success = MCListAppend(*t_list, MCN_win_bitmap);
+	if (t_success && p_clipboard->HasWinMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_metafile);
+	if (t_success && p_clipboard->HasWinEnhMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_enh_metafile);
     
     // Check for specific styled text formats. These are the "true" formats and
     // aren't round-tripped via a LiveCode field.
@@ -911,6 +939,18 @@ void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& c
         case TRANSFER_TYPE_JPEG:
             r_result = p_clipboard->HasJPEG();
             break;
+
+		case TRANSFER_TYPE_BMP:
+			r_result = p_clipboard->HasBMP();
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			r_result = p_clipboard->HasWinMetafile();
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			r_result = p_clipboard->HasWinEnhMetafile();
+			break;
             
         case TRANSFER_TYPE_FILES:
             r_result = p_clipboard->HasFileList();
@@ -1050,9 +1090,9 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> copytext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
 	else
 		MCselected -> copy();
@@ -1070,9 +1110,9 @@ void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_
 
 void MCPasteboardExecCut(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> cuttext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
 	else
 		MCselected -> cut();
@@ -1323,20 +1363,17 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
 			{
 				// For backwards compatibility, HTML can be added to the
                 // clipboard as either data or text.
-				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeData)
-                    t_success = t_clipboard->AddHTML(static_cast<MCDataRef>(p_data));
+				if (MCValueGetTypeCode(p_data) != kMCValueTypeCodeString)
+				{
+					// Legacy behaviour: treat data as native-encoded text
+					MCAutoStringRef t_html;
+					t_success = ctxt.ConvertToString(p_data, &t_html);
+					if (t_success)
+						t_success = t_clipboard->AddHTMLText(*t_html);
+				}
 				else
 				{
-                    // If it is a string, encode it into the native encoding
-                    // then add as data. This probably should be ASCII but we've
-                    // always used the native encoding here...
-                    MCAutoStringRef t_string;
-                    MCAutoDataRef t_data;
-                    t_success = ctxt.ConvertToString(p_data, &t_string);
-                    if (t_success)
-                        t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-                    if (t_success)
-                        t_success = t_clipboard->AddHTML(*t_data);
+                        t_success = t_clipboard->AddHTMLText(static_cast<MCStringRef>(p_data));
 				}
 				
 				break;
@@ -1555,7 +1592,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            p_clipboard->CopyAsHTMLText((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTMLText((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_STYLED_TEXT:
@@ -1571,7 +1608,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            p_clipboard->CopyAsHTML((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTML((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_IMAGE:
@@ -1589,6 +1626,18 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
         case TRANSFER_TYPE_JPEG:
             p_clipboard->CopyAsJPEG((MCDataRef&)&t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			p_clipboard->CopyAsBMP((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			p_clipboard->CopyAsWinMetafile((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			p_clipboard->CopyAsWinEnhMetafile((MCDataRef&)&t_data);
+			break;
             
         case TRANSFER_TYPE_OBJECTS:
             p_clipboard->CopyAsLiveCodeObjects((MCDataRef&)&t_data);
@@ -1644,8 +1693,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTMLText(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTMLText(*t_string);
             break;
             
         case TRANSFER_TYPE_RTF_TEXT:
@@ -1669,8 +1718,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTML(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTML(*t_string);
             break;
             
         case TRANSFER_TYPE_IMAGE:
@@ -1692,6 +1741,21 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             if (ctxt.ConvertToData(p_value, &t_data))
                 t_success = p_clipboard->AddJPEG(*t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddBMP(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinMetafile(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinEnhMetafile(*t_data);
+			break;
             
         case TRANSFER_TYPE_FILES:
             if (ctxt.ConvertToString(p_value, &t_string))
@@ -1870,7 +1934,7 @@ void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragsource != nil)
+    if (MCdragsource)
     {
         r_object . object = MCdragsource;
         r_object . part_id = 0;
@@ -1882,7 +1946,7 @@ void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_obje
 
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdragdest;
         r_object . part_id = 0;
@@ -1894,7 +1958,7 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 
 void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdropfield;
         r_object . part_id = 0;

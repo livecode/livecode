@@ -41,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "platform.h"
 static MCPlatformSoundRef s_current_sound = nil;
 #elif defined _WINDOWS_DESKTOP
-#include "w32prefix.h"
 // SN-2014-06-26 [[ PlatformPlayer ]]
 // These 2 definitions must be accessible from exec-interface-aclip
 HWAVEOUT hwaveout;  //handle to audio device opened
@@ -123,7 +122,7 @@ MCAudioClip::MCAudioClip()
 	disposable = False;
 	loudness = 100;
 #ifdef TARGET_PLATFORM_LINUX
-	x11audio = new X11Audio ;
+	x11audio = new (nothrow) X11Audio ;
 #endif
 }
 
@@ -133,7 +132,7 @@ MCAudioClip::MCAudioClip(const MCAudioClip &aref) : MCObject(aref)
 	samples = osamples = NULL;
 	if (size != 0)
 	{
-		samples = new int1[size];
+		samples = new (nothrow) int1[size];
 		memcpy(samples, aref.samples, size);
 	}
 	format = aref.format;
@@ -143,7 +142,7 @@ MCAudioClip::MCAudioClip(const MCAudioClip &aref) : MCObject(aref)
 	disposable = False;
 	loudness = aref.loudness;
 #ifdef TARGET_PLATFORM_LINUX
-	x11audio = new X11Audio ;
+	x11audio = new (nothrow) X11Audio ;
 #endif
 }
 
@@ -152,7 +151,7 @@ MCAudioClip::~MCAudioClip()
 	if (MCacptr == this)
 	{
 		stop(True);
-		MCacptr = NULL;
+		MCacptr = nil;
 	}
 	delete[] samples; /* Allocated with new[] */
 	delete osamples;
@@ -187,7 +186,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
     }
 	else
 	{
-		MCacptr = NULL;
+		MCacptr = nil;
 		if (mstack != NULL)
 		{
 			if (mstack->getopened())
@@ -240,7 +239,7 @@ void MCAudioClip::init()
 
 void MCAudioClip::convert_mulawtolin16()
 {
-	int2 *newsamples = new int2[size];
+	int2 *newsamples = new (nothrow) int2[size];
 	uint1 *sptr = (uint1 *)samples;
 	int2 *dptr = newsamples;
 	uint4 count = size;
@@ -260,7 +259,7 @@ void MCAudioClip::convert_mulawtolin16()
 
 void MCAudioClip::convert_mulawtoulin8()
 {
-	int1 *newsamples = new int1[size];
+	int1 *newsamples = new (nothrow) int1[size];
 	uint1 *sptr = (uint1 *)samples;
 	int1 *dptr = newsamples;
 	uint4 count = size;
@@ -287,7 +286,7 @@ void MCAudioClip::convert_slin8toslin16()
 	uint4 count = size;
 	size <<= 1;
 	swidth = 2;
-	int1 *newsamples = new int1[size];
+	int1 *newsamples = new (nothrow) int1[size];
 	int1 *sptr = samples;
 	int2 *dptr = (int2 *)newsamples;
 	while(count--)
@@ -359,7 +358,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 	size = (uint4)MCS_fsize(stream);
 	if (size == 0)
 		return False;
-	samples = new int1[size];
+	samples = new (nothrow) int1[size];
 	if (IO_read(samples, size, stream) != IO_NORMAL)
 		return False;
 	if (strnequal((char*)samples, ".snd", 4))
@@ -472,7 +471,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
     uindex_t t_sep;
     MCStringRef t_fname;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_sep + 1, MCStringGetLength(fname)), t_fname);
     else
         t_fname = MCValueRetain(fname);
     
@@ -687,7 +686,7 @@ Boolean MCAudioClip::play()
 	if (!open_audio())
 	{
 		real8 delay =  MCS_time() + (real8)size / (real8)(rate*nchannels*swidth);
-		MCParameter *newparam = new MCParameter;
+		MCParameter *newparam = new (nothrow) MCParameter;
 		newparam->setvalueref_argument(getname());
 		MCscreen->addmessage(MCdefaultstackptr->getcurcard(), MCM_play_stopped, delay, newparam);
 		return False;
@@ -910,7 +909,7 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (size != 0)
 	{
-		samples = new int1[size];
+		samples = new (nothrow) int1[size];
 		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}
@@ -965,7 +964,7 @@ uint2 MCS_getplayloudness()
     t_loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
 #elif defined TARGET_PLATFORM_LINUX
     X11Audio *t_x11audio = nil;
-    t_x11audio = new X11Audio ;
+    t_x11audio = new (nothrow) X11Audio ;
     if ( t_x11audio != nil)
     {
         t_loudness = t_x11audio -> getloudness() ;
@@ -1008,7 +1007,7 @@ void MCS_setplayloudness(uint2 p_loudness)
     SetDefaultOutputVolume(volume | volume << 16);
 #elif defined TARGET_PLATFORM_LINUX
     X11Audio *t_x11audio = nil;
-    t_x11audio = new X11Audio ;
+    t_x11audio = new (nothrow) X11Audio ;
     if (t_x11audio != nil)
     {
         t_x11audio -> setloudness(p_loudness);

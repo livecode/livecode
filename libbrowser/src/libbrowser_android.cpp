@@ -1042,7 +1042,7 @@ class MCAndroidWebViewBrowserFactory : public MCBrowserFactory
 	virtual bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)
 	{
 		MCAndroidWebViewBrowser *t_browser;
-		t_browser = new MCAndroidWebViewBrowser();
+		t_browser = new (nothrow) MCAndroidWebViewBrowser();
 		
 		if (t_browser == nil)
 			return false;
@@ -1061,7 +1061,7 @@ class MCAndroidWebViewBrowserFactory : public MCBrowserFactory
 
 bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 {
-	MCBrowserFactory *t_factory = new MCAndroidWebViewBrowserFactory();
+	MCBrowserFactory *t_factory = new (nothrow) MCAndroidWebViewBrowserFactory();
 	
 	if (t_factory == nil)
 		return false;

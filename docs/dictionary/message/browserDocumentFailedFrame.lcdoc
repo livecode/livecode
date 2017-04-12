@@ -43,12 +43,12 @@ encountered an error while loading a url and all its dependent resources
 in a frame.
 
 If the target is the main frame of the browser then the
-<browserDocumentFailed message> message is sent instead.
+<browserDocumentFailed> <message> message is sent instead.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserOpenCef (function),
-revBrowserOpen function (function), browserDownloadRequest (message),
-browserDocumentFailed message (message)
+revBrowserOpen (function), function (glossary), browserDownloadRequest (message),
+browserDocumentFailed (message), message (glossary)
 

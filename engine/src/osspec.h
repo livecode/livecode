@@ -146,10 +146,6 @@ extern void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_lengt
 extern void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *&p_utf8, uint4& p_utf16_length);
 extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *&p_native, uint4& p_native_length);
 
-extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
-extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
-extern void MCS_unloadmodule(MCSysModuleHandle p_module);
-
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
 extern bool MCS_datetimetouniversal(MCDateTime& x_datetime);
 extern bool MCS_datetimetolocal(MCDateTime& x_datetime);
@@ -169,8 +165,6 @@ extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
-bool MCS_generate_uuid(char buffer[128]);
-
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,7 +183,7 @@ extern void MCS_setplayloudness(uint2 p_loudness);
 
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
-extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
+extern MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
 extern void MCS_close_socket(MCSocket *s);
 extern MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
@@ -240,23 +234,21 @@ MCSErrorMode MCS_get_errormode(void);
 
 enum MCSOutputTextEncoding
 {
-	kMCSOutputTextEncodingUndefined,
-	
 	kMCSOutputTextEncodingWindows1252,
 	kMCSOutputTextEncodingMacRoman,
 	kMCSOutputTextEncodingISO8859_1,
 	kMCSOutputTextEncodingUTF8,
-	
-#if defined(__MACROMAN__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman,
-#elif defined(__WINDOWS_1252__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252,
-#elif defined(__ISO_8859_1__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1,
-#else
-#error Unknown native text encoding
-#endif
 };
+
+#if defined(__MACROMAN__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman;
+#elif defined(__WINDOWS_1252__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252;
+#elif defined(__ISO_8859_1__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1;
+#else
+#   error Unknown native text encoding
+#endif
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding);
 MCSOutputTextEncoding MCS_get_outputtextencoding(void);

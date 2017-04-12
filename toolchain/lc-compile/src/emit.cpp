@@ -19,9 +19,12 @@
 #include "libscript/script.h"
 #include "libscript/script-auto.h"
 
-#include "report.h"
-#include "literal.h"
-#include "position.h"
+#include <output.h>
+#include <allocate.h>
+#include <position.h>
+#include <report.h>
+#include <literal.h>
+#include "outputfile.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -87,14 +90,7 @@ extern "C" void EmitDefinedType(long index, long& r_type_index);
 extern "C" void EmitForeignType(long binding, long& r_type_index);
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
-extern "C" void EmitOptionalType(long index, long& r_new_index);
-extern "C" void EmitPointerType(long& r_new_index);
-extern "C" void EmitBoolType(long& r_new_index);
-extern "C" void EmitIntType(long& r_new_index);
-extern "C" void EmitUIntType(long& r_new_index);
-extern "C" void EmitFloatType(long& r_new_index);
-extern "C" void EmitDoubleType(long& r_new_index);
-extern "C" void EmitAnyType(long& r_new_index);
+extern "C" void EmitOptionalType(long index, long& r_new_index);extern "C" void EmitAnyType(long& r_new_index);
 extern "C" void EmitBooleanType(long& r_new_index);
 extern "C" void EmitIntegerType(long& r_new_index);
 extern "C" void EmitRealType(long& r_new_index);
@@ -104,7 +100,7 @@ extern "C" void EmitDataType(long& r_new_index);
 extern "C" void EmitArrayType(long& r_new_index);
 extern "C" void EmitListType(long& r_new_index);
 extern "C" void EmitUndefinedType(long& r_new_index);
-extern "C" void EmitBeginRecordType(long base_type_index);
+extern "C" void EmitBeginRecordType(void);
 extern "C" void EmitRecordTypeField(NameRef name, long type_index);
 extern "C" void EmitEndRecordType(long& r_type_index);
 extern "C" void EmitBeginHandlerType(long return_type_index);
@@ -168,11 +164,6 @@ extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 extern "C" void EmitPosition(PositionRef position);
 
 extern "C" void OutputBeginManifest(void);
-extern "C" void OutputEnd(void);
-extern "C" void OutputWrite(const char *msg);
-extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
-extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
-extern "C" void OutputWriteXmlS(const char *left, const char *string, const char *right);
 
 extern "C" int IsBootstrapCompile(void);
 
@@ -197,6 +188,8 @@ struct AttachedReg
 };
 
 static AttachedReg *s_attached_regs = nil;
+
+void EmitCheckNoRegisters(void);
 
 //////////
 
@@ -236,9 +229,9 @@ static MCStringRef to_mcstringref(long p_string)
     MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
                             (uindex_t)strlen(reinterpret_cast<const char *>(p_string)),
                             kMCStringEncodingUTF8, false, &t_string);
-    MCStringRef t_uniq_string;
-    MCValueInter(*t_string, t_uniq_string);
-    return t_uniq_string;
+    MCAutoStringRef t_uniq_string;
+    MCValueInter(*t_string, &t_uniq_string);
+    return t_uniq_string.Take();
 }
 
 static NameRef nameref_from_mcstringref(MCStringRef p_string)
@@ -253,9 +246,6 @@ static NameRef nameref_from_mcstringref(MCStringRef p_string)
 }
 
 //////////
-
-extern "C" void *Allocate(size_t p_size);
-extern "C" void *Reallocate(void *p_ptr, size_t p_new_size);
 
 static MCScriptModuleBuilderRef s_builder;
 static NameRef s_module_name;
@@ -277,16 +267,25 @@ static EmittedModule *s_emitted_modules = NULL;
 
 //////////
 
-// String used for output as C sources
-#define MC_AS_C_PREFIX "\n" \
-    "#ifdef _MSC_VER \n" \
-    "#  pragma section(\"__modules\") \n" \
-    "#  define MODULE_SECTION __declspec(allocate(\"__modules\")) \n" \
-    "#elif defined __APPLE__ \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__MODULES,__modules\"))) __attribute__((used)) \n" \
-    "#else \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
-    "#endif \n"
+static const char *kOutputCDefinitions =
+    "struct __builtin_module_info\n"
+    "{\n"
+    "    void *next;\n"
+    "    void *handle;\n"
+    "    unsigned char *data;\n"
+    "    unsigned long length;\n"
+    "    bool (*initializer)();\n"
+    "    void (*finalizer)();\n"
+    "};\n"
+    "extern \"C\" void MCScriptRegisterBuiltinModule(__builtin_module_info *desc);\n"
+    "class __builtin_module_loader\n"
+    "{\n"
+    "public:\n"
+    "    __builtin_module_loader(__builtin_module_info *p_desc)\n"
+    "    {\n"
+    "        MCScriptRegisterBuiltinModule(p_desc);\n"
+    "    }\n"
+    "};\n\n";
 
 void EmitStart(void)
 {
@@ -297,9 +296,7 @@ void EmitStart(void)
     
     if (s_output_code_file != NULL)
     {
-        if (fprintf(s_output_code_file, MC_AS_C_PREFIX) < 0)
-            goto error_cleanup;
-        if (fprintf(s_output_code_file, "typedef struct { const char *name; unsigned char *data; unsigned long length; } builtin_module_descriptor;\n\n") < 0)
+        if (fprintf(s_output_code_file, "%s", kOutputCDefinitions) < 0)
             goto error_cleanup;
     }
     
@@ -324,94 +321,8 @@ static void __EmitModuleOrder(NameRef p_name)
     s_ordered_modules[s_ordered_module_count++] = p_name;
 }
 
-static bool __FindEmittedModule(NameRef p_name, EmittedModule*& r_module)
-{
-    for(EmittedModule *t_module = s_emitted_modules; t_module != NULL; t_module = t_module -> next)
-        if (IsNameEqualToName(p_name, t_module -> name))
-        {
-            r_module = t_module;
-            return true;
-        }
-    
-    return false;
-}
-
 void EmitFinish(void)
 {
-    if (s_output_code_file != NULL && IsBootstrapCompile())
-    {
-        if (fprintf(s_output_code_file, "builtin_module_descriptor* g_builtin_modules[] =\n{\n") < 0)
-            goto error_cleanup;
-        
-        for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-                if (fprintf(s_output_code_file, "    &__%s_module_info,\n", t_module -> modified_name) < 0)
-                    goto error_cleanup;
-        }
-        
-        if (fprintf(s_output_code_file, "};\n\n") < 0)
-            goto error_cleanup;
-        
-        if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern int %s_Initialize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    if (!%s_Initialize())\n"
-                            "        return 0;\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern void %s_Finalize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
-            goto error_cleanup;
-        for(unsigned int i = s_ordered_module_count; i > 0; i--)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i - 1], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    %s_Finalize();\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        
-        if (fprintf(s_output_code_file, "}\n\n") < 0)
-            goto error_cleanup;
-    }
-    
 	if (nil != s_output_code_file)
     {
 		fclose (s_output_code_file);
@@ -539,6 +450,18 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
     
+    // Emit the initializer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" bool %s_Initialize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
+    // Emit the finalizer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" void %s_Finalize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
 	if (0 > fprintf(t_file, "static unsigned char %s_module_data[] = {", t_modified_name))
 		goto error_cleanup;
 
@@ -551,12 +474,15 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (0 > fprintf(t_file, "0x%02x, ", ((unsigned char *)p_bytecode)[i]))
 			goto error_cleanup;
 	}
-	if (0 > fprintf(t_file, "};\n\n"))
-		goto error_cleanup;
+	if (0 > fprintf(t_file, "};\n"))
+        goto error_cleanup;
 
-	if (0 > fprintf(t_file, "builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
+	if (0 > fprintf(t_file, "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n", t_modified_name, t_modified_name, t_modified_name, t_modified_name, t_modified_name))
 		goto error_cleanup;
-
+    
+    if (0 > fprintf(t_file, "static __builtin_module_loader __%s_loader(&__%s_module_info);\n\n", t_modified_name, t_modified_name))
+        goto error_cleanup;
+    
     EmittedModule *t_mod;
     t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
     t_mod -> next = s_emitted_modules;
@@ -908,6 +834,9 @@ void EmitBeginUnsafeHandlerDefinition(long p_index, PositionRef p_position, Name
 
 void EmitEndHandlerDefinition(void)
 {
+    /* Check that registers have all been destroyed */
+    EmitCheckNoRegisters();
+    
     if (s_attached_regs != nil)
     {
         for(AttachedReg *t_reg = s_attached_regs; t_reg != NULL; t_reg = t_reg -> next)
@@ -1144,54 +1073,6 @@ void EmitOptionalType(long base_index, long& r_new_index)
     Debug_Emit("OptionalType(%ld -> %ld)", base_index, r_new_index);
 }
 
-void EmitPointerType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("Pointer", r_new_index))
-        return;
-
-    Debug_Emit("PointerType(-> %ld)", r_new_index);
-}
-
-void EmitBoolType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CBool", r_new_index))
-        return;
-
-    Debug_Emit("BoolType(-> %ld)", r_new_index);
-}
-
-void EmitIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CInt", r_new_index))
-        return;
-
-    Debug_Emit("IntType(-> %ld)", r_new_index);
-}
-
-void EmitUIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CUint", r_new_index))
-        return;
-
-    Debug_Emit("UIntType(-> %ld)", r_new_index);
-}
-
-void EmitFloatType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CFloat", r_new_index))
-        return;
-
-    Debug_Emit("FloatType(-> %ld)", r_new_index);
-}
-
-void EmitDoubleType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CDouble", r_new_index))
-        return;
-
-    Debug_Emit("DoubleType(-> %ld)", r_new_index);
-}
-
 void EmitAnyType(long& r_new_index)
 {
     if (!define_builtin_typeinfo("any", r_new_index))
@@ -1275,11 +1156,11 @@ void EmitUndefinedType(long& r_new_index)
 
 //////////
 
-void EmitBeginRecordType(long p_base_type_index)
+void EmitBeginRecordType()
 {
-    MCScriptBeginRecordTypeInModule(s_builder, (uindex_t)p_base_type_index);
+    MCScriptBeginRecordTypeInModule(s_builder);
 
-    Debug_Emit("BeginRecordType(%ld)", p_base_type_index);
+    Debug_Emit("BeginRecordType()");
 }
 
 void EmitRecordTypeField(NameRef name, long type_index)
@@ -1420,6 +1301,25 @@ void EmitDestroyRegister(long regindex)
     Debug_Emit("DestroyRegister(%ld)", regindex);
 }
 
+void EmitCheckNoRegisters(void)
+{
+    bool t_all_destroyed = true;
+    if (s_register_count > 0)
+    {
+        for(uindex_t i = 0; i < s_register_count; i++)
+            if (s_registers[i] != 0)
+            {
+                t_all_destroyed = false;
+                Debug_Emit("Register %d not destroyed", i);
+            }
+    }
+    
+    if (!t_all_destroyed)
+    {
+        Fatal_InternalInconsistency("handler generation finished without destroying all registers");
+    }
+}
+
 //////////
 
 struct RepeatLabels
@@ -1433,8 +1333,8 @@ static RepeatLabels *s_repeat_labels = nil;
 
 void EmitPushRepeatLabels(long next, long exit)
 {
-    RepeatLabels *t_labels;
-    MCMemoryNew(t_labels);
+    RepeatLabels *t_labels = nullptr;
+    /* UNCHECKED */ MCMemoryNew(t_labels);
     t_labels -> head = next;
     t_labels -> tail = exit;
     t_labels -> next = s_repeat_labels;
@@ -1576,7 +1476,7 @@ void EmitEndArrayConstant(long *idx)
 class __opcode_index
 {
 public:
-    __opcode_index(const char *p_name)
+    __opcode_index(const char *p_name) : m_index(0)
     {
         if (!MCScriptLookupBytecode(p_name, m_index))
         {
@@ -1819,11 +1719,11 @@ static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
 
 void EmitAttachRegisterToExpression(long reg, long expr)
 {
-    AttachedReg *t_attach;
+    AttachedReg *t_attach = nullptr;
     if (FindAttachedReg(expr, t_attach))
         Fatal_InternalInconsistency("Register attached to expression which is already attached");
     
-    MCMemoryNew(t_attach);
+    /* UNCHECKED */ MCMemoryNew(t_attach);
     t_attach -> next = s_attached_regs;
     t_attach -> expr = expr;
     t_attach -> reg = reg;
@@ -1896,109 +1796,9 @@ void EmitPosition(PositionRef p_position)
 
 //////////
 
-static FILE *s_output = NULL;
-
 void OutputBeginManifest(void)
 {
-    s_output = OpenManifestOutputFile();
-}
-
-void OutputWrite(const char *p_string)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s", p_string);
-}
-
-void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
-}
-
-void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    const char *t_name_string;
-    GetStringOfNameLiteral(p_name, &t_name_string);
-    OutputWriteS(p_left, t_name_string, p_right);
-}
-
-/* This is the same as OutputWriteS, but escapes special XML
- * characters (&, ", ', <, >) found in p_string */
-void
-OutputWriteXmlS(const char *p_left,
-                const char *p_string,
-                const char *p_right)
-{
-	struct xml_replacement_t {
-		const char *from, *to;
-	};
-
-	static const struct xml_replacement_t k_replacements[] = {
-		{"&", "&amp;"},
-		{"<", "&lt;"},
-		{">", "&gt;"},
-		{"\"", "&quot;"},
-		{"\'", "&apos;"},
-		{NULL, NULL},
-	};
-
-	if (s_output == NULL)
-	{
-		return;
-	}
-
-	bool t_success = true;
-	MCAutoStringRef t_string;
-	if (t_success)
-	{
-		t_success =
-			MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
-			                        (uindex_t)strlen(p_string), kMCStringEncodingUTF8,
-			                        false, &t_string);
-	}
-
-	MCAutoStringRef t_xml_string;
-	if (t_success)
-	{
-		t_success = MCStringMutableCopy(*t_string, &t_xml_string);
-	}
-	for (int i = 0; t_success && k_replacements[i].from != nil; ++i)
-	{
-		t_success = MCStringFindAndReplace(*t_xml_string,
-		                                   MCSTR(k_replacements[i].from),
-		                                   MCSTR(k_replacements[i].to),
-		                                   kMCStringOptionCompareExact);
-	}
-
-	MCAutoStringRefAsUTF8String t_xml_utf8string;
-	if (t_success)
-	{
-		t_success = t_xml_utf8string.Lock(*t_xml_string);
-	}
-
-	if (t_success)
-	{
-		OutputWriteS(p_left, *t_xml_utf8string, p_right);
-	}
-	else
-	{
-		/* UNCHECKED */ abort();
-	}
-}
-
-void OutputEnd(void)
-{
-    if (s_output == NULL)
-        return;
-    
-    fclose(s_output);
+	OutputFileBegin(OpenManifestOutputFile());
 }
 
 //////////

@@ -496,7 +496,7 @@ static MCDateTimeLocale *do_cache_locale(void)
 	
 	s_locale_timezone = CFTimeZoneCopySystem();
 	
-	s_locale_info = new MCDateTimeLocale;
+	s_locale_info = new (nothrow) MCDateTimeLocale;
 	
 	if (!osx_cf_cache_locale(s_locale_info))
 		*s_locale_info = *g_basic_locale;

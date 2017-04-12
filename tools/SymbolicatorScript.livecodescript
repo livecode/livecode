@@ -2,11 +2,12 @@
 constant kLiveCodeAppId = "com.runrev.livecode"
 constant kStagingUrl = "https://downloads.livecode.com/livecode/staging"
 constant kShortFlags = "v,d,h"
-constant kLongFlags = "verbose,debug,help,fetch"
+constant kLongFlags = "verbose,debug,help,fetch,hang"
 constant kValueOptions = "repo,cache-dir,symbol-dir,version,staging-url,edition,output"
 
 local sDebugging
 local sVerbose
+local sHangReport
 
 
 ---------------------------------------
@@ -32,6 +33,8 @@ on startup
       showHelp
       quit 0
    end if
+   
+   if "hang" is among the keys of tArgs then put true into sHangReport
    
    -- Show debugging information?
    if "d" or "debug" is among the keys of tArgs then put true into sDebugging
@@ -147,9 +150,9 @@ private command showHelp
                                                                                   return & \
 "Usage:"                                                                        & return & \
 "  symbolicate.sh --help"                                                       & return & \
-"  symbolicate.sh [-v|--verbose] [-d|--debug] [--repo=...] [--symbol-dir=...]"  & return & \
-"    [--fetch --cache-dir=... [--staging-url=...]] [--version=...]"             & return & \
-"    [--edition=...] [--output=...] input.log"                                  & return & \
+"  symbolicate.sh [-v|--verbose] [-d|--debug] [--hang] [--repo=...] "           & return & \
+"    [--symbol-dir=...] [--fetch --cache-dir=... [--staging-url=...]] "         & return & \
+"    [--version=...] [--edition=...] [--output=...] input.log"                  & return & \
                                                                                   return & \
 "Options:"                                                                      & return & \
 "  --help               Displays this message"                                  & return & \
@@ -158,6 +161,9 @@ private command showHelp
                                                                                   return & \
 "  --debug              Displays information that may help debug problems with" & return & \
 "                       this script"                                            & return & \
+                                                                                  return & \
+"  --hang               Treat the input file as a hang log rather than a crash" & return & \
+"                       log"                                                    & return & \
                                                                                   return & \
 "  --repo=...           Path to a current checkout of the LiveCode source code" & return & \
 "                       repository. If not specified, the current directory"    & return & \
@@ -552,11 +558,25 @@ end fetchSymbolsForRevision
 ---------- SYMBOLICATION ----------
 -----------------------------------
 
+private function findLineBeginningWith pWord, pLog
+   local tFoundLineNumber, tCurrentLine, tNextLine
+   put lineOffset(pWord, pLog) into tNextLine
+   repeat while tNextLine is not 0
+      add tNextLine to tCurrentLine
+      if line tCurrentLine of pLog begins with pWord then 
+      	put tCurrentLine into tFoundLineNumber
+      	exit repeat
+      end if
+      put lineOffset(pWord, pLog, tCurrentLine) into tNextLine
+   end repeat
+   return tFoundLineNumber
+end findLineBeginningWith
+
 -- Guesses the LiveCode engine version and edition from the crash log
 private function guessVersionAndEdition pLog, @rVersion, @rEdition
    -- Find the line that contains the embedded version information
    local tVersionLineNumber
-   put lineOffset("Version:", pLog) into tVersionLineNumber
+   put findLineBeginningWith("Version:", pLog) into tVersionLineNumber
    if tVersionLineNumber is zero then return false
    
    -- Version line has the form "Version: 8.0.0.13012 [DP 12]"
@@ -575,12 +595,13 @@ private function guessVersionAndEdition pLog, @rVersion, @rEdition
    
    -- Find the line that contains the process name
    local tProcessLineNumber
-   put lineOffset("Process:", pLog) into tProcessLineNumber
+   put findLineBeginningWith("Process:", pLog) into tProcessLineNumber
    if tProcessLineNumber is zero then return false
    
    -- Look for keywords in the line
    local tProcessLine
    put line tProcessLineNumber of pLog into tProcessLine
+   
    switch
       case "LiveCode-Community" is among the words of tProcessLine
          put "community" into rEdition
@@ -605,7 +626,7 @@ private function guessVersionAndEdition pLog, @rVersion, @rEdition
 end guessVersionAndEdition
 
 -- Finds the line range in the given log that corresponds to the stack trace of the crashed thread
-private command findStackTraceLineRange pLog, @rStart, @rEnd
+private command findCrashStackTraceLineRange pLog, @rStart, @rEnd
       -- The stack trace begins after a line with "Thread N Crashed:"
    local tStackTraceLineNumber
    put lineOffset("Crashed:", pLog) into tStackTraceLineNumber
@@ -620,14 +641,14 @@ private command findStackTraceLineRange pLog, @rStart, @rEnd
    
    put tStackTraceLineNumber+1 into rStart
    put tStackTraceLineNumber+tStackTraceLineCount into rEnd
-end findStackTraceLineRange
+end findCrashStackTraceLineRange
 
 -- Takes an OSX crash log and finds the addresses needing symbolicated
-function addressesFromLog pLog
+function addressesFromCrashLog pLog
    -- Find the range that represents the stack trace needing symbolicated
    local tStackTraceStart
    local tStackTraceEnd
-   findStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
+   findCrashStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
    
    -- Extract just the stack trace then find the addresses in the trace
    local tStackTrace
@@ -640,6 +661,55 @@ function addressesFromLog pLog
    end repeat
    
    return tOutput
+end addressesFromCrashLog
+
+-- Finds the line range in the given log that corresponds to the stack trace
+-- of the 
+private command findHangStackTraceLineRange pLog, @rStart, @rEnd
+      -- The stack trace begins after a line with "Thread N Crashed:"
+   local tStackTraceLineNumber
+   put lineOffset("Heaviest", pLog) into tStackTraceLineNumber
+   if tStackTraceLineNumber is zero then throw "Could not find stack trace"
+   
+   -- Count the number of lines in the stack trace
+   -- Just keep going until there is a blank line
+   local tStackTraceLineCount
+   
+   repeat while word 1 of line (tStackTraceLineNumber+tStackTraceLineCount+1) of pLog is not empty
+      put tStackTraceLineCount + 1 into tStackTraceLineCount
+   end repeat
+   
+   put tStackTraceLineNumber+1 into rStart
+   put tStackTraceLineNumber+tStackTraceLineCount into rEnd
+end findHangStackTraceLineRange
+
+-- Takes an OSX hang report and finds the addresses needing symbolicated
+function addressesFromHangReport pLog
+   -- Find the range that represents the stack trace needing symbolicated
+   local tStackTraceStart
+   local tStackTraceEnd
+   findHangStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
+   
+   -- Extract just the stack trace then find the addresses in the trace
+   local tStackTrace
+   put line tStackTraceStart to tStackTraceEnd of pLog into tStackTrace
+   
+   local tOutput
+   repeat for each line tLine in tStackTrace
+      -- The address is enclosed in square brackets as word -1 of each line
+      put char 2 to -2 of word -1 of tLine & return after tOutput
+   end repeat
+   
+   return tOutput
+end addressesFromHangReport
+
+-- Finds the addresses needing symbolicated from the given log
+function addressesFromLog pLog
+	if sHangReport then
+		return addressesFromHangReport(pLog)
+	else
+		return addressesFromCrashLog(pLog)
+	end if
 end addressesFromLog
 
 -- Finds the load address of the LiveCode executable in the given crash log
@@ -650,10 +720,15 @@ function loadAddressFromLog pLog
    if tHeaderOffset is zero then throw "Couldn't find load addresses list"
    
    -- Find the line containing the LiveCode IDE identifier ("com.runrev.livecode")
-   local tExeLineOffset
+   local tExeLineOffset, tCheckAppID
+   put kLiveCodeAppId into tCheckAppId
+   if not sHangReport then
+      put "+" before tCheckAppId
+   end if
+   
    repeat with i = tHeaderOffset+1 to the number of lines of pLog
       -- Format of lines is "0xXXXX - 0xYYYY +com.runrev.livecode"
-      if word 4 of line i of pLog is "+" & kLiveCodeAppId then exit repeat
+      if word 4 of line i of pLog is tCheckAppId then exit repeat
    end repeat
    if i > the number of lines of pLog then throw "Could not find LiveCode executable's load offset"
    put i into tExeLineOffset
@@ -685,11 +760,11 @@ function symbolsForAddresses pAddresses, pAppBundle, pLoadAddress
    return tSymbols
 end symbolsForAddresses
 
-function mergeSymbolsIntoLog pLog, pSymbols
+function mergeSymbolsIntoCrashLog pLog, pSymbols
    -- Find the line range of the stack trace that was symbolicated
    local tStackTraceStart
    local tStackTraceEnd
-   findStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
+   findCrashStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
    
    -- Sanity check
    if the number of lines of pSymbols is not (tStackTraceEnd - tStackTraceStart + 1) then throw "symbolicated trace is different length to original"
@@ -706,6 +781,37 @@ function mergeSymbolsIntoLog pLog, pSymbols
    
    -- Return the modified log
    return pLog
+end mergeSymbolsIntoCrashLog
+
+function mergeSymbolsIntoHangReport pLog, pSymbols
+   -- Find the line range of the stack trace that was symbolicated
+   local tStackTraceStart
+   local tStackTraceEnd
+   findHangStackTraceLineRange pLog, tStackTraceStart, tStackTraceEnd
+   
+   -- Sanity check
+   if the number of lines of pSymbols is not (tStackTraceEnd - tStackTraceStart + 1) then throw "symbolicated trace is different length to original"
+   
+   -- Loop through the symbols list and replace where appropriate
+   repeat with i = 0 to (the number of lines of pSymbols) - 1
+      -- In the original log, is this a LiveCode symbol?
+      if line (tStackTraceStart+i) of pLog contains "LiveCode" then
+         local tSymbol
+         put line (i+1) of pSymbols into tSymbol
+         put tSymbol into word 2 of line (tStackTraceStart+i) of pLog
+      end if
+   end repeat
+   
+   -- Return the modified log
+   return pLog
+end mergeSymbolsIntoHangReport
+
+function mergeSymbolsIntoLog pLog, pSymbols
+   if sHangReport then
+      return mergeSymbolsIntoHangReport(pLog, pSymbols)
+   else
+      return mergeSymbolsIntoCrashLog(pLog, pSymbols)
+   end if
 end mergeSymbolsIntoLog
 
 function symbolicateLog pLog, pAppBundle

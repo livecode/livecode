@@ -25,6 +25,10 @@ set the dropShadow["color"] of me to "255,0,0"
 
 Description:
 Use the <dropShadow> property to create a shadow effect on an object.
+If the object is opaque,  the shadow effect is applied to the exterior 
+boundary of the object. If the object is transparent, the shadow is 
+applied to the interior visible elements of the control: the text 
+in the field, the label/name of the button (if shown) or the lines of the graphic.
 The <dropShadow> is an array style property, each key of the array
 controls a different <dropShadow> parameter that will affect its final
 appearance. The easiest way to adjust these properties is by using the

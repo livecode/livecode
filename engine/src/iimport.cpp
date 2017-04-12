@@ -361,7 +361,7 @@ IO_stat MCImage::import(MCStringRef newname, IO_handle stream, IO_handle mstream
             uindex_t t_offset;
             if (MCStringLastIndexOfChar(newname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_offset))
             {
-                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMake(t_offset + 1, MCStringGetLength(newname) - t_offset - 1), t_name);
+                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMakeMinMax(t_offset + 1, MCStringGetLength(newname)), t_name);
                 /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
             }
             else

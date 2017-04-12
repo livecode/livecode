@@ -6,21 +6,39 @@ use com.livecode.foreign
 -- **EXPERIMENTAL** Helper functions for testing error states
 ----------------------------------------------------------------
 
+public constant ThisModule is "com.livecode.__INTERNAL._testlib"
+
 public handler type Thunk() returns optional any
 
 public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) returns nothing
-	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, false, "")
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, nothing, true, false, "")
+end handler
+
+public handler MCUnitTestHandlerThrowsNamed(in pHandler as any, in pErrorName, in pDescription as String) returns nothing
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, pErrorName, true, false, "")
 end handler
 
 public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as String, in pReason as String) returns nothing
-	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, true, pReason)
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, nothing, true, true, pReason)
+end handler
+
+public handler MCUnitTestHandlerDoesntThrow(in pHandler as any, in pDescription as String) returns nothing
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, nothing, false, false, "")
+end handler
+
+public handler MCUnitTestHandlerDoesntThrowBroken(in pHandler as any, in pDescription as String, in pReason as String) returns nothing
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, nothing, false, true, pReason)
 end handler
 
 ----------------------------------------------------------------
 
 foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) returns optional any binds to "<builtin>"
+foreign handler MCValueGetTypeInfo(in pValue as any) returns Pointer binds to "<builtin>"
+foreign handler MCNamedTypeInfoGetName(in pValue as Pointer) returns Pointer binds to "<builtin>"
+foreign handler MCNameGetString(in pValue as Pointer) returns Pointer binds to "<builtin>"
+foreign handler MCValueRetain(in pValue as Pointer) returns any binds to "<builtin>"
 
-handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) returns nothing
+handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pErrorName as optional String, in pExpectThrow as Boolean, in pBroken as Boolean, in pReason as String) returns nothing
 
 	variable tHandler as Thunk
 	put pHandler into tHandler
@@ -41,10 +59,28 @@ handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as Strin
 	if tHasError then
 		test diagnostic tMaybeError
 	end if
-	if pBroken then
-		broken test pDescription when tHasError because pReason
+
+	variable tTestPass as Boolean
+	if pExpectThrow then
+		if pErrorName is not nothing then
+			if tHasError then
+				unsafe
+					put MCValueRetain(MCNameGetString(MCNamedTypeInfoGetName(MCValueGetTypeInfo(tMaybeError)))) is pErrorName into tTestPass
+				end unsafe
+			else
+				put false into tTestPass
+			end if
+		else
+			put tHasError into tTestPass
+		end if
 	else
-		test pDescription when tHasError
+		put not tHasError into tTestPass
+	end if
+
+	if pBroken then
+		broken test pDescription when tTestPass because pReason
+	else
+		test pDescription when tTestPass
 	end if
 
 end handler

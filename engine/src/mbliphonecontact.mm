@@ -152,101 +152,6 @@ static bool name_to_key(MCNameRef p_name, CFStringRef &r_key)
 	return false;
 }
 
-/*
-bool MCCFDictionaryToArray(MCExecPoint& ep, CFDictionaryRef p_dict, MCVariableValue *&r_array)
-{
-	bool t_success = true;
-	
-	CFStringRef *t_dict_keys = nil;
-	CFStringRef *t_dict_values = nil;
-	uindex_t t_dict_size = 0;
-	
-	MCVariableValue *t_prop_array = nil;
-	
-	t_success = nil != (t_prop_array = new MCVariableValue());
-	
-	if (t_success)
-	{
-		t_dict_size = CFDictionaryGetCount(p_dict);
-		t_success = MCMemoryNewArray(t_dict_size, t_dict_keys) &&
-		MCMemoryNewArray(t_dict_size, t_dict_values);
-	}
-	
-	if (t_success)
-	{
-		CFDictionaryGetKeysAndValues(p_dict, (const void **)t_dict_keys, (const void**)t_dict_values);
-		for (uindex_t i = 0; t_success && i < t_dict_size; i++)
-		{
-			MCNameRef t_key_name;
-			MCVariableValue *t_array_entry;
-			if (key_to_name(t_dict_keys[i], t_key_name))
-			{
-				t_success = t_prop_array->lookup_element(ep, MCNameGetOldString(t_key_name), t_array_entry) == ES_NORMAL;
-				if (t_success)
-				{
-					const char *t_value = [(NSString*)t_dict_values[i] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-					t_success = t_array_entry->assign_string(MCString(t_value));
-				}
-			}
-		}
-	}
-	
-	if (t_success)
-		r_array = t_prop_array;
-	
-	MCMemoryDeleteArray(t_dict_keys);
-	MCMemoryDeleteArray(t_dict_values);
-	
-	return t_success;
-
-}
-
-bool MCCFDictionaryFromArray(MCExecPoint& p_ep, MCVariableValue *p_array, CFDictionaryRef& r_dict)
-{
-	if (!p_array->is_array())
-		return false;
-	
-	bool t_success = true;
-	
-	MCVariableArray *t_array = p_array->get_array();
-
-	CFMutableDictionaryRef t_dict = nil;
-	t_success = nil != (t_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, t_array->getnfilled(), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
-	
-	MCHashentry *t_hashentry = nil;
-	uindex_t t_index = 0;
-	
-	MCExecPoint ep(p_ep);
-	
-	while (t_success && nil != (t_hashentry = t_array->getnextelement(t_index, t_hashentry, False, ep)))
-	{
-		CFStringRef t_key;
-		t_hashentry->value.fetch(ep);
-		
-		MCNameRef t_key_name = nil;
-		t_success = MCNameCreateWithCString(t_hashentry->string, t_key_name);
-		
-		if (name_to_key(t_key_name, t_key))
-		{
-			NSString *t_value = nil;
-			if (t_success)
-				t_success = nil != (t_value = [NSString stringWithCString:ep.getcstring() encoding: NSMacOSRomanStringEncoding]);
-			
-			if (t_success)
-				CFDictionaryAddValue(t_dict, t_key, t_value);
-		}
-		
-		MCNameDelete(t_key_name);
-	}
-	
-	if (t_success)
-		r_dict = t_dict;
-	else if (t_dict != nil)
-		CFRelease(t_dict);
-	
-	return t_success;
-} */
-
 bool MCCFDictionaryToArray(CFDictionaryRef p_dict, MCArrayRef &r_array)
 {
 	bool t_success = true;
@@ -309,7 +214,7 @@ bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
 		{
 			NSString *t_value = nil;
 			if (t_success)
-				t_success = nil != (t_value = [NSString stringWithMCStringRef: (MCStringRef)t_entry]);
+				t_success = nil != (t_value = MCStringConvertToAutoreleasedNSString((MCStringRef)t_entry));
 			
 			if (t_success)
 				CFDictionaryAddValue(t_dict, t_key, t_value);
@@ -323,171 +228,6 @@ bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
 	
 	return t_success;
 }
-
-/*
-bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *&r_contact)
-{
-	MCVariableValue *t_contact = nil;
-	bool t_success = true;
-	
-	t_contact = new MCVariableValue();
-	t_success = t_contact != nil;
-	
-	for (uindex_t i = 0; t_success && i < ELEMENTS(s_property_map); i++)
-	{
-		CFTypeRef t_prop_value;
-		t_prop_value = ABRecordCopyValue(p_person, *s_property_map[i].property);
-		if (t_prop_value != nil)
-		{
-			if (!s_property_map[i].has_labels)
-			{
-				const char *t_value = [(NSString*)t_prop_value cStringUsingEncoding: NSMacOSRomanStringEncoding];
-				t_success = MCContactAddProperty(ep, t_contact, *s_property_map[i].name, MCString(t_value));
-			}
-			else
-			{
-				// if the property has a label, it's a multivalue prop and can have multiple entries of the same type
-				ABMultiValueRef t_values = t_prop_value;
-				ABPropertyType t_proptype = ABMultiValueGetPropertyType(t_values);
-				uindex_t t_value_count = ABMultiValueGetCount(t_values);
-
-				for (uindex_t j = 0; j < t_value_count; j++)
-				{
-					CFStringRef t_label;
-					MCNameRef t_label_name;
-					
-					t_label = ABMultiValueCopyLabelAtIndex(t_values, j);
-					
-                    // FG-2013-11-26 [[ Bugfix 11511 ]]
-                    // ABMultiValueCopyLabelAtIndex returns a null pointer if
-                    // there is no label for the given index.
-					if (t_label != nil && label_to_name(t_label, t_label_name))
-					{
-						CFTypeRef t_multi_value;
-						t_multi_value = ABMultiValueCopyValueAtIndex(t_values, j);
-						
-						// Currently we're only dealing with string values
-						if (t_proptype == kABStringPropertyType)
-						{
-							const char *t_value = [(NSString*)t_multi_value cStringUsingEncoding: NSMacOSRomanStringEncoding];
-							t_success = MCContactAddPropertyWithLabel(ep, t_contact, *s_property_map[i].name, t_label_name, MCString(t_value));
-						}
-						else if (t_proptype == kABDictionaryPropertyType)
-						{
-							// construct an array containing the keys/values of the CFDictionaryRef and add it to our contact array
-							MCVariableValue *t_prop_array = nil;
-							t_success = MCCFDictionaryToArray(ep, (CFDictionaryRef)t_multi_value, t_prop_array) && 
-								MCContactAddPropertyWithLabel(ep, t_contact, *s_property_map[i].name, t_label_name, t_prop_array);
-							
-							delete t_prop_array;
-						}
-						
-						CFRelease(t_multi_value);
-					}
-				}
-			}
-			
-			CFRelease(t_prop_value);
-		}
-	}
-	
-	if (t_success)
-		r_contact = t_contact;
-	else
-		delete t_contact;
-	
-	return t_success;
-}
-
-bool MCCreatePerson(MCExecPoint &p_ep, MCArrayRef p_contact, ABRecordRef &r_person)
-{ 
-	MCExecPoint ep(p_ep);
-	bool t_success = true;
-	ABRecordRef t_person = nil;
-	t_success = nil != (t_person = ABPersonCreate());
-	
-	for (uindex_t i = 0; t_success && i < ELEMENTS(s_property_map); i++)
-	{
-		if (p_contact->fetch_element_if_exists(ep, MCNameGetOldString(*s_property_map[i].name), false))
-		{
-			if (!s_property_map[i].has_labels)
-			{
-				MCString t_value = ep.getsvalue0();
-				if (t_value.getlength() > 0)
-				{
-					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithCString:t_value.getstring() encoding:NSMacOSRomanStringEncoding],
-									 nil);
-				}
-			}
-			else
-			{
-
-				MCVariableValue *t_prop_array = ep.getarray();
-				if (t_prop_array != nil)
-				{
-					ABMutableMultiValueRef t_multi_value = nil;
-					
-					CFTypeID t_multi_type = s_property_map[i].has_keys ? kABDictionaryPropertyType : kABStringPropertyType;
-					t_success = nil != (t_multi_value = ABMultiValueCreateMutable(t_multi_type));
-					for (uindex_t j = 0; t_success && j < ELEMENTS(s_label_map); j++)
-					{
-						if (t_prop_array->fetch_element_if_exists(ep, MCNameGetOldString(*s_label_map[j].name), false))
-					{
-							MCVariableValue *t_indexed_array = ep.getarray();
-							if (t_indexed_array != nil)
-							{
-								MCVariableValue *t_index_value;
-								uindex_t t_index = 1;
-								
-								while (t_success = (ES_NORMAL == t_indexed_array->lookup_index(ep, t_index++, false, t_index_value)))
-								{
-									if (t_index_value == nil)
-										break;
-
-									t_index_value->fetch(ep);
-									if (!s_property_map[i].has_keys)
-									{
-										MCString t_value = ep.getsvalue0();
-										if (t_value.getlength() > 0)
-										{
-											t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																					 [NSString stringWithCString:t_value.getstring() encoding:NSMacOSRomanStringEncoding],
-																					 s_label_map[j].label,
-																					 nil);
-										}
-									}
-									else
-									{
-										MCVariableValue *t_label_array = ep.getarray();
-										if (t_label_array != nil)
-										{
-											CFDictionaryRef t_dict = nil;
-											t_success = MCCFDictionaryFromArray(ep, t_label_array, t_dict) &&
-											ABMultiValueAddValueAndLabel(t_multi_value, t_dict, s_label_map[j].label, nil);
-											if (t_dict != nil)
-												CFRelease(t_dict);
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
-						t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
-				}
-            }
-		}
-	}
-	
-	if (t_success)
-		r_person = t_person;
-	else if (t_person != nil)
-		CFRelease(t_person);
-	
-	return t_success;
-}*/
 
 bool MCCreatePersonData(ABRecordRef p_person, MCArrayRef& r_contact)
 {
@@ -577,7 +317,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 				if (MCStringGetLength(*t_value_string) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithMCStringRef: *t_value_string],
+									 MCStringConvertToAutoreleasedNSString(*t_value_string),
 									 nil);
 				}
 			}
@@ -609,7 +349,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 									if (MCStringGetLength(*t_index_value_string) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithMCStringRef: *t_index_value_string],
+																				 MCStringConvertToAutoreleasedNSString(*t_index_value_string),
 																				 s_label_map[j].label,
 																				 nil);
 									}
@@ -1285,9 +1025,9 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 		{
-            t_title = [NSString stringWithMCStringRef: p_title == nil ? kMCEmptyString : p_title];
-            t_message = [NSString stringWithMCStringRef: p_message == nil ? kMCEmptyString : p_message];
-			t_alternate_name = [NSString stringWithMCStringRef: p_alternate_name == nil ? kMCEmptyString : p_alternate_name];
+            t_title = MCStringConvertToAutoreleasedNSString(p_title == nil ? kMCEmptyString : p_title);
+            t_message = MCStringConvertToAutoreleasedNSString(p_message == nil ? kMCEmptyString : p_message);
+			t_alternate_name = MCStringConvertToAutoreleasedNSString(p_alternate_name == nil ? kMCEmptyString : p_alternate_name);
 			m_success = (t_title != nil) && (t_message != nil) && (t_alternate_name != nil);
 		}
 		

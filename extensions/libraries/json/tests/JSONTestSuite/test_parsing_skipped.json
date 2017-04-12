@@ -1,0 +1,9 @@
+{
+    "n_string_UTF8_surrogate_U+D800.json": "Text decoding",
+    "n_string_invalid_utf-8.json": "Text decoding",
+    "n_string_iso_latin_1.json": "Text decoding",
+    "n_string_lone_utf8_continuation_byte.json": "Text decoding",
+    "n_string_overlong_sequence_2_bytes.json": "Text decoding",
+    "n_string_overlong_sequence_6_bytes.json": "Text decoding",
+    "n_string_overlong_sequence_6_bytes_null.json": "Text decoding"
+}

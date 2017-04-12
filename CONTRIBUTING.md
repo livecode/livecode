@@ -90,89 +90,9 @@ When the pull request is merged, the status should be set to "AWAITING_BUILD".
 
 ## Coding style
 
-### C++ coding style
+See the separate documentation for:
 
-The majority of the engine is written in C++, but the style treats C++ as an improved version of C, and doesn't use the whole of the language's feature set.  In particular:
+- [C++ coding style](docs/development/C++-style.md) and
+  [use of C++ language features](docs/development/C++-features.md)
 
-* The engine doesn't use exceptions or RTTI (run time type information).
-* Templates are used sparingly, and typically as "sanitized macros" for efficiency purposes or for resource management.
-* No standard C++ library is used (i.e. you cannot use anything in the `std` namespace)
-
-#### Naming convention
-
-The engine source code follows a standard naming convention.
-
-Variable and function names should be descriptive.  Don't be scared of verbosity (but don't go too overboard on symbol lengths)
-
-
-Variable names:
-* should be lowercase, with words separated by underscores ("\_")
-* should be prefixed to indicate scope:
-  * "t\_": local variables
-  * "p\_": in parameters
-  * "r\_": out parameters
-  * "x\_": in-out parameters
-  * "m\_": class or struct instance member variables
-  * "s\_": class, function, or file-local static variables
-  * "g\_": global variables
-  * example: `t_foo_bar`
-
-Constants' names (including enum members):
-* should be camel-case
-* should prefixed with `kMC` and the module name
-* example: `kMCModuleFooBar`
-
-Function names:
-* should generally be camel-case
-* public / exported functions should have names prefixed with "MC" followed by the module name.
-* file-local static functions may also be in lower-case and underscore-separated
-* example: `MCFooBar()`
-
-#### Coding practices
-
-* Declare and initialize local variables on separate lines
-* Initialize all variables to a base value, e.g.
-  * pointers to `nil`
-  * bools to `true` or `false`
-  * numbers to 0
-* Only pass `bool` values to conditions (e.g. `if`, `while`, etc.). Don't assume that `nil`/`null`/`0` are false.
-* Always check the success of memory allocations; if the calling code can't handle memory failure then prefix the line that allocates with `/* UNCHECKED */`
-* Avoid using preprocessor macros to abbreviate code; use inline and/or template functions instead
-* Use implicit resource management (e.g. `MCAutoStringRef`) wherever reasonably possible
-* Functions should not modify "out" function parameters until immediately before returning, and only on success
-* `goto` is only usually acceptable for implementing cleanup-on-error
-* Avoid using the ternary operator (`<condition> ? <expr-if-true> : <expr-if-false>`)
-* Use a bit-field when declaring boolean values in a struct or class (e.g. `bool m_bool_member : 1`)
-* Whenever adding a function, add a comment that explains precisely:
-  * What the function does, under what conditions it succeeds, and how it behaves when it fails
-  * What the function expects as inputs, and what outputs it generates
-* When disabling code with a false condition, prefix the condition with 
-  `/* DISABLES CODE */`. For example:
-
-  ````
-  if (/* DISABLES CODE */ (false))
-  {
-     /* <body> */
-  }
-  ````
-
-#### Layout and style
-
-* Indent with tabs, using a 4-space tab width.
-* All curly braces should be on a line on their own.  They should be indented to match the level of the construct they relate to.  For example:
-
-  ````
-  if (/* <condition> */)
-  {
-    /* <body> */
-  }
-  ````
-* Use a single space after the `for`, `while`, `if`, and `switch` keywords, as in the example above.
-* Don't insert a space between a function or macro name and its parameter list
-* Insert a single space after each comma (",")
-* Insert a single space before and after binary operators (e.g. `x == y`)
-* Put a single statement on each line
-* Split overly-long lines (> 80 characters) appropriately.  Try to place a line-break after any binary operators or commas.
-* Use a single blank line to separate different areas of code with in a function.
-* Use a single blank line between function and type definitions
-* Separate significant areas of code with comment bars, e.g. a line containing only 80 slash characters ("/")
+- [LiveCode Builder coding style](docs/guides/LiveCode Builder Style Guide.md)

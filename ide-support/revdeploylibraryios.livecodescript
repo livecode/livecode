@@ -18,13 +18,13 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "6.1,7.1,8.2,9.2,10.0"
+   return "8.2,9.2,10.2"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
-   put deploySanatizeSystemVersion() into tMacVersion
+   put deploySanitizeSystemVersion() into tMacVersion
    if tMacVersion < 100800 then
       put "6.1,4.6" into tList[1]
    else if tMacVersion < 100900 then
@@ -38,15 +38,15 @@ function deployGetIphoneOSes
          put "9.2,7.2" into tList[2]
       end if
    else
-      // Xcode 8.0 requires a Mac running Mac OS 10.11.5 or later
-      put "10.0,8.0" into tList[1]
+      // Xcode 8.2 requires a Mac running Mac OS 10.11.5 or later
+      put "10.2,8.2" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0"
+   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    put empty into tError
    
    local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   put revSBGetSettings(pTargetStack, true) into tSettings
    
    put revTestEnvironment() into tRunningTest
    
@@ -561,7 +561,7 @@ end deployIsValidSDK
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function deploySanatizeSystemVersion
+function deploySanitizeSystemVersion
    set the itemDel to "."
    get the systemVersion   
    if the length of item 2 of it is 0 then
@@ -576,6 +576,6 @@ function deploySanatizeSystemVersion
    end if   
    replace "." with empty in it
    return it
-end deploySanatizeSystemVersion
+end deploySanitizeSystemVersion
 
 ////////////////////////////////////////////////////////////////////////////////

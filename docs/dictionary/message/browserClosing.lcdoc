@@ -37,7 +37,7 @@ The <browserClosing> message is sent to the current card of a stack
 containing a browser object when the browser object is about to close.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserClose (command), revBrowserOpen function (function)
+References: revBrowserClose (command), revBrowserOpen (function), function (glossary)
 

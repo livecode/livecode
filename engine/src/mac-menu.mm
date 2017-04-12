@@ -185,7 +185,7 @@ enum MCShadowedItemTags
 
 - (void)menuItemSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     NSMenuItem *t_item;
@@ -319,7 +319,7 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
@@ -684,6 +684,19 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 		case kMCPlatformMenuItemPropertyTag:
 			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
 			break;
+        case kMCPlatformMenuItemPropertySubmenu:
+        {
+            NSMenu *t_current_submenu = [t_item submenu];
+            
+            MCPlatformMenuRef t_current_submenu_ref = nil;
+            if (t_current_submenu != nil)
+            {
+                t_current_submenu_ref = [(MCMenuDelegate *)[t_current_submenu delegate] platformMenuRef];
+            }
+            *(MCPlatformMenuRef *)r_value = t_current_submenu_ref;
+        }
+        break;
+            
 		default:
 			assert(false);
 			break;
@@ -842,6 +855,9 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			}
 		}
 		break;
+			
+		case kMCPlatformMenuItemPropertyUnknown:
+			MCUnreachable();
 	}
 }
 

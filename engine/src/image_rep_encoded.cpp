@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "context.h"
 #include "securemode.h"
-
+#include "globals.h"
 
 #include "exec.h"
 #include "util.h"

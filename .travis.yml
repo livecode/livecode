@@ -11,7 +11,13 @@ os:
   - linux
   - osx
 
+# Use a Travis image containing an Xcode we support
+# This prevents surprise upgrades!
+osx_image: xcode7.3
+
 language: c++
+
+compiler: clang
 
 # Skip vulcan CI branches
 branches:
@@ -28,9 +34,16 @@ env:
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "c++11"
 
+jdk:
+  - openjdk6
+
 # Install any required tools
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then sudo gem install xcpretty ; fi
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+      rvm --default use 2.2.1
+      gem install xcpretty
+    fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
 install: 
@@ -39,23 +52,26 @@ install:
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
-script: >
+script: |
   case "${TRAVIS_OS_NAME}" in
     linux)
-      BUILD_PLATFORM=linux ;
-      CHECK_COMMAND=xvfb-run ;
-      LICENSE_DIR="${HOME}/.runrev/licenses" ;
+      BUILD_PLATFORM=linux
+      CHECK_COMMAND=xvfb-run
+      LICENSE_DIR="${HOME}/.runrev/licenses"
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
       ;;
     osx)
-      BUILD_PLATFORM=mac ;
-      CHECK_COMMAND= ;
-      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses" ;
-      export XCODEBUILD="set -o pipefail && xcodebuild" ;
-      export XCODEBUILD_FILTER="| xcpretty" ;
+      BUILD_PLATFORM=mac
+      CHECK_COMMAND=
+      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses"
+      export XCODE_TARGET_SDK=macosx10.11
+      export XCODEBUILD="set -o pipefail && xcodebuild"
+      export XCODEBUILD_FILTER="| xcpretty"
+      export JAVA_HOME=$(/usr/libexec/java_home)
       ;;
   esac
 
-  if [[ -z "${COVERITY_SCAN_BRANCH}" ]]; then
+  if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
     make all-${BUILD_PLATFORM} &&

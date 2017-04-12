@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 #include <stdio.h>
-
+#include <utility>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,14 +90,16 @@ struct __MCTypeInfo: public __MCValue
         {
             MCRecordTypeFieldInfo *fields;
             uindex_t field_count;
-            MCTypeInfoRef base;
         } record;
         struct
         {
+            /* forward declaration, to avoid including FFI header here */
+            typedef struct _ffi_type ffi_type;
+
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
-            void **layout_args;
+            ffi_type** layout_args;
             MCHandlerTypeLayout *layouts;
         } handler;
         struct
@@ -443,6 +445,7 @@ extern const uindex_t __kMCValueHashTableSizes[];
 extern const uindex_t __kMCValueHashTableCapacities[];
 
 bool __MCValueCreate(MCValueTypeCode type_code, size_t size, __MCValue*& r_value);
+
 void __MCValueDestroy(__MCValue *value);
 
 bool __MCValueImmutableCopy(__MCValue *value, bool release, __MCValue*& r_new_value);
@@ -458,6 +461,20 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 	if (__MCValueCreate(p_type_code, sizeof(T), t_value))
 		return r_value = (T *)t_value, true;
 	return false;
+}
+
+/* Allocate a value ref structure that has enough space to hold an
+ * instance of ValueType, possibly with some extra space tacked on the
+ * end. */
+template <typename ValueType>
+inline bool __MCValueCreateExtended(MCValueTypeCode p_type_code,
+                                    size_t p_extra_space,
+                                    ValueType*& r_value)
+{
+    __MCValue* t_new = nullptr;
+    if (__MCValueCreate(p_type_code, sizeof(ValueType) + p_extra_space, t_new))
+        return r_value = static_cast<ValueType*>(t_new), r_value != nullptr;
+    return false;
 }
 
 //////////
@@ -555,7 +572,6 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 uindex_t __MCRecordTypeInfoGetFieldCount (__MCTypeInfo *self);
-void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
 
 bool __MCForeignValueInitialize(void);
 void __MCForeignValueFinalize(void);
@@ -571,6 +587,9 @@ bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_description);
 
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
+
+bool __MCJavaInitialize(void);
+void __MCJavaFinalize(void);
 
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
@@ -646,6 +665,28 @@ __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 #define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
 
 #define __MCAssertIsErrorTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsError)
+#define __MCAssertIsForeignTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsForeign)
+
+////////////////////////////////////////////////////////////////////////////////
+// ALGORITHM TEMPLATES
+//
+
+/* Efficiently reverse the order of elements in an array, in-place.
+ * The algorithm works from the middle of the array outwards, swapping
+ * the elements at each end.  The ElementType must be swappable,
+ * either by being trivially copyable or by implementing a
+ * std::swap()-compatible swap operation that can be found by ADL. */
+/* TODO[C++11] Obsolete this macro by using std::reverse from
+ * <algorithm>.  Would require MCSpan to support STL iteration. */
+template <typename ElementType, typename IndexType>
+inline void MCInplaceReverse(ElementType* x_elements, IndexType p_num_elements)
+{
+    using std::swap;
+    MCAssert(x_elements != nullptr || p_num_elements == 0);
+    for (auto t_count = p_num_elements/2; t_count > 0; --t_count)
+        swap(x_elements[t_count - 1],
+             x_elements[p_num_elements - t_count]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

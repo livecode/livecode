@@ -24,11 +24,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCScrollbar;
 
-class MCGroup : public MCControl
+typedef MCObjectProxy<MCGroup>::Handle MCGroupHandle;
+
+class MCGroup : public MCControl, public MCMixinObjectHandle<MCGroup>
 {
 public:
     
     enum { kObjectType = CT_GROUP };
+    using MCMixinObjectHandle<MCGroup>::GetHandle;
 
 private:
     
@@ -89,7 +92,7 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
 
-    
+    virtual void removereferences(void);
 	virtual Boolean del(bool p_check_flag);
 	virtual void recompute();
 

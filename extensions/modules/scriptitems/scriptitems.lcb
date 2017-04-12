@@ -1,0 +1,169 @@
+/*                                                                     -*-LCB-*-
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+Utility functions for LiveCode Script-compatible item lists.
+
+Many LiveCode Builder widget and library extensions expose APIs to
+LiveCode Script that use item lists.  This library provides a set of
+functions for converting `List` values to-and-from comma-delimited
+item strings.
+*/
+
+module com.livecode.library.scriptitems
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "LiveCode Script item list handling"
+
+/**
+Summary: Parse a comma-delimited "item" string as a list of strings
+
+Parameters:
+pStringValue: A string containing comma-delimited "items"
+pListLength: The number of elements the parsed list should contain
+pDefaultValue: Value to be used for extra elements
+
+Returns: The parsed items as a list of strings
+
+Description:
+Helper function for converting a LiveCode Script "item" list into list
+of strings, obeying the LiveCode Script rules for items.
+
+If <pListLength> is provided, then the returned list will always
+contain that number of elements: extra elements will be discarded, and
+missing elements will be set to <pDefaultValue>.
+
+Related: parseItemsAsNumberList (handler), formatStringListAsItems (handler)
+*/
+public handler parseItemsAsStringList(in pStringValue as String, \
+		in pListLength as optional Number, \
+		in pDefaultValue as optional String) returns List /* of String */
+
+	variable tItems as List
+	split pStringValue by "," into tItems
+
+	if pListLength is not nothing then
+		repeat while the number of elements in tItems < pListLength
+			push pDefaultValue onto tItems
+		end repeat
+		if the number of elements in tItems > pListLength then
+			delete element (pListLength + 1) to -1 of tItems
+		end if
+	end if
+
+	return tItems
+end handler
+
+/**
+Summary: Parse a comma-delimited "item" string as a list of numbers
+
+Parameters:
+pStringValue: A string containing comma-delimited "items"
+pListLength: The number of elements the parsed list should contain
+pDefaultValue: Value to be used for extra elements
+
+Returns: The parsed items as a list of strings
+
+Description:
+Helper function for converting a LiveCode Script "item" list into a
+list of numbers, obeying the LiveCode Script rules for items.
+
+If <pListLength> is provided, then the returned list will always
+contain that number of elements: extra elements will be discarded, and
+missing elements will be set to <pDefaultValue>.
+
+Related: parseItemsAsStringList (handler), formatNumberListAsItems (handler)
+*/
+public handler parseItemsAsNumberList(in pStringValue as String, \
+		in pListLength as optional Number, \
+		in pDefaultValue as optional Number) returns List /* of Number */
+	variable tItems as List
+	put parseItemsAsStringList(pStringValue, pListLength, nothing) into tItems
+
+	variable tNumbers as List
+	variable tItem as optional String
+	repeat for each element tItem in tItems
+		variable tValue as Number
+		if tItem is nothing then
+			put pDefaultValue into tValue
+		else
+			put tItem parsed as number into tValue
+		end if
+		push tValue onto tNumbers
+	end repeat
+
+	return tNumbers
+end handler
+
+/**
+Summary: Format a list of strings as a comma-delimited "item" string
+
+Parameters:
+pList: A list of strings
+
+Returns: A comma-delimited LiveCode Script-compatible "item" string
+
+Description:
+Helper function for converting a list of strings into a LiveCode
+Script "item" list, obeying the LiveCode Script rules for items.
+
+Related: parseItemsAsStringList (handler), formatNumberListAsItems (handler)
+*/
+public handler formatStringListAsItems(in pList as List) returns String
+	if pList is empty then
+		return ""
+	end if
+
+	variable tResult as String
+	combine pList with "," into tResult
+
+	-- If a LiveCode Script string ends with a delimiter, it does _not_
+	-- mean that the last item in the string is empty.  To achieve
+	-- that, it's necessary to add an extra delimiter.
+	if tResult is empty or tResult ends with "," then
+		put "," after tResult
+	end if
+
+	return tResult
+end handler
+
+/**
+Summary: Format a list of numbers as a comma-delimited "item" string
+
+Parameters:
+pList: A list of numbers
+
+Returns: A comma-delimited LiveCode Script-compatible "item" string
+
+Description:
+Helper function for converting a list of numbers into a LiveCode
+Script "item" list, obeying the LiveCode Script rules for items.
+
+Related: formatStringListAsItems (handler), parseItemsAsNumberList (handler)
+*/
+public handler formatNumberListAsItems(in pList as List) returns String
+	variable tItems as List
+	variable tValue as Number
+	repeat for each element tValue in pList
+		push tValue formatted as string onto tItems
+	end repeat
+	return formatStringListAsItems(tItems)
+end handler
+
+end module

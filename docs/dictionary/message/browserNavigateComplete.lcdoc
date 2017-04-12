@@ -42,13 +42,13 @@ navigating to a new url and has starting loading the url.
 
 If the target is the main frame of the browser (e.g. the html page
 containing the "FRAMESET" declaration), then the browserNavigateComplete
-message is sent. Otherwise the <browserNavigateCompleteFrame message> is
+message is sent. Otherwise the <browserNavigateCompleteFrame> <message> is
 sent instead.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserNavigate (command),
-revBrowserOpen function (function),
-browserNavigateCompleteFrame message (message)
+revBrowserOpen (function), function (glossary),
+browserNavigateCompleteFrame (message), message (glossary)
 

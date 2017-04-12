@@ -32,19 +32,23 @@ public:
 	MCStackIdCache(void);
 	~MCStackIdCache(void);
 	
-	void CacheObject(MCObject *object);
-	void UncacheObject(MCObject *object);
-	MCObject *FindObject(uint32_t id);
+	void CacheObject(MCObjectHandle object);
+	void UncacheObject(MCObjectHandle object);
+	MCObjectHandle FindObject(uint32_t id);
 	
 	bool RehashBuckets(index_t p_new_count_delta);
 
 private:
 	static hash_t HashId(uint32_t id);
 
-	uindex_t FindBucket(uint32_t id, hash_t hash);
-	uindex_t FindBucketIfExists(uint32_t id, hash_t hash);
+	uindex_t FindBucket(uint32_t id, hash_t hash, bool p_only_if_exists = false);
 	uindex_t FindBucketAfterRehash(uint32_t id, hash_t hash);
 	
+    inline uindex_t FindBucketIfExists(uint32_t id, hash_t hash)
+    {
+        return FindBucket(id, hash, true);
+    }
+    
 	uindex_t m_capacity_idx;
 	uindex_t m_count;
 	uintptr_t *m_buckets;
@@ -102,10 +106,22 @@ MCStackIdCache::MCStackIdCache(void)
 
 MCStackIdCache::~MCStackIdCache(void)
 {
-	MCMemoryDeleteArray(m_buckets);
+	// Clear all handles from the array
+	for (uindex_t i = 0; i < __kMCValueHashTableSizes[m_capacity_idx]; i++)
+	{
+		uintptr_t t_bucket = m_buckets[i];
+		if (t_bucket == UINTPTR_MIN || t_bucket == UINTPTR_MAX)
+			continue;
+		
+		MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[i]);
+		t_handle -> setinidcache(false);
+		t_handle.ExternalRelease();
+	}
+	
+    MCMemoryDeleteArray(m_buckets);
 }
 
-void MCStackIdCache::CacheObject(MCObject *p_object)
+void MCStackIdCache::CacheObject(MCObjectHandle p_object)
 {
 	if (p_object -> getinidcache())
 		return;
@@ -117,7 +133,7 @@ void MCStackIdCache::CacheObject(MCObject *p_object)
 	t_hash = HashId(t_id);
 	
 	uindex_t t_target_slot;
-	t_target_slot = FindBucket(t_id, t_hash);
+	t_target_slot = FindBucket(t_id, t_hash, false);
 	
 	if (t_target_slot == UINDEX_MAX)
 	{
@@ -131,11 +147,11 @@ void MCStackIdCache::CacheObject(MCObject *p_object)
 		return;
 
 	p_object -> setinidcache(true);
-	m_buckets[t_target_slot] = (uintptr_t)p_object;
+	m_buckets[t_target_slot] = uintptr_t(p_object.ExternalRetain());
 	m_count += 1;
 }
 
-void MCStackIdCache::UncacheObject(MCObject *p_object)
+void MCStackIdCache::UncacheObject(MCObjectHandle p_object)
 {
 	if (!p_object -> getinidcache())
 		return;
@@ -151,13 +167,19 @@ void MCStackIdCache::UncacheObject(MCObject *p_object)
 	
 	if (t_target_slot != UINDEX_MAX)
 	{
-		p_object -> setinidcache(false);
+		MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot]);
+		
+		// Make sure we are removing the intended object
+		MCAssert(t_handle == p_object);
+		
+		t_handle -> setinidcache(false);
+		t_handle.ExternalRelease();
 		m_buckets[t_target_slot] = UINTPTR_MAX;
 		m_count -= 1;
 	}
 }
 
-MCObject *MCStackIdCache::FindObject(uint32_t p_id)
+MCObjectHandle MCStackIdCache::FindObject(uint32_t p_id)
 {
 	hash_t t_hash;
 	t_hash = HashId(p_id);
@@ -166,7 +188,7 @@ MCObject *MCStackIdCache::FindObject(uint32_t p_id)
 	t_target_slot = FindBucketIfExists(p_id, t_hash);
 	
 	if (t_target_slot != UINDEX_MAX)
-		return (MCObject *)m_buckets[t_target_slot];
+		return MCObjectHandle(reinterpret_cast<MCObjectProxy<>*>(m_buckets[t_target_slot]));
 	
 	return nil;
 }
@@ -179,55 +201,7 @@ hash_t MCStackIdCache::HashId(uint32_t h)
     return h ^ (h >> 7) ^ (h >> 4);
 }
 
-uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash)
-{
-	uindex_t t_capacity;
-	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
-	
-	uindex_t t_h1;
-#if defined(__ARM__) && 0 // TODO
-	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#else
-	t_h1 = p_hash % t_capacity;
-#endif
-	
-	uindex_t t_probe;
-	t_probe = t_h1;
-
-	uindex_t t_target_slot;
-	t_target_slot = UINDEX_MAX;
-
-	for(uindex_t i = 0; i < t_capacity; i++)
-	{
-		uintptr_t t_bucket;
-		t_bucket = m_buckets[t_probe];
-		if (t_bucket == UINTPTR_MIN)
-		{
-			if (t_target_slot == UINDEX_MAX)
-				t_target_slot = t_probe;
-			break;
-		}
-		else if (t_bucket == UINTPTR_MAX)
-		{
-			if (t_target_slot == UINDEX_MAX)
-				t_target_slot = t_probe;
-		}
-		else
-		{
-			if (p_id == ((MCObject *)t_bucket) -> getid())
-				return t_probe;
-		}
-
-		t_probe += 1;
-
-		if (t_capacity <= t_probe)
-			t_probe -= t_capacity;
-	}
-
-	return t_target_slot;
-}
-
-uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
+uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash, bool p_only_if_exists)
 {
 	uindex_t t_capacity;
 	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
@@ -239,20 +213,43 @@ uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
 	t_h1 = p_hash % t_capacity;
 #endif
 
-	uindex_t t_probe;
-	t_probe = t_h1;
+	uindex_t t_probe = t_h1;
+    uindex_t t_candidate_slot = UINDEX_MAX;
 
 	for(uindex_t i = 0; i < t_capacity; i++)
 	{
 		uintptr_t t_bucket;
 		t_bucket = m_buckets[t_probe];
 
-		if (t_bucket == UINTPTR_MIN)
-			return UINDEX_MAX;
-
-		if (t_bucket != UINTPTR_MAX &&
-			((MCObject *)t_bucket) -> getid() == p_id)
-			return t_probe;
+		if (t_bucket != UINTPTR_MAX && t_bucket != UINTPTR_MIN)
+        {
+            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(t_bucket);
+            
+            if (t_handle)
+            {
+                if (p_id == t_handle->getid())
+                    return t_probe;
+            }
+            else
+            {
+                // Object is dead, remove it from the cache
+                t_handle.ExternalRelease();
+                m_buckets[t_probe] = UINTPTR_MAX;
+                m_count -= 1;
+            }
+        }
+        else
+        {
+            // The entry could be placed here but we keep searching in case a
+            // later entry already holds the same object.
+            if (t_candidate_slot == UINDEX_MAX)
+                t_candidate_slot = t_probe;
+			
+			// If nothing was ever in this slot, we know we don't have to
+			// continue searching.
+			if (t_bucket == UINTPTR_MIN)
+				break;
+        }
 
 		t_probe += 1;
 
@@ -260,7 +257,10 @@ uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
 			t_probe -= t_capacity;
 	}
 
-	return UINDEX_MAX;
+    // If we get here, the object was not found in the cache. Return an invalid
+    // index if existance was required or a slot where it could be placed
+    // otherwise.
+	return p_only_if_exists ? UINDEX_MAX : t_candidate_slot;
 }
 
 uindex_t MCStackIdCache::FindBucketAfterRehash(uint32_t p_id, hash_t p_hash)
@@ -340,9 +340,18 @@ bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 	{
 		if (t_old_buckets[i] != UINTPTR_MIN && t_old_buckets[i] != UINTPTR_MAX)
 		{
-			uint32_t t_id;
-			t_id = ((MCObject *)t_old_buckets[i]) -> getid();
-			
+            MCObjectHandle t_handle = reinterpret_cast<MCObjectProxy<>*>(t_old_buckets[i]);
+            
+            // If the object is dead, don't transfer it to the new table
+            if (!t_handle)
+            {
+                t_handle.ExternalRelease();
+                m_count -= 1;
+                continue;
+            }
+            
+            uint32_t t_id = t_handle->getid();
+
 			hash_t t_hash;
 			t_hash = HashId(t_id);
 			
@@ -352,6 +361,8 @@ bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 			// This assertion should never trigger - something is very wrong if it does!
 			MCAssert(t_target_slot != UINDEX_MAX);
 
+            // No retain/release pair is done when moving the entries to the new
+            // hash table as the ref count for each object doesn't change.
 			m_buckets[t_target_slot] = t_old_buckets[i];
 		}
 	}
@@ -370,7 +381,7 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 {
 	if (m_id_cache == nil)
 	{
-		m_id_cache = new MCStackIdCache;
+		m_id_cache = new (nothrow) MCStackIdCache;
 		if (!m_id_cache -> RehashBuckets(1))
 		{
 			delete m_id_cache;
@@ -379,7 +390,7 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 	}
 		
 	if (m_id_cache != nil)
-		m_id_cache -> CacheObject(p_object);
+		m_id_cache -> CacheObject(p_object->GetHandle());
 }
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
@@ -387,7 +398,7 @@ void MCStack::uncacheobjectbyid(MCObject *p_object)
 	if (m_id_cache == nil)
 		return;
 		
-	m_id_cache -> UncacheObject(p_object);
+	m_id_cache -> UncacheObject(p_object->GetHandle());
 }
 
 MCObject *MCStack::findobjectbyid(uint32_t p_id)

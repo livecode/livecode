@@ -16,6 +16,9 @@
 
 # This file contains rules used by the LiveCode Buildbot installation at
 # <https://vulcan.livecode.com/>
+#
+# Tasks that may be run on Windows workers must be implemented in the
+# buildbot.py script.
 
 # Load version information
 include version
@@ -28,48 +31,11 @@ GIT_VERSION=g$(shell git rev-parse --short HEAD)
 endif
 
 ################################################################
-# Configure with gyp
+# Extract built binaries
 ################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-CONFIG_TARGET = config-$(BUILD_PLATFORM)
-else
-CONFIG_TARGET = config-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-config:
-	$(MAKE) $(CONFIG_TARGET)
-
-.PHONY: config
-
-################################################################
-# Compile
-################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)
-else
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-compile:
-	$(MAKE) $(COMPILE_TARGET)
-
-.PHONY: compile
-
-################################################################
-# Archive / extract built binaries
-################################################################
-
-bin-archive:
-	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
 bin-extract:
-	find . -maxdepth 1 -name '*-bin.tar.xz' -print0 | xargs -0 -n1 tar -xvf
+	find . -maxdepth 1 -name '*-bin.tar.*' -exec tar -xvf '{}' ';'
 
 ################################################################
 # Installer generation
@@ -202,7 +168,7 @@ dist-tools: dist-tools-commercial
 distmac-disk: distmac-disk-indy distmac-disk-business
 endif
 
-dist-tools: dist-tools-community
+dist-tools: dist-tools-community dist-tools-version-check
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
@@ -213,6 +179,19 @@ dist-tools-commercial:
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+# Ensure that the version for which we're trying to build installers
+# hasn't already been tagged.
+dist-tools-version-check:
+	@if git rev-parse refs/tags/$(BUILD_SHORT_VERSION) \
+	        >/dev/null 2>&1 ; then \
+	  echo; \
+	  echo "$(BUILD_SHORT_VERSION) has already been released."; \
+	  echo "You probably need to update the 'version' file."; \
+	  echo; \
+	  exit 1; \
+	fi
+
+.PHONY: dist-tools-version-check
 
 distmac-bundle-community:
 	$(buildtool_command) --platform mac --stage bundle --edition community
@@ -234,6 +213,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
+	                -o -name '*-bin.tar.bz2' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \

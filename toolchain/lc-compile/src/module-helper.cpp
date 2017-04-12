@@ -27,6 +27,7 @@ struct builtin_module_descriptor {};
 extern builtin_module_descriptor __com_livecode_foreign_module_info;
 extern builtin_module_descriptor __com_livecode_arithmetic_module_info;
 extern builtin_module_descriptor __com_livecode_array_module_info;
+extern builtin_module_descriptor __com_livecode_assert_module_info;
 extern builtin_module_descriptor __com_livecode_binary_module_info;
 extern builtin_module_descriptor __com_livecode_bitwise_module_info;
 extern builtin_module_descriptor __com_livecode_byte_module_info;
@@ -56,6 +57,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_foreign_module_info,
     &__com_livecode_arithmetic_module_info,
     &__com_livecode_array_module_info,
+    &__com_livecode_assert_module_info,
     &__com_livecode_binary_module_info,
     &__com_livecode_bitwise_module_info,
     &__com_livecode_byte_module_info,

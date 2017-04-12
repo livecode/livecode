@@ -714,8 +714,33 @@ public handler TestOffsetBeforeZero()
 	test "last offset before (+ve, 0)" when the last offset of [true,false] before 0 in tList is tNoBefore
 end handler
 
+----------------------------------------------------------------
+
 public handler TestConcat()
 	test "concat" when ["x"] & ["y"] is ["x", "y"]
+end handler
+
+----------------------------------------------------------------
+
+public handler TestReverse()
+	variable tReversed
+
+	put [1, 2, 3] into tReversed
+	reverse tReversed
+	test "reverse in-place (odd)" when tReversed is [3, 2, 1]
+	reverse tReversed
+	test "rereverse in-place (odd)" when tReversed is [1, 2, 3]
+
+
+	put [1, 2, 3, 4] into tReversed
+	reverse tReversed
+	test "reverse in-place (even)" when tReversed is [4, 3, 2, 1]
+	reverse tReversed
+	test "rereverse in-place (even)" when tReversed is [1, 2, 3, 4]
+
+	put [] into tReversed
+	reverse tReversed
+	test "reverse in-place (empty)" when tReversed is empty
 end handler
 
 end module

@@ -26,7 +26,7 @@ characters. A single <character> is composed of one or more codepoints.
 
 Use the expression 
 
-the number of codepoints of tString
+	the number of codepoints of tString
 
 to find out how many codepoints make up a Unicode string.
 

@@ -178,7 +178,7 @@ MCFontlist::getfont(MCNameRef p_name,
 	}
 
 	/* No match; create a new font with the requested parameters */
-	t_node = new MCFontnode(p_name, p_size, p_style);
+	t_node = new (nothrow) MCFontnode(p_name, p_size, p_style);
 
 	t_node->appendto(m_font_list);
 

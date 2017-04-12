@@ -51,9 +51,20 @@ added to the bottom of the message path. If it is a widget, it will be
 available as a control in the tools palette to drag out, or to create
 with the <create widget> <command>.
 
+If the <moduleData> or the data loaded from <filePath> contains more
+than one LiveCode Builder module, then the first module is treated as
+the extension's main module and the remaining modules are treated as
+support modules.  Support modules are only kept loaded if they are
+used by the main module.  Support modules' names must begin with the
+name of the main module.
+
 References: unload extension (command), create widget (command),
 loadedExtensions (function), result (function),
 LiveCode Builder extension (glossary)
+
+Changes:
+The ability to load multiple modules in a single <load extension>
+command was added in LiveCode 9.0.
 
 Tags: extensions
 

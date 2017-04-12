@@ -28,26 +28,19 @@ revZipSetProgressCallback command is called without any parameters, then
 the progress callback will be disabled. The progress callback will be
 called with the following parameters:
 
-pArchive:
-pArchive: the name of the archive being processed
+- pArchive: the name of the archive being processed
 
-pItem:
-pItem: the name of the item being processed
+- pItem: the name of the item being processed
 
-pType:
-pType: the operation type, either "packing" or "unpacking"
+- pType: the operation type, either "packing" or "unpacking"
 
-pItemProgress:
-pItemProgress: the progress of the current item
+- pItemProgress: the progress of the current item
 
-pItemTotal:
-pItemTotal: the total progress for the items
+- pItemTotal: the total progress for the items
 
-pGlobalProgress:
-pGlobalProgress: the global progress
+- pGlobalProgress: the global progress
 
-pGlobalTotal:
-pGlobalTotal: the global total progress
+- pGlobalTotal: the global total progress
 
 Description:
 Use the <revZipSetProgressCallback> command to get information about the

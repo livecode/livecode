@@ -55,9 +55,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32compat.h"
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -225,7 +226,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeRedirect:
 	{
 		char *t_redirect;
-		t_redirect = new char[p_length];
+		t_redirect = new (nothrow) char[p_length];
 		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
@@ -243,7 +244,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeFontmap:
     {
         char *t_fontmap;
-        t_fontmap = new char[p_length];
+        t_fontmap = new (nothrow) char[p_length];
         if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read fontmap");
@@ -259,7 +260,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     }
     break;
         
-	case kMCCapsuleSectionTypeStack:
+	case kMCCapsuleSectionTypeMainStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
@@ -270,17 +271,33 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		//   the startup script and such work.
 		MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
-			
+            
+    case kMCCapsuleSectionTypeScriptOnlyMainStack:
+        if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read standalone stack");
+            return false;
+        }
+            
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
+        break;
+            
 	case kMCCapsuleSectionTypeExternal:
 	{
 		MCAutoStringRef t_external_str;
-		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str))
+        MCAutoStringRef t_resolved_external_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str) ||
+            !MCStringFormat(&t_resolved_external_str,
+                            "./%@",
+                            *t_external_str))
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(*t_external_str))
+		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
 			MCresult -> sets("failed to load external");
 			return false;
@@ -317,16 +334,40 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 			
-	case kMCCapsuleSectionTypeAuxiliaryStack:
-	{
-		MCStack *t_aux_stack;
-		if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
-		{
-            MCresult -> sets("failed to read auxiliary stack");
-			return false;
-		}
-	}
-	break;
+    case kMCCapsuleSectionTypeAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadbinarystack(kMCEmptyString,
+                                                 kMCEmptyString,
+                                                 p_stream, nullptr,
+                                                 t_aux_stack, t_result) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+        break;
+
+    case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadscriptonlystackofsize(kMCEmptyString,
+                                                           p_stream,
+                                                           p_length,
+                                                           nullptr,
+                                                           t_aux_stack,
+                                                           t_result)
+            != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+    break;
             
     case kMCCapsuleSectionTypeModule:
     {
@@ -885,7 +926,7 @@ IO_stat MCDispatch::startup(void)
 			MCscreen -> wait(t_end_time - MCS_time(), True, False);
 		
 		destroystack(t_banner_stack, True);
-		MCtopstackptr = NULL;
+		MCtopstackptr = nil;
 		
 		MCMemoryDeallocate((void *)t_info . banner_stackfile . getstring());
 	}
@@ -1082,18 +1123,12 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+	t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
 	/* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
 	return t_do_relaunch;
 #else
@@ -1141,7 +1176,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1333,3 +1368,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

@@ -52,6 +52,12 @@ enum MCExecValueType
 
 struct MCExecValue
 {
+public:
+	MCExecValue()
+	{
+		MCMemoryClear(*this);
+		type = kMCExecValueTypeNone;
+	}
 	union
 	{
 		MCValueRef valueref_value;
@@ -216,6 +222,7 @@ enum MCPropertyType
 	kMCPropertyTypeBinaryString,
 	kMCPropertyTypeColor,
 	kMCPropertyTypeRectangle,
+    kMCPropertyTypeRectangle32,
 	kMCPropertyTypePoint,
 	kMCPropertyTypeInt16X2,
 	kMCPropertyTypeInt16X4,
@@ -681,6 +688,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkGetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectChunkThunkGetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectChunkThunkGetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle&)
+#define MCPropertyObjectChunkThunkGetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32&)
 #define MCPropertyObjectChunkThunkGetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t&)
 #define MCPropertyObjectChunkThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, typ&)
 #define MCPropertyObjectChunkThunkGetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
@@ -693,6 +701,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkSetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectChunkThunkSetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectChunkThunkSetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle)
+#define MCPropertyObjectChunkThunkSetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32)
 #define MCPropertyObjectChunkThunkSetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t)
 #define MCPropertyObjectChunkThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, const typ&)
 #define MCPropertyObjectChunkThunkSetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
@@ -2116,6 +2125,7 @@ extern MCExecMethodInfo *kMCFiltersEvalUniEncodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalUniDecodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalMD5DigestMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalSHA1DigestMethodInfo;
+extern MCExecMethodInfo *kMCFiltersEvalMessageDigestMethodInfo;
 
 void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result);
 void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result);
@@ -2131,6 +2141,7 @@ void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, 
 void MCFiltersEvalUniDecodeToNative(MCExecContext& ctxt, MCDataRef p_input, MCStringRef &r_output);
 void MCFiltersEvalUniEncodeFromEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
 void MCFiltersEvalUniDecodeToEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
+void MCFiltersEvalMessageDigest(MCExecContext& ctxt, MCDataRef p_data, MCNameRef p_digest_name, MCDataRef &r_digest);
 void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 
@@ -2171,6 +2182,13 @@ extern MCExecMethodInfo *kMCStringsEvalItemOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLineOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalWordOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokenOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalSentenceOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalParagraphOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTrueWordOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodepointOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodeunitOffsetMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalByteOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
@@ -3386,6 +3404,10 @@ void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object
 void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+
+MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data);
+bool MCInterfaceStringCouldBeStack(MCStringRef p_string);
+
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
@@ -4232,13 +4254,15 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value);
 
 ///////////
 
-extern MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo;
+struct MCMultimediaRecordFormat;
+extern MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo;
 
 extern MCExecMethodInfo *kMCMultimediaExecAnswerEffectMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecAnswerRecordMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalQTVersionMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalQTEffectsMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalRecordCompressionTypesMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaEvalRecordFormatsMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalRecordLoudnessMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMovieMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMCISendStringMethodInfo;
@@ -4288,6 +4312,7 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt);
 void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result);
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string);
+void MCMultimediaEvalRecordFormats(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness);
 void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r_result);
@@ -4311,8 +4336,8 @@ void MCMultimediaExecPlayPlayerOperation(MCExecContext& ctxt, MCStack *p_target,
 void MCMultimediaExecPlayVideoOperation(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, int p_operation);
 void MCMultimediaExecPlayLastVideoOperation(MCExecContext& ctxt, int p_operation);
 
-void MCMultimediaGetRecordFormat(MCExecContext& ctxt, intenum_t &r_value);
-void MCMultimediaSetRecordFormat(MCExecContext& ctxt, intenum_t p_value);
+void MCMultimediaGetRecordFormat(MCExecContext& ctxt, MCMultimediaRecordFormat& r_value);
+void MCMultimediaSetRecordFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_value);
 void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value);
 void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value);
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value);
@@ -4423,9 +4448,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_from_address, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url);
 
@@ -4850,12 +4875,10 @@ void MCLegacySetMultiSpace(MCExecContext& ctxt, uinteger_t p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCIdeExecPutIntoMessageMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecEditScriptOfObjectMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecHideMessageBoxMethodInfo;
 extern MCExecMethodInfo *kMCIdeExecShowMessageBoxMethodInfo;
 
-void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_at);
 void MCIdeExecHideMessageBox(MCExecContext& ctxt);
@@ -5106,6 +5129,7 @@ extern MCExecMethodInfo *kMCDebuggingSetDebugContextMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
+extern MCExecMethodInfo *kMCDebuggingExecPutIntoMessageMethodInfo;
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
@@ -5131,6 +5155,7 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value);
 void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingGetWatchedVariables(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
 ///////////
 
@@ -5562,6 +5587,21 @@ void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_p
 void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+extern MCExecMethodInfo* kMCNFCGetIsNFCAvailable;
+extern MCExecMethodInfo* kMCNFCGetIsNFCEnabled;
+extern MCExecMethodInfo* kMCNFCExecEnableNFCDispatch;
+extern MCExecMethodInfo* kMCNFCExecDisableNFCDispatch;
+
+void MCNFCGetIsNFCAvailable(MCExecContext& ctxt);
+void MCNFCGetIsNFCEnabled(MCExecContext& ctxt);
+void MCNFCExecEnableNFCDispatch(MCExecContext& ctxt);
+void MCNFCExecDisableNFCDispatch(MCExecContext& ctxt);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCExtensionInitialize(void);
+void MCExtensionFinalize(void);
 
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);

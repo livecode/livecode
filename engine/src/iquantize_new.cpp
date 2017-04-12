@@ -232,11 +232,11 @@ bool MCImageMedianCutQuantization(MCWeightedPixel *p_pixels, uint32_t p_pixel_co
 	bool t_success = true;
 
 	// create first box (containing all pixels)
-	MCWeightedPixelBox *t_box = new MCWeightedPixelBox(p_pixels, 0, p_pixel_count - 1);
+	MCWeightedPixelBox *t_box = new (nothrow) MCWeightedPixelBox(p_pixels, 0, p_pixel_count - 1);
 
 	// create queue containing the box
-	MCPriorityQueue<MCWeightedPixelBox*> *t_queue = new MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_volume_population_product);
-	MCPriorityQueue<MCWeightedPixelBox*> *t_finished_queue = new MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_null);
+	MCPriorityQueue<MCWeightedPixelBox*> *t_queue = new (nothrow) MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_volume_population_product);
+	MCPriorityQueue<MCWeightedPixelBox*> *t_finished_queue = new (nothrow) MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_null);
 	if (t_box->volume == 1)
 		t_finished_queue->insert_sorted(t_box);
 	else
@@ -248,7 +248,7 @@ bool MCImageMedianCutQuantization(MCWeightedPixel *p_pixels, uint32_t p_pixel_co
 	{
 		if (f && t_count >= f)
 		{
-			MCPriorityQueue<MCWeightedPixelBox*> *t_new_queue = new MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_volume_population_product);
+			MCPriorityQueue<MCWeightedPixelBox*> *t_new_queue = new (nothrow) MCPriorityQueue<MCWeightedPixelBox*>(vbox_compare_volume_population_product);
 			while (t_queue->count() > 0)
 				t_new_queue->insert_sorted(t_queue->pop_first());
 			delete t_queue;
@@ -275,16 +275,16 @@ bool MCImageMedianCutQuantization(MCWeightedPixel *p_pixels, uint32_t p_pixel_co
 		{
 			uint32_t t_midpoint_value = ( p_pixels[t_median_index].channel[t_box->longest_axis] + t_box->channel_min[t_box->longest_axis] ) / 2;
 			uint32_t t_midpoint_index = t_box->split_axis(t_box->longest_axis, t_box->first, t_median_index, t_midpoint_value) - 1;
-			t_box1 = new MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
-			t_box2 = new MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
+			t_box1 = new (nothrow) MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
+			t_box2 = new (nothrow) MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
             //MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
 		}
 		else
 		{
 			uint32_t t_midpoint_value = ( p_pixels[t_median_index].channel[t_box->longest_axis] + t_box->channel_max[t_box->longest_axis] ) / 2;
 			uint32_t t_midpoint_index = t_box->split_axis(t_box->longest_axis, t_median_index, t_box->last, t_midpoint_value) - 1;
-			t_box1 = new MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
-			t_box2 = new MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
+			t_box1 = new (nothrow) MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
+			t_box2 = new (nothrow) MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
             //MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
 		}
 

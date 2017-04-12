@@ -1,7 +1,7 @@
 ﻿script "BuilderUtilities"
 
-constant kMergExtVersion = "2016-9-19"
-constant kTSNetVersion = "1.2.3"
+constant kMergExtVersion = "2017-2-14"
+constant kTSNetVersion = "1.2.7"
 
 local sEngineDir
 local sWorkDir
@@ -401,6 +401,11 @@ function builderPackagedExtensionsFolder
    builderFetchEngine "", "macosx"
    return the result & slash & "packaged_extensions"
 end builderPackagedExtensionsFolder
+
+function builderExtractedDocsFolder
+   builderFetchEngine "", "macosx"
+   return the result & slash & "extracted_docs"
+end builderExtractedDocsFolder
 
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform

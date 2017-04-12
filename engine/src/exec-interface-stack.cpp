@@ -131,72 +131,68 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
             decorations = i1 | WD_WDEF;
         else
         {
-            if (decorations & WD_WDEF)
-                decorations |= ~WD_WDEF;
-            else
-            {
-                uindex_t t_start_pos, t_end_pos;
-                t_end_pos = 0;
-                while (t_end_pos < MCStringGetLength(p_input))
-                {
-                    t_start_pos = t_end_pos;
-                    // skip spaces at the beginning or after a comma (if any)
-                    MCU_skip_spaces(p_input, t_start_pos);
-                    
-                    uindex_t t_comma;
-                    if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
-                        t_end_pos = MCStringGetLength(p_input) + 1;
-                    else
-                        t_end_pos = t_comma + 1;
-                    
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCtitlestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmenustring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MENU | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCminimizestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MINIMIZE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmaximizestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MAXIMIZE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCclosestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_CLOSE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmetalstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_METAL; //metal can not have title
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCutilitystring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_UTILITY;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCnoshadowstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_NOSHADOW;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_FORCETASKBAR;
-                        continue;
-                    }
-                    ctxt . LegacyThrow(EE_STACK_BADDECORATION);
-                    return;
-                }
+			uindex_t t_start_pos, t_end_pos;
+			t_end_pos = 0;
+			while (t_end_pos < MCStringGetLength(p_input))
+			{
+				t_start_pos = t_end_pos;
+				// skip spaces at the beginning or after a comma (if any)
+				MCU_skip_spaces(p_input, t_start_pos);
+				
+				uindex_t t_comma;
+				if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
+					t_end_pos = MCStringGetLength(p_input) + 1;
+				else
+					t_end_pos = t_comma + 1;
+
+                MCRange t_range = MCRangeMakeMinMax(t_start_pos, t_end_pos - 1);
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCtitlestring), kMCCompareCaseless))
+				{
+					decorations |= WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmenustring), kMCCompareCaseless))
+				{
+					decorations |= WD_MENU | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCminimizestring), kMCCompareCaseless))
+				{
+					decorations |= WD_MINIMIZE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmaximizestring), kMCCompareCaseless))
+				{
+					decorations |= WD_MAXIMIZE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCclosestring), kMCCompareCaseless))
+				{
+					decorations |= WD_CLOSE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmetalstring), kMCCompareCaseless))
+				{
+					decorations |= WD_METAL; //metal can not have title
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCutilitystring), kMCCompareCaseless))
+				{
+					decorations |= WD_UTILITY;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCnoshadowstring), kMCCompareCaseless))
+				{
+					decorations |= WD_NOSHADOW;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
+				{
+					decorations |= WD_FORCETASKBAR;
+					continue;
+				}
+				ctxt . LegacyThrow(EE_STACK_BADDECORATION);
+				return;
             }
         }
     }
@@ -494,10 +490,10 @@ void MCStack::GetNumber(MCExecContext& ctxt, uinteger_t& r_number)
 {
 	uint2 num;
 
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> count(CT_STACK, CT_UNDEFINED, this, num);
 	}
 	else
@@ -533,7 +529,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 	if (!MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> GetEffectiveFileName(ctxt, r_file_name);
 		return;
 	}
@@ -1005,7 +1001,7 @@ void MCStack::SetIcon(MCExecContext& ctxt, uinteger_t p_id)
 
 void MCStack::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 		parent -> GetLongId(ctxt, 0, r_owner);
 }
 
@@ -1013,8 +1009,8 @@ void MCStack::GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack)
 {
 	MCStack *sptr = this;
 
-	if (parent != nil && !MCdispatcher->ismainstack(sptr))
-		sptr = (MCStack *)parent;
+	if (parent && !MCdispatcher->ismainstack(sptr))
+		sptr = parent.GetAs<MCStack>();
 
 	r_main_stack = MCValueRetain(MCNameGetString(sptr->getname()));
 }
@@ -1037,7 +1033,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 		return;
 	}
 	
-	if (parent != nil && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
+	if (parent && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
 	{
 		bool t_this_is_mainstack;
 		t_this_is_mainstack = MCdispatcher -> ismainstack(this) == True;
@@ -1057,7 +1053,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 			MCdispatcher -> removestack(this);
 		else
 		{
-			MCStack *pstack = (MCStack *)parent;
+			MCStack *pstack = parent.GetAs<MCStack>();
 			remove(pstack -> substacks);
 			// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks, then 
 			//   make sure we undo the extraopen.
@@ -1164,7 +1160,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 
-		t_success = MCStringCopySubstring(p_substacks, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);
+		t_success = MCStringCopySubstring(p_substacks, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_name_string);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			// If tsub is one of the existing substacks of the stack, it is set to
@@ -1198,7 +1194,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)
-					tsub = new MCStack(*toclone);
+					tsub = new (nothrow) MCStack(*toclone);
 			}
 			else
 			{
@@ -1602,7 +1598,7 @@ void MCStack::SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamed
 	{
 		if (linkatts == nil)
 		{
-			/* UNCHECKED */ linkatts = new Linkatts;
+			/* UNCHECKED */ linkatts = new (nothrow) Linkatts;
 			MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
 			linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
 			linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
@@ -1728,7 +1724,7 @@ void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool* p_value)
     {
         if (linkatts == nil)
         {
-            /* UNCHECKED */ linkatts = new Linkatts;
+            /* UNCHECKED */ linkatts = new (nothrow) Linkatts;
             MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
             linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
             linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);

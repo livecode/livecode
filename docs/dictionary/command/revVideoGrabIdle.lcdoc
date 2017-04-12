@@ -6,15 +6,17 @@ Syntax: revVideoGrabIdle
 
 Summary:
 Gives processing time to <QuickTime> during video previewing and
-recording. 
+recording.
 
 Associations: video library
 
 Introduced: 2.0
 
-OS: mac
+Deprecated: 9.0
 
-Platforms: desktop
+OS:
+
+Platforms:
 
 Security: disk, privacy
 
@@ -25,28 +27,7 @@ Example:
 send "revVideoGrabIdle" to me in 10 milliseconds
 
 Description:
-Use the <revVideoGrabIdle> <command> to avoid display problems during
-<video capture>.
-
-When using QuickTime for video capture, you need to execute the
-<revVideoGrabIdle> command periodically in order to let <QuickTime>
-update the display. (Not doing so may cause the video in the <video
-grabber> to stutter or display strange screen artifacts.) If you have
-issued the <revPreviewVideo> or <revRecordVideo> <command>, be sure to
-call the <revVideoGrabIdle> <command> periodically until you stop
-previewing or recording video.
-
-There is no specific interval to use between calls to
-<revVideoGrabIdle>. If you are seeing jittering or strange artifacts in
-the <video grabber> window, try decreasing the interval and calling
-<revVideoGrabIdle> more often.
-
->*Note:* If you specified "VFW" or "directx" as the video method when
-> you executed the <revInitializeVideoGrabber> <command>, you don't need
-> to call <revVideoGrabIdle>. If the <video capture> is using <VFW|Video
-> for Windows>, the <revVideoGrabIdle> <command> is ignored and has no
-> effect. You need to call <revVideoGrabIdle> only if you specified "QT"
-> as the video method.
+The <revVideoGrabIdle> <command> is ignored and has no effect.
 
 >*Important:*  The <revVideoGrabIdle> <command> is part of the 
 > <Video library>. To ensure that the <command> works in a 
@@ -62,9 +43,10 @@ The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
 longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revInitializeVideoGrabber (command),
 revPreviewVideo (command), revRecordVideo (command),

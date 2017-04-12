@@ -66,6 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "resolution.h"
 
+#include "scriptpt.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_GET_METHOD(Interface, DialogData, 1)
@@ -1521,7 +1523,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 	{
 		MCcursor = t_cursor;
         MCcursorid = t_cursor_id;
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 			MCmousestackptr->resetcursor(True);
 		else
 			MCdefaultstackptr->resetcursor(True);
@@ -1541,7 +1543,7 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
     // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
     MCdefaultcursor = t_cursor;
     MCdefaultcursorid = p_value;
-    if (MCmousestackptr != NULL)
+    if (MCmousestackptr)
         MCmousestackptr->resetcursor(True);
     else
         MCdefaultstackptr->resetcursor(True);
@@ -1575,7 +1577,7 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
-	if (MCdefaultmenubar == nil)
+	if (!MCdefaultmenubar)
 	{
 		r_value = MCValueRetain(kMCEmptyName);
 		return;
@@ -2284,7 +2286,7 @@ void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_o
 
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtopstackptr != nil)
+    if (MCtopstackptr)
     {
         r_object . object = MCtopstackptr;
         r_object . part_id = 0;
@@ -2296,7 +2298,7 @@ void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickstackptr != nil)
+    if (MCclickstackptr)
     {
         r_object . object = MCclickstackptr;
         r_object . part_id = 0;
@@ -2308,7 +2310,7 @@ void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr;
         r_object . part_id = 0;
@@ -2320,7 +2322,7 @@ void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickfield != nil)
+    if (MCclickfield)
     {
         r_object . object = MCclickfield;
         r_object . part_id = 0;
@@ -2332,7 +2334,7 @@ void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactivefield != nil)
+    if (MCactivefield)
     {
         r_object . object = MCactivefield;
         r_object . part_id = 0;
@@ -2343,7 +2345,7 @@ void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
     {
         r_object . object = MCactiveimage;
         r_object . part_id = 0;
@@ -2354,7 +2356,7 @@ void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCfoundfield != nil)
+    if (MCfoundfield)
     {
         r_object . object = MCfoundfield;
         r_object . part_id = 0;
@@ -2367,7 +2369,7 @@ void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     // OK-2009-01-19: Refactored to ensure behaviour is the same as the mouseControl.
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr->getcard()->getmousecontrol();
         r_object . part_id = 0;
@@ -2395,36 +2397,26 @@ void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_binary_fail)
+MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data)
 {
-    uint4 offset;
-    MCStack *t_stack;
-    bool t_binary_fail;
+    MCAutoStringRefAsNativeChars t_native_string;
+    const char_t* t_string = nullptr;
+    uindex_t t_length = 0;
+    if (!t_native_string.Lock(p_data, t_string, t_length))
+        return nullptr;
+ 
+    MCStack *t_stack = nullptr;
+    IO_handle stream = MCS_fakeopen(t_string, t_length);
+    /* UNCHECKED */ MCdispatcher->readfile(nullptr, nullptr, stream, t_stack);
+    MCS_close(stream);
     
-    t_stack = nil;
-    t_binary_fail = false;
-    
-    if (MCStringFirstIndexOf(p_data, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
-    {
-        char_t* t_string;
-        uindex_t t_length;
-        /* UNCHECKED */ MCStringConvertToNative(p_data, t_string, t_length);
-        IO_handle stream = MCS_fakeopen(t_string, t_length);
-        /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
-        MCS_close(stream);
-        t_binary_fail = t_stack == nil;
-    }
-
-    r_binary_fail = t_binary_fail;
     return t_stack;
 }
                                            
 void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
 {
     MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack(p_data, t_binary_fail);
+    t_stack = MCInterfaceTryToEvalStackFromString(p_data);
     
     if (t_stack != nil)
     {
@@ -2438,7 +2430,7 @@ void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data,
 
 void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdefaultstackptr != nil)
+    if (MCdefaultstackptr)
     {
         r_object . object = MCdefaultstackptr;
         r_object . part_id = 0;
@@ -2477,11 +2469,37 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
     ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
 }
 
+bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
+{
+    // Check if it could be a binary stack
+    uindex_t t_offset;
+    if (MCStringFirstIndexOf(p_string,
+                             MCSTR(kMCStackFileMetaCardSignature), 0,
+                             kMCCompareExact, t_offset) ||
+        (MCStringGetLength(p_string) > 8 &&
+         MCStringBeginsWithCString(p_string, (const char_t *)"REVO",
+                                  kMCCompareExact)))
+        return true;
+    
+    // Check if it could be a script-only stack
+    MCScriptPoint sp(p_string);
+    // Parse 'script' token.
+    if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
+        return false;
+    
+    // Parse <string> token.
+    Symbol_type t_type;
+    if (sp . next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        return false;
+            
+    // Parse end of line.
+    Parse_stat t_stat = sp . next(t_type);
+    return (t_stat == PS_EOL || t_stat == PS_EOF);
+}
+
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
-    uint4 offset;
-   
-    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
+    if (MCInterfaceStringCouldBeStack((MCStringRef)p_value))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
@@ -2586,7 +2604,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
-        (MCacptr != NULL && MCacptr -> hasname(p_name)))
+        (MCacptr && MCacptr -> hasname(p_name)))
             t_clip = MCacptr;
     
     if (t_clip != nil)
@@ -2645,16 +2663,7 @@ void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {
         IO_cleanprocesses();
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            if (tptr -> hasname(p_name))
-            {
-                t_clip = tptr;
-                break;
-            }
-            tptr = tptr->getnextplayer();
-        }
+        t_clip = MCPlayer::FindPlayerByName(p_name);
     }
     
     if (t_clip != nil)
@@ -3040,14 +3049,14 @@ void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group,
 
 void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
 {
-    if (MCmenubar != nil)
+    if (MCmenubar)
     {
         r_menubar . object = MCmenubar;
         r_menubar . part_id = 0;
         return;
     }
     
-    if (MCdefaultmenubar != nil)
+    if (MCdefaultmenubar)
     {
         r_menubar . object = MCdefaultmenubar;
         r_menubar . part_id = 0;
@@ -3270,51 +3279,6 @@ void MCInterfaceEvalStackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_
     r_stack . part_id = p_parent . part_id;
 }
 
-void MCInterfaceEvalOptionalStackOrCardByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
-{
-    ctxt . SetTheResultToEmpty();
-    
-    MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack((MCStringRef)p_value, t_binary_fail);
-    
-    if (t_binary_fail)
-    {
-        ctxt . SetTheResultToStaticCString("can't build stack from string");
-        r_object . object = nil;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    if (t_stack == nil)
-    {
-        integer_t t_id;
-        if (MCU_stoi4((MCStringRef)p_value, t_id))
-            t_stack = MCdefaultstackptr -> findstackid(t_id);
-    }
-    
-    if (t_stack == nil)
-        t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
-    
-    if (t_stack != nil)
-    {
-        r_object . object = t_stack;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    bool t_parse_error;
-    
-    if (!MCEngineEvalValueAsObject(p_value, false, r_object, t_parse_error))
-    {
-        if (t_parse_error)
-            ctxt . SetTheResultToStaticCString("no such card");
-        r_object . object = nil;
-        r_object . part_id = 0;
-    }
-}
-
 void MCInterfaceEvalSubstackOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
 {
     MCStack *t_stack;
@@ -3458,13 +3422,16 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
         
         if (p_marked)
             t_stack -> setmark();
-        r_card . object = t_stack -> getchildbyname(p_name);
+        t_card = t_stack -> getchildbyname(p_name);
         t_stack -> clearmark();
         t_stack -> clearbackground();
     }
 
     r_card . object = t_card;
-    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+	if (t_card != nil)
+		r_card . part_id = t_card -> getid();
+	else
+		r_card . part_id = p_stack . part_id;
 }
 
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark)
@@ -3771,8 +3738,8 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
 		t_source_handle = p_source . object -> GetHandle();
 		t_new_owner_handle = t_new_owner -> GetHandle();
-		t_new_target_handle = t_new_target != nil ? t_new_target -> GetHandle() : nil;
-        
+		t_new_target_handle = t_new_target != nil ? t_new_target : nil;
+
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
 		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;

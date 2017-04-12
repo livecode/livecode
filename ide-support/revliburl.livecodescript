@@ -2055,7 +2055,7 @@ function ulBuildHttpRequest pUrl
          end if
       end repeat
       if laSocketSecured[tSocket] is false then
-         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] into tRequest
+         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] into tRequest
          
          -- MM-2014-06-05: [[ Bug 12566 ]] Make sure we authenticate the proxy.
          if laUrlProxy[pUrl] <> empty then
@@ -3655,28 +3655,18 @@ function libUrlMultipartFormData @pFormData, pParam
       put "--" & tBoundary & CRLF after pFormData
       put "Content-Disposition: form-data; name=" & quote & item 1 of pParam[tKey] & quote after pFormData
       put item 2 to -1 of pParam[tKey] into tValue
-      if char 1 to 6 of tValue = "<file>" then
-        
-        put   tValue into tFile
+      if char 1 to 6 of tValue = "<file>" then  
+        put tValue into tFile
         put empty into tValue
-        put the number of items of tFile into tNumFiles
         put char 7 to -1 of tFile into tFilepath
-        if tNumFiles = 1 then ##single file
-          set the itemDel to "/"
-          put item -1 of tFilepath into tFilename
-          set the itemDel to comma
-          put ";" && "filename=" & quote & tFilename & quote after pFormData
-          put CRLF & "Content-Type: application/octet-stream" after pFormData
-          put url ("binfile:" & tFilepath) into tValue
-          if the result <> empty then
-            return "error" && the result
-          end if
-        else ##muliple files
-          put "__subPart__" & ulFormBoundary() into tSubBoundary
-          put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-          get ulSubForm(tValue, tFilepath, tSubBoundary)
-          if it is not empty then return it
-          
+        set the itemDel to "/"
+        put item -1 of tFilepath into tFilename
+        set the itemDel to comma
+        put ";" && "filename=" & quote & tFilename & quote after pFormData
+        put CRLF & "Content-Type: application/octet-stream" after pFormData
+        put url ("binfile:" & tFilepath) into tValue
+        if the result <> empty then
+          return "error" && the result
         end if
       end if
       put CRLF & CRLF after pFormData
@@ -3699,28 +3689,17 @@ function libUrlMultipartFormData @pFormData, pParam
         put param(i) into tValue
         
         if char 1 to 6 of tValue = "<file>" then
-          put   tValue into tFile
+          put tValue into tFile
           put empty into tValue
-          put the number of items of tFile into tNumFiles
-          put char 7 to -1 of tFile into tFilepath
-          if tNumFiles = 1 then ##single file
-            
-            set the itemDel to "/"
-            put item -1 of tFilepath into tFilename
-            set the itemDel to comma
-            put ";" && "filename=" & quote & tFilename & quote after pFormData
-            put CRLF & "Content-Type: application/octet-stream" after pFormData
-            put url ("binfile:" & tFilepath) into tValue
-            if the result <> empty then
-              return "error" && the result
-            end if
-            
-          else ##multiple files
-            put "__subPart__" & ulFormBoundary() into tSubBoundary
-            put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-            get ulSubForm(tValue, tFilepath, tSubBoundary)
-            if it is not empty then return it
-            
+          put char 7 to -1 of tFile into tFilepath            
+          set the itemDel to "/"
+          put item -1 of tFilepath into tFilename
+          set the itemDel to comma
+          put ";" && "filename=" & quote & tFilename & quote after pFormData
+          put CRLF & "Content-Type: application/octet-stream" after pFormData
+          put url ("binfile:" & tFilepath) into tValue
+          if the result <> empty then
+            return "error" && the result
           end if
         end if
         put CRLF & CRLF after pFormData
@@ -3749,33 +3728,21 @@ function libUrlMultipartFormAddPart @pFormData,pName,pValue,pMimeType,pEncoding
     
     put   pValue into tFile
     put empty into pValue
-    put the number of items of tFile into tNumFiles
     put char 7 to -1 of tFile into tFilepath
     
-    if tNumFiles = 1 then ##single file
-      set the itemDel to "/"
-      put item -1 of tFilepath into tFilename
-      set the itemDel to comma
-      put ";" && "filename=" & quote & tFilename & quote after tPartData
-      
-      put url ("binfile:" & tFilepath) into pValue
-      if the result <> empty then return "error" && the result
-      
-      if pMimeType is empty then put "application/octet-stream" into pMimeType
-      if pEncoding is empty then
-        put "Binary" into pEncoding
-      end if
-      
-    else ##multiple files
-      put "__subPart__" & ulFormBoundary() into tSubBoundary
-      put pMimeType into tSubMimeTypes
-      put pEncoding into tSubEncodings
-      put  "multipart/mixed; boundary=" & quote & tSubBoundary & quote into pMimeType
-      put empty into pEncoding
-      get ulSubForm(pValue, tFilepath, tSubBoundary, tSubMimeTypes, tSubEncodings)
-      if it is not empty then return it
-      
+    set the itemDel to "/"
+    put item -1 of tFilepath into tFilename
+    set the itemDel to comma
+    put ";" && "filename=" & quote & tFilename & quote after tPartData
+    
+    put url ("binfile:" & tFilepath) into pValue
+    if the result <> empty then return "error" && the result
+    
+    if pMimeType is empty then put "application/octet-stream" into pMimeType
+    if pEncoding is empty then
+      put "Binary" into pEncoding
     end if
+    
   end if
   if pMimeType <> empty then
     put CRLF & "Content-Type:" && pMimeType after tPartData
@@ -4225,15 +4192,50 @@ function ulStripUrl pUrl
 end ulStripUrl
 --------------------------------
 function ul_TraceLocals ##DEBUG ROUTINE, used in development
-  local e,tRetVal,tDoString
+  local e,tRetVal,tDoString,tKeys
   
   repeat for each item e in line 3 of the localNames
     put e & cr after tRetVal
-    put "put keys(" & e & ") & cr after tRetVal" into tDoString
+    put "put the keys of" && e && "into tKeys" into tDoString
+    do tDoString
+    if tKeys is empty then
+       put "put" && e && "& cr after tRetVal" into tDoString
+    else
+       put "put ul_PrintKeys(" & e & ") & cr after tRetVal" into tDoString
+    end if
     do tDoString
   end repeat
   return tRetVal
 end ul_TraceLocals
+--------------------------------
+function ul_PrintKeys @pArray, pDimension
+   local tKeys, tKey, tText
+   
+   if pDimension is empty then put 0 into pDimension
+    
+   put the keys of pArray into tKeys
+   sort tKeys numeric
+     
+   repeat for each line tKey in tKeys
+      if pArray[tKey] is an array then
+         put _printCharXTimes(space, pDimension * 5) & tKey & cr after tText
+         put ul_PrintKeys(pArray[tKey], pDimension + 1) after tText
+      else
+         put _printCharXTimes(space, pDimension * 5) &  tKey & ":" && line 1 of pArray[tKey] & cr after tText
+      end if
+   end repeat
+     
+   return tText
+end ul_PrintKeys
+-------------------------------- 
+private function _printCharXTimes pChar, pTimes
+   local tStr
+     
+   repeat with i = 1 to pTimes
+      put pChar after tStr
+   end repeat
+   return tStr
+end _printCharXTimes
 --------------------------------
 function ulFtpCommand pCommandString, pSocket
   ##executes ftp commands
@@ -4570,7 +4572,7 @@ function ulSubForm @pData, ,pFiles, pSubBoundary, pMimeTypes, pEncodings
     put CRLF & "Content-Transfer-Encoding:" &&  tEnc after pData
     put CRLF & CRLF after pData
     put url ("binfile:" & tFile) after pData
-    if the result <> empty then return "error" & the result
+    if the result <> empty then return "error" && the result
     put CRLF after pData
   end repeat
   put "--" & pSubBoundary & "--" after pData

@@ -22,11 +22,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCEPS : public MCControl
+class MCEPS;
+typedef MCObjectProxy<MCEPS>::Handle MCEPSHandle;
+
+class MCEPS : public MCControl, public MCMixinObjectHandle<MCEPS>
 {
 public:
     
     enum { kObjectType = CT_EPS };
+    using MCMixinObjectHandle<MCEPS>::GetHandle;
     
 private:
     

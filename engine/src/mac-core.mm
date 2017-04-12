@@ -31,14 +31,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool s_have_primary_screen_height = false;
-static CGFloat s_primary_screen_height = 0.0f;
+static bool s_have_desktop_height = false;
+static CGFloat s_desktop_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
 // MW-2014-08-14: [[ Bug 13016 ]] This holds the window that is currently being
 //   moved by the windowserver.
 static MCPlatformWindowRef s_moving_window = nil;
+
+static NSWindow *s_pseudo_modal_for = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,56 +54,56 @@ enum
 
 @implementation com_runrev_livecode_MCApplication
 
--(id)init
+- (void)sendEvent:(NSEvent *)p_event
 {
-    self = [super init];
-    if (self)
-    {
-        m_pseudo_modal_for = nil;
+	if (!MCMacPlatformApplicationSendEvent(p_event))
+	{
+        [super sendEvent: p_event];
     }
-    
-    return self;
 }
 
-- (void)sendEvent:(NSEvent *)event
+@end
+
+bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
 {
-    if ([event type] == NSApplicationDefined &&
-        [event subtype] == kMCMacPlatformMouseSyncEvent)
+    if ([p_event type] == NSApplicationDefined &&
+        [p_event subtype] == kMCMacPlatformMouseSyncEvent)
+	{
         MCMacPlatformHandleMouseSync();
-    else
-    {
-        // MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
-        //   we intercept mouseDragged events so we can keep script informed.
-        NSWindow *t_window;
-        t_window = [event window];
-        if (s_moving_window != nil &&
-            [event window] == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
-        {
-            if ([event type] == NSLeftMouseDragged)
-                [t_window com_runrev_livecode_windowMoved: s_moving_window];
-            else if ([event type] == NSLeftMouseUp)
-                [self windowStoppedMoving: s_moving_window];
-        }
-        
-        [super sendEvent: event];
-    }
+		return true;
+	}
+
+	// MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
+	//   we intercept mouseDragged events so we can keep script informed.
+	NSWindow *t_window;
+	t_window = [p_event window];
+	if (s_moving_window != nil &&
+		t_window == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+	{
+		if ([p_event type] == NSLeftMouseDragged)
+			MCMacPlatformWindowWindowMoved(t_window, s_moving_window);
+		else if ([p_event type] == NSLeftMouseUp)
+			MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
+	}
+	
+	return false;
 }
 
-- (bool)windowIsMoving: (MCPlatformWindowRef)window
+bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window)
 {
-    return window == s_moving_window;
+    return p_window == s_moving_window;
 }
 
-- (void)windowStartedMoving: (MCPlatformWindowRef)window
+void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window)
 {
     if (s_moving_window != nil)
-        [self windowStoppedMoving: s_moving_window];
+        MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
     
-    MCPlatformRetainWindow(window);
-    s_moving_window = window;
+    MCPlatformRetainWindow(p_window);
+    s_moving_window = p_window;
 }
 
-- (void)windowStoppedMoving: (MCPlatformWindowRef)window
+void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window)
 {
     if (s_moving_window == nil)
         return;
@@ -114,25 +116,23 @@ enum
     s_moving_window = nil;
 }
 
-- (void)becomePseudoModalFor: (NSWindow*)window
+void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window)
 {
     // MERG-2016-03-04: ensure pseudo modals open above any calling modals
-    [window setLevel: kCGPopUpMenuWindowLevel];
-    m_pseudo_modal_for = window;
+    [p_window setLevel: kCGPopUpMenuWindowLevel];
+    s_pseudo_modal_for = p_window;
 }
 
-- (NSWindow*)pseudoModalFor
+NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 {
     // MERG-2016-03-04: ensure pseudo modals remain above any calling modals
     // If we need to check whether we're pseudo-modal, it means we're in a
     // situation where that window needs to be forced to the front
-    if (m_pseudo_modal_for != nil)
-        [m_pseudo_modal_for orderFrontRegardless];
+    if (s_pseudo_modal_for != nil)
+        [s_pseudo_modal_for orderFrontRegardless];
     
-    return m_pseudo_modal_for;
+    return s_pseudo_modal_for;
 }
-
-@end
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -233,7 +233,7 @@ enum
 
 static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, SRefCon p_context)
 {
-    return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
+    return [(MCApplicationDelegate*)[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
 }
 
 - (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
@@ -393,7 +393,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NSTerminateCancel;
     
     // There is an NSApplicationTerminateReplyLater result code which will place
@@ -512,7 +512,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 - (void)applicationDidChangeScreenParameters:(NSNotification *)notification
 {
 	// Make sure we refetch the primary screen height.
-	s_have_primary_screen_height = false;
+	s_have_desktop_height = false;
 	
 	// Dispatch the notification.
 	MCPlatformCallbackSendScreenParametersChanged();
@@ -661,6 +661,15 @@ struct MCCallback
 static MCCallback *s_callbacks = nil;
 static uindex_t s_callback_count;
 
+static MCPlatformPreWaitForEventCallback s_pre_waitforevent_callback = nullptr;
+static MCPlatformPostWaitForEventCallback s_post_waitforevent_callback = nullptr;
+
+void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
+{
+    s_pre_waitforevent_callback = p_pre;
+    s_post_waitforevent_callback = p_post;
+}
+
 void MCPlatformBreakWait(void)
 {
     [s_callback_lock lock];
@@ -692,27 +701,27 @@ void MCPlatformBreakWait(void)
 	[t_pool release];
 }
 
-static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+void MCMacPlatformWaitEventObserverCallback(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
  	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
-static uindex_t s_event_checking_enabled = 0;
+static uindex_t s_event_checking_disabled = 0;
 
 void MCMacPlatformEnableEventChecking(void)
 {
-	s_event_checking_enabled += 1;
+	s_event_checking_disabled -= 1;
 }
 
 void MCMacPlatformDisableEventChecking(void)
 {
-	s_event_checking_enabled -= 1;
+	s_event_checking_disabled += 1;
 }
 
 bool MCMacPlatformIsEventCheckingEnabled(void)
 {
-	return s_event_checking_enabled == 0;
+	return s_event_checking_disabled == 0;
 }
 
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
@@ -720,6 +729,25 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (!MCMacPlatformIsEventCheckingEnabled())
 		return false;
 	
+    if (s_pre_waitforevent_callback != nullptr)
+    {
+        if (!s_pre_waitforevent_callback(p_duration, p_blocking))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        // Make sure we have our observer and install it. This is used when we are
+        // blocking and should break the event loop whenever a new event is added
+        // to the queue.
+        if (s_observer == nil)
+        {
+            s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, MCMacPlatformWaitEventObserverCallback, NULL);
+            CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+        }
+    }
+    
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
@@ -736,15 +764,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	MCMemoryDeleteArray(t_callbacks);
 	t_callbacks = nil;
 	t_callback_count = 0;
-	
-	// Make sure we have our observer and install it. This is used when we are
-	// blocking and should break the event loop whenever a new event is added
-	// to the queue.
-	if (s_observer == nil)
-	{
-		s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, NULL);
-		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
-	}
 	
 	s_in_blocking_wait = true;
 	
@@ -797,9 +816,24 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
 	[t_pool release];
 	
+    if (s_post_waitforevent_callback != nullptr)
+    {
+        return s_post_waitforevent_callback(t_event != nullptr);
+    }
+    
 	return t_event != nil;
 }
 
+void MCMacPlatformClearLastMouseEvent(void)
+{
+    if (s_last_mouse_event == nil)
+    {
+        return;
+    }
+    
+    [s_last_mouse_event release];
+    s_last_mouse_event = nil;
+}
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
@@ -1163,18 +1197,6 @@ void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
 {
 	NSRect t_viewport;
 	t_viewport = [[[NSScreen screens] objectAtIndex: p_index] frame];
-	if (p_index == 0)
-	{
-		s_have_primary_screen_height = true;
-		s_primary_screen_height = t_viewport . size . height;
-		
-		r_viewport . x = t_viewport . origin . x;
-		r_viewport . y = t_viewport . origin . y;
-		r_viewport . width = t_viewport . size . width;
-		r_viewport . height = t_viewport . size . height;
-		return;
-	}
-	
 	MCMacPlatformMapScreenNSRectToMCRectangle(t_viewport, r_viewport);
 }
 
@@ -1949,49 +1971,44 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+CGFloat get_desktop_height()
 {
-	if (!s_have_primary_screen_height)
+	if (!s_have_desktop_height)
 	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
+		s_desktop_height = 0.0f;
+		
+		for (NSScreen * t_screen in [NSScreen screens])
+		{
+			NSRect t_rect = [t_screen frame];
+			if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
+				s_desktop_height = t_rect.origin.y + t_rect.size.height;
+		}
+		
+		s_have_desktop_height = true;
 	}
 	
-	r_point = NSMakePoint(p . x, s_primary_screen_height - p . y);
+	return s_desktop_height;
+}
+
+void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+{
+	r_point = NSMakePoint(p . x, get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_point . x = p . x;
-	r_point . y = s_primary_screen_height - p . y;
+	r_point . x = int16_t(p . x);
+	r_point . y = int16_t(get_desktop_height() - p . y);
 }
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_rect = NSMakeRect(r . x, s_primary_screen_height - (r . y + r . height), r . width, r . height);
+	r_rect = NSMakeRect(CGFloat(r . x), get_desktop_height() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
 }
 
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	if (!s_have_primary_screen_height)
-	{
-		MCRectangle t_viewport;
-		MCPlatformGetScreenViewport(0, t_viewport);
-	}
-	
-	r_rect = MCRectangleMake(r . origin . x, s_primary_screen_height - (r . origin . y + r . size . height), r . size . width, r . size . height);
+	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(get_desktop_height() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2001,8 +2018,8 @@ void MCMacPlatformShowMessageDialog(MCStringRef p_title,
 {
     NSAlert *t_alert = [[NSAlert alloc] init];
     [t_alert addButtonWithTitle:@"OK"];
-    [t_alert setMessageText: [NSString stringWithMCStringRef: p_title]];
-    [t_alert setInformativeText: [NSString stringWithMCStringRef: p_message]];
+    [t_alert setMessageText: MCStringConvertToAutoreleasedNSString(p_title)];
+    [t_alert setInformativeText: MCStringConvertToAutoreleasedNSString(p_message)];
     [t_alert setAlertStyle:NSInformationalAlertStyle];
     [t_alert runModal];
 }
@@ -2013,13 +2030,10 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 {
 	// COCOA-TODO: Make this is a little more discerning (only need to reset if
 	//   primary geometry changes).
-	s_have_primary_screen_height = false;
+	s_have_desktop_height = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
 
 int platform_main(int argc, char *argv[], char *envp[])
 {
@@ -2040,8 +2054,9 @@ int platform_main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() ||
+        !MCSInitialize() ||
+	    !MCScriptInitialize())
 		exit(-1);
     
 	// On OSX, argv and envp are encoded as UTF8
@@ -2093,7 +2108,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	[t_pool release];
 	
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

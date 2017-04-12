@@ -149,7 +149,7 @@ void MCControl::DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& s
 {
 	if (flags & F_HSCROLLBAR)
 	{
-		hsb = new MCScrollbar(*MCtemplatescrollbar);
+		hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 		hsb->setparent(this);
 		hsb->setflag(False, F_TRAVERSAL_ON);
 		hsb->setflag(flags & F_3D, F_3D);
@@ -185,7 +185,7 @@ void MCControl::DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& s
 {
 	if (flags & F_VSCROLLBAR)
 	{
-		vsb = new MCScrollbar(*MCtemplatescrollbar);
+		vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 		vsb->setparent(this);
 		vsb->setflag(False, F_TRAVERSAL_ON);
 		vsb->setflag(flags & F_3D, F_3D);

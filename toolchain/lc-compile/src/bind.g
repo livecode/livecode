@@ -26,12 +26,20 @@
 
 --------------------------------------------------------------------------------
 
+'var' CurrentModuleId : ID
+
 -- The purpose of the 'Bind' phase is to ensure every Id is assigned either a
 -- reference to the definingid() for its meaning, or the actual meaning if it is
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
     'rule' Bind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
+		CurrentModuleId <- Name
+		DoBind(Module, ImportedModules)
+
+'action' DoBind(MODULE, MODULELIST)
+
+    'rule' DoBind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
@@ -45,8 +53,8 @@
 
             -- Import all the used modules
             DeclareImports(Definitions, ImportedModules)
-            
-            EnterScope
+
+			EnterScope
 
             -- Declare the predefined ids
             DeclarePredefinedIds
@@ -54,11 +62,11 @@
             Declare(Definitions)
             -- Resolve all references to id's.
             Apply(Definitions)
-            
-            LeaveScope
 
             LeaveScope
-            
+
+			LeaveScope
+
             -- Step 2: Ensure all definitions have their appropriate meaning
             Define(Name, Definitions)
             
@@ -72,7 +80,7 @@
         BindImports(Right, Imports)
         
     'rule' BindImports(import(Position, Id), Imports):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         (|
             FindModuleInList(Name, Imports -> Module)
             Module'Name -> ModuleId
@@ -80,7 +88,7 @@
                 QueryId(ModuleId -> module(Info))
             ||
                 DefineModuleId(ModuleId)
-                Bind(Module, Imports)
+                DoBind(Module, Imports)
             |)
         ||
             (|
@@ -102,11 +110,11 @@
         DeclareImports(Right, Imports)
         
     'rule' DeclareImports(import(Position, Id), Imports):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         (|
             FindModuleInList(Name, Imports -> Module)
             Module'Definitions -> Definitions
-            DeclareImportedDefinitions(Definitions)
+            DeclareImportedDefinitions(Id, Definitions)
         ||
             (|
                 IsBootstrapCompile()
@@ -119,46 +127,46 @@
     'rule' DeclareImports(_, _):
         -- do nothing
         
-'action' DeclareImportedDefinitions(DEFINITION)
+'action' DeclareImportedDefinitions(ID, DEFINITION)
 
-    'rule' DeclareImportedDefinitions(sequence(Left, Right)):
-        DeclareImportedDefinitions(Left)
-        DeclareImportedDefinitions(Right)
+    'rule' DeclareImportedDefinitions(Module, sequence(Left, Right)):
+        DeclareImportedDefinitions(Module, Left)
+        DeclareImportedDefinitions(Module, Right)
 
-    'rule' DeclareImportedDefinitions(unsafe(_, Definition)):
-        DeclareImportedDefinitions(Definition)
+    'rule' DeclareImportedDefinitions(Module, unsafe(_, Definition)):
+        DeclareImportedDefinitions(Module, Definition)
 
-    'rule' DeclareImportedDefinitions(type(Position, _, Name, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, type(Position, _, Name, _)):
+        DeclareImportedId(Module, Name)
 
-    'rule' DeclareImportedDefinitions(constant(Position, _, Name, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, constant(Position, _, Name, _)):
+        DeclareImportedId(Module, Name)
     
-    'rule' DeclareImportedDefinitions(variable(Position, _, Name, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, variable(Position, _, Name, _)):
+        DeclareImportedId(Module, Name)
 
-    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, handler(Position, _, Name, _, _, _)):
+        DeclareImportedId(Module, Name)
     
-    'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, foreignhandler(Position, _, Name, _, _)):
+        DeclareImportedId(Module, Name)
     
-    'rule' DeclareImportedDefinitions(property(Position, _, Name, _, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, property(Position, _, Name, _, _)):
+        DeclareImportedId(Module, Name)
     
-    'rule' DeclareImportedDefinitions(event(Position, _, Name, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, event(Position, _, Name, _)):
+        DeclareImportedId(Module, Name)
 
-    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _, _)):
-        DeclareId(Name)
+    'rule' DeclareImportedDefinitions(Module, syntax(Position, _, Name, _, _, _, _)):
+        DeclareImportedId(Module, Name)
 
-    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+    'rule' DeclareImportedDefinitions(Module, metadata(_, _, _)):
         -- do nothing
 
-    'rule' DeclareImportedDefinitions(import(_, _)):
+    'rule' DeclareImportedDefinitions(Module, import(_, _)):
         -- do nothing
 
-    'rule' DeclareImportedDefinitions(nil):
+    'rule' DeclareImportedDefinitions(_, nil):
         -- do nothing
 
 --
@@ -167,13 +175,14 @@
 
     'rule' FindModuleInList(Name, modulelist(Head, Rest) -> Head):
         Head'Name -> Id
-        Id'Name -> ModName
+        GetQualifiedName(Id -> ModName)
         IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
         FindModuleInList(Name, Rest -> Found)
 
 'action' QueryId(ID -> MEANING)
+'action' GetQualifiedName(ID -> NAME)
 
 --------------------------------------------------------------------------------
 
@@ -289,11 +298,15 @@
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
 
+	'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+		DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
+		DefineParameters(Name, Parameters)
+
     'rule' Define(ModuleId, unsafe(_, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _))):
         DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
 
-    'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+    'rule' Define(ModuleId, unsafe(_, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _))):
         DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
@@ -416,10 +429,7 @@
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
     
-    'rule' Apply(TYPE'record(_, BaseType, Fields)):
-        -- Apply the base type
-        Apply(BaseType)
-        
+    'rule' Apply(TYPE'record(_, Fields)):
         -- Enter a new scope for fields
         EnterScope
         
@@ -619,28 +629,53 @@
 
 --------------------------------------------------------------------------------
 
+'condition' ResolveNamespace(OPTIONALID -> NAME)
+
+'action' DeclareImportedId(ID, ID)
+
+	'rule' DeclareImportedId(Namespace, Id):
+		Id'Namespace <- id(Namespace)
+		DeclareNamespacedId(Id)
+
+-- Ensure all module-level declarations have module namespace
 'action' DeclareId(ID)
 
-    'rule' DeclareId(Id):
+	'rule' DeclareId(Id):
+		CurrentModuleId -> ModuleId
+		Id'Namespace <- id(ModuleId)
+		DeclareNamespacedId(Id)
+
+'action' DeclareNamespacedId(ID)
+
+    'rule' DeclareNamespacedId(Id):
+		Id'Name -> Name
+		HasLocalMeaning(Name -> definingid(DefiningId))
+		Id'Position -> Position
+		DefiningId'Position -> DefiningPosition
+		Error_IdentifierPreviouslyDeclared(Position, Name, DefiningPosition)
+
+    'rule' DeclareNamespacedId(Id):
         Id'Name -> Name
-        HasLocalMeaning(Name -> definingid(DefiningId))
-        Id'Position -> Position
-        DefiningId'Position -> DefiningPosition
-        Error_IdentifierPreviouslyDeclared(Position, Name, DefiningPosition)
-        
-    'rule' DeclareId(Id):
-        Id'Name -> Name
-        DefineMeaning(Name, definingid(Id))
+		Id'Namespace -> NamespaceId
+		ResolveNamespace(NamespaceId -> Namespace)
+		DefineMeaning(Name, Namespace, definingid(Id))
 
 'action' ApplyId(ID)
 
-    'rule' ApplyId(Id):
-        Id'Name -> Name
-        HasMeaning(Name -> Meaning)
+    'rule' ApplyId(Id):	
+		Id'Name -> Name
+		Id'Namespace -> NamespaceId
+		(|
+			where(NamespaceId -> nil)
+			HasUnqualifiedMeaning(Name -> Meaning)
+		||
+			ResolveNamespace(NamespaceId -> Namespace)
+			HasMeaning(Name, Namespace -> Meaning)
+		|)
         Id'Meaning <- Meaning
-        
+
     'rule' ApplyId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_IdentifierNotDeclared(Position, Name)
         Id'Meaning <- error
@@ -648,12 +683,17 @@
 'action' ApplyLocalId(ID)
 
     'rule' ApplyLocalId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         HasLocalMeaning(Name -> Meaning)
         Id'Meaning <- Meaning
 
+	'rule' ApplyLocalId(Id):
+		Id'Name -> Name
+		HasLocalMeaning(Name -> Meaning)
+		Id'Meaning <- Meaning
+
     'rule' ApplyLocalId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_IdentifierNotDeclared(Position, Name)
         Id'Meaning <- error
@@ -673,7 +713,7 @@
             MarkInfo'LMode <- uncomputed
             MarkInfo'RMode <- uncomputed
             where(syntaxmark(MarkInfo) -> Meaning)
-            DefineMeaning(Name, Meaning)
+            DefineUnqualifiedMeaning(Name, Meaning)
             LastSyntaxMarkIndexVar <- Index + 1
         |)
         Id'Meaning <- Meaning

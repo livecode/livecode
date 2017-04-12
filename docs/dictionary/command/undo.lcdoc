@@ -39,10 +39,7 @@ The undo command is equivalent to choosing Edit menuUndo.
 Use the <undo> command to give the user an opportunity to reverse a
 horrible mistake.
 
->*Important:* .</importa
-
 References: copy (command), delete (command), redo (command),
 undoChanged (message)
 
 Tags: ui
-

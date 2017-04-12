@@ -31,7 +31,7 @@ bool MCAndroidTypefaceCreateWithData(void *p_data, uint32_t p_length, MCAndroidT
     t_stream = nil;
     if (t_success)
     {
-        t_stream = new SkMemoryStream(p_data, p_length, false);
+        t_stream = new (nothrow) SkMemoryStream(p_data, p_length, false);
         t_success = t_stream != nil;
     }
     

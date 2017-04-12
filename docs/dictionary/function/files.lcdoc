@@ -30,9 +30,14 @@ answer merge("The files in the current folder use" && \
       "[[tTotalSize]] bytes")
 
 Example:
+local tDiskContents
 put the files & return & the folders into \
-      diskContents[the defaultFolder]
-filter diskContents[the defaultFolder] without ".."
+      tDiskContents["the defaultFolder"]
+filter tDiskContents["the defaultFolder"] without ".."
+
+Parameters:
+targetFolder (String):
+The folder path to search.
 
 Returns (String):
 A list of file names or file information, with one
@@ -57,8 +62,8 @@ included in the list only if they refer to a <file>.
 
 ### Short form
 
-When the <files> is called as a <function>, or without the `long` or
-`detailed` modifiers, it <return(glossary)|returns> only the <file>
+When the <files> is called as a <function>, or without the `<long>` or
+`<long|detailed>` modifiers, it <return(glossary)|returns> only the <file>
 names as a string with one file name per line.
 
 > *Note:* On some <platform|platforms>, file names are permitted to
@@ -68,8 +73,8 @@ names as a string with one file name per line.
 
 ### Long form
 
-`the long files` and `the detailed files` are synonyms.  When the
-<files> <function> is called in this form, the <return(glossary)>
+`the <long> files` and `the <long|detailed> files` are synonyms.  When 
+the <files> <function> is called in this form, the <return(glossary)>
 value is a list of files with detailed file attributes.
 
 Each line in the return value is a comma-separated list of file
@@ -99,7 +104,7 @@ used for the <umask> property.
 > *Note:* On Windows, the permissions are always reported as "777".
 
 Changes:
-The long form was introduced in version 1.1.
+The <long> form was introduced in version 1.1.
 The optional <targetFolder> argument for the function call form was
 introduced in version 8.1.
 
@@ -108,7 +113,7 @@ specialFolderPath (function), alias (glossary), current folder (glossary),
 data fork (glossary), folder (glossary), function (glossary),
 platform (glossary), return (glossary), resource fork (glossary),
 shortcut (glossary), symbolic link (glossary), defaultFolder (property),
-umask (property)
+umask (property), long (keyword)
 
 Tags: file system
 

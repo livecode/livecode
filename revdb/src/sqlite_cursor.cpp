@@ -236,13 +236,13 @@ Bool DBCursor_SQLITE::getFieldsInformation()
 {
 	ENTER;
 	//create an array of columns
-	fields = new DBField *[fieldCount];
+	fields = new (nothrow) DBField *[fieldCount];
 
 	Fields *t_fields_object;
 	t_fields_object = mDataset -> get_fields_object();
 
 	for(int i = 0 ; i < fieldCount; i++) {
-		DBField *tfield = new DBField();
+		DBField *tfield = new (nothrow) DBField();
 		fields[i] = tfield;
 		
 		const char *name = mDataset->fieldName(i);
@@ -377,7 +377,7 @@ Bool DBCursor_SQLITE::getRowData()
 				else
 				{
 					int bufsize = tmp.size();
-					fields[i]->data = new char[tmp.size() + 1];
+					fields[i]->data = new (nothrow) char[tmp.size() + 1];
 
 					memset(fields[i]->data,0,bufsize+1);
 					memcpy(fields[i]->data, tmp.data(), tmp.size());

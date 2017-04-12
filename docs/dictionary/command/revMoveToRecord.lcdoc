@@ -45,13 +45,13 @@ Use the <revMoveToRecord> command to move around within the selected set
 of records.
 
 If the command could not move to the specified record, then the value of
-the <result function> will be set to false, otherwise it will be set to
+the <result> <function> will be set to false, otherwise it will be set to
 true. 
 
 The <revMoveToRecord> command is currently supported by MySQL,
 PostgreSQL and SQLite. On ODBC, it will work providing that a forward
 only cursor has not been selected. For more information on ODBC Cursor
-types, please see the <revOpenDatabase function>. The <revMoveToRecord>
+types, please see the <revOpenDatabase> <function>. The <revMoveToRecord>
 command is not supported by Oracle at the moment and will just return
 false. 
 
@@ -61,5 +61,5 @@ command will not be supported. The error
 
 References: revMoveToPreviousRecord (command),
 revMoveToNextRecord (command), result (function),
-result function (function), revOpenDatabase function (function)
+function (glossary), revOpenDatabase (function)
 

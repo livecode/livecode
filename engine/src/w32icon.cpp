@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -348,7 +348,7 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 			t_item_start++;
 
 		MenuItemDescriptor *t_item;
-		t_item = new MenuItemDescriptor;
+		t_item = new (nothrow) MenuItemDescriptor;
 	
 		if (t_current_item == NULL)
 			t_items = t_item, t_current_item = t_items;
@@ -363,12 +363,12 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 		}
 
 		MCValueRelease(t_item->m_name);
-		/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_item_start, t_tag_sep - t_item_start), t_item->m_name);
+		/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMakeMinMax(t_item_start, t_tag_sep), t_item->m_name);
 
 		if (t_tag_sep != t_item_end)
 		{
 			MCValueRelease(t_item->m_tag);
-			/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_tag_sep + 1, t_item_end - t_tag_sep - 1), t_item->m_tag);
+			/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMakeMinMax(t_tag_sep + 1, t_item_end), t_item->m_tag);
 		}
 
 		t_item -> depth = t_item_start - t_offset;
@@ -535,7 +535,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 		if (!s_got_dblclick)
 		{
-			if (MCdefaultstackptr != nil)
+			if (MCdefaultstackptr)
 				MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_click, t_button);
 		}
 		else
@@ -556,7 +556,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			t_button = 3;
 
 		s_got_dblclick = true;
-		if (MCdefaultstackptr != nil)
+		if (MCdefaultstackptr)
 			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_double_click, t_button);
 	}
 	break;

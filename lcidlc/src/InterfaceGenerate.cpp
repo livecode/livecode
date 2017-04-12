@@ -152,6 +152,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
             return kNativeTypeJavaUTF8Data;
         case kNativeTypeUTF16CData:
             return kNativeTypeJavaUTF16Data;
+		default:
+			break;
 		}
 	}
 	
@@ -1171,8 +1173,6 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
     case kNativeTypeUTF16CData:
         return new CDataTypeMapper(t_type);
 	case kNativeTypeLCArray: return new LCArrayTypeMapper(t_type);
-//	case kNativeTypeCArray:
-//	case kNativeTypeCDictionary:
 	case kNativeTypeObjcString: return new ObjcStringTypeMapper;
 	case kNativeTypeObjcNumber: return new ObjcNumberTypeMapper;
 	case kNativeTypeObjcData: return new ObjcDataTypeMapper;
@@ -1186,8 +1186,16 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
     case kNativeTypeJavaUTF8Data:
     case kNativeTypeJavaUTF16Data:
         return new JavaDataTypeMapper(t_type);
+	case kNativeTypeCArray:
+	case kNativeTypeCDictionary:
+	case kNativeTypeJavaArray:
+	case kNativeTypeJavaNumber:
+	case kNativeTypeJavaDictionary:
+	case kNativeTypeNone:
+		return nil;
 	}
-	return nil;
+	
+	MCUnreachableReturn(nil);
 }
 
 static void map_parameter(InterfaceRef self, HandlerMapping p_mapping, HandlerParameter *p_parameter, uint32_t k, MappedParameter& r_param)
@@ -1213,7 +1221,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 	t_is_java = p_mapping == kHandlerMappingJava;
 	
 	MappedParameter *t_mapped_params;
-	t_mapped_params = new MappedParameter[t_variant -> parameter_count];
+	t_mapped_params = new (nothrow) MappedParameter[t_variant -> parameter_count];
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
 		map_parameter(self, p_mapping, &t_variant -> parameters[k], k, t_mapped_params[k]);
 	

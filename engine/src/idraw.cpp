@@ -317,6 +317,9 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dx = r . x;
             dw = r . width;
             break;
+		case kMCGravityNone:
+			MCUnreachable();
+			break;
     }
     
     switch(p_gravity)
@@ -348,6 +351,9 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dy = r . y;
             dh = r . height;
             break;
+		case kMCGravityNone:
+			MCUnreachable();
+			break;
     }
     
     drawme(dc, 0, 0, rect . width, rect . height, dx, dy, dw, dh);
@@ -376,7 +382,7 @@ void MCImage::startmag(int2 x, int2 y)
 	MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 	if (sptr == NULL)
 		return;
-	if (MCmagimage != NULL)
+	if (MCmagimage)
 		MCmagimage->endmag(False);
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
@@ -416,7 +422,7 @@ void MCImage::endmag(Boolean close)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	MCmagimage = NULL;
+	MCmagimage = nil;
 	if (close)
 	{
 		MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
@@ -458,7 +464,7 @@ void MCImage::magredrawdest(const MCRectangle &brect)
 
 void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 {
-	if (MCmagnifier == NULL)
+	if (!MCmagnifier)
 		endmag(False);
 
 	MCRectangle t_mr;
@@ -475,7 +481,7 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_mr));
 
 	MCContext *t_gfxcontext = nil;
-	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 
 	getstack() -> getcurcard() -> draw(t_gfxcontext, t_mr, false); 
 	

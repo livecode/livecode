@@ -1,39 +1,40 @@
-@REM Make sure ProgramFiles(x86) variable is defined
-@SET "ProgramFilesBase=%ProgramFiles% (x86)"
-@IF NOT EXIST "%ProgramFilesBase%" (
-  SET "ProgramFilesBase=%ProgramFiles%"
+@rem Try to detect if running on 64-bit or 32-bit windows
+@rem Choose some sensible defaults
+set ProgramFilesBase=%ProgramFiles(x86)%
+if defined ProgramFiles(x86) (
+    if not defined BUILD_PLATFORM set BUILD_PLATFORM=win-x86_64
+) else (
+    set ProgramFilesBase=%ProgramFiles%
+    if not defined BUILD_PLATFORM set BUILD_PLATFORM=win-x86
 )
 
-ECHO %ProgramFilesBase%
+@rem Guess build mode
+if not defined BUILDTYPE set BUILDTYPE=Debug
 
-@REM Set up environment so that we can run Visual Studio.
-@REM More-or-less the same effect as running vcvars32.bat
-@REM from the Visual Studio source tree.
-@REM @call vcvars32
-@set "PATH=%ProgramFilesBase%\Microsoft Visual Studio 10.0\VSTSDB\Deploy;%ProgramFilesBase%\Microsoft Visual Studio 10.0\Common7\IDE\;%ProgramFilesBase%\Microsoft Visual Studio 10.0\VC\BIN;%ProgramFilesBase%\Microsoft Visual Studio 10.0\Common7\Tools;C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Windows\Microsoft.NET\Framework\v3.5;%ProgramFilesBase%\Microsoft Visual Studio 10.0\VC\VCPackages;%ProgramFilesBase%\HTML Help Workshop;%ProgramFilesBase%\Microsoft SDKs\Windows\7.0A\bin\NETFX 4.0 Tools;%ProgramFilesBase%\Microsoft SDKs\Windows\7.0A\bin;C:\Perl64\site\bin;C:\Perl64\bin;C:\Perl\site\bin;C:\Perl\bin;C:\windows\system32;C:\windows;C:\windows\system32\wbem"
-
-@REM Works around hangs when generating .pdb files
-@REM Needs to run in the background as never terminates
-@REM
-@start /min /b mspdbsrv -start -spawn -shutdowntime -1
-
-@REM Select the correct build mode.
-@REM
-@IF NOT DEFINED BUILDTYPE SET BUILDTYPE=Debug
-
-@REM Select the correct build project file
-@REM
-IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION=community
-IF %BUILD_EDITION%==commercial (
-  SET BUILD_PROJECT=livecode-commercial.sln
-) ELSE (
-  SET BUILD_PROJECT=livecode\livecode.sln
+@rem Guess build project
+if not defined BUILD_EDITION set BUILD_EDITION=community
+if /I "%BUILD_EDITION%"=="commercial" (
+    set BUILD_PROJECT=livecode-commercial.sln
+) else (
+    set BUILD_PROJECT=livecode\livecode.sln
 )
 
-IF -%1-==-- (
-  @msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
-) ELSE (
-  @msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1 /t:%TARGET%
+@rem Guess target architecture based on build platform
+if /I "%BUILD_PLATFORM%"=="win-x86_64" (
+    @set VSCMD_ARG_TGT_ARCH=x64
+    @set MSBUILD_PLATFORM=x64
 )
+if /I "%BUILD_PLATFORM%"=="win-x86" (
+    @set VSCMD_ARG_TGT_ARCH=x86
+    @set MSBUILD_PLATFORM=Win32
+)
+
+@rem Try to build with VS 2015 build tools by default
+if not defined VSINSTALLDIR set VSINSTALLDIR=%ProgramFilesBase%\Microsoft Visual Studio 14.0\
+call "%VSINSTALLDIR%VC\vcvarsall.bat" %VSCMD_ARG_TGT_ARCH%
+
+@if "%1" NEQ "" set MSBUILD_TARGET_ARG=/t:%1
+
+msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /m:1 %BUILD_TARGET_ARG% /p:Configuration=%BUILDTYPE% /p:Platform=%MSBUILD_PLATFORM%
 
 @exit %ERRORLEVEL%

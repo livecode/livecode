@@ -102,10 +102,10 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+    : _name(kMCEmptyName)
 {
-	parent = NULL;
+	parent = nil;
 	obj_id = 0;
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
 	dflags = 0;
@@ -137,8 +137,8 @@ MCObject::MCObject()
 	// MW-2008-10-25: Initialize the parent script link to NULL
 	parent_script = NULL;
 
-	// No proxy initially
-	m_weak_proxy = nil;
+	// Generate a weak proxy object
+	m_weak_proxy = new MCObjectProxyBase(this);
 
 	// MW-2012-02-14: [[ Fonts ]] Initialize the font to nil.
 	m_font = nil;
@@ -173,14 +173,14 @@ MCObject::MCObject()
     MCDeletedObjectsOnObjectCreated(this);
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+    : MCDLlist(oref),
+      _name(oref._name)
 {
-	if (oref.parent == NULL)
+	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
-	
-	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
 	rect = oref.rect;
@@ -190,8 +190,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	ncolors = oref.ncolors;
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
@@ -243,8 +243,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	else
 		parent_script = NULL;
 
-	// No proxy initially
-	m_weak_proxy = nil;
+	// Generate a weak proxy object
+	m_weak_proxy = new MCObjectProxyBase(this);
 
 	// MW-2012-02-14: [[ FontRefs ]] As objects start off closed, the font is not
 	//   copied and starts nil.
@@ -280,15 +280,13 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 
 MCObject::~MCObject()
 {
-	while (opened)
+    MCAssert(!m_in_id_cache);
+    
+    while (opened)
 		close();
 
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
 	clearfontattrs();
-
-	// This object is going away; invalidate the proxy
-	if (m_weak_proxy != NULL)
-        m_weak_proxy->Clear();
 
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
@@ -298,16 +296,12 @@ MCObject::~MCObject()
 	MCB_clearbreaks(this);
 
 	if (MCerrorptr == this)
-		MCerrorptr = NULL;
+		MCerrorptr = nil;
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
-	MCscreen->cancelmessageobject(this, NULL);
-	removefrom(MCfrontscripts);
-	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
-	MCNameDelete(_name);
 	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
@@ -321,17 +315,19 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-
-	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
-	//   all deletions vector through 'scheduledelete'.
-	if (m_in_id_cache)
-		getstack() -> uncacheobjectbyid(this);
     
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
 		MCParentScript::FlushObject(this);
 	
 	delete m_native_layer;
+    
+    // This object is going away; invalidate the proxy
+    if (m_weak_proxy)
+    {
+        m_weak_proxy->Clear();
+	m_weak_proxy = nil;
+    }
     
     // Detach ourselves from the object pool.
     MCDeletedObjectsOnObjectDestroyed(this);
@@ -355,14 +351,14 @@ bool MCObject::hasname(MCNameRef p_other_name)
 
 void MCObject::setname(MCNameRef p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameClone(p_new_name, _name);
+	_name.Reset(p_new_name);
 }
 
 void MCObject::setname_cstring(const char *p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	setname(*t_name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
@@ -375,7 +371,7 @@ void MCObject::open()
 	if (opened++ != 0)
 		return;
 
-	if (obj_id == 0 && parent != nil)
+	if (obj_id == 0 && parent)
 		obj_id = getstack()->newid();
 
 	// MW-2012-02-14: [[ FontRefs ]] Map the object's font.
@@ -856,9 +852,32 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
+void MCObject::removereferences()
+{
+    if (m_in_id_cache)
+        getstack()->uncacheobjectbyid(this);
+    
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
+    
+    // If the object is marked as being used as a parentScript, flush the parentScript
+    // table so we don't get any dangling pointers.
+    if (m_is_parent_script)
+    {
+        MCParentScript::FlushObject(this);
+        m_is_parent_script = false;
+    }
+    
+    // This object is in the process of being deleted; invalidate any weak refs
+    // and prevent any new ones from being created.
+    m_weak_proxy->Clear();
+    m_weak_proxy = nil;
+}
+
 bool MCObject::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
+    if (!parent || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -870,50 +889,28 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
-    // If the object is marked as being used as a parentScript, flush the parentScript
-    // table so we don't get any dangling pointers.
-	if (m_is_parent_script)
-	{
-		MCParentScript::FlushObject(this);
-        m_is_parent_script = false;
-    }
-    
-    // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
-    //  MCObject::scheduledelete, since a deleted object is no longer something
-    //  we want to listen to. In case we undo the deletion, it will be added
-    //  back to the list of listened objects; in case we revert the stack to its
-    //  saved state, we will now be left with a list of listened-to objects with
-    //  no dangling pointers.
-    
-    // This object is in the process of being deleted; invalidate any weak refs
-    if (m_weak_proxy != nil)
-        m_weak_proxy->Clear();
-    
-    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
-    //   (if it is in it!).
-    if (m_in_id_cache)
-        getstack() -> uncacheobjectbyid(this);
-    
 	return True;
 }
 
 void MCObject::paste(void)
 {
-	fprintf(stderr, "Object: ERROR tried to paste %s\n", getname_cstring());
+	MCLog("Object: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::undo(Ustruct *us)
 {
-	fprintf(stderr, "Object: ERROR tried to undo %s\n", getname_cstring());
+	MCLog("Object:: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::freeundo(Ustruct *us)
 {}
 
-MCStack *MCObject::getstack()
+MCStackHandle MCObject::getstack()
 {
-	if (parent == NULL)
-		return MCdefaultstackptr;
+	if (!parent)
+		return MCStackHandle(MCdefaultstackptr);
 	return parent->getstack();
 }
 
@@ -932,7 +929,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	lockforexecution();
     MCExecContext ctxt(this, hlist, hptr);
-	if (MCtracestackptr != NULL && MCtracereturn)
+	if (MCtracestackptr && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
@@ -983,13 +980,12 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
     MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
 	ctxt.SetParentScript(parentscript);
-	if (MCtracestackptr != NULL && MCtracereturn)
+	if (MCtracestackptr && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
@@ -1010,7 +1006,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1083,6 +1078,8 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
 
+	MCObjectExecutionLock self_lock(this);
+
 	// Make sure this object has its script compiled.
 	parsescript(True);
 
@@ -1154,7 +1151,7 @@ Exec_stat MCObject::handle(Handler_type htype, MCNameRef mess, MCParameter *para
 	Exec_stat stat;
 	stat = handleself(htype, mess, params);
 
-	if (pass_from != nil && parent != NULL)
+	if (pass_from != nil && parent)
 	{
 		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
 		{
@@ -1165,7 +1162,7 @@ Exec_stat MCObject::handle(Handler_type htype, MCNameRef mess, MCParameter *para
 		}
 	}
 
-	if (stat == ES_ERROR && MCerrorptr == NULL)
+	if (stat == ES_ERROR && !MCerrorptr)
 		MCerrorptr = this;
 
 	return stat;
@@ -1194,7 +1191,7 @@ void MCObject::closemenu(Boolean kfocus, Boolean disarm)
 		attachedmenu = NULL;
 		menudepth--;
 		if (MCmenuobjectptr == this)
-			MCmenuobjectptr = NULL;
+			MCmenuobjectptr = nil;
 	}
 }
 
@@ -1391,7 +1388,7 @@ bool MCObject::isvisible(bool p_effective)
 	if (!getflag(F_VISIBLE))
 		return false;
 	
-	if (p_effective && parent != nil && parent->gettype() == CT_GROUP)
+	if (p_effective && parent && parent->gettype() == CT_GROUP)
 		return parent->isvisible(true);
 	
 	return true;
@@ -1399,10 +1396,9 @@ bool MCObject::isvisible(bool p_effective)
 
 bool MCObject::showinvisible()
 {
-	MCStack *t_stack;
-	t_stack = getstack();
+	MCStackHandle t_stack = getstack();
 	
-	if (t_stack == nil)
+	if (!t_stack)
 		return false;
 	
 	return t_stack->geteffectiveshowinvisibleobjects();
@@ -1410,9 +1406,9 @@ bool MCObject::showinvisible()
 
 Boolean MCObject::resizeparent()
 {
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
-		MCGroup *gptr = (MCGroup *)parent;
+		MCGroup *gptr = parent.GetAs<MCGroup>();
         
 		// MERG-2013-06-02: [[ GrpLckUpdates ]] Only recalculate the group if not locked.
         if (!gptr -> islocked())
@@ -1743,10 +1739,10 @@ Boolean MCObject::setpatterns(MCStringRef data)
 	{
 		MCAutoStringRef t_substring;
         if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, MCStringGetLength(data)), &t_substring);
         else
         {
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, t_end_pos), &t_substring);
             t_start_pos = t_end_pos + 1;
         }
             
@@ -1779,8 +1775,8 @@ uint2 MCObject::createcindex(uint2 di)
 	MCColor *oldcolors = colors;
 	MCStringRef *oldnames = colornames;
 	ncolors++;
-	colors = new MCColor[ncolors];
-	colornames = new MCStringRef[ncolors];
+	colors = new (nothrow) MCColor[ncolors];
+	colornames = new (nothrow) MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -1896,7 +1892,7 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 	uint2 t_index;
 	if (!getcindex(di, t_index))
 	{
-		if (parent != nil && parent != MCdispatcher)
+		if (parent && parent != MCdispatcher)
 			return parent -> getcoloraspixel(di);
 		switch(di)
 		{
@@ -1932,7 +1928,7 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	{
 		if (this != MCdispatcher)
 		{
-			if (parent == nil)
+			if (!parent)
 				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 			else
 				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
@@ -2059,7 +2055,7 @@ Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
 {
 	// Fetch current default stack and target settings
-	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -2073,11 +2069,13 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCtargetptr . object = this;
     MCtargetptr . part_id = 0;
 
+    MCObjectExecutionLock t_self_lock(this);
+
 	// Dispatch the message
 	Exec_stat t_stat;
 	t_stat = MCU_dofrontscripts(p_type, p_message, p_params);
 	Boolean olddynamic = MCdynamicpath;
-	MCdynamicpath = MCdynamiccard != NULL;
+	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		t_stat = handle(p_type, p_message, p_params, this);
 
@@ -2085,7 +2083,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
     if (MCdefaultstackptr == t_this_stack
                 && t_old_defaultstack.IsValid())
-        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        MCdefaultstackptr = t_old_defaultstack;
 	
 	// Reset target pointer
 	MCtargetptr = t_old_target;
@@ -2096,15 +2094,15 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean changedefault, Boolean send, Boolean p_is_debug_message)
 {
-	MCStack *mystack = getstack();
-	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || parent == NULL || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
+	MCStackHandle t_stack = getstack();
+	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
     // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
 	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
-	MCscreen->flush(mystack->getw());
+	MCscreen->flush(t_stack->getw());
 	
 	// Object's cannot be deleted whilst they are executing script. However,
 	// this method will run script when script in the object is *not* running
@@ -2117,11 +2115,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	void *t_deletion_cookie;
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
-	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
-		MCdefaultstackptr = mystack;
+		MCdefaultstackptr = t_stack;
 		MCtargetptr . object = this;
         MCtargetptr . part_id = 0;
 	}
@@ -2135,24 +2133,29 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+		MCObjectExecutionLock t_self_lock(this);
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
-		Window mywindow = mystack->getw();
-		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == NULL
-		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+		
+		if (t_stack.IsValid())
 		{
-			// PASS STATE FIX
-			Exec_stat oldstat = stat;
-			stat = handle(HT_MESSAGE, mess, paramptr, this);
-			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-				stat = ES_PASS;
+			Window mywindow = t_stack->getw();
+			if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
+					&& (MCtracewindow == NULL
+						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
+			{
+				// PASS STATE FIX
+				Exec_stat oldstat = stat;
+				stat = handle(HT_MESSAGE, mess, paramptr, this);
+				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+					stat = ES_PASS;
+			}
 		}
 	}
-	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
-		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+		MCdefaultstackptr = t_old_defaultstack;
 	
     MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
@@ -2283,13 +2286,13 @@ void MCObject::senderror()
 		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
-	if (MCerrorptr == NULL)
+	if (!MCerrorptr)
 		MCerrorptr = this;
 	MCAutoStringRef t_eerror;
 	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
-	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
+	MCscreen->delaymessage(MCerrorlockptr ? MCerrorlockptr : MCerrorptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
-	MCerrorptr = NULL;
+	MCerrorptr = nil;
 }
 
 void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
@@ -2306,8 +2309,8 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	};
 	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
     
-	MCAssert(htype <= max_htype);
-	MCStaticAssert(max_htype == HT_MAX);
+	MCAssert(htype <= Handler_type(max_htype));
+	MCStaticAssert(Handler_type(max_htype) == HT_MAX);
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
@@ -2330,9 +2333,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     
     const char *itypestring = gettypestring();
     MCAutoPointer<char[]> tmptypestring;
-    if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
+    if (parent && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
-        tmptypestring = new char[strlen(itypestring) + 7];
+        tmptypestring.Reset(new (nothrow) char[strlen(itypestring) + 7]);
+        if (!tmptypestring)
+            return false;
         if (parent->gettype() == CT_GROUP)
             sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
         else
@@ -2347,10 +2352,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
         case P_ABBREV_ID:
             return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
             
-            // The stack object has its own version of long * which we check for here. We
-            // could make 'names()' virtual and do this that way, but since there shouldn't
-            // really be an exception to how id is formatted (and there won't be for any
-            // future object types) we handle it here.
+        // The stack object has its own version of long * which we check for here. We
+        // could make 'names()' virtual and do this that way, but since there shouldn't
+        // really be an exception to how id is formatted (and there won't be for any
+        // future object types) we handle it here.
+        case P_LONG_NAME_NO_FILENAME:
         case P_LONG_NAME:
         case P_LONG_ID:
             if (gettype() == CT_STACK)
@@ -2360,7 +2366,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
                 
                 MCStringRef t_filename;
                 t_filename = t_this -> getfilename();
-                if (MCStringIsEmpty(t_filename))
+                
+                /* If the property type is 'NO_FILENAME' then we resolve the name
+                 * of the mainstack, and not its filename. */
+                if (MCStringIsEmpty(t_filename) ||
+                    which == P_LONG_NAME_NO_FILENAME)
                 {
                     if (MCdispatcher->ismainstack(t_this))
                     {
@@ -2386,7 +2396,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
             t_which_requested = which;
             if (which == P_LONG_NAME && isunnamed())
                 which = P_LONG_ID;
-            if (parent != NULL)
+            if (parent)
             {
                 MCObject *t_parent_object;
 //                if (parent -> gettype() == CT_CARD)
@@ -2452,7 +2462,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 {
 	if (!force && hashandlers & HH_DEAD_SCRIPT)
 		return False;
-	if (MCStringIsEmpty(_script) || parent == NULL)
+	if (MCStringIsEmpty(_script) || !parent)
 		hashandlers = 0;
 	else
 		if (force || hlist == NULL)
@@ -2460,7 +2470,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			MCscreen->cancelmessageobject(this, MCM_idle);
 			hashandlers = 0;
 			if (hlist == NULL)
-				hlist = new MCHandlerlist;
+				hlist = new (nothrow) MCHandlerlist;
 			
 			getstack() -> unsecurescript(this);
 			
@@ -2472,7 +2482,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			if (t_stat != PS_NORMAL)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;
-				if (report && parent != NULL)
+				if (report && parent)
                 {
                     MCExecContext ctxt(this, nil, nil);
                     MCAutoStringRef t_id;
@@ -2633,8 +2643,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCLineSegment[bwidth * 2];
-		b = new MCLineSegment[bwidth * 2];
+		t = new (nothrow) MCLineSegment[bwidth * 2];
+		b = new (nothrow) MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
@@ -2873,12 +2883,12 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr)
+Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	// SMR 1947, suppress parsing errors
 	MCerrorlock++;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
@@ -2897,7 +2907,10 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ctxt, NULL);
+
+    MCObjectExecutionLock t_self_lock(this);
+	Exec_stat stat = hptr->exec(ctxt, p_args);
+
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2915,7 +2928,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -2935,6 +2948,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    MCObjectExecutionLock t_self_lock(this);
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -3068,7 +3082,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	// MW-2014-01-07: [[ bug 11632 ]] Use the offscreen variant of the context so its
 	//   type field is appropriate for use by the player.
-	MCContext *t_context = new MCOffscreenGraphicsContext(t_gcontext);
+	MCContext *t_context = new (nothrow) MCOffscreenGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
@@ -3081,7 +3095,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	MCObject *t_opened_control = nil;
 	if (opened == 0)
     {
-        if (parent == nil)
+        if (!parent)
         {
             setparent(MCdefaultstackptr -> getcard());
             t_parent_added = true;
@@ -3108,9 +3122,8 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		t_context -> setfunction(GXblendSrcOver);
 
         // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            t_player -> syncbuffering(t_context);
-            
+        MCPlayer::SyncPlayers(getstack(), t_context);
+        
 #ifdef FEATURE_PLATFORM_PLAYER
         MCPlatformWaitForEvent(0.0, true);
 #endif
@@ -3174,11 +3187,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	MCNewAutoNameRef t_name;
+	if ((stat = IO_read_nameref_new(&t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
-	MCNameDelete(_name);
-	_name = t_name;
+	setname(*t_name);
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
@@ -3230,7 +3242,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			delete fontname;
 		}
 	}
-	else if (parent != nil && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
+	else if (parent && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE_TAG;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -3252,8 +3264,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
@@ -3498,7 +3510,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(getname(), stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))
@@ -4246,18 +4258,6 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle MCObject::GetHandle(void) const
-{
-	if (m_weak_proxy == NULL)
-	{
-		m_weak_proxy = new MCObjectProxy(this);
-        if (!m_weak_proxy)
-            return nil;
-	}
-
-	return MCObjectHandle(m_weak_proxy);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-10-17: [[ FullscreenMode ]] Removed struct fields not related to image masks
@@ -4345,7 +4345,7 @@ static void compute_objectshape_mask(MCObject *p_object, const MCObjectShape& p_
 	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_rect));
 
 	MCContext *t_gfxcontext = nil;
-	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 	
 	// Make sure the object is opened.
 	bool t_needs_open;
@@ -4676,7 +4676,7 @@ bool MCObject::mapfont(bool recursive)
     {
         if (!inheritfont())
             return true;
-        if (parent == nil)
+        if (!parent)
             return false;
         return parent->mapfont(true);
     }
@@ -4698,11 +4698,11 @@ bool MCObject::mapfont(bool recursive)
 	//   stacks with substacks have their fonts unmapped incorrectly.
 	bool t_mapped_parent;
 	t_mapped_parent = false;
-	if (parent != nil && parent -> m_font == nil)
+	if (parent && parent -> m_font == nil)
 	{
 		t_mapped_parent = true;
 	}
-    if (parent != nil)
+    if (parent)
         t_explicit_font = parent -> mapfont(true);
 	
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
@@ -4728,7 +4728,7 @@ bool MCObject::mapfont(bool recursive)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-		if ((parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
+		if ((parent && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
 		    (gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout()))
 			t_font_style |= kMCFontStylePrinterMetrics;
 
@@ -4749,7 +4749,7 @@ bool MCObject::mapfont(bool recursive)
             /* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
         }
 	}
-	else if (parent != nil && t_explicit_font)
+	else if (parent && t_explicit_font)
 	{
 		if (parent -> m_font == nil)
 		{
@@ -5017,7 +5017,7 @@ bool MCObject::inheritfont() const
 //   is different from ours.
 bool MCObject::needtosavefontrecord(void) const
 {
-	return hasfontattrs() || hasunicode() || fontheight != 0 || (parent != nil && parent -> hasunicode() != hasunicode());
+	return hasfontattrs() || hasunicode() || fontheight != 0 || (parent && parent -> hasunicode() != hasunicode());
 }
 
 // MW-2012-06-08: [[ Relayer ]] No-op - only implemented for containers.
@@ -5231,6 +5231,26 @@ bool MCObject::isancestorof(MCObject *p_object)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void MCObject::signallisteners(Properties which)
+{
+    if (m_listening && which != P_CUSTOM_PROPERTY_SET)
+    {
+        m_properties_changed |= kMCPropertyChangedMessageTypePropertyChanged;
+        MCobjectpropertieschanged = True;
+    }
+}
+
+void MCObject::signallistenerswithmessage(uint8_t p_message)
+{
+    if (m_listening)
+    {
+        m_properties_changed |= p_message;
+        MCobjectpropertieschanged = True;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);
@@ -5346,58 +5366,58 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectProxy::MCObjectProxy(const MCObject *p_object) :
-  m_refcount(0),
-  m_object(const_cast<MCObject*>(p_object))
+MCObjectProxyBase::MCObjectProxyBase(MCObject *p_object) :
+  m_object(p_object),
+  m_refcount(1)		// The pointed-to object holds a reference
 {
 }
 
-MCObjectProxy::~MCObjectProxy()
+MCObjectProxyBase::~MCObjectProxyBase()
 {
     // Shouldn't get deleted if there are references outstanding!
     MCAssert(m_refcount == 0);
 }
 
-MCObject* MCObjectProxy::Get()
+MCObject* MCObjectProxyBase::Get()
 {
-	MCAssert(m_object != nil);
+    MCAssert(m_object != nil);
     return m_object;
 }
 
-void MCObjectProxy::Clear()
+void MCObjectProxyBase::Clear()
 {
-	if (m_object)
-	{
-		m_object->m_weak_proxy = nil;
-		m_object = nil;
-	}
+    if (m_object)
+    {
+	// The object is being deleted so it can no longer be reached
+	m_object = nil;
+	
+	// Release the reference the object holds to this proxy
+	Release();
+    }
 }
 
-void MCObjectProxy::Retain()
+void MCObjectProxyBase::Retain()
 {
-	m_refcount += 1;
+    m_refcount += 1;
 }
 
-void MCObjectProxy::Release()
+void MCObjectProxyBase::Release()
 {
     // Sanity check to prevent over-releases (which implies a bug in the Handle
     // RAII class) as there shouldn't be another way to get a reference.
     MCAssert(m_refcount > 0);
     
     if (--m_refcount <= 0)
-	{
-        // The object in question no longer has a proxy object as we are being
-        // deleted
-		Clear();
-        
-		delete this;
-	}
+    {
+        delete this;
+    }
 }
 
-bool MCObjectProxy::ObjectExists() const
+bool MCObjectProxyBase::ObjectExists() const
 {
-	return m_object != NULL;
+    return m_object != NULL;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

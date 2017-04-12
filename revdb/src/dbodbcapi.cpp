@@ -26,7 +26,7 @@ unsigned int *DBObject::idcounter = NULL;
 
 extern "C" LIBRARY_EXPORT DBConnection *newdbconnectionref() 
 {
-	DBConnection *ref = new DBConnection_ODBC();
+	DBConnection *ref = new (nothrow) DBConnection_ODBC();
 	return ref;
 }
 

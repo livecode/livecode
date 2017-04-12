@@ -31,6 +31,42 @@ end switchChanged
 Description:
 Handle the hiliteChanged message in the widget's object script to respond to
 the user switching the button on or off.
+
+Name: backColor
+Type: property
+
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: Controls the background color of the switch button
+
+Description:
+Use the <backColor> property to control the off-position fill color of the
+switch button.
+
+Name: hiliteColor
+Type: property
+
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
+
+Summary: Controls the color of the switch button when it is in the on position
+
+Description:
+Use the <hiliteColor> property to control the on-position fill color of the
+switch button.
+
+Name: borderColor
+Type: property
+
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: Controls the color of the switch button when it is in the on position
+
+Description:
+Use the <borderColor> property to control the on-position fill color of the
+switch button.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -41,7 +77,7 @@ widget com.livecode.widget.switchbutton
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 --
 
@@ -52,6 +88,21 @@ metadata version is "2.0.0"
 metadata preferredSize is "64,48"
 metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.8c10.2,0,18.5-8.3,18.5-18.5v0C65.8,8.3,57.5,0,47.3,0zM19.8,33.5c-8.3,0-15-6.7-15-15c0-8.3,6.7-15,15-15s15,6.7,15,15C34.8,26.8,28,33.5,19.8,33.5z"
 --
+
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.default is "244,244,244"
+metadata backgroundcolor.section is "Colors"
+metadata backgroundColor.label is "Background color"
+
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.default is "10,95,244"
+metadata hilitecolor.section is "Colors"
+metadata hiliteColor.label is "Hilite color"
+
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.default is "109,109,109"
+metadata bordercolor.section is "Colors"
+metadata borderColor.label is "Border color"
 
 /**
 Syntax: set the theme of <widget> to <pWidgetTheme>
@@ -104,51 +155,6 @@ around it or not
 */
 property showBorder get mShowFrameBorder set setShowFrameBorder
 metadata showBorder.default is "true"
-
-/**
-Syntax: set the backColor of <widget> to <pColor>
-Syntax: get the backColor of <widget>
-
-Summary: Controls the background color of the switch button
-
-Description:
-Use the <backColor> property to control the off-position fill color of the
-switch button.
-*/
-metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.default is "244,244,244"
-metadata backgroundcolor.section is "Colors"
-metadata backgroundColor.label is "Background color"
-
-/**
-Syntax: set the hiliteColor of <widget> to <pColor>
-Syntax: get the hiliteColor of <widget>
-
-Summary: Controls the color of the switch button when it is in the on position
-
-Description:
-Use the <hiliteColor> property to control the on-position fill color of the
-switch button.
-*/
-metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.default is "10,95,244"
-metadata hilitecolor.section is "Colors"
-metadata hiliteColor.label is "Hilite color"
-
-/**
-Syntax: set the borderColor of <widget> to <pColor>
-Syntax: get the borderColor of <widget>
-
-Summary: Controls the color of the switch button when it is in the on position
-
-Description:
-Use the <borderColor> property to control the on-position fill color of the
-switch button.
-*/
-metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.default is "109,109,109"
-metadata bordercolor.section is "Colors"
-metadata borderColor.label is "Border color"
 
 
 -- private instance variables
