@@ -346,6 +346,8 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
+    	# TODO [2017-04-11]: This should be 2017, but it is not 
+    	# compatible with our gyp as is.
         opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
