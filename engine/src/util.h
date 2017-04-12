@@ -285,4 +285,40 @@ extern "C" char *MCSupportLibraryCopyNativePath(void *handle);
 extern "C" void *MCSupportLibraryLookupSymbol(void *handle,
                                               const char *symbol);
 
+/* Split a LiveCode path into dirname and basename, using the current platform's
+ * rules. Any unnecessary trailing slashes will be trimmed from dir. */
+bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using unix rules.
+ * In this case, the string is split at the last '/' into prefix and suffix.
+ * If the prefix is '/', then dir is '/' and base is the rest of the path;
+ * Otherwise, dir is prefix and base is suffix - in this case dir will not end
+ * with '/'. */
+bool
+MCU_path_split_unix(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using win32 rules.
+ * Win32 paths can have the following forms in addition to unix forms.
+ *   //[Share]/[Folder][/Base]
+ *   Drive:[Folder]/[Base]
+ * In the first case, dir is //Share/Folder and base is Base
+ * In the second case, if Folder is not present then
+ *   dir is Drive:/
+ *   base is Base
+ * If Folder is present then
+ *   dir is Drive:Folder
+ *   base is Base
+ * The addition of a trailing '/' in the case of Folder not being present is
+ * necessary to distinguish between drive relative and drive absolute paths.
+ */
+bool
+MCU_path_split_win32(MCStringRef p_path,
+                     MCStringRef* r_dir,
+                     MCStringRef* r_base);
+
 #endif

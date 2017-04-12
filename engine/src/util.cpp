@@ -2916,6 +2916,221 @@ MCU_path_has_extension(MCStringRef p_path)
                                     t_ext);
 }
 
+static void
+MCU_path_compute_split_unix(MCStringRef p_path,
+                            uindex_t p_split_at,
+                            uindex_t& x_dir_end,
+                            uindex_t& x_base_start)
+
+{
+    if (MCStringGetLength(p_path) > 0 &&
+        MCStringGetCharAtIndex(p_path, 0) == '/')
+    {
+        if (p_split_at == 0)
+        {
+            /* Make sure dir is / and base is everything after */
+            x_dir_end = 1;
+        }
+    }
+    else
+    {
+        if (p_split_at == 0)
+        {
+            x_dir_end = 0;
+            x_base_start = 0;
+        }
+    }
+
+    /* Trim any trailing slashes, down to one in the first position */
+    while(x_dir_end > 1 &&
+          MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+    {
+        x_dir_end -= 1;
+    }
+}
+
+static void
+MCU_path_compute_split_win32(MCStringRef p_path,
+                             uindex_t p_split_at,
+                             uindex_t& x_dir_end,
+                             uindex_t& x_base_start)
+{
+   if (MCStringBeginsWithCString(p_path,
+                                 (const char_t *)"//",
+                                 kMCStringOptionCompareExact))
+    {
+        /* UNC */
+        
+        uindex_t t_end_of_share = 0;
+        uindex_t t_end_of_folder = 0;
+        if (MCStringFirstIndexOfChar(p_path,
+                                     '/',
+                                     2,
+                                     kMCStringOptionCompareExact,
+                                     t_end_of_share))
+        {
+            if (!MCStringFirstIndexOfChar(p_path,
+                                          '/',
+                                          t_end_of_share + 1,
+                                          kMCStringOptionCompareExact,
+                                          t_end_of_folder))
+            {
+                t_end_of_folder = UINDEX_MAX;
+            }
+        }
+        else
+        {
+            t_end_of_folder = UINDEX_MAX;
+        }
+        
+        if (t_end_of_folder >= p_split_at)
+        {
+            x_dir_end = t_end_of_folder;
+            if (t_end_of_folder != UINDEX_MAX)
+            {
+                x_base_start = t_end_of_folder + 1;
+            }
+            else
+            {
+                x_base_start = UINDEX_MAX;
+            }
+        }
+        
+        /* Trim any slashes down to the end of the UNC folder component */
+        while(x_dir_end > t_end_of_folder &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else if (MCStringGetLength(p_path) > 1 &&
+             MCStringGetCharAtIndex(p_path, 1) == ':')
+    {
+        /* DRIVE */
+    
+        if (MCStringGetLength(p_path) > 2 &&
+            MCStringGetCharAtIndex(p_path, 2) == '/')
+        {
+            /* DRIVE:/ (absolute) */
+        
+            if (p_split_at == 2)
+            {
+                /* Make sure we include the / after the drive in the dir */
+                x_dir_end = p_split_at + 1;
+            }
+        }
+        else
+        {
+            /* DRIVE: (DRIVE relative) */
+        
+            if (p_split_at == 0)
+            {
+                /* Make sure dir is DRIVE: and base is everything after */
+                x_dir_end = 2;
+                x_base_start = 2;
+            }
+        }
+        
+        /* Trim any trailing slashes, down to one in the third position */
+        while(x_dir_end > 3 &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    p_split_at,
+                                    x_dir_end,
+                                    x_base_start);
+    }
+}
+
+static bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base,
+               bool p_win32)
+{
+    uindex_t t_split_at = 0;
+    if (!MCStringLastIndexOfChar(p_path,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_split_at))
+    {
+        t_split_at = 0;
+    }
+    
+    uindex_t t_dir_end = t_split_at;
+    uindex_t t_base_start = t_split_at + 1;
+
+    if (p_win32)
+    {
+        MCU_path_compute_split_win32(p_path,
+                                     t_split_at,
+                                     t_dir_end,
+                                     t_base_start);
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    t_split_at,
+                                    t_dir_end,
+                                    t_base_start);
+    }
+
+    if (r_dir != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(0, t_dir_end),
+                                   *r_dir))
+        {
+            return false;
+        }
+    }
+    
+    if (r_base != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(t_base_start, UINDEX_MAX),
+                                   *r_base))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool MCU_path_split(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base)
+{
+#ifdef __WINDOWS__
+    return MCU_path_split(p_path, r_dir, r_base, true);
+#else
+    return MCU_path_split(p_path, r_dir, r_base, false);
+#endif
+}
+
+bool MCU_path_split_unix(MCStringRef p_path,
+                         MCStringRef* r_dir,
+                         MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, false);
+}
+
+bool MCU_path_split_win32(MCStringRef p_path,
+                          MCStringRef* r_dir,
+                          MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 static bool
 __MCU_library_load_verbatim(MCStringRef p_path,
                             MCSLibraryRef& r_library)
