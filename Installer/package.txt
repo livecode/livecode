@@ -806,5 +806,6 @@ component Toolset
 		file repo:extensions/script-libraries/oauth2/oauth2.livecodescript
 		file repo:extensions/script-libraries/getopt/getopt.livecodescript
 		file repo:extensions/script-libraries/mime/mime.livecodescript
+		file repo:extensions/script-libraries/diff/diff.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
