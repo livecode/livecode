@@ -85,20 +85,6 @@ X_initialize_mccmd(const X_init_options& p_options)
                                     MCcmd);
 }
 
-static bool
-X_initialize_mcappcodepath(const X_init_options& p_options)
-{
-    if (p_options.app_code_path != nullptr)
-    {
-        MCappcodepath = MCValueRetain(p_options.app_code_path);
-        return;
-    }
-    
-    return MCU_path_split(MCcmd,
-                          &MCappcodepath,
-                          nullptr);
-}
-
 /* Compute the app code path - on mobile this is the folder containing
  * the executable. */
 static bool
