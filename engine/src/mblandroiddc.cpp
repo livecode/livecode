@@ -1370,7 +1370,7 @@ static void *mobile_main(void *arg)
 	// Free arguments and environment vars
 	for (int i = 0; i < argc; i++)
 		MCValueRelease(t_args[i]);
-	for (int i = 0; i < envc; i++)
+	for (int i = 0; t_env[i] != nullptr; i++)
 		MCValueRelease(t_env[i]);
 
     // Free global refs
