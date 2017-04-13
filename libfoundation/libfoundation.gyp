@@ -219,7 +219,7 @@
                 
                 # Set java-related defines and includes
                 [
-					'host_os == "mac" and OS != "ios"',
+					'host_os == "mac" and OS != "ios" and OS != "emscripten"',
 					{
 						'defines':
 						[

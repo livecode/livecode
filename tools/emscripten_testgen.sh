@@ -47,7 +47,7 @@ cp -a ${test_src_dir} ${em_stack_dir}
 cp ${em_test_src_dir}/__boot.livecodescript ${em_test_build_dir}/standalone/boot/standalone/__boot.livecode
 # Copy in startup stack and make substitutions
 cp ${top_src_dir}/engine/rsrc/emscripten-startup-template.livecodescript ${em_test_build_dir}/standalone/boot/__startup.livecode
-sed -i -e"s,@BOOT_HASH@,${boot_hash}," ${em_test_build_dir}/standalone/boot/__startup.livecode
-sed -i -e"s,@ENGINE_VERSION@,${short_ver}," ${em_test_build_dir}/standalone/boot/__startup.livecode
+sed -i"foo" -e"s,@BOOT_HASH@,${boot_hash}," ${em_test_build_dir}/standalone/boot/__startup.livecode
+sed -i"foo" -e"s,@ENGINE_VERSION@,${short_ver}," ${em_test_build_dir}/standalone/boot/__startup.livecode
 # Create the standalone.zip file
 ( cd ${em_test_build_dir}/standalone && zip -0qr ${em_test_build_dir}/standalone.zip * )

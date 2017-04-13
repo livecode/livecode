@@ -74,12 +74,36 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-extern void X_clear_globals(void);
-extern void MCU_initialize_names();
-
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
+static void
+X_initialize_mccmd(const X_init_options& p_options)
 {
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mccmd),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+}
+
+static void
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    if (p_options.app_code_path != nullptr)
+    {
+        MCappcodepath = MCValueRetain(p_options.app_code_path);
+        return;
+    }
+    
+    MCU_path_split(MCcmd,
+                   &MCappcodepath,
+                   nullptr);
+}
+
+bool X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+
     void *t_bottom;
     MCstackbottom = (char *)&t_bottom;
 	
@@ -94,7 +118,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	////
 	
 	X_clear_globals();
-	
+    
 	////
 
 #ifndef _WINDOWS_DESKTOP
@@ -103,7 +127,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	////
 	
-	MCU_initialize_names();
+	X_initialize_names();
 
 	////
 	
@@ -131,6 +155,14 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 #ifdef _WINDOWS_DESKTOP
 	MCS_init();
 #endif
+
+    /* Set up MCcmd correctly - this is the path to the loadable object
+     * containing this folder. */
+    X_initialize_mccmd(p_options);
+    
+    /* Set up MCappcodepath correctly if not already set - on desktop this is
+     * the folder containing MCcmd. */
+    X_initialize_mcappcodepath(p_options);
 
 #ifdef _WINDOWS_DESKTOP
 	delete MCperror;
@@ -305,7 +337,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	return true;
 }
 
-void X_main_loop_iteration()
+bool X_main_loop_iteration()
 {
     void *t_bottom;
     MCstackbottom = (char *)&t_bottom;
@@ -318,7 +350,7 @@ void X_main_loop_iteration()
 		//   (the result is used by the development environment bootstrap code)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down, (MCParameter *)NULL, True, True);
 		MCquit = True;
-		return;
+		return false;
 	}
 	MCscreen->wait(MCmaxwait, True, True);
 	MCU_resetprops(True);
@@ -339,6 +371,8 @@ void X_main_loop_iteration()
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;
 	MCS_alarm(0.0);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

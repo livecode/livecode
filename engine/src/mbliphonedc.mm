@@ -57,10 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 extern void X_main_loop(void);
-extern bool X_main_loop_iteration(void);
-extern int X_close(void);
 extern void send_startup_message(bool p_do_relaunch = true);
 extern void setup_simulator_hooks(void);
 
@@ -1255,8 +1252,14 @@ static void MCIPhoneDoDidBecomeActive(void *)
     }
 	
 	// Initialize the engine.
+    struct X_init_options t_options;
+    t_options.argc = 1;
+    t_options.argv = args;
+    t_options.envp = *t_envp;
+    t_options.app_code_path = nullptr;
+    
 	Bool t_init_success;
-    t_init_success = X_init(1, args, envc, *t_envp);
+    t_init_success = X_init(t_options);
 	
     [t_pool release];
 	
