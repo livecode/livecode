@@ -75,17 +75,17 @@ static Boolean byte_swapped()
 ////////////////////////////////////////////////////////////////////////////////
 
 static void
-X_compute_mccmd(const X_init_options& p_options)
+X_initialize_mccmd(const X_init_options& p_options)
 {
     MCSAutoLibraryRef t_self;
-    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_compute_mccmd),
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mccmd),
                                 &t_self);
     MCSLibraryCopyPath(*t_self,
                        MCcmd);
 }
 
 static void
-X_compute_mcappcodepath(const X_init_options& p_options)
+X_initialize_mcappcodepath(const X_init_options& p_options)
 {
     if (p_options.app_code_path != nullptr)
     {
@@ -158,11 +158,11 @@ bool X_init(const X_init_options& p_options)
 
     /* Set up MCcmd correctly - this is the path to the loadable object
      * containing this folder. */
-    X_compute_mccmd(p_options);
+    X_initialize_mccmd(p_options);
     
     /* Set up MCappcodepath correctly if not already set - on desktop this is
      * the folder containing MCcmd. */
-    X_compute_mcappcodepath(p_options);
+    X_initialize_mcappcodepath(p_options);
 
 #ifdef _WINDOWS_DESKTOP
 	delete MCperror;

@@ -79,14 +79,14 @@ MCTheme *MCThemeCreateNative(void)
 }
 
 static bool
-X_compute_mccmd(const X_init_options& p_options)
+X_initialize_mccmd(const X_init_options& p_options)
 {
     return MCsystem->PathFromNative(p_options.argv[0],
                                     MCcmd);
 }
 
 static bool
-X_compute_mcappcodepath(const X_init_options& p_options)
+X_initialize_mcappcodepath(const X_init_options& p_options)
 {
     if (p_options.app_code_path != nullptr)
     {
@@ -102,11 +102,11 @@ X_compute_mcappcodepath(const X_init_options& p_options)
 /* Compute the app code path - on mobile this is the folder containing
  * the executable. */
 static bool
-X_compute_mcappcodepath(const X_init_options& p_options)
+X_initialize_mcappcodepath(const X_init_options& p_options)
 {
     MCSAutoLibraryRef t_self;
     MCAutoStringRef t_lib_path;
-    return MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_compute_mcappcodepath),
+    return MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mcappcodepath),
                                        &t_self) &&
             MCSLibraryCopyPath(*t_self,
                                &t_lib_path) &&
@@ -132,9 +132,9 @@ bool X_init(const X_init_options& p_options)
 	
 	MCS_init();
 	
-    X_compute_mccmd(p_options);
+    X_initialize_mccmd(p_options);
     
-    X_compute_mcappcodepath(p_options);
+    X_initialize_mcappcodepath(p_options);
     
 	////
 

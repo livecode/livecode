@@ -106,14 +106,14 @@ static bool
 /* ================================================================ */
 
 static bool
-X_compute_mccmd(const X_init_options& p_options)
+X_initialize_mccmd(const X_init_options& p_options)
 {
     return MCsystem->PathFromNative(p_options.argv[0],
                                     MCcmd);
 }
 
 static bool
-X_compute_mcappcodepath(const X_init_options& p_options)
+X_initialize_mcappcodepath(const X_init_options& p_options)
 {
     if (p_options.app_code_path != nullptr)
     {
@@ -150,12 +150,12 @@ X_init(const X_init_options& p_options)
 	/* ---------- Initialise all the things */
 	MCS_init();
     
-    if (!X_compute_mccmd(p_options))
+    if (!X_initialize_mccmd(p_options))
     {
         goto error_cleanup;
     }
 
-    if (!X_compute_mcappcodepath(p_options))
+    if (!X_initialize_mcappcodepath(p_options))
     {
         goto error_cleanup;
     }
