@@ -130,12 +130,12 @@ bool X_init(const X_init_options& p_options)
 	MCfalsemcstring = MCfalsestring;
 	MCnullmcstring = MCnullmcstring;
 	
+	MCS_init();
+	
     X_compute_mccmd(p_options);
     
     X_compute_mcappcodepath(p_options);
     
-	MCS_init();
-	
 	////
 
 	X_initialize_names();

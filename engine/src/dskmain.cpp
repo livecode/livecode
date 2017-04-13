@@ -120,14 +120,6 @@ bool X_init(const X_init_options& p_options)
 	X_clear_globals();
     
 	////
-    
-    /* Set up MCcmd correctly - this is the path to the loadable object
-     * containing this folder. */
-    X_compute_mccmd(p_options);
-    
-    /* Set up MCappcodepath correctly if not already set - on desktop this is
-     * the folder containing MCcmd. */
-    X_compute_mcappcodepath(p_options);
 
 #ifndef _WINDOWS_DESKTOP
 	MCS_init();
@@ -163,6 +155,14 @@ bool X_init(const X_init_options& p_options)
 #ifdef _WINDOWS_DESKTOP
 	MCS_init();
 #endif
+
+    /* Set up MCcmd correctly - this is the path to the loadable object
+     * containing this folder. */
+    X_compute_mccmd(p_options);
+    
+    /* Set up MCappcodepath correctly if not already set - on desktop this is
+     * the folder containing MCcmd. */
+    X_compute_mcappcodepath(p_options);
 
 #ifdef _WINDOWS_DESKTOP
 	delete MCperror;

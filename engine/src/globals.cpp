@@ -535,7 +535,7 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	/* FRAGILE */ MCcmd = nullptr;
     MCappcodepath = nullptr;
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
@@ -1529,7 +1529,8 @@ int X_close(void)
     
     if (MCappcodepath != nullptr)
         MCValueRelease(MCappcodepath);
-    MCValueRelease(MCcmd);
+    if (MCcmd != nullptr)
+        MCValueRelease(MCcmd);
     
 	return MCretcode;
 }

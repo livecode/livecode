@@ -389,6 +389,8 @@ bool X_init(const X_init_options& p_options)
 
 	////
     
+	MCS_init();
+
     /* Set up MCcmd correctly - this is the path to the loadable object
      * containing this folder. */
     X_compute_mccmd(p_options);
@@ -396,8 +398,6 @@ bool X_init(const X_init_options& p_options)
     /* Setup MCappcodepath correctly - this is the folder containing the
      * MCcmd. */
     X_compute_mcappcodepath(p_options);
-
-	MCS_init();
 
 	////
 	

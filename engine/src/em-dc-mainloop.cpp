@@ -127,7 +127,7 @@ X_compute_mcappcodepath(const X_init_options& p_options)
 }
 
 bool
-X_init(X_init_options& p_options)
+X_init(const X_init_options& p_options)
 {
     int argc = p_options.argc;
     MCStringRef *argv = p_options.argv;
@@ -147,6 +147,9 @@ X_init(X_init_options& p_options)
 	 * absence on incoming events. */
 	MCmaxwait = INFINITY;
 
+	/* ---------- Initialise all the things */
+	MCS_init();
+    
     if (!X_compute_mccmd(p_options))
     {
         goto error_cleanup;
@@ -156,9 +159,7 @@ X_init(X_init_options& p_options)
     {
         goto error_cleanup;
     }
-
-	/* ---------- Initialise all the things */
-	MCS_init();
+    
 	X_initialize_names();
 
 	if (!MCFontInitialize())
