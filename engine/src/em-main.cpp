@@ -55,6 +55,10 @@ platform_main(int argc, char *argv[], char *envp[])
 	{
 		MCEmscriptenBootError("Core initialisation");
 	}
+    if (!MCSInitialize())
+    {
+		MCEmscriptenBootError("Core System initialisation");
+    }
 	if (!MCScriptInitialize())
 	{
 		MCEmscriptenBootError("LCB VM initialisation");
