@@ -681,9 +681,9 @@ function revSBTargetToPlatform pTarget
 end revSBTargetToPlatform
 
 -- item 1 of the architectures should be the default architecture
-constant kWindowsArchitectures = "x86-32"
-constant kMacOSXArchitectures = "x86-32,x86-64"
-constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
+constant kWindowsArchitectures = "x86"
+constant kMacOSXArchitectures = "x86,x86_64"
+constant kLinuxArchitectures =  "x86,x86_64,armv6_hf"
 constant kAndroidArchitectures =  "armv6"
 constant kiOSArchitectures =  "armv7,arm64"
 constant kEmscriptenArchitectures =  "js"
@@ -709,10 +709,12 @@ end revSBPlatformArchitectures
 
 private function __ArchitectureSynonyms pArchitecture
    switch pArchitecture
-      case "x86-32"
-         return pArchitecture,"x86,i386"
-      case "x86-64"
-         return pArchitecture,"x64"
+      case "x86"
+         return pArchitecture,"x86_32,x86-32,i386"
+      case "x86_64"
+         return pArchitecture,"x86-64,x64"
+      case "armv6_hf"
+         return pArchitecture,"armv6-hf"
    end switch
    
    return pArchitecture
@@ -728,17 +730,10 @@ private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
       repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
          if xName ends with tArchitectureIdentifier then
             put tArchitecture into tFoundArchitecture 
-            set the itemDelimiter to "-"
-            if the number of items of xName > 1 then
-               delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
-            else
-               set the itemDelimiter to "_"
-               if the number of items of xName > 1 then
-                  delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
-               end if
+            delete char -length(tArchitectureIdentifier) to -1 of xName
+            if the last char of xName is in "-_" then
+               delete the last char of xName
             end if
-            set the itemDelimiter to comma
-            
             exit repeat
          end if
       end repeat
