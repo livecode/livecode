@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
+#include "stack.h"
+#include "card.h"
 
 MCExpression::MCExpression()
 {
@@ -741,6 +743,13 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 			stat = p->handle(HT_FUNCTION, name, params, p);
 			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 				stat = ES_PASS;
+				
+			// PM-2015-07-09: [[ Bug 15253 ]] When setting property to function in msg box, search for the function handler in the mainstack/card script
+			if (stat == ES_NOT_HANDLED)
+			{
+				MCStack * sptr = MCdefaultstackptr;
+				stat = sptr -> getcard() -> handle(HT_FUNCTION, name, params, sptr -> getcard());
+			}
 		}
 		MCEPptr = oldep;
 		MCdynamicpath = olddynamic;
