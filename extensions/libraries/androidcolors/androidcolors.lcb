@@ -1,0 +1,772 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+*/
+
+/*
+This is an Android color scheme library
+*/
+
+library com.livecode.library.androidColors
+
+use com.livecode.engine
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Android Color Schemes"
+
+constant kRedColor is "Red"
+constant kPinkColor is "Pink"
+constant kPurpleColor is "Purple"
+constant kDeepPurpleColor is "Deep Purple"
+constant kIndigoColor is "Indigo"
+constant kBlueColor is "Blue"
+constant kLightBlueColor is "Light Blue"
+constant kCyanColor is "Cyan"
+constant kTealColor is "Teal"
+constant kGreenColor is "Green"
+constant kLightGreenColor is "Light Green"
+constant kLimeColor is "Lime"
+constant kYellowColor is "Yellow"
+constant kAmberColor is "Amber"
+constant kOrangeColor is "Orange"
+constant kDeepOrangeColor is "Deep Orange"
+constant kBrownColor is "Brown"
+constant kGreyColor is "Grey"
+constant kBlueGreyColor is "Blue Grey"
+
+/*
+Returns a list of the Android color schemes.
+
+Returns: A list of names of the color swatches used in Android.
+
+Description:
+Returns a list of the Android color schemes.
+Use the <androidColorSchemes> function to get a list of the names of the color swatches used in Android.
+*/
+public handler androidColorSchemes() returns List
+   return [kRedColor, kPinkColor, kPurpleColor, kDeepPurpleColor, kIndigoColor, kBlueColor, kLightBlueColor, kCyanColor, kTealColor, kGreenColor, kLightGreenColor, kLimeColor, kYellowColor, kAmberColor, kOrangeColor, kDeepOrangeColor, kBrownColor, kGreyColor, kBlueGreyColor]
+end handler
+
+/*
+Returns a list of Android accent color schemes.
+
+Returns: a list of names of the accent color swatches used in Android.
+
+Description:
+Returns a list of the Android accent color schemes.
+Use the <androidAccentColorSchemes> function to get a list of the names of the accent color swatches used in Android.
+*/
+public handler androidAccentColorSchemes() returns List
+   return [kRedColor, kPinkColor, kPurpleColor, kDeepPurpleColor, kIndigoColor, kBlueColor, kLightBlueColor, kCyanColor, kTealColor, kGreenColor, kLightGreenColor, kLimeColor, kYellowColor, kAmberColor, kOrangeColor, kDeepOrangeColor]
+end handler
+
+/*
+Returns either "Dark" or "Light" depending on whether the primary color of the color palette is dark or light.
+
+pColorPalette: The name of the color palette.
+Returns: "Dark" if the primary color of the color palette is dark or "Light" if the primary color of the color palette is light.
+
+Description:
+Returns "Dark" if the primary color of pColorPalette is a dark color palette or "Light" if the primary color of pColorPalette is a light color palette.
+*/
+public handler darkOrLightPrimaryColor(in pColorPalette as String) returns String
+   variable tDarkColorPalettes as List
+   variable tLightColorPalettes as List
+
+   put [kRedColor, kPinkColor, kPurpleColor, kDeepPurpleColor, kIndigoColor, kBlueColor, kTealColor, kDeepOrangeColor, kBrownColor, kBlueGreyColor] into tDarkColorPalettes
+   put [kLightBlueColor, kCyanColor, kGreenColor, kLightGreenColor, kLimeColor, kYellowColor, kAmberColor, kOrangeColor, kGreyColor] into tLightColorPalettes
+
+   if pColorPalette is in tDarkColorPalettes then
+      return "Dark"
+   else if pColorPalette is in tLightColorPalettes then
+      return "Light"
+   end if
+
+end handler
+
+private handler primaryColors() returns Array
+
+   variable tPrimaryColors as Array
+   put the empty array into tPrimaryColors
+
+   put "238,43,41" into tPrimaryColors[kRedColor]
+	put "224,0,81" into tPrimaryColors[kPinkColor]
+	put "137,0,161" into tPrimaryColors[kPurpleColor]
+	put "83,33,168" into tPrimaryColors[kDeepPurpleColor]
+	put "48,58,165" into tPrimaryColors[kIndigoColor]
+	put "30,128,240" into tPrimaryColors[kBlueColor]
+	put "20,150,241" into tPrimaryColors[kLightBlueColor]
+	put "22,175,202" into tPrimaryColors[kCyanColor]
+	put "17,133,117" into tPrimaryColors[kTealColor]
+	put "63,164,63" into tPrimaryColors[kGreenColor]
+	put "122,186,58" into tPrimaryColors[kLightGreenColor]
+	put "194,215,45" into tPrimaryColors[kLimeColor]
+	put "254,233,46" into tPrimaryColors[kYellowColor]
+	put "253,182,13" into tPrimaryColors[kAmberColor]
+	put "253,133,9" into tPrimaryColors[kOrangeColor]
+	put "251,63,28" into tPrimaryColors[kDeepOrangeColor]
+	put "101,67,56" into tPrimaryColors[kBrownColor]
+	put "140,140,140" into tPrimaryColors[kGreyColor]
+	put "78,106,120" into tPrimaryColors[kBlueGreyColor]
+
+   return tPrimaryColors
+end handler
+
+/*
+Returns RGBA color string of the primary color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The primary color of pColorScheme
+
+Returns the primary color scheme of the given Android color scheme in RGBA color string format.
+*/
+public handler androidPrimaryColor(in pColorScheme as String) returns String
+   variable tPrimaryColors as Array
+   put primaryColors() into tPrimaryColors
+   return tPrimaryColors[pColorScheme]
+end handler
+
+private handler swatch50Colors() returns Array
+
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "255,229,234" into tColors[kRedColor]
+	put "250,220,231" into tColors[kPinkColor]
+	put "240,221,243" into tColors[kPurpleColor]
+	put "232,224,244" into tColors[kDeepPurpleColor]
+	put "226,228,244" into tColors[kIndigoColor]
+	put "220,238,252" into tColors[kBlueColor]
+	put "219,242,253" into tColors[kLightBlueColor]
+	put "218,245,249" into tColors[kCyanColor]
+	put "218,239,238" into tColors[kTealColor]
+	put "226,244,227" into tColors[kGreenColor]
+	put "238,247,228" into tColors[kLightGreenColor]
+	put "248,251,225" into tColors[kLimeColor]
+	put "255,254,225" into tColors[kYellowColor]
+	put "255,247,218" into tColors[kAmberColor]
+	put "255,241,217" into tColors[kOrangeColor]
+	put "250,227,225" into tColors[kDeepOrangeColor]
+	put "235,230,227" into tColors[kBrownColor]
+	put "249,249,249" into tColors[kGreyColor]
+	put "231,235,238" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 50 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 50 color of pColorScheme
+
+Returns the swatch 50 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch50Color(in pColorScheme as String) returns String
+   variable tSwatch50Colors as Array
+   put swatch50Colors() into tSwatch50Colors
+   return tSwatch50Colors[pColorScheme]
+end handler
+
+private handler swatch100Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "254,192,199" into tColors[kRedColor]
+   put "245,171,197" into tColors[kPinkColor]
+   put "216,174,225" into tColors[kPurpleColor]
+   put "198,182,228" into tColors[kDeepPurpleColor]
+   put "184,190,228" into tColors[kIndigoColor]
+   put "173,211,248" into tColors[kBlueColor]
+   put "166,222,251" into tColors[kLightBlueColor]
+   put "165,231,238" into tColors[kCyanColor]
+   put "164,217,211" into tColors[kTealColor]
+   put "189,225,189" into tColors[kGreenColor]
+   put "212,234,188" into tColors[kLightGreenColor]
+   put "236,243,182" into tColors[kLimeColor]
+   put "255,249,184" into tColors[kYellowColor]
+   put "254,233,164" into tColors[kAmberColor]
+   put "254,217,163" into tColors[kOrangeColor]
+   put "254,192,174" into tColors[kDeepOrangeColor]
+   put "206,193,188" into tColors[kBrownColor]
+   put "242,242,242" into tColors[kGreyColor]
+   put "196,207,212" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 100 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 100 color of pColorScheme
+
+Returns the swatch 100 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch100Color(in pColorScheme as String) returns String
+   variable tSwatch100Colors as Array
+   put swatch100Colors() into tSwatch100Colors
+   return tSwatch100Colors[pColorScheme]
+end handler
+
+private handler swatch200Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "233,133,136" into tColors[kRedColor]
+   put "239,119,162" into tColors[kPinkColor]
+   put "193,124,206" into tColors[kPurpleColor]
+   put "163,135,210" into tColors[kDeepPurpleColor]
+   put "141,149,209" into tColors[kIndigoColor]
+   put "127,190,247" into tColors[kBlueColor]
+   put "112,201,248" into tColors[kLightBlueColor]
+   put "113,215,229" into tColors[kCyanColor]
+   put "112,194,184" into tColors[kTealColor]
+   put "150,207,151" into tColors[kGreenColor]
+   put "186,220,148" into tColors[kLightGreenColor]
+   put "224,237,138" into tColors[kLimeColor]
+   put "255,245,140" into tColors[kYellowColor]
+   put "254,219,111" into tColors[kAmberColor]
+   put "254,193,109" into tColors[kOrangeColor]
+   put "253,153,127" into tColors[kDeepOrangeColor]
+   put "174,154,147" into tColors[kBrownColor]
+   put "234,234,234" into tColors[kGreyColor]
+   put "160,176,185" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 200 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 200 color of pColorScheme
+
+Returns the swatch 200 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch200Color(in pColorScheme as String) returns String
+   variable tSwatch200Colors as Array
+   put swatch200Colors() into tSwatch200Colors
+   return tSwatch200Colors[pColorScheme]
+end handler
+
+private handler swatch300Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "220,92,96" into tColors[kRedColor]
+   put "234,71,127" into tColors[kPinkColor]
+   put "170,77,188" into tColors[kPurpleColor]
+   put "130,92,194" into tColors[kDeepPurpleColor]
+   put "102,112,191" into tColors[kIndigoColor]
+   put "84,164,243" into tColors[kBlueColor]
+   put "66,182,245" into tColors[kLightBlueColor]
+   put "66,199,218" into tColors[kCyanColor]
+   put "65,170,156" into tColors[kTealColor]
+   put "112,190,113" into tColors[kGreenColor]
+   put "110,207,110" into tColors[kLightGreenColor]
+   put "212,229,98" into tColors[kLimeColor]
+   put "254,241,99" into tColors[kYellowColor]
+   put "254,206,63" into tColors[kAmberColor]
+   put "253,169,61" into tColors[kOrangeColor]
+   put "253,116,83" into tColors[kDeepOrangeColor]
+   put "143,117,108" into tColors[kBrownColor]
+   put "217,217,217" into tColors[kGreyColor]
+   put "126,147,158" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 300 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 300 color of pColorScheme
+
+Returns the swatch 300 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch300Color(in pColorScheme as String) returns String
+   variable tSwatch300Colors as Array
+   put swatch300Colors() into tSwatch300Colors
+   return tSwatch300Colors[pColorScheme]
+end handler
+
+private handler swatch400Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "233,58,63" into tColors[kRedColor]
+   put "229,36,103" into tColors[kPinkColor]
+   put "153,43,174" into tColors[kPurpleColor]
+   put "106,62,180" into tColors[kDeepPurpleColor]
+   put "74,83,179" into tColors[kIndigoColor]
+   put "54,146,242" into tColors[kBlueColor]
+   put "38,166,243" into tColors[kLightBlueColor]
+   put "38,187,209" into tColors[kCyanColor]
+   put "35,152,136" into tColors[kTealColor]
+   put "87,177,87" into tColors[kGreenColor]
+   put "140,197,83" into tColors[kLightGreenColor]
+   put "203,221,70" into tColors[kLimeColor]
+   put "254,237,72" into tColors[kYellowColor]
+   put "254,193,32" into tColors[kAmberColor]
+   put "253,150,31" into tColors[kOrangeColor]
+   put "253,88,53" into tColors[kDeepOrangeColor]
+   put "121,90,80" into tColors[kBrownColor]
+   put "175,175,175" into tColors[kGreyColor]
+   put "102,125,138" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 400 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 400 color of pColorScheme
+
+Returns the swatch 400 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch400Color(in pColorScheme as String) returns String
+   variable tSwatch400Colors as Array
+   put swatch400Colors() into tSwatch400Colors
+   return tSwatch400Colors[pColorScheme]
+end handler
+
+private handler swatch500Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "238,43,41" into tColors[kRedColor]
+	put "224,0,81" into tColors[kPinkColor]
+	put "137,0,161" into tColors[kPurpleColor]
+	put "83,33,168" into tColors[kDeepPurpleColor]
+	put "48,58,165" into tColors[kIndigoColor]
+	put "30,128,240" into tColors[kBlueColor]
+	put "20,150,241" into tColors[kLightBlueColor]
+	put "22,175,202" into tColors[kCyanColor]
+	put "17,133,117" into tColors[kTealColor]
+	put "63,164,63" into tColors[kGreenColor]
+	put "122,186,58" into tColors[kLightGreenColor]
+	put "194,215,45" into tColors[kLimeColor]
+	put "254,233,46" into tColors[kYellowColor]
+	put "253,182,13" into tColors[kAmberColor]
+	put "253,133,9" into tColors[kOrangeColor]
+	put "251,63,28" into tColors[kDeepOrangeColor]
+	put "101,67,56" into tColors[kBrownColor]
+	put "140,140,140" into tColors[kGreyColor]
+	put "78,106,120" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 500 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 500 color of pColorScheme
+
+Returns the swatch 500 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch500Color(in pColorScheme as String) returns String
+   variable tSwatch500Colors as Array
+   put swatch500Colors() into tSwatch500Colors
+   return tSwatch500Colors[pColorScheme]
+end handler
+
+private handler swatch600Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "220,34,41" into tColors[kRedColor]
+   put "204,0,77" into tColors[kPinkColor]
+   put "122,0,154" into tColors[kPurpleColor]
+   put "75,29,161" into tColors[kDeepPurpleColor]
+   put "43,51,154" into tColors[kIndigoColor]
+   put "27,113,222" into tColors[kBlueColor]
+   put "18,135,222" into tColors[kLightBlueColor]
+   put "20,157,180" into tColors[kCyanColor]
+   put "16,120,104" into tColors[kTealColor]
+   put "56,147,55" into tColors[kGreenColor]
+   put "106,168,51" into tColors[kLightGreenColor]
+   put "179,193,40" into tColors[kLimeColor]
+   put "252,210,42" into tColors[kYellowColor]
+   put "253,165,10" into tColors[kAmberColor]
+   put "248,120,6" into tColors[kOrangeColor]
+   put "238,57,25" into tColors[kDeepOrangeColor]
+   put "89,59,50" into tColors[kBrownColor]
+   put "98,98,98" into tColors[kGreyColor]
+   put "67,91,102" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 600 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 600 color of pColorScheme
+
+Returns the swatch 600 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch600Color(in pColorScheme as String) returns String
+   variable tSwatch600Colors as Array
+   put swatch600Colors() into tSwatch600Colors
+   return tSwatch600Colors[pColorScheme]
+end handler
+
+private handler swatch700Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "199,25,36" into tColors[kRedColor]
+   put "179,0,73" into tColors[kPinkColor]
+   put "102,0,145" into tColors[kPurpleColor]
+   put "63,23,151" into tColors[kDeepPurpleColor]
+   put "36,42,142" into tColors[kIndigoColor]
+   put "23,95,199" into tColors[kBlueColor]
+   put "14,114,198" into tColors[kLightBlueColor]
+   put "17,134,150" into tColors[kCyanColor]
+   put "13,104,88" into tColors[kTealColor]
+   put "46,127,46" into tColors[kGreenColor]
+   put "87,145,43" into tColors[kLightGreenColor]
+   put "160,168,33" into tColors[kLimeColor]
+   put "249,180,36" into tColors[kYellowColor]
+   put "253,142,9" into tColors[kAmberColor]
+   put "240,103,8" into tColors[kOrangeColor]
+   put "222,51,51" into tColors[kDeepOrangeColor]
+   put "74,49,42" into tColors[kBrownColor]
+   put "78,78,78" into tColors[kGreyColor]
+   put "54,72,81" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 700 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 700 color of pColorScheme
+
+Returns the swatch 700 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch700Color(in pColorScheme as String) returns String
+   variable tSwatch700Colors as Array
+   put swatch700Colors() into tSwatch700Colors
+   return tSwatch700Colors[pColorScheme]
+end handler
+
+private handler swatch800Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "183,20,31" into tColors[kRedColor]
+   put "155,0,70" into tColors[kPinkColor]
+   put "85,0,136" into tColors[kPurpleColor]
+   put "52,18,142" into tColors[kDeepPurpleColor]
+   put "30,34,129" into tColors[kIndigoColor]
+   put "20,78,178" into tColors[kBlueColor]
+   put "13,97,175" into tColors[kLightBlueColor]
+   put "14,113,124" into tColors[kCyanColor]
+   put "11,88,74" into tColors[kTealColor]
+   put "38,109,38" into tColors[kGreenColor]
+   put "70,123,36" into tColors[kLightGreenColor]
+   put "141,142,28" into tColors[kLimeColor]
+   put "245,152,30" into tColors[kYellowColor]
+   put "253,124,7" into tColors[kAmberColor]
+   put "233,86,6" into tColors[kOrangeColor]
+   put "205,46,19" into tColors[kDeepOrangeColor]
+   put "60,39,35" into tColors[kBrownColor]
+   put "51,51,51" into tColors[kGreyColor]
+   put "42,55,62" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 800 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 800 color of pColorScheme
+
+Returns the swatch 800 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch800Color(in pColorScheme as String) returns String
+   variable tSwatch800Colors as Array
+   put swatch800Colors() into tSwatch800Colors
+   return tSwatch800Colors[pColorScheme]
+end handler
+
+private handler swatch900Colors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "166,9,22" into tColors[kRedColor]
+   put "115,0,62" into tColors[kPinkColor]
+   put "57,0,121" into tColors[kPurpleColor]
+   put "36,5,128" into tColors[kDeepPurpleColor]
+   put "20,20,107" into tColors[kIndigoColor]
+   put "13,51,144" into tColors[kBlueColor]
+   put "9,67,137" into tColors[kLightBlueColor]
+   put "10,78,81" into tColors[kCyanColor]
+   put "8,61,49" into tColors[kTealColor]
+   put "23,77,24" into tColors[kGreenColor]
+   put "40,88,23" into tColors[kLightGreenColor]
+   put "111,101,19" into tColors[kLimeColor]
+   put "240,106,20" into tColors[kYellowColor]
+   put "253,88,6" into tColors[kAmberColor]
+   put "222,59,5" into tColors[kOrangeColor]
+   put "175,35,13" into tColors[kDeepOrangeColor]
+   put "47,29,27" into tColors[kBrownColor]
+   put "25,25,25" into tColors[kGreyColor]
+   put "28,38,43" into tColors[kBlueGreyColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch 900 color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch 900 color of pColorScheme
+
+Returns the swatch 900 color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatch900Color(in pColorScheme as String) returns String
+   variable tSwatch900Colors as Array
+   put swatch900Colors() into tSwatch900Colors
+   return tSwatch900Colors[pColorScheme]
+end handler
+
+private handler swatchA100AccentColors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "253,116,110" into tColors[kRedColor]
+   put "252,103,155" into tColors[kPinkColor]
+   put "226,98,250" into tColors[kPurpleColor]
+   put "163,108,255" into tColors[kDeepPurpleColor]
+   put "121,135,255" into tColors[kIndigoColor]
+   put "112,159,254" into tColors[kBlueColor]
+   put "112,206,155" into tColors[kLightBlueColor]
+   put "118,255,255" into tColors[kCyanColor]
+   put "154,255,230" into tColors[kTealColor]
+   put "173,246,190" into tColors[kGreenColor]
+   put "194,255,125" into tColors[kLightGreenColor]
+   put "242,255,111" into tColors[kLimeColor]
+   put "255,255,123" into tColors[kYellowColor]
+   put "254,225,109" into tColors[kAmberColor]
+   put "254,200,109" into tColors[kOrangeColor]
+   put "253,138,109" into tColors[kDeepOrangeColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch A100 accent color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch A100 accent color of pColorScheme
+
+Returns the swatch A100 accent color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatchA100AccentColor(in pColorScheme as String) returns String
+   variable tSwatchA100Colors as Array
+   put swatchA100AccentColors() into tSwatchA100Colors
+   return tSwatchA100Colors[pColorScheme]
+end handler
+
+private handler swatchA200AccentColors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "251,57,66" into tColors[kRedColor]
+   put "251,34,110" into tColors[kPinkColor]
+   put "213,15,250" into tColors[kPurpleColor]
+   put "103,43,254" into tColors[kDeepPurpleColor]
+   put "65,81,253" into tColors[kIndigoColor]
+   put "54,113,254" into tColors[kBlueColor]
+   put "54,182,254" into tColors[kLightBlueColor]
+   put "39,255,255" into tColors[kCyanColor]
+   put "89,255,209" into tColors[kTealColor]
+   put "92,241,158" into tColors[kGreenColor]
+   put "166,255,72" into tColors[kLightGreenColor]
+   put "234,255,51" into tColors[kLimeColor]
+   put "255,255,11" into tColors[kYellowColor]
+   put "254,209,51" into tColors[kAmberColor]
+   put "253,155,50" into tColors[kOrangeColor]
+   put "253,87,50" into tColors[kDeepOrangeColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch A200 accent color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch A200 accent color of pColorScheme
+
+Returns the swatch A200 accent color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatchA200AccentColor(in pColorScheme as String) returns String
+   variable tSwatchA200Colors as Array
+   put swatchA200AccentColors() into tSwatchA200Colors
+   return tSwatchA200Colors[pColorScheme]
+end handler
+
+public handler swatchA400AccentColors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "251,0,53" into tColors[kRedColor]
+   put "239,0,70" into tColors[kPinkColor]
+   put "200,0,248" into tColors[kPurpleColor]
+   put "80,0,255" into tColors[kDeepPurpleColor]
+   put "46,59,253" into tColors[kIndigoColor]
+   put "33,94,254" into tColors[kBlueColor]
+   put "19,158,255" into tColors[kLightBlueColor]
+   put "29,224,255" into tColors[kCyanColor]
+   put "38,232,167" into tColors[kTealColor]
+   put "30,229,98" into tColors[kGreenColor]
+   put "105,255,9" into tColors[kLightGreenColor]
+   put "188,255,9" into tColors[kLimeColor]
+   put "254,232,11" into tColors[kYellowColor]
+   put "254,185,8" into tColors[kAmberColor]
+   put "253,126,9" into tColors[kOrangeColor]
+   put "251,36,7" into tColors[kDeepOrangeColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch A400 accent color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch A400 accent color of pColorScheme
+
+Returns the swatch A400 accent color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatchA400AccentColor(in pColorScheme as String) returns String
+   variable tSwatchA400Colors as Array
+   put swatchA400AccentColors() into tSwatchA400Colors
+   return tSwatchA400Colors[pColorScheme]
+end handler
+
+private handler swatchA700AccentColors() returns Array
+   variable tColors as Array
+   put the empty array into tColors
+
+   put "201,0,5" into tColors[kRedColor]
+   put "182,0,80" into tColors[kPinkColor]
+   put "151,0,254" into tColors[kPurpleColor]
+   put "78,0,228" into tColors[kDeepPurpleColor]
+   put "36,47,253" into tColors[kIndigoColor]
+   put "31,69,255" into tColors[kBlueColor]
+   put "15,123,229" into tColors[kLightBlueColor]
+   put "22,170,202" into tColors[kCyanColor]
+   put "23,180,148" into tColors[kTealColor]
+   put "25,193,66" into tColors[kGreenColor]
+   put "87,219,19" into tColors[kLightGreenColor]
+   put "160,234,7" into tColors[kLimeColor]
+   put "254,208,9" into tColors[kYellowColor]
+   put "253,155,8" into tColors[kAmberColor]
+   put "253,86,7" into tColors[kOrangeColor]
+   put "211,22,4" into tColors[kDeepOrangeColor]
+
+   return tColors
+end handler
+
+/*
+Returns RGBA color string of the swatch A700 accent color of the given color scheme.
+
+pColorScheme: The Android color scheme
+Returns: The swatch A700 accent color of pColorScheme
+
+Returns the swatch A700 accent color of the given Android color scheme in RGBA color string format.
+*/
+public handler androidSwatchA700AccentColor(in pColorScheme as String) returns String
+   variable tSwatchA700Colors as Array
+   put swatchA700AccentColors() into tSwatchA700Colors
+   return tSwatchA700Colors[pColorScheme]
+end handler
+
+/*
+Returns RGBA color string of the main body text color based on whether the background color is light or dark.
+
+pBackground: "Light" or "Dark", depending on the background color.
+Returns: The RGBA color string of the main body text color depending on whether the background color is light or dark
+
+Description:
+Returns RGBA color string of the main body text color, based on whether the color behind the text is a light or dark color.
+*/
+public handler androidTextColor(in pBackground as String) returns String
+   if pBackground is "Light" then
+      return "0,0,0,0.87"
+   else if pBackground is "Dark" then
+      return "1,1,1"
+   end if
+end handler
+
+/*
+Returns RGBA color string of the secondary text and icon color based on whether the background color is light or dark.
+
+pBackground: "Light" or "Dark", depending on the background color.
+Returns: The RGBA color string of the secondary text and icon color depending on whether the background color is light or dark
+
+Description:
+Returns the RGBA color string of the secondary text and icon color in Android, based on whether the color behind the text is a light or dark color.
+*/
+public handler androidSecondaryTextColor(in pBackgrouns as String) returns String
+   if pBackground is "Light" then
+      return "0,0,0,0.54"
+   else if pBackground is "Dark" then
+      return "1,1,1,0.7"
+   end if
+end library
+
+/*
+Returns the RGBA color string of the disbaled/hint text color based on whether the background color is light or dark.
+
+pBackground: "Light" or "Dark", depending on the background color.
+Returns: The RGBA color string of the disbaled/hint text color depending on whether the background color is light or dark
+
+Description:
+Returns the RGBA color string of the disbaled/hint text color in Android, based on whether the color behind the text is a light or dark color.
+*/
+public handler androidDisabledTextColor(in pBackgrouns as String) returns String
+   if pBackground is "Light" then
+      return "0,0,0,0.38"
+   else if pBackground is "Dark" then
+      return "1,1,1,0.3"
+   end if
+end library
+
+/*
+Returns the RGBA color string of the dividers based on whether the background color is light or dark.
+
+pBackground: "Light" or "Dark", depending on the background color.
+Returns: The RGBA color string of the dividers depending on whether the background color is light or dark
+
+Description:
+Returns the RGBA color string of the dividers in Android, based on whether the color behind the text is a light or dark color.
+*/
+public handler androidDividerColor(in pBackgrouns as String) returns String
+   if pBackground is "Light" then
+      return "0,0,0,0.12"
+   else if pBackground is "Dark" then
+      return "1,1,1,0.12"
+   end if
+end library
