@@ -1250,7 +1250,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
         // Ensure t_envp array is NULL-terminated
         t_envp[envc] = NULL;
     }
-	
+    
 	// Initialize the engine.
     struct X_init_options t_options;
     t_options.argc = 1;
@@ -1263,20 +1263,23 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
     [t_pool release];
 	
-	if (!t_init_success)
-	{
-		
-		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
-		{
-			NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
-			abort();
-			return;
-		}
-	}
+    if (!MCIPhoneIsEmbedded())
+    {
+        if (!t_init_success)
+        {
+            
+            if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+            {
+                NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+                abort();
+                return;
+            }
+        }
 
-	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to
-	//   start preparing.
-	[MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startPreparing) withObject:nil waitUntilDone:NO];
+        // MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to
+        //   start preparing.
+        [MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startPreparing) withObject:nil waitUntilDone:NO];
+    }
 }
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point that triggers before the main
@@ -1292,7 +1295,8 @@ static void MCIPhoneDoDidStartPreparing(void *)
 	
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished preparing, get the app to
 	//   start executing.
-	[MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startExecuting) withObject:nil waitUntilDone:NO];
+    if (!MCIPhoneIsEmbedded())
+        [MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startExecuting) withObject:nil waitUntilDone:NO];
 }
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for execution of the main
