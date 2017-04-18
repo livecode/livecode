@@ -565,6 +565,8 @@ Boolean MCSellist::del()
             {
                 tptr->m_ref = nil;
             }
+            
+            /* No scheduledelete() as the undo record now owns it */
         }
         delete tptr;
     }
