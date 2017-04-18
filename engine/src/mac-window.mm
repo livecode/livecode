@@ -1362,7 +1362,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     // Create a wrapper around the drag board for this operation if the drag
     // source is outside this instance of LiveCode.
     MCAutoRefcounted<MCMacRawClipboard> t_dragboard;
-    if ([sender draggingSource] != nil)
+    if ([sender draggingSource] == nil)
         t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
     
 	NSDragOperation t_ns_operation;
