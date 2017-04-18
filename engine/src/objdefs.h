@@ -456,7 +456,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Uses CS_VSCROLL 15
 #define CS_SENDING_RESIZE		(1UL << 16)
 // MCCard state
-#define CS_OWN_CONTROLS         (1UL << 14)
 #define CS_INSIDE               (1UL << 15)
 // MCStack state
 #define CS_BEEN_MOVED           (1UL << 13)
