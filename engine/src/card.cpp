@@ -1150,12 +1150,12 @@ Boolean MCCard::del(bool p_check_flag)
 			}
 			else
 			{
-                optr->getref()->removereferences();
-				getstack()->removecontrol(optr->getref());
+                MCControl *cptr = optr->getref();
+                
+                cptr->removereferences();
+				getstack()->removecontrol(cptr);
+                cptr->scheduledelete();
 			}
-			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
-			if (dptr != NULL)
-				dptr->appendto(savedata);
 			optr = optr->next();
 		}
 		while (optr != objptrs);
@@ -3533,25 +3533,8 @@ void MCCard::scheduledelete(bool p_is_child)
 {
     MCObject::scheduledelete(p_is_child);
     
-    if (objptrs != NULL)
-    {
-        MCObjptr *optr = objptrs;
-        do
-        {
-            // MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-            //   than removed from the stack since they cannot be 'owned' by the card.
-            if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
-            {
-                // Do nothing for shared groups as they move to the stack.
-            }
-            else
-            {
-                optr -> getref() -> scheduledelete(true);
-            }
-            optr = optr->next();
-        }
-        while (optr != objptrs);
-    }
+    /* No need to recurse through children, as they are scheduled for
+     * deletion in ::del */
 }
 
 MCPlatformControlType MCCard::getcontroltype()
