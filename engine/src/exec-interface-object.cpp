@@ -51,6 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 
 #include "exec-interface.h"
+#include "widget.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1290,9 +1291,18 @@ void MCObject::Redraw(void)
 	if (!opened)
 		return;
 	
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	if (gettype() >= CT_GROUP)
-		static_cast<MCControl *>(this) -> layer_redrawall();
+    if (gettype() == CT_WIDGET)
+    {
+        MCWidgetRef t_widget;
+        t_widget = reinterpret_cast<MCWidget *>(this) -> getwidget();
+        if (t_widget != nil)
+            MCWidgetRedrawAll(t_widget);
+    }
+    else if (gettype() >= CT_GROUP)
+    {
+        // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+        static_cast<MCControl *>(this) -> layer_redrawall();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
