@@ -6820,6 +6820,23 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
     return t_success;
 }
 
+////////////////////////////////////////////////////////////////////////
+
+#if defined(__WINDOWS__)
+
+MC_DLLEXPORT_DEF bool
+MCStringCreateWithBSTR(const BSTR p_bstr,
+                       MCStringRef& r_string)
+{
+    return MCStringCreateWithChars(p_bstr,
+                                   SysStringLen(p_bstr),
+                                   r_string);
+}
+
+#endif /*__WINDOWS__*/
+
+////////////////////////////////////////////////////////////////////////
+
 MC_DLLEXPORT_DEF
 bool
 MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two)

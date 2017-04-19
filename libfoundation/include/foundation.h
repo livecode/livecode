@@ -2145,6 +2145,11 @@ MC_DLLEXPORT bool MCStringCreateWithPascalString(const unsigned char* pascal_str
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
 
+#if defined(__WINDOWS__)
+// Create a string from a Windows BSTR
+MC_DLLEXPORT bool MCStringCreateWithBSTR(const BSTR p_bstr, MCStringRef& r_string);
+#endif
+
 // Creates a string from existing strings. The first variant exists to provide
 // an optimised implementation in the (very common) case of only two strings.
 MC_DLLEXPORT bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two);
