@@ -1,13 +1,22 @@
 Name: current card
 
-Synonyms: current card
+Synonyms: current card, this card, currentcard
 
 Type: glossary
 
 Description:
 The <card> currently being displayed in a <stack window>.
 
+Example:
+put the long id of the current card of this stack
+
+Example:
+set the marked of the current card of this stack to false
+
 References: card (glossary), stack window (glossary)
 
 Tags: navigation
 
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
