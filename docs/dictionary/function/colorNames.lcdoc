@@ -45,6 +45,10 @@ properties (property), backdrop (property), bottomColor (property),
 backgroundColor (property), accentColor (property), topColor (property),
 linkColor (property), selectionHandleColor (property)
 
+>*Note:* in LC version 8.1, the colors <"Gray"&X> (where X is a number 
+> from 0 to 100), in the lines 149 to 249 of <colorNames>, are set to 
+> correct value (bug 7344) and sorted numerically.
+
 Tags: ui
 
 Changes:
