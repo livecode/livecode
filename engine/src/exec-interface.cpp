@@ -3091,14 +3091,20 @@ void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNa
 	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
 }
 
+static MCStack* open_stack_relative_to(MCStack *p_target)
+{
+    if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
+        return MCdefaultstackptr;
+    else if (MCtopstackptr && MCtopstackptr->isvisible())
+        return MCtopstackptr;
+    else
+        return p_target;
+}
+
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
 {
-	if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCdefaultstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else if (MCtopstackptr && MCtopstackptr->isvisible())
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, p_target->getrect(), WP_DEFAULT, OP_NONE, p_mode);
+    MCStack* t_stack = open_stack_relative_to(p_target);
+    MCInterfaceExecSubwindow(ctxt, p_target, nil, t_stack->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 }
 
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
@@ -4503,14 +4509,15 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	}
 	else
 	{
-		// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
-		if (ctxt . GetObject()->getstack()->getopened() || !MCtopstackptr)
+        // MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
+		if (ctxt . GetObject()->getstack()->getopened())
 			parentptr = ctxt . GetObject() -> getstack();
 		else
-			parentptr = MCtopstackptr;
+			parentptr = open_stack_relative_to(t_stack);
 
 		rel = parentptr -> getrect();
-	}
+        
+    }
 
 	Window_mode wm = (Window_mode)p_mode;
 	if (wm == WM_LAST && t_stack->userlevel() != 0 && p_window == nil && !p_this_stack)
@@ -4585,6 +4592,13 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		// MW-2011-08-18: [[ Redraw ]] Move to use redraw lock/unlock.
 		MCRedrawForceUnlockScreen();
 	}
+    
+    // Need a parentptr that is an open stack
+    if (parentptr == t_stack && (wm == WM_SHEET || wm == WM_DRAWER))
+    {
+        ctxt . LegacyThrow(EE_GO_BADWINDOWEXP);
+        return;
+    }
 
 	Boolean oldtrace = MCtrace;
 	MCtrace = False;
