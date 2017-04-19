@@ -1757,10 +1757,23 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			keysym |= 0xFF00;
 			t_string = kMCEmptyString;
 		}
-		else if (keysym > 0x7F)
-			keysym |= XK_Class_codepoint;
 		else
         {
+            /* If the character is in the BMP *and* it has a native mapping then
+             * we use the mapped native char as the keycode. This makes things
+             * consistent with normal keyboard entry. Any non-native unicode char
+             * will pass through with a keycode with the XK_Class_codepoint bit
+             * set. */
+            unichar_t t_bmp_codepoint = t_cp_char & 0xFFFF;
+            char_t t_native_char = 0;
+            if (t_cp_char <= 0xFFFF &&
+                MCUnicodeMapToNative(&t_bmp_codepoint, 1, t_native_char))
+            {
+                keysym = t_native_char;
+            }
+            else if (keysym > 0x7F)
+                keysym |= XK_Class_codepoint;
+		
             MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
 			t_string = *t_char;
         }
