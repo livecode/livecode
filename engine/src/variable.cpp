@@ -1131,7 +1131,7 @@ __join_paths(MCSpan<MCNameRef> p_base,
             t_result[i + p_base.size()] = p_extra[i];
     }
     
-    return std::move(t_result);
+    return t_result;
 }
 
 MCContainer::~MCContainer(void)
