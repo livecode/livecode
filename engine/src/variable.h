@@ -313,8 +313,7 @@ public:
     
 private:
 	MCVariable *m_variable = nullptr;
-	MCNameRef *m_path = nullptr;
-	uindex_t m_length = 0;
+    MCAutoNameRefArray m_path;
 	bool m_case_sensitive = false;
 };
 

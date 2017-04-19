@@ -1136,10 +1136,6 @@ __join_paths(MCSpan<MCNameRef> p_base,
 
 MCContainer::~MCContainer(void)
 {
-    // AL-2014-09-17: [[ Bug 13465 ]] Delete path array regardless of length
-	for(uindex_t i = 0; i < m_length; i++)
-		MCValueRelease(m_path[i]);
-	MCMemoryDeleteArray(m_path);
 }
 
 bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
@@ -1149,12 +1145,14 @@ bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
 
 bool MCContainer::eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value)
 {
-    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(getpath(), p_path);
+    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(m_path.Span(), p_path);
     
     if (!t_full_path)
         return false;
-    
-    return m_variable->eval(ctxt, {*t_full_path, p_path.size() + m_length}, r_value);
+
+    return m_variable->eval(ctxt,
+                            {*t_full_path, p_path.size() + m_path.Span().size()},
+                            r_value);
 }
 
 bool MCContainer::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
@@ -1164,12 +1162,13 @@ bool MCContainer::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSetting
 
 bool MCContainer::set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef p_value)
 {
-    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(getpath(), p_path);
+    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(m_path.Span(), p_path);
     
     if (!t_full_path)
         return false;
     
-    return m_variable->set(ctxt, p_value, {*t_full_path, p_path.size() + m_length});
+    return m_variable->set(ctxt, p_value,
+                           {*t_full_path, p_path.size() + m_path.Span().size()});
 }
 
 bool MCContainer::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -1214,7 +1213,7 @@ bool MCContainer::clear(void)
 
 bool MCContainer::set_real(double p_real)
 {
-    if (m_length == 0)
+    if (m_path.Count() == 0)
     {
         m_variable -> setnvalue(p_real);
         return true;
@@ -1228,14 +1227,13 @@ bool MCContainer::set_real(double p_real)
 
 MCSpan<MCNameRef> MCContainer::getpath()
 {
-    return {m_path, m_length};
+    return m_path.Span();
 }
 
 bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer& r_container)
 {
 	r_container.m_variable = p_var;
-	r_container.m_length = 0;
-    r_container.m_path = nil;
+    r_container.m_path.Reset();
 	r_container.m_case_sensitive = false;
 	return true;
 }
@@ -1243,8 +1241,7 @@ bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer& r_container
 bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container)
 {
 	r_container.m_variable = p_var;
-	r_container.m_path = p_path;
-	r_container.m_length = p_length;
+	r_container.m_path.Give(p_path, p_length);
 	r_container.m_case_sensitive = false;
 	return true;
 }
