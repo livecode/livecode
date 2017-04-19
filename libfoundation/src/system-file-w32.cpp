@@ -267,7 +267,7 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	/* FIXME Possibly inefficient */
 	MCStreamRef t_stream = NULL;
-	if (!__MCSFileCreateStream (*t_temp_native_path, kMCSFileOpenModeRead,
+	if (!__MCSFileCreateStream (*t_temp_native_path, kMCSFileOpenModeWrite,
 	                            t_stream))
 		goto error_cleanup;
 
