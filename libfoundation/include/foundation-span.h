@@ -217,6 +217,23 @@ inline void MCMemoryClearSecure(MCSpan<ElementType> x_span)
 }
 
 MC_DLLEXPORT
+bool MCArrayStoreValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             MCSpan<MCNameRef> path,
+                             MCValueRef value);
+
+MC_DLLEXPORT
+bool MCArrayFetchValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             MCSpan<MCNameRef> path,
+                             MCValueRef& r_value);
+
+MC_DLLEXPORT
+bool MCArrayRemoveValueOnPath(MCArrayRef array,
+                              bool case_sensitive,
+                              MCSpan<MCNameRef> path);
+
+MC_DLLEXPORT
 hash_t MCHashBytes(MCSpan<const byte_t> bytes);
 
 MC_DLLEXPORT
