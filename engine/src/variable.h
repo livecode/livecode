@@ -40,11 +40,11 @@ class MCVariable
 protected:
 	MCNewAutoNameRef name;
 	MCExecValue value;
-	MCVariable *next;
+	MCVariable *next = nullptr;
 
-	bool is_msg : 1;
-	bool is_env : 1;
-	bool is_global : 1;
+	bool is_msg = false;
+	bool is_env = false;
+	bool is_global = false;
 
 	// MW-2011-08-28: [[ SERVER ]] Some variables must only be computed when they
 	//   are first requested - in particular $_POST and $_POST_RAW. To support this
@@ -52,24 +52,15 @@ protected:
 	//   be constructed when a reference to the variable is parsed. This bit is
 	//   unset as soon as the value has been computed once. If this bit is set then
 	//   it means the variable is actually an instance of MCDeferredVariable.
-	bool is_deferred : 1;
+	bool is_deferred = false;
 
 	// If set, this means that the variable has been parsed as an 'unquoted-
 	// literal'. Such variables get cleared when referenced as an l-value.
-	bool is_uql : 1;
+	bool is_uql = false;
 
 	// The correct way to create variables is with the static 'create' methods
 	// which can catch a failure.
-    MCVariable()
-        : next(nullptr),
-          is_msg(false),
-          is_env(false),
-          is_global(false),
-          is_deferred(false),
-          is_uql(false)
-    {}
-
-	MCVariable(const MCVariable& other) {}
+    MCVariable() = default;
     
     // Returns true if the existing value of the variable is can become or remain
     // data when the operation is complete, without loss of information.
@@ -281,23 +272,11 @@ public:
 class MCContainer
 {
 public:
-    MCContainer(void)
-        : m_variable(nullptr),
-          m_path(nullptr),
-          m_length(0),
-          m_case_sensitive(false)
-    {
-    }
+    MCContainer() = default;
     
-    MCContainer(MCVariable *var)
-        : m_variable(var),
-          m_path(nullptr),
-          m_length(0),
-          m_case_sensitive(false)
-    {
-    }
-    
-	~MCContainer(void);
+    MCContainer(MCVariable *var) : m_variable(var) {}
+
+    ~MCContainer(void);
 
 	//
 
@@ -337,10 +316,10 @@ public:
     }
     
 private:
-	MCVariable *m_variable;
-	MCNameRef *m_path;
-	uindex_t m_length;
-	bool m_case_sensitive;
+	MCVariable *m_variable = nullptr;
+	MCNameRef *m_path = nullptr;
+	uindex_t m_length = 0;
+	bool m_case_sensitive = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -348,63 +327,47 @@ private:
 class MCVarref : public MCExpression
 {
 protected:
-	MCVariable *ref;
-	MCHandler *handler;
+	MCVariable *ref = nullptr;
+	MCHandler *handler = nullptr;
 	union
 	{
-		MCExpression *exp;
+		MCExpression *exp = nullptr;
 		MCExpression **exps;
 	};
-	unsigned index : 16;
-	unsigned dimensions : 8;
-	bool isparam : 1;
+	uint16_t index = 0;
+	uint8_t dimensions = 0;
+	bool isparam = false;
 
 	// MW-2008-10-28: [[ ParentScripts ]] This boolean flag is True if this
 	//   varref refers to a script local.
-	bool isscriptlocal : 1;
+	bool isscriptlocal = false;
 	
 	// MW-2012-03-15: [[ Bug ]] This boolean flag is true if this varref is
 	//   a plain var and doesn't require synching.
-	bool isplain : 1;
+	bool isplain = false;
 
 public:
-	MCVarref(MCVariable *var)
-	{
-		ref = var;
-		exp = NULL;
-		dimensions = 0;
-		index = 0;
-		isparam = False;
-		isscriptlocal = False;
-		handler = NULL;
-		isplain = var -> isplain();
-	}
+    MCVarref(MCVariable *var)
+        : ref(var),
+          isplain(ref->isplain())
+    {}
 
 	// MW-2008-10-28: [[ ParentScripts ]] A new constructor to handle the case
 	//   of a script local.
-	MCVarref(MCVariable *var, uint2 i)
-	{
-		ref = var;
-		exp = NULL;
-		dimensions = 0;
-		index = i;
-		isparam = False;
-		isscriptlocal = True;
-		handler = NULL;
-		isplain = true;
-	}
+    MCVarref(MCVariable *var, uint2 i)
+        : ref(var),
+          index(i),
+          isscriptlocal(true),
+          isplain(true)
+    {}
 
-	MCVarref(MCHandler *hptr, uint2 i, Boolean param)
-	{
-		index = i;
-		isparam = param;
-		handler = hptr;
-		ref = NULL;
-		exp = NULL;
-		dimensions = 0;
-		isscriptlocal = False;
-		isplain = true;
-	}
+    MCVarref(MCHandler *hptr, uint2 i, Boolean param)
+        : handler(hptr),
+          index(i),
+          isparam(param),
+          isplain(true)
+    {}
+
     virtual ~MCVarref();
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
