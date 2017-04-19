@@ -27,6 +27,7 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
+		'toolset_os': '<(host_os)',
 	},
 	
 	'target_defaults':
@@ -56,6 +57,15 @@
 					'includes':
 					[
 						'android-settings.gypi',
+					],
+				},
+			],
+			[
+				'toolset_os == "mac"',
+				{
+					'cflags!':
+					[
+						'-Werror=uninitialized',
 					],
 				},
 			],
