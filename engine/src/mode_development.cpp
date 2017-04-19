@@ -839,13 +839,18 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	if (t_dbg_help_module != NULL)
 		t_write_minidump = (MiniDumpWriteDumpPtr)GetProcAddress(t_dbg_help_module, "MiniDumpWriteDump");
 
-	char *t_path = NULL;
-	if (t_write_minidump != NULL)
-		t_path = MCS_resolvepath(MCStringGetCString(MCcrashreportfilename));
-
-	HANDLE t_file = NULL;
-	if (t_path != NULL)
-		t_file = CreateFileA(t_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    HANDLE t_file = nullptr;
+    if (t_write_minidump != nullptr)
+    {
+        MCAutoStringRef t_path;
+        MCAutoStringRefAsWString t_path_w32;
+        if (MCS_resolvepath(MCcrashreportfilename, &t_path) &&
+            t_path_w32.Lock(*t_path))
+        {
+            t_file = CreateFileW(*t_path_w32, GENERIC_WRITE, 0, nullptr,
+                                 CREATE_ALWAYS, 0, nullptr);
+        }
+    }
 
 	BOOL t_minidump_written = FALSE;
 	if (t_file != NULL)
@@ -860,9 +865,6 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	if (t_file != NULL)
 		CloseHandle(t_file);
 
-	if (t_path != NULL)
-		delete t_path;
-	
 	if (t_dbg_help_module != NULL)
 		FreeLibrary(t_dbg_help_module);
 

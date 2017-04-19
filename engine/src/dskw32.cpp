@@ -3509,23 +3509,13 @@ cleanup:
 			MCresult -> sets("alternate language not found");
 		else
 		{
-			MCAutoStringRefAsUTF8String t_utf8;
-			/* UNCHECKED */ t_utf8.Lock(p_script);
-			
 			MCAutoStringRef t_result;
-			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
-			t_environment -> Run(*t_string, &t_result);
+			t_environment -> Run(p_script, &t_result);
 			t_environment -> Release();
 
 			if (*t_result != nil)
 			{
-				MCAutoDataRef t_data;
-				MCAutoStringRef t_native;
-				MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_result), MCStringGetLength(*t_result), &t_data);
-
-				MCStringDecode(*t_data, kMCStringEncodingUTF8, false, &t_native);
-				MCresult -> setvalueref(*t_native);
+				MCresult -> setvalueref(*t_result);
 			}
 			else
 				MCresult -> sets("execution error");

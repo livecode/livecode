@@ -595,13 +595,9 @@ void MCWindowsActiveScriptEnvironment::Finalize(void)
 
 void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
-	LPOLESTR t_ole_script;
-	char *temp;
-	/* UNCHECKED */ MCStringConvertToCString(p_script, temp);
-	t_ole_script = ConvertUTF8ToOLESTR(temp);
-	delete temp;
-	if (t_ole_script == NULL)
-		return;
+    MCAutoStringRefAsWString t_script;
+    if (!t_script.Lock(p_script))
+        return;
 
 	EXCEPINFO t_exception = { 0 };
 
@@ -609,15 +605,14 @@ void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_
 	t_result = S_OK;
 
 	if (t_result == S_OK)
-		t_result = m_parser -> ParseScriptText(t_ole_script, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISVISIBLE, NULL, &t_exception);
+		t_result = m_parser -> ParseScriptText(*t_script, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISVISIBLE, NULL, &t_exception);
 
 	IDispatch *t_lang_dispatch;
 	t_lang_dispatch = NULL;
 	if (t_result == S_OK)
 		t_result = m_environment -> GetScriptDispatch(NULL, &t_lang_dispatch);
 
-	char *t_return_value;
-	t_return_value = NULL;
+    MCAutoStringRef t_return_value;
 	if (t_result == S_OK)
 	{
 		HRESULT t_var_result;
@@ -645,34 +640,27 @@ void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_
 				t_result = VariantChangeType(&t_function_result, &t_function_result, VARIANT_ALPHABOOL, VT_BSTR);
 				if (t_result == S_OK)
 				{
-					t_return_value = ConvertBSTRToUTF8(t_function_result . bstrVal);
-					if (t_return_value == NULL)
-						t_result = E_OUTOFMEMORY;
+                    if (!MCStringCreateWithBSTR(t_function_result . bstrVal,
+                                                &t_return_value))
+                        t_result = E_OUTOFMEMORY;
 				}
 				VariantClear(&t_function_result);
 			}
 		}
 		else
-			t_return_value = strdup("");
+			t_return_value = kMCEmptyString;
 	}
 
 
 	if (t_result != S_OK)
 	{
-		if (t_return_value != NULL)
-		{
-			delete t_return_value;
-			t_return_value = NULL;
-		}
+        t_return_value = kMCEmptyString;
 	}
 
 	if (t_lang_dispatch != NULL)
 		t_lang_dispatch -> Release();
 
-	if (t_ole_script != NULL)
-		delete t_ole_script;
-
-	/* UNCHECKED */ MCStringCreateWithCString(t_return_value, r_out);
+    r_out = t_return_value.Take();
 	return;
 }
 
