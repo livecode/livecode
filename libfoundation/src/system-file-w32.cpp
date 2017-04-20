@@ -461,6 +461,40 @@ __MCSFilePathFromNative (MCStringRef p_native_path,
 	                                r_path);
 }
 
+bool
+__MCSFileGetCurrentDirectory (MCStringRef & r_native_path)
+{
+
+	DWORD t_length = 0;
+	MCAutoArray<unichar_t> t_native_chars;
+	while (true)
+	{
+		t_length = GetCurrentDirectoryW (t_native_chars.Size(), t_native_chars.Ptr());
+
+		/* On error, GetCurrentDirectoryW() returns 0 */
+		if (0 == t_length)
+		{
+			return __MCSFileThrowIOErrorWithErrorCode (kMCEmptyString, MCSTR("Failed to get current working directory: %{description}"), GetLastError());
+		}
+
+		/* On success, it returns the number of characters read, not
+		 * including the trailing nul */
+		if (t_length + 1 < t_native_chars.Size())
+		{
+			break;
+		}
+
+		/* If the buffer isn't large enough, it returns the length of
+		 * buffer required. */
+		if (!t_native_chars.Resize (t_length))
+		{
+			return false;
+		}
+	}
+
+	return MCStringCreateWithWString (t_native_chars.Ptr(), r_native_path);
+}
+
 /* ================================================================
  * File stream creation
  * ================================================================ */
