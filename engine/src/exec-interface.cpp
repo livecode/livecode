@@ -4494,7 +4494,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
     t_stack = p_card -> getstack();
     
 	MCRectangle rel;
-	MCStack *parentptr;
+	MCStack *parentptr = nullptr;
 
 	if (p_mode == WM_PULLDOWN || p_mode == WM_POPUP || p_mode == WM_OPTION)
 	{

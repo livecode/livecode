@@ -1703,7 +1703,7 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         r_value . y = y + yoffset;
     }
     else
-        memset(&r_value, 0, sizeof(MCRectangle));
+        r_value = MCRectangle32{};
 }
 
 
