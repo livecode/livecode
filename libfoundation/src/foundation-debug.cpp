@@ -36,21 +36,25 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 	_CrtDbgReport(_CRT_ASSERT, p_file, p_line, NULL, "%s", p_message);
 }
 
+static void MCLogV(const char *p_file,
+                     uint32_t p_line,
+                     const char *p_format,
+                     va_list p_format_args)
+{
+    MCAutoStringRef t_message, t_string;
+    MCAutoStringRefAsWString t_wstring;
+    /* UNCHECKED */ MCStringFormatV(&t_message, p_format, p_format_args);
+    /* UNCHECKED */ MCStringFormat(&t_string, "[%u] %@\n",
+                                   GetCurrentProcessId(), *t_message);
+    /* UNCHECKED */ t_wstring.Lock(*t_string);
+    _CrtDbgReportW(_CRT_WARN, p_file, p_line, NULL, *t_wstring);
+}
+
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	MCAutoStringRef t_string;
-	
-	va_list t_args;
 	va_start(t_args, p_format);
-	MCStringFormatV(&t_string, p_format, t_args);
+    MCLogV(p_file, p_line, p_format, t_args);
 	va_end(t_args);
-
-	char *t_cstring;
-	if (MCStringConvertToCString(*t_string, t_cstring))
-	{
-		_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %s\n", GetCurrentProcessId(), t_cstring);
-		MCMemoryDeallocate(t_cstring);
-	}
 }
 
 void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format, ...)
@@ -77,20 +81,10 @@ void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format,
 			s_sym_setoptions(SYMOPT_LOAD_LINES);
 		}
 	}
-	
-	MCAutoStringRef t_string;
-	
-	va_list t_args;
-	va_start(t_args, p_format);
-	MCStringFormatV(&t_string, p_format, t_args);
-	va_end(t_args);
-	
-	char *t_cstring;
-	if (MCStringConvertToCString(*t_string, t_cstring))
-	{
-		_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %s\n", GetCurrentProcessId(), t_cstring);
-		MCMemoryDeallocate(t_cstring);
-	}
+
+    va_start(t_args, p_format);
+    MCLogV(p_file, p_line, p_format, t_args);
+    va_end(t_args);
 
 	if (s_sym_from_addr != nil)
 	{
