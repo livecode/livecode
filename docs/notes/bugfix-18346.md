@@ -1,0 +1,1 @@
+# Provide tsNet build for building against iOS 10 SDK
