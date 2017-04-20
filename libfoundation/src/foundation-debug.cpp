@@ -190,7 +190,8 @@ void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 
 void __MCUnreachable(void)
 {
-	fprintf(stderr, "**** UNREACHABLE CODE EXECUTED ****\n");
+    __android_log_print(ANDROID_LOG_ERROR, "revandroid",
+                        "**** UNREACHABLE CODE EXECUTED ****");
 	abort();
 }
 
