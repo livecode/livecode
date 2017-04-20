@@ -209,26 +209,31 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
     abort();
 }
 
-void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
+static void MCLogV(const char *p_file, uint32_t p_line,
+                   const char *p_format, va_list p_args)
 {
 	MCAutoStringRef t_string;
-	
-	va_list t_args;
-	va_start(t_args, p_format);
-	MCStringFormatV(&t_string, p_format, t_args);
-	va_end(t_args);
-	
-	char *t_cstring;
-	if (MCStringConvertToCString(*t_string, t_cstring))
-	{
-		fprintf(stderr, "%s\n", t_cstring);
-		MCMemoryDeallocate(t_cstring);
-	}
+    /* UNCHECKED */ MCStringFormatV(&t_string, p_format, p_args);
+
+    MCAutoStringRefAsSysString t_string_sys;
+    /* UNCHECKED */ t_string_sys.Lock(*t_string);
+    fprintf(stderr, "%s\n", *t_string_sys);
+}
+
+void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
+{
+    va_list t_args;
+    va_start(t_args, p_format);
+    MCLogV(p_file, p_line, p_format);
+    va_end(t_args);
 }
 
 void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	__MCLog(p_file, p_line, p_format);
+    va_list t_args;
+    va_start(t_args, p_format);
+    MCLogV(p_file, p_line, p_format);
+    va_end(t_args);
 }
 
 #endif
