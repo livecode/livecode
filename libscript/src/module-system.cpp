@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -60,6 +60,22 @@ extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetCommandArguments (MCProperListRef & r_list)
 {
 	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
+}
+
+/* ================================================================
+ * System error information
+ * ================================================================ */
+
+extern "C" MC_DLLEXPORT_DEF void
+MCSystemEvalErrorCode (uint32_t & r_code)
+{
+	r_code = MCSErrorGetCode ();
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCSystemEvalErrorDescription (MCStringRef & r_string)
+{
+	/* UNCHECKED */ MCSErrorGetDescription (MCSErrorGetCode (), r_string);
 }
 
 ////////////////////////////////////////////////////////////////
