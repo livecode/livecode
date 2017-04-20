@@ -318,6 +318,22 @@ __MCSFileSetContents (MCStringRef p_native_path,
  * Path manipulation
  * ================================================================ */
 
+/* For use only when operating on *native* paths. */
+static inline bool
+__MCSFileCharIsSeparator (codepoint_t p_char)
+{
+	return (p_char == '/' || p_char == '\\');
+}
+
+/* For use only when operating on *native* paths. */
+static inline bool
+__MCSFileCharIsDriveLetter (codepoint_t p_char)
+{
+	/* Windows drive letters must be A-Z */
+	return ((p_char >= 'A' && p_char <= 'Z') ||
+	        (p_char >= 'a' && p_char <= 'z'));
+}
+
 /* Convert a path in LiveCode representation (with '/' as the file
  * separator) to a Windows path (using '\').  This function also
  * performs some (very) limited validation, ensuring that the input
@@ -493,6 +509,37 @@ __MCSFileGetCurrentDirectory (MCStringRef & r_native_path)
 	}
 
 	return MCStringCreateWithWString (t_native_chars.Ptr(), r_native_path);
+}
+
+bool
+__MCSFilePathIsAbsolute (MCStringRef p_native_path)
+{
+	/* This case covers UNC paths and absolute paths on the current drive. */
+	if (MCStringIsEmpty (p_native_path))
+	{
+		return false;
+	}
+
+	if (__MCSFileCharIsSeparator(MCStringGetCharAtIndex (p_native_path, 0)))
+	{
+		return true;
+	}
+
+	/* This case covers "C:\" absolute Windows paths.  Note that "C:foo\bar"
+	 * is actually a relative path. */
+	if (3 > MCStringGetLength (p_native_path))
+	{
+		return false;
+	}
+
+	if (__MCSFileCharIsDriveLetter (MCStringGetCharAtIndex (p_native_path, 0)) &&
+	    ':' == MCStringGetCharAtIndex (p_native_path, 1) &&
+	    __MCSFileCharIsSeparator (MCStringGetCharAtIndex (p_native_path, 2)))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 /* ================================================================

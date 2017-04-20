@@ -121,6 +121,13 @@ MCSFileGetCurrentDirectory (MCStringRef & r_path)
 	return true;
 }
 
+MC_DLLEXPORT_DEF bool
+MCSFilePathIsAbsolute (MCStringRef p_path)
+{
+	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCSFilePathIsAbsolute (t_native_path);
+}
+
 /* ================================================================
  * Whole-file IO
  * ================================================================ */

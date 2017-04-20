@@ -499,6 +499,13 @@ __MCSFileGetCurrentDirectory (MCStringRef & r_native_path)
 	return t_success;
 }
 
+bool
+__MCSFilePathIsAbsolute (MCStringRef p_path)
+{
+	return MCStringBeginsWithCString(p_path, (const char_t *) "/",
+	                                 kMCStringOptionCompareExact);
+}
+
 /* ================================================================
  * File stream creation
  * ================================================================ */
