@@ -180,15 +180,12 @@ void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 
     va_list t_args;
     va_start(t_args, p_format);
-    MCStringFormatV(&t_string, p_format, t_args);
+    /* UNCHECKED */ MCStringFormatV(&t_string, p_format, t_args);
     va_end(t_args);
-	
-	char *t_cstring;
-	if (MCStringConvertToCString(*t_string, t_cstring))
-	{
-		__android_log_print(ANDROID_LOG_INFO, "revandroid", "%s", t_cstring);
-		MCMemoryDeallocate(t_cstring);
-    }
+
+    MCAutoStringRefAsSysString t_string_sys;
+    /* UNCHECKED */ t_string_sys.Lock(*t_string);
+    __android_log_print(ANDROID_LOG_INFO, "revandroid", "%s", *t_string_sys);
 }
 
 void __MCUnreachable(void)
