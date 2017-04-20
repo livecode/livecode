@@ -40,11 +40,11 @@ class MCVariable
 protected:
 	MCNewAutoNameRef name;
 	MCExecValue value;
-	MCVariable *next;
+	MCVariable *next = nullptr;
 
-	bool is_msg : 1;
-	bool is_env : 1;
-	bool is_global : 1;
+	bool is_msg = false;
+	bool is_env = false;
+	bool is_global = false;
 
 	// MW-2011-08-28: [[ SERVER ]] Some variables must only be computed when they
 	//   are first requested - in particular $_POST and $_POST_RAW. To support this
@@ -52,40 +52,31 @@ protected:
 	//   be constructed when a reference to the variable is parsed. This bit is
 	//   unset as soon as the value has been computed once. If this bit is set then
 	//   it means the variable is actually an instance of MCDeferredVariable.
-	bool is_deferred : 1;
+	bool is_deferred = false;
 
 	// If set, this means that the variable has been parsed as an 'unquoted-
 	// literal'. Such variables get cleared when referenced as an l-value.
-	bool is_uql : 1;
+	bool is_uql = false;
 
 	// The correct way to create variables is with the static 'create' methods
 	// which can catch a failure.
-    MCVariable()
-        : next(nullptr),
-          is_msg(false),
-          is_env(false),
-          is_global(false),
-          is_deferred(false),
-          is_uql(false)
-    {}
-
-	MCVariable(const MCVariable& other) {}
+    MCVariable() = default;
     
     // Returns true if the existing value of the variable is can become or remain
     // data when the operation is complete, without loss of information.
-    bool can_become_data(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
+    bool can_become_data(MCExecContext& ctxt, MCSpan<MCNameRef> p_path);
     
     // Modify the content of the variable - append or prepend (nested key).
-    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting);
     // Modify the variable by appending/prepending the value given (nested key).
-    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting);
     
     bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
     bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
     
-    bool modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    bool modify_string(MCExecContext& ctxt, MCStringRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting);
     // Modify the content of the variable - append or prepend (nested key). Target must already be data.
-    bool modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    bool modify_data(MCExecContext& ctxt, MCDataRef p_data, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor
@@ -98,25 +89,25 @@ public:
     // '::append' has been renamed '::modify' to take in consideration this new ability
 
 	// Set the content of the variable (nested key) to the given value.
-	bool setvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef value);
+	bool setvalueref(MCSpan<MCNameRef> path, bool case_sensitive, MCValueRef value);
 	// Return the content of the variable (nested key). This does not copy the value.
-	MCValueRef getvalueref(MCNameRef *path, uindex_t length, bool case_sensitive);
+	MCValueRef getvalueref(MCSpan<MCNameRef> path, bool case_sensitive);
 	// Make an immutable copy of the content of the variable (nested key).
-	bool copyasvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef& r_value);
+	bool copyasvalueref(MCSpan<MCNameRef> path, bool case_sensitive, MCValueRef& r_value);
 
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
-    bool eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef &r_value);
+    bool eval(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef &r_value);
     // Copy the contents of the valueref into the variable (nested key).
-    bool set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     // Remove the content (nested key) of the variable.
-    bool remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
+    bool remove(MCExecContext& ctxt, MCSpan<MCNameRef> p_path);
     
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
-    bool eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCExecValue &r_value);
+    bool eval_ctxt(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCExecValue &r_value);
     // Give the exec value to the variable (nested key).
-    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting = kMCVariableSetInto);
 	
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
@@ -131,13 +122,13 @@ public:
     // SN-2014-04-11 [[ FasterVariable ]]
     // Replace the content of the internal string according to the range given to avoid unnecessary copy
 	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
-    bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
+    bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path);
     
-    bool replace_string(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
-    bool replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
+    bool replace_string(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path);
+    bool replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path);
     
 	bool deleterange(MCExecContext& ctxt, MCRange p_range);
-    bool deleterange(MCExecContext& ctxt, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
+    bool deleterange(MCExecContext& ctxt, MCRange p_range, MCSpan<MCNameRef> p_path);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -281,33 +272,21 @@ public:
 class MCContainer
 {
 public:
-    MCContainer(void)
-        : m_variable(nullptr),
-          m_path(nullptr),
-          m_length(0),
-          m_case_sensitive(false)
-    {
-    }
+    MCContainer() = default;
     
-    MCContainer(MCVariable *var)
-        : m_variable(var),
-          m_path(nullptr),
-          m_length(0),
-          m_case_sensitive(false)
-    {
-    }
-    
-	~MCContainer(void);
+    MCContainer(MCVariable *var) : m_variable(var) {}
+
+    ~MCContainer(void);
 
 	//
 
     bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-    bool eval_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
+    bool eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value);
     
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool set_on_path(MCExecContext& ctxt, MCNameRef *path, uindex_t path_length, MCValueRef p_value);
+    bool set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> path, MCValueRef p_value);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
@@ -320,12 +299,8 @@ public:
 
 	bool set_valueref(MCValueRef value);
     MCValueRef get_valueref(void);
-    
-    void getpath(MCNameRef*& r_path, uindex_t& r_length)
-    {
-        r_path = m_path;
-        r_length = m_length;
-    }
+
+    MCSpan<MCNameRef> getpath();
 
 	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
 	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
@@ -337,10 +312,9 @@ public:
     }
     
 private:
-	MCVariable *m_variable;
-	MCNameRef *m_path;
-	uindex_t m_length;
-	bool m_case_sensitive;
+	MCVariable *m_variable = nullptr;
+    MCAutoNameRefArray m_path;
+	bool m_case_sensitive = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -348,63 +322,47 @@ private:
 class MCVarref : public MCExpression
 {
 protected:
-	MCVariable *ref;
-	MCHandler *handler;
+	MCVariable *ref = nullptr;
+	MCHandler *handler = nullptr;
 	union
 	{
-		MCExpression *exp;
+		MCExpression *exp = nullptr;
 		MCExpression **exps;
 	};
-	unsigned index : 16;
-	unsigned dimensions : 8;
-	bool isparam : 1;
+	uint16_t index = 0;
+	uint8_t dimensions = 0;
+	bool isparam = false;
 
 	// MW-2008-10-28: [[ ParentScripts ]] This boolean flag is True if this
 	//   varref refers to a script local.
-	bool isscriptlocal : 1;
+	bool isscriptlocal = false;
 	
 	// MW-2012-03-15: [[ Bug ]] This boolean flag is true if this varref is
 	//   a plain var and doesn't require synching.
-	bool isplain : 1;
+	bool isplain = false;
 
 public:
-	MCVarref(MCVariable *var)
-	{
-		ref = var;
-		exp = NULL;
-		dimensions = 0;
-		index = 0;
-		isparam = False;
-		isscriptlocal = False;
-		handler = NULL;
-		isplain = var -> isplain();
-	}
+    MCVarref(MCVariable *var)
+        : ref(var),
+          isplain(ref->isplain())
+    {}
 
 	// MW-2008-10-28: [[ ParentScripts ]] A new constructor to handle the case
 	//   of a script local.
-	MCVarref(MCVariable *var, uint2 i)
-	{
-		ref = var;
-		exp = NULL;
-		dimensions = 0;
-		index = i;
-		isparam = False;
-		isscriptlocal = True;
-		handler = NULL;
-		isplain = true;
-	}
+    MCVarref(MCVariable *var, uint2 i)
+        : ref(var),
+          index(i),
+          isscriptlocal(true),
+          isplain(true)
+    {}
 
-	MCVarref(MCHandler *hptr, uint2 i, Boolean param)
-	{
-		index = i;
-		isparam = param;
-		handler = hptr;
-		ref = NULL;
-		exp = NULL;
-		dimensions = 0;
-		isscriptlocal = False;
-		isplain = true;
-	}
+    MCVarref(MCHandler *hptr, uint2 i, Boolean param)
+        : handler(hptr),
+          index(i),
+          isparam(param),
+          isplain(true)
+    {}
+
     virtual ~MCVarref();
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
@@ -436,8 +394,8 @@ private:
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
     bool resolve(MCExecContext& ctxt, MCContainer& r_container);
-    
-    void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
+
+    MCSpan<MCNameRef> getpath(MCExecContext& ctxt);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

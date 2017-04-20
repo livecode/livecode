@@ -597,7 +597,7 @@ static void cgi_unescape_url(MCDataRef p_url, MCRange p_url_range, MCDataRef &r_
 
 static void cgi_fetch_valueref_for_key(MCVariable *p_variable, MCNameRef p_key, MCValueRef &r_var_value)
 {
-    r_var_value = p_variable->getvalueref(&p_key, 1, false);
+    r_var_value = p_variable->getvalueref({&p_key, 1}, false);
 }
 
 /*
@@ -627,7 +627,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
     // Use the full key if there is no subkey
     if (!MCStringFirstIndexOfChar(t_raw_key_str, '[', 0, kMCStringOptionCompareExact, t_key_end))
     {
-        return p_variable -> setvalueref(&p_raw_key, 1, false, p_value);
+        return p_variable -> setvalueref({&p_raw_key, 1}, false, p_value);
     }
 
     // Store the key path.
@@ -644,7 +644,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
             || !t_path . Push(*t_key))
         return false;
 
-    t_fetched_value = p_variable -> getvalueref(*t_path, t_path . Count(), false);
+    t_fetched_value = p_variable -> getvalueref(t_path.Span(), false);
 
     uindex_t t_subkey_start, t_subkey_end;
 
@@ -654,7 +654,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
     while (MCStringFirstIndexOfChar(t_raw_key_str, '[', t_subkey_end, kMCStringOptionCompareExact, t_subkey_start))
     {
         // Fetch the value at the current path.
-        t_fetched_value = p_variable -> getvalueref(*t_path, t_path . Count(), false);
+        t_fetched_value = p_variable -> getvalueref(t_path.Span(), false);
 
         // The subkey starts after the '['
         t_subkey_start++;
@@ -710,7 +710,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
 
     // Store the value at the built key path - setvalueref will take care of
     //  creating subarrays if needed.
-    return p_variable -> setvalueref(*t_path, t_path . Count(), false, p_value);
+    return p_variable -> setvalueref(t_path.Span(), false, p_value);
 }
 
 
@@ -1644,7 +1644,7 @@ bool cgi_initialize()
 				{
 					// Because MCVariable::setvalueref takes an MCNameRef*...
 					MCNameRef t_key_name_temp = *t_key_name;
-					t_success = s_cgi_server->setvalueref(&t_key_name_temp, 1, false, *t_value);
+					t_success = s_cgi_server->setvalueref({&t_key_name_temp, 1}, false, *t_value);
 				}
 			}
 		}

@@ -151,12 +151,6 @@ public:
 		r_var_count = nvnames;
 	}
 	
-	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
-	{
-		r_vars = params;
-		r_param_count = npnames;
-	}
-	
 	void getgloballist(MCVariable**& r_vars, uint32_t& r_var_count)
 	{
 		r_vars = globals;
