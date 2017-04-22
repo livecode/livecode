@@ -495,8 +495,9 @@ bool MCJavaStringFromNative(JNIEnv *env, const char *p_string, jstring &r_java_s
     }
     else
     {
-        MCString t_mcstring(p_string);
-        return MCJavaStringFromNative(env, &t_mcstring, r_java_string);
+        // HH-2017-04-22 [[ Bug 19609 ]]: Convert cstring to Java UTF string directly
+        r_java_string = env->NewStringUTF(p_string);
+        return true;
     }
 }
 
