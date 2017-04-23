@@ -196,7 +196,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 #endif
 
