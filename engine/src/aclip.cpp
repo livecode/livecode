@@ -652,7 +652,7 @@ Boolean MCAudioClip::open_audio() //plays a sound immediately
 	else
 		return True;
 }
-#elif defined _LINUX
+#elif defined TARGET_PLATFORM_LINUX
 // TS-2007-11-20 : Stopping LINUX from playing any sound - for 2.9.0-DP-2
 // TS-2007-12-04 : Adding in support for ESD
 Boolean MCAudioClip::open_audio()
@@ -745,7 +745,7 @@ Boolean MCAudioClip::play()
 			return False;
 		}
 	return True;
-#elif defined(_LINUX)
+#elif defined(TARGET_PLATFORM_LINUX)
 	if (looping || curindex < size)
 	{
 		while (True)

@@ -54,8 +54,8 @@ protected:
 
 
 // Forward declarations
-static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name, uint16_t p_style);
-static MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file);
+static sk_sp<SkTypeface> emscripten_get_font_by_name(MCNameRef p_name, uint16_t p_style);
+static sk_sp<SkTypeface> emscripten_get_font_from_file(MCStringRef p_file);
 
 
 /* ================================================================
@@ -70,11 +70,11 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 	  m_requested_style(p_style)
 {
     // Load the font as requested
-	m_font_info.fid = emscripten_get_font_by_name(p_name, p_style);
+    auto t_typeface = emscripten_get_font_by_name(p_name, p_style);
 
     // Calculate the metrics for this typeface and size
     SkPaint t_paint;
-    t_paint.setTypeface((SkTypeface*)m_font_info.fid);
+    t_paint.setTypeface(t_typeface);
     t_paint.setTextSize(p_size);
         
     SkPaint::FontMetrics t_metrics;
@@ -86,7 +86,7 @@ MCFontnode::MCFontnode(MCNameRef p_name,
     m_font_info.m_descent = t_metrics.fDescent;
     m_font_info.m_leading = t_metrics.fLeading;
     m_font_info.m_xheight = t_metrics.fXHeight;
-
+    m_font_info.fid = reinterpret_cast<MCSysFontHandle>(t_typeface.release());
     m_font_info.size = p_size;
 }
 
@@ -253,45 +253,46 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 }
 
 
-MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name,
-                                            uint16_t p_style)
+sk_sp<SkTypeface> emscripten_get_font_by_name(MCNameRef p_name,
+                                              uint16_t p_style)
 {
 	/* Decode style */
 	bool t_italic = (0 != (p_style & FA_ITALIC));
 	bool t_bold = (0x05 < (p_style & FA_WEIGHT));
-	SkTypeface::Style t_style;
-	if (t_italic && t_bold)
-	{
-		t_style = SkTypeface::kBoldItalic;
-	}
-	else if (t_italic)
-	{
-		t_style = SkTypeface::kItalic;
-	}
-	else if (t_bold)
-	{
-		t_style = SkTypeface::kBold;
-	}
-	else
-	{
-		t_style = SkTypeface::kNormal;
-	}
 
-	MCAutoStringRefAsSysString t_sys_name;
+    SkFontStyle::Weight t_weight;
+    SkFontStyle::Width t_width;
+    SkFontStyle::Slant t_slant;
+    
+	if (t_bold)
+        t_weight = SkFontStyle::kBold_Weight;
+    else
+        t_weight = SkFontStyle::kNormal_Weight;
+    
+    t_width = SkFontStyle::kNormal_Width;
+    
+    if (t_italic)
+        t_slant = SkFontStyle::kItalic_Slant;
+    else
+        t_slant = SkFontStyle::kUpright_Slant;
+	
+    SkFontStyle t_style(t_weight, t_width, t_slant);
+    
+    MCAutoStringRefAsSysString t_sys_name;
 	/* UNCHECKED */ t_sys_name.Lock(MCNameGetString(p_name));
 
-	MCSysFontHandle t_handle =
-		MCSysFontHandle(SkTypeface::CreateFromName(*t_sys_name, t_style));
-	MCAssert(nil != t_handle);
-	return t_handle;
+	sk_sp<SkTypeface> t_typeface = SkTypeface::MakeFromName(*t_sys_name, t_style);
+	
+	return t_typeface;       
 }
 
-MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file)
+sk_sp<SkTypeface> emscripten_get_font_from_file(MCStringRef p_file)
 {
     MCAutoStringRefAsSysString t_sys_path;
     /* UNCHECKED */ t_sys_path.Lock(p_file);
 
-    MCSysFontHandle t_handle = (MCSysFontHandle)SkTypeface::CreateFromFile(*t_sys_path);
-    MCAssert(t_handle != nil);
-    return t_handle;
+    sk_sp<SkTypeface> t_typeface = SkTypeface::MakeFromFile(*t_sys_path);
+    MCAssert(t_typeface != nil);
+    return t_typeface;
 }
+

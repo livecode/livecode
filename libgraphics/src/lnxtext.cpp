@@ -220,18 +220,22 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_paint . setAntiAlias(self -> state -> should_antialias);
 		t_paint . setColor(MCGColorToSkColor(self -> state -> fill_color));
 		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-		t_paint . setXfermode(t_blend_mode);
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();		
+		SkBlendMode t_blend_mode = MCGBlendModeToSkBlendMode(self->state->blend_mode);
+		t_paint.setBlendMode(t_blend_mode);
+
+		SkImageInfo t_info = SkImageInfo::MakeA8(t_clipped_bounds.width, t_clipped_bounds.height);
 		
 		SkBitmap t_bitmap;
-		t_bitmap . setConfig(SkBitmap::kA8_Config, t_clipped_bounds . width, t_clipped_bounds .  height);
-        t_bitmap . setAlphaType(kPremul_SkAlphaType);
-		t_bitmap . setPixels(t_data);
-		self -> layer -> canvas -> drawSprite(t_bitmap, t_clipped_bounds . x + t_device_location . x, 
-											  t_clipped_bounds . y + t_device_location . y, &t_paint);
+		t_bitmap.setInfo(t_info);
+		t_bitmap.setPixels(t_data);
+
+		self->layer->canvas->save();
+		self->layer->canvas->resetMatrix();
+		self->layer->canvas->drawBitmap(t_bitmap,
+						t_clipped_bounds.x + t_device_location.x,
+						t_clipped_bounds.y + t_device_location.y,
+						&t_paint);
+		self->layer->canvas->restore();
 	}
     
 	MCMemoryDelete(t_data);
