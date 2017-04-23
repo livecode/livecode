@@ -1,6 +1,5 @@
 #include <SkCanvas.h>
 #include <SkPaint.h>
-#include <SkFontHost.h>
 #include <SkTypeface.h>
 #include <SkUtils.h>
 
@@ -22,9 +21,13 @@ static hb_position_t SkiaScalarToHarfbuzzPosition(SkScalar value)
 
 static void SkiaSetPaint(SkPaint *paint, hb_skia_face_t *p_face, SkPaint::TextEncoding p_encoding)
 {
+    // Skia APIs expect SkTypeface to be passed via a shared pointer
+    sk_sp<SkTypeface> t_typeface(p_face->typeface);
+    t_typeface->ref();
+    
     paint -> setTextEncoding(p_encoding);
     paint -> setTextSize(p_face -> size);
-    paint -> setTypeface(p_face -> typeface);
+    paint -> setTypeface(t_typeface);
 }
 
 static void SkiaGetGlyphWidthAndExtents(SkPaint* paint, hb_skia_face_t *p_face, hb_codepoint_t codepoint, hb_position_t* width, hb_glyph_extents_t* extents)
