@@ -1151,11 +1151,6 @@ const char *MCNameGetCString(MCNameRef p_name)
 	return MCStringGetCString(MCNameGetString(p_name));
 }
 
-MCString MCNameGetOldString(MCNameRef p_name)
-{
-	return MCStringGetOldString(MCNameGetString(p_name));
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
