@@ -1138,11 +1138,6 @@ bool MCNameClone(MCNameRef p_name, MCNameRef& r_new_name)
 	return true;
 }
 
-const char *MCNameGetCString(MCNameRef p_name)
-{
-	return MCStringGetCString(MCNameGetString(p_name));
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;

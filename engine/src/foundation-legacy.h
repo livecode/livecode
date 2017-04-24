@@ -83,7 +83,6 @@ bool MCNameClone(MCNameRef name, MCNameRef& r_new_name);
 
 bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
-const char *MCNameGetCString(MCNameRef name);
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
 
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCCompareOptions options);
