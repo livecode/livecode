@@ -592,11 +592,13 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
     }
-	
-	MCAutoStringRef t_return;
-	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
+
+    MCAutoStringRef t_result_string;
+    /* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_result_string);
+    char *t_return = nullptr;
+    /* UNCHECKED */ MCStringConvertToCString(*t_result_string, t_return);
 	*retval = xresSucc;
-    return MCStringGetOldString(*t_return).clone();
+    return t_return;
 }
 
 static char *get_global(const char *arg1, const char *arg2,
