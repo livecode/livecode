@@ -1010,6 +1010,10 @@ void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, ui
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 [[deprecated]]
 bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
+void MCGContextDrawPlatformText(MCGContextRef context, MCSpan<const unichar_t> text, MCGPoint location, const MCGFont &font, bool p_rtl);
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, MCSpan<const unichar_t> text, const MCGFont &p_font, const MCGAffineTransform &p_transform);
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, MCSpan<const unichar_t> text, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
 ////////////////////////////////////////////////////////////////////////////////
 

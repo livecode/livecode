@@ -290,6 +290,16 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	self -> is_valid = t_success;
 }
 
+void MCGContextDrawPlatformText(MCGContextRef self,
+                                MCSpan<const unichar_t> p_text,
+                                MCGPoint p_location,
+                                const MCGFont &p_font,
+                                bool p_rtl)
+{
+    MCGContextDrawPlatformText(self, p_text.data(), p_text.sizeBytes(),
+                               p_location, p_font, p_rtl);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
@@ -339,6 +349,20 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 		CFRelease(t_line);
 	
 	return t_success;
+}
+
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self,
+                                              MCSpan<const unichar_t> p_text,
+                                              const MCGFont &p_font,
+                                              const MCGAffineTransform &p_transform,
+                                              MCGRectangle &r_bounds)
+{
+    return MCGContextMeasurePlatformTextImageBounds(self,
+                                                    p_text.data(),
+                                                    p_text.sizeBytes(),
+                                                    p_font,
+                                                    p_transform,
+                                                    r_bounds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

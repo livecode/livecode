@@ -138,7 +138,7 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
     MCGAffineTransform t_id = MCGAffineTransformMakeIdentity();
     auto t_measure_char_func =
         [&t_gfont, &t_id](unichar_t p_char) -> MCGFloat {
-        return MCGContextMeasurePlatformText(nullptr, &p_char, 1*sizeof(p_char),
+        return MCGContextMeasurePlatformText(nullptr, {&p_char, 1},
                                              t_gfont, t_id);
     };
 
@@ -467,7 +467,7 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MC
 	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
-    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform);
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, {MCStringGetCharPtr(p_string) + p_range.offset, p_range.length}, t_font, ctxt -> m_transform);
 }
 
 int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform)
@@ -521,7 +521,7 @@ static void MCFontMeasureTextImageBoundsCallback(MCFontRef p_font, MCStringRef p
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
 	MCGRectangle t_bounds;
-	if (MCGContextMeasurePlatformTextImageBounds(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform, t_bounds))
+	if (MCGContextMeasurePlatformTextImageBounds(NULL, {MCStringGetCharPtr(p_string) + p_range.offset, p_range.length}, t_font, ctxt -> m_transform, t_bounds))
 	{
 		t_bounds.origin.x += ctxt->m_bounds.size.width;
 		ctxt->m_bounds = MCGRectangleUnion(ctxt->m_bounds, t_bounds);
@@ -564,11 +564,13 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
 	t_font . fixed_advance = p_font -> fixed_advance;
     
 	// The drawing is done on the UTF-16 form of the text
-	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
+    MCSpan<const unichar_t> t_text =
+        {MCStringGetCharPtr(p_text) + p_range.offset, p_range.length};
+	MCGContextDrawPlatformText(ctxt->m_gcontext, t_text, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
 
     // The draw position needs to be advanced
     // MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, t_text, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
 void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)

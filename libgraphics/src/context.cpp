@@ -2803,6 +2803,15 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	return 0.0;
 }
 
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef self,
+                                       MCSpan<const unichar_t> p_text,
+                                       const MCGFont &p_font,
+                                       const MCGAffineTransform &p_transform)
+{
+    return MCGContextMeasurePlatformText(self, p_text.data(), p_text.sizeBytes(),
+                                         p_font, p_transform);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)

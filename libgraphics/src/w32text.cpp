@@ -588,6 +588,16 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	__MCGContextDrawPlatformTextScreen(self, p_text, p_length, p_location, p_font, p_rtl);
 }
 
+void MCGContextDrawPlatformText(MCGContextRef self,
+                                MCSpan<const unichar_t> p_text,
+                                MCGPoint p_location,
+                                const MCGFont &p_font,
+                                bool p_rtl)
+{
+    MCGContextDrawPlatformText(self, p_text.data(), p_text.sizeBytes(),
+                               p_location, p_font, p_rtl);
+}
+
 //////////
 
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
@@ -812,6 +822,20 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
     AbortPath(s_measure_dc);
 
     return true;
+}
+
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self,
+                                              MCSpan<const unichar_t> p_text,
+                                              const MCGFont &p_font,
+                                              const MCGAffineTransform &p_transform,
+                                              MCGRectangle &r_bounds)
+{
+    return MCGContextMeasurePlatformTextImageBounds(self,
+                                                    p_text.data(),
+                                                    p_text.sizeBytes(),
+                                                    p_font,
+                                                    p_transform,
+                                                    r_bounds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
