@@ -50,13 +50,18 @@ MC_EXEC_DEFINE_GET_METHOD(NativeControl, ControlList, 1)
 
 //////////
 
-static bool MCParseRGBA(const MCString &p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
+static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
 {
 	bool t_success = true;
 	Boolean t_parsed;
 	uint2 r, g, b, a;
-	const char *t_data = p_data.getstring();
-	uint32_t l = p_data.getlength();
+
+    MCAutoStringRefAsCString t_data_str;
+    if (t_success)
+        t_success = t_data_str.Lock(p_data);
+    const char *t_data = *t_data_str;
+    uint32_t l = t_data_str.Size();
+
 	if (t_success)
 	{
 		r = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
@@ -98,7 +103,7 @@ void MCNativeControlColorParse(MCExecContext& ctxt, MCStringRef p_input, MCNativ
 {
     uint8_t t_r8, t_g8, t_b8, t_a8;
     MCColor t_color;
-    if (MCParseRGBA(MCStringGetOldString(p_input), false, t_r8, t_g8, t_b8, t_a8))
+    if (MCParseRGBA(p_input, false, t_r8, t_g8, t_b8, t_a8))
     {
         r_output . r = (t_r8 << 8) | t_r8;
         r_output . g = (t_g8 << 8) | t_g8;
