@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <mach-o/dyld.h>
 #endif
 
+#include <algorithm>
+
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
 
@@ -2242,38 +2244,37 @@ void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
 // MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
-bool MCU_couldbeurl(const MCString& p_potential_url)
+bool MCU_couldbeurl(MCStringRef p_potential_url)
 {
-	uint4 t_length;
-	const char *t_url;
-	t_length = p_potential_url . getlength();
-	t_url = p_potential_url . getstring();
-	
+    MCAutoStringRefAsCString t_potential_url;
+    if (!t_potential_url.Lock(p_potential_url))
+        return false;
+    const auto&& t_url = t_potential_url.Span();
+
 	// If the first char isn't a letter, then we are done.
-	if (t_length == 0 || !isalpha(t_url[0]))
+	if (t_url.empty() || !isalpha(t_url[0]))
 		return false;
-	
-	uint4 t_colon_index;
-	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
-	{
-		char t_char;
-		t_char = t_url[t_colon_index];
-		
-		// If we find the ':' we are done (end of scheme).
-		if (t_url[t_colon_index] == ':')
-			break;
-		
-		// If the character isn't something allowed in a scheme name, we are done.
-		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
-			return false;
-	}
-	
-	// If the scheme name < 2 chars, or there is nothing after it, we are done.
-	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
-		return false;
-	
-	// If we get here then we could well have a url.
-	return true;
+
+    auto t_is_scheme_char = [](const char p_char) {
+        return (isalpha(p_char) || isdigit(p_char) ||
+                p_char == '+' || p_char == '.' || p_char == '-');
+    };
+    auto t_colon =
+        std::find_if_not(t_url.begin(), t_url.end(), t_is_scheme_char);
+
+    /* If no scheme name or non-scheme characters were found, this
+     * could still be a URL. */
+    if (t_colon == t_url.end())
+        return true;
+    /* If there was a non-scheme character, this can't be a URL */
+    if (*t_colon != ':')
+        return false;
+    /* If the scheme name is < 2 characters, or there is nothing after
+       the scheme, this can't be a URL. */
+    if (t_url.end() - t_colon <= 1 || t_colon - t_url.begin() <= 1)
+        return false;
+
+    return true;
 }
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
@@ -2295,7 +2296,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		// Send a "getURL" message
 		Boolean oldlock = MClockmessages;
@@ -2362,7 +2363,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		MCAutoDataRef t_data;
 
