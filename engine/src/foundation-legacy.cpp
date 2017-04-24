@@ -706,14 +706,6 @@ bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_st
 	return MCStringCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_string);
 }
 
-MCString MCStringGetOldString(MCStringRef p_string)
-{
-    if (!MCStringIsNative(p_string))
-        MCStringNativize(p_string);
-    
-    return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
-}
-
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
 {
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_oldstring . getstring(), p_oldstring . getlength(), p_options);

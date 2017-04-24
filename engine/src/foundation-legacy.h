@@ -38,7 +38,6 @@ bool MCValueConvertToStringForSave(MCValueRef value, MCStringRef& r_string);
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringCreateWithOldString(const MCString&, MCStringRef &r_string);
-MCString MCStringGetOldString(MCStringRef p_string);
 bool MCStringIsEqualToOldString(MCStringRef string, const MCString& oldstring, MCCompareOptions options);
 
 // Attempt to interpret the given string as a base-10 integer. It returns false
