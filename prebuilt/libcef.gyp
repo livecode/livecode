@@ -141,11 +141,16 @@
                         'copies':
                         [
                             {
-                                'destination': '<(PRODUCT_DIR)/',
+                                'destination': '<(PRODUCT_DIR)/CEF',
                                 'files':
                                 [
+                                    'lib/linux/<(target_arch)/CEF/cef.pak',
+                                    'lib/linux/<(target_arch)/CEF/cef_100_percent.pak',
+                                    'lib/linux/<(target_arch)/CEF/cef_200_percent.pak',
+                                    'lib/linux/<(target_arch)/CEF/cef_extensions.pak',
+                                    'lib/linux/<(target_arch)/CEF/devtools_resources.pak',
                                     'lib/linux/<(target_arch)/CEF/icudtl.dat',
-
+                                    'lib/linux/<(target_arch)/CEF/libcef.so',
                                     'lib/linux/<(target_arch)/CEF/natives_blob.bin',
                                     'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
                                 ],
