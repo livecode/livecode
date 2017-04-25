@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #ifdef HAVE_VALGRIND
 #  include <valgrind/memcheck.h>
@@ -378,6 +379,16 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 		return MCStringCopy (MCSTR("<unknown>"), r_desc);
 	}
 	MCUnreachableReturn(false);
+}
+
+MC_DLLEXPORT_DEF
+void MCValueLog(MCValueRef p_value)
+{
+    MCAutoStringRef t_desc;
+    if (MCValueCopyDescription(p_value, &t_desc))
+        MCLog("%p: %@", p_value, *t_desc);
+    else
+        MCLog("%p: Cannot describe", p_value);
 }
 
 //////////

@@ -1507,6 +1507,11 @@ MC_DLLEXPORT bool MCValueInterAndRelease(MCValueRef value, MCValueRef& r_unique_
 // Fetch the 'extra bytes' field for the given custom value.
 inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)value) + kMCValueCustomHeaderSize; }
 
+#if defined(_DEBUG)
+// Emit a debug log message containing the description of the value
+MC_DLLEXPORT void MCValueLog(MCValueRef);
+#endif
+
 //////////
 
 }
