@@ -2067,7 +2067,6 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	MCdefaultstackptr = t_this_stack;
     MCtargetptr = MCObjectPartHandle(this);
 
-    MCObjectExecutionLock t_self_lock(this);
 
 	// Dispatch the message
 	Exec_stat t_stat;
@@ -2075,7 +2074,21 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		t_stat = handle(p_type, p_message, p_params, this);
+    {
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
+        if (MCtargetptr)
+        {
+            MCObjectExecutionLock t_target_lock(this);
+            t_stat = handle(p_type, p_message, p_params, this);
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
+        }
+    }
 
 	// Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
@@ -2130,7 +2143,10 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
-		MCObjectExecutionLock t_self_lock(this);
+        /* Take a handle to self.  This will be used to check if the
+         * frontscripts deleted the object. */
+        MCObjectHandle t_self_handle(this);
+
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
@@ -2142,11 +2158,22 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 					&& (MCtracewindow == NULL
 						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 			{
-				// PASS STATE FIX
-				Exec_stat oldstat = stat;
-				stat = handle(HT_MESSAGE, mess, paramptr, this);
-				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-					stat = ES_PASS;
+                /* If the object was deleted in the frontscript,
+                 * prevent normal message dispatch as if the
+                 * frontscript did not pass the message. */
+                if (t_self_handle)
+                {
+                    MCObjectExecutionLock t_self_lock(this);
+                    // PASS STATE FIX
+                    Exec_stat oldstat = stat;
+                    stat = handle(HT_MESSAGE, mess, paramptr, this);
+                    if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+                        stat = ES_PASS;
+                }
+                else
+                {
+                    stat = ES_NORMAL;
+                }
 			}
 		}
 	}

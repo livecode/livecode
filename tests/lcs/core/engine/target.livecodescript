@@ -18,15 +18,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
    create button "script"
-   set the script of button "script" to "on doSomething; delete the target; end doSomething"
+   set the script of button "script" to "on doSomething; delete the target; pass doSomething; end doSomething"
    
    create button "test"
-   
 end TestSetup
 
 on TestDeleteTargetInFrontScript
    insert the script of button "script" into front
-   TestAssertThrow "Delete target in frontscript", "__TestDeleteTarget", the long id me, 347
+   set the script of button "test" to "on doSomething; send __TestDeletedCallback; end doSomething"
+   __TestDeleteTarget
+   TestAssert "Delete target in frontscript", there is no button "test"
+   TestAssert "Delete target in frontscript blocks message", sDeleted is not true
    remove the script of button "script" from front
 end TestDeleteTargetInFrontScript
 
@@ -50,3 +52,8 @@ end TestDeleteTargetInOwner
 on __TestDeleteTarget
    send "doSomething" to button "test"
 end __TestDeleteTarget
+
+local sDeleted
+on __TestDeletedCallback
+   put true into sDeleted
+end __TestDeletedCallback

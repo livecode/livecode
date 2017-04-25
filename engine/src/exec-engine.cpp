@@ -1184,7 +1184,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 	
 	// Work out the target object
-	MCObjectPtr t_object;
+	MCObjectPartHandle t_object;
 	if (p_target != nil)
 		t_object = *p_target;
 	else
@@ -1196,7 +1196,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
 	MCStack *t_this_stack;
-	t_this_stack = t_object . object -> getstack();
+	t_this_stack = t_object -> getstack();
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
@@ -1221,19 +1221,31 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 
 	// Dispatch the message
-	MCObjectExecutionLock t_object_lock(t_object.object);
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
-		{
-		case ES_ERROR:
-			ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
-			break;
-		default:
-			break;
-		}
+    {
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        if (t_object)
+        {
+            MCObjectExecutionLock t_object_lock(t_object);
+            switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
+            {
+            case ES_ERROR:
+                ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
+        }
+    }
 	
 	// Set 'it' appropriately
 	switch(t_stat)

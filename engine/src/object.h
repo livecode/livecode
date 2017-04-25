@@ -1702,6 +1702,12 @@ class MCObjectExecutionLock
 {
     MCObjectHandle m_handle;
 public:
+    MCObjectExecutionLock(const MCObjectHandle& obj) : m_handle(obj)
+    {
+        if (m_handle.IsValid())
+            m_handle->lockforexecution();
+    }
+
     MCObjectExecutionLock(MCObject* obj) : m_handle(obj)
     {
         if (m_handle.IsValid())
