@@ -135,6 +135,10 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 
 NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 {
+	// IM-2017-04-20: [[ Bug 19327 ]] Transform rect to ui view coords
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleGetTransformedBounds(p_rect, m_object->getstack()->getviewtransform());
+	
 	int32_t t_gp_height;
 	
 	NSWindow *t_window = getStackWindow();
@@ -144,7 +148,7 @@ NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 		t_gp_height = m_object->getcard()->getrect().height;
 	
 	NSRect t_rect;
-	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+	t_rect = NSMakeRect(t_view_rect.x, t_gp_height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
 	
 	return t_rect;
 }
