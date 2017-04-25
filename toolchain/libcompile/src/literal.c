@@ -150,17 +150,17 @@ int MakeIntegerLiteral(const char *p_token, intptr_t *r_literal)
 {
 	int t_base = 0;
 	const char *t_literal_start = NULL;
-    intptr_t t_value = 0;
+    uintptr_t t_value = 0;
 	
 	__ComputeIntegerLiteralBaseAndStart(p_token, &t_base, &t_literal_start);
 
 	errno = 0;
     t_value = strtoul(t_literal_start, NULL, t_base);
     
-    if (errno == ERANGE || t_value > 0xFFFFFFFFU)
+    if (errno == ERANGE || t_value > 0xFFFFFFFF)
         return 0;
     
-    *r_literal = t_value;
+    *r_literal = (intptr_t)t_value;
     
     return 1;
 }
