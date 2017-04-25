@@ -740,7 +740,7 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 	return true;
 }
 
-void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
+void MCS_downloadurl(MCObjectHandle p_target, MCStringRef p_url, MCStringRef p_file)
 {
 	bool t_success = true;
 	

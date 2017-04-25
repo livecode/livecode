@@ -354,7 +354,7 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
-    MCS_downloadurl(MCtargetptr . object, p_url, p_filename);
+    MCS_downloadurl(MCtargetptr . object -> GetHandle(), p_url, p_filename);
 }
 
 void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)
