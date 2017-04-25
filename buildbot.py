@@ -34,6 +34,7 @@ import uuid
 
 # LiveCode build configuration script
 import config
+import fetch
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
@@ -111,6 +112,18 @@ def exec_buildbot_make(target):
     args = ["make", "-f", "buildbot.mk", target]
     print(' '.join(args))
     sys.exit(subprocess.call(args))
+
+################################################################
+# Fetch prebuilts
+################################################################
+
+def exec_fetch(args):
+    print('fetch.py ' + ' '.join(args))
+    sys.exit(fetch.fetch(args))
+
+def do_fetch():
+    check_target_triple()
+    exec_fetch(['--target', get_target_triple()])
 
 ################################################################
 # Configure with gyp
