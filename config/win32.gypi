@@ -25,18 +25,6 @@
 			'silence_warnings': 0,
 		},
 		
-		'include_dirs':
-		[
-			'$(foo)C:/WinDDK/7600.16385.1/inc/atl71',
-			'$(foo)C:/WinDDK/7600.16385.1/inc/mfc42',
-		],
-		
-		'library_dirs':
-		[
-			'$(foo)C:/WinDDK/7600.16385.1/lib/ATL/i386',
-			'$(foo)C:/WinDDK/7600.16385.1/lib/MFC/i386',
-		],
-		
 		# Don't assume a Cygwin environment when invoking actions
 		'msvs_cygwin_shell': 0,
 		
