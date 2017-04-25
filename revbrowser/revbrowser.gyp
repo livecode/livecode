@@ -127,15 +127,6 @@
 						},
 					},
 				],
-                [
-                    'target_arch == "x64"',
-                    {
-						'libraries':
-						[
-							'-latlthunk',
-						],
-                    },
-                ],
 				[
 					'OS == "linux"',
 					{
