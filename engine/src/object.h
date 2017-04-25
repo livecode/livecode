@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if 0
 #include <type_traits>
 #endif
+#include <utility>
 
 enum {
     MAC_SHADOW,
@@ -433,8 +434,20 @@ public:
         return MCObjectProxy<U>::Handle(static_cast<MCObjectProxy<U>*>(m_proxy));
     }
 #endif
-    
-    
+
+    /* Swap the contents of two object handles. Allows std::swap() to be
+     * used on MCObjectHandle instances of exactly the same type. */
+    void swap(Handle& x_other)
+    {
+        using std::swap;
+        swap(m_proxy, x_other.m_proxy);
+    }
+
+    friend void swap(Handle& x_left, Handle& x_right)
+    {
+	    x_left.swap(x_right);
+    }
+
 private:
     
     // The proxy for the object this is a handle to
