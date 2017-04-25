@@ -5670,3 +5670,48 @@ void MCDeletedObjectsOnObjectResumeDeletion(MCObject *p_object, void *p_deletion
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+MCObjectPartHandle::MCObjectPartHandle(MCObject* p_object, uint32_t p_part_id)
+    : MCObjectHandle(p_object), m_part_id(p_part_id)
+{
+}
+
+MCObjectPartHandle::MCObjectPartHandle(const MCObjectPtr& p_ptr)
+    : MCObjectHandle(p_ptr.object), m_part_id(p_ptr.part_id)
+{
+}
+
+MCObjectPartHandle&
+MCObjectPartHandle::operator=(decltype(nullptr))
+{
+    MCObjectHandle::operator=(nullptr);
+    m_part_id = 0;
+    return *this;
+}
+
+MCObjectPartHandle&
+MCObjectPartHandle::operator=(const MCObjectPtr& p_ptr)
+{
+    MCObjectHandle::operator=(p_ptr.object);
+    m_part_id = p_ptr.part_id;
+    return *this;
+}
+
+MCObjectPtr
+MCObjectPartHandle::getObjectPtr() const
+{
+    if (IsValid())
+        return MCObjectPtr(Get(), getPart());
+    else
+        return MCObjectPtr(nullptr, 0);
+}
+
+void swap(MCObjectPartHandle &x_left, MCObjectPartHandle &x_right)
+{
+    using std::swap;
+    swap(x_left.m_part_id, x_right.m_part_id);
+    swap(static_cast<MCObjectHandle&>(x_left),
+         static_cast<MCObjectHandle&>(x_right));
+}
+
+///////////////////////////////////////////////////////////////////////////////
