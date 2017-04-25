@@ -22304,7 +22304,7 @@ yy yy_8_1;
 yy_1 = yyglov_maxAttr;
 if (yy_1 == (yy) yyu) yyErr(1,4057);
 yyv_N = yy_1;
-yy_2_1 = ((yy)"typedef struct {intptr_t attr[");
+yy_2_1 = ((yy)"#include <stdint.h>\ntypedef struct {intptr_t attr[");
 s(yy_2_1);
 yy_3_1_1 = yyv_N;
 yy_3_1_2 = ((yy)1);
