@@ -21,6 +21,19 @@ private function q pString
    return pString
 end q
 
+on TestSuperscriptInField
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   create field "TestField"
+   
+   // The text contains a superscript e.g. The room is 10 m^2
+   set the htmlText of field "TestField" to format("<p>The room is 10 m<sup shift=\"-4\">2</sup></p>")
+   TestAssert "Setting the htmlText respects superscripts", the htmlText of field "TestField" is format("<p>The room is 10 m<sup shift=\"-4\">2</sup></p>")
+   
+   delete stack "Test"
+end TestSuperscriptInField
+
 on TestSurrogateRoundtrip
    create stack "Test"
    set the defaultStack to "Test"
