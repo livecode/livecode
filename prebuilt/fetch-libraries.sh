@@ -195,7 +195,7 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
         for ARCH in "${ARCHS[@]}" ; do
                 for LIB in "${LIBS[@]}" ; do
                         echo "Monkey patching toolset/arch for ${LIB} library"
-                        for SUBPLATFORM in "${SUBPLATFORMS[@]} v140_static_fast"; do
+                        for SUBPLATFORM in "v140_static_debug" "v140_static_release" "v140_static_fast"; do
                                 SRC_TRIPLE="${ARCH}-${PLATFORM}-${SUBPLATFORM}"
                                 DST_TRIPLE=$(echo "${SRC_TRIPLE}" | sed 's/v140/v141/')
                                 SRC_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${SRC_TRIPLE}"
