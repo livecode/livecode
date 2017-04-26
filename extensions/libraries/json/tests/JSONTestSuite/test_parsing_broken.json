@@ -1,12 +1,1 @@
-{
-    "n_number_-01.json": "Bug 18698",
-    "n_number_-2..json": "Bug 18698",
-    "n_number_0.e1.json": "Bug 18698",
-    "n_number_2.e+3.json": "Bug 18698",
-    "n_number_2.e-3.json": "Bug 18698",
-    "n_number_2.e3.json": "Bug 18698",
-    "n_number_neg_int_starting_with_zero.json": "Bug 18698",
-    "n_number_neg_real_without_int_part.json": "Bug 18698",
-    "n_number_real_without_fractional_part.json": "Bug 18698",
-    "n_number_with_leading_zero.json": "Bug 18698"
-}
+{}

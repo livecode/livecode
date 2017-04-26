@@ -441,7 +441,7 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url)
 // SJT-2014-09-11: [[ URLMessages ]] Send "postURL" messages on all platforms.
 {
-	if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	if (MCU_couldbeurl(p_url))
 	{
 		MCAutoDataRef t_data;
 
@@ -510,7 +510,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 		MCStringCopySubstring(p_target, MCRangeMakeMinMax(8, MCStringGetLength(p_target)), &t_filename);
 		MCS_saveresfile(*t_filename, kMCEmptyData);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_target)))
+	else if (MCU_couldbeurl(p_target))
 	{
 		// Send "deleteURL" message
 		Boolean oldlock = MClockmessages;

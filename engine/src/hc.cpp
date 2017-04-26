@@ -2289,8 +2289,12 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				break;
 			default:
-				hcstat_append("Not converting %4.4s id %5d \"%s\"",
-				        (char *)&t_type, id, MCNameGetCString(*t_name));
+                {
+                    MCAutoStringRefAsCString t_name_str;
+                    /* UNCHECKED */ t_name_str.Lock(MCNameGetString(*t_name));
+                    hcstat_append("Not converting %4.4s id %5d \"%s\"",
+                                  (char *)&t_type, id, *t_name_str);
+                }
 				break;
 			}
 			objects += 12;
