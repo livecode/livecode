@@ -29,7 +29,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <crtdbg.h>
 #include <dbghelp.h>
 
-extern "C" USHORT WINAPI RtlCaptureStackBackTrace(ULONG, ULONG, PVOID*, PULONG);
+extern "C"
+NTSYSAPI
+WORD
+NTAPI
+RtlCaptureStackBackTrace(
+    DWORD FramesToSkip,
+    DWORD FramesToCapture,
+    PVOID * BackTrace,
+    PDWORD BackTraceHash
+);
 
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 {
@@ -41,17 +50,22 @@ static void MCLogV(const char *p_file,
                      const char *p_format,
                      va_list p_format_args)
 {
+    MCAutoStringRef t_file;
+    MCAutoStringRefAsWString t_file_w;
+    /* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
+    /* UNCHECKED */ t_file_w.Lock(*t_file);
     MCAutoStringRef t_message, t_string;
     MCAutoStringRefAsWString t_wstring;
     /* UNCHECKED */ MCStringFormatV(&t_message, p_format, p_format_args);
     /* UNCHECKED */ MCStringFormat(&t_string, "[%u] %@\n",
                                    GetCurrentProcessId(), *t_message);
     /* UNCHECKED */ t_wstring.Lock(*t_string);
-    _CrtDbgReportW(_CRT_WARN, p_file, p_line, NULL, *t_wstring);
+    _CrtDbgReportW(_CRT_WARN, *t_file_w, p_line, NULL, *t_wstring);
 }
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
+    va_list t_args;
 	va_start(t_args, p_format);
     MCLogV(p_file, p_line, p_format, t_args);
 	va_end(t_args);
@@ -82,6 +96,7 @@ void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format,
 		}
 	}
 
+    va_list t_args;
     va_start(t_args, p_format);
     MCLogV(p_file, p_line, p_format, t_args);
     va_end(t_args);
