@@ -58,9 +58,9 @@ function fetchLibrary {
 	local NAME=""
 	if [ "${PLATFORM}" = "win32" ]; then
 		if [ "${LIB}" = "CEF" ]; then
-			if [ "${ARCH}" = "i386" ]; then
+			if [ "${ARCH}" = "x86" ]; then
 				NAME="CEF-${VERSION}-win32-i386"
-			else
+			elif [ "${ARCH}" = "x86_64" ]; then
 				NAME="CEF-${VERSION}-win32-x86_64"
 			fi
 		else
