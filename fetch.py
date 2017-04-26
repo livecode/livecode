@@ -19,6 +19,7 @@ import sys
 import platform
 import os
 import subprocess
+import re
 
 def usage(exit_status):
     print(
