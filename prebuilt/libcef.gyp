@@ -26,20 +26,6 @@
 			'conditions':
 			[   
                 [
-                    'OS == "win" and target_arch == "x86"',
-                    {
-                        'copies':
-                        [
-                            {
-                                'destination':'<(PRODUCT_DIR)/CEF/',
-                                'files':
-                                [
-                                    'lib/win32/<(target_arch)/CEF/wow_helper.exe',
-                                ],
-                            },
-                        ],
-                    },
-
 				    'OS == "win"',
 				    {
 					    'copies':
