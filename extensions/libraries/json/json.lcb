@@ -65,6 +65,19 @@ private handler JsonSyntaxError(in pLine as Number, in pColumn as Number, \
   throw "syntax error:" && FormatInt(pLine) & ":" & FormatInt(pColumn) && pMessage
 end handler
 
+private handler JsonCheckNumberTerminal(in pLine as Number, \
+      in pColumn as Number, in pChar as String, \
+      inout xExtraToken as optional String) returns nothing
+   if pChar is in "]}," then
+      put pChar into xExtraToken
+   else if not (pChar is in " \t\r\n") then
+      JsonSyntaxError(pLine, pColumn, "bad number terminal '" & \
+            FormatChar(pChar) & "'")
+   else
+      put nothing into xExtraToken
+   end if
+end handler
+
 --================================================================
 -- JSON parser
 --================================================================
@@ -76,7 +89,14 @@ constant kScanInString is 10
 constant kScanInStringEscape is 11
 constant kScanInStringUnicode is 12
 constant kScanInLiteral is 20
-constant kScanInNumber is 30
+constant kScanInNumberIntStart is 30
+constant kScanInNumberInt is 31
+constant kScanInNumberIntEnd is 32
+constant kScanInNumberFracStart is 33
+constant kScanInNumberFrac is 34
+constant kScanInNumberExpSign is 35
+constant kScanInNumberExpStart is 36
+constant kScanInNumberExp is 37
 
 -- Parser states
 constant kParseTop is 0
@@ -218,18 +238,23 @@ public handler JsonImport(in pJson as String) returns optional any
         put tChar into tToken
         put tChar into tTokenValue
         put kScanInLiteral into tScanState
-      else if tChar is "-" then
-         -- If a number begins with a "-" then it *must* be contain at
-         -- least one further character
+      else if tChar is "0" then
          put "0" into tToken
          put tChar into tTokenValue
-         put kScanInNumber into tScanState
-      else if tChar is in "0123456789" then
-        -- A number is permitted to be a single digit
+         if tCharCount < tJsonLength then
+           put kScanInNumberIntEnd into tScanState
+         else
+           put kScanEndToken into tScanState
+         end if
+      else if tChar is "-" then
+         put "0" into tToken
+         put tChar into tTokenValue
+         put kScanInNumberIntStart into tScanState
+      else if tChar is in "123456789" then
         put "0" into tToken
         put tChar into tTokenValue
         if tCharCount < tJsonLength then
-           put kScanInNumber into tScanState
+           put kScanInNumberInt into tScanState
         else
            put kScanEndToken into tScanState
         end if
@@ -314,29 +339,124 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanEndToken into tScanState
       end if
 
-    else if tScanState is kScanInNumber then
-      if tChar is in ".+-eE0123456789" then
-        -- The only case in which we're guaranteed to have got to the
-        -- end of a number after reading a number constituent char is
-        -- when we've reached the end of input.  Otherwise, we need to
-        -- read one char further.
-        put tChar after tTokenValue
-        if tCharCount < tJsonLength then
-           next repeat
-        else
-           put kScanEndToken into tScanState
-        end if
-      else
-        put kScanEndToken into tScanState
-        if tChar is in "]}," then
-           -- It's possible for the character that terminates a number
-           -- literal to be a whole token in its own right.
-          put tChar into tExtraToken
-        else if not (tChar is in " \t\r\n") then
+    else if tScanState is kScanInNumberIntStart then
+       if tChar is "0" then
+          put kScanInNumberIntEnd into tScanState
+       else if tChar is in "123456789" then
+          put kScanInNumberInt into tScanState
+       else
           return JsonSyntaxError(tLine, tColumn, \
-                "bad number terminal '" & FormatChar(tChar) & "'")
-        end if
-      end if
+                "unexpected '" & FormatChar(tChar) & \
+                "' at start of number integer part")
+       end if
+       -- Any valid character may be terminal
+       put tChar after tTokenValue
+       if tCharCount >= tJsonLength then
+          put kScanEndToken into tScanState
+       end if
+
+    else if tScanState is kScanInNumberInt then
+       if tChar is in "0123456789" then
+          -- Same state; may be terminal
+          if tCharCount >= tJsonLength then
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else if tChar is "." then
+          put kScanInNumberFracStart into tScanState
+          put tChar after tTokenValue
+       else if tChar is in "eE" then
+          put kScanInNumberExpSign into tScanState
+          put tChar after tTokenValue
+       else
+          JsonCheckNumberTerminal(tLine, tColumn, tChar, tExtraToken)
+          put kScanEndToken into tScanState
+       end if
+
+    else if tScanState is kScanInNumberIntEnd then
+       if tChar is "." then
+          put kScanInNumberFracStart into tScanState
+          put tChar after tTokenValue
+       else if tChar is in "eE" then
+          put kScanInNumberExpSign into tScanState
+          put tChar after tTokenValue
+       else
+          JsonCheckNumberTerminal(tLine, tColumn, tChar, tExtraToken)
+          put kScanEndToken into tScanState
+       end if
+
+    else if tScanState is kScanInNumberFracStart then
+       if tChar is in "0123456789" then
+          if tCharCount < tJsonLength then
+             put kScanInNumberFrac into tScanState
+          else
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else
+          return JsonSyntaxError(tLine, tColumn, \
+                "unexpected '" & FormatChar(tChar) & \
+                "' at start of number fractional part")
+       end if
+
+    else if tScanState is kScanInNumberFrac then
+       if tChar is in "0123456789" then
+          if tCharCount >= tJsonLength then
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else if tChar is in "eE" then
+          put kScanInNumberExpSign into tScanState
+          put tChar after tTokenValue
+       else
+          JsonCheckNumberTerminal(tLine, tColumn, tChar, tExtraToken)
+          put kScanEndToken into tScanState
+       end if
+
+    else if tScanState is kScanInNumberExpSign then
+       if tChar is in "+-" then
+          put kScanInNumberExpStart into tScanState
+          put tChar after tTokenValue
+       else if tChar is in "0123456789" then
+          -- May be terminal
+          if tCharCount < tJsonLength then
+             put kScanInNumberExp into tScanState
+          else
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else
+          return JsonSyntaxError(tLine, tColumn, \
+                "unexpected '" & FormatChar(tChar) & \
+                "' at start of number exponent part")
+       end if
+
+    else if tScanState is kScanInNumberExpStart then
+       if tChar is in "0123456789" then
+          -- May be terminal
+          if tCharCount < tJsonLength then
+             put kScanInNumberExp into tScanState
+          else
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else
+          return JsonSyntaxError(tLine, tColumn, \
+                "unexpected '" & FormatChar(tChar) & \
+                "' in number exponent part")
+       end if
+
+    else if tScanState is kScanInNumberExp then
+       if tChar is in "0123456789" then
+          -- May be terminal
+          if tCharCount >= tJsonLength then
+             put kScanEndToken into tScanState
+          end if
+          put tChar after tTokenValue
+       else
+          JsonCheckNumberTerminal(tLine, tColumn, tChar, tExtraToken)
+          put kScanEndToken into tScanState
+       end if
 
     else
       return JsonSyntaxError(tLine, tColumn, "bad scan state")
