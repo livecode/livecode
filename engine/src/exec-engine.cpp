@@ -2013,9 +2013,9 @@ void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStrin
     }
     
     if (p_is_md5)
-        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateMD5(t_namespace, p_name, t_uuid);
     else
-        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateSHA1(t_namespace, p_name, t_uuid);
     
     if (MCEngineUuidToStringRef(t_uuid, r_uuid))
         return;
