@@ -52,7 +52,7 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'js-emscripten-sdk1.35',
 )
 # The set of build tasks that this branch supports
-BUILDBOT_TARGETS = ('config', 'compile', 'bin-archive', 'bin-extract',
+BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract',
     'dist-notes', 'dist-docs', 'dist-server', 'dist-tools', 'dist-upload',
     'distmac-archive', 'distmac-extract', 'distmac-disk')
 
@@ -267,7 +267,9 @@ def buildbot_task(target):
         print('Buildbot build step "{}" is not supported'.format(target))
         sys.exit(SKIP_EXIT_STATUS)
 
-    if target == 'config':
+    if target == 'fetch':
+        return do_fetch()
+    elif target == 'config':
         return do_configure()
     elif target == 'compile':
         return do_compile()
