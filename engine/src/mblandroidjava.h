@@ -40,6 +40,7 @@ typedef enum
     
     // specialized return types
     kMCJavaTypeCString,
+    kMCJavaTypeUtf8CString,
     kMCJavaTypeMCString,
     kMCJavaTypeMCStringUnicode,
 	kMCJavaTypeMCStringRef,

@@ -495,12 +495,23 @@ bool MCJavaStringFromNative(JNIEnv *env, const char *p_string, jstring &r_java_s
     }
     else
     {
-        // HH-2017-04-22 [[ Bug 19609 ]]: Convert cstring to Java UTF string directly
-        r_java_string = env->NewStringUTF(p_string);
-        return true;
+        MCString t_mcstring(p_string);
+        return MCJavaStringFromNative(env, &t_mcstring, r_java_string);
     }
 }
 
+bool MCJavaStringFromNativeUTF8(JNIEnv *env, const char *p_string, jstring &r_java_string)
+{
+    if (p_string == nil)
+    {
+        r_java_string = nil;
+        return true;
+    }
+    else
+    {
+        return nil != (r_java_string = env->NewStringUTF(p_string));
+    }
+}
 bool MCJavaStringFromUnicode(JNIEnv *env, const MCString *p_string, jstring &r_java_string)
 {
     if (p_string == nil)
@@ -1404,6 +1415,8 @@ static MCJavaType native_sigchar_to_returntype(char p_sigchar)
             return kMCJavaTypeVoid;
         case 's':
             return kMCJavaTypeCString;
+        case 't':
+            return kMCJavaTypeUtf8CString;
         case 'S':
             return kMCJavaTypeMCString;
         case 'U':
@@ -1449,6 +1462,7 @@ static const char *return_type_to_java_sig(MCJavaType p_type)
         case kMCJavaTypeBoolean:  // boolean
             return "Z";
         case kMCJavaTypeCString:  // string from char *
+        case kMCJavaTypeUtf8CString: // string from utf8 char *
         case kMCJavaTypeMCString:  // string from MCString *
         case kMCJavaTypeMCStringUnicode:  // string from utf16 MCString *
 		case kMCJavaTypeMCStringRef: // string from MCStringRef
@@ -1702,8 +1716,20 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
                 case kMCJavaTypeCString:
                 {
                     t_cstring = va_arg(p_args, const char *);
-                    
+
                     t_success = MCJavaStringFromNative(env, t_cstring, t_java_string);
+                    if (t_success)
+                        t_value . l = t_java_string;
+                    
+                    t_delete = true;
+                    t_object = true;
+                }
+                    break;
+                case kMCJavaTypeUtf8CString:
+                {
+                    t_cstring = va_arg(p_args, const char *);
+
+                    t_success = MCJavaStringFromNativeUTF8(env, t_cstring, t_java_string);
                     if (t_success)
                         t_value . l = t_java_string;
                     
