@@ -511,6 +511,9 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+// The main window callback to compute the window to parent root modal dialogs to (if any)
+MCMainWindowCallback MCmainwindowcallback = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
