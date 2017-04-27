@@ -5,7 +5,7 @@ PLATFORMS=( mac linux win32 android ios emscripten )
 ARCHS_android=( armv6 )
 ARCHS_mac=( Universal )
 ARCHS_ios=( Universal )
-ARCHS_win32=( x86 )
+ARCHS_win32=( x86 x86_64 )
 ARCHS_linux=( i386 x86_64 )
 ARCHS_emscripten=( js )
 LIBS_android=( OpenSSL ICU )
@@ -16,7 +16,7 @@ LIBS_linux=( OpenSSL Curl ICU CEF )
 LIBS_emscripten=( ICU )
 
 SUBPLATFORMS_ios=(iPhoneSimulator8.2 iPhoneSimulator9.2 iPhoneSimulator10.2 iPhoneOS9.2 iPhoneOS10.2)
-SUBPLATFORMS_win32=(v141_static_debug v141_static_release)
+SUBPLATFORMS_win32=(v140_static_debug v140_static_release)
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -58,7 +58,11 @@ function fetchLibrary {
 	local NAME=""
 	if [ "${PLATFORM}" = "win32" ]; then
 		if [ "${LIB}" = "CEF" ]; then
-			NAME="CEF-${VERSION}-win32-i386"
+			if [ "${ARCH}" = "x86" ]; then
+				NAME="CEF-${VERSION}-win32-i386"
+			elif [ "${ARCH}" = "x86_64" ]; then
+				NAME="CEF-${VERSION}-win32-x86_64"
+			fi
 		else
 			NAME="${LIB}-${VERSION}-${ARCH}-${PLATFORM}-${SUBPLATFORM}"
 		fi
@@ -170,23 +174,38 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 		# the "Release" configuration, in terms of linkability.  So if
 		# there's a "Release" build of any given library, duplicate
 		# it for "Fast"
-                for ARCH in "${ARCHS[@]}" ; do
-                        for LIB in "${LIBS[@]}" ; do
-                                echo "Providing 'Fast' configuration for ${LIB} library"
-                                for SUBPLATFORM in "${SUBPLATFORMS[@]}"; do
-                                        if [[ ! ${SUBPLATFORM} =~ _release$ ]]; then
-                                                continue
-                                        fi
-                                        SRC_TRIPLE="${ARCH}-${PLATFORM}-${SUBPLATFORM}"
-                                        DST_TRIPLE=$(echo "${SRC_TRIPLE}" | sed 's/release/fast/')
-                                        SRC_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${SRC_TRIPLE}"
-                                        DST_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${DST_TRIPLE}"
-                                        if [[ -d "${SRC_DIR}" && ! -d "${DST_DIR}" ]]; then
-                                                cp -a "${SRC_DIR}" "${DST_DIR}"
-                                        fi
-                                done
+        for ARCH in "${ARCHS[@]}" ; do
+                for LIB in "${LIBS[@]}" ; do
+                        echo "Providing 'Fast' configuration for ${LIB} library"
+                        for SUBPLATFORM in "${SUBPLATFORMS[@]}"; do
+                                if [[ ! ${SUBPLATFORM} =~ _release$ ]]; then
+                                        continue
+                                fi
+                                SRC_TRIPLE="${ARCH}-${PLATFORM}-${SUBPLATFORM}"
+                                DST_TRIPLE=$(echo "${SRC_TRIPLE}" | sed 's/release/fast/')
+                                SRC_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${SRC_TRIPLE}"
+                                DST_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${DST_TRIPLE}"
+                                if [[ -d "${SRC_DIR}" && ! -d "${DST_DIR}" ]]; then
+                                        cp -a "${SRC_DIR}" "${DST_DIR}"
+                                fi
                         done
-		done
+                done
+        done
+                        
+        for ARCH in "${ARCHS[@]}" ; do
+                for LIB in "${LIBS[@]}" ; do
+                        echo "Monkey patching toolset/arch for ${LIB} library"
+                        for SUBPLATFORM in "v140_static_debug" "v140_static_release" "v140_static_fast"; do
+                                SRC_TRIPLE="${ARCH}-${PLATFORM}-${SUBPLATFORM}"
+                                DST_TRIPLE=$(echo "${SRC_TRIPLE}" | sed 's/v140/v141/')
+                                SRC_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${SRC_TRIPLE}"
+                                DST_DIR="${WIN32_EXTRACT_DIR}/${LIB}/${DST_TRIPLE}"
+                                if [[ -d "${SRC_DIR}" && ! -d "${DST_DIR}" ]]; then
+                                        cp -a "${SRC_DIR}" "${DST_DIR}"
+                                fi
+                        done
+                done
+        done
 	fi
 done
 

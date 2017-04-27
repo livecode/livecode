@@ -35,7 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #define _DBL_RADIX      2                       /* exponent radix */
-#define _DBL_ROUNDS     1                       /* addition rounding: near */
 
 #ifndef FLT_DIG
 #define FLT_DIG         6                       /* # of decimal digits of precision */

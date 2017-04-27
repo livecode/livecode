@@ -508,6 +508,10 @@ sub typeListToProto
 		{
 			$proto .= "long long int ";
 		}
+		elsif ($line eq "intsize")
+		{
+			$proto .= "size_t ";
+		}
 		else
 		{
 			die "Unknown type specified: $line";

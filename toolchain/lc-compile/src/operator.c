@@ -40,15 +40,15 @@ struct Node
     {
         struct
         {
-            long precedence;
-            long position;
-            long method;
-            long arity;
+            intptr_t precedence;
+			intptr_t position;
+			intptr_t method;
+			intptr_t arity;
             Node *arguments;
         } operator;
         struct
         {
-            long value;
+			intptr_t value;
         } operand;
     };
 };
@@ -108,9 +108,9 @@ static void AppendToNodeList(Node **x_list, Node *p_node)
     t_last -> next = p_node;
 }
 
-static long CountNodeList(Node *p_list)
+static intptr_t CountNodeList(Node *p_list)
 {
-    long t_count = 0;
+    intptr_t t_count = 0;
 
     while(p_list != NULL)
     {
@@ -120,7 +120,7 @@ static long CountNodeList(Node *p_list)
     return t_count;
 }
 
-Node *DivideNodeListAt(Node **x_list, long p_index)
+Node *DivideNodeListAt(Node **x_list, intptr_t p_index)
 {
     Node *t_return;
 
@@ -210,7 +210,7 @@ static int CompareNodePrecedence(Node *p_left, Node *p_right)
 	return 0;
 }
 
-static long GetNodeArity(Node *p_node)
+static intptr_t GetNodeArity(Node *p_node)
 {
     if (p_node -> kind == kNodeKindOperand)
         return 0;
@@ -264,7 +264,7 @@ void EndOperatorExpression(void)
     free(t_remove);
 }*/
 
-void ReorderOperatorExpression(long p_sentinal)
+void ReorderOperatorExpression(intptr_t p_sentinal)
 {
     Node *t_clause;
 	Node *t_input_stack, *t_output_stack;
@@ -390,7 +390,7 @@ void ReorderOperatorExpression(long p_sentinal)
     s_stack = t_output_stack;
 }
 
-int PopOperatorExpression(long *r_position, long *r_method, long *r_arity)
+int PopOperatorExpression(intptr_t *r_position, intptr_t *r_method, intptr_t *r_arity)
 {
     Node *t_node;
 	Node *t_arguments;
@@ -422,7 +422,7 @@ int PopOperatorExpression(long *r_position, long *r_method, long *r_arity)
     return 1;
 }
 
-void PopOperatorExpressionArgument(long *r_argument)
+void PopOperatorExpressionArgument(intptr_t *r_argument)
 {
     Node *t_node;
 	
@@ -437,7 +437,7 @@ void PopOperatorExpressionArgument(long *r_argument)
 
 //////////
 
-static void PushOperatorExpressionOperator(NodeKind p_kind, long p_position, long p_precedence, long p_method, long *r_sentinal)
+static void PushOperatorExpressionOperator(NodeKind p_kind, intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     Node *t_node;
     t_node = MakeNode(p_kind);
@@ -451,32 +451,32 @@ static void PushOperatorExpressionOperator(NodeKind p_kind, long p_position, lon
     *r_sentinal = CountNodeList(s_clause) - 1;
 }
 
-void PushOperatorExpressionPrefix(long p_position, long p_precedence, long p_method, long *r_sentinal)
+void PushOperatorExpressionPrefix(intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     PushOperatorExpressionOperator(kNodeKindPrefixOperator, p_position, p_precedence, p_method, r_sentinal);
 }
 
-void PushOperatorExpressionPostfix(long p_position, long p_precedence, long p_method, long *r_sentinal)
+void PushOperatorExpressionPostfix(intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     PushOperatorExpressionOperator(kNodeKindPostfixOperator, p_position, p_precedence, p_method, r_sentinal);
 }
 
-void PushOperatorExpressionLeftBinary(long p_position, long p_precedence, long p_method, long *r_sentinal)
+void PushOperatorExpressionLeftBinary(intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     PushOperatorExpressionOperator(kNodeKindLeftBinaryOperator, p_position, p_precedence, p_method, r_sentinal);
 }
 
-void PushOperatorExpressionRightBinary(long p_position, long p_precedence, long p_method, long *r_sentinal)
+void PushOperatorExpressionRightBinary(intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     PushOperatorExpressionOperator(kNodeKindRightBinaryOperator, p_position, p_precedence, p_method, r_sentinal);
 }
 
-void PushOperatorExpressionNeutralBinary(long p_position, long p_precedence, long p_method, long *r_sentinal)
+void PushOperatorExpressionNeutralBinary(intptr_t p_position, intptr_t p_precedence, intptr_t p_method, intptr_t *r_sentinal)
 {
     PushOperatorExpressionOperator(kNodeKindNeutralBinaryOperator, p_position, p_precedence, p_method, r_sentinal);
 }
 
-void PushOperatorExpressionArgument(long p_argument, long *r_sentinal)
+void PushOperatorExpressionArgument(intptr_t p_argument, intptr_t *r_sentinal)
 {
     Node *t_node;
 	Node *t_last;
@@ -493,7 +493,7 @@ void PushOperatorExpressionArgument(long p_argument, long *r_sentinal)
     *r_sentinal = CountNodeList(s_clause) - 1;
 }
 
-void PushOperatorExpressionOperand(long p_operand, long *r_sentinal)
+void PushOperatorExpressionOperand(intptr_t p_operand, intptr_t *r_sentinal)
 {
     Node *t_node;
     t_node = MakeNode(kNodeKindOperand);

@@ -24,7 +24,7 @@
 						{
 							'include_dirs':
 							[
-								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
 							],
 						},
 					],
@@ -58,7 +58,7 @@
 						{
 							'include_dirs':
 							[
-								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
 							],
 						},
 					],
@@ -138,7 +138,7 @@
 						{
 							'library_dirs':
 							[
-								'unpacked/openssl/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

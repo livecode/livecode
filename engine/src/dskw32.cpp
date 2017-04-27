@@ -442,7 +442,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 static MMRESULT tid;
 
-void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK MCS_tp(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCalarm = True;
 }
@@ -1615,13 +1615,19 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-		r_string = MCValueRetain(MCNameGetString(MCN_x86));
+		r_string = MCValueRetain(MCNameGetString(GetProcessor()));
 		return true;
     }
     
 	virtual MCNameRef GetProcessor(void)
     {
+#if defined _M_IX86
         return MCN_x86;
+#elif defined _M_AMD64
+		return MCN_x86_64;
+#else
+#  error Unknown processor
+#endif
     }
     
 	virtual bool GetAddress(MCStringRef& r_address)
