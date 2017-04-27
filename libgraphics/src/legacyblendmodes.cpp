@@ -752,8 +752,8 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 	uint16_t t_dst_alpha_src_red, t_dst_alpha_src_green, t_dst_alpha_src_blue, t_dst_alpha_src_alpha, t_dst_alpha_dst_alpha;
 	uint16_t t_dst_alpha_dst_red, t_dst_alpha_dst_green, t_dst_alpha_dst_blue;
 	uint16_t t_src_alpha_dst_red, t_src_alpha_dst_green, t_src_alpha_dst_blue, t_src_alpha_dst_alpha;
-	uint16_t t_inv_dst_alpha_src_red, t_inv_dst_alpha_src_green, t_inv_dst_alpha_src_blue, t_inv_dst_alpha_src_alpha;
-	uint16_t t_inv_src_alpha_dst_red, t_inv_src_alpha_dst_green, t_inv_src_alpha_dst_blue, t_inv_src_alpha_dst_alpha;
+	uint16_t t_inv_dst_alpha_src_red, t_inv_dst_alpha_src_green, t_inv_dst_alpha_src_blue/*, t_inv_dst_alpha_src_alpha*/;
+	uint16_t t_inv_src_alpha_dst_red, t_inv_src_alpha_dst_green, t_inv_src_alpha_dst_blue/*, t_inv_src_alpha_dst_alpha*/;
 	uint32_t t_dst_alpha_dst_alpha_src_alpha;
 	uint8_t t_red, t_green, t_blue, t_alpha;
 	
@@ -783,7 +783,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_src_alpha_dst_red = upscale(t_dst_red);
 		t_inv_src_alpha_dst_green = upscale(t_dst_green);
 		t_inv_src_alpha_dst_blue = upscale(t_dst_blue);
-		t_inv_src_alpha_dst_alpha = upscale(t_dst_alpha);
+		// t_inv_src_alpha_dst_alpha = upscale(t_dst_alpha);
 	}
 	else if (t_src_alpha == 255)
 	{
@@ -795,7 +795,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_src_alpha_dst_red = 0;
 		t_inv_src_alpha_dst_green = 0;
 		t_inv_src_alpha_dst_blue = 0;
-		t_inv_src_alpha_dst_alpha = 0;
+		// t_inv_src_alpha_dst_alpha = 0;
 	}
 	else
 	{
@@ -807,7 +807,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_src_alpha_dst_red = (255 - t_src_alpha) * t_dst_red;
 		t_inv_src_alpha_dst_green = (255 - t_src_alpha) * t_dst_green;
 		t_inv_src_alpha_dst_blue = (255 - t_src_alpha) * t_dst_blue;
-		t_inv_src_alpha_dst_alpha = (255 - t_src_alpha) * t_dst_alpha;
+		// t_inv_src_alpha_dst_alpha = (255 - t_src_alpha) * t_dst_alpha;
 	}
 	
 	if (t_dst_alpha == 0)
@@ -827,7 +827,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_dst_alpha_src_red = upscale(t_src_red);
 		t_inv_dst_alpha_src_green = upscale(t_src_green);
 		t_inv_dst_alpha_src_blue = upscale(t_src_blue);
-		t_inv_dst_alpha_src_alpha = upscale(t_src_alpha);
+        // t_inv_dst_alpha_src_alpha = upscale(t_src_alpha);
 	}
 	else if (t_dst_alpha == 255)
 	{
@@ -845,7 +845,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_dst_alpha_src_red = 0;
 		t_inv_dst_alpha_src_green = 0;
 		t_inv_dst_alpha_src_blue = 0;
-		t_inv_dst_alpha_src_alpha = 0;
+        // t_inv_dst_alpha_src_alpha = 0;
 	}
 	else
 	{
@@ -863,7 +863,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_inv_dst_alpha_src_red = (255 - t_dst_alpha) * t_src_red;
 		t_inv_dst_alpha_src_green = (255 - t_dst_alpha) * t_src_green;
 		t_inv_dst_alpha_src_blue = (255 - t_dst_alpha) * t_src_blue;
-		t_inv_dst_alpha_src_alpha = (255 - t_dst_alpha) * t_src_alpha;
+        // t_inv_dst_alpha_src_alpha = (255 - t_dst_alpha) * t_src_alpha;
 	}
 	
 	switch(x_combiner)
