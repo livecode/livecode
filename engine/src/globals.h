@@ -439,6 +439,11 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
+// A callback to invoke to fetch the current mainwindow to use for modal dialog
+// parenting.
+typedef void *(*MCMainWindowCallback)(void);
+extern MCMainWindowCallback MCmainwindowcallback;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  LIFECYCLE
@@ -453,6 +458,9 @@ struct X_init_options
     
     /* Specifies the base folder to use to resolve relative library paths */
     MCStringRef app_code_path = nullptr;
+
+    /* Specifies the root main window of the application */
+    MCMainWindowCallback main_window_callback = nullptr;
 };
 
 /* These are the main lifecycle functions. They are implemented separately for

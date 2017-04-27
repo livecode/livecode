@@ -106,6 +106,8 @@ bool X_init(const X_init_options& p_options)
 
     void *t_bottom;
     MCstackbottom = (char *)&t_bottom;
+
+    MCmainwindowcallback = p_options.main_window_callback;
 	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
