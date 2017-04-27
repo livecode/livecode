@@ -385,13 +385,13 @@ static bool GetDlgItemTextAsCefString(HWND p_dialog, int p_item, CefString &r_st
 static INT_PTR CALLBACK AuthDialogProc(HWND p_dialog, UINT p_message, WPARAM p_wparam, LPARAM p_lparam)
 {
 	AuthDialogState *t_state;
-	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWL_USER);
+	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWLP_USER);
 
 	switch(p_message)
 	{
 	case WM_INITDIALOG:
 		{
-			SetWindowLongPtrW(p_dialog, DWL_USER, (LONG)p_lparam);
+			SetWindowLongPtrW(p_dialog, DWLP_USER, (LONG)p_lparam);
 			t_state = (AuthDialogState *)p_lparam;
 
 			SetDlgItemTextWithCString(p_dialog, IDC_AUTH_USERNAME_LABEL, t_state -> strings . username_label);

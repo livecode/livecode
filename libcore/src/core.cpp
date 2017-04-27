@@ -66,8 +66,6 @@ bool MCThrow(uint32_t p_error)
 #include <crtdbg.h>
 #include <dbghelp.h>
 
-extern "C" USHORT WINAPI RtlCaptureStackBackTrace(ULONG, ULONG, PVOID*, PULONG);
-
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 {
 	_CrtDbgReport(_CRT_ASSERT, p_file, p_line, NULL, "%s", p_message);

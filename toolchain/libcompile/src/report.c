@@ -158,9 +158,9 @@ void Error_CouldNotWriteInterfaceFile(const char *p_file)
 	++s_error_count;
 }
 
-static void _PrintPosition(long p_position)
+static void _PrintPosition(intptr_t p_position)
 {
-    long t_row, t_column;
+    intptr_t t_row, t_column;
     FileRef t_file;
     const char *t_path;
     GetColumnOfPosition(p_position, &t_column);
@@ -173,11 +173,11 @@ static void _PrintPosition(long p_position)
 /* Print the source code line that contains p_position, and another
  * line below it with a caret pointing "up" to the exact character
  * that the position specifies. */
-static void _PrintContext(long p_position)
+static void _PrintContext(intptr_t p_position)
 {
 	const char *t_raw_text = NULL;
 	char *t_text = NULL;
-	long t_column;
+	intptr_t t_column;
 	int i;
 	GetRowTextOfPosition(p_position, &t_raw_text);
 	GetColumnOfPosition(p_position, &t_column);
@@ -203,7 +203,7 @@ static void _PrintContext(long p_position)
 	free(t_text);
 }
 
-static void _Error(long p_position, const char *p_message)
+static void _Error(intptr_t p_position, const char *p_message)
 {
     _PrintPosition(p_position);
     fprintf(stderr, "error: %s\n", p_message);
@@ -211,7 +211,7 @@ static void _Error(long p_position, const char *p_message)
     s_error_count += 1;
 }
 
-static void _Warning(long p_position, const char *p_message)
+static void _Warning(intptr_t p_position, const char *p_message)
 {
     if (IsDependencyCompile())
         return;
@@ -228,9 +228,9 @@ static void _Warning(long p_position, const char *p_message)
     }
 }
 
-static void _ErrorS(long p_position, const char *p_message, const char *p_string)
+static void _ErrorS(intptr_t p_position, const char *p_message, const char *p_string)
 {
-    long t_row, t_column;
+    intptr_t t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
@@ -241,7 +241,7 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     s_error_count += 1;
 }
 
-static void _WarningS(long p_position, const char *p_message, const char *p_string)
+static void _WarningS(intptr_t p_position, const char *p_message, const char *p_string)
 {
     if (IsDependencyCompile())
         return;
@@ -260,14 +260,14 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
     }
 }
 
-static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
+static void _ErrorI(intptr_t p_position, const char *p_message, NameRef p_name)
 {
     const char *t_string;
     GetStringOfNameLiteral(p_name, &t_string);
     _ErrorS(p_position, p_message, t_string);
 }
 
-static void _WarningI(long p_position, const char *p_message, NameRef p_name)
+static void _WarningI(intptr_t p_position, const char *p_message, NameRef p_name)
 {
 	const char *t_string;
 	GetStringOfNameLiteral(p_name, &t_string);
@@ -275,13 +275,13 @@ static void _WarningI(long p_position, const char *p_message, NameRef p_name)
 }
 
 #define DEFINE_ERROR(Name, Message) \
-    void Error_##Name(long p_position) { _Error(p_position, Message); }
+    void Error_##Name(intptr_t p_position) { _Error(p_position, Message); }
 
 #define DEFINE_ERROR_I(Name, Message) \
-    void Error_##Name(long p_position, NameRef p_id) { _ErrorI(p_position, Message, p_id); }
+    void Error_##Name(intptr_t p_position, NameRef p_id) { _ErrorI(p_position, Message, p_id); }
 
 #define DEFINE_ERROR_S(Name, Message) \
-void Error_##Name(long p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
+void Error_##Name(intptr_t p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
 
 DEFINE_ERROR_I(UnableToFindImportedPackage, "Unable to find imported package '%s'");
 DEFINE_ERROR_I(UnableToFindImportedDefinition, "Unable to find imported definition '%s'");
@@ -402,11 +402,11 @@ DEFINE_ERROR(BytecodeNotAllowedInSafeContext, "Bytecode blocks can only be prese
 DEFINE_ERROR_I(UnsafeHandlerCallNotAllowedInSafeContext, "Unsafe handler '%s' can only be called in unsafe context")
 
 #define DEFINE_WARNING(Name, Message) \
-    void Warning_##Name(long p_position) { _Warning(p_position, Message); }
+    void Warning_##Name(intptr_t p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
-    void Warning_##Name(long p_position, NameRef p_id) { _WarningI(p_position, Message, p_id); }
+    void Warning_##Name(intptr_t p_position, NameRef p_id) { _WarningI(p_position, Message, p_id); }
 #define DEFINE_WARNING_S(Name, Message) \
-	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
+	void Warning_##Name(intptr_t p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
 
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
@@ -419,7 +419,7 @@ DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 
 void yyerror(const char *p_text)
 {
-    long t_position;
+    intptr_t t_position;
     GetCurrentPosition(&t_position);
     _ErrorS(t_position, "Parsing error: %s", p_text);
 }

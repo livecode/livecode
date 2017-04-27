@@ -424,6 +424,7 @@ void MCScreenDC::openwindow(Window w, Boolean override)
             m_main_window_current = (HWND)MCmainwindowcallback();
             EnableWindow(m_main_window_current, False);
         }
+        SetWindowLongPtr((HWND)w->handle.window, GWLP_HWNDPARENT, (LONG_PTR)m_main_window_current);
     }
 
 	if (override)

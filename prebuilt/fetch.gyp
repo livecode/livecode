@@ -396,6 +396,7 @@
 					'outputs':
 					[
 						'lib/win32/<(target_arch)',
+                        'unpacked',
 					],
 					
 					'action':

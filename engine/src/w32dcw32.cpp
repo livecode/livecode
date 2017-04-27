@@ -133,7 +133,7 @@ void MCScreenDC::appendevent(MCEventnode *tptr)
 	tptr->appendto(pendingevents);
 }
 
-void CALLBACK mouseproc(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK mouseproc(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	pms->setmousetimer(0);
