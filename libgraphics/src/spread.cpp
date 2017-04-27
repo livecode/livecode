@@ -21,37 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <SkMath.h>
 
-static int dilateMask(const uint8_t *src, int src_y_stride, uint8_t *dst, int radius, int width, int height, bool transpose)
-{
-	int new_width = width + radius * 2;
-    int dst_x_stride = transpose ? height : 1;
-    int dst_y_stride = transpose ? 1 : new_width;
-	for(int y = 0; y < height; ++y)
-	{
-		uint8_t *dptr;
-		dptr = dst + y * dst_y_stride;
-		const uint8_t *sptr;
-		sptr = src + y * src_y_stride;
-		for(int x = -radius; x < width + radius; x++)
-		{
-			uint8_t v;
-			v = 0;
-			for(int z = x - radius; z < x + radius; z++)
-			{
-				if (z < 0)
-					continue;
-				if (z >= width)
-					continue;
-				if (sptr[z] > v)
-					v = sptr[z];
-			}
-			*dptr = v;
-			dptr += dst_x_stride;
-		}
-	}
-	return new_width;
-}
-
 // Dilate the input by using a distance transform. A pixel in the new mask
 // is taken to be in the dilated mask if it is within the ellipse with radii
 // xradius and yradius of a set pixel in the original mask. The maximum
