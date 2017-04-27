@@ -355,7 +355,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < 0 || t_prop > UINT8_MAX)
+                if (t_prop < 0 || uint32_t(t_prop) > UINT8_MAX)
                     return false;
                 ((uint8_t*)x_result_array)[t_offset] = uint8_t(t_prop);
                 if (t_advance == 2)
@@ -367,7 +367,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < 0 || t_prop > UINT16_MAX)
+                if (t_prop < 0 || uint32_t(t_prop) > UINT16_MAX)
                     return false;
                 ((uint16_t*)x_result_array)[t_offset] = uint16_t(t_prop);
                 if (t_advance == 2)
@@ -379,7 +379,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < 0 || t_prop > UINT32_MAX)
+                if (t_prop < 0 || uint32_t(t_prop) > UINT32_MAX)
                     return false;
                 ((uint32_t*)x_result_array)[t_offset] = uint32_t(t_prop);
                 if (t_advance == 2)
