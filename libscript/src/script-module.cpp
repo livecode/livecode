@@ -544,7 +544,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 	/* If the module is already marked as being checked for usability,
 	 * then there must be a cyclic module dependency. */
 	if (self -> is_in_usable_check)
-		return MCErrorThrowGeneric(MCSTR("cyclic module dependency"));
+	{
+		return MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - cyclic module dependency"),
+		                                      "name", self -> name,
+		                                      nil);
+	}
     
 	self -> is_in_usable_check = true;
     

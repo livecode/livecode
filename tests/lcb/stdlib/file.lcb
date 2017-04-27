@@ -1,0 +1,60 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.file.tests
+
+use com.livecode.__INTERNAL._testlib
+
+public handler TestCommandArgumentParsedAsFile()
+
+	plan 5 tests
+
+	test "/./ removal" when command argument "/foo/./bar" parsed as file is "/foo/bar"
+	test "/../ removal" when command argument "/foo/../bar" parsed as file is "/bar"
+	test "// removal" when command argument "/foo//bar" parsed as file is "/foo/bar"
+
+	test "leading // preservation" when command argument "//foo/bar" parsed as file is "//foo/bar"
+
+	test "leading /../ removal" when command argument "/../foo/bar" parsed as file is "/foo/bar"
+
+	---------- Non-Windows tests
+	plan 2 tests
+
+	if the operating system is not "win" then
+		test "leading /// removal" when command argument "///foo/bar" parsed as file is "/foo/bar"
+		test "\\ preservation" when command argument "/foo\\bar" parsed as file is "/foo\\bar"
+	else
+		skip test "leading /// removal" because "non-Windows only"
+		skip test "\\ preservation" because "non-Windows only"
+	end if
+
+	---------- Windows tests
+	plan 3 tests
+
+	if the operating system is "win" then
+		test "\\ conversion" when command argument "\\foo\\bar" parsed as file is "/foo/bar"
+		test "UNC preservation" when command argument "\\\\foo\\bar" parsed as file is "//foo/bar"
+		test "UNC \\..\\ preservation" when command argument "\\\\foo\\..\\bar" parsed as file is "//foo/bar"
+	else
+		skip test "\\ conversion" because "Windows only"
+		skip test "UNC preservation" because "Windows only"
+		skip test "UNC \\..\\ preservation" because "Windows only"
+	end if
+
+end handler
+
+end module

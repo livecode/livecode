@@ -37,6 +37,7 @@
 		
 		'stdscript_other_lcb_files':
 		[
+			'src/file-impl.lcb',
 			'src/unittest-impl.lcb',
 		],
 		
@@ -68,6 +69,7 @@
 			'src/module-type.cpp',
 			'src/module-unittest.cpp',
 			'src/module-unittest_IMPL.cpp',
+			'src/module-file_IMPL.cpp',
 			'src/module-url.cpp',
 		],
 	},

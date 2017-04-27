@@ -52,6 +52,24 @@ end syntax
 
 --
 
+public foreign handler MCFileEvalCurrentDirectory(out Directory as String) returns nothing binds to "<builtin>"
+
+/*
+Summary:	The current working directory.
+
+Description:
+The current working directory of the LiveCode process.
+
+Tags: System, Filesystem
+*/
+syntax CurrentDirectory is expression
+	"the" "current" "directory"
+begin
+	MCFileEvalCurrentDirectory(output)
+end syntax
+
+--
+
 public foreign handler MCFileExecDeleteFile(in File as String) returns nothing binds to "<builtin>"
 
 /**
@@ -126,5 +144,45 @@ begin
 end syntax
 
 --
+
+public foreign handler MCFileEvalCommandArgumentParsedAsFile(in Argument as String, out File as String) returns nothing binds to "lcb:com.livecode.file.__IMPL.MCFileEvalCommandArgumentParsedAsFile"
+
+/**
+Summary:	Convert a command-line argument into a file path
+
+Argument:	A command-line argument
+
+Example:
+	-- Get a list of files to process from the command line
+	variable tFiles
+	variable tFile
+	variable tArgument
+	put [] into tFiles
+	repeat for each element tArgument in the command arguments
+		put command argument tArgument parsed as file into tFile
+		push tFile onto back of tFiles
+	end repeat
+
+Description:
+Converts the command-line <Argument> to an absolute filename in
+LiveCode's internal filename representation.
+
+This transformation is specifically designed for handling paths
+provided in the command-line arguments pased to the program.
+
+**Warning:** The processing performed by this expression assumes that
+the <CurrentDirectory | current working directory> has not changed
+since the program was started.  If the current directory has been
+changed, then the results may be incorrect.
+
+References: CommandArguments(expression), CurrentDirectory(expression)
+
+Tags: Filesystem, System
+*/
+syntax CommandArgumentParsedAsFile is expression
+	"command" "argument" <Argument: Expression> "parsed" "as" "file"
+begin
+	MCFileEvalCommandArgumentParsedAsFile(Argument, output)
+end syntax
 
 end module
