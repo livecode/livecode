@@ -41,7 +41,16 @@ bool __MCSFileThrowInvalidPathError (MCStringRef p_path);
  * Path manipulation
  * ================================================================ */
 
+/* Get the current working directory */
+MC_DLLEXPORT bool MCSFileGetCurrentDirectory (MCStringRef & r_path);
+
+/* Test whether a path is absolute. */
+MC_DLLEXPORT bool MCSFilePathIsAbsolute (MCStringRef p_path);
+
 #ifdef __MCS_INTERNAL_API__
+
+bool __MCSFileGetCurrentDirectory (MCStringRef & r_native_path);
+bool __MCSFilePathIsAbsolute (MCStringRef p_path);
 
 bool __MCSFilePathToNative (MCStringRef p_path, MCStringRef & r_native_path);
 bool __MCSFilePathFromNative (MCStringRef p_native_path, MCStringRef & r_path);

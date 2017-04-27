@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "variable.h"
 
+#include <foundation-system.h>
+
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -361,6 +363,8 @@ MCEmscriptenSystem::ResolveAlias(MCStringRef p_target,
 bool
 MCEmscriptenSystem::GetCurrentFolder(MCStringRef & r_path)
 {
+	return MCSFileGetCurrentDirectory(r_path);
+
 	/* FIXME use get_current_dir_name() once it's available in Emscripten's
 	 * libc. */
 
