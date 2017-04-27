@@ -335,9 +335,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
         MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
         MCdefaultstackptr = getstack();
-		MCObjectPtr oldtargetptr = MCtargetptr;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCObjectPartHandle oldtargetptr(this);
+        swap(MCtargetptr, oldtargetptr);
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -350,8 +349,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
         if (t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
-        
-        MCtargetptr = oldtargetptr;
+
+        swap(MCtargetptr, oldtargetptr);
 		if (added)
 			MCnexecutioncontexts--;
 	}
@@ -426,9 +425,8 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		
 		MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 		MCdefaultstackptr = getstack();
-		MCObjectPtr oldtargetptr = MCtargetptr;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCObjectPartHandle oldtargetptr(this);
+        swap(MCtargetptr, oldtargetptr);
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -445,8 +443,8 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
         if (t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
-        
-        MCtargetptr = oldtargetptr;
+
+        swap(MCtargetptr, oldtargetptr);
 	}
     
 	return t_stat;

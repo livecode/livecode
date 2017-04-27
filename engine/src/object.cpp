@@ -2056,8 +2056,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 {
 	// Fetch current default stack and target settings
 	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
-	MCObjectPtr t_old_target;
-	t_old_target = MCtargetptr;
+    MCObjectPartHandle t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
@@ -2066,8 +2065,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCtargetptr = MCObjectPartHandle(this);
 
     MCObjectExecutionLock t_self_lock(this);
 
@@ -2086,7 +2084,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
         MCdefaultstackptr = t_old_defaultstack;
 	
 	// Reset target pointer
-	MCtargetptr = t_old_target;
+    swap(MCtargetptr, t_old_target);
 	MCdynamicpath = olddynamic;
 	
 	return t_stat;
@@ -2116,12 +2114,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
 	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
-	MCObjectPtr oldtargetptr = MCtargetptr;
+    MCObjectPartHandle oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
 		MCdefaultstackptr = t_stack;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCtargetptr = MCObjectPartHandle(this);
 	}
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = False;
@@ -2156,8 +2153,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
 		MCdefaultstackptr = t_old_defaultstack;
-	
-    MCtargetptr = oldtargetptr;
+
+    swap(MCtargetptr, oldtargetptr);
 	MCdynamicpath = olddynamic;
 	
 	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
@@ -2892,9 +2889,8 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 		return ES_ERROR;
 	}
 	MCerrorlock--;
-	MCObjectPtr oldtargetptr = MCtargetptr;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle oldtargetptr(this);
+    swap(oldtargetptr, MCtargetptr);
 	MCHandler *hptr;
     handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
 
@@ -2905,7 +2901,7 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
-	MCtargetptr = oldtargetptr;
+    swap(MCtargetptr, oldtargetptr);
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
 	else
@@ -2928,9 +2924,8 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 		ctxt.Throw();
 		return;
 	}
-	MCObjectPtr oldtargetptr = MCtargetptr;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle oldtargetptr(this);
+    swap(MCtargetptr, oldtargetptr);
 	MCHandler *hptr;
 	MCHandler *oldhandler = ctxt.GetHandler();
 	MCHandlerlist *oldhlist = ctxt.GetHandlerList();
@@ -2951,7 +2946,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
-	MCtargetptr = oldtargetptr;
+    swap(MCtargetptr, oldtargetptr);
 	ctxt.SetHandlerList(oldhlist);
 	ctxt.SetHandler(oldhandler);
 	delete handlist;

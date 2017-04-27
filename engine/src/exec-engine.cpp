@@ -604,18 +604,18 @@ void MCEngineEvalMe(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalTarget(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), P_NAME, False, r_string);
 }
 
 void MCEngineEvalTargetContents(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, MCtargetptr . object -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), MCtargetptr -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
 }
 
 //////////
@@ -1192,8 +1192,6 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		
 	// Fetch current default stack and target settings
 	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
-	MCObjectPtr t_old_target;
-	t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
@@ -1202,8 +1200,8 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
-	MCtargetptr = t_object;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle t_old_target(t_object);
+    swap(t_old_target, MCtargetptr);
     
 	// MW-2012-10-30: [[ Bug 10478 ]] Turn off lockMessages before dispatch.
 	Boolean t_old_lock;
@@ -1269,7 +1267,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		MCdefaultstackptr = t_old_stack;
 
 	// Reset target pointer
-	MCtargetptr = t_old_target;
+    swap(MCtargetptr, t_old_target);
 	MCdynamicpath = olddynamic;
 	
 	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
@@ -1930,9 +1928,9 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtargetptr . object != nil)
+    if (MCtargetptr)
     {
-        r_object = MCtargetptr;
+        r_object = MCtargetptr.getObjectPtr();
         return;
     }
     

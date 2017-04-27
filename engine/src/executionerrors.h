@@ -2728,6 +2728,9 @@ enum Exec_errors
 
 	// {EE-0893} folders: error in folder parameter
 	EE_FOLDERS_BADFOLDER,
+
+	// {EE-0894} no target object
+    EE_NOTARGET,
 };
 
 extern const char *MCexecutionerrors;
