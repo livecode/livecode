@@ -259,6 +259,7 @@
     EmitBeginOpcode
     EmitContinueOpcode
     EmitEndOpcode
+    EmitCast
 
     OutputBeginManifest
     OutputEnd
@@ -660,6 +661,7 @@
 'action' EmitBeginOpcode(Opcode: STRING)
 'action' EmitContinueOpcode(Output: INT)
 'action' EmitEndOpcode()
+'action' EmitCast(TypeIndex: INT, OutputReg: INT, InputReg: INT)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)

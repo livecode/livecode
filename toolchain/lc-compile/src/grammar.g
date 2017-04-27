@@ -1025,8 +1025,8 @@
     'rule' TermExpression(-> result(Position)):
         "the" @(-> Position) "result"
 
-    --'rule' TermExpression(-> as(Position, Value, Type)):
-    --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+    'rule' TermExpression(-> as(Position, Value, Type)):
+        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         QualifiedId(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
