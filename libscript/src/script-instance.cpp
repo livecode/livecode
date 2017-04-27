@@ -59,7 +59,7 @@ MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module,
     
     // Attempt to create a script object.
     if (t_success)
-        t_success = MCScriptCreateObject(kMCScriptObjectKindInstance, sizeof(MCScriptInstance), (MCScriptObject*&)t_instance);
+        t_success = MCScriptCreateObject(kMCScriptObjectKindInstance, t_instance);
 
     // Now associate the script object with the module (so the 'slots' field make sense).
     if (t_success)

@@ -70,6 +70,16 @@ struct MCScriptObject
 bool MCScriptCreateObject(MCScriptObjectKind kind, size_t size, MCScriptObject*& r_object);
 void MCScriptDestroyObject(MCScriptObject *object);
 
+template <typename ScriptObjectType>
+bool MCScriptCreateObject(MCScriptObjectKind kind, ScriptObjectType*& r_object)
+{
+    MCScriptObject* t_new = nullptr;
+    if (!MCScriptCreateObject(kind, sizeof(ScriptObjectType), t_new))
+        return false;
+    r_object = reinterpret_cast<ScriptObjectType*>(t_new);
+    return true;
+}
+
 MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
 uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *object);
