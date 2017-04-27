@@ -88,17 +88,25 @@ uinteger_t MCChunkCountElementChunkCallback(void *context, MCRange *p_range)
 bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
-    uinteger_t t_count;
-    bool t_counted;
-    t_counted = false;
-    
+
+    /* Helper closure for making sure that the chunk counting callback
+     * is called exactly once. */
+    int32_t t_count = 0;
+    bool t_counted = false;
+    auto t_get_count = [&] {
+        if (!t_counted)
+        {
+            t_count = MCMin<uinteger_t>(INT32_MAX, p_callback(p_context, p_range));
+            t_counted = true;
+        }
+        return t_count;
+    };
+
     // If the first index is negative, count chunks and adjust accordingly.
     // Resolved index should be the index *before* the target first chunk.
     if (p_first < 0)
     {
-        t_count = p_callback(p_context, p_range);
-        t_counted = true;
-        p_first += t_count;
+        p_first += t_get_count();
     }
     else
         p_first--;
@@ -107,13 +115,7 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
     // Resolved index should be the index of the target last chunk.
     if (p_last < 0)
     {
-        if (!t_counted)
-        {
-            t_count = p_callback(p_context, p_range);
-            t_counted = true;
-        }
-        
-        p_last += t_count + 1;
+        p_last += t_get_count() + 1;
     }
     
     t_chunk_count = p_last - p_first;
@@ -132,12 +134,10 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
         if (t_chunk_count == 0)
             return false;
         
-        if (!t_counted)
-            t_count = p_callback(p_context, p_range);
-        
         // If the range extends beyond the number of chunks, the end index is out of range unless we are
         // looking for an end boundary, in which case it can exceed the end index by 1.
-        if (p_first + t_chunk_count > t_count + 1 || (!p_boundary_end && p_first + t_chunk_count == t_count + 1))
+        if (p_first + t_chunk_count > t_get_count() + 1 ||
+            (!p_boundary_end && p_first + t_chunk_count == t_get_count() + 1))
             return false;
     }
     
