@@ -482,7 +482,7 @@ EmitEndModuleOutputC (NameRef p_module_name,
 	if (0 > fprintf(t_file, "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n", t_modified_name, t_modified_name, t_modified_name, t_modified_name, t_modified_name))
 		goto error_cleanup;
     
-    if (0 > fprintf(t_file, "static __builtin_module_loader __%s_loader(&__%s_module_info);\n\n", t_modified_name, t_modified_name))
+    if (0 > fprintf(t_file, "__builtin_module_loader __%s_loader(&__%s_module_info);\n\n", t_modified_name, t_modified_name))
         goto error_cleanup;
     
     EmittedModule *t_mod;
