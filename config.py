@@ -473,6 +473,8 @@ def core_gyp_args(opts):
 
     if opts['BUILD_EDITION'] == 'commercial':
         args.append(os.path.join('..', 'livecode-commercial.gyp'))
+        
+    args.append('-Dbuild_edition=' + opts['BUILD_EDITION'])
 
     args.append('-Duniform_arch=' + opts['UNIFORM_ARCH'])
 
