@@ -644,6 +644,10 @@ MCStack::~MCStack()
 	view_destroy();
 
 	release_window_buffer();
+
+    // Make sure we destroy the window
+    if (window != nullptr)
+        MCscreen->destroywindow(window);
 }
 
 Chunk_term MCStack::gettype() const
