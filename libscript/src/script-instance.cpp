@@ -729,21 +729,28 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return MCScriptThrowClassNotAllowedInCBindingError();
 		}
 		
-        /* TODO: This leaks a module handle! */
+        /* TODO: This leaks a module handle if library is not empty (builtin) */
         MCSLibraryRef t_module;
-		if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
-                                 t_module))
-		{
-			if (r_bound == nil)
-			{
-				return MCScriptThrowUnableToLoadForiegnLibraryError();
-			}
+        if (MCStringIsEmpty(*t_library))
+        {
+            t_module = MCScriptGetLibrary();
+        }
+        else
+        {
+		    if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                     *t_library,
+                                     t_module))
+		    {
+			    if (r_bound == nil)
+			    {
+				    return MCScriptThrowUnableToLoadForiegnLibraryError();
+			    }
 			
-			*r_bound = false;
+			    *r_bound = false;
 			
-			return true;
-		}
+			    return true;
+		    }
+        }
 		
 		void *t_pointer =
                 MCSLibraryLookupSymbol(t_module,
