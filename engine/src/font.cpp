@@ -79,6 +79,10 @@ bool MCFontInitialize(void)
 
 void MCFontFinalize(void)
 {
+    while(s_loaded_fonts != nullptr)
+    {
+        MCFontUnload(s_loaded_fonts->path);
+    }
 }
 
 bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontRef& r_font)
