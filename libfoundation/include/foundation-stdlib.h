@@ -30,6 +30,7 @@ extern "C" __declspec(noalias) void * __cdecl malloc(size_t size);
 extern "C" __declspec(noalias) void * __cdecl realloc(void *memory, size_t size);
 
 extern "C" unsigned long __cdecl strtoul(const char *str, char **endptr, int radix);
+extern "C" long __cdecl strtol(const char *str, char **endptr, int radix);
 extern "C" double __cdecl strtod(const char *str, char **endptr);
 
 extern "C" int __cdecl _vscprintf(const char *format, va_list args);
