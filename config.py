@@ -474,6 +474,13 @@ def core_gyp_args(opts):
     if opts['BUILD_EDITION'] == 'commercial':
         args.append(os.path.join('..', 'livecode-commercial.gyp'))
 
+    # Get the current git hash from the appropriate repository
+    if opts['BUILD_EDITION'] == 'commercial':
+        git_revision = subprocess.check_output(['git', '-C', '..', 'rev-parse', 'HEAD'])
+    else:
+        git_revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+    args.append('-Dgit_revision=' + git_revision)
+
     args.append('-Duniform_arch=' + opts['UNIFORM_ARCH'])
 
     return args
