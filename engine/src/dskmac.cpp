@@ -945,18 +945,22 @@ static void handle_signal(int sig)
             MCsiguser2++;
             break;
         case SIGTERM:
-            switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-		{
-            case ES_NORMAL:
-                return;
-            case ES_PASS:
-            case ES_NOT_HANDLED:
-                MCdefaultstackptr->getcard()->message(MCM_shut_down);
-                MCquit = True; //set MC quit flag, to invoke quitting
-                return;
-            default:
-                break;
-		}
+            if (MCdefaultstackptr)
+            {
+                switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+                {
+                    case ES_NORMAL:
+                        return;
+                    case ES_PASS:
+                    case ES_NOT_HANDLED:
+                        MCdefaultstackptr->getcard()->message(MCM_shut_down);
+                        MCquit = True; //set MC quit flag, to invoke quitting
+                        return;
+                    default:
+                        break;
+                }
+            }
+            
             MCS_killall();
             exit(-1);
             
