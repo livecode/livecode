@@ -1266,6 +1266,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 int X_close(void)
 {
+    // MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
+    MCFontFinalize();
+    
     /* Finalize all builtin extensions */
     MCExtensionFinalize();
 
@@ -1493,8 +1496,6 @@ int X_close(void)
 	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();
-	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
-	MCFontFinalize();
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
