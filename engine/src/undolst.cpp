@@ -88,7 +88,8 @@ void MCUndolist::savestate(MCObject *objptr, Ustruct *us)
 {
 	MCUndonode *uptr = new MCUndonode(objptr, us);
 	uptr->appendto(nodes);
-	objptr->message(MCM_undo_changed);
+    if (MCdefaultstackptr)
+        MCdefaultstackptr->getcurcard()->message(MCM_undo_changed);
 }
 
 void MCUndolist::freestate()
