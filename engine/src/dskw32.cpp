@@ -1484,7 +1484,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return nil;
     }
     
-	virtual bool Initialize(void)
+	virtual bool Initialize(bool p_handle_signals)
 	{
 		IO_stdin = MCsystem -> OpenFd(STD_INPUT_HANDLE, kMCOpenFileModeRead);
 		IO_stdout = MCsystem -> OpenFd(STD_OUTPUT_HANDLE, kMCOpenFileModeWrite);

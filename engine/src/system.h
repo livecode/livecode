@@ -472,7 +472,7 @@ struct MCSystemInterface
 {
     virtual MCServiceInterface *QueryService(MCServiceType type) = 0;
     
-	virtual bool Initialize(void) = 0;
+	virtual bool Initialize(bool p_handle_signals) = 0;
 	virtual void Finalize(void) = 0;
 	
 	virtual void Debug(MCStringRef p_string) = 0;

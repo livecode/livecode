@@ -461,6 +461,9 @@ struct X_init_options
 
     /* Specifies the root main window of the application */
     MCMainWindowCallback main_window_callback = nullptr;
+    
+    /* Specifies whether the process should register to handle signals */
+    bool should_handle_signals = true;
 };
 
 /* These are the main lifecycle functions. They are implemented separately for

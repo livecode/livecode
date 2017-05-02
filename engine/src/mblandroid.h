@@ -27,7 +27,7 @@ struct MCAndroidSystem: public MCSystemInterface
 {
     virtual MCServiceInterface *QueryService(MCServiceType type);
     
-	virtual bool Initialize(void);
+	virtual bool Initialize(bool p_handle_signals);
 	virtual void Finalize(void);
 	
 	virtual void Debug(MCStringRef p_string);

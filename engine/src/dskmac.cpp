@@ -2777,34 +2777,38 @@ static bool MCS_getentries_for_folder(MCStringRef p_folder, MCSystemListFolderEn
 
 struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 {
-	virtual bool Initialize(void)
+	virtual bool Initialize(bool p_handle_signals)
     {
         IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
         IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
-        struct sigaction action;
-        memset((char *)&action, 0, sizeof(action));
-        action.sa_handler = handle_signal;
-        action.sa_flags = SA_RESTART;
-        sigaction(SIGHUP, &action, NULL);
-        sigaction(SIGINT, &action, NULL);
-        sigaction(SIGQUIT, &action, NULL);
-        sigaction(SIGIOT, &action, NULL);
-        sigaction(SIGPIPE, &action, NULL);
-        sigaction(SIGALRM, &action, NULL);
-        sigaction(SIGTERM, &action, NULL);
-        sigaction(SIGUSR1, &action, NULL);
-        sigaction(SIGUSR2, &action, NULL);
-        sigaction(SIGFPE, &action, NULL);
-        action.sa_flags |= SA_NOCLDSTOP;
-        sigaction(SIGCHLD, &action, NULL);
         
-        // MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
-        //   the OS default so CrashReporter will kick in.
-        action.sa_flags = SA_RESETHAND;
-        sigaction(SIGSEGV, &action, NULL);
-        sigaction(SIGILL, &action, NULL);
-        sigaction(SIGBUS, &action, NULL);
+        if (p_handle_signals)
+        {
+            struct sigaction action;
+            memset((char *)&action, 0, sizeof(action));
+            action.sa_handler = handle_signal;
+            action.sa_flags = SA_RESTART;
+            sigaction(SIGHUP, &action, NULL);
+            sigaction(SIGINT, &action, NULL);
+            sigaction(SIGQUIT, &action, NULL);
+            sigaction(SIGIOT, &action, NULL);
+            sigaction(SIGPIPE, &action, NULL);
+            sigaction(SIGALRM, &action, NULL);
+            sigaction(SIGTERM, &action, NULL);
+            sigaction(SIGUSR1, &action, NULL);
+            sigaction(SIGUSR2, &action, NULL);
+            sigaction(SIGFPE, &action, NULL);
+            action.sa_flags |= SA_NOCLDSTOP;
+            sigaction(SIGCHLD, &action, NULL);
+            
+            // MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
+            //   the OS default so CrashReporter will kick in.
+            action.sa_flags = SA_RESETHAND;
+            sigaction(SIGSEGV, &action, NULL);
+            sigaction(SIGILL, &action, NULL);
+            sigaction(SIGBUS, &action, NULL);
+        }
         
         MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
         

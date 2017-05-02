@@ -38,7 +38,7 @@ public:
 	virtual MCServiceInterface *QueryService(MCServiceType type);
 
 	/* ---------- Start up and tear down */
-	virtual bool Initialize(void);
+	virtual bool Initialize(bool p_handle_signals);
 	virtual void Finalize(void);
 
 	/* ---------- System error handling */

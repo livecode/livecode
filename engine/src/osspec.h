@@ -42,7 +42,7 @@ enum MCSRegistryValueType
 
 
 extern void MCS_preinit();
-extern void MCS_init();
+extern void MCS_init(bool p_handle_signals);
 extern void MCS_shutdown();
 extern void MCS_seterrno(int value);
 extern int MCS_geterrno(void);
