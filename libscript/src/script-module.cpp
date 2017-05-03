@@ -409,7 +409,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     
     // If this fails then we've run out of memory (oh well - not much to be done!).
     MCScriptModule *t_module;
-    if (!MCScriptCreateObject(kMCScriptObjectKindModule, sizeof(MCScriptModule), (MCScriptObject*&)t_module))
+    if (!MCScriptCreateObject(kMCScriptObjectKindModule, t_module))
         return false;
     
     // If the unpickling fails, there's nothing we can do.

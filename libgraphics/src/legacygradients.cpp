@@ -232,29 +232,6 @@ PACKED_INLINE uint4 packed_avg(uint4 x, uint4 y)
 	return u | v;
 }
 
-PACKED_INLINE float magic_sqrt (float number)
-{
-	float x = number;
-	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
-	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
-	x = x*(1.5f-xhalf*x*x);
-	return number * x;
-	
-}
-
-PACKED_INLINE float inv_sqrt (float x)
-{
-	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
-	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
-	x = x*(1.5f-xhalf*x*x);
-	return x;
-	
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline uint4 MCU_abs(int4 source)
