@@ -2729,22 +2729,25 @@ enum Exec_errors
 	// {EE-0893} folders: error in folder parameter
 	EE_FOLDERS_BADFOLDER,
 
-	// {EE-0894} extension: error occured with column
+    // {EE-0894} no target object
+    EE_NOTARGET,
+    
+	// {EE-0895} extension: error occured with column
 	EE_EXTENSION_ERROR_COLUMN,
 	
-	// {EE-0895} parentScript: can't change parent while parent script is executing
+	// {EE-0896} parentScript: can't change parent while parent script is executing
     EE_PARENTSCRIPT_EXECUTING,
     
-    // {EE-0896} call: type conversion error
+    // {EE-0897} call: type conversion error
     EE_INVOKE_TYPEERROR,
 
-    // {EE-0897} open: error in from address expression
+    // {EE-0898} open: error in from address expression
     EE_OPEN_BADFROMADDRESS,
 
-    // {EE-0898} messageDigest: error in digest type parameter
+    // {EE-0899} messageDigest: error in digest type parameter
     EE_MESSAGEDIGEST_BADTYPE,
 
-    // {EE-0899} messageDigest: error in message data parameter
+    // {EE-0900} messageDigest: error in message data parameter
     EE_MESSAGEDIGEST_BADDATA,
 };
 

@@ -155,7 +155,7 @@ on TestExtensionLibraryHandlerCallErrors
    TestAssertThrow "library handler call throws correct error on type error", \
          "CallLibraryHandlerWithString", \
          the long id of me, \
-         (896, 219)
+         (897, 219)
 
    TestAssertThrow "library handler call throws correct error on too few args error", \
          "CallLibraryHandlerWithTooFewParams", \

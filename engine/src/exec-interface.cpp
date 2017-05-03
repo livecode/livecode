@@ -1757,15 +1757,28 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 				keysym = 0x0D;
 			keysym |= 0xFF00;
 		}
-		else if (keysym > 0x7F)
-			keysym |= XK_Class_codepoint;
 		else
         {
+            /* If the character is in the BMP *and* it has a native mapping then
+             * we use the mapped native char as the keycode. This makes things
+             * consistent with normal keyboard entry. Any non-native unicode char
+             * will pass through with a keycode with the XK_Class_codepoint bit
+             * set. */
+            unichar_t t_bmp_codepoint = t_cp_char & 0xFFFF;
+            char_t t_native_char = 0;
+            if (t_cp_char <= 0xFFFF &&
+                MCUnicodeMapToNative(&t_bmp_codepoint, 1, t_native_char))
+            {
+                keysym = t_native_char;
+            }
+            else if (keysym > 0x7F)
+                keysym |= XK_Class_codepoint;
+		
             if (!MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char))
-			{
-				ctxt . Throw();
-				break;
-			}
+            {
+                ctxt.Throw();
+                break;
+            }
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
 		if (*t_char == nil)
@@ -2958,8 +2971,8 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 		
 		while (t_state)
 		{
-			if (t_state & 0x1)
-				MCtargetptr . object -> mup(t_which, true);
+			if ((t_state & 0x1) && MCtargetptr)
+				MCtargetptr -> mup(t_which, true);
 			t_state >>= 1;
 			t_which += 1;
 		}
@@ -3124,14 +3137,20 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
 {
+    if (!MCtargetptr)
+    {
+        ctxt . LegacyThrow(EE_NOTARGET);
+        return;
+    }
+
 	// MW-2007-04-10: [[ Bug 4260 ]] We shouldn't attempt to attach a menu to a control that is descendent of itself
-	if (MCtargetptr . object -> getstack() == p_target)
+	if (MCtargetptr -> getstack() == p_target)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
 		return;
 	}
 
-	if (MCtargetptr . object -> attachmenu(p_target))
+	if (MCtargetptr -> attachmenu(p_target))
 	{
 		if (p_mode == WM_POPUP && p_at != nil)
 		{
@@ -3139,7 +3158,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 			MCmousey = p_at -> y;
 		}
 		MCRectangle t_rect;
-		t_rect = MCU_recttoroot(MCtargetptr . object -> getstack(), MCtargetptr . object -> getrect());
+		t_rect = MCU_recttoroot(MCtargetptr -> getstack(), MCtargetptr -> getrect());
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode);
 		if (!MCabortscript)
 			return;

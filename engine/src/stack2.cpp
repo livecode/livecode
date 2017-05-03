@@ -920,6 +920,7 @@ void MCStack::stopedit()
 	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    oldcard->removereferences();
 	oldcard->scheduledelete();
 	kfocus();
 	dirtywindowname();

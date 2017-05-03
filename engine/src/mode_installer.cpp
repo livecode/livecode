@@ -612,7 +612,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> GetHandle();
+			t_context . target = MCtargetptr;
 			t_context . name = *t_item;
             if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
                 return;

@@ -153,22 +153,21 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 
     char *t_end;
     t_end  = nil;
-    // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
-    uinteger_t t_uinteger;
+    
+    integer_t t_integer;
 #if defined(__LP64__)
-    unsigned long t_ulong;
-    t_ulong = strtoul(t_string, &t_end, t_base);
-    if (t_ulong > UINTEGER_MAX)
+    long t_long;
+    t_long = strtol(t_string, &t_end, t_base);
+    if (t_long > UINTEGER_MAX)
         errno = ERANGE;
-    t_uinteger = (uinteger_t) t_ulong;
+    t_integer = (integer_t)t_long;
 #elif defined(__LP32__) || defined(__LLP64__)
-    t_uinteger = strtoul(t_string, &t_end, t_base);
+    t_integer = strtol(t_string, &t_end, t_base);
 #endif
     
-    // SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
-    t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != t_string));
+    t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == (ptrdiff_t)p_length) : (t_end != t_string));
     if (t_success)
-        t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
+        t_success = MCNumberCreateWithInteger(t_integer, t_number);
     // If parsing as base 10 unsigned integer failed, try to parse as real.
     else if (t_base == 10)
     {
@@ -178,7 +177,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
         t_real = strtod(p_string, &t_end);
         
         // SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
-        t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != t_string));
+        t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == (ptrdiff_t)p_length) : (t_end != t_string));
         if (t_success)
             t_success = MCNumberCreateWithReal(t_real, t_number);
     }

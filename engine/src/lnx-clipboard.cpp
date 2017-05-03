@@ -552,12 +552,13 @@ bool MCLinuxRawClipboard::HasGDK()
 #ifndef _SERVER
     // Only try to initialise GDK once
     static bool s_try_gdk = false;
-    static bool s_has_gdk = !MCnoui && initialise_weak_link_X11()
-    && initialise_weak_link_gobject()
-    && initialise_weak_link_gdk();
+    static bool s_has_gdk = false;
     if (!s_try_gdk)
     {
         s_try_gdk = true;
+        s_has_gdk = !MCnoui && initialise_weak_link_X11()
+            && initialise_weak_link_gobject()
+            && initialise_weak_link_gdk();
         if (s_has_gdk)
             gdk_init(0, NULL);
     }

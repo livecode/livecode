@@ -94,3 +94,32 @@ on TestUndoAfterDeleteNothing
 	
 	TestAssert "undo previous delete after failed delete", there is a button 1
 end TestUndoAfterDeleteNothing
+
+on TestDeleteComboBox
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	set the style of it to "menu"
+	set the menumode of it to "combobox"
+	select it
+	delete
+	undo
+		
+	TestAssert "undo delete of combo box", there is a button 1
+end TestDeleteComboBox
+
+on TestDeleteUndoChanged
+	create stack
+	set the defaultStack to the short name of it
+	set the script of this card to \ 
+		"on undoChanged; set the cCardReceived of this stack to true; end undoChanged"
+	
+	create button
+	set the script of it to \ 
+		"on undoChanged; set the cCardReceived of this stack to false; end undoChanged"
+	select it
+	delete
+
+	TestAssert "undoChanged sent to current card", the cCardReceived of this stack
+end TestDeleteUndoChanged

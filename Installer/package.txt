@@ -602,6 +602,22 @@ component Runtime.iOS
 		file ios:iphonesimulator10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator10.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-10_3" place
+		executable ios:iphonesimulator10.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator10.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator10.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator10.3/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator10.3/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator10.3/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator10.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator10.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator10.3/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator10.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator10.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator10.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator10.3/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator10.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator10.3/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
 		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
@@ -642,6 +658,26 @@ component Runtime.iOS
 		file ios:iphoneos10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos10.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-10_3" place
+		executable ios:iphoneos10.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
+		executable ios:iphoneos10.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos10.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
+		executable ios:iphoneos10.3/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
+		executable ios:iphoneos10.3/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
+		executable ios:iphoneos10.3/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
+		executable ios:iphoneos10.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
+		executable ios:iphoneos10.3/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
+		file ios:iphoneos10.3/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos10.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos10.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos10.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos10.3/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos10.3/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos10.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos10.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos10.3/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos10.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos10.3/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
