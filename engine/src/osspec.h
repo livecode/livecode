@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-locale.h"
 
+#include "object.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // Types for values stored in the Win32 registry
@@ -61,7 +63,7 @@ extern void MCS_sleep(real8);
 extern bool MCS_getenv(MCStringRef name, MCStringRef& r_result);
 extern void MCS_setenv(MCStringRef name, MCStringRef value);
 extern void MCS_unsetenv(MCStringRef name);
-extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
+extern void MCS_downloadurl(MCObjectHandle p_target, MCStringRef p_url, MCStringRef p_file);
 
 extern bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path);
 extern bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path);

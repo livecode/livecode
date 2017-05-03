@@ -29,10 +29,33 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
-// Disabled until C++11 support is available on all platforms
-#if 0
-#include <type_traits>
-#endif
+// TODO[C++11] Remove this and change uses of std_ to std when merging into
+// develop.
+//
+// When compiling on develop-8.1, various toolchains have differing support
+// for C++11, and including C++11 headers at this point causes problems elsewhere.
+namespace std_ {
+    template<typename _Tp>
+    struct remove_reference
+    { typedef _Tp     type; };
+
+    template<typename _Tp>
+    struct remove_reference<_Tp&>
+    { typedef _Tp     type; };
+    
+    template <class _Tp>
+    inline typename std_::remove_reference<_Tp>::type&& move(_Tp&& __t)
+    {
+        typedef typename std_::remove_reference<_Tp>::type _Up;
+        return static_cast<_Up&&>(__t);
+    }
+    
+    template <typename T> void swap(T& t1, T& t2) {
+        T temp = std_::move(t1);
+        t1 = std_::move(t2);
+        t2 = std_::move(temp);
+    }
+}
 
 enum {
     MAC_SHADOW,
@@ -433,8 +456,20 @@ public:
         return MCObjectProxy<U>::Handle(static_cast<MCObjectProxy<U>*>(m_proxy));
     }
 #endif
-    
-    
+
+    /* Swap the contents of two object handles. Allows std::swap() to be
+     * used on MCObjectHandle instances of exactly the same type. */
+    void swap(Handle& x_other)
+    {
+        using std_::swap;
+        swap(m_proxy, x_other.m_proxy);
+    }
+
+    friend void swap(Handle& x_left, Handle& x_right)
+    {
+	    x_left.swap(x_right);
+    }
+
 private:
     
     // The proxy for the object this is a handle to
@@ -1689,6 +1724,12 @@ class MCObjectExecutionLock
 {
     MCObjectHandle m_handle;
 public:
+    MCObjectExecutionLock(const MCObjectHandle& obj) : m_handle(obj)
+    {
+        if (m_handle.IsValid())
+            m_handle->lockforexecution();
+    }
+
     MCObjectExecutionLock(MCObject* obj) : m_handle(obj)
     {
         if (m_handle.IsValid())
@@ -1699,6 +1740,59 @@ public:
         if (m_handle.IsValid())
             m_handle->unlockforexecution();
     }
+};
+
+/* Object handle class that incorporates a part ID, allowing objects
+ * to be disambiguated with respect to which card they are on.
+ * Basically the same as an MCObjectPtr except for weakly referencing
+ * its target object. */
+class MCObjectPartHandle: public MCObjectHandle
+{
+    /* TODO[C++11] uint32_t m_part_id = 0; */
+    uint32_t m_part_id;
+public:
+    /* TODO[2017-04-27] These constructors should be constexpr */
+    /* TODO[C++11] constexpr MCObjectPartHandle() = default; */
+    MCObjectPartHandle() : MCObjectHandle(), m_part_id(0) {}
+    MCObjectPartHandle(decltype(nullptr))
+      : MCObjectHandle(nullptr), m_part_id(0) {}
+
+    /* TODO[C++11] MCObjectPartHandle(const MCObjectPartHandle&) = default; */
+    MCObjectPartHandle(const MCObjectPartHandle& other)
+      : MCObjectHandle(other), m_part_id(other.m_part_id) {}
+    /* TODO[C++11] MCObjectPartHandle(MCObjectPartHandle&& other) = deafult; */
+    MCObjectPartHandle(MCObjectPartHandle&& other)
+      : MCObjectHandle(nullptr), m_part_id(0)
+    {
+        using std_::swap;
+        swap(*this, other);
+    }
+
+    MCObjectPartHandle(MCObject* p_object, uint32_t p_part_id = 0);
+    MCObjectPartHandle(const MCObjectPtr&);
+
+    /* TODO[C++11] MCObjectPartHandle& operator=(const MCObjectPartHandle&) = default; */
+    MCObjectPartHandle& operator=(const MCObjectPartHandle& other)
+    {
+        MCObjectHandle::operator=(other);
+        m_part_id = other.m_part_id;
+        return *this;
+    }
+    /* TODO[C++11] MCObjectPartHandle& operator=(MCObjectPartHandle&&) = default; */
+    MCObjectPartHandle& operator=(MCObjectPartHandle&& other)
+    {
+        MCObjectHandle::operator=(std_::move(other));
+        m_part_id = other.m_part_id;
+        return *this;
+    }
+
+    MCObjectPartHandle& operator=(decltype(nullptr));
+    MCObjectPartHandle& operator=(const MCObjectPtr&);
+
+    uint32_t getPart() const { return m_part_id; }
+    MCObjectPtr getObjectPtr() const;
+
+    friend void swap(MCObjectPartHandle&, MCObjectPartHandle&);
 };
 
 #endif

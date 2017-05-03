@@ -604,18 +604,18 @@ void MCEngineEvalMe(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalTarget(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), P_NAME, False, r_string);
 }
 
 void MCEngineEvalTargetContents(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, MCtargetptr . object -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), MCtargetptr -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
 }
 
 //////////
@@ -1184,7 +1184,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 	
 	// Work out the target object
-	MCObjectPtr t_object;
+	MCObjectPartHandle t_object;
 	if (p_target != nil)
 		t_object = *p_target;
 	else
@@ -1192,18 +1192,16 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		
 	// Fetch current default stack and target settings
 	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
-	MCObjectPtr t_old_target;
-	t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
 	MCStack *t_this_stack;
-	t_this_stack = t_object . object -> getstack();
+	t_this_stack = t_object -> getstack();
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
-	MCtargetptr = t_object;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle t_old_target(t_object);
+    swap(t_old_target, MCtargetptr);
     
 	// MW-2012-10-30: [[ Bug 10478 ]] Turn off lockMessages before dispatch.
 	Boolean t_old_lock;
@@ -1223,19 +1221,31 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 
 	// Dispatch the message
-	MCObjectExecutionLock t_object_lock(t_object.object);
 	t_stat = MCU_dofrontscripts((Handler_type)p_handler_type, p_message, p_parameters);
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
-		{
-		case ES_ERROR:
-			ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
-			break;
-		default:
-			break;
-		}
+    {
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        if (t_object)
+        {
+            MCObjectExecutionLock t_object_lock(t_object);
+            switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
+            {
+            case ES_ERROR:
+                ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
+        }
+    }
 	
 	// Set 'it' appropriately
 	switch(t_stat)
@@ -1269,7 +1279,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		MCdefaultstackptr = t_old_stack;
 
 	// Reset target pointer
-	MCtargetptr = t_old_target;
+    swap(MCtargetptr, t_old_target);
 	MCdynamicpath = olddynamic;
 	
 	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
@@ -1930,9 +1940,9 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtargetptr . object != nil)
+    if (MCtargetptr)
     {
-        r_object = MCtargetptr;
+        r_object = MCtargetptr.getObjectPtr();
         return;
     }
     

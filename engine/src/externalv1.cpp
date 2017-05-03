@@ -1230,12 +1230,10 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             break;
         case kMCExternalContextQueryTarget:
         {
-            MCObjectHandle t_handle;
-            t_handle = MCtargetptr . object -> GetHandle();
-            if (!t_handle)
-                return kMCExternalErrorOutOfMemory;
+            if (!MCtargetptr)
+                return kMCExternalErrorNoObject;
             
-            *(static_cast<MCExternalObjectRef*>(result)) = t_handle.ExternalRetain();
+            *(static_cast<MCExternalObjectRef*>(result)) = MCtargetptr.ExternalRetain();
         }
             break;
         case kMCExternalContextQueryResult:
