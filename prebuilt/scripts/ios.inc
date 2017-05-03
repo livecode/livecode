@@ -25,7 +25,7 @@ function checkiOS {
     local t_sdk_ver=$3
     local t_archs=$4
 	 
-	 local t_try_xcode="${XCODES_DIR}/Xcode_${t_xcode_dir}"
+	 local t_try_xcode="${XCODES_DIR}/Xcode_${t_xcode_ver}"
     if [ -e "${t_try_xcode}" ]; then
 	 	addiOS "${t_try_xcode}/Xcode.app/Contents/Developer" "${t_sdk_name}" "${t_sdk_ver}" "${t_archs}"
     elif [ -e "${ALT_XCODE_DIR}/Platforms/${t_sdk_name}.platform/Developer/SDKs/${t_sdk_name}${t_sdk_ver}.sdk" ]; then
@@ -46,3 +46,5 @@ checkiOS 7_2_1 iPhoneSimulator 9.2 "i386 x86_64"
 checkiOS 7_2_1 iPhoneOS 9.2 "armv7 arm64"
 checkiOS 8_2_0 iPhoneSimulator 10.2 "i386 x86_64"
 checkiOS 8_2_0 iPhoneOS 10.2 "armv7 arm64"
+checkiOS 8_3_0 iPhoneSimulator 10.3 "i386 x86_64"
+checkiOS 8_3_0 iPhoneOS 10.3 "armv7 arm64"

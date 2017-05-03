@@ -534,6 +534,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		t_app_spec = [s_simulator_proxy specifierWithApplicationPath: [NSString stringWithUTF8String:t_app.buffer]];
 		
 		t_session_config = [s_simulator_proxy newSessionConfig];
+        
 		
 		[t_session_config setApplicationToSimulateOnStart:t_app_spec];
 		
@@ -551,13 +552,17 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		// MM-2014-10-07: [[ Bug 13584 ]] As well as setting the sys root, also set the sim runtime where applicable.
 		//   Ensures we launch the correct version of the simulator.
 		if (s_simulator_runtime != nil && [t_session_config respondsToSelector: @selector(setRuntime:)])
+        {
 			[t_session_config setRuntime: s_simulator_runtime];
-		
+        }
 		[t_session_config setSimulatedApplicationShouldWaitForDebugger: NO];
 		[t_session_config setSimulatedApplicationLaunchArgs: [NSArray array]];
 		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
-		[t_session_config setLocalizedClientName: @"LiveCode"];
-		
+        
+        // As of Xcode 8.3 the property NSString *localizedClientName is no longer available in DTiPhoneSimulatorSessionConfig class
+        if ([t_session_config respondsToSelector: @selector(setLocalizedClientName:)])
+            [t_session_config setLocalizedClientName: @"LiveCode"];
+        
 		bool t_is_ipad;
 		t_is_ipad = strcasecmp(t_family, "ipad") == 0;
 		
@@ -812,9 +817,9 @@ bool revIPhoneSetToolset(MCVariableRef *argv, uint32_t argc, MCVariableRef resul
 	{
 		NSBundle *t_bundle;
 		t_bundle = [NSBundle bundleForClass: objc_getClass("revIPhoneLaunchDelegate")];
-		t_id = [NSString stringWithFormat: @"com.runrev.reviphoneproxy.%08x.%08x", getpid(), clock()];
+		t_id = [NSString stringWithFormat: @"com.runrev.reviphoneproxy.%08x.%08lx", getpid(), clock()];
 		t_task = [NSTask launchedTaskWithLaunchPath: [t_bundle pathForAuxiliaryExecutable: @"reviphoneproxy"] //[(NSURL *)t_url path]] //@"/Volumes/Macintosh HD/Users/mark/Workspace/revolution/trunk-mobile/_build/Debug/reviphoneproxy"
-										  arguments: [NSArray arrayWithObjects: t_path, t_id, nil]];
+										  arguments: [NSArray arrayWithObjects: t_path, t_id, (NSString*)nil]];
 		if (t_task == nil)
 			t_success = Throw("unable to start proxy");
 	}

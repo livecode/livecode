@@ -616,7 +616,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> GetHandle();
+			t_context . target = MCtargetptr;
 			t_context . name = *t_item;
             t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;

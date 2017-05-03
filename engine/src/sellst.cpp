@@ -555,16 +555,18 @@ Boolean MCSellist::del()
             MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
             uint2 num = 0;
             cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-            
-            Ustruct *us = new Ustruct;
-            us->type = UT_DELETE;
-            us->ud.layer = num;
-            MCundos->savestate(cptr, us);
-            
+        
             if (cptr->del(true))
             {
+                Ustruct *us = new Ustruct;
+                us->type = UT_DELETE;
+                us->ud.layer = num;
+                MCundos->savestate(cptr, us);
+                
                 tptr->m_ref = nil;
             }
+            
+            /* No scheduledelete() as the undo record now owns it */
         }
         delete tptr;
     }
