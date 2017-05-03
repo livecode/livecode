@@ -255,6 +255,9 @@ void MCEventQueueFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 static void MCEventQueueDispatchEvent(MCEvent *p_event)
 {
 	MCEvent *t_event;

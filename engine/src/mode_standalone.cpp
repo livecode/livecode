@@ -738,6 +738,9 @@ MCDispatch::startup()
 
 #else
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 IO_stat MCDispatch::startup(void)
 {
     char *t_mccmd;

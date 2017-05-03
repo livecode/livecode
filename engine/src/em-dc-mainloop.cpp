@@ -126,6 +126,9 @@ X_initialize_mcappcodepath(const X_init_options& p_options)
                           nullptr);
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool
 X_init(const X_init_options& p_options)
 {

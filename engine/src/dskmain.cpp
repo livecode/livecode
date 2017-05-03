@@ -339,6 +339,9 @@ bool X_init(const X_init_options& p_options)
 	return true;
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool X_main_loop_iteration()
 {
     void *t_bottom;
