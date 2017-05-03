@@ -25,8 +25,6 @@ command revSaveAsMobileStandalone pStack, pAppBundle, pTarget, pSettings
    catch tError
       if revTestEnvironment() then
          return tError
-      else
-         answer tError
       end if
    end try
    
