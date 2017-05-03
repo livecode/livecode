@@ -232,7 +232,7 @@ void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
     va_list t_args;
     va_start(t_args, p_format);
-    MCLogV(p_file, p_line, p_format);
+    MCLogV(p_file, p_line, p_format, t_args);
     va_end(t_args);
 }
 
@@ -240,7 +240,7 @@ void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format,
 {
     va_list t_args;
     va_start(t_args, p_format);
-    MCLogV(p_file, p_line, p_format);
+    MCLogV(p_file, p_line, p_format, t_args);
     va_end(t_args);
 }
 

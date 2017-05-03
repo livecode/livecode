@@ -1053,6 +1053,9 @@ X_open_environment_variables(MCStringRef envp[])
 
 /* ---------------------------------------------------------------- */
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	MCperror = new (nothrow) MCError();
