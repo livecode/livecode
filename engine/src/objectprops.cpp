@@ -329,15 +329,13 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
 	{
-		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
         MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
         MCdefaultstackptr = getstack();
-		MCObjectPtr oldtargetptr = MCtargetptr;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCObjectPartHandle oldtargetptr(this);
+        swap(MCtargetptr, oldtargetptr);
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -346,12 +344,26 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		}
 		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
 		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
-			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+        {
+            /* If the target object was deleted in the frontscript, prevent
+             * normal message dispatch as if the frontscript did not pass the
+             * message. */
+            MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
+            if (MCtargetptr)
+            {
+                MCObjectExecutionLock t_self_lock(this);
+                t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+            }
+            else
+            {
+                t_stat = ES_NORMAL;
+            }
+        }
         
         if (t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
-        
-        MCtargetptr = oldtargetptr;
+
+        swap(MCtargetptr, oldtargetptr);
 		if (added)
 			MCnexecutioncontexts--;
 	}
@@ -417,7 +429,6 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	Exec_stat t_stat = ES_NOT_HANDLED;
 	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler()->hasname(t_setprop_name)))
 	{
-		MCObjectExecutionLock t_self_lock(this);
 		MCParameter p1, p2;
 		p1.setnext(&p2);
         
@@ -426,27 +437,40 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		
 		MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 		MCdefaultstackptr = getstack();
-		MCObjectPtr oldtargetptr = MCtargetptr;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCObjectPartHandle oldtargetptr(this);
+        swap(MCtargetptr, oldtargetptr);
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
 			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
-        
+
 		t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
 		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
-			t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+        {
+            /* If the target object was deleted in the frontscript, prevent
+             * normal message dispatch as if the frontscript did not pass the
+             * message. */
+            MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
+            if (MCtargetptr)
+            {
+                MCObjectExecutionLock t_self_lock(this);
+                t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+            }
+            else
+            {
+                t_stat = ES_NORMAL;
+            }
+        }
         
 		if (added)
 			MCnexecutioncontexts--;
         
         if (t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
-        
-        MCtargetptr = oldtargetptr;
+
+        swap(MCtargetptr, oldtargetptr);
 	}
     
 	return t_stat;
