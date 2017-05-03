@@ -43,7 +43,7 @@
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 		
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
-		'DEVELOPMENT_TEAM': 'SA2BUJR53Y',
+		'DEVELOPMENT_TEAM': 'KR649NSGHP',
 	},
 	
 	'target_defaults':
