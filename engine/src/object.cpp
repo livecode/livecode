@@ -5730,7 +5730,7 @@ MCObjectPartHandle::getObjectPtr() const
 
 void swap(MCObjectPartHandle &x_left, MCObjectPartHandle &x_right)
 {
-    using std::swap;
+    using std_::swap;
     swap(x_left.m_part_id, x_right.m_part_id);
     swap(static_cast<MCObjectHandle&>(x_left),
          static_cast<MCObjectHandle&>(x_right));

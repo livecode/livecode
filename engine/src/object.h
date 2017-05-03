@@ -29,11 +29,33 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
-// Disabled until C++11 support is available on all platforms
-#if 0
-#include <type_traits>
-#endif
-#include <utility>
+// TODO[C++11] Remove this and change uses of std_ to std when merging into
+// develop.
+//
+// When compiling on develop-8.1, various toolchains have differing support
+// for C++11, and including C++11 headers at this point causes problems elsewhere.
+namespace std_ {
+    template<typename _Tp>
+    struct remove_reference
+    { typedef _Tp     type; };
+
+    template<typename _Tp>
+    struct remove_reference<_Tp&>
+    { typedef _Tp     type; };
+    
+    template <class _Tp>
+    inline typename std_::remove_reference<_Tp>::type&& move(_Tp&& __t)
+    {
+        typedef typename std_::remove_reference<_Tp>::type _Up;
+        return static_cast<_Up&&>(__t);
+    }
+    
+    template <typename T> void swap(T& t1, T& t2) {
+        T temp = std_::move(t1);
+        t1 = std_::move(t2);
+        t2 = std_::move(temp);
+    }
+}
 
 enum {
     MAC_SHADOW,
@@ -439,7 +461,7 @@ public:
      * used on MCObjectHandle instances of exactly the same type. */
     void swap(Handle& x_other)
     {
-        using std::swap;
+        using std_::swap;
         swap(m_proxy, x_other.m_proxy);
     }
 
@@ -1742,7 +1764,7 @@ public:
     MCObjectPartHandle(MCObjectPartHandle&& other)
       : MCObjectHandle(nullptr), m_part_id(0)
     {
-        using std::swap;
+        using std_::swap;
         swap(*this, other);
     }
 
@@ -1759,7 +1781,7 @@ public:
     /* TODO[C++11] MCObjectPartHandle& operator=(MCObjectPartHandle&&) = default; */
     MCObjectPartHandle& operator=(MCObjectPartHandle&& other)
     {
-        MCObjectHandle::operator=(std::move(other));
+        MCObjectHandle::operator=(std_::move(other));
         m_part_id = other.m_part_id;
         return *this;
     }
