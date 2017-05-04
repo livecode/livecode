@@ -1186,9 +1186,6 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 			}
 		}
 		break;
-			
-		default:
-			break;
 	}
 	
 #if 0

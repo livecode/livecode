@@ -920,9 +920,6 @@ static bool MCBitmapEffectBlurFactory(MCBitmapEffectFilter p_type, MCBitmapEffec
 	case kMCBitmapEffectFilterThreePassBox:
 		r_blur = new (nothrow) MCBitmapEffectBoxBlur(3);
 		return true;
-
-	default:
-		break;
 	}
 
 	return false;

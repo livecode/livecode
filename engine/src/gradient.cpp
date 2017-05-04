@@ -447,9 +447,6 @@ static bool MCGradientFillStoreProperty(MCExecContext& ctxt, MCGradientFill*& p_
             MCGradientFillSetUIntProperty(t_gradient, which, t_value, dirty);
         }
             break;
-            
-        default:
-            break;
 	}
 	if (!t_success)
 	{

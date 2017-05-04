@@ -654,9 +654,6 @@ static void MCBitmapEffectFetchProperty(MCExecContext& ctxt, MCBitmapEffect *eff
             r_value . bool_value = effect -> shadow . knockout;
             r_value . type = kMCExecValueTypeBool;
             break;
-            
-        default:
-            break;
     }
 }
 
@@ -940,8 +937,6 @@ static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_e
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeBool, &t_value);
             MCBitmapEffectsSetBooleanProperty(x_effect, p_prop, t_value, r_dirty);
         }
-            break;
-        default:
             break;
     }
 }
