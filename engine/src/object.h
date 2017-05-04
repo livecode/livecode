@@ -438,8 +438,19 @@ public:
         return MCObjectProxy<U>::Handle(static_cast<MCObjectProxy<U>*>(m_proxy));
     }
 #endif
-    
-    
+
+    /* Swap the contents of two object handles. Allows std::swap() to be
+     * used on MCObjectHandle instances of exactly the same type. */
+    void swap(Handle& x_other)
+    {
+	    std::swap(m_proxy, x_other.m_proxy);
+    }
+
+    friend void swap(Handle& x_left, Handle& x_right)
+    {
+	    x_left.swap(x_right);
+    }
+
 private:
     
     // The proxy for the object this is a handle to

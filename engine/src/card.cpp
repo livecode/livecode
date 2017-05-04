@@ -818,7 +818,7 @@ Boolean MCCard::mdown(uint2 which)
 				MCexitall = False;
 
 				if (!(MCmodifierstate & MS_SHIFT))
-					MCselected->clear(True);
+					MCselected.clear(True);
 				state |= CS_SIZE;
 				startx = MCmousex;
 				starty = MCmousey;
@@ -1037,7 +1037,7 @@ Boolean MCCard::doubleup(uint2 which)
 					editscript();
 				else
 				{
-					MCselected->replace(this);
+					MCselected.replace(this);
 					message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 				}
 				break;
@@ -1130,8 +1130,6 @@ Boolean MCCard::del(bool p_check_flag)
 	    return False;
 	
     clean();
-    
-	MCselected->remove(this);
 	
 	// MW-2008-10-31: [[ ParentScripts ]] Make sure we close the controls
 	closecontrols();
@@ -2908,9 +2906,9 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		if (is != was)
 		{
 			if (is)
-				MCselected->add(cptr);
+				MCselected.add(cptr);
 			else
-				MCselected->remove(cptr);
+				MCselected.remove(cptr);
 
 			drect = MCU_union_rect(drect, cptr->getrect());
 			

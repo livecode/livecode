@@ -263,7 +263,7 @@ MCObjectHandle MCdragtargetptr;
 uint2 MCdragdelta = 4;
 
 MCUndolist *MCundos;
-MCSellist *MCselected;
+MCSellist MCselected;
 MCStacklist *MCstacks;
 MCStacklist *MCtodestroy;
 MCCardlist *MCrecent;
@@ -656,7 +656,6 @@ void X_clear_globals(void)
 	MCdragtargetptr = nil;
 	MCdragdelta = 4;
 	MCundos = nil;
-	MCselected = nil;
 	MCstacks = nil;
     MCtodestroy = nil;
 	MCrecent = nil;
@@ -1168,7 +1167,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCclipboardlockcount = 0;
 	
 	MCundos = new (nothrow) MCUndolist;
-	MCselected = new (nothrow) MCSellist;
 	MCstacks = new (nothrow) MCStacklist(true);
 	// IM-2016-11-22: [[ Bug 18852 ]] Changes to MCtodestroy shouldn't affect MCtopstack
     MCtodestroy = new (nothrow) MCStacklist(false);
@@ -1288,7 +1286,7 @@ int X_close(void)
 	MCInterfaceFinalize(ctxt);
 
 	MCstacks->closeall();
-	MCselected->clear(False);
+	MCselected.clear(False);
     MCundos->freestate();
     
 	MCU_play_stop();
@@ -1365,7 +1363,7 @@ int X_close(void)
 
 	delete MCtemplateimage;
 	delete MCtemplatefield;
-	delete MCselected;
+    MCselected.clear(False);
     delete MCtodestroy;
 	delete MCstacks;
     

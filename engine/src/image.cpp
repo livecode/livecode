@@ -370,7 +370,7 @@ Boolean MCImage::mdown(uint2 which)
 					{
 						state &= ~CS_SIZE;
 						state |= CS_MOVE;
-						MCselected->startmove(mx, my, False);
+						MCselected.startmove(mx, my, False);
 					}
 				}
 				break;

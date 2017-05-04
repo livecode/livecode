@@ -164,7 +164,7 @@ void MCU_resetprops(Boolean update)
 		if (MCdragging)
 		{
 			MCdragging = False;
-			MCselected->redraw();
+			MCselected.redraw();
 		}
 	}
 	MCerrorlock.Reset();
@@ -1860,7 +1860,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 
 	MCundos->freestate();
 	if (MCcurtool != T_POINTER)
-		MCselected->clear(True);
+		MCselected.clear(True);
 	if (MCactiveimage && MCcurtool != T_SELECT)
 		MCactiveimage->endsel();
 	MCeditingimage = nil;

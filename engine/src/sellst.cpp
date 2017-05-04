@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,58 +38,71 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include <algorithm>
+#include <type_traits>
 
-class MCSellist::MCSelnode : public MCDLlist
+/* ---------------------------------------------------------------- */
+
+MCSellist::MCSelnode::MCSelnode() : MCObjectHandle() {}
+
+/* When constructing an MCSelnode with an object, mark the
+ * object as internally selected. */
+MCSellist::MCSelnode::MCSelnode(MCObjectHandle object)
+    : MCObjectHandle(object)
 {
-public:
-    
-    MCSelnode(MCObjectHandle object);
-    ~MCSelnode();
-    
-    MCDLlistAdaptorFunctions(MCSelnode);
-    
-    MCObjectHandle m_ref;
-};
-
-
-MCSellist::MCSelnode::MCSelnode(MCObjectHandle object) :
-  m_ref(object)
-{
-	if (m_ref)
-		m_ref->select();
+    if (IsValid())
+        Get()->select();
 }
 
+/* Allow move construction of an MCSelnode.  The object's
+ * selection state becomes "owned" by the newly-constructed
+ * MCSelnode.  The old MCSelnode has its object reference
+ * stolen, so it won't deselect the object when it's
+ * destroyed. */
+MCSellist::MCSelnode::MCSelnode(MCSelnode&& other)
+    : MCObjectHandle(std::forward<MCObjectHandle>(other))
+{}
+
+/* Allow move assignment, but ensure that object selection
+ * status is managed correctly. */
+MCSellist::MCSelnode&
+MCSellist::MCSelnode::operator=(MCSelnode&& other) {
+    if (IsValid()) Get()->deselect();
+    MCObjectHandle::operator=(nullptr);
+    swap(other);
+    return *this;
+}
+
+/* When destroying an MCSelnode with an object, mark the
+   object as internally deselected. */
 MCSellist::MCSelnode::~MCSelnode()
 {
-	if (m_ref)
-		m_ref->deselect();
+    if (IsValid()) Get()->deselect();
 }
 
-MCSellist::MCSellist() :
-  m_owner(nil),
-  objects(nil),
-  curobject(nil),
-  startx(0), starty(0),
-  lastx(0), lasty(0),
-  locked(false),
-  dropclone(false)
+/* ---------------------------------------------------------------- */
+
+MCSellist::MCSellist()
 {
+    static_assert(std::is_move_constructible<MCSelnode>::value,
+                  "MCSelnode is not move constructible");
+    static_assert(std::is_move_assignable<MCSelnode>::value,
+                  "MCSelnode is not move assignable");
+
+    static_assert(!std::is_copy_assignable<MCSelnode>::value,
+                  "MCSelnode is copy assignable");
+    static_assert(!std::is_copy_constructible<MCSelnode>::value,
+                  "MCSelnode is copy constructible");
 }
 
 MCSellist::~MCSellist()
 {
-	clear(False);
 }
 
 MCObjectHandle MCSellist::getfirst()
 {
-	if (objects != nil)
-	{
-		curobject = objects;
-		return curobject->m_ref;
-	}
-	else
-		return nil;
+    if (m_objects.empty()) return {};
+    return m_objects.front();
 }
 
 bool MCSellist::getids(MCListRef& r_list)
@@ -98,49 +111,28 @@ bool MCSellist::getids(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
-	if (objects != nil)
-	{
-		MCSelnode *tptr = objects;
-		do
-		{
-			MCAutoValueRef t_string;
-            if (tptr->m_ref)
-            {
-                if (!tptr->m_ref->names(P_LONG_ID, &t_string))
-                    return false;
-                if (!MCListAppend(*t_list, *t_string))
-                    return false;
-            }
-			tptr = tptr->next();
-		}
-		while (tptr != objects);
-	}
+    for (const auto& t_node : m_objects)
+    {
+        if (t_node)
+        {
+            MCAutoValueRef t_string;
+            if (!t_node->names(P_LONG_ID, &t_string))
+                return false;
+            if (!MCListAppend(*t_list, *t_string))
+                return false;
+        }
+    }
 
 	return MCListCopy(*t_list, r_list);
 }
 
 void MCSellist::Clean()
 {
-    if (objects == nil)
-        return;
-    
-    // Remove any dead objects from the selected list
-    MCSelnode* t_cursor = objects;
-    do
-    {
-        if (!t_cursor->m_ref)
-        {
-            MCSelnode* t_next = t_cursor->next();
-            t_cursor->remove(objects);
-            delete t_cursor;
-            t_cursor = t_next;
-        }
-        else
-        {
-            t_cursor = t_cursor->next();
-        }
-    }
-    while (t_cursor != objects);
+    /* Remove any dead objects from the selected list. */
+    m_objects.erase(
+         std::remove_if(m_objects.begin(), m_objects.end(),
+                        [](const MCSelnode& node) { return bool{!node}; }),
+         m_objects.end());
 }
 
 void MCSellist::clear(Boolean message)
@@ -148,13 +140,9 @@ void MCSellist::clear(Boolean message)
 	if (locked)
 		return;
     
-	MCObjectHandle optr = nil;
-	while (objects != nil)
-	{
-		MCSelnode *nodeptr = objects->remove(objects);
-		optr = nodeptr->m_ref;
-		delete nodeptr;
-	}
+    const MCObjectHandle optr = m_objects.empty() ? MCObjectHandle{} : m_objects.back();
+
+    m_objects.clear();
     
 	if (message && optr)
 		optr->message(MCM_selected_object_changed);
@@ -162,23 +150,14 @@ void MCSellist::clear(Boolean message)
 
 void MCSellist::top(MCObject *objptr)
 {
-	Clean();
-    
-    if (objects != nil)
-	{
-		MCSelnode *tptr = objects;
-		do
-		{
-			if (tptr->m_ref == objptr)
-			{
-				tptr->remove(objects);
-				break;
-			}
-			tptr = tptr->next();
-		}
-		while (tptr != objects);
-		tptr->insertto(objects);
-	}
+    /* Find the requested object, then rotate its entry to the front
+     * of the selected list. */
+    const auto t_found =
+        std::find(m_objects.begin(), m_objects.end(), objptr);
+    if (t_found != m_objects.end())
+    {
+        std::rotate(m_objects.begin(), t_found, t_found+1);
+    }
 }
 
 void MCSellist::replace(MCObject *objptr)
@@ -192,17 +171,16 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
     // Ensure that the top object in the list isn't dead as we need to check its
     // type before adding a new object
     Clean();
-    
-    if (objects != NULL && (objptr->getstack() != objects->m_ref->getstack()
-	                        || objects->m_ref->gettype() < CT_GROUP))
+
+    if (!m_objects.empty() &&
+        (objptr->getstack() != m_objects.front()->getstack() ||
+         m_objects.front()->gettype() < CT_GROUP))
 		clear(False);
     
 	if (MCactivefield)
 		MCactivefield->unselect(True, True);
     
-	MCSelnode *nodeptr = new (nothrow) MCSelnode(objptr->GetHandle());
-
-	nodeptr->appendto(objects);
+    /* UNCHECKED */ m_objects.emplace_back(objptr->GetHandle());
     
 	if (p_sendmessage)
 		objptr->message(MCM_selected_object_changed);
@@ -210,131 +188,96 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 
 void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 {
-	if (objects != NULL)
-	{
-		MCSelnode *tptr = objects;
-		do
-		{
-			if (tptr->m_ref == objptr)
-			{
-				tptr->remove(objects);
-				if (p_sendmessage)
-					tptr->m_ref->message(MCM_selected_object_changed);
-				delete tptr;
-				return;
-			}
-			tptr = tptr->next();
-		}
-		while (tptr != objects);
-	}
+    const auto&& t_found =
+        std::find(m_objects.begin(), m_objects.end(), objptr);
+    if (t_found != m_objects.end())
+    {
+        if (p_sendmessage)
+            (*t_found)->message(MCM_selected_object_changed);
+        m_objects.erase(t_found, t_found+1);
+    }
 }
 
 void MCSellist::sort()
 {
     // Remove all dead objects from the list before sorting
     Clean();
-    
-    MCSelnode *optr = objects;
-	MCAutoArray<MCSortnode> items;
-	uint4 nitems = 0;
-	MCCard *cptr = optr->m_ref->getcard();
-	do
-	{
-		items.Extend(nitems + 1);
-		items[nitems].data = (void *)optr;
-		uint2 num = 0;
-		cptr->count(CT_LAYER, CT_UNDEFINED, optr->m_ref, num, True);
-		/* UNCHECKED */ MCNumberCreateWithUnsignedInteger(num, items[nitems].nvalue);
-		nitems++;
-		optr = optr->next();
-	}
-	while (optr != objects);
-	if (nitems > 1)
-	{
-        extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
-		MCStringsSort(items.Ptr(), nitems, ST_ASCENDING, ST_NUMERIC, kMCStringOptionCompareExact);
-		uint4 i;
-		MCSelnode *newobjects = NULL;
-		for (i = 0 ; i < nitems ; i++)
-		{
-			optr = (MCSelnode *)items[i].data;
-			optr->remove(objects);
-			optr->appendto(newobjects);
-		}
-		objects = newobjects;
-	}
+
+    if (m_objects.size() < 2)
+        return;
+
+    /* Create a list of object handles with their layer numbers. We do
+     * this because computing the layer number is relatively
+     * expensive. */
+    struct SortNode
+    {
+        SortNode() = default;
+        SortNode(MCObject* o, uint2 n) : m_object(o), m_num(n) {}
+        MCObject *m_object {};
+        uint2 m_num {};
+        bool operator<(const SortNode other) const { return m_num < other.m_num; }
+    };
+
+    /* UNCHECKED */ std::vector<SortNode> t_items {m_objects.size()};
+    MCCard *t_card = m_objects.front()->getcard();
+
+    std::transform(m_objects.begin(), m_objects.end(),
+                   t_items.begin(),
+                   [&](const MCSelnode& t_node) {
+                       uint2 t_num {};
+                       t_card->count(CT_LAYER, CT_UNDEFINED,
+                                     t_node, t_num, True);
+                       return SortNode{t_node.Get(), t_num};
+                   });
+    m_objects.clear();
+
+    /* Sort the object handles by layer number */
+    std::sort(t_items.begin(), t_items.end());
+
+    /* Rebuild the selection in the appropriate order */
+    for (const auto& t_sorted : t_items)
+        m_objects.emplace_back(MCObjectHandle(t_sorted.m_object));
 }
 
 uint32_t MCSellist::count()
 {
-	uint32_t t_count = 0;
-	MCSelnode *t_node = objects;
-	if (t_node != nil)
-	{
-		do
-		{
-            // Only count non-zombie objects
-            if (t_node->m_ref)
-                t_count++;
-            
-			t_node = t_node->next();
-		} while (t_node != objects);
-	}
-
-	return t_count;
+    return std::count_if(m_objects.begin(), m_objects.end(),
+                         [](const MCSelnode& t_node) {
+                             return static_cast<bool>(t_node);
+                         });
 }
 
 MCControl *MCSellist::clone(MCObject *target)
 {
-    // Remove any dead objects before trying to clone them
-    Clean();
-    
-    MCObjectHandle *t_selobj_handles = nil;
-	uint32_t t_selobj_count;
-	t_selobj_count = count();
+    /* Remove any dead objects before trying to clone them & sort
+     * what's left */
+    sort();
 
-	/* UNCHECKED */ MCMemoryNewArrayInit(t_selobj_count, t_selobj_handles);
-	sort();
+    /* Work through the selection, replacing each selected object's
+     * entry with its clone. */
+    MCControlHandle t_newtarget;
+    std::transform(
+        m_objects.begin(), m_objects.end(), m_objects.begin(),
+        [&](const MCSelnode& t_node) {
+            MCControl* t_clone =
+                t_node.GetAs<MCControl>()->clone(True, OP_NONE, false);
+            if (t_node == target)
+                t_newtarget = t_clone;
+            /* Deselect the original object; select the
+             * clone. */
+            return MCSelnode{MCObjectHandle(t_clone)};
+        });
 
-	MCSelnode *t_node = objects;
-	for (uint32_t i = 0; i < t_selobj_count; i++)
-	{
-		t_selobj_handles[i] = t_node->m_ref->GetHandle();
-		t_node = t_node->next();
-	}
-
-	clear(false);
-
-	MCControlHandle t_newtarget = nil;
-	for (uint32_t i = 0; i < t_selobj_count; i++)
-	{
-		if (t_selobj_handles[i].IsValid())
-		{
-			MCControl *t_control = t_selobj_handles[i].GetAs<MCControl>();
-			MCControl *t_clone = t_control->clone(True, OP_NONE, false);
-			t_clone->select();
-			if (t_control == target)
-				t_newtarget = t_clone->GetHandle();
-			t_control->deselect();
-			add(t_clone, false);
-		}
-	}
-	
-	MCControl *t_result;
-	t_result = nil;
 	if (t_newtarget.IsValid())
 	{
         t_newtarget->message(MCM_selected_object_changed);
         
         // Note that t_newtarget->Get() can change while executing the above message
         // hence we re-evaluate here.
-        t_result = t_newtarget;
+        return t_newtarget;
 	}
-	
-	// MW-2010-05-06: Make sure we clean up the temp array
-	MCMemoryDeleteArray(t_selobj_handles, t_selobj_count);
 
-	return t_result;
+	return nullptr;
 }
 
 Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
@@ -343,16 +286,17 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
     Clean();
     
     MCresult->clear(False);
-	if (objects != nil && objects->m_ref->gettype() <= CT_LAST_CONTROL
-	        && objects->m_ref->gettype() >= CT_GROUP)
+    if (!m_objects.empty() &&
+        m_objects.front()->gettype() <= CT_LAST_CONTROL &&
+        m_objects.front()->gettype() >= CT_GROUP)
 	{
-		MCObject *parent = objects->m_ref->getparent();
-		MCSelnode *tptr = objects;
-		do
+        MCObject *parent = m_objects.front()->getparent();
+        for (const auto& t_node : m_objects)
 		{
 			// MERG-2013-05-07: [[ Bug 10863 ]] If grouping a shared group, throw
 			//   an error.
-            if (tptr->m_ref->gettype() == CT_GROUP && tptr->m_ref.GetAs<MCGroup>()->isshared())
+            if (t_node->gettype() == CT_GROUP &&
+                t_node.GetAs<MCGroup>()->isshared())
             {
                 MCeerror->add(EE_GROUP_NOBG, line, pos);
 				return ES_ERROR;
@@ -360,44 +304,45 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 			
 			// MERG-2013-05-07: [[ Bug 10863 ]] If the parent of all the objects
 			//   isn't the same, throw an error.
-			if (tptr->m_ref->getparent() != parent)
+            if (t_node->getparent() != parent)
 			{
                 MCeerror->add(EE_GROUP_DIFFERENTPARENT, line, pos);
 				return ES_ERROR;
             }
-			
-			tptr = tptr->next();
 		}
-		while (tptr != objects);
         
 		sort();
 		MCControl *controls = NULL;
-		while (objects != NULL)
+        for (auto&& t_iter : m_objects)
 		{
-			tptr = objects->remove(objects);
-			MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
-			delete tptr;
-			if (parent->gettype() == CT_CARD)
+            /* Steal each object reference from the selected list */
+            MCSelnode t_node = std::move(t_iter);
+
+            auto cptr = t_node.GetAs<MCControl>();
+            if (parent->gettype() == CT_CARD)
 			{
-				MCCard *card = (MCCard *)parent;
+                auto card = MCObjectCast<MCCard>(parent);
 				card->removecontrol(cptr, False, True);
 				card->getstack()->removecontrol(cptr);
 			}
 			else
 			{
-				MCGroup *group = (MCGroup *)parent;
+                auto group = MCObjectCast<MCGroup>(parent);
 				group->removecontrol(cptr, True);
 			}
 			cptr->appendto(controls);
 		}
-		MCGroup *gptr;
+        m_objects.clear();
+
+		MCGroup *gptr = nullptr;
 		if (MCsavegroupptr == NULL)
 			gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
 		else
 			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
 		gptr->makegroup(controls, parent);
 
-		objects = new (nothrow) MCSelnode(MCObjectHandle(gptr));
+        /* UNCHECKED */ m_objects.emplace_back(
+                            MCObjectCast<MCObject>(gptr)->GetHandle());
 		gptr->message(MCM_selected_object_changed);
 		
 		r_group_ptr = gptr;
@@ -415,116 +360,114 @@ bool MCSellist::clipboard(bool p_is_cut)
     // Remove any dead objects before trying to put them on the clipboard
     Clean();
     
-    if (objects != NULL)
-	{
-		// First we construct the pickle of the list of selected objects
-		MCPickleContext *t_context;
+    if (m_objects.empty())
+        return false;
+
+    // First we construct the pickle of the list of selected objects
+    MCPickleContext *t_context;
 		
-        // AL-2014-02-14: [[ UnicodeFileFormat ]] When pickling for the clipboard, make sure it
-        //   includes 2.7, 5.5 and 7.0 stackfile formats.
-		t_context = MCObject::startpickling(true);
+    // AL-2014-02-14: [[ UnicodeFileFormat ]] When pickling for the clipboard, make sure it
+    //   includes 2.7, 5.5 and 7.0 stackfile formats.
+    t_context = MCObject::startpickling(true);
 
-		MCSelnode *t_node;
-		t_node = objects;
+    // OK-2008-08-06: [[Bug 6794]] - If no objects were copied because the stack was password protected,
+    // then don't write anything to the clipboard. Otherwise the MCClipboard function returns "objects",
+    // yet the clipboardData["objects"] will be empty.
+    bool t_objects_were_copied;
+    t_objects_were_copied = false;
 
-		// OK-2008-08-06: [[Bug 6794]] - If no objects were copied because the stack was password protected,
-		// then don't write anything to the clipboard. Otherwise the MCClipboard function returns "objects",
-		// yet the clipboardData["objects"] will be empty.
-		bool t_objects_were_copied;
-		t_objects_were_copied = false;
+    for (const auto& t_node : m_objects)
+    {
+        if (!t_node -> getstack() -> iskeyed())
+            MCresult -> sets("can't cut object (stack is password protected)");
+        else
+        {
+            MCObject::continuepickling(t_context, t_node,
+                                       t_node -> getcard() -> getid());
+            t_objects_were_copied = true;
+        }
+    }
 
-		do
-		{
-			if (!t_node -> m_ref -> getstack() -> iskeyed())
-				MCresult -> sets("can't cut object (stack is password protected)");
-			else
-			{
-				MCObject::continuepickling(t_context, t_node -> m_ref, t_node -> m_ref -> getcard() -> getid());
-				t_objects_were_copied = true;
-			}
+    bool t_success;
+    t_success = true;
 
-			t_node = t_node -> next();
-		}
-		while(t_node != objects);
+    MCAutoDataRef t_pickle;
+    MCObject::stoppickling(t_context, &t_pickle);
+    if (*t_pickle == nil)
+        t_success = false;
 
-		bool t_success;
-		t_success = true;
-
-		MCAutoDataRef t_pickle;
-		MCObject::stoppickling(t_context, &t_pickle);
-		if (*t_pickle == nil)
-			t_success = false;
-
-		// OK-2008-08-06: [[Bug 6794]] - Return here before writing to the clipboard to preserve the message in the result.
-		if (!t_objects_were_copied)
-			return false;
+    // OK-2008-08-06: [[Bug 6794]] - Return here before writing to the clipboard to preserve the message in the result.
+    if (!t_objects_were_copied)
+        return false;
 
 		// Now attempt to write it to the clipboard
-        if (!MCclipboard->Lock())
-            return false;
+	if (!MCclipboard->Lock())
+		return false;
 
-        // Clear the current contents of the clipboard
-        MCclipboard->Clear();
+	// Clear the current contents of the clipboard
+	MCclipboard->Clear();
         
-        // Add the serialised objects to the clipboard
-        if (t_success)
-            t_success = MCclipboard->AddLiveCodeObjects(*t_pickle);
+    // Add the serialised objects to the clipboard
+    if (t_success)
+        t_success = MCclipboard->AddLiveCodeObjects(*t_pickle);
     
-		// If we are pasting just one object and it is an image, add it to the
-        // clipboard as an image, too, so that other applications can paste it.
-		if (t_success)
-			if (objects == objects -> next() && objects -> m_ref -> gettype() == CT_IMAGE)
-			{
-                // Failure to add the image to the clipboard is ignored as
-                // (while sub-optimal), the paste was mostly successful.
-                MCAutoDataRef t_data;
-                objects->m_ref.GetAs<MCImage>()->getclipboardtext(&t_data);
-				if (*t_data != nil)
-                    MCclipboard->AddImage(*t_data);
-			}
+    // If we are pasting just one object and it is an image, add it to the
+    // clipboard as an image, too, so that other applications can paste it.
+    if (t_success)
+        if (m_objects.size() == 1 &&
+            m_objects.front() -> gettype() == CT_IMAGE)
+        {
+            const MCSelnode& t_node = m_objects.front();
+            // Failure to add the image to the clipboard is ignored as
+            // (while sub-optimal), the paste was mostly successful.
+            MCAutoDataRef t_data;
+            t_node.GetAs<MCImage>()->getclipboardtext(&t_data);
+            if (*t_data != nil)
+                MCclipboard->AddImage(*t_data);
+        }
 		
-        // Ensure out changes to the clipboard get pushed out to the OS
-        MCclipboard->Unlock();
+    // Ensure out changes to the clipboard get pushed out to the OS
+    MCclipboard->Unlock();
 
-		// If we succeeded remove the objects if its a cut operation
-		if (t_success)
-		{
-			if (p_is_cut)
-			{
-				MCStack *sptr = objects->m_ref->getstack();
-				while (objects != NULL)
-				{
-					MCSelnode *tptr = objects->remove(objects);
-					
-					// MW-2008-06-12: [[ Bug 6466 ]] Make sure we don't still delete an
-					//   object if the stack is protected.
-					if (tptr -> m_ref -> getstack() -> iskeyed())
-					{
-                        // Because we need to manipulate the object after it has
-                        // been 'deleted', take a strong reference to the object
-                        // here
-                        MCObject* t_obj = tptr->m_ref;
+    // If we succeeded remove the objects if its a cut operation
+    if (t_success)
+    {
+        if (p_is_cut)
+        {
+            MCStack *sptr = m_objects.front()->getstack();
+
+            while (!m_objects.empty())
+            {
+                /* Deselect the object before attempting to delete it.
+                 * This ensures that it doesn't try to deselect itself
+                 * while being deleted. */
+                MCObjectHandle t_node = m_objects.back();
+                m_objects.pop_back();
+
+                // MW-2008-06-12: [[ Bug 6466 ]] Make sure we don't still delete an
+                //   object if the stack is protected.
+                if (t_node && t_node -> getstack() -> iskeyed())
+                {
+                    // Because we need to manipulate the object after it has
+                    // been 'deleted', take a strong reference to the object
+                    // here
+                    MCObject* t_obj = t_node.Get();
                         
-                        if (t_obj->del(true))
-                        {
-                            if (t_obj->gettype() == CT_STACK)
-                                MCtodestroy -> remove(MCObjectCast<MCStack>(t_obj));
-							t_obj->scheduledelete();
-                        }
-					}
+                    if (t_obj->del(true))
+                    {
+                        if (t_obj->gettype() == CT_STACK)
+                            MCtodestroy -> remove(MCObjectCast<MCStack>(t_obj));
+                        t_obj->scheduledelete();
+                    }
+                }
+            }
+            sptr->message(MCM_selected_object_changed);
+        }
+    }
+    else
+        MCresult -> sets("can't write to clipboard");
 
-					delete tptr;
-				}
-				sptr->message(MCM_selected_object_changed);
-			}
-		}
-		else
-			MCresult -> sets("can't write to clipboard");
-
-		return true;
-	}
-
-	return false;
+    return true;
 }
 
 Boolean MCSellist::copy()
@@ -539,35 +482,33 @@ Boolean MCSellist::cut()
 
 Boolean MCSellist::del()
 {
-    if (!IsDeletable())
-        return False;
- 
-	if (nullptr == objects)
+    if (!IsDeletable() || m_objects.empty())
         return False;
 
     MCundos->freestate();
-    
-    MCStack *sptr = objects->m_ref->getstack();
-    while (objects != NULL)
+
+    MCStack *sptr = m_objects.front()->getstack();
+    while (!m_objects.empty())
     {
-        MCSelnode *tptr = objects->remove(objects);
-        if (tptr->m_ref->gettype() >= CT_GROUP)
+        /* Deselect the object before attempting to delete it.  This
+         * ensures that it doesn't try to deselect itself while being
+         * deleted. */
+        MCObjectHandle t_node = m_objects.back();
+        m_objects.pop_back();
+
+        if (t_node && t_node->gettype() >= CT_GROUP)
         {
-            MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
+            MCControl *cptr = t_node.GetAs<MCControl>();
             uint2 num = 0;
             cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-            
-            Ustruct *us = new (nothrow) Ustruct;
+
+            /* UNCHECKED */ Ustruct *us = new (nothrow) Ustruct;
             us->type = UT_DELETE;
             us->ud.layer = num;
             MCundos->savestate(cptr, us);
-            
-            if (cptr->del(true))
-            {
-                tptr->m_ref = nil;
-            }
+
+            cptr->del(true);
         }
-        delete tptr;
     }
     sptr->message(MCM_selected_object_changed);
     return True;
@@ -575,29 +516,18 @@ Boolean MCSellist::del()
 
 bool MCSellist::IsDeletable()
 {
-    if (nullptr == objects)
-        return false;
-    
-    // Clear all deleted objects first
     Clean();
-
-    MCSelnode *t_object = objects;
-    do
-    {
-        if (!t_object->m_ref->isdeletable(true))
-            return false;
-        
-        t_object = t_object->next();
-    }
-    while (t_object != objects);
-
-    return true;
+    return
+        std::all_of(m_objects.begin(), m_objects.end(),
+                    [](const MCSelnode& t_node) {
+                        return t_node->isdeletable(true);
+                    });
 }
 
 void MCSellist::startmove(int2 x, int2 y, Boolean canclone)
 {
-	if (objects == NULL)
-		return;
+    if (m_objects.empty())
+        return;
 	dropclone = canclone;
 	lastx = startx = x;
 	lasty = starty = y;
@@ -605,24 +535,31 @@ void MCSellist::startmove(int2 x, int2 y, Boolean canclone)
 
 void MCSellist::continuemove(int2 x, int2 y)
 {
-	if (objects == NULL)
-		return;
+    if (m_objects.empty())
+        return;
 
-	MCSelnode *tptr = objects;
 	int2 dx = lastx - startx;
 	int2 dy = lasty - starty;
-	do
-	{
-		if (tptr->m_ref)
+
+    auto t_first_valid =
+        std::find_if(m_objects.begin(), m_objects.end(),
+                     [](const MCSelnode& p_node) {
+                         return bool{p_node};
+                     });
+    for (auto&& t_iter = t_first_valid;
+         t_iter != std::end(m_objects);
+         ++t_iter)
+    {
+        if (*t_iter)
 		{
-			MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
+			MCControl *cptr = (*t_iter).GetAs<MCControl>();
 			MCRectangle trect = cptr->getrect();
 			MCRectangle t_startrect = trect;
 			t_startrect.x -= dx;
 			t_startrect.y -= dy;
 			trect.x = t_startrect.x + (x - startx);
 			trect.y = t_startrect.y + (y - starty);
-			if (tptr == objects)
+			if (t_iter == t_first_valid)
 			{
 				MCU_snap(trect.x);
 				MCU_snap(trect.y);
@@ -650,62 +587,48 @@ void MCSellist::continuemove(int2 x, int2 y)
 				cptr->resizeparent();
 			}
 		}
-		tptr = tptr->next();
 	}
-	while (tptr != objects);
 	lastx = x;
 	lasty = y;
 }
 
 Boolean MCSellist::endmove()
 {
-	if (objects == NULL)
-		return False;
+    if (m_objects.empty())
+        return False;
     
 	if (startx == lastx && starty == lasty)
 		return False;
     
 	MCundos->freestate();
-	MCSelnode *tptr = objects;
-	do
-	{
-		if (tptr->m_ref)
-		{
-			MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
-			Ustruct *us = new (nothrow) Ustruct;
-			us->type = UT_MOVE;
-			us->ud.deltas.x = lastx - startx;
-			us->ud.deltas.y = lasty - starty;
-			MCundos->savestate(cptr, us);
-		}
-		tptr = tptr->next();
-	}
-	while (tptr != objects);
+
+    for (const auto& t_node : m_objects)
+    {
+        if (t_node)
+        {
+            auto cptr = t_node.GetAs<MCControl>();
+            /* UNCHECKED */ auto us = new (nothrow) Ustruct;
+            us->type = UT_MOVE;
+            us->ud.deltas.x = lastx - startx;
+            us->ud.deltas.y = lasty - starty;
+            MCundos->savestate(cptr, us);
+        }
+    }
 	return True;
 }
 
 void MCSellist::redraw()
 {
-	if (objects == NULL)
-		return;
-
-	// MW-2011-08-19: [[ Layers ]] Invalidate each object.
-	MCSelnode *tptr = objects;
-	do
-	{
-		if (tptr->m_ref)
-		{
-			MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
-
-			// MW-2012-09-19: [[ Bug 10182 ]] Cards and stacks can be in the list
-			//   so make sure we treat those differently from controls!
-			if (cptr -> gettype() <= CT_CARD)
-				cptr -> getstack() -> dirtyall();
-			else
-			cptr -> layer_redrawall();
-		}
-
-		tptr = tptr->next();
-	}
-	while (tptr != objects);
+    // MW-2011-08-19: [[ Layers ]] Invalidate each object.
+    for (const auto& t_node : m_objects)
+    {
+        if (t_node)
+        {
+            auto cptr = t_node.GetAs<MCControl>();
+            if (cptr -> gettype() <= CT_CARD)
+                cptr -> getstack() -> dirtyall();
+            else
+                cptr -> layer_redrawall();
+        }
+    }
 }

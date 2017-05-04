@@ -3242,9 +3242,9 @@ void MCObject::SetSelected(MCExecContext& ctxt, bool setting)
 	if (setting != ((state & CS_SELECTED) != 0))
 	{
 		if (setting)
-			MCselected->add(this);
+			MCselected.add(this);
 		else
-			MCselected->remove(this);
+			MCselected.remove(this);
 	}
 }
 

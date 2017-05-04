@@ -1,4 +1,5 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/*                                                             -*-c++-*-
+Copyright (C) 2003-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,22 +21,42 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	SELLIST_H
 #define	SELLIST_H
 
-#include "dllst.h"
 #include "stack.h"
+
+#include <vector>
 
 class MCSellist
 {
 private:
-    
-    class MCSelnode;
-    
-	MCStackHandle m_owner;
-	MCSelnode *objects;
-	MCSelnode *curobject;
-	int2 startx, starty;
-	int2 lastx, lasty;
-	Boolean locked;
-	Boolean dropclone;
+    /* This class represents an entry in the list of selected objects.
+     * Whether or not an object is considered selected is directly
+     * linked to the lifetime of its MCSelnode. While an object has a
+     * corresponding MCSelnode, it's selected; once the MCSelnode is
+     * destroyed, the object is no longer selected. */
+    class MCSelnode : public MCObjectHandle
+    {
+    public:
+	    MCSelnode();
+        MCSelnode(MCObjectHandle object);
+        MCSelnode(MCSelnode&& other);
+
+        MCSelnode& operator=(MCSelnode&& other);
+
+        ~MCSelnode();
+
+        /* Prevent copying an MCSelnode, because to do so would mean
+         * that multiple MCSelnode instances "own" the object's
+         * selection state. */
+        MCSelnode(const MCSelnode& other) = delete;
+        MCSelnode& operator=(const MCSelnode& other) = delete;
+    };
+
+    MCStackHandle m_owner = nullptr;
+    std::vector<MCSelnode> m_objects {};
+    int2 startx = 0, starty = 0;
+    int2 lastx = 0, lasty = 0;
+    bool locked = false;
+    bool dropclone = false;
     
     void Clean();
     bool IsDeletable();

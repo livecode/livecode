@@ -237,7 +237,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	{
 		mx = x;
 		my = y;
-		MCselected->continuemove(x, y);
+		MCselected.continuemove(x, y);
 		// MM-2012-09-05: [[ Property Listener ]] Moving object using IDE. Make sure location property is flagged as changed.
 		signallisteners(P_LOCATION);
 		message_with_args(MCM_mouse_move, x, y);
@@ -553,8 +553,8 @@ void MCControl::paste(void)
 	if (getstack()->gettool(this) == T_POINTER && opened)
 	{
 		state |= CS_SELECTED;
-		MCselected->clear(False);
-		MCselected->add(this);
+		MCselected.clear(False);
+		MCselected.add(this);
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
@@ -590,7 +590,7 @@ void MCControl::undo(Ustruct *us)
 			MCrelayergrouped = oldrlg;
 			Boolean oldlock = MClockmessages;
 			MClockmessages = True;
-			MCselected->add(this);
+			MCselected.add(this);
 			MClockmessages = oldlock;
 			MCscreen->delaymessage(this, MCM_selected_object_changed);
 			us->type = UT_REPLACE;
@@ -1230,20 +1230,20 @@ void MCControl::start(Boolean canclone)
 	if (!(state & CS_SELECTED))
 	{
 		if (MCmodifierstate & MS_SHIFT)
-			MCselected->add(this);
+			MCselected.add(this);
 		else
-			MCselected->replace(this);
+			MCselected.replace(this);
 	}
 	else
 	{
 		if (MCmodifierstate & MS_SHIFT && sizehandles(mx, my) == 0)
 		{
-			MCselected->remove(this);
+			MCselected.remove(this);
 			return;
 		}
 		else
 		{
-			MCselected->top(this);
+			MCselected.top(this);
 		}
 	}
 	if (MCbuttonstate == 0)
@@ -1263,8 +1263,8 @@ void MCControl::start(Boolean canclone)
 				Boolean noshift = IsMacLF()
 				                  ? !(MCmodifierstate & (MS_SHIFT | MS_CONTROL))
 				                  : !(MCmodifierstate & (MS_SHIFT | MS_MOD1));
-				MCselected->startmove(mx, my, canclone && hascontrol
-				                      && noshift && !(state & CS_SIZE));
+				MCselected.startmove(mx, my, canclone && hascontrol
+				                     && noshift && !(state & CS_SIZE));
 			}
 			else
 			{
@@ -1291,7 +1291,7 @@ void MCControl::end(bool p_send_mouse_up, bool p_release)
 	state &= ~(CS_MOVE | CS_SIZE | CS_CREATE);
 	if (oldstate & CS_MOVE)
 	{
-		if (MCselected->endmove())
+		if (MCselected.endmove())
 			message(MCM_move_control);
 	}
 	else if (oldstate & CS_CREATE)

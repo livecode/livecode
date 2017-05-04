@@ -297,8 +297,6 @@ MCObject::~MCObject()
 
 	if (MCerrorptr == this)
 		MCerrorptr = nil;
-	if (state & CS_SELECTED)
-		MCselected->remove(this);
 	IO_freeobject(this);
 	MCundos->freeobject(this);
 	delete hlist;
@@ -400,7 +398,7 @@ void MCObject::close()
 	unmapfont();
 
 	if (state & CS_SELECTED)
-		MCselected->remove(this);
+		MCselected.remove(this);
 
     // MM-2012-05-32: [[ Bug ]] Make sure the closed object is not the drag target or source.  
     //      Causes crash on drag drop if target object no longer exists.
