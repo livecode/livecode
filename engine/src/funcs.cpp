@@ -3178,6 +3178,7 @@ MCMessageDigestFunc::parse(MCScriptPoint &sp,
         freeexps(t_params, t_param_count);
 
         MCperror->add(PE_MESSAGEDIGEST_BADPARAM, sp);
+        return PS_ERROR;
     }
 
     m_data.Reset(t_params[0]);
