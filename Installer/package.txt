@@ -807,5 +807,6 @@ component Toolset
 		file repo:extensions/script-libraries/getopt/getopt.livecodescript
 		file repo:extensions/script-libraries/mime/mime.livecodescript
 		file repo:extensions/script-libraries/diff/diff.livecodescript
+		file repo:extensions/script-libraries/messageauthentication/messageauthentication.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
