@@ -8,7 +8,7 @@
 		# Set if the Gyp step is being run on a Unix-like host (i.e not Windows)
 		'unix_configure%': '0',
 		
-		'output_dir': '../win-<(target_arch)-bin',
+		'output_dir': '../win-<(uniform_arch)-bin',
 	},
 	
 	'target_defaults':
