@@ -434,7 +434,7 @@ def validate_android_tools(opts):
                  '-target arm-linux-androideabi -march=armv6 -integrated-as')
     android_tool('clang++', 'CXX',
                  '-target arm-linux-androideabi -march=armv6 -integrated-as')
-    android_tool('clang++', 'LINK',
+    android_tool('clang', 'LINK',
                  '-target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd')
     android_tool('objcopy', 'OBJCOPY')
     android_tool('objdump', 'OBJDUMP')
