@@ -2232,7 +2232,8 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 	switch (form)
 	{
         case ST_DATETIME:
-            if (t_success && MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_converted))
+            if (t_success &&
+                MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, NULL, CF_SECONDS, CF_UNDEFINED, NULL, &t_converted))
                 if (ctxt.ConvertToNumber(*t_converted, items[nitems].nvalue))
                     break;
             

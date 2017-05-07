@@ -135,6 +135,8 @@ MCConvert::~MCConvert()
 {
 	delete container;
 	delete source;
+    delete m_from_format;
+    delete m_to_format;
 }
 
 Parse_stat MCConvert::parse(MCScriptPoint &sp)
@@ -160,7 +162,7 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 		MCerrorlock--;
 	if (sp.skip_token(SP_FACTOR, TT_FROM) == PS_NORMAL)
 	{
-		if (parsedtformat(sp, fform, fsform) != PS_NORMAL)
+		if (parsedtformat(sp, fform, fsform, m_from_format) != PS_NORMAL)
 			return PS_ERROR;
 	}
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
@@ -169,13 +171,13 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 		(PE_CONVERT_NOTO, sp);
 		return PS_ERROR;
 	}
-	if (parsedtformat(sp, pform, sform) != PS_NORMAL)
+	if (parsedtformat(sp, pform, sform, m_to_format) != PS_NORMAL)
 		return PS_ERROR;
 	return PS_NORMAL;
 }
 
 Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
-                                    Convert_form &secondform)
+                                    Convert_form &secondform, MCExpression *&r_format)
 {
 	const LT *te;
 	Symbol_type type;
@@ -196,17 +198,17 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 		}
 		if (sp.lookup(SP_CONVERT, te) != PS_NORMAL)
 		{
-			if (needformat)
+            sp.backup();
+            
+            if (needformat)
 			{
-				MCperror->add
-				(PE_CONVERT_NOTFORMAT, sp);
-				return PS_ERROR;
-			}
-			else
-			{
-				sp.backup();
-				break;
-			}
+                if (sp.parseexp(False, True, &r_format) != PS_NORMAL)
+                {
+                    MCperror->add(PE_CONVERT_NOTFORMAT, sp);
+                    return PS_ERROR;
+                }
+                return PS_NORMAL;
+            }
 		}
 		switch (te->which)
 		{
@@ -283,12 +285,26 @@ void MCConvert::exec_ctxt(MCExecContext& ctxt)
         if (!ctxt . EvalExprAsStringRef(source, EE_CONVERT_CANTGET, &t_input))
             return;
     }
+    
+    MCAutoStringRef t_from_format;
+    if (m_from_format != NULL)
+    {
+        if (!ctxt . EvalExprAsStringRef(m_from_format, EE_CONVERT_CANTGET, &t_from_format))
+            return;
+    }
+    
+    MCAutoStringRef t_to_format;
+    if (m_to_format != NULL)
+    {
+        if (!ctxt . EvalExprAsStringRef(m_to_format, EE_CONVERT_CANTGET, &t_to_format))
+            return;
+    }
 
 	if (container == NULL)
-        MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform);
+        MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, *t_from_format, pform, sform, *t_to_format);
 	else
 	{
-		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
+		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, *t_from_format, pform, sform, *t_to_format, &t_output);
         container -> set(ctxt, PT_INTO, *t_output);
 
         if (ctxt . HasError())

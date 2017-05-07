@@ -1765,7 +1765,7 @@ static bool cgi_send_cookies(void)
 			MCAutoNumberRef t_num;
 			MCAutoStringRef t_string;
 			/* UNCHECKED */ MCNumberCreateWithInteger(MCservercgicookies[i].expires, &t_num);
-			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED, &t_string);
+			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, NULL, CF_INTERNET_DATE, CF_UNDEFINED, NULL, &t_string);
 			if (t_success)
 			{
 				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", MCStringGetCString(*t_string));

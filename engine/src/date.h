@@ -216,13 +216,21 @@ extern bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef
 extern void MCD_dateformat(MCExecContext& ctxt, Properties p_format, MCStringRef& r_dateformat);
 
 extern bool MCD_convert(MCExecContext& ctxt, MCValueRef p_input,
-						Convert_form p_primary_from, Convert_form p_secondary_from,
-						Convert_form p_primary_to, Convert_form p_secondary_to,
+						Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef p_from_format,
+						Convert_form p_primary_to, Convert_form p_secondary_to, MCStringRef p_to_format,
 						MCStringRef& r_converted);
 
-extern bool MCD_convert_to_datetime(MCExecContext& ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
-extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCValueRef &r_output);
+extern bool MCD_convert_to_datetime(MCExecContext &ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef p_from_format, MCDateTime &r_datetime);
+inline bool MCD_convert_to_datetime(MCExecContext& ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime)
+{
+    return MCD_convert_to_datetime(ctxt, p_input, p_primary_from, p_secondary_from, NULL, r_datetime);
+}
 
+extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef p_from_format, MCValueRef &r_output);
+inline bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCValueRef &r_output)
+{
+    return MCD_convert_from_datetime(ctxt, p_datetime, p_primary_from, p_secondary_from, NULL, r_output);
+}
 extern void MCD_getlocaleformats();
 
 #endif
