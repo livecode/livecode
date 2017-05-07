@@ -2749,6 +2749,9 @@ enum Exec_errors
 
     // {EE-0900} messageDigest: error in message data parameter
     EE_MESSAGEDIGEST_BADDATA,
+    
+    // {EE-0901} date: error in format parameter
+    EE_DATE_BADFORMAT,
 };
 
 extern const char *MCexecutionerrors;

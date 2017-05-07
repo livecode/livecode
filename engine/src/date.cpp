@@ -748,6 +748,18 @@ void MCD_date(MCExecContext &ctxt, Properties p_format, MCStringRef &r_date)
 	datetime_format(t_locale, t_date_format, t_datetime, r_date);
 }
 
+void MCD_date_of_format(MCExecContext &ctxt, MCStringRef p_format, MCStringRef &r_date)
+{
+    MCDateTime t_datetime;
+    MCS_getlocaldatetime(t_datetime);
+    
+    const MCDateTimeLocale *t_locale;
+    t_locale = g_basic_locale;
+    
+    datetime_format(t_locale, p_format, t_datetime, r_date);
+}
+
+
 void MCD_time(MCExecContext &ctxt, Properties p_format, MCStringRef &r_time)
 {
 	MCDateTime t_datetime;

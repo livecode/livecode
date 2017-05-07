@@ -209,6 +209,7 @@ extern bool MCDateTimeInitialize();
 extern bool MCDateTimeFinalize();
 
 extern void MCD_date(MCExecContext& ctxt, Properties p_format, MCStringRef& r_date);
+extern void MCD_date_of_format(MCExecContext &ctxt, MCStringRef p_format, MCStringRef &r_date);
 extern void MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time);
 extern bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);
 extern bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);

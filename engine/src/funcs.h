@@ -578,12 +578,19 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalControlKeyMethodInfo; }
 };
 
-class MCDate : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDate>
+class MCDate : public MCFunction
 {
 public:
-	// virtual Exec_stat eval(MCExecPoint &);
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateMethodInfo; }
+    MCDate() : m_format(nil) {}
+    virtual ~MCDate();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean p_is_the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+    virtual void compile(MCSyntaxFactoryRef);
 
+    // virtual Exec_stat eval(MCExecPoint &);
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateMethodInfo; }
+private:
+    MCExpression *m_format;
 };
 
 class MCDateFormat : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDateFormat>

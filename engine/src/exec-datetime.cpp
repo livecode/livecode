@@ -34,6 +34,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Milliseconds, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Seconds, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Ticks, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Date, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(DateTime, DateOfFormat, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Time, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, DateFormat, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, MonthNames, 1)
@@ -74,6 +75,11 @@ void MCDateTimeEvalTicks(MCExecContext& ctxt, real64_t& r_ticks)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCDateTimeEvalDateOfFormat(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string)
+{
+    MCDateTimeGetDateOfFormat(ctxt, p_format, r_string);
+}
 
 void MCDateTimeEvalDate(MCExecContext& ctxt, MCStringRef& r_string)
 {
@@ -154,6 +160,11 @@ void MCDateTimeSetTwelveTime(MCExecContext &ctxt, bool p_value)
 void MCDateTimeGetDate(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
 {
 	MCD_date(ctxt, p_type, r_value);
+}
+
+void MCDateTimeGetDateOfFormat(MCExecContext &ctxt, MCStringRef p_format, MCStringRef& r_value)
+{
+    MCD_date_of_format(ctxt, p_format, r_value);
 }
 
 void MCDateTimeGetTime(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
