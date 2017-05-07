@@ -29,6 +29,18 @@ Example:
 convert the date && the time to seconds
 put it
 
+Example:
+local tDate
+put 1494192899 into tDate
+convert tDate from seconds to "%Y-%m-%d"
+-- 2017-05-08
+
+Example:
+local tDate
+put "20170507T205054+1000" into tDate
+convert tDate from "%Y%m%dT%H%M%S%z" to dateItems
+-- 2017,5,7,20,50,54,1
+
 Parameters:
 dateAndTime (string):
 A string or container with a date, a time, or a date and time separated
@@ -51,7 +63,27 @@ can request only one format.
 - "internet date":   Thu, 17 Feb 2017 22:13:21 -0500
 - "seconds":   the number of seconds since the start of the epoch
 - "dateItems":   2017,2,17,22,13,21,5
+- a <string> containing one or more formatting incantations, each of
+  which describes a part of the requested date <format>. The possible
+  incantations are as follows:
 
+    * `%a` - Abbreviated weekday name:  the abbreviated day of the week,
+    as reported by the <weekdayNames> function
+    * `%A` - Full weekday name:  the full day of the week, as reported
+    by the weekdayNames function
+    * `%b` Abbreviated month name:  the abbreviated month name, as
+    reported by the monthNames function
+    * `%B` - Full month name:  the full month name, as reported by the
+    monthNames function 
+    * `%d` - Day of the month:  the day of the month as a number
+    * `%m` - Month number:  the number of the month
+    * `%y` - Two-digit year:  the year as a two-digit number
+    * `%Y` - Four-digit year:  This incantation indicates the year as a
+    four-digit number (including the century)
+    * `%w` - Day of the week:  A number between 1 and 7
+    * if `#` is after `%` then any leading zeros are not
+    included in the format. For example for the first of the month the
+    format `%d` would be `01` while the format `%#d` would be `1`.
 
 It:
 If the <dateAndTime> is a <container>, the converted date and time is
@@ -110,6 +142,14 @@ not change according to the user's preferences.
 >*Note:* The range of dates that the <convert> <command> can handle is
 > limited by the operating system's date routines. In particular,
 > Windows systems are limited to dates after 1/1/1970.
+
+>*Note:* It is possible to create an ambiguous date format string that
+> will not convert correctly. For example, the format `%#m%#d` would
+> create a date `112` for both the 12th of January and the 2nd of
+> November.
+
+Changes:
+The ability to use date formatting strings was added in version 9.0.
 
 References: sort container (command), time (function),
 dateFormat (function), milliseconds (function), date (function),

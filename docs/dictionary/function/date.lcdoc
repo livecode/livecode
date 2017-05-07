@@ -6,7 +6,7 @@ Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system | internet 
 
 Syntax: the [internet] [{ english | system }] date
 
-Syntax: date()
+Syntax: date([<dateFormat>])
 
 Summary:
 <return|Returns> the current date.
@@ -25,6 +25,9 @@ put the internet date into dateHeader
 
 Example:
 put the long system date into field "Today's Date"
+
+Example:
+put date("%Y-%m-%d") -- 2017-05-08
 
 Returns:
 If the useSystemDate <property> is set to true or if you specify the
@@ -57,6 +60,29 @@ The internet date form returns the following parts, separated by spaces:
           colons 
         * the four-digit time zone relative to UTC (Greenwich) time.
 
+Parameters:
+
+dateFormat (optional string): a <string> containing one or more
+formatting incantations, each of which describes a part of the requested
+date <format>. The possible incantations are as follows:
+
+* `%a` - Abbreviated weekday name:  the abbreviated day of the week, as reported
+by the <weekdayNames> function
+* `%A` - Full weekday name:  the full day of the week, as reported by the
+weekdayNames function
+* `%b` Abbreviated month name:  the abbreviated month name, as reported by the
+monthNames function
+* `%B` - Full month name:  the full month name, as reported by the monthNames
+function 
+* `%d` - Day of the month:  the day of the month as a number
+* `%m` - Month number:  the number of the month
+* `%y` - Two-digit year:  the year as a two-digit number
+* `%Y` - Four-digit year:  This incantation indicates the year as a four-digit
+number (including the century)
+* `%w` - Day of the week:  A number between 1 and 7
+* if `#` is after `%` then any leading zeros are not included
+in the format. For example for the first of the month the format `%d`
+would be `01` while the format `%#d` would be `1`.
 
 Description:
 Use the <date> <function> to display the current date to the user, or to
@@ -71,6 +97,8 @@ The ability to use the date format preferred by the user was introduced
 in version 1.1. In previous versions, the date function, along with the
 time function, consistently used the standard U.S. format, even if the
 operating system's settings specified another language or date format.
+
+The ability to use date formatting strings was added in version 9.0.
 
 References: convert (command), function (control structure),
 dateFormat (function), milliseconds (function), format (function),
