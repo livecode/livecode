@@ -169,7 +169,8 @@ function deployIsValidJDK pPath
       return false
    end if
    
-   if not pPath contains "jdk1.8" then
+   // newer versions of SDK Tools require Java 8
+   if pathToSDKClasses() contains "sdklib-" and not pPath contains "jdk1.8" then
       answer error "The version of Java installed in your system is not compatible with the current version of Android SDK Tools. Please install Java 8 to continue."
       return false
    end if
@@ -330,6 +331,7 @@ function pathToSDKClasses pRoot
       return pRoot & slash & "tools/lib/sdklib.jar"
    else
       filter tLibs with "sdklib-[0-9]*" into tSdkLib
+      if tSdkLib is empty then return empty
       return pRoot & "/tools/lib/" & tSdkLib
    end if
 end pathToSDKClasses
