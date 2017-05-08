@@ -169,6 +169,11 @@ function deployIsValidJDK pPath
       return false
    end if
    
+   if not pPath contains "jdk1.8" then
+      answer error "The version of Java installed in your system is not compatible with the current version of Android SDK Tools. Please install Java 8 to continue."
+      return false
+   end if
+   
    return true
 end deployIsValidJDK
 
@@ -319,8 +324,25 @@ function pathToSDKClasses pRoot
    if pRoot is empty then
       put sAndroidRoot into pRoot
    end if
-   return pRoot & slash & "tools/lib/sdklib.jar"
+   local tLibs,tSdkLib
+   put files(pRoot&"/tools/lib") into tLibs
+   if tLibs contains "sdklib.jar" then 
+      return pRoot & slash & "tools/lib/sdklib.jar"
+   else
+      filter tLibs with "sdklib-[0-9]*" into tSdkLib
+      return pRoot & "/tools/lib/" & tSdkLib
+   end if
 end pathToSDKClasses
+
+function pathToCommonClasses pRoot
+   if pRoot is empty then
+      put sAndroidRoot into pRoot
+   end if
+   local tCommonLib
+   filter files(pRoot&"/tools/lib") with "common-*" into tCommonLib
+   if tCommonLib is empty then return empty
+   return pRoot & slash & "tools/lib/" & tCommonLib
+end pathToCommonClasses
 
 private function searchTools pRoot, pCommand
    // search the shared tools folder
