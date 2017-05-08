@@ -53,6 +53,14 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
       put ":" into tSep
    end if
    
+   // We need the 'common' classes to fix the following exception
+   /*
+   Exception in thread "main" java.lang.NoClassDefFoundError: com/android/prefs/AndroidLocation
+	at com.android.sdklib.internal.build.DebugKeyProvider.getDefaultKeyStoreOsPath(DebugKeyProvider.java:122)
+	at com.android.sdklib.build.ApkBuilder.getDebugKeystore(ApkBuilder.java:944)
+	at com.android.sdklib.build.ApkBuilderMain.main(ApkBuilderMain.java:129)
+    Caused by: java.lang.ClassNotFoundException: com.android.prefs.AndroidLocation
+   */
    executeShellCommand pathToJava(), "-Xmx128M", "-classpath", pathToSDKClasses() & tSep & pathToCommonClasses(), "com.android.sdklib.build.ApkBuilderMain", pUnalignedApkFile, pUnsignedParam, "-v", "-z", pAssetArchive, "-f", pClassesFile, "-nf", pLibsBuildFolder
    put the result into tResult
    return tResult
