@@ -133,6 +133,17 @@ US date and time formats are used.
 The internet date, seconds, and <dateItems> formats are invariant and do
 not change according to the user's preferences.
 
+Specifying a from format is optional, however, when parsing the date it
+will be assumed to be in a US (<english>) <date> format. For example
+assuming a non-US locale:
+
+    -- 8th of May, 2017
+    put "8/5/2017" into tDate 
+    convert tDate to dateItems 
+    -- 2017,8,5,0,0,0,7 = 5th of Aug, 2017
+    convert tDate from system date to dateItems
+    -- 2017,5,8,0,0,0,2 = 8th of May, 2017
+
 >*Note:* The <convert> command assumes all dates / times are in local
 > time except for 'the seconds', which is taken to be universal time.
 
