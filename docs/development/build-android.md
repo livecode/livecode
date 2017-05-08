@@ -42,9 +42,13 @@ Create a standalone toolchain (this simplifies setting up the build environment)
 
 ````bash
 android-ndk-r14/build/tools/make_standalone_toolchain.py \
-    --arch arm --api 17 --stl libc++ \
+    --arch arm --api 9 \
     --install-dir ${HOME}/android/toolchain/standalone
 ````
+
+**Note:** We currently use NDK API 9 for building the LiveCode Android engine and
+do not specify the '--stl' option as we currently require the C++ library (if used)
+to be statically linked into the executable.
 
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
 
