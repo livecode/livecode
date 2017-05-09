@@ -7,7 +7,7 @@ Syntax: selectionChanged
 Summary:
 Sent to a <field> or <player> when the <selection> is changed.
 
-Associations: field
+Associations: field, player
 
 Introduced: 1.0
 
