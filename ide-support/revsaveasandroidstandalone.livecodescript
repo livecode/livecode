@@ -46,9 +46,22 @@ end pathIsRelative
 
 // IM-2013-05-21: [[ BZ 10904 ]] This function replicates the functionality of the apkbuilder script which has now been removed from the Android SDK platform tools
 private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClassesFile, pLibsBuildFolder
-   local tResult
+   local tResult, tSep
+   if the platform is "Win32" then 
+      put ";" into tSep
+   else
+      put ":" into tSep
+   end if
    
-   executeShellCommand pathToJava(), "-Xmx128M", "-classpath", pathToSDKClasses(), "com.android.sdklib.build.ApkBuilderMain", pUnalignedApkFile, pUnsignedParam, "-v", "-z", pAssetArchive, "-f", pClassesFile, "-nf", pLibsBuildFolder
+   // We need the 'common' classes to fix the following exception
+   /*
+   Exception in thread "main" java.lang.NoClassDefFoundError: com/android/prefs/AndroidLocation
+	at com.android.sdklib.internal.build.DebugKeyProvider.getDefaultKeyStoreOsPath(DebugKeyProvider.java:122)
+	at com.android.sdklib.build.ApkBuilder.getDebugKeystore(ApkBuilder.java:944)
+	at com.android.sdklib.build.ApkBuilderMain.main(ApkBuilderMain.java:129)
+    Caused by: java.lang.ClassNotFoundException: com.android.prefs.AndroidLocation
+   */
+   executeShellCommand pathToJava(), "-Xmx128M", "-classpath", pathToSDKClasses() & tSep & pathToCommonClasses(), "com.android.sdklib.build.ApkBuilderMain", pUnalignedApkFile, pUnsignedParam, "-v", "-z", pAssetArchive, "-f", pClassesFile, "-nf", pLibsBuildFolder
    put the result into tResult
    return tResult
 end buildAPK
@@ -1160,6 +1173,11 @@ private function pathToSDKClasses pRoot
    dispatch function "pathToSDKClasses" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToSDKClasses
+
+private function pathToCommonClasses pRoot
+   dispatch function "pathToCommonClasses" to stack "revDeployLibraryAndroid" with pRoot
+   return the result
+end pathToCommonClasses
 
 private function pathToAapt pRoot
    // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
