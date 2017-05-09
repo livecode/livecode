@@ -18,6 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <Windows.h>
 #include <atlbase.h>
 #include <DShow.h>
+#include <d3d9.h>
+#include <vmr9.h>
 
 #include "globals.h"
 #include "stack.h"
@@ -151,6 +153,7 @@ private:
 	index_t m_last_marker;
 
 	bool m_looping;
+	bool m_mirrored;
 
     CComPtr<IGraphBuilder>  m_graph;
     CComPtr<IMediaEventEx>  m_event;
@@ -392,6 +395,9 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 	m_callback_markers.count = 0;
 	m_callback_markers.ptr = nil;
 	m_last_marker = -1;
+
+	m_looping = false;
+	m_mirrored = false;
 }
 
 MCWin32DSPlayer::~MCWin32DSPlayer()
@@ -445,6 +451,27 @@ bool MCWin32DSPinIsConnected(IPin *p_pin)
 	HRESULT t_result;
 	t_result = p_pin->ConnectedTo(&t_connected);
 	return t_result == S_OK;
+}
+
+bool MCWin32DSFilterIsConnected(IBaseFilter *p_filter, PIN_DIRECTION p_direction)
+{
+	CComPtr<IEnumPins> t_enum_pins;
+	if (!SUCCEEDED(p_filter->EnumPins(&t_enum_pins)))
+		return false;
+
+	CComPtr<IPin> t_pin;
+	while (S_OK == t_enum_pins->Next(1, &t_pin, NULL))
+	{
+		PIN_DIRECTION t_direction;
+		if (SUCCEEDED(t_pin->QueryDirection(&t_direction)))
+		{
+			if (MCWin32DSPinIsConnected(t_pin) && t_direction == p_direction)
+				return true;
+		}
+		t_pin.Release();
+	}
+
+	return false;
 }
 
 // Examines the input pins of each renderer filter to determine the supported media types, and video frame-rate if applicable
@@ -699,6 +726,20 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success && t_source_filter == nil)
 		t_success = SUCCEEDED(t_graph->AddSourceFilter(*t_filename, L"MCWin32DSSourceFilter", &t_source_filter));
 
+	// try to add VMR9 to filter graph - we remove it later if it's not used (no video)
+	CComPtr<IBaseFilter> t_vmr9;
+	// don't fail loading if VMR9 isn't available
+	if (t_success && SUCCEEDED(t_vmr9.CoCreateInstance(CLSID_VideoMixingRenderer9)))
+	{
+		CComPtr<IVMRFilterConfig9> t_fc9;
+		if (t_success)
+			t_success = SUCCEEDED(t_vmr9->QueryInterface(&t_fc9));
+		if (t_success)
+			t_success = SUCCEEDED(t_fc9->SetNumberOfStreams(1));
+		if (t_success)
+			t_success = SUCCEEDED(t_graph->AddFilter(t_vmr9, L"MCWin32DSVMR9Filter"));
+	}
+
 	CComPtr<IEnumPins> t_enum_pins;
 	if (t_success)
 		t_success = SUCCEEDED(t_source_filter->EnumPins(&t_enum_pins));
@@ -720,6 +761,9 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 			t_pin->Release();
 		}
 	}
+
+	if (t_success && t_vmr9 != NULL && !MCWin32DSFilterIsConnected(t_vmr9, PINDIR_INPUT))
+		t_success = SUCCEEDED(t_graph->RemoveFilter(t_vmr9));
 
 	if (t_success)
 		t_success = SetFilterGraph(t_graph);
@@ -1053,13 +1097,40 @@ bool MCWin32DSPlayer::SetOffscreen(bool p_offscreen)
 // TODO - implement mirror property
 bool MCWin32DSPlayer::GetMirrored(bool &r_mirrored)
 {
-	r_mirrored = false;
+	r_mirrored = m_mirrored;
 	return true;
 }
 
 bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
 {
-	return false;
+	if (m_mirrored == p_mirrored)
+		return true;
+
+	CComPtr<IBaseFilter> t_vmr9;
+	if (!SUCCEEDED(m_graph->FindFilterByName(L"MCWin32DSVMR9Filter", &t_vmr9)))
+		return false;
+
+	CComPtr<IVMRMixerControl9> t_mc9;
+	if (!SUCCEEDED(t_vmr9->QueryInterface(&t_mc9)))
+		return false;
+
+	VMR9NormalizedRect t_rect;
+	if (p_mirrored)
+	{
+		t_rect.right = t_rect.top = 0.0;
+		t_rect.left = t_rect.bottom = 1.0;
+	}
+	else
+	{
+		t_rect.left = t_rect.top = 0.0;
+		t_rect.right = t_rect.bottom = 1.0;
+	}
+
+	if (!SUCCEEDED(t_mc9->SetOutputRect(0, &t_rect)))
+		return false;
+
+	m_mirrored = p_mirrored;
+	return true;
 }
 
 bool MCWin32DSPlayer::GetMediaTypes(MCPlatformPlayerMediaTypes &r_types)

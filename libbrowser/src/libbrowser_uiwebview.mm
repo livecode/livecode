@@ -180,7 +180,6 @@ bool MCNSArrayToBrowserValue(NSArray *p_array, MCBrowserValue &r_value)
 {
 	MCUIWebViewBrowser *m_instance;
 	bool m_pending_request;
-	bool m_frame_request;
 	char *m_request_url;
 	char *m_frame_request_url;
 }
@@ -820,9 +819,9 @@ bool MCUIWebViewBrowser::Init(void)
 		return YES;
 	}
 	
-	m_frame_request = ![[request URL] isEqual: [request mainDocumentURL]];
+	bool t_frame_request = ![[request URL] isEqual: [request mainDocumentURL]];
 	
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url != nil)
 		MCCStringFree(t_url);
 	t_url = nil;
@@ -831,14 +830,14 @@ bool MCUIWebViewBrowser::Init(void)
 	
 	if ([NSURLConnection canHandleRequest: request])
 	{
-		if (!m_frame_request)
+		if (!t_frame_request)
 			m_instance->OnNavigationBegin(false, t_url);
 
 		return YES;
 	}
 	else
 	{
-		m_instance->OnNavigationRequestUnhandled(m_frame_request, t_url);
+		m_instance->OnNavigationRequestUnhandled(t_frame_request, t_url);
 		
 		return NO;
 	}
@@ -846,41 +845,43 @@ bool MCUIWebViewBrowser::Init(void)
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
 {
-	char *t_url = m_frame_request ? m_frame_request_url : m_request_url;
+    bool t_frame_request = ![[[webView request] URL] isEqual: [[webView request] mainDocumentURL]];
+	char *t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
-	m_instance->OnDocumentLoadBegin(m_frame_request, t_url);
+	m_instance->OnDocumentLoadBegin(t_frame_request, t_url);
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
-	if (!m_frame_request)
+    bool t_frame_request = ![[[webView request] URL] isEqual: [[webView request] mainDocumentURL]];
+	if (!t_frame_request)
 		m_instance->AttachJSHandlers();
 	
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 
-	m_instance->OnDocumentLoadComplete(m_frame_request, t_url);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadComplete(t_frame_request, t_url);
+	if (!t_frame_request)
 		m_instance->OnNavigationComplete(false, t_url);
 
 	MCCStringFree(t_url);
 	t_url = nil;
 }
-
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+    bool t_frame_request = ![[[webView request] URL] isEqual: [[webView request] mainDocumentURL]];
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 
-	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadFailed(t_frame_request, t_frame_request ? m_frame_request_url : m_request_url, t_error);
+	if (!t_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
 
 	MCCStringFree(t_url);
