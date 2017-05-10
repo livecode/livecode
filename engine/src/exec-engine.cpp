@@ -1226,13 +1226,24 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
     {
-        switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        if (t_object)
         {
-        case ES_ERROR:
-            ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
-            break;
-        default:
-            break;
+            MCObjectExecutionLock t_object_lock(t_object);
+            switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
+            {
+            case ES_ERROR:
+                ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
         }
     }
 	

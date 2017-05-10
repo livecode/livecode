@@ -256,15 +256,6 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
-        
-        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
-        {
-            if (!MCtargetptr.IsValid())
-            {
-                stat = ES_NORMAL;
-                t_has_passed = false;
-            }
-        }
 	}
 
 //#ifdef TARGET_SUBPLATFORM_IPHONE
@@ -294,15 +285,6 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
     {
         extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
         stat = MCEngineHandleLibraryMessage(mess, params);
-        
-        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
-        {
-            if (!MCtargetptr.IsValid())
-            {
-                stat = ES_NORMAL;
-                t_has_passed = false;
-            }
-        }
     }
     
 	if (MCmessagemessages && stat != ES_PASS && MCtargetptr)
