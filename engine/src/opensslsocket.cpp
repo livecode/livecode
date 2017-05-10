@@ -720,6 +720,17 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
                 return false;
             }
 
+#ifdef SO_REUSEPORT
+            // some platforms also require the SO_REUSEPORT option to be set in order to use the same local port for multiple connections
+            t_port_reuse = 1;
+            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
+            {
+                p_socket->error = strclone("can't use the local port");
+                p_socket->doclose();
+                return false;
+            }
+#endif
+
             if (bind(p_socket->fd, (struct sockaddr *)&t_bind_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 p_socket->error = strclone("can't bind to local host and port");
@@ -1132,6 +1143,15 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	int on = 1;
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+
+#ifdef SO_REUSEPORT
+    on = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const char *)&on, sizeof(on)) != 0)
+    {
+        MCresult->sets("can't reuse port");
+        return NULL;
+    }
+#endif
 
 	mc_sockaddr_in_t addr;
 
@@ -1591,7 +1611,7 @@ void MCSocket::readsome()
 				MCAutoStringRef n;
 				MCNewAutoNameRef t_name;
 				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
-				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCStringAppendFormat(*n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
 				uindex_t index;
 				if (accepting && !IO_findsocket(*t_name, index))
