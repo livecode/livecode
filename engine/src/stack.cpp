@@ -1596,13 +1596,6 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 		stat = m_externals -> Handle(this, htype, message, params);
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
-        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
-        {
-            if (!MCtargetptr.IsValid())
-            {
-                stat = ES_NORMAL;
-            }
-        }
 	}
 
 	// MW-2011-06-30: Cleanup of message path - this clause handles the transition
