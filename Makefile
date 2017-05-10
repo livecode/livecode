@@ -46,7 +46,7 @@ else
 endif
 
 # Prettifying output for CI builds
-XCODEBUILD_FILTER ?= 
+XCODEBUILD_FILTER ?=
 
 include Makefile.common
 
@@ -56,6 +56,15 @@ include Makefile.common
 
 all: all-$(guess_platform)
 check: check-$(guess_platform)
+
+# [[ MDW-2017-05-09 ]] feature_clean_target
+clean:
+	rm -rf linux-*-bin
+	rm -rf build-linux-*
+	rm -rf prebuilt/fetched
+	rm -rf prebuilt/include
+	rm -rf prebuilt/lib
+	find . -name \*.lcb | xargs touch
 
 check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin
