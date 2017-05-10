@@ -2627,7 +2627,7 @@ Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
     t_category = kMCSoundAudioCategoryUnknown;
     if (t_success)
     {
-        MCSoundAudioCategoryFromString(*t_category_string);
+        t_category = MCSoundAudioCategoryFromString(*t_category_string);
     }
     
     if (t_success)
