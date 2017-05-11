@@ -1592,13 +1592,17 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 
 	if (((passing_object != nil && stat == ES_PASS) || stat == ES_NOT_HANDLED) && m_externals != nil)
 	{
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+        
 		Exec_stat oldstat = stat;
 		stat = m_externals -> Handle(this, htype, message, params);
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
         if (stat == ES_PASS || stat == ES_NOT_HANDLED)
         {
-            if (!MCtargetptr.IsValid())
+            if (t_target_was_valid && !MCtargetptr.IsValid())
             {
                 stat = ES_NORMAL;
             }
