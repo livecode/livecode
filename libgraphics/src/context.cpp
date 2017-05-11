@@ -1493,10 +1493,9 @@ void MCGContextEnd(MCGContextRef self)
 	else
 	{
 		// Hardware-backed layer - copy it into RAM
-		sk_sp<SkImage> t_image = t_child_layer->m_surface->makeImageSnapshot();
 		self->layer->canvas->save();
 		self->layer->canvas->resetMatrix();
-		self->layer->canvas->drawImage(t_image, t_child_layer->origin_x, t_child_layer->origin_y, &t_paint);
+		t_child_layer->m_surface->draw(self->layer->canvas, t_child_layer->origin_x, t_child_layer->origin_y, &t_paint);
 		self->layer->canvas->restore();
 	}
 	

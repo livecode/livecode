@@ -91,8 +91,7 @@ void MCAndroidTypefaceRelease(MCAndroidTypefaceRef p_typeface)
 bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_size, float &r_ascent, float &r_descent, float &r_leading, float &r_xheight)
 {
     // Skia APIs expect typefaces to be passed as shared pointers
-    sk_sp<SkTypeface> t_typeface((SkTypeface*)p_typeface);
-    t_typeface->ref();
+    sk_sp<SkTypeface> t_typeface = sk_ref_sp((SkTypeface *)p_typeface);
     
 	SkPaint t_paint;
 	t_paint.setTypeface(t_typeface);
@@ -114,8 +113,7 @@ bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_siz
 bool MCAndroidTypefaceMeasureText(MCAndroidTypefaceRef p_typeface, uint32_t p_size, const char *p_text, uint32_t p_text_length, bool p_utf16, float &r_length)
 {
     // Skia APIs expect typefaces to be passed as shared pointers
-    sk_sp<SkTypeface> t_typeface((SkTypeface*)p_typeface);
-    t_typeface->ref();
+    sk_sp<SkTypeface> t_typeface = sk_ref_sp((SkTypeface *)p_typeface);
     
     SkPaint t_paint;
 	t_paint.setTypeface(t_typeface);
