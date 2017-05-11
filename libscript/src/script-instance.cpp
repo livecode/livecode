@@ -1404,7 +1404,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScr
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
     if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler -> function_cif))
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("Failed to fetch handler layout type"));
     
     if (!p_throw)
         r_bound = true;
