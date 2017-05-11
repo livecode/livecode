@@ -251,17 +251,17 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		t_found_comma = MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma);
 		if (t_found_comma)
 		{
-			if (MCStringSubstringContains(p_input, MCRangeMake(t_pos, t_comma - t_pos), MCSTR("-"), kMCCompareExact))
+			if (MCStringSubstringContains(p_input, MCRangeMakeMinMax(t_pos, t_comma), MCSTR("-"), kMCCompareExact))
 			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash);
 
 				MCAutoStringRef t_substring_from;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_dash), &t_substring_from);
 				t_error = !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring_to);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_comma), &t_substring_to);
 				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = t_comma;
 			}
@@ -269,7 +269,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			else
 			{
 				MCAutoStringRef t_substring;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_comma), &t_substring);
 				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;
@@ -279,17 +279,17 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		else
 		{
 			//case dash found after t_pos
-			if (MCStringSubstringContains(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), MCSTR("-"), kMCCompareExact))
+			if (MCStringSubstringContains(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), MCSTR("-"), kMCCompareExact))
 			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash);
 
 				MCAutoStringRef t_substring_from;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, t_dash), &t_substring_from);
 				t_error =  !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring_to);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), &t_substring_to);
 				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = MCStringGetLength(p_input);
 			}
@@ -297,7 +297,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			else
 			{
 				MCAutoStringRef t_substring;
-				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_pos, MCStringGetLength(p_input)), &t_substring);
 				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;

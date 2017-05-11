@@ -9,6 +9,9 @@
 		'module_test_sources':
 		[
 			'test/environment.cpp',
+            'test/test_foreign.cpp',
+			'test/test_hash.cpp',
+			'test/test_proper-list.cpp',
 			'test/test_string.cpp',
 			'test/test_typeconvert.cpp',
             'test/test_system-library.cpp',
@@ -57,6 +60,7 @@
 				'include/foundation-locale.h',
 				'include/foundation-math.h',
 				'include/foundation-objc.h',
+                'include/foundation-span.h',
 				'include/foundation-stdlib.h',
 				'include/foundation-system.h',
 				'include/foundation-text.h',
@@ -215,7 +219,7 @@
                 
                 # Set java-related defines and includes
                 [
-					'host_os == "mac" and OS != "ios"',
+					'host_os == "mac" and OS != "ios" and OS != "emscripten"',
 					{
 						'defines':
 						[

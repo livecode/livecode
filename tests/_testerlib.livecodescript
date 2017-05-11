@@ -52,14 +52,9 @@ end TesterGetTestFileNames
 
 -- Helper command used by runGetTestFileNames
 private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, @xFiles, @xCount
-   -- Save the CWD
-   local tSaveFolder
-   put the defaultfolder into tSaveFolder
-   set the defaultfolder to pPath
-
    -- Process files in the current directory
    local tFile
-   repeat for each line tFile in the files
+   repeat for each line tFile in files(pPath)
       if tFile ends with ("." & pExtension) and \
             not (tFile begins with "." or tFile begins with "_") then
 
@@ -74,7 +69,7 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
    -- Process subdirectories
    local tFolder, tFolderPath
-   repeat for each line tFolder in the folders
+   repeat for each line tFolder in folders(pPath)
       if tFolder begins with "." then
          next repeat
       end if
@@ -87,9 +82,6 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
       TesterGetActualFileNames_Recursive tFolderPath, tFolder, pExtension, xFiles, xCount
    end repeat
-
-   -- Restore the CWD
-   set the defaultfolder to tSaveFolder
 end TesterGetActualFileNames_Recursive
 
 -- Get a number-indexed array contain the names of all "test"
@@ -111,6 +103,7 @@ function TesterParseTestCommandNames pFilename
    -- Scan the file for "on Test*" definitions
    local tCommandNames, tCount, tLine, tName
 
+   local tCommandNameSeen
    repeat for each line tLine in tScript
       if token 1 of tLine is not "on" then
          next repeat
@@ -122,6 +115,12 @@ function TesterParseTestCommandNames pFilename
          next repeat
       end if
 
+      if tCommandNameSeen[tName] then
+         -- Duplicate test name
+         write merge("Error: duplicate test name [[tName]] in [[pFilename]]\n") to stderr
+         quit 1
+      end if
+
       -- Exclude the test setup message
       if tName is "TestSetup" or tName is "TestTearDown" then
          next repeat
@@ -129,6 +128,7 @@ function TesterParseTestCommandNames pFilename
 
       add 1 to tCount
       put tName into tCommandNames[tCount]
+      put true into tCommandNameSeen[tName]
    end repeat
 
    return tCommandNames

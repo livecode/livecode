@@ -38,7 +38,6 @@ bool MCValueConvertToStringForSave(MCValueRef value, MCStringRef& r_string);
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringCreateWithOldString(const MCString&, MCStringRef &r_string);
-MCString MCStringGetOldString(MCStringRef p_string);
 bool MCStringIsEqualToOldString(MCStringRef string, const MCString& oldstring, MCCompareOptions options);
 
 // Attempt to interpret the given string as a base-10 integer. It returns false
@@ -84,8 +83,6 @@ bool MCNameClone(MCNameRef name, MCNameRef& r_new_name);
 
 bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
-const char *MCNameGetCString(MCNameRef name);
-MCString MCNameGetOldString(MCNameRef name);
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
 
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCCompareOptions options);

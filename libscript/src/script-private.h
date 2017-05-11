@@ -70,6 +70,16 @@ struct MCScriptObject
 bool MCScriptCreateObject(MCScriptObjectKind kind, size_t size, MCScriptObject*& r_object);
 void MCScriptDestroyObject(MCScriptObject *object);
 
+template <typename ScriptObjectType>
+bool MCScriptCreateObject(MCScriptObjectKind kind, ScriptObjectType*& r_object)
+{
+    MCScriptObject* t_new = nullptr;
+    if (!MCScriptCreateObject(kind, sizeof(ScriptObjectType), t_new))
+        return false;
+    r_object = reinterpret_cast<ScriptObjectType*>(t_new);
+    return true;
+}
+
 MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
 uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *object);
@@ -435,6 +445,10 @@ struct MCScriptModule: public MCScriptObject
     // This is the module-chain link. We keep a linked list of all modules in memory
     // with unique names -- not pickled.
     MCScriptModule *next_module;
+    
+    // These are the native code initializer/finalizer (if any) -- not pickled
+    bool (*initializer)(void);
+    void (*finalizer)(void);
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);

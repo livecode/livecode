@@ -25,9 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	include <windows.h>
 #endif
 
-extern "C" bool MCModulesInitialize(void);
-extern "C" void MCModulesFinalize(void);
-
 /* Possible exit statuses used by lc-run */
 enum {
 	kMCRunExitStatusSuccess = 0,
@@ -482,7 +479,6 @@ main (int argc,
 	MCInitialize();
 	MCSInitialize();
 	MCScriptInitialize();
-	MCModulesInitialize();
 
 	/* Defaults */
 	MCRunConfiguration t_config;
@@ -523,7 +519,6 @@ main (int argc,
 			MCRunHandlerError();
 	}
 
-	MCModulesFinalize();
 	MCScriptFinalize();
 	MCSFinalize();
 	MCFinalize();

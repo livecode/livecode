@@ -567,12 +567,6 @@ MCStack::~MCStack()
 	MCValueRelease(title);
 	MCValueRelease(titlestring);
 
-	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
-	{
-		stop_externals();
-		destroywindow();
-	}
-
 	// Clear and free the id cache before removing any controls
 	freeobjectidcache();
 	
@@ -604,17 +598,6 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(externalfiles);
 
-	uint2 i = 0;
-	while (i < MCnusing)
-		if (MCusing[i] == this)
-		{
-			MCnusing--;
-			uint2 j;
-			for (j = i ; j < MCnusing ; j++)
-				MCusing[j] = MCusing[j + 1];
-		}
-		else
-			i++;
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
 	if (MCmbstackptr.IsBoundTo(this))
 		MCmbstackptr = nil;
@@ -661,6 +644,10 @@ MCStack::~MCStack()
 	view_destroy();
 
 	release_window_buffer();
+
+    // Make sure we destroy the window
+    if (window != nullptr)
+        MCscreen->destroywindow(window);
 }
 
 Chunk_term MCStack::gettype() const
@@ -1386,74 +1373,134 @@ bool MCStack::isdeletable(bool p_check_flag)
     return true;
 }
 
-Boolean MCStack::del(bool p_check_flag)
+Boolean MCStack::dodel()
 {
-    if (!isdeletable(p_check_flag))
-	   return False;
-
-	while (substacks)
-	{
-		if (!substacks -> del(false))
-			return False;
-	}
-	
     MCscreen->ungrabpointer();
     MCdispatcher->removemenu();
     
     setstate(True, CS_DELETE_STACK);
     
-	if (opened)
-	{
-		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
-		//   get system resource accumulation in a tight create/destroy loop.
-		flags |= F_DESTROY_WINDOW;
-		close();
-	}
-
-	if (curcard != NULL)
-		curcard->message(MCM_delete_stack);
-	else
-		if (cards != NULL)
-			cards->message(MCM_delete_stack);
-	
+    if (opened)
+    {
+        // MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
+        //   get system resource accumulation in a tight create/destroy loop.
+        flags |= F_DESTROY_WINDOW;
+        close();
+    }
+    
+    if (curcard != NULL)
+        curcard->message(MCM_delete_stack);
+    else
+        if (cards != NULL)
+            cards->message(MCM_delete_stack);
+    
     notifyattachments(kMCStackAttachmentEventDeleting);
     
-	if (MCdispatcher->ismainstack(this))
-	{
-		MCdispatcher->removestack(this);
-	}
-        else if (MCdispatcher->is_transient_stack(this))
-        {
-                MCdispatcher->remove_transient_stack(this);
-        }
-	else if (parent->gettype() == CT_STACK)
-	{
-		remove(parent.GetAs<MCStack>()->substacks);
-		// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
-		//   undo the extraopen.
-		if (parent.GetAs<MCStack>()->substacks == nil)
-			parent.GetAs<MCStack>()->extraclose(true);
-	}
-        else
-        {
-                // One of the above conditions should always be true
-                MCUnreachable();
-        }
+    if (window != NULL && !(state & CS_FOREIGN_WINDOW))
+    {
+        stop_externals();
+        destroywindow();
+    }
+    
+    removereferences();
+        
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del(true);
+}
 
+Boolean MCStack::del(bool p_check_flag)
+{
+    if (!isdeletable(p_check_flag))
+	   return False;
+
+    while (substacks)
+    {
+        if (!substacks -> del(false))
+            return False;
+    }
+    
+    return dodel();
+}
+
+void MCStack::removereferences()
+{
+    if (controls != NULL)
+    {
+        MCControl *t_control = controls;
+        do
+        {   t_control -> removereferences();
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    if (aclips != NULL)
+    {
+        MCAudioClip *t_aclip = aclips;
+        do
+        {   t_aclip -> removereferences();
+            t_aclip = t_aclip -> next();
+        }
+        while(t_aclip != aclips);
+    }
+    
+    if (vclips != NULL)
+    {
+        MCVideoClip *t_vclip = vclips;
+        do
+        {   t_vclip -> removereferences();
+            t_vclip = t_vclip -> next();
+        }
+        while(t_vclip != vclips);
+    }
+    
+    if (cards != NULL)
+    {
+        MCCard *t_card = cards;
+        do
+        {   t_card -> removereferences();
+            t_card = t_card -> next();
+        }
+        while(t_card != cards);
+    }
+    
+    if (MCdispatcher->ismainstack(this))
+    {
+        MCdispatcher->removestack(this);
+    }
+    else if (MCdispatcher->is_transient_stack(this))
+    {
+        MCdispatcher->remove_transient_stack(this);
+    }
+    else if (parent->gettype() == CT_STACK)
+    {
+        remove(parent.GetAs<MCStack>()->substacks);
+        // MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks then make sure we
+        //   undo the extraopen.
+        if (parent.GetAs<MCStack>()->substacks == nil)
+            parent.GetAs<MCStack>()->extraclose(true);
+    }
+    else
+    {
+        // One of the above conditions should always be true
+        MCUnreachable();
+    }
+    
     if (MCtopstackptr == this)
     {
         MCtopstackptr = nil;
         MCstacks->top(nil);
     }
     if (MCstaticdefaultstackptr == this)
-		MCstaticdefaultstackptr = MCtopstackptr;
-	if (MCdefaultstackptr == this)
-		MCdefaultstackptr = MCstaticdefaultstackptr;
-
-	// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
-	//   flag set, flush the parentscripts table.
-	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
-		MCParentScript::FlushStack(this);
+        MCstaticdefaultstackptr = MCtopstackptr;
+    if (MCdefaultstackptr == this)
+        MCdefaultstackptr = MCstaticdefaultstackptr;
+    
+    // MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
+    //   flag set, flush the parentscripts table.
+    if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
+        MCParentScript::FlushStack(this);
     
     if (needs != NULL)
     {
@@ -1463,10 +1510,20 @@ Boolean MCStack::del(bool p_check_flag)
         delete needs;
         needs = NULL;
     }
+
+    uint2 i = 0;
+    while (i < MCnusing)
+        if (MCusing[i] == this)
+        {
+            MCnusing--;
+            uint2 j;
+            for (j = i ; j < MCnusing ; j++)
+                MCusing[j] = MCusing[j + 1];
+        }
+        else
+            i++;
     
-    // MCObject now does things on del(), so we must make sure we finish by
-    // calling its implementation.
-    return MCObject::del(true);
+    MCObject::removereferences();
 }
 
 void MCStack::paste(void)
@@ -1538,11 +1595,11 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 	// object.
 	Exec_stat stat;
 	stat = ES_NOT_HANDLED;
-	if (!MCdynamicpath || MCdynamiccard->getparent() != this)
+	if (!MCdynamicpath || MCdynamiccard->getparent() == this)
 		stat = handleself(htype, message, params);
 	else if (passing_object != nil)
 	{
-		// MW-2011-06-20:  If dynamic path is enabled, and this stack is the parent
+		// MW-2011-06-20:  If dynamic path is enabled, and this stack is not the parent
 		//   of the dynamic card then instead of passing through this stack, we pass
 		//   through the dynamic card (which will then pass through this stack).
 		MCdynamicpath = False;
@@ -1693,7 +1750,7 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
             // If the relative path begins with "./" or ".\", we must remove this, otherwise
 			// certain system calls will get confused by the path.
 			if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact) || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
-				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMake(2, MCStringGetLength(p_path) - 2));
+				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMakeMinMax(2, MCStringGetLength(p_path)));
 			else
 				/* UNCHECKED */ MCStringAppend(*t_new_filename, p_path);
             
@@ -1725,7 +1782,7 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
     MCS_getcurdir(&t_cur_dir);
 
     MCRange t_range;
-    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    t_range = MCRangeMakeMinMax(t_start_index, MCStringGetLength(p_path));
     return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 

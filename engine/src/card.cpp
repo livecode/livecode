@@ -205,14 +205,6 @@ MCCard::~MCCard()
 		close();
 	while (objptrs != NULL)
 	{
-		if (state & CS_OWN_CONTROLS)
-		{
-			MCControl *cptr = objptrs->getref();
-			// MW-2011-08-09: [[ Groups ]] We mustn't delete a shared group even
-			//   if the card owns the controls.
-			if (cptr->gettype() != CT_GROUP || !static_cast<MCGroup *>(cptr)->isshared())
-				delete cptr;
-		}
 		MCObjptr *optr = objptrs->remove(objptrs);
 		delete optr;
 	}
@@ -1139,7 +1131,7 @@ Boolean MCCard::del(bool p_check_flag)
 	message(MCM_delete_card);
 	
 	MCundos->freestate();
-	state |= CS_NO_MESSAGES | CS_OWN_CONTROLS;
+	state |= CS_NO_MESSAGES;
 	getstack()->removecard(this);
 	state &= ~CS_NO_MESSAGES;
 	if (objptrs != NULL)
@@ -1158,18 +1150,18 @@ Boolean MCCard::del(bool p_check_flag)
 			}
 			else
 			{
-                optr->getref()->uncacheid();
-				getstack()->removecontrol(optr->getref());
+                MCControl *cptr = optr->getref();
+                
+                cptr->removereferences();
+				getstack()->removecontrol(cptr);
+                cptr->scheduledelete();
 			}
-			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
-			if (dptr != NULL)
-				dptr->appendto(savedata);
 			optr = optr->next();
 		}
 		while (optr != objptrs);
 	}
     
-    uncacheid();
+    removereferences();
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
@@ -1423,8 +1415,6 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 
 	if (controls)
 	{
-		if (!attach)
-			newcptr->state |= CS_OWN_CONTROLS;
 		if (objptrs != NULL)
 		{
 			newcptr->clonedata(this);
@@ -1454,13 +1444,7 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 						newcontrol->setparent(newcptr);
 					if (attach)
 					{
-						if (state & CS_OWN_CONTROLS && oldcontrol->getid() != 0)
-						{
-							newcontrol->setid(oldcontrol->getid());
-							oldcontrol->setid(0);
-						}
-						else
-							newcontrol->setid(newcptr->getstack()->newid());
+                        newcontrol->setid(newcptr->getstack()->newid());
 						newoptr->setid(newcontrol->getid());
 						newcptr->getstack()->appendcontrol(newcontrol);
 					}
@@ -1473,15 +1457,8 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 		}
 		if (attach)
 		{
-			if (state & CS_OWN_CONTROLS && obj_id != 0)
-			{
-				newcptr->obj_id = obj_id;
-				obj_id = 0;
-			}
-			else
-				newcptr->obj_id = newcptr->getstack()->newid();
+            newcptr->obj_id = newcptr->getstack()->newid();
 			newcptr->getstack()->appendcard(newcptr);
-			newcptr->state &= ~CS_OWN_CONTROLS;
 			if (diffstack)
 				newcptr->replacedata(getstack());
 			else
@@ -1769,19 +1746,24 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 
             do
             {
-                if (foundobj == t_insert_iter->getref())
-                {
-                    if (t_found_in_group)
-                    {
-                        uint2 t_minimum_layer = 0;
-                        count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
-                              t_minimum_layer, True);
-                        t_before = (t_insert_iter->next() == objptrs ||
-                                    newlayer < t_minimum_layer);
-                    }
-                    break;
-                }
-            }
+				if (foundobj == t_insert_iter->getref())
+				{
+					if (t_found_in_group)
+					{
+						uint2 t_minimum_layer = 0;
+						count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
+							  t_minimum_layer, True);
+						if (t_insert_iter->next() == objptrs ||
+							newlayer < t_minimum_layer)
+						{
+							t_before = true;
+							if (t_insert_iter == objptrs)
+								foundobj = nullptr;
+						}
+					}
+					break;
+				}
+				t_insert_iter = t_insert_iter->next();            }
             while (t_insert_iter != objptrs);
         }
 
@@ -1794,7 +1776,7 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
         optr->setparent(this);
         getstack()->appendcontrol(optr);
 
-        if (t_insert_iter == objptrs)
+        if (foundobj == nullptr)
         {
             if (t_before)
                 newptr->insertto(objptrs);
@@ -2709,7 +2691,7 @@ MCObjptr *MCCard::getobjptrforcontrol(MCControl *p_control)
 
 void MCCard::clean()
 {
-	if (objptrs == NULL || state & CS_OWN_CONTROLS)
+	if (objptrs == NULL)
 		return;
 	clear();
 	MCObjptr *tptr = objptrs;
@@ -2736,8 +2718,6 @@ void MCCard::clean()
 
 void MCCard::clear()
 {
-	if (state & CS_OWN_CONTROLS)
-		return;
 	MCObjptr *tptr = objptrs;
 	do
 	{
@@ -3060,11 +3040,15 @@ void MCCard::drawselectedchildren(MCDC *dc)
         return;
     do
     {
-        if (tptr -> getref() -> getstate(CS_SELECTED))
-            tptr->getref()->drawselected(dc);
+        MCControl *t_control = tptr->getref();
+        if (t_control != nullptr)
+        {
+            if (tptr -> getref() -> getstate(CS_SELECTED))
+                tptr->getref()->drawselected(dc);
         
-        if (tptr -> getrefasgroup() != nil)
-            tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            if (tptr -> getrefasgroup() != nil)
+                tptr -> getrefasgroup() -> drawselectedchildren(dc);
+        }
             
         tptr = tptr->next();
     }
@@ -3135,7 +3119,9 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		MCObjptr *tptr = objptrs;
 		do
 		{
-			tptr->getref()->redraw(dc, dirty);
+            MCControl *t_control = tptr->getref();
+            if (t_control != nullptr)
+                t_control->redraw(dc, dirty);
 			tptr = tptr->next();
 		}
 		while (tptr != objptrs);
@@ -3572,25 +3558,8 @@ void MCCard::scheduledelete(bool p_is_child)
 {
     MCObject::scheduledelete(p_is_child);
     
-    if (objptrs != NULL)
-    {
-        MCObjptr *optr = objptrs;
-        do
-        {
-            // MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-            //   than removed from the stack since they cannot be 'owned' by the card.
-            if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
-            {
-                // Do nothing for shared groups as they move to the stack.
-            }
-            else
-            {
-                optr -> getref() -> scheduledelete(true);
-            }
-            optr = optr->next();
-        }
-        while (optr != objptrs);
-    }
+    /* No need to recurse through children, as they are scheduled for
+     * deletion in ::del */
 }
 
 MCPlatformControlType MCCard::getcontroltype()

@@ -18,8 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "em-dc-mainloop.h"
-
 #include <libscript/script.h>
 
 #include "globdefs.h"
@@ -31,9 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 
 #include <unistd.h>
-
-/* Declarations that should probably be in a header */
-extern "C" bool MCModulesInitialize(void);
 
 /* ================================================================
  * Emscripten engine start-up
@@ -60,13 +55,13 @@ platform_main(int argc, char *argv[], char *envp[])
 	{
 		MCEmscriptenBootError("Core initialisation");
 	}
+    if (!MCSInitialize())
+    {
+		MCEmscriptenBootError("Core System initialisation");
+    }
 	if (!MCScriptInitialize())
 	{
 		MCEmscriptenBootError("LCB VM initialisation");
-	}
-	if (!MCModulesInitialize())
-	{
-		MCEmscriptenBootError("LCB library initialisation");
 	}
 
 	/* ---------- Process command-line arguments.
@@ -114,8 +109,14 @@ platform_main(int argc, char *argv[], char *envp[])
 	t_envp[t_envc] = nil; /* null-terminated */
 
 	/* ---------- Engine boot */
+    struct X_init_options t_options;
+    t_options.argc = argc;
+    t_options.argv = t_argv;
+    t_options.envp = t_envp;
+    t_options.app_code_path = nullptr;
+    
 	MCresult = nil;
-	if (!X_init(argc, t_argv, t_envc, t_envp))
+	if (!X_init(t_options))
 	{
 		MCStringRef t_string = nil;
 		if (MCresult != nil)

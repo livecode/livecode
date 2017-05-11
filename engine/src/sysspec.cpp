@@ -229,12 +229,6 @@ static MCHookNativeControlsDescriptor s_native_control_desc =
 
 void MCS_common_init(void)
 {
-    MCSAutoLibraryRef t_self;
-    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCS_common_init),
-                                &t_self);
-    MCSLibraryCopyPath(*t_self,
-                       MCcmd);
-    
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	

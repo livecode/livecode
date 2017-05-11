@@ -235,6 +235,11 @@ bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef p_recorde
     return p_recorder -> ListCompressors(callback, context);
 }
 
+bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context)
+{
+    return p_recorder -> ListFormats(callback, context);
+}
+
 void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderConfiguration& r_config)
 {
     p_recorder -> GetConfiguration(r_config);

@@ -890,14 +890,13 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	MCWidget *t_host;
 	t_host = GetHost();
 	
-    MCObjectPtr t_old_target;
+    MCObjectPartHandle t_old_target;
     if (t_host)
     {
-        t_old_target = MCtargetptr;
-        
-        MCtargetptr . object = t_host;
-        MCtargetptr . part_id = 0;
-        t_this_stack = MCtargetptr . object -> getstack();
+        swap(t_old_target, MCtargetptr);
+        MCtargetptr = MCObjectPartHandle(t_host);
+
+        t_this_stack = MCtargetptr -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else
@@ -909,7 +908,7 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	
 	if (t_host != nil)
 	{
-		MCtargetptr = t_old_target;
+        swap(MCtargetptr, t_old_target);
         if (MCdefaultstackptr == t_this_stack && t_old_defaultstack.IsValid())
             MCdefaultstackptr = t_old_defaultstack;
 	}

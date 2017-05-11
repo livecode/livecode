@@ -28,7 +28,7 @@
 #define ROWS_PER_FILE 10000
 #define COLUMNS_PER_FILE (COLUMNS_PER_ROW * ROWS_PER_FILE)
 
-static long s_current_position;
+static intptr_t s_current_position;
 
 void InitializePosition(void)
 {
@@ -39,9 +39,9 @@ void FinalizePosition(void)
 {
 }
 
-void AdvanceCurrentPosition(long p_delta)
+void AdvanceCurrentPosition(intptr_t p_delta)
 {
-    long t_column;
+    intptr_t t_column;
     GetColumnOfPosition(s_current_position, &t_column);
     t_column += p_delta;
     if (t_column > COLUMNS_PER_ROW)
@@ -51,7 +51,7 @@ void AdvanceCurrentPosition(long p_delta)
 
 void AdvanceCurrentPositionToNextRow(void)
 {
-    long t_row;
+    intptr_t t_row;
     GetRowOfPosition(s_current_position, &t_row);
     t_row += 1;
     if (t_row > ROWS_PER_FILE)
@@ -61,56 +61,56 @@ void AdvanceCurrentPositionToNextRow(void)
 
 void AdvanceCurrentPositionToFile(FileRef p_file)
 {
-    long t_index;
+    intptr_t t_index;
     GetFileIndex(p_file, &t_index);
     s_current_position = t_index * COLUMNS_PER_FILE;
 }
 
-void GetColumnOfPosition(long p_position, long *r_column)
+void GetColumnOfPosition(intptr_t p_position, intptr_t *r_column)
 {
     *r_column = (p_position % COLUMNS_PER_ROW) + 1;
 }
 
-void GetRowOfPosition(long p_position, long *r_row)
+void GetRowOfPosition(intptr_t p_position, intptr_t *r_row)
 {
     *r_row = ((p_position / COLUMNS_PER_ROW) % ROWS_PER_FILE) + 1;
 }
 
-void GetRowTextOfPosition(long p_position, const char **r_text)
+void GetRowTextOfPosition(intptr_t p_position, const char **r_text)
 {
 	FileRef t_file = NULL;
-	long t_row = 0;
+	intptr_t t_row = 0;
 	GetFileOfPosition(p_position, &t_file);
 	GetRowOfPosition(p_position, &t_row);
 	*r_text = GetFileLineText(t_file, t_row);
 }
 
-void GetFileOfPosition(long p_position, FileRef *r_file)
+void GetFileOfPosition(intptr_t p_position, FileRef *r_file)
 {
-    long t_index;
+    intptr_t t_index;
     t_index = p_position / COLUMNS_PER_FILE;
     if (GetFileWithIndex(t_index, r_file) == 0)
         Fatal_InternalInconsistency("Position encoded with invalid file index");
 }
 
-void GetFilenameOfPosition(long p_position, const char **r_filename)
+void GetFilenameOfPosition(intptr_t p_position, const char **r_filename)
 {
     FileRef t_file = NULL;
     GetFileOfPosition(p_position, &t_file);
     GetFilePath(t_file, r_filename);
 }
 
-void GetCurrentPosition(long *r_result)
+void GetCurrentPosition(intptr_t *r_result)
 {
     *r_result = s_current_position;
 }
 
-void GetUndefinedPosition(long *r_result)
+void GetUndefinedPosition(intptr_t *r_result)
 {
     *r_result = -1;
 }
 
-void yyGetPos(long *r_result)
+void yyGetPos(intptr_t *r_result)
 {
     GetCurrentPosition(r_result);
 }
@@ -263,7 +263,7 @@ static int __FindNextSeparator(const char *p_buffer, int p_length,
 static void __InitializeFileLines(FileRef x_file)
 {
 	FILE *t_stream = NULL;
-	long t_file_length = 0;
+	intptr_t t_file_length = 0;
 	char *t_raw_text = NULL;
 	const char **t_lines = NULL;
 	int t_line_count = 0;
@@ -361,7 +361,7 @@ static void __InitializeFileLines(FileRef x_file)
 	return;
 }
 
-const char *GetFileLineText(FileRef p_file, long p_row)
+const char *GetFileLineText(FileRef p_file, intptr_t p_row)
 {
 	__InitializeFileLines(p_file);
 	if (p_file->line_text == NULL)
@@ -371,12 +371,12 @@ const char *GetFileLineText(FileRef p_file, long p_row)
 	return p_file->line_text[p_row-1];
 }
 
-void GetFileIndex(FileRef p_file, long *r_index)
+void GetFileIndex(FileRef p_file, intptr_t *r_index)
 {
     *r_index = p_file -> index;
 }
 
-int GetFileWithIndex(long p_index, FileRef *r_file)
+int GetFileWithIndex(intptr_t p_index, FileRef *r_file)
 {
     FileRef t_file;
 

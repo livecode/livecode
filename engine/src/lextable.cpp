@@ -276,9 +276,7 @@ static LT ask_table[] =
 
 LT command_table[] =
     {
-#if defined(MODE_DEVELOPMENT) || defined(MODE_INSTALLER) || defined(_TEST)
 		{"_internal", TT_STATEMENT, S_INTERNAL},
-#endif
         {"accept", TT_STATEMENT, S_ACCEPT},
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},
@@ -1433,6 +1431,7 @@ LT factor_table[] =
         {"recordcompression", TT_PROPERTY, P_RECORD_COMPRESSION},
         {"recordcompressiontypes", TT_FUNCTION, F_RECORD_COMPRESSION_TYPES},
         {"recordformat", TT_PROPERTY, P_RECORD_FORMAT},
+        {"recordformats", TT_FUNCTION, F_RECORD_FORMATS},
         {"recording", TT_PROPERTY, P_RECORDING},
         {"recordinput", TT_PROPERTY, P_RECORD_INPUT},
         {"recordloudness", TT_FUNCTION, F_RECORD_LOUDNESS},
@@ -1463,14 +1462,12 @@ LT factor_table[] =
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif
-#ifdef MODE_DEVELOPMENT
 		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
+#if defined(MODE_DEVELOPMENT)
 #ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-09-05: [[ Property Listener ]] Returns the list of all active object property listeners
 		{"revobjectlisteners", TT_PROPERTY, P_REV_OBJECT_LISTENERS},
-#endif
-#ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-11-06: [[ Property Listener ]] Minimum number of milliseconds between propertyChanged messages.
 		{"revpropertylistenerthrottle", TT_PROPERTY, P_REV_PROPERTY_LISTENER_THROTTLE_TIME},
 #endif

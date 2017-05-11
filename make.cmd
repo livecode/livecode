@@ -29,9 +29,9 @@ if /I "%BUILD_PLATFORM%"=="win-x86" (
     @set MSBUILD_PLATFORM=Win32
 )
 
-@rem Try to build with VS 2015 build tools by default
-if not defined VSINSTALLDIR set VSINSTALLDIR=%ProgramFilesBase%\Microsoft Visual Studio 14.0\
-call "%VSINSTALLDIR%VC\vcvarsall.bat" %VSCMD_ARG_TGT_ARCH%
+@rem Try to build with VS 2017 build tools by default
+if not defined VSINSTALLDIR set VSINSTALLDIR=%ProgramFilesBase%\Microsoft Visual Studio\2017\BuildTools\
+call "%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat" %VSCMD_ARG_TGT_ARCH%
 
 @if "%1" NEQ "" set MSBUILD_TARGET_ARG=/t:%1
 

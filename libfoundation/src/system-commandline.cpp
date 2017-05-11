@@ -284,7 +284,7 @@ __MCSWindowsCommandLineGet (uindex_t & r_argc,
 }
 
 static void
-__MCSWindowsCommandLineFree (size_t & p_argc,
+__MCSWindowsCommandLineFree (uindex_t& p_argc,
                              unichar_t **&p_argv)
 {
 	if (p_argv != NULL)

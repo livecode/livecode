@@ -1,0 +1,5 @@
+This file has some text, with the final line NOT terminated by LF
+
+********
+
+********

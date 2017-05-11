@@ -59,7 +59,7 @@ MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module,
     
     // Attempt to create a script object.
     if (t_success)
-        t_success = MCScriptCreateObject(kMCScriptObjectKindInstance, sizeof(MCScriptInstance), (MCScriptObject*&)t_instance);
+        t_success = MCScriptCreateObject(kMCScriptObjectKindInstance, t_instance);
 
     // Now associate the script object with the module (so the 'slots' field make sense).
     if (t_success)
@@ -729,28 +729,43 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			return MCScriptThrowClassNotAllowedInCBindingError();
 		}
 		
-        /* TODO: This leaks a module handle! */
+        /* TODO: This leaks a module handle if library is not empty (builtin) */
         MCSLibraryRef t_module;
-		if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
-                                 t_module))
-		{
-			if (r_bound == nil)
-			{
-				return MCScriptThrowUnableToLoadForiegnLibraryError();
-			}
+        if (MCStringIsEmpty(*t_library))
+        {
+            t_module = MCScriptGetLibrary();
+        }
+        else
+        {
+		    if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                     *t_library,
+                                     t_module))
+		    {
+			    if (r_bound == nil)
+			    {
+				    return MCScriptThrowUnableToLoadForiegnLibraryError();
+			    }
 			
-			*r_bound = false;
+			    *r_bound = false;
 			
-			return true;
-		}
+			    return true;
+		    }
+        }
 		
 		void *t_pointer =
                 MCSLibraryLookupSymbol(t_module,
                                        *t_function);
 		if (t_pointer == nullptr)
 		{
-			return false;
+            if (r_bound == nullptr)
+            {
+                return MCScriptThrowUnableToResolveForeignHandlerError(p_instance,
+                                                                       p_handler);
+            }
+            
+            *r_bound = false;
+            
+			return true;
 		}
 		
 		p_handler -> native . function = t_pointer;
@@ -799,11 +814,20 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		if (!MCJavaCheckSignature(t_signature,
 		                          *t_arguments,
 		                          *t_return,
-		                          p_handler -> java . call_type))
-            return false;
+		                          p_handler -> java . call_type) ||
+            !MCJavaVMInitialize())
+        {
+            if (r_bound == nullptr)
+            {
+                return false;
+            }
+            
+            MCErrorReset();
         
-        if (!MCJavaVMInitialize())
-            return false;
+            *r_bound = false;
+        
+            return true;
+        }
 		
         void *t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_arguments, *t_return, p_handler -> java . call_type);
         
@@ -815,8 +839,12 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		{
 			if (r_bound == nullptr)
 			{
-                return false;
+                return MCScriptThrowUnableToResolveForeignHandlerError(p_instance,
+                                                                       p_handler);
             }
+            
+            MCErrorReset();
+            
 			*r_bound = false;
 			
 			return true;

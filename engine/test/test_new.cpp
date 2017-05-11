@@ -37,7 +37,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 enum {
 	kSize =
-#if defined(__32_BIT__)
+// MSVC borks if a declared array is > 0x7fffffff bytes long, so make sure
+// VeryBig doesn't exceed this.
+#if defined(__32_BIT__) || defined(__WINDOWS__)
 	1 << 15
 #else
 	1 << 20

@@ -267,7 +267,7 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	/* FIXME Possibly inefficient */
 	MCStreamRef t_stream = NULL;
-	if (!__MCSFileCreateStream (*t_temp_native_path, kMCSFileOpenModeRead,
+	if (!__MCSFileCreateStream (*t_temp_native_path, kMCSFileOpenModeWrite,
 	                            t_stream))
 		goto error_cleanup;
 
@@ -318,39 +318,156 @@ __MCSFileSetContents (MCStringRef p_native_path,
  * Path manipulation
  * ================================================================ */
 
+/* The essential reference material for working with these functions
+ * is the "Naming Files, Paths and Namespaces" page in the Windows API
+ * documentation on MSDN. */
+
+/* For use only when operating on *native* paths. */
+static inline bool
+__MCSFileCharIsSeparator (codepoint_t p_char)
+{
+	return (p_char == '/' || p_char == '\\');
+}
+
+/* For use only when operating on *native* paths. */
+static inline bool
+__MCSFileCharIsDriveLetter (codepoint_t p_char)
+{
+	/* Windows drive letters must be A-Z */
+	return ((p_char >= 'A' && p_char <= 'Z') ||
+	        (p_char >= 'a' && p_char <= 'z'));
+}
+
+/* For use only when operating on *native* paths.
+ *
+ * Tests whether p_path is a UNC path. */
+static inline bool
+__MCSFilePathIsUnc (MCStringRef p_native_path)
+{
+	if (2 > MCStringGetLength (p_native_path))
+	{
+		return false;
+	}
+
+	return (__MCSFileCharIsSeparator (MCStringGetCharAtIndex (p_native_path, 0)) &&
+	        __MCSFileCharIsSeparator (MCStringGetCharAtIndex (p_native_path, 1)));
+}
+
+/* For use only when operating on *native* paths.
+ *
+ * Tests whether p_path begins with "\\?\" or "\\.\" (or equivalent).
+ * N.b. that "\\?" and "\\." are treated as UNC paths rather than NT
+ * namespace paths. */
+static bool
+__MCSFilePathIsNamespace (MCStringRef p_native_path)
+{
+	if (4 > MCStringGetLength (p_native_path))
+	{
+		return false;
+	}
+
+	if (!__MCSFilePathIsUnc (p_native_path))
+	{
+		return false;
+	}
+
+	codepoint_t t_char = MCStringGetCharAtIndex (p_native_path, 2);
+	if ('.' != t_char && '?' != t_char)
+	{
+		return false;
+	}
+
+	if (!__MCSFileCharIsSeparator (MCStringGetCharAtIndex (p_native_path, 3)))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/* For use only when operating on *native* paths.
+ *
+ * Tests whether p_path is a special Windows "device" path. */
+static inline bool
+__MCSFilePathIsDevice (MCStringRef p_native_path)
+{
+	static const char* const kMCSDeviceBaseNames[] = {
+		"CON",
+		"PRN",
+		"AUX",
+		"NUL",
+		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+	};
+
+	/* UNC paths are safe! */
+	if (__MCSFilePathIsUnc (p_native_path))
+		return false;
+
+	uindex_t t_len = MCStringGetLength (p_native_path);
+
+	/* Find the last separator in the path */
+	/* FIXME[2017-04-20] there should be a "basename" function */
+	uindex_t t_basename_offset = t_len;
+	while (t_basename_offset > 0)
+	{
+		codepoint_t t_char = MCStringGetCharAtIndex (p_native_path,
+		                                             t_basename_offset - 1);
+		if (__MCSFileCharIsSeparator (t_char))
+			break;
+		--t_basename_offset;
+	}
+
+	/* Find the first '.' in the separator */
+	uindex_t t_basename_len = 0;
+	while (t_basename_len + t_basename_offset < t_len)
+	{
+		if ('.' == MCStringGetCharAtIndex (p_native_path,
+		                                   t_basename_offset + t_basename_len))
+		{
+			break;
+		}
+		++t_basename_len;
+	}
+
+	/* No basename -> not a device */
+	if (0 == t_basename_len)
+	{
+		return false;
+	}
+
+	MCAutoStringRef t_basename;
+	if (!MCStringCopySubstring (p_native_path,
+	                            MCRangeMake (t_basename_offset, t_basename_len),
+	                            &t_basename))
+	{
+		return false;
+	}
+
+	/* Check against static table of reserved device names */
+	for (const char* t_device_base : kMCSDeviceBaseNames)
+	{
+		if (MCStringIsEqualToCString (*t_basename, t_device_base,
+		                              kMCStringOptionCompareCaseless))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /* Convert a path in LiveCode representation (with '/' as the file
  * separator) to a Windows path (using '\').  This function also
  * performs some (very) limited validation, ensuring that the input
- * path does not contain any nul bytes or '\' characters.
+ * path does not contain any nul bytes or '\' characters, and is not a
+ * "special" device path (e.g. "NUL" or "COM1").
  *
  * FIXME Currently, this function -- and thus the files API on Windows
  * -- does not support the translation of long paths (i.e. longer than
  * 260 characters including the leading disk specifier and the
- * trailing nul).  There are a number of issues here:
- *
- * 1) Using __MCSFilePathToNative() followed by
- *    __MCSFilePathFromNative() is supposed to be a lossless operation,
- *    but supporting long file names means losing the relative
- *    filename information (because "\\?\" format supports absolute
- *    filenames only).
- *
- * 2) In some cases, users may be intentionally trying to open devices
- *    (to obtain an input stream for a serial port, for example).  It
- *    would be necessary to provide an alternative API for these
- *    users.
- *
- * 3) Since we may want to use the "\\?\" format for the native
- *    representation in the future, we need to forbid "/" in native
- *    paths returned by this function (because "\\?\" namespace treats
- *    them as normal characters rather than as path separators).
- *
- * It may be better to resolve these issues (and similar ones on other
- * platforms, e.g. Linux) by defining a 'filename' type and adding API
- * for obtaining the filename in various different forms.
- *
- * Initially, there's support for translating file namespace ("\\?\")
- * paths, but only if they're presented to the API already in that
- * format.
+ * trailing nul).  Excessively long paths are passed through to the
+ * underlying operating system APIs for them to error on.
  */
 bool
 __MCSFilePathToNative (MCStringRef p_path,
@@ -362,12 +479,6 @@ __MCSFilePathToNative (MCStringRef p_path,
 	if (0 == t_len)
 		return __MCSFileThrowInvalidPathError (p_path);
 
-	/* Check for '//?/' prefix.  If present, we handle some path
-	 * translations differently. */
-	bool t_file_namespace;
-	t_file_namespace = MCStringBeginsWithCString (p_path, (const char_t*)"//?/",
-	                                              kMCStringOptionCompareExact);
-
 	MCAutoArray<unichar_t> t_native_chars;
 	if (!t_native_chars.New (t_len))
 		return false;
@@ -376,22 +487,22 @@ __MCSFilePathToNative (MCStringRef p_path,
 	{
 		unichar_t t_char = MCStringGetCharAtIndex (p_path, i);
 
+		/* Explicitly reserved characters */
+		if (t_char < 32)
+		{
+			return __MCSFileThrowInvalidPathError (p_path);
+		}
+
 		switch (t_char)
 		{
-		case 0:
-			/* Path may not incorporate a nul */
-			return __MCSFileThrowInvalidPathError (p_path);
 		case '\\':
-			/* If the input path is a Win32 file namespace path,
-			 * translate '\\' to '/', since they'll be treated as
-			 * "normal" path characters.  Otherwise, fail (because we
-			 * may need to do translation to file namespace in future
-			 * versions of this API). */
-			if (t_file_namespace)
-				t_native_chars[i] = '/';
-			else
-				return __MCSFileThrowInvalidPathError (p_path);
-			break;
+			/* Backslashes in LiveCode internal paths are always
+			 * invalid on Windows, because they are ambiguous.  In
+			 * LiveCode internal paths, '\' is just another character,
+			 * but Windows doesn't distinguish.  It's better to
+			 * enforce that the only path separator used in internal
+			 * paths is '/'. */
+			return __MCSFileThrowInvalidPathError (p_path);
 		case '/':
 			t_native_chars[i] = '\\';
 			break;
@@ -401,14 +512,31 @@ __MCSFilePathToNative (MCStringRef p_path,
 		}
 	}
 
-	return MCStringCreateWithChars (t_native_chars.Ptr(),
-	                                t_native_chars.Size(),
-	                                r_native_path);
+	MCAutoStringRef t_native_path;
+	if (!MCStringCreateWithChars (t_native_chars.Ptr(),
+	                              t_native_chars.Size(),
+	                              &t_native_path))
+	{
+		return false;
+	}
+
+	/* Verify that the file is not a device path.  Assume that COM1 is a valid
+	 * filename when a UNC path is used. */
+	if (__MCSFilePathIsDevice (*t_native_path))
+	{
+		return __MCSFileThrowInvalidPathError (p_path);
+	}
+
+	return MCStringCopy (*t_native_path, r_native_path);
 }
 
+/* Convert a Windows path (using '\' as a separator) to LiveCode
+ * representation (using '/').  This function also performs some
+ * validation by truncating at nul bytes and ensuring that the path is
+ * not a device path. */
 bool
 __MCSFilePathFromNative (MCStringRef p_native_path,
-                        MCStringRef & r_path)
+                         MCStringRef & r_path)
 {
 	uindex_t t_len;
 	t_len = MCStringGetLength (p_native_path);
@@ -416,11 +544,10 @@ __MCSFilePathFromNative (MCStringRef p_native_path,
 	if (0 == t_len)
 		return MCStringCopy (p_native_path, r_path);
 
-	/* Check for '\\?\' prefix.  If present, we handle some path
-	 * translations differently. */
-	bool t_file_namespace;
-	t_file_namespace = MCStringBeginsWithCString (p_native_path, (const char_t*)"\\\\?\\",
-	                                              kMCStringOptionCompareExact);
+	if (__MCSFilePathIsDevice (p_native_path))
+	{
+		return __MCSFileThrowInvalidPathError (p_native_path);
+	}
 
 	MCAutoArray<unichar_t> t_internal_chars;
 	if (!t_internal_chars.New (t_len))
@@ -434,20 +561,13 @@ __MCSFilePathFromNative (MCStringRef p_native_path,
 		{
 		case 0:
 			/* If a nul is encountered, truncate the output path to
-			 * the number of preceding characters visited */
+			 * the number of preceding characters visited. */
+			t_len = i;
 			t_internal_chars.Shrink (i);
 			break;
 		case '/':
-			/* If the input path is a Win32 file namespace path,
-			 * translate '/' to '\\', since they're "normal" path
-			 * characters in this context.  Otherwise, fail (beacuse
-			 * we may need to do translation to/from file namespace in
-			 * future versions of this API). */
-			if (t_file_namespace)
-				t_internal_chars[i] = '\\';
-			else
-				return __MCSFileThrowInvalidPathError (p_native_path);
 		case '\\':
+			/* Always translate both '/' and '\' separators to '/'. */
 			t_internal_chars[i] = '/';
 			break;
 		default:
@@ -459,6 +579,71 @@ __MCSFilePathFromNative (MCStringRef p_native_path,
 	return MCStringCreateWithChars (t_internal_chars.Ptr(),
 	                                t_internal_chars.Size(),
 	                                r_path);
+}
+
+bool
+__MCSFileGetCurrentDirectory (MCStringRef & r_native_path)
+{
+
+	DWORD t_length = 0;
+	MCAutoArray<unichar_t> t_native_chars;
+	while (true)
+	{
+		t_length = GetCurrentDirectoryW (t_native_chars.Size(), t_native_chars.Ptr());
+
+		/* On error, GetCurrentDirectoryW() returns 0 */
+		if (0 == t_length)
+		{
+			return __MCSFileThrowIOErrorWithErrorCode (kMCEmptyString, MCSTR("Failed to get current working directory: %{description}"), GetLastError());
+		}
+
+		/* On success, it returns the number of characters read, not
+		 * including the trailing nul */
+		if (t_length + 1 < t_native_chars.Size())
+		{
+			break;
+		}
+
+		/* If the buffer isn't large enough, it returns the length of
+		 * buffer required. */
+		if (!t_native_chars.Resize (t_length))
+		{
+			return false;
+		}
+	}
+
+	return MCStringCreateWithWString (t_native_chars.Ptr(), r_native_path);
+}
+
+bool
+__MCSFilePathIsAbsolute (MCStringRef p_native_path)
+{
+	/* This case covers UNC paths and absolute paths on the current drive. */
+	if (MCStringIsEmpty (p_native_path))
+	{
+		return false;
+	}
+
+	if (__MCSFileCharIsSeparator(MCStringGetCharAtIndex (p_native_path, 0)))
+	{
+		return true;
+	}
+
+	/* This case covers "C:\" absolute Windows paths.  Note that "C:foo\bar"
+	 * is actually a relative path. */
+	if (3 > MCStringGetLength (p_native_path))
+	{
+		return false;
+	}
+
+	if (__MCSFileCharIsDriveLetter (MCStringGetCharAtIndex (p_native_path, 0)) &&
+	    ':' == MCStringGetCharAtIndex (p_native_path, 1) &&
+	    __MCSFileCharIsSeparator (MCStringGetCharAtIndex (p_native_path, 2)))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 /* ================================================================

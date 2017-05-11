@@ -39,9 +39,11 @@ Use the <lineOffset> <function> to find which <line> a <string> occurs
 in. 
 
 The value returned by the <lineOffset> <function> is the number of the
-<line> where <lineToFind> appears in <stringToSearch>. If the
+<line> where <lineToFind> first appears in <stringToSearch>. If the
 <lineToFind> is not in <stringToSearch>, the <lineOffset> <function>
-<return|returns> zero.
+<return|returns> zero. If the <lineToFind> spans more than one <line>, the
+<lineOffset> <function> always <return|returns> zero, even if the
+<lineToFind> appears in the <stringToSearch>.
 
 If you specify how many <linesToSkip>, the <lineOffset> <function> skips
 the specified number of <lines> in the <stringToSearch>. The <value>

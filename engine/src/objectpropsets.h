@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -107,6 +107,9 @@ private:
     /* Always returns a valid array, even if m_props isn't set.  The
      * returned array is _not_ owned by the caller */
     MCArrayRef fetch_nocopy() const;
+    /* Returns the contents array, creating it if necessary.  If
+     * creation fails, returns an unset array reference. */
+    MCAutoArrayRef fetch_ensure();
 
 	MCObjectPropertySet *m_next;
 	MCNewAutoNameRef m_name;

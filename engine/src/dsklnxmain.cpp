@@ -36,12 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_main_loop_iteration();
-int X_close();
-
-////////////////////////////////////////////////////////////////////////////////
-
 extern "C" void initialise_required_weak_link_glib();
 
 void X_main_loop(void)
@@ -49,9 +43,6 @@ void X_main_loop(void)
 	while(!MCquit)
 		X_main_loop_iteration();
 }
-
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
 
 int platform_main(int argc, char *argv[], char *envp[])
 {
@@ -70,12 +61,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	if (!MCSInitialize())
 	{
 		fprintf(stderr, "Fatal: platform initialization failed\n");
-		exit(-1);
-	}
-	
-	if (!MCModulesInitialize())
-	{
-		fprintf(stderr, "Fatal: built-in module initialization failed\n");
 		exit(-1);
 	}
 	
@@ -120,7 +105,12 @@ int platform_main(int argc, char *argv[], char *envp[])
 	if (argc == 3&& strcmp(argv[1], "-elevated-slave") == 0)
 		return MCSystemElevatedMain(argc, argv);
 	
-	if (!X_init(argc, *t_argv, *t_envp))
+    struct X_init_options t_options;
+    t_options.argc = argc;
+    t_options.argv = *t_argv;
+    t_options.envp = *t_envp;
+    t_options.app_code_path = nullptr;
+	if (!X_init(t_options))
     {
 		// Try to print an informative error message or, failing that, just
 		// report that an error occurred.
@@ -148,7 +138,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code = X_close();
 
 	MCScriptFinalize();
-	MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);

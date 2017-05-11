@@ -312,6 +312,9 @@ Boolean MCScreenDC::close(Boolean force)
 	timeEndPeriod(1);
 	opened = 0;
 
+	DestroyWindow(invisiblehwnd);
+	invisiblehwnd = NULL;
+
 	return True;
 }
 
@@ -411,6 +414,19 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
 
+    // If there is a mainwindow callback then disable the mainwindow.
+    if (MCmainwindowcallback != NULL && !IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth < INT_MAX - 1);
+        m_main_window_depth += 1;
+        if (m_main_window_depth == 1)
+        {
+            m_main_window_current = (HWND)MCmainwindowcallback();
+            EnableWindow(m_main_window_current, False);
+        }
+        SetWindowLongPtr((HWND)w->handle.window, GWLP_HWNDPARENT, (LONG_PTR)m_main_window_current);
+    }
+
 	if (override)
 		ShowWindow((HWND)w->handle.window, SW_SHOWNA);
 	else
@@ -438,6 +454,20 @@ void MCScreenDC::closewindow(Window w)
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
+
+    // If there is a mainwindow callback then re-enable the mainwindow if at
+    // depth 1.
+    if (MCmainwindowcallback != nullptr && IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth > 0);
+        m_main_window_depth -= 1;
+        if (m_main_window_depth == 0 &&
+            m_main_window_current != nullptr)
+        {
+            EnableWindow(m_main_window_current, True);
+            m_main_window_current = nullptr;
+        }
+    }
 
 	// If we are a sheet or a modal dialog we need to ensure we enable the right windows
 	// and activate the next obvious window.

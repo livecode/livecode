@@ -920,6 +920,7 @@ void MCStack::stopedit()
 	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    oldcard->removereferences();
 	oldcard->scheduledelete();
 	kfocus();
 	dirtywindowname();
@@ -2295,9 +2296,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
     
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == curcard -> getstack())
-            t_player -> detachplayer();
+    MCPlayer::DetachPlayers(curcard -> getstack());
 #endif
 		
 	// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
@@ -2322,9 +2321,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == curcard -> getstack())
-            t_player -> attachplayer();
+    MCPlayer::AttachPlayers(curcard -> getstack());
 #endif
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
@@ -2473,6 +2470,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// MW-2011-01-12: [[ Bug 9282 ]] Set to true if the props need restoring.
 	bool t_restore_props;
 	
+    Exec_stat t_stat = ES_NORMAL;
 	if (opened && flags & F_VISIBLE)
 	{
 		// MW-2011-08-19: [[ Redraw ]] Set the update region to everything.
@@ -2522,22 +2520,40 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			// If opening the dialog failed for some reason, this will return false.
 			if (mode_openasdialog())
 			{
-				while (opened && (mode == WM_MODAL || mode == WM_SHEET) && !MCquit)
+				while (opened &&
+                       (mode == WM_MODAL || mode == WM_SHEET) &&
+                       !MCquit &&
+                       !MCabortscript)
 				{
 					MCU_resetprops(True);
 					// MW-2011-09-08: [[ Redraw ]] Make sure we flush any updates.
 					MCRedrawUpdateScreen();
 					MCscreen->siguser();
-					MCscreen->wait(REFRESH_INTERVAL, True, True);
+					if (MCscreen->wait(REFRESH_INTERVAL, True, True))
+                    {
+                        MCeerror->add(EE_WAIT_ABORT, 0, 0);
+                        t_stat = ES_ERROR;
+                        break;
+                    }
 				}
 				mode_closeasdialog();
 				if (MCquit)
 					MCabortscript = False;
 			}
 
-			// Make sure the mode is reset to closed so dialogs can be reopened.
-			mode = WM_CLOSED;
-			
+            // If there was no error, make sure the mode is reset to closed so
+            // it can be reopened. Otherwise, do the equivalent of 'close this
+            // stack'.
+            if (t_stat != ES_ERROR)
+            {
+                mode = WM_CLOSED;
+            }
+            else
+            {
+                close();
+                checkdestroy();
+			}
+            
 			t_restore_props = true;
 		}
 		else
@@ -2572,7 +2588,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	if (reopening)
 		MClockmessages = oldlock;
-	return ES_NORMAL;
+    
+	return t_stat;
 	
 	
 }
@@ -2628,7 +2645,7 @@ bool MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
 		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
         
-		t_success = MCStringCopySubstring(d_strref, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);
+		t_success = MCStringCopySubstring(d_strref, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_line);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			MCAutoStringRef t_stack_name;
@@ -2955,12 +2972,7 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	t_tilecache = view_gettilecache();
 	
     // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
-    for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
-	{
-        	if (t_player -> getstack() == this)
-            	t_player -> syncbuffering(nil);
-	}
-    
+    MCPlayer::SyncPlayers(this, nil);
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
         MCGIntegerRectangle t_bounds;

@@ -162,6 +162,28 @@ static id s_SimRuntime_class = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+int getXcodeVersion(char *path_to_developer_folder)
+{
+    NSBundle *t_xcode_bundle = nil;
+    NSString *t_xcode_path = [NSString stringWithFormat: @"%s/../../", path_to_developer_folder];
+    
+    t_xcode_bundle = [NSBundle bundleWithPath: t_xcode_path];
+    
+    NSString *t_xcode_version_string = [[t_xcode_bundle infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    NSArray *t_xcode_version_array = [t_xcode_version_string componentsSeparatedByString:@"."];
+    
+    int t_xcode_version;
+    t_xcode_version = [[t_xcode_version_array objectAtIndex:0] intValue] * 100;
+    t_xcode_version += [[t_xcode_version_array objectAtIndex:1] intValue] * 10;
+    
+    if ([t_xcode_version_array count] == 3)
+    {
+        t_xcode_version += [[t_xcode_version_array objectAtIndex:2] intValue];
+    }
+    
+    return t_xcode_version;
+}
+
 int main(int argc, char *argv[])
 {
 	bool t_success;
@@ -215,22 +237,29 @@ int main(int argc, char *argv[])
 				
 				//NSLog(@"DVTFoundation %d", t_success);
 			}
-			
-			NSBundle *t_dev_tools_bundle;
-			t_dev_tools_bundle = nil;
-			if (t_success)
-			{
-				NSString *t_dev_tools_path;
-				t_dev_tools_path = [NSString stringWithFormat: @"%s/../OtherFrameworks/DevToolsFoundation.framework",  argv[1]];
-				
-				if (![[NSFileManager defaultManager] fileExistsAtPath: t_dev_tools_path])
-					t_dev_tools_path = [NSString stringWithFormat: @"%s/Library/PrivateFrameworks/DevToolsFoundation.framework",  argv[1]];
-				
-				t_dev_tools_bundle = [NSBundle bundleWithPath: t_dev_tools_path];
-				t_success = [t_dev_tools_bundle load];
-								
-				//NSLog(@"DevTools %d", t_success);
-			}
+            
+            int t_xcode_version = getXcodeVersion(argv[1]);
+            
+            // In Xcode 8.3 the Xcode.app/Contents/OtherFrameworks/DevToolsFoundation.framework is no longer present
+            // In fact it is not needed anyway
+            if (t_xcode_version < 830)
+            {
+                NSBundle *t_dev_tools_bundle;
+                t_dev_tools_bundle = nil;
+                if (t_success)
+                {
+                     NSString *t_dev_tools_path;
+                     t_dev_tools_path = [NSString stringWithFormat: @"%s/../OtherFrameworks/DevToolsFoundation.framework",  argv[1]];
+                     
+                     if (![[NSFileManager defaultManager] fileExistsAtPath: t_dev_tools_path])
+                     t_dev_tools_path = [NSString stringWithFormat: @"%s/Library/PrivateFrameworks/DevToolsFoundation.framework",  argv[1]];
+                     
+                     t_dev_tools_bundle = [NSBundle bundleWithPath: t_dev_tools_path];
+                     t_success = [t_dev_tools_bundle load];
+                     
+                     //NSLog(@"DevTools %d", t_success);
+                }
+            }
 			
 			if (t_success)
 			{

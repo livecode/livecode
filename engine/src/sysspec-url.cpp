@@ -43,7 +43,7 @@ bool MCSystemStripUrl(MCStringRef p_url, MCStringRef &r_stripped)
 	while (t_end > t_start && is_whitespace(MCStringGetNativeCharAtIndex(p_url, t_end - 1)))
 		t_end--;
 	
-	return MCStringCopySubstring(p_url, MCRangeMake(t_start, t_end - t_start), r_stripped);
+	return MCStringCopySubstring(p_url, MCRangeMakeMinMax(t_start, t_end), r_stripped);
 }
 
 bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MCStringRef &r_processed_url)
@@ -556,7 +556,11 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusError)
     {
         MCAutoDataRef t_err;
-        MCDataCreateWithBytes((const byte_t *)MCStringGetCString((MCStringRef)p_data), MCStringGetLength((MCStringRef)p_data), &t_err);
+        if (!MCStringEncode(static_cast<MCStringRef>(const_cast<void*>(p_data)),
+                            kMCStringEncodingNative,
+                            false,
+                            &t_err))
+            return false;
 		MCValueAssign(context -> data, *t_err);
     }
 	else if (p_status == kMCSystemUrlStatusLoading)
@@ -740,7 +744,7 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 	return true;
 }
 
-void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
+void MCS_downloadurl(MCObjectHandle p_target, MCStringRef p_url, MCStringRef p_file)
 {
 	bool t_success = true;
 	

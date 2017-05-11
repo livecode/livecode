@@ -155,7 +155,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_LEFT, Int32, MCField, FormattedLeft)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_WIDTH, Int32, MCField, FormattedWidth)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCField, FormattedHeight)
-	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_RECT, Rectangle, MCField, FormattedRect)
+	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_RECT, Rectangle32, MCField, FormattedRect)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_LINK_TEXT, String, MCField, LinkText)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_IMAGE_SOURCE, String, MCField, ImageSource)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_METADATA, String, MCField, Metadata)
@@ -2297,7 +2297,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         // Count the number of chars in this paragraph. The only paragraph
         // with a non-zero si valus is the first paragraph.
         MCRange t_cu_range, t_char_range;
-        t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        t_cu_range = MCRangeMakeMinMax(si, t_pg->gettextlength());
         // SN-2014-09-11: [[ Bug 13361 ]] We need to remove the codeunits we skipped in the paragraph before counting.
         ei -= si;
         si = 0;
@@ -2318,7 +2318,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
     if (!t_stop)
     {
         MCRange t_char_range, t_cu_range;
-        t_cu_range = MCRangeMake(si, ei - si);
+        t_cu_range = MCRangeMakeMinMax(si, ei);
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         t_count += t_char_range.length;
     }
@@ -2718,7 +2718,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr;
 			tptr = getcarddata(fdata, 0, False);
 			if (tptr != NULL)
-				if ((stat = tptr -> save(stream, OT_FDATA, 0, p_version)) != IO_NORMAL)
+				if ((stat = tptr -> save(stream, OT_FDATA, 0, this, p_version)) != IO_NORMAL)
 					return stat;
 		}
 		else
@@ -2726,7 +2726,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr = fdata;
 			do
 			{
-				if ((stat = tptr->save(stream, OT_FDATA, p_part, p_version)) != IO_NORMAL)
+				if ((stat = tptr->save(stream, OT_FDATA, p_part, this, p_version)) != IO_NORMAL)
 					return stat;
 				tptr = tptr->next();
 			}

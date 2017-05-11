@@ -545,6 +545,23 @@ private function escapeArg pArg
    return pArg
 end escapeArg
 
+-- Needed on MacOS Sierra
+private command clearExtendedAttributes pAppBundle
+   -- make sure you have permission to clear extended attributes from bundle files
+   get shell("chmod -R u+w" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Setting permissions failed with error:" && it
+      throw "failure"
+   end if
+      
+   -- clear extended attributes from bundle files
+   get shell("xattr -cr" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Clearing extended attributes failed with error:" && it
+      throw "failure"
+   end if
+end clearExtendedAttributes
+
 private function findSigningIdentity
    get shell("/usr/bin/security -q find-identity -v")
    filter it with "*Developer ID Application: Runtime Revolution Ltd*"
@@ -656,6 +673,8 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
             get shell("file" && escapeArg(tFullPath))
             if tFile is "Standalone" or "Mach-O" is not among the words of it then next repeat
 
+            clearExtendedAttributes escapeArg(tFullPath)
+			
             -- Sign the extension
             -- The "--force" parameter strips the existing signature (which was
             -- made using a not-valid-for-distribution profile)
@@ -668,6 +687,8 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
          end repeat
       end repeat
 
+      clearExtendedAttributes escapeArg(tAppBundle)
+    		
       builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
       wait 1 second
       get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--deep --verbose=2" && escapeArg(tAppBundle))

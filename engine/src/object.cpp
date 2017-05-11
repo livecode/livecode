@@ -300,9 +300,6 @@ MCObject::~MCObject()
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
 	IO_freeobject(this);
-	MCscreen->cancelmessageobject(this, NULL);
-	removefrom(MCfrontscripts);
-	removefrom(MCbackscripts);
 	MCundos->freeobject(this);
 	delete hlist;
 	delete[] colors; /* Allocated with new[] */
@@ -855,10 +852,27 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
-void MCObject::uncacheid()
+void MCObject::removereferences()
 {
     if (m_in_id_cache)
         getstack()->uncacheobjectbyid(this);
+    
+    MCscreen->cancelmessageobject(this, NULL);
+    removefrom(MCfrontscripts);
+    removefrom(MCbackscripts);
+    
+    // If the object is marked as being used as a parentScript, flush the parentScript
+    // table so we don't get any dangling pointers.
+    if (m_is_parent_script)
+    {
+        MCParentScript::FlushObject(this);
+        m_is_parent_script = false;
+    }
+    
+    // This object is in the process of being deleted; invalidate any weak refs
+    // and prevent any new ones from being created.
+    m_weak_proxy->Clear();
+    m_weak_proxy = nil;
 }
 
 bool MCObject::isdeletable(bool p_check_flag)
@@ -875,19 +889,6 @@ bool MCObject::isdeletable(bool p_check_flag)
 
 Boolean MCObject::del(bool p_check_flag)
 {
-    // If the object is marked as being used as a parentScript, flush the parentScript
-    // table so we don't get any dangling pointers.
-	if (m_is_parent_script)
-	{
-		MCParentScript::FlushObject(this);
-        m_is_parent_script = false;
-    }
-	
-	// This object is in the process of being deleted; invalidate any weak refs
-	// and prevent any new ones from being created.
-	m_weak_proxy->Clear();
-	m_weak_proxy = nil;
-	
 	return True;
 }
 
@@ -979,7 +980,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
 	t_parentscript_object->lockforexecution();
 
@@ -1006,7 +1006,6 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	unlockforexecution();
 	t_parentscript_object->unlockforexecution();
 
 	return stat;
@@ -1078,6 +1077,8 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 {	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
+
+	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
 	parsescript(True);
@@ -1738,10 +1739,10 @@ Boolean MCObject::setpatterns(MCStringRef data)
 	{
 		MCAutoStringRef t_substring;
         if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, MCStringGetLength(data)), &t_substring);
         else
         {
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, t_end_pos), &t_substring);
             t_start_pos = t_end_pos + 1;
         }
             
@@ -2055,8 +2056,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 {
 	// Fetch current default stack and target settings
 	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
-	MCObjectPtr t_old_target;
-	t_old_target = MCtargetptr;
+    MCObjectPartHandle t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
@@ -2065,8 +2065,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCtargetptr = MCObjectPartHandle(this);
+
 
 	// Dispatch the message
 	Exec_stat t_stat;
@@ -2074,7 +2074,21 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		t_stat = handle(p_type, p_message, p_params, this);
+    {
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
+        if (MCtargetptr)
+        {
+            MCObjectExecutionLock t_target_lock(this);
+            t_stat = handle(p_type, p_message, p_params, this);
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
+        }
+    }
 
 	// Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
@@ -2083,7 +2097,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
         MCdefaultstackptr = t_old_defaultstack;
 	
 	// Reset target pointer
-	MCtargetptr = t_old_target;
+    swap(MCtargetptr, t_old_target);
 	MCdynamicpath = olddynamic;
 	
 	return t_stat;
@@ -2113,12 +2127,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
 	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
-	MCObjectPtr oldtargetptr = MCtargetptr;
+    MCObjectPartHandle oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
 		MCdefaultstackptr = t_stack;
-		MCtargetptr . object = this;
-        MCtargetptr . part_id = 0;
+        MCtargetptr = MCObjectPartHandle(this);
 	}
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = False;
@@ -2130,6 +2143,10 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	else
 	{
+        /* Take a handle to self.  This will be used to check if the
+         * frontscripts deleted the object. */
+        MCObjectHandle t_self_handle(this);
+
 		MCS_alarm(CHECK_INTERVAL);
 		MCdebugcontext = MAXUINT2;
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
@@ -2141,19 +2158,30 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 					&& (MCtracewindow == NULL
 						|| memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 			{
-				// PASS STATE FIX
-				Exec_stat oldstat = stat;
-				stat = handle(HT_MESSAGE, mess, paramptr, this);
-				if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-					stat = ES_PASS;
+                /* If the object was deleted in the frontscript,
+                 * prevent normal message dispatch as if the
+                 * frontscript did not pass the message. */
+                if (t_self_handle)
+                {
+                    MCObjectExecutionLock t_self_lock(this);
+                    // PASS STATE FIX
+                    Exec_stat oldstat = stat;
+                    stat = handle(HT_MESSAGE, mess, paramptr, this);
+                    if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
+                        stat = ES_PASS;
+                }
+                else
+                {
+                    stat = ES_NORMAL;
+                }
 			}
 		}
 	}
 	if ((!send || !changedefault || MCdefaultstackptr == t_stack)
                 && t_old_defaultstack.IsValid())
 		MCdefaultstackptr = t_old_defaultstack;
-	
-    MCtargetptr = oldtargetptr;
+
+    swap(MCtargetptr, oldtargetptr);
 	MCdynamicpath = olddynamic;
 	
 	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
@@ -2348,10 +2376,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
         case P_ABBREV_ID:
             return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
             
-            // The stack object has its own version of long * which we check for here. We
-            // could make 'names()' virtual and do this that way, but since there shouldn't
-            // really be an exception to how id is formatted (and there won't be for any
-            // future object types) we handle it here.
+        // The stack object has its own version of long * which we check for here. We
+        // could make 'names()' virtual and do this that way, but since there shouldn't
+        // really be an exception to how id is formatted (and there won't be for any
+        // future object types) we handle it here.
+        case P_LONG_NAME_NO_FILENAME:
         case P_LONG_NAME:
         case P_LONG_ID:
             if (gettype() == CT_STACK)
@@ -2361,7 +2390,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
                 
                 MCStringRef t_filename;
                 t_filename = t_this -> getfilename();
-                if (MCStringIsEmpty(t_filename))
+                
+                /* If the property type is 'NO_FILENAME' then we resolve the name
+                 * of the mainstack, and not its filename. */
+                if (MCStringIsEmpty(t_filename) ||
+                    which == P_LONG_NAME_NO_FILENAME)
                 {
                     if (MCdispatcher->ismainstack(t_this))
                     {
@@ -2889,19 +2922,21 @@ Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args)
 		return ES_ERROR;
 	}
 	MCerrorlock--;
-	MCObjectPtr oldtargetptr = MCtargetptr;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle oldtargetptr(this);
+    swap(oldtargetptr, MCtargetptr);
 	MCHandler *hptr;
     handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
 
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
+
+    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, p_args);
+
 	MClockerrors = oldlock;
 	delete handlist;
-	MCtargetptr = oldtargetptr;
+    swap(MCtargetptr, oldtargetptr);
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
 	else
@@ -2924,9 +2959,8 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 		ctxt.Throw();
 		return;
 	}
-	MCObjectPtr oldtargetptr = MCtargetptr;
-	MCtargetptr . object = this;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle oldtargetptr(this);
+    swap(MCtargetptr, oldtargetptr);
 	MCHandler *hptr;
 	MCHandler *oldhandler = ctxt.GetHandler();
 	MCHandlerlist *oldhlist = ctxt.GetHandlerList();
@@ -2936,6 +2970,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
+    MCObjectExecutionLock t_self_lock(this);
 	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -2946,7 +2981,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
-	MCtargetptr = oldtargetptr;
+    swap(MCtargetptr, oldtargetptr);
 	ctxt.SetHandlerList(oldhlist);
 	ctxt.SetHandler(oldhandler);
 	delete handlist;
@@ -3109,9 +3144,8 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		t_context -> setfunction(GXblendSrcOver);
 
         // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            t_player -> syncbuffering(t_context);
-            
+        MCPlayer::SyncPlayers(getstack(), t_context);
+        
 #ifdef FEATURE_PLATFORM_PLAYER
         MCPlatformWaitForEvent(0.0, true);
 #endif
@@ -5662,6 +5696,51 @@ void MCDeletedObjectsOnObjectResumeDeletion(MCObject *p_object, void *p_deletion
 	
 	p_object -> setdeletedobjectpool((MCDeletedObjectPool *)p_deletion_cookie);
 	p_object -> setdeletionissuspended(false);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+MCObjectPartHandle::MCObjectPartHandle(MCObject* p_object, uint32_t p_part_id)
+    : MCObjectHandle(p_object), m_part_id(p_part_id)
+{
+}
+
+MCObjectPartHandle::MCObjectPartHandle(const MCObjectPtr& p_ptr)
+    : MCObjectHandle(p_ptr.object), m_part_id(p_ptr.part_id)
+{
+}
+
+MCObjectPartHandle&
+MCObjectPartHandle::operator=(decltype(nullptr))
+{
+    MCObjectHandle::operator=(nullptr);
+    m_part_id = 0;
+    return *this;
+}
+
+MCObjectPartHandle&
+MCObjectPartHandle::operator=(const MCObjectPtr& p_ptr)
+{
+    MCObjectHandle::operator=(p_ptr.object);
+    m_part_id = p_ptr.part_id;
+    return *this;
+}
+
+MCObjectPtr
+MCObjectPartHandle::getObjectPtr() const
+{
+    if (IsValid())
+        return MCObjectPtr(Get(), getPart());
+    else
+        return MCObjectPtr(nullptr, 0);
+}
+
+void swap(MCObjectPartHandle &x_left, MCObjectPartHandle &x_right)
+{
+    using std::swap;
+    swap(x_left.m_part_id, x_right.m_part_id);
+    swap(static_cast<MCObjectHandle&>(x_left),
+         static_cast<MCObjectHandle&>(x_right));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

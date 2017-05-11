@@ -136,7 +136,7 @@ static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input
             break;
         
 		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uintx2_string);
+            t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_uintx2_string);
 		
 		if (t_success)
 			t_success = MCU_stoui4x2(*t_uintx2_string, t_range . start, t_range . end);

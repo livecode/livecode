@@ -562,9 +562,12 @@ bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struc
 
 	if (p_final)
 	{
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
-		MCscreen->delaymessage(t_info->target, t_info->message, t_info->name, *t_string);
+        if (t_info -> target . IsValid())
+        {
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
+            MCscreen->delaymessage(t_info->target, t_info->message, t_info->name, *t_string);
+        }
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
@@ -716,6 +719,17 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
                 p_socket->doclose();
                 return false;
             }
+
+#ifdef SO_REUSEPORT
+            // some platforms also require the SO_REUSEPORT option to be set in order to use the same local port for multiple connections
+            t_port_reuse = 1;
+            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
+            {
+                p_socket->error = strclone("can't use the local port");
+                p_socket->doclose();
+                return false;
+            }
+#endif
 
             if (bind(p_socket->fd, (struct sockaddr *)&t_bind_addr, sizeof(struct sockaddr_in)) != 0)
             {
@@ -1130,6 +1144,15 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	int on = 1;
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 
+#ifdef SO_REUSEPORT
+    on = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const char *)&on, sizeof(on)) != 0)
+    {
+        MCresult->sets("can't reuse port");
+        return NULL;
+    }
+#endif
+
 	mc_sockaddr_in_t addr;
 
 	memset((char *)&addr, 0, sizeof(addr));
@@ -1523,7 +1546,7 @@ void MCSocket::acceptone()
 	struct sockaddr_in addr;
 	int addrsize = sizeof(addr);
 	SOCKET newfd = accept(fd, (struct sockaddr *)&addr, &addrsize);
-	if (newfd > 0)
+	if (newfd > 0 && object . IsValid())
 	{
 		char *t = inet_ntoa(addr.sin_addr);
 		MCAutoStringRef n;
@@ -1582,13 +1605,13 @@ void MCSocket::readsome()
 #endif
 		else
 		{
-			if (message != NULL)
+			if (message != NULL && object . IsValid())
 			{
 				char *t = inet_ntoa(addr.sin_addr);
 				MCAutoStringRef n;
 				MCNewAutoNameRef t_name;
 				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
-				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCStringAppendFormat(*n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
 				uindex_t index;
 				if (accepting && !IO_findsocket(*t_name, index))
@@ -1626,7 +1649,7 @@ void MCSocket::readsome()
 #else
 
 			int newfd = accept(fd, (struct sockaddr *)&addr, &addrsize);
-			if (newfd > 0)
+			if (newfd > 0 && object . IsValid())
 			{
 				int val = 1;
 				ioctl(newfd, FIONBIO, (char *)&val);
@@ -1753,13 +1776,16 @@ void MCSocket::processreadqueue()
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
-				MCParameter *params = new (nothrow) MCParameter;
-				params->setvalueref_argument(name);
-				params->setnext(new MCParameter);
-				params->getnext()->setvalueref_argument(*t_data);
-				MCscreen->addmessage(e->optr, e->message, curtime, params);
+                if (e -> optr . IsValid())
+                {
+                    MCParameter *params = new (nothrow) MCParameter;
+                    params->setvalueref_argument(name);
+                    params->setnext(new MCParameter);
+                    params->getnext()->setvalueref_argument(*t_data);
+                    MCscreen->addmessage(e->optr, e->message, curtime, params);
+                }
 				delete e;
-				if (nread == 0 && fd == 0)
+				if (nread == 0 && fd == 0 && object . IsValid())
 					MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
@@ -1771,10 +1797,10 @@ void MCSocket::processreadqueue()
 void MCSocket::writesome()
 {
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-	if (!connected && message != NULL)
+	if (!connected && message != NULL && object . IsValid())
 	{
 #else
-	if (!accepting && !connected && message != NULL)
+	if (!accepting && !connected && message != NULL && object . IsValid())
 	{
 #endif
 		MCscreen->delaymessage(object, message, MCNameGetString(name));
@@ -1822,8 +1848,10 @@ void MCSocket::writesome()
 			{
 				MCSocketwrite *e = wevents->remove
 				                   (wevents);
-				MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
-				added = True;
+                if (e -> optr . IsValid())
+                    MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
+				
+                added = True;
 				delete e;
 			}
 			else
@@ -1850,15 +1878,19 @@ void MCSocket::doclose()
 	{
 		if (error != NULL)
 		{
-			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
-			MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
+            if (object . IsValid())
+            {
+                MCAutoStringRef t_error;
+                /* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
+                MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
+            }
 			added = True;
 		}
 		else
 			if (nread == 0)
 			{
-				MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
+				if (object . IsValid())
+                    MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 	}
@@ -2156,9 +2188,9 @@ Boolean MCSocket::sslconnect()
 
     uindex_t t_pos;
     if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
     else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
 
     MCAutoPointer<char> t_host;
     /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
@@ -2362,9 +2394,9 @@ Boolean MCSocket::sslaccept()
             /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
             uindex_t t_pos;
             if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
 			
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
             // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL

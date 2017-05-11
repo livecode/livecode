@@ -65,20 +65,20 @@ void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
     OutputWriteS(p_left, t_name_string, p_right);
 }
 
-void OutputWriteD(const char *p_left, double p_number, const char *p_right)
+void OutputWriteD(const char *p_left, double* p_number, const char *p_right)
 {
     if (s_output == NULL)
         return;
     
-    fprintf(s_output, "%s%f%s", p_left, p_number, p_right);
+    fprintf(s_output, "%s%f%s", p_left, *p_number, p_right);
 }
 
-void OutputWriteN(const char *p_left, int p_number, const char *p_right)
+void OutputWriteN(const char *p_left, intptr_t p_number, const char *p_right)
 {
     if (s_output == NULL)
         return;
     
-    fprintf(s_output, "%s%d%s", p_left, p_number, p_right);
+    fprintf(s_output, "%s%ld%s", p_left, p_number, p_right);
 }
 
 void OutputEnd(void)

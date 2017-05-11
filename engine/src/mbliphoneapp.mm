@@ -487,20 +487,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification
 {
     MCLog("application:didReceiveLocalNotification:");
-    UIApplicationState t_state = [p_application applicationState];
-    MCAutoStringRef t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
 	
-	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
-	if (t_reminder_text != nil)
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
-	else
-		t_mc_reminder_text = MCValueRetain(kMCEmptyString);
-    if (m_did_become_active)
-    {
-		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
-    }
-    
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveLocalNotification, t_reminder_text);
     
@@ -508,27 +496,11 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (m_did_become_active)
         dispatch_notification_events();
     
-/*    t_mc_reminder_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
-    if (m_did_become_active)
-    {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
-    }*/
 }
 
 - (void)application:(UIApplication *)p_application didReceiveRemoteNotification:(NSDictionary *)p_dictionary
 {
     MCLog("application:didReceiveRemoteNotification:");
-    UIApplicationState t_state = [p_application applicationState];
-    MCAutoStringRef t_mc_push_notification_text;
 	id t_reminder_text_value = [p_dictionary objectForKey:@"payload"];
 	
 	// Prevent crash when sending push notifications while the app is running:
@@ -541,40 +513,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		// t_reminder_text_value is NSNull, not NSString
 		t_reminder_text = nil;
 	
-	
-	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
-	if (t_reminder_text != nil)
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
-	else
-		t_mc_push_notification_text = MCValueRetain(kMCEmptyString);
-	
-    if (m_did_become_active)
-    {
-		MCNotificationPostPushNotificationEvent(*t_mc_push_notification_text);
-    }
-    
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveRemoteNotification, t_reminder_text);
     
     // If we are already active, dispatch.
     if (m_did_become_active)
         dispatch_notification_events();
-    
-/*    if (t_reminder_text != nil)
-        t_mc_push_notification_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
-    if (m_did_become_active)
-    {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostPushNotificationEvent(t_mc_push_notification_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostPushNotificationEvent (t_mc_push_notification_text);
-        }
-    }*/
 }
 
 - (void)application:(UIApplication*)p_application didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)p_device_token
@@ -2053,8 +1997,6 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-extern "C" bool MCModulesInitialize();
-
 MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
@@ -2065,8 +2007,9 @@ MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+        !MCSInitialize() ||
+        !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

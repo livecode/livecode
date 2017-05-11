@@ -303,12 +303,12 @@ void MCVariable::setnvalue(real8 p_number)
 
 bool MCVariable::setvalueref(MCValueRef p_value)
 {
-	return setvalueref(nil, 0, false, p_value);
+	return setvalueref({}, false, p_value);
 }
 
-bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef p_value)
+bool MCVariable::setvalueref(MCSpan<MCNameRef> p_path, bool p_case_sensitive, MCValueRef p_value)
 {
-	if (p_length == 0)
+	if (p_path.empty())
 	{
 		MCValueRef t_new_value;
 		if (!MCValueCopy(p_value, t_new_value))
@@ -326,7 +326,7 @@ bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_s
     if (!MCValueCopy(p_value, &t_copied_value))
         return false;
 
-    if (MCArrayStoreValueOnPath(value . arrayref_value, p_case_sensitive, p_path, p_length, *t_copied_value))
+    if (MCArrayStoreValueOnPath(value . arrayref_value, p_case_sensitive, p_path, *t_copied_value))
 		return true;
 
 	return false;
@@ -349,14 +349,14 @@ MCValueRef MCVariable::getvalueref(void)
 	return *name;
 }
 
-MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive)
+MCValueRef MCVariable::getvalueref(MCSpan<MCNameRef> p_path, bool p_case_sensitive)
 {
-	if (p_length == 0)
+	if (p_path.empty())
 		return getvalueref();
 
 	MCValueRef t_value;
 	if (value . type == kMCExecValueTypeArrayRef &&
-            MCArrayFetchValueOnPath(value . arrayref_value, p_case_sensitive, p_path, p_length, t_value))
+            MCArrayFetchValueOnPath(value . arrayref_value, p_case_sensitive, p_path, t_value))
 		return t_value;
 
 	return kMCEmptyString;
@@ -375,22 +375,22 @@ MCExecValue MCVariable::getexecvalue(void)
 
 bool MCVariable::copyasvalueref(MCValueRef& r_value)
 {
-    return copyasvalueref(nil, 0, false, r_value);
+    return copyasvalueref({}, false, r_value);
 }
 
-bool MCVariable::copyasvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef& r_value)
+bool MCVariable::copyasvalueref(MCSpan<MCNameRef> p_path, bool p_case_sensitive, MCValueRef& r_value)
 {
-    return MCValueCopy(getvalueref(p_path, p_length, p_case_sensitive), r_value);
+    return MCValueCopy(getvalueref(p_path, p_case_sensitive), r_value);
 }
 
 bool MCVariable::eval(MCExecContext& ctxt, MCValueRef& r_value)
 {
-    return eval(ctxt, nil, 0, r_value);
+    return eval(ctxt, {}, r_value);
 }
 
-bool MCVariable::eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef& r_value)
+bool MCVariable::eval(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value)
 {
-    return copyasvalueref(p_path, p_length, ctxt . GetCaseSensitive(), r_value);
+    return copyasvalueref(p_path, ctxt . GetCaseSensitive(), r_value);
 }
 
 bool MCVariable::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -399,12 +399,12 @@ bool MCVariable::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     return true;
 }
 
-bool MCVariable::eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCExecValue& r_value)
+bool MCVariable::eval_ctxt(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCExecValue& r_value)
 {
-    if (p_length == 0)
+    if (p_path.empty())
         return eval_ctxt(ctxt, r_value);
     
-    if (copyasvalueref(p_path, p_length, ctxt . GetCaseSensitive(), r_value . valueref_value))
+    if (copyasvalueref(p_path, ctxt . GetCaseSensitive(), r_value . valueref_value))
     {
         r_value . type = kMCExecValueTypeValueRef;
         return true;
@@ -414,15 +414,15 @@ bool MCVariable::eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_le
 
 bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
-    return set(ctxt, p_value, nil, 0, p_setting);
+    return set(ctxt, p_value, {}, p_setting);
 }
 
-bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
     if (p_setting != kMCVariableSetInto)
-        return modify(ctxt, p_value, p_path, p_length, p_setting);
+        return modify(ctxt, p_value, p_path, p_setting);
     
-    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), p_value))
+    if (setvalueref(p_path, ctxt . GetCaseSensitive(), p_value))
     {
         synchronize(ctxt, true);
         return true;
@@ -452,18 +452,18 @@ bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariable
     return true;
 }
 
-bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
     if (p_setting != kMCVariableSetInto)
-        return modify_ctxt(ctxt, p_value, p_path, p_length, p_setting);
+        return modify_ctxt(ctxt, p_value, p_path, p_setting);
     
-    if (p_length == 0)
+    if (p_path.empty())
         return give_value(ctxt, p_value, p_setting);
     
     MCAutoValueRef t_value;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_value));
     
-    if (!ctxt . HasError() && setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), *t_value))
+    if (!ctxt . HasError() && setvalueref(p_path, ctxt . GetCaseSensitive(), *t_value))
     {
         synchronize(ctxt, true);
         return true;
@@ -472,12 +472,12 @@ bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef 
     return false;
 }
 
-bool MCVariable::can_become_data(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::can_become_data(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
 {
     MCValueRef t_current_value;
     t_current_value = nil;
  
-    if (p_length == 0)
+    if (p_path.empty())
     {
         // If we are already data, then we can stay data
         if (value . type == kMCExecValueTypeDataRef)
@@ -491,7 +491,7 @@ bool MCVariable::can_become_data(MCExecContext& ctxt, MCNameRef *p_path, uindex_
         t_current_value = value . valueref_value;
     }
     else
-        t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+        t_current_value = getvalueref(p_path, ctxt . GetCaseSensitive());
     
     // The only values that cannot convert losslessly to data are strings or names that contain non-native characters
     if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeString)
@@ -505,12 +505,12 @@ bool MCVariable::can_become_data(MCExecContext& ctxt, MCNameRef *p_path, uindex_
 
 bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
-	return modify(ctxt, p_value, nil, 0, p_setting);
+	return modify(ctxt, p_value, {}, p_setting);
 }
 
-bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {    
-	if (p_length == 0)
+	if (p_path.empty())
 	{
         if (!converttomutabledata(ctxt))
             return false;
@@ -531,7 +531,7 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
 	}
     
 	MCValueRef t_current_value;
-	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+	t_current_value = getvalueref(p_path, ctxt . GetCaseSensitive());
 
     MCDataRef t_value_as_data;
     t_value_as_data = nil;
@@ -540,7 +540,7 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
 	    MCDataMutableCopyAndRelease(t_value_as_data, t_value_as_data) &&
 		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
          (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
-		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
+		setvalueref(p_path, ctxt . GetCaseSensitive(), t_value_as_data))
 	{
 		MCValueRelease(t_value_as_data);
         synchronize(ctxt, true);
@@ -551,9 +551,9 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
 	return false;
 }
 
-bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
-    if (p_length == 0)
+    if (p_path.empty())
     {
         if (!converttomutablestring(ctxt))
             return false;
@@ -575,7 +575,7 @@ bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameR
     }
     
     MCValueRef t_current_value;
-    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+    t_current_value = getvalueref(p_path, ctxt . GetCaseSensitive());
     
     MCStringRef t_current_value_as_string;
     t_current_value_as_string = nil;
@@ -584,7 +584,7 @@ bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameR
         MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
         ((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, p_value)) ||
          (p_setting == kMCVariableSetBefore && MCStringPrepend(t_current_value_as_string, p_value))) &&
-        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
+        setvalueref(p_path, ctxt . GetCaseSensitive(), t_current_value_as_string))
     {
         MCValueRelease(t_current_value_as_string);
         synchronize(ctxt, true);
@@ -595,33 +595,33 @@ bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameR
     return false;
 }
 
-bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
-    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && can_become_data(ctxt, p_path, p_length))
-        return modify_data(ctxt, (MCDataRef)p_value, p_path, p_length, p_setting);
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && can_become_data(ctxt, p_path))
+        return modify_data(ctxt, (MCDataRef)p_value, p_path, p_setting);
 
     MCAutoStringRef t_value;
     if (!ctxt . ConvertToString(p_value, &t_value))
         return false;
     
-    return modify_string(ctxt, *t_value, p_path, p_length, p_setting);
+    return modify_string(ctxt, *t_value, p_path, p_setting);
 }
 
 bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
 {
-	return modify_ctxt(ctxt, p_value, nil, 0, p_setting);
+	return modify_ctxt(ctxt, p_value, {}, p_setting);
 }
 
-bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
     if (p_value . type == kMCExecValueTypeDataRef)
     {
-        if (can_become_data(ctxt, p_path, p_length))
+        if (can_become_data(ctxt, p_path))
         {
             // AL-2014-11-20: In this codepath, we are taking the value rather than retaining, so make sure the DataRef is released.
             MCAutoDataRef t_value;
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value));
-            return modify_data(ctxt, *t_value, p_path, p_length, p_setting);
+            return modify_data(ctxt, *t_value, p_path, p_setting);
         }
     }
     
@@ -631,17 +631,17 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;
     
-    return modify_string(ctxt, *t_value, p_path, p_length, p_setting);
+    return modify_string(ctxt, *t_value, p_path, p_setting);
 }
 
 bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-    return replace(ctxt, p_replacement, p_range, nil, 0);
+    return replace(ctxt, p_replacement, p_range, {});
 }
 
-bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path)
 {
-    if (p_length == 0)
+    if (p_path.empty())
     {
         if (!converttomutabledata(ctxt))
             return false;
@@ -655,7 +655,7 @@ bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRa
     }
     
     MCValueRef t_current_value;
-    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+    t_current_value = getvalueref(p_path, ctxt . GetCaseSensitive());
     
     MCDataRef t_current_value_as_data;
     t_current_value_as_data = nil;
@@ -663,7 +663,7 @@ bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRa
     if (ctxt . ConvertToData(t_current_value, t_current_value_as_data) &&
         MCDataMutableCopyAndRelease(t_current_value_as_data, t_current_value_as_data) &&
         MCDataReplace(t_current_value_as_data, p_range, (MCDataRef)p_replacement) &&
-        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_data))
+        setvalueref(p_path, ctxt . GetCaseSensitive(), t_current_value_as_data))
     {
         MCValueRelease(t_current_value_as_data);
         synchronize(ctxt, true);
@@ -674,9 +674,9 @@ bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRa
     return false;
 }
 
-bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path)
 {
-    if (p_length == 0)
+    if (p_path.empty())
     {
         if (!converttomutablestring(ctxt))
             return false;
@@ -690,7 +690,7 @@ bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, 
     }
     
     MCValueRef t_current_value;
-    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+    t_current_value = getvalueref(p_path, ctxt . GetCaseSensitive());
     
     MCStringRef t_current_value_as_string;
     t_current_value_as_string = nil;
@@ -698,7 +698,7 @@ bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, 
     if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
         MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
         MCStringReplace(t_current_value_as_string, p_range, p_replacement) &&
-        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
+        setvalueref(p_path, ctxt . GetCaseSensitive(), t_current_value_as_string))
     {
         MCValueRelease(t_current_value_as_string);
         synchronize(ctxt, true);
@@ -709,42 +709,42 @@ bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, 
     return false;
 }
 
-bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCSpan<MCNameRef> p_path)
 {
-    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData && can_become_data(ctxt, p_path, p_length))
-        return replace_data(ctxt, (MCDataRef)p_replacement, p_range, p_path, p_length);
+    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData && can_become_data(ctxt, p_path))
+        return replace_data(ctxt, (MCDataRef)p_replacement, p_range, p_path);
     
     MCAutoStringRef t_replacement;
     if (!ctxt . ConvertToString(p_replacement, &t_replacement))
         return false;
     
-    return replace_string(ctxt, *t_replacement, p_range, p_path, p_length);
+    return replace_string(ctxt, *t_replacement, p_range, p_path);
 }
 
 bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range)
 {
     if (value . type == kMCExecValueTypeDataRef)
-        return replace_data(ctxt, kMCEmptyData, p_range, nil, 0);
+        return replace_data(ctxt, kMCEmptyData, p_range, {});
     
-    return replace_string(ctxt, kMCEmptyString, p_range, nil, 0);
+    return replace_string(ctxt, kMCEmptyString, p_range, {});
 }
 
-bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range, MCSpan<MCNameRef> p_path)
 {
-    if (MCValueGetTypeCode(getvalueref(p_path, p_length, ctxt . GetCaseSensitive())) == kMCValueTypeCodeData)
-        return replace_data(ctxt, kMCEmptyData, p_range, p_path, p_length);
+    if (MCValueGetTypeCode(getvalueref(p_path, ctxt . GetCaseSensitive())) == kMCValueTypeCodeData)
+        return replace_data(ctxt, kMCEmptyData, p_range, p_path);
     
-    return replace_string(ctxt, kMCEmptyString, p_range, p_path, p_length);
+    return replace_string(ctxt, kMCEmptyString, p_range, p_path);
 }
 
 bool MCVariable::remove(MCExecContext& ctxt)
 {
-	return remove(ctxt, nil, 0);
+	return remove(ctxt, {});
 }
 
-bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::remove(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
 {
-	if (p_length == 0)
+	if (p_path.empty())
 	{
 		clear();
 		
@@ -765,7 +765,7 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
 	if (!converttomutablearray())
 		return false;
     
-	MCArrayRemoveValueOnPath(value . arrayref_value, ctxt . GetCaseSensitive(), p_path, p_length);
+	MCArrayRemoveValueOnPath(value . arrayref_value, ctxt . GetCaseSensitive(), p_path);
     
 	return true;
     
@@ -1124,91 +1124,86 @@ __join_paths(MCSpan<MCNameRef> p_base,
             new (nothrow) MCNameRef[p_base.size() + p_extra.size()];
     if (t_result)
     {
-        for(int i = 0; i < p_base.size(); i++)
-            t_result[i] = p_base[i];
-    
-        for(int i = 0; i < p_extra.size(); i++)
-            t_result[i + p_base.size()] = p_extra[i];
+        int t_count = 0;
+        for (MCNameRef t_name : p_base)
+            t_result[t_count++] = t_name;
+        for (MCNameRef t_name : p_extra)
+            t_result[t_count++] = t_name;
     }
     
-    return std::move(t_result);
+    return t_result;
 }
 
 MCContainer::~MCContainer(void)
 {
-    // AL-2014-09-17: [[ Bug 13465 ]] Delete path array regardless of length
-	for(uindex_t i = 0; i < m_length; i++)
-		MCValueRelease(m_path[i]);
-	MCMemoryDeleteArray(m_path);
 }
 
 bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
 {
-    return m_variable -> eval(ctxt, m_path, m_length, r_value);
+    return m_variable -> eval(ctxt, getpath(), r_value);
 }
 
-bool MCContainer::eval_on_path(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_path_length, MCValueRef& r_value)
+bool MCContainer::eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value)
 {
-    MCAutoPointer<MCNameRef[]> t_full_path =
-            __join_paths(MCMakeSpan(m_path, m_length),
-                         MCMakeSpan(p_path, p_path_length));
+    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(m_path.Span(), p_path);
     
     if (!t_full_path)
         return false;
-    
-    return m_variable->eval(ctxt, *t_full_path, p_path_length + m_length, r_value);
+
+    return m_variable->eval(ctxt,
+                            {*t_full_path, p_path.size() + m_path.Span().size()},
+                            r_value);
 }
 
 bool MCContainer::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
-	return m_variable -> set(ctxt, p_value, m_path, m_length, p_setting);
+	return m_variable -> set(ctxt, p_value, getpath(), p_setting);
 }
 
-bool MCContainer::set_on_path(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_path_length, MCValueRef p_value)
+bool MCContainer::set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef p_value)
 {
-    MCAutoPointer<MCNameRef[]> t_full_path =
-            __join_paths(MCMakeSpan(m_path, m_length),
-                         MCMakeSpan(p_path, p_path_length));
+    MCAutoPointer<MCNameRef[]> t_full_path = __join_paths(m_path.Span(), p_path);
     
     if (!t_full_path)
         return false;
     
-    return m_variable->set(ctxt, p_value, *t_full_path, p_path_length + m_length);
+    return m_variable->set(ctxt, p_value,
+                           {*t_full_path, p_path.size() + m_path.Span().size()});
 }
 
 bool MCContainer::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    return m_variable -> eval_ctxt(ctxt, m_path, m_length, r_value);
+    return m_variable -> eval_ctxt(ctxt, getpath(), r_value);
 }
 
 bool MCContainer::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
 {
-	return m_variable -> give_value(ctxt, p_value, m_path, m_length, p_setting);
+	return m_variable -> give_value(ctxt, p_value, getpath(), p_setting);
 }
 
 bool MCContainer::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-    return m_variable -> replace(ctxt, p_replacement, p_range, m_path, m_length);
+    return m_variable -> replace(ctxt, p_replacement, p_range, getpath());
 }
 
 bool MCContainer::deleterange(MCExecContext &ctxt, MCRange p_range)
 {
-    return m_variable -> deleterange(ctxt, p_range, m_path, m_length);
+    return m_variable -> deleterange(ctxt, p_range, getpath());
 }
 
 bool MCContainer::remove(MCExecContext& ctxt)
 {
-	return m_variable -> remove(ctxt, m_path, m_length);
+	return m_variable -> remove(ctxt, getpath());
 }
 
 bool MCContainer::set_valueref(MCValueRef p_value)
 {
-	return m_variable -> setvalueref(m_path, m_length, m_case_sensitive, p_value);
+	return m_variable -> setvalueref(getpath(), m_case_sensitive, p_value);
 }
 
 MCValueRef MCContainer::get_valueref()
 {
-	return m_variable -> getvalueref(m_path, m_length, m_case_sensitive);
+	return m_variable -> getvalueref(getpath(), m_case_sensitive);
 }
 
 bool MCContainer::clear(void)
@@ -1218,7 +1213,7 @@ bool MCContainer::clear(void)
 
 bool MCContainer::set_real(double p_real)
 {
-    if (m_length == 0)
+    if (m_path.Count() == 0)
     {
         m_variable -> setnvalue(p_real);
         return true;
@@ -1230,11 +1225,15 @@ bool MCContainer::set_real(double p_real)
 	return set_valueref(*t_number);
 }
 
+MCSpan<MCNameRef> MCContainer::getpath()
+{
+    return m_path.Span();
+}
+
 bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer& r_container)
 {
 	r_container.m_variable = p_var;
-	r_container.m_length = 0;
-    r_container.m_path = nil;
+    r_container.m_path.Reset();
 	r_container.m_case_sensitive = false;
 	return true;
 }
@@ -1242,8 +1241,7 @@ bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer& r_container
 bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container)
 {
 	r_container.m_variable = p_var;
-	r_container.m_path = p_path;
-	r_container.m_length = p_length;
+	r_container.m_path.Give(p_path, p_length);
 	r_container.m_case_sensitive = false;
 	return true;
 }
@@ -1487,14 +1485,12 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
 	else
 		t_dimensions = exps;
     
-	uindex_t t_path_length;
-	t_path_length = 0;
-    
     // AL-2014-08-20: [[ ArrayElementRefParams ]] If the Varref refers to a container then
     //  resolving the path requires appending the new dimensions to the old path
     
-	MCNameRef *t_path, *t_old_path;
-    getpath(ctxt, t_old_path, t_path_length);
+	MCNameRef *t_path;
+    MCSpan<MCNameRef> t_old_path = getpath(ctxt);
+    uindex_t t_path_length = t_old_path.size();
     
     uindex_t t_new_dimension_count;
 	t_new_dimension_count = dimensions + t_path_length;
@@ -1558,16 +1554,12 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
     }
 }
 
-void MCVarref::getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length)
+MCSpan<MCNameRef> MCVarref::getpath(MCExecContext& ctxt)
 {
     if (!isparam)
-    {
-        r_path = nil;
-        r_length = 0;
-        return;
-    }
-    
-    fetchcontainer(ctxt) -> getpath(r_path, r_length);
+        return {};
+
+    return fetchcontainer(ctxt) -> getpath();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

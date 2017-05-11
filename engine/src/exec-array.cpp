@@ -278,7 +278,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
 	}
 	
 	if (t_success)
-		t_success = MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+		t_success = MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt);
 	
     if (t_success)
     {
@@ -346,7 +346,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
 						if (MCStringFind(t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX), t_row_delimiter, ctxt.GetStringComparisonType(), &t_cell_range))
 						{
 							// We found a row delimiter, so we stop the copy range before it and update the next index from which to look
-							t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], t_cell_range . offset - t_next_row_indices[i]));
+							t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMakeMinMax(t_next_row_indices[i], t_cell_range . offset));
 							t_next_row_indices[i] = t_cell_range . offset + t_cell_range . length;
 						}
 						else
@@ -479,7 +479,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             
             // Check that a string has been created to store this column
             MCRange t_range;
-            t_range = MCRangeMake(t_cell_offset, t_cell_found . offset - t_cell_offset);
+            t_range = MCRangeMakeMinMax(t_cell_offset, t_cell_found . offset);
             if (t_temp_array[t_column_index] == nil)
             {
                 t_success = MCStringCreateMutable(0, t_temp_array[t_column_index]);
@@ -928,7 +928,7 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
             t_finish = t_string_len;
 		
         MCAutoStringRef t_substring;
-        if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring))
+        if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, t_finish), &t_substring))
 			return false;
 		
         MCAutoNumberRef t_number;

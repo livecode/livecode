@@ -1476,6 +1476,79 @@ bool MCStringMutableCopySubstringAndRelease(MCStringRef self, MCRange p_range, M
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
+bool MCStringCopyReversed(MCStringRef self, MCStringRef& r_new_string)
+{
+    __MCAssertIsString(self);
+
+    if (MCStringGetLength(self) < 2)
+        return MCStringCopy(self, r_new_string);
+
+    /* Make a deep copy of the input string. */
+    /* TODO[2017-03-29] This could be optimised by _not_ copying the
+     * actual string buffer contents during the deep copy, but
+     * reversing directly from the input string's internal buffer to
+     * the result string's buffer. */
+    MCAutoStringRef t_result;
+    if (!MCStringMutableCopy(self, &t_result))
+        return false;
+    if (__MCStringIsIndirect(*t_result))
+        if (!__MCStringResolveIndirect(*t_result))
+            return false;
+
+    if (__MCStringIsNative(*t_result))
+    {
+        /* Native strings have one char_t per grapheme, so they can be
+         * reversed in-place. */
+        MCInplaceReverse(t_result->native_chars, t_result->char_count);
+    }
+    else if (__MCStringIsTrivial(*t_result))
+    {
+        /* Trivial strings have one unichar_t per grapheme, so they
+         * can be reversed in-place. */
+        MCInplaceReverse(t_result->chars, t_result->char_count);
+    }
+    else
+    {
+        /* These strings have some potentially-unbounded number of
+         * unichar_t codeunits items per grapheme.  In this case, we
+         * reverse by iterating over the contents of the original
+         * string, copying the graphemes into the new string. */
+        MCStringRef t_original = self;
+        if (__MCStringIsIndirect(t_original))
+        {
+            t_original = t_original->string;    
+        }
+
+        /* Start of the next grapheme to copy, in the input string */
+        uindex_t t_from = 0;
+        uindex_t t_length = t_original->char_count;
+
+        while (t_from < t_length)
+        {
+            /* Find the end of the current grapheme */
+            uindex_t t_grapheme_end =
+                MCStringGraphemeBreakIteratorAdvance(t_original, t_from);
+
+            if (t_grapheme_end == kMCLocaleBreakIteratorDone)
+                t_grapheme_end = t_length;
+
+            MCAssert(t_grapheme_end <= t_length);
+
+            MCMemoryCopy(t_result->chars + t_length - t_grapheme_end,
+                         t_original->chars + t_from,
+                         (t_grapheme_end - t_from) * sizeof(*t_result->chars));
+
+            t_from = t_grapheme_end;
+        }
+    }
+
+    r_new_string = t_result.Take();
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
 bool MCStringIsMutable(const MCStringRef self)
 {
 	__MCAssertIsString(self);
@@ -1918,7 +1991,7 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
         t_end = MCStringGetLength(self);
     
     MCRange t_units;
-    t_units = MCRangeMake(t_start, t_end - t_start);
+    t_units = MCRangeMakeMinMax(t_start, t_end);
     
     // All done
     r_out_range = t_units;
@@ -1965,7 +2038,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCRange p_grapheme_range, MCRa
     if (t_end == kMCLocaleBreakIteratorDone)
         t_end = MCStringGetLength(self);
     
-    r_cu_range = MCRangeMake(t_start, t_end - t_start);
+    r_cu_range = MCRangeMakeMinMax(t_start, t_end);
     return true;
 }
 
@@ -2017,7 +2090,7 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         ;
     
     MCRange t_units;
-    t_units = MCRangeMake(t_start, t_word_range . offset + t_word_range . length - t_start);
+    t_units = MCRangeMakeMinMax(t_start, t_word_range . offset + t_word_range . length);
     
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
@@ -2468,25 +2541,24 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingUTF16BE:
         {
             uindex_t t_char_count;
-            unichar_t *t_bytes;
-            if (MCStringConvertToUnicode(self, t_bytes, t_char_count))
+            unichar_t * t_bytes;
+            if (!MCStringConvertToUnicode(self, t_bytes, t_char_count))
+                return false;
+
+            if ((p_encoding == kMCStringEncodingUTF16BE &&
+                 kMCByteOrderHost != kMCByteOrderBigEndian) ||
+                (p_encoding == kMCStringEncodingUTF16LE &&
+                 kMCByteOrderHost != kMCByteOrderLittleEndian))
             {
-                unichar_t *t_buffer;
-                MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
-                
-                for (uindex_t i = 0; i < t_char_count; i++)
+                for (uindex_t i = 0; i < t_char_count; ++i)
                 {
-                    if (p_encoding == kMCStringEncodingUTF16BE)
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToBig((t_bytes)[i]);   
-                    else
-                        t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                    t_bytes[i] = MCSwapInt(t_bytes[i]);
                 }
-				MCMemoryDeleteArray (t_bytes);
-                r_bytes = (byte_t*&)t_buffer;
-                r_byte_count = t_char_count * sizeof(unichar_t);
-                return true;
             }
-            return false;
+
+            r_bytes = reinterpret_cast<byte_t*>(t_bytes);
+            r_byte_count = t_char_count * sizeof(*t_bytes);
+            return true;
         }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
@@ -3377,7 +3449,7 @@ bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, M
 MC_DLLEXPORT_DEF
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
-    return MCStringFirstIndexOfCharInRange(self, p_needle, MCRangeMake(p_after, self -> char_count - p_after), p_options, r_offset);
+    return MCStringFirstIndexOfCharInRange(self, p_needle, MCRangeMakeMinMax(p_after, self -> char_count), p_options, r_offset);
 }
 
 MC_DLLEXPORT_DEF
@@ -3703,7 +3775,7 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 		return false;
 	
 	MCStringRef t_tail;
-	if (!MCStringCopySubstring(self, MCRangeMake(p_offset + 1, MCStringGetLength(self) - p_offset - 1), t_tail))
+	if (!MCStringCopySubstring(self, MCRangeMakeMinMax(p_offset + 1, MCStringGetLength(self)), t_tail))
 	{
 		MCValueRelease(t_head);
 		return false;
@@ -3809,7 +3881,7 @@ static bool __MCStringSkip(MCStringRef self,
     while(p_count > 0)
     {
         if (!__MCStringFind(self,
-                            MCRangeMake(t_start, t_finish - t_start),
+                            MCRangeMakeMinMax(t_start, t_finish),
                             p_needle,
                             p_options,
                             &t_last))
@@ -3868,7 +3940,7 @@ static uindex_t __MCStringCount(MCStringRef self,
     MCRange t_last;
     t_last = MCRangeMake(t_start, 0);
     while(__MCStringFind(self,
-                         MCRangeMake(t_start, t_finish - t_start),
+                         MCRangeMakeMinMax(t_start, t_finish),
                          p_needle,
                          p_options,
                          &t_last))
@@ -3932,7 +4004,7 @@ static bool __MCStringDelimitedOffset(MCStringRef self,
     // we are done.
     MCRange t_found_range;
     if (!__MCStringFind(self,
-                        MCRangeMake(t_start, t_finish - t_start),
+                        MCRangeMakeMinMax(t_start, t_finish),
                         p_needle,
                         p_options,
                         &t_found_range))
@@ -3941,7 +4013,7 @@ static bool __MCStringDelimitedOffset(MCStringRef self,
     // We must now search for delimiters in the substring between the end of the
     // previous delimiter and the start of the found range.
     t_delimiter_count += __MCStringCount(self,
-                                         MCRangeMake(t_start, t_found_range . offset - t_start),
+                                         MCRangeMakeMinMax(t_start, t_found_range . offset),
                                          p_delimiter,
                                          p_options,
                                          &t_prev_delimiter);
@@ -6747,6 +6819,23 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
     
     return t_success;
 }
+
+////////////////////////////////////////////////////////////////////////
+
+#if defined(__WINDOWS__)
+
+MC_DLLEXPORT_DEF bool
+MCStringCreateWithBSTR(const BSTR p_bstr,
+                       MCStringRef& r_string)
+{
+    return MCStringCreateWithChars(p_bstr,
+                                   SysStringLen(p_bstr),
+                                   r_string);
+}
+
+#endif /*__WINDOWS__*/
+
+////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
 bool

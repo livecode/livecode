@@ -2124,7 +2124,9 @@ void MCWindowsPrinter::EncodeSettings(MCStringRef p_name, DEVMODEW* p_devmode, M
 
 	void *t_temp;
 	uint4 t_len;
-	t_dictionary . Set('NMEA', MCStringGetOldString(p_name));
+    MCAutoStringRefAsCString t_name;
+    /* UNCHECKED */ t_name.Lock(p_name);
+    t_dictionary . Set('NMEA', *t_name);
 	t_dictionary . Set('W32A', MCString((char *)p_devmode, p_devmode -> dmSize + p_devmode -> dmDriverExtra));
 	t_dictionary . Pickle(t_temp, t_len);
 

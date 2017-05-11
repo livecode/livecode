@@ -433,6 +433,16 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	return MCArrayFetchValueOnPath((MCArrayRef)t_value, p_case_sensitive, p_path + 1, p_path_length - 1, r_value);
 }
 
+bool MCArrayFetchValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             const MCSpan<MCNameRef> path,
+                             MCValueRef& value)
+{
+    return MCArrayFetchValueOnPath(array, case_sensitive,
+                                   path.data(), path.size(),
+                                   value);
+}
+
 //////////////////////
 
 MC_DLLEXPORT_DEF
@@ -537,6 +547,16 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	return true;
 }
 
+bool MCArrayStoreValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             const MCSpan<MCNameRef> path,
+                             MCValueRef value)
+{
+    return MCArrayStoreValueOnPath(array, case_sensitive,
+                                   path.data(), path.size(),
+                                   value);
+}
+
 //////////////////////
 
 MC_DLLEXPORT_DEF
@@ -603,6 +623,14 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 
 	// Otherwise there is nothing more to do.
 	return true;
+}
+
+bool MCArrayRemoveValueOnPath(MCArrayRef array,
+                              bool case_sensitive,
+                              MCSpan<MCNameRef> path)
+{
+    return MCArrayRemoveValueOnPath(array, case_sensitive,
+                                    path.data(), path.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

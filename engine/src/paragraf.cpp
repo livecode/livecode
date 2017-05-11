@@ -1992,7 +1992,7 @@ void MCParagraph::split(findex_t p_position)
     pgptr->m_text.Reset();
 	if (!MCStringIsEmpty(*m_text))
 	{
-        MCRange t_range = MCRangeMake(p_position, MCStringGetLength(*m_text) - p_position);
+        MCRange t_range = MCRangeMakeMinMax(p_position, MCStringGetLength(*m_text));
 		/* UNCHECKED */ MCStringMutableCopySubstring(*m_text, t_range, &pgptr->m_text);
         /* UNCHECKED */ MCStringSubstring(*m_text, MCRangeMake(0, p_position));
 	}
@@ -2167,7 +2167,7 @@ void MCParagraph::deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_st
 	}
 	
 	// Excise the deleted range from the paragraph text
-	/* UNCHECKED */ MCStringRemove(*m_text, MCRangeMake(si, ei-si));
+	/* UNCHECKED */ MCStringRemove(*m_text, MCRangeMakeMinMax(si, ei));
 
 	// Eliminate any zero length blocks *after* one we might have ensured
 	// is present for styling purposes.
@@ -2304,7 +2304,7 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		{
             // We found a line-break, so insert it into the current paragraph and then split at
 			// the end.
-			MCRange t_range = MCRangeMake(t_index, t_nextpara - t_index - 1);
+			MCRange t_range = MCRangeMakeMinMax(t_index, t_nextpara - 1);
             t_paragraph -> finsertnobreak(p_string, t_range);
 			t_paragraph -> split();
 			t_paragraph = t_paragraph -> next();
@@ -2318,7 +2318,7 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		{
 			// We didn't find a line-break, so insert the string into the current paragraph and
 			// we must be done.
-			t_paragraph -> finsertnobreak(p_string, MCRangeMake(t_index, t_length - t_index));
+			t_paragraph -> finsertnobreak(p_string, MCRangeMakeMinMax(t_index, t_length));
 			t_index = t_length;
 		}
 	}
@@ -2384,7 +2384,7 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
         // Get the bit of text we need to decompose and do so
         MCAutoStringRef t_composed, t_decomposed;
         MCRange t_range;
-        t_range = MCRangeMake(t_charstart, t_charend - t_charstart);
+        t_range = MCRangeMakeMinMax(t_charstart, t_charend);
         /* UNCHECKED */ MCStringCopySubstring(*m_text, t_range, &t_composed);
         /* UNCHECKED */ MCStringNormalizedCopyNFD(*t_composed, &t_decomposed);
         

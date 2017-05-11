@@ -36,7 +36,7 @@ pTargetRect: The rectangle to fit the path within
 xPath: The path to transform
 
 Example:
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 
 public handler OnPaint() returns nothing
 	-- get the 'shopping cart' icon from the icon library

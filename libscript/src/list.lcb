@@ -1098,4 +1098,30 @@ begin
     MCListEvalConcatenate(Left, Right, output)
 end syntax
 
+----------------------------------------------------------------
+
+public foreign handler MCListExecReverseElementsOf(inout Target as List) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse a list
+Target:	A list
+
+Example:
+	variable tList
+	put [1, 2, 3] into tList
+	reverse tList
+	expect that tList is [3, 2, 1]
+
+Description:
+Reverses the order of elements in the <Target>.
+
+Tags: Lists
+*/
+syntax ReverseElementsOfList is statement
+	"reverse" <Target: Expression>
+begin
+	MCListExecReverseElementsOf(Target)
+end syntax
+
 end module

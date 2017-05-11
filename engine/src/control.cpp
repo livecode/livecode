@@ -497,29 +497,6 @@ Boolean MCControl::del(bool p_check_flag)
 	if (getselected())
 		getcard()->dirtyselection(rect);
 
-	switch (parent->gettype())
-	{
-        case CT_STACK:
-            uncacheid();
-            parent.GetAs<MCStack>()->removecontrol(this);
-            break;
-        
-        case CT_CARD:
-            if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
-				return False;
-            uncacheid();
-			getstack()->removecontrol(this);
-			break;
-        
-        case CT_GROUP:
-			parent.GetAs<MCGroup>()->removecontrol(this, True);
-            uncacheid();
-			break;
-
-        default:
-            MCUnreachable();
-	}
-
     // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
     // to a 'dragdrop' message would leave these globals pointing to the deleted
     // object, leading to an infinite loop if the target was a field
@@ -531,6 +508,29 @@ Boolean MCControl::del(bool p_check_flag)
     
     if (MCdragsource == this)
         MCdragsource = nil;
+    
+	switch (parent->gettype())
+	{
+        case CT_STACK:
+            removereferences();
+            parent.GetAs<MCStack>()->removecontrol(this);
+            break;
+        
+        case CT_CARD:
+            if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
+				return False;
+            removereferences();
+			getstack()->removecontrol(this);
+			break;
+        
+        case CT_GROUP:
+			parent.GetAs<MCGroup>()->removecontrol(this, True);
+            removereferences();
+			break;
+
+        default:
+            MCUnreachable();
+	}
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.

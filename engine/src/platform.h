@@ -494,6 +494,12 @@ void MCPlatformSetSystemProperty(MCPlatformSystemProperty property, MCPlatformPr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCPlatformPreWaitForEventCallback)(double duration, bool blocking);
+typedef bool (*MCPlatformPostWaitForEventCallback)(bool found_event);
+
+// Set the callbacks to call before and after waitforevent has been executed.
+void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post);
+
 // Break the current WaitForEvent which is progress.
 void MCPlatformBreakWait(void);
 
@@ -501,6 +507,12 @@ void MCPlatformBreakWait(void);
 // no events which cause a dispatch should be processed. If an event is processed
 // during duration, true is returned; otherwise false is.
 bool MCPlatformWaitForEvent(double duration, bool blocking);
+
+// Disables abort key checks
+void MCPlatformDisableAbortKey(void);
+
+// Enables abort key checks
+void MCPlatformEnableAbortKey(void);
 
 // Return true if the abort key has been pressed since the last check.
 bool MCPlatformGetAbortKeyPressed(void);
@@ -1179,6 +1191,7 @@ struct MCPlatformSoundRecorderConfiguration
 
 typedef bool (*MCPlatformSoundRecorderListInputsCallback)(void *context, unsigned int input_id, const char *label);
 typedef bool (*MCPlatformSoundRecorderListCompressorsCallback)(void *context, unsigned int compressor_id, const char *label);
+typedef bool (*MCPlatformSoundRecorderListFormatsCallback)(void *context, intenum_t format_id, MCStringRef label);
 
 void MCPlatformSoundRecorderCreate(MCPlatformSoundRecorderRef& r_recorder);
 
@@ -1206,6 +1219,9 @@ bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef recorder, MCPl
 // Call callback for each possible compressor available - if the callback returns 'false' at any point
 // enumeration is cancelled, and the false will be returned.
 bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+// Call callback for each possible output format available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context);
 
 // Get the current sound recording configuration. The caller is responsible for freeing 'extra_info'.
 void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderConfiguration& r_config);

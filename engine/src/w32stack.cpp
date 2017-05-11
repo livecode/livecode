@@ -315,7 +315,7 @@ void MCStack::setopacity(uint1 p_level)
 			// MW-2010-10-22: [[ Bug 8151 ]] Make sure we update the title string.
 			MCscreen -> setname(window, titlestring);
 
-			SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
+			SetWindowLongPtrA((HWND)window->handle.window, GWLP_USERDATA, mode);
 			
 			if (flags & F_DECORATIONS && !(decorations & WD_SHAPE) && !(decorations & WD_CLOSE))
 				EnableMenuItem(GetSystemMenu((HWND)window->handle.window, False), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
@@ -433,7 +433,7 @@ void MCStack::realize()
         window -> handle . window = (MCSysWindowHandle)CreateWindowExW(exstyle, MC_WIN_CLASS_NAME_W, *t_window_name, wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
                                                                        t_parenthwnd, NULL, MChInst, NULL);
 
-		SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
+		SetWindowLongPtrA((HWND)window->handle.window, GWLP_USERDATA, mode);
 		
 		if (flags & F_DECORATIONS && !(decorations & WD_SHAPE) && !(decorations & WD_CLOSE))
 			EnableMenuItem(GetSystemMenu((HWND)window->handle.window, False), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
@@ -635,15 +635,8 @@ void MCStack::stop_externals()
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
-	MCPlayer *tptr = MCplayers;
-	while (tptr != NULL)
-	{
-		MCPlayer *t_next = tptr->getnextplayer();
-		if (tptr->getstack() == this)
-			tptr->playstop();
-
-		tptr = t_next;
-	}
+    
+    MCPlayer::StopPlayers(this);
 
 	if (!MCnoui && window != DNULL)
 	{

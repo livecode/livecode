@@ -119,6 +119,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION TYPES
+//
+
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-unicode.h>
+#include <foundation-bidi.h>
+
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  COMPILER AND CODE GENERATION DEFINES
 //
 
@@ -138,26 +159,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #error Unknown compiler being used.
 #endif
 
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION TYPES
-//
-
-#include <foundation.h>
-#include <foundation-auto.h>
-#include <foundation-unicode.h>
-#include <foundation-bidi.h>
-
-#ifdef __OBJC__
-#include <foundation-objc.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION SYSTEM LIBRARY
-//
-
-#include <foundation-system.h>
+// The engine is implemented assuming that 'bool' is at most one byte in size
+static_assert(sizeof(bool) <= 1, "Bool size is not at most 1 byte");
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1357,9 +1360,18 @@ enum Chunk_term {
 
 struct MCObjectPtr
 {
+    /* TODO[C++11] MCObject *object = nullptr; */
+    /* TODO[C++11] uint32_t part_id = 0; */
 	MCObject *object;
 	uint32_t part_id;
-    
+
+    /* TODO[C++11] constexpr MCObjectPtr() = default; */
+    MCObjectPtr() : object(nullptr), part_id(0) {}
+    /* TODO[C++11] constexpr */
+    MCObjectPtr(MCObject *p_object, uint32_t p_part_id)
+        : object(p_object), part_id(p_part_id)
+    {}
+
     MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
     {
         object = p_obj_ptr . object;

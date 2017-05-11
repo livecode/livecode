@@ -112,18 +112,14 @@ static bool __MCMemoryInputStreamTell(MCStreamRef p_stream, filepos_t& r_positio
 {
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	r_position = self -> pointer;
-	return true;
+    return MCNarrow(self->pointer, r_position);
 }
 
 static bool __MCMemoryInputStreamSeek(MCStreamRef p_stream, filepos_t p_position)
 {
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	if (p_position < 0 || p_position > self -> length)
-		return false;
-	self -> pointer = (size_t)p_position;
-	return true;
+    return MCNarrow(p_position, self->pointer);
 }
 
 static MCStreamCallbacks kMCMemoryInputStreamCallbacks =

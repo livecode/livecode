@@ -17,6 +17,8 @@
 #ifndef __REPORT__
 #define __REPORT__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,14 +39,14 @@ void Error_CouldNotGenerateInterface(void);
 void Error_CouldNotOpenInputFile(const char *path);
 void Error_CouldNotWriteOutputFile(const char *path);
 void Error_CouldNotWriteInterfaceFile(const char *path);
-void Error_MalformedToken(long position, const char *token);
-void Error_MalformedSyntax(long position);
-void Error_IntegerLiteralOutOfRange(long position);
-void Error_InvalidIntegerLiteral(long position);
-void Error_InvalidDoubleLiteral(long position);
+void Error_MalformedToken(intptr_t position, const char *token);
+void Error_MalformedSyntax(intptr_t position);
+void Error_IntegerLiteralOutOfRange(intptr_t position);
+void Error_InvalidIntegerLiteral(intptr_t position);
+void Error_InvalidDoubleLiteral(intptr_t position);
     
-void Warning_EmptyUnicodeEscape(long position);
-void Warning_UnicodeEscapeTooBig(long position);
+void Warning_EmptyUnicodeEscape(intptr_t position);
+void Warning_UnicodeEscapeTooBig(intptr_t position);
 
 void Error_Bootstrap(const char *format, ...);
 

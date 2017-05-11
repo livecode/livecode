@@ -8,7 +8,7 @@
 		# Set if the Gyp step is being run on a Unix-like host (i.e not Windows)
 		'unix_configure%': '0',
 		
-		'output_dir': '../win-<(target_arch)-bin',
+		'output_dir': '../win-<(uniform_arch)-bin',
 	},
 	
 	'target_defaults':
@@ -28,6 +28,23 @@
 		# Don't assume a Cygwin environment when invoking actions
 		'msvs_cygwin_shell': 0,
 		
+		# TODO [2017-04-11]: Remove these overrides when we can use 	
+		# -Gmsvs_version=2017
+		"msvs_target_platform_version" : "10.0.14393.0",
+		"msbuild_toolset" : "v141",
+		
+		# WIN64-CHECK
+		'conditions':
+		[
+			[
+				'target_arch == "x64"',
+				{
+					'msvs_target_platform': 'x64',
+					'msvs_configuration_platform': 'x64',
+				},
+			],
+		],
+
 		'configurations':
 		{
 			'Debug':
@@ -120,8 +137,8 @@
 			'_CRT_SECURE_NO_DEPRECATE',
 			'_CRT_DISABLE_PERFCRIT_LOCKS',
 			'__LITTLE_ENDIAN__',
-			'WINVER=0x0501',		# Windows XP
-			'_WIN32_WINNT=0x0501',		# Windows XP
+			'WINVER=0x0601',        # Windows 7
+			'_WIN32_WINNT=0x0601',  # Windows 7
 		],
 		
 		'target_conditions':
@@ -180,7 +197,7 @@
 				'ExceptionHandling': '0',
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
-				'Detect64BitPortabilityProblems': 'false',
+				'Detect64BitPortabilityProblems': 'true',
 
 				# Silence abundent warnings to speed up build:
 				#   4577: exception handling mode mismatch

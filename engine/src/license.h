@@ -45,6 +45,7 @@ enum
 	kMCLicenseDeployToIOSEmbedded = 1 << 8,
 	kMCLicenseDeployToAndroidEmbedded = 1 << 9,
     kMCLicenseDeployToHTML5 = 1 << 10,
+    kMCLicenseDeployToFileMaker = 1 << 11,
 };
 
 enum
@@ -77,5 +78,10 @@ struct MCLicenseParameters
 
 extern MCLicenseParameters MClicenseparameters;
 extern Boolean MCenvironmentactive;
+
+void MCLicenseSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
+void MCLicenseGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
+void MCLicenseGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info);
+void MCLicenseGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info);
 
 #endif

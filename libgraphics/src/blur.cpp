@@ -320,14 +320,6 @@ static int boxBlurInterp(const uint8_t* src, int src_y_stride, uint8_t* dst,
     return new_width;
 }
 
-static void get_adjusted_radii(SkScalar passRadius, int *loRadius, int *hiRadius)
-{
-    *loRadius = *hiRadius = SkScalarCeil(passRadius);
-    if (SkIntToScalar(*hiRadius) - passRadius > SkFloatToScalar(0.5f)) {
-        *loRadius = *hiRadius - 1;
-    }
-}
-
 // pass 0 is (radius + (3 - 0 - 1)) / (3 - 0) = (radius + 2) / 3  (4)
 // radius -= p0_radius
 // pass 1 is (radius + (3 - 1 - 1)) / (3 - 1) = (radius + 1) / 2  (3)

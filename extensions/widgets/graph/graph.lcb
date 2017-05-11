@@ -28,14 +28,14 @@ The graph has labelled axes and allows multiple lines to be displayed.
 References: graphData(property), graphColors(property), hilitedCoordinates(property)
 */
 
-widget com.livecode.widget.lineGraph
+widget com.livecode.widget.linegraph
 --
 
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 --
 

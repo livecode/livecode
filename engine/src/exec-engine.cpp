@@ -604,18 +604,18 @@ void MCEngineEvalMe(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalTarget(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), P_NAME, False, r_string);
 }
 
 void MCEngineEvalTargetContents(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr . object == nil)
+	if (!MCtargetptr)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, MCtargetptr . object -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
+		MCtargetptr -> getstringprop(ctxt, MCtargetptr.getPart(), MCtargetptr -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
 }
 
 //////////
@@ -746,7 +746,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 if (!MCDataMutableCopyAndRelease((MCDataRef)p_var . mark . text, &t_data))
                     return;
                 
-                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
+                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish), (MCDataRef)p_value);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
             else
@@ -755,7 +755,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
                 MCValueRelease(p_var . mark . text);
                 
-                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish));
             }
         }
         else
@@ -789,7 +789,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 if (!MCStringMutableCopyAndRelease((MCStringRef)p_var . mark . text, &t_string))
                     return;
             
-                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
             }
             else
@@ -798,7 +798,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
                 MCValueRelease(p_var . mark . text);
                 
-                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish));
             }
         }
 	}
@@ -1084,12 +1084,12 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
         if (!ctxt . EvalExprAsMutableStringRef(p_chunks[i] . variable, EE_ENGINE_DELETE_BADVARCHUNK, &t_string))
             return;
 
-        if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
+        if (MCStringReplace(*t_string, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish), kMCEmptyString))
         {
             p_chunks[i] . variable -> set(ctxt, *t_string, kMCVariableSetInto);
         } */
         // SN-2014-04-11 [[ FasterVariables ]] Deletiong of the content of a variable is now done without copying
-        p_chunks[i] . variable -> deleterange(ctxt, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+        p_chunks[i] . variable -> deleterange(ctxt, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish));
 	}
 }
 
@@ -1184,7 +1184,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 	
 	// Work out the target object
-	MCObjectPtr t_object;
+	MCObjectPartHandle t_object;
 	if (p_target != nil)
 		t_object = *p_target;
 	else
@@ -1192,18 +1192,16 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		
 	// Fetch current default stack and target settings
 	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
-	MCObjectPtr t_old_target;
-	t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
 	MCStack *t_this_stack;
-	t_this_stack = t_object . object -> getstack();
+	t_this_stack = t_object -> getstack();
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
-	MCtargetptr = t_object;
-    MCtargetptr . part_id = 0;
+    MCObjectPartHandle t_old_target(t_object);
+    swap(t_old_target, MCtargetptr);
     
 	// MW-2012-10-30: [[ Bug 10478 ]] Turn off lockMessages before dispatch.
 	Boolean t_old_lock;
@@ -1227,14 +1225,27 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
-		{
-		case ES_ERROR:
-			ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
-			break;
-		default:
-			break;
-		}
+    {
+        /* If the target object was deleted in the frontscript, prevent
+         * normal message dispatch as if the frontscript did not pass the
+         * message. */
+        if (t_object)
+        {
+            MCObjectExecutionLock t_object_lock(t_object);
+            switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
+            {
+            case ES_ERROR:
+                ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            t_stat = ES_NORMAL;
+        }
+    }
 	
 	// Set 'it' appropriately
 	switch(t_stat)
@@ -1268,7 +1279,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		MCdefaultstackptr = t_old_stack;
 
 	// Reset target pointer
-	MCtargetptr = t_old_target;
+    swap(MCtargetptr, t_old_target);
 	MCdynamicpath = olddynamic;
 	
 	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
@@ -1314,7 +1325,7 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
         
         if (t_offset == t_length || t_char == ',')
         {
-            t_exp_range = MCRangeMake(t_start_offset, t_offset - t_start_offset);
+            t_exp_range = MCRangeMakeMinMax(t_start_offset, t_offset);
 
             MCAutoStringRef t_expression;
             /* UNCHECKED */ MCStringCopySubstring(p_script, t_exp_range, &t_expression);
@@ -1731,7 +1742,7 @@ void MCEngineGetSecurityCategories(MCExecContext& ctxt, intset_t& r_value)
 
 void MCEngineGetSecurityPermissions(MCExecContext& ctxt, intset_t& r_value)
 {
-	r_value = MCsecuremode;
+	r_value = ~MCsecuremode;
 }
 
 void MCEngineSetSecurityPermissions(MCExecContext& ctxt, intset_t p_value)
@@ -1927,9 +1938,9 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtargetptr . object != nil)
+    if (MCtargetptr)
     {
-        r_object = MCtargetptr;
+        r_object = MCtargetptr.getObjectPtr();
         return;
     }
     
@@ -2012,9 +2023,9 @@ void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStrin
     }
     
     if (p_is_md5)
-        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateMD5(t_namespace, p_name, t_uuid);
     else
-        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateSHA1(t_namespace, p_name, t_uuid);
     
     if (MCEngineUuidToStringRef(t_uuid, r_uuid))
         return;

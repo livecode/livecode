@@ -222,6 +222,7 @@ enum MCPropertyType
 	kMCPropertyTypeBinaryString,
 	kMCPropertyTypeColor,
 	kMCPropertyTypeRectangle,
+    kMCPropertyTypeRectangle32,
 	kMCPropertyTypePoint,
 	kMCPropertyTypeInt16X2,
 	kMCPropertyTypeInt16X4,
@@ -687,6 +688,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkGetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectChunkThunkGetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectChunkThunkGetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle&)
+#define MCPropertyObjectChunkThunkGetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32&)
 #define MCPropertyObjectChunkThunkGetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t&)
 #define MCPropertyObjectChunkThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, typ&)
 #define MCPropertyObjectChunkThunkGetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
@@ -699,6 +701,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkSetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectChunkThunkSetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectChunkThunkSetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle)
+#define MCPropertyObjectChunkThunkSetRectangle32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle32)
 #define MCPropertyObjectChunkThunkSetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t)
 #define MCPropertyObjectChunkThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, const typ&)
 #define MCPropertyObjectChunkThunkSetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
@@ -4251,13 +4254,15 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value);
 
 ///////////
 
-extern MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo;
+struct MCMultimediaRecordFormat;
+extern MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo;
 
 extern MCExecMethodInfo *kMCMultimediaExecAnswerEffectMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecAnswerRecordMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalQTVersionMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalQTEffectsMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalRecordCompressionTypesMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaEvalRecordFormatsMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalRecordLoudnessMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMovieMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMCISendStringMethodInfo;
@@ -4307,6 +4312,7 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt);
 void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result);
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string);
+void MCMultimediaEvalRecordFormats(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness);
 void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string);
 void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r_result);
@@ -4330,8 +4336,8 @@ void MCMultimediaExecPlayPlayerOperation(MCExecContext& ctxt, MCStack *p_target,
 void MCMultimediaExecPlayVideoOperation(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, int p_operation);
 void MCMultimediaExecPlayLastVideoOperation(MCExecContext& ctxt, int p_operation);
 
-void MCMultimediaGetRecordFormat(MCExecContext& ctxt, intenum_t &r_value);
-void MCMultimediaSetRecordFormat(MCExecContext& ctxt, intenum_t p_value);
+void MCMultimediaGetRecordFormat(MCExecContext& ctxt, MCMultimediaRecordFormat& r_value);
+void MCMultimediaSetRecordFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_value);
 void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value);
 void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value);
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value);
@@ -5593,6 +5599,9 @@ void MCNFCExecEnableNFCDispatch(MCExecContext& ctxt);
 void MCNFCExecDisableNFCDispatch(MCExecContext& ctxt);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCExtensionInitialize(void);
+void MCExtensionFinalize(void);
 
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);

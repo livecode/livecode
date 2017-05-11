@@ -1393,7 +1393,7 @@ public:
 
                 if (!MCStringCreateMutable(0, &t_tilde_path) ||
                     !MCStringAppend(*t_tilde_path, *t_pw_dir) ||
-                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMakeMinMax(t_user_end, MCStringGetLength(p_path))))
                     return false;
             }
             else

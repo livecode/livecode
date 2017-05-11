@@ -70,6 +70,64 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 }
 
 MC_DLLEXPORT_DEF
+bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_typeinfo, const void *p_values, uindex_t p_value_count, MCProperListRef& r_list)
+{
+    __MCAssertIsForeignTypeInfo(p_typeinfo);
+    MCAssert(p_values != nullptr || p_value_count == 0);
+
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+
+    const MCForeignTypeDescriptor *t_descriptor =
+            MCForeignTypeInfoGetDescriptor(p_typeinfo);
+
+    while(p_value_count > 0)
+    {
+        MCAutoValueRef t_value;
+        if (t_descriptor->doimport != nil)
+        {
+            if (!t_descriptor->doimport((void *)p_values,
+                                        false,
+                                        &t_value))
+            {
+                   return false;
+            }
+        }
+        else
+        {
+            if (!MCForeignValueCreate(p_typeinfo,
+                                      (void *)p_values,
+                                      (MCForeignValueRef&)&t_value))
+            {
+                   return false;
+            }
+        }
+
+        if (!MCProperListPushElementOntoBack(*t_list,
+                                             *t_value))
+        {
+            return false;
+        }
+
+        p_value_count -= 1;
+        p_values = (byte_t *)p_values + t_descriptor->size;
+    }
+
+    if (!t_list.MakeImmutable())
+    {
+            return false;
+    }
+
+    r_list = t_list.Take();
+
+    return true;
+}
+
+
+MC_DLLEXPORT_DEF
 bool MCProperListCreateMutable(MCProperListRef& r_list)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeProperList, r_list))
@@ -895,6 +953,20 @@ bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
     }
     
     return false;
+}
+
+MC_DLLEXPORT_DEF
+bool MCProperListReverse(MCProperListRef self)
+{
+    MCAssert(MCProperListIsMutable(self));
+
+    // Ensure the list ref is not indirect
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->list, self->length);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

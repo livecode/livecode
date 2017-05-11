@@ -127,6 +127,7 @@
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
+            'src/license.cpp',
 			'src/mcerror.h',
 			'src/mcio.h',
 			'src/mcssl.h',
@@ -269,6 +270,7 @@
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
 			'src/imageloader.cpp',
+            'src/internal.cpp',
 			'src/ipng.cpp',
 			'src/iquantization.cpp',
 			'src/iquantize_new.cpp',
@@ -759,7 +761,6 @@
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
-			'src/em-dc-mainloop.h',
 			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
@@ -829,7 +830,6 @@
 			'src/deploy_windows.cpp',
 			'src/deploysecurity.cpp',
 			'src/ide.cpp',
-			'src/internal.cpp',
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
@@ -845,7 +845,6 @@
 		'engine_installer_mode_source_files':
 		[
 			'src/bsdiff_apply.cpp',
-			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.mm',
@@ -1001,6 +1000,7 @@
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
 			'test/test_rgb.cpp',
+            'test/test_path.cpp',
 		],
 	},
 	
@@ -1040,7 +1040,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/srvmac.cpp',
 						'src/native-layer-mac.mm',
 					],
 				},

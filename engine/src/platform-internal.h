@@ -297,6 +297,7 @@ public:
     
     virtual bool ListInputs(MCPlatformSoundRecorderListInputsCallback callback, void *context) = 0;
     virtual bool ListCompressors(MCPlatformSoundRecorderListCompressorsCallback callback, void *context) = 0;
+    virtual bool ListFormats(MCPlatformSoundRecorderListFormatsCallback callback, void *context) = 0;
     
 protected:
 

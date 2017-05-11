@@ -42,9 +42,9 @@ Use the <wordOffset> <function> to find which <word> a <string> occurs
 in. 
 
 The value returned by the <wordOffset> <function> is the number of the
-<word> where <wordToFind> appears in <stringToSearch>. If the
+<word> where <wordToFind> first appears in <stringToSearch>. If the
 <wordToFind> is not in <stringToSearch>, the <wordOffset> <function>
-<return|returns> zero. If the <wordToFind> is more than one <word>, the
+<return|returns> zero. If the <wordToFind> contains more than one <word>, the
 <wordOffset> <function> always <return|returns> zero, even if the
 <wordToFind> appears in the <stringToSearch>.
 

@@ -1666,7 +1666,7 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
         r_value = 0;
 }
 
-void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle& r_value)
+void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle32& r_value)
 {
     // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
     if (opened)
@@ -1679,8 +1679,8 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         coord_t yoffset = getcontenty() + paragraphtoy(sptr);
         coord_t minx, maxx;
         coord_t maxy = y;
-        minx = MCinfinity;
-        maxx = -MCinfinity;
+        minx = FLT_MAX;
+        maxx = FLT_MIN;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the
@@ -1691,16 +1691,19 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         }
         while (ei > 0 && sptr != pgptr);
 
+        /* Make sure minx is sensible if it is not set in getxextents() and there is only one
+         * line. */
+        if (minx > maxx)
+            minx = maxx;
+        
         // MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
-        r_value . height = (maxy - 2*y);
-        // AL-2014-10-28: [[ Bug 13829 ]] The left and width of the formattedRect should be
-        // floorf'd and ceilf'd respectively, to give the correct integer bounds.
+        r_value . height = maxy - 2*y;
         r_value . width = ceilf(maxx - minx);
-        r_value . x = floorf(minx + getcontentx());
+        r_value . x = floorf(minx) + getcontentx();
         r_value . y = y + yoffset;
     }
     else
-        memset(&r_value, 0, sizeof(MCRectangle));
+        r_value = MCRectangle32{};
 }
 
 

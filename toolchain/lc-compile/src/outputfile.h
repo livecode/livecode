@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-typedef long PositionRef;
+typedef intptr_t PositionRef;
 typedef struct File *FileRef;
 
 enum DependencyModeType

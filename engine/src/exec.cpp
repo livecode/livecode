@@ -1519,7 +1519,7 @@ static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter
 			uinteger_t t_d;
         
 			if (t_success)
-				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+				t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_uint_string);
 			
 			if (t_success)
 				t_success = MCU_stoui4(*t_uint_string, t_d);
@@ -1577,7 +1577,7 @@ static bool MCPropertyParseLooseDoubleList(MCStringRef p_input, char_t p_delimit
 			double t_d;
 			
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_double_string);
             
             if (t_success)
                 t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
@@ -1625,7 +1625,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 			t_new_offset = t_length;
         
 		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
+            t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), t_string);
 		
 		if (t_success)
 			t_success = t_list . Push(t_string);
@@ -1684,7 +1684,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
         else
         {
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_point_string);
             
             if (t_success)
                 MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
@@ -1822,6 +1822,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
+        
+        case kMCPropertyTypeRectangle32:
+        {
+            MCRectangle32 t_value;
+            ((void(*)(MCExecContext&, void *, MCRectangle32&))prop -> getter)(ctxt, mark, t_value);
+            
+            MCAutoStringRef t_string;
+            if (!ctxt . HasError())
+            {
+                if (MCStringFormat(&t_string, "%d,%d,%d,%d", t_value.x, t_value.y, t_value.x + t_value.width, t_value.y + t_value.height))
+                {
+                    r_value . stringref_value = t_string.Take();
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+                else
+                {
+                    ctxt.Throw();
+                }
+            }
+        }
+        break;
             
         case kMCPropertyTypePoint:
         {
@@ -2688,6 +2709,25 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ((void(*)(MCExecContext&, void *, MCRectangle))prop -> setter)(ctxt, mark, t_value);
         }
             break;
+            
+        case kMCPropertyTypeRectangle32:
+        {
+            int4 a, b, c, d;
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi4x4(*t_value, a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                MCRectangle32 t_rect;
+                t_rect.x = a;
+                t_rect.y = b;
+                t_rect.width = c - a;
+                t_rect.height = d - b;
+                ((void(*)(MCExecContext&, void *, MCRectangle32))prop -> setter)(ctxt, mark, t_rect);
+            }
+        }
+        break;
             
         case kMCPropertyTypePoint:
         {

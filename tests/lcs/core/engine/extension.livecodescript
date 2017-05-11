@@ -38,7 +38,7 @@ end TestSetup
 
 private command buildMultiModuleExtension pInputs, pOutput
     -- Build a multi-module extension
-    local tBasename, tBytecode, tFile
+    local tBasename, tBytecode, tFile, tResult
     repeat for each item tBasename in pInputs
        put merge("[[kBytecodePath]]/[[tBasename]].lcm") into tFile
        put url("binfile:" & tFile) after tBytecode
@@ -146,20 +146,26 @@ command CallLibraryHandlerWithTooManyParams
 end CallLibraryHandlerWithTooManyParams
 
 on TestExtensionLibraryHandlerCallErrors
+   /* In all cases in this test we expect the error stack to be:
+    *    <specific error>
+    *    219, ...
+    * Here '219' is the error in handler error which the call to the actual
+    * TestExtensionLibraryHandler function will generate. */
+
    TestAssertThrow "library handler call throws correct error on type error", \
          "CallLibraryHandlerWithString", \
          the long id of me, \
-         896
+         (897, 219)
 
    TestAssertThrow "library handler call throws correct error on too few args error", \
          "CallLibraryHandlerWithTooFewParams", \
          the long id of me, \
-         885
+         (885, 219)
 
    TestAssertThrow "library handler call throws correct error on too many args error", \
          "CallLibraryHandlerWithTooManyParams", \
          the long id of me, \
-         886
+         (886, 219)
 end TestExtensionLibraryHandlerCallErrors
 
 //////////

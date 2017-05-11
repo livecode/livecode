@@ -827,7 +827,13 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
         t_new_url = p_url;
 
     if (ctxt . EnsureProcessIsAllowed())
+	{
+		// MCS_launch_url will set the result on failure, so we clear here to
+		// make sure it is empty if it succeeds.
+		ctxt.SetTheResultToEmpty();
+		
         MCS_launch_url(*t_new_url);
+	}
     else
         ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
@@ -1746,8 +1752,8 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                     doingspace = True;
                 }
         }
-        else
-        {            
+        else if (!MCStringIsEmpty(*t_norm_sent))
+        {
             // Normalise the character read and append it to the normalised buffer
             unichar_t *t_norm_chunk;
             uint4 t_norm_chunk_size;
@@ -2318,7 +2324,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 					len = 0;
 				}
 				MCAutoStringRef s;
-				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
+				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMakeMinMax(t_start_pos, t_data_pos), &s); 
 				real8 n;
 				if (!MCTypeConvertStringToReal(*s, n))
 				{

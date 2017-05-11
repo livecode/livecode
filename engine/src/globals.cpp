@@ -104,9 +104,15 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-MCStringRef MCcmd;
-MCStringRef MCfiletype;
-MCStringRef MCstackfiletype;
+
+/* The path to the base folder which contains the application's code resources.
+ * This is used to resolve references to code resources. This is added as a
+ * prefix to the (relative) paths computed in MCU_library_load. */
+MCStringRef MCappcodepath = nullptr;
+
+MCStringRef MCcmd = nullptr;
+MCStringRef MCfiletype = nullptr;
+MCStringRef MCstackfiletype = nullptr;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -216,10 +222,10 @@ Boolean MCselectintersect = True;
 MCRectangle MCwbr;
 uint2 MCjpegquality = 100;
 Export_format MCpaintcompression = EX_PBM;
-uint2 MCrecordformat = EX_AIFF;
 uint2 MCrecordchannels = 1;
 uint2 MCrecordsamplesize = 8;
 real8 MCrecordrate = 22.050;
+intenum_t MCrecordformat;
 char MCrecordcompression[5] = "raw ";
 char MCrecordinput[5] = "dflt";
 Boolean MCuselzw;
@@ -273,7 +279,7 @@ MCCardHandle MCdynamiccard;
 Boolean MCdynamicpath;
 MCObjectHandle MCerrorptr;
 MCObjectHandle MCerrorlockptr;
-MCObjectPtr MCtargetptr;
+MCObjectPartHandle MCtargetptr;
 MCGroup *MCsavegroupptr;
 MCObjectHandle MCmenuobjectptr;
 MCGroupHandle MCdefaultmenubar;
@@ -505,6 +511,9 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+// The main window callback to compute the window to parent root modal dialogs to (if any)
+MCMainWindowCallback MCmainwindowcallback = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -529,7 +538,8 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	/* FRAGILE */ MCcmd = nullptr;
+    MCappcodepath = nullptr;
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -610,7 +620,7 @@ void X_clear_globals(void)
 	memset(&MCwbr, 0, sizeof(MCRectangle));
 	MCjpegquality = 100;
 	MCpaintcompression = EX_PBM;
-	MCrecordformat = EX_AIFF;
+	MCrecordformat = 0;
 	MCrecordchannels = 1;
 	MCrecordsamplesize = 8;
 	MCrecordrate = 22.050;
@@ -662,7 +672,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
+	MCtargetptr = nullptr;
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
@@ -1043,6 +1053,9 @@ X_open_environment_variables(MCStringRef envp[])
 
 /* ---------------------------------------------------------------- */
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	MCperror = new (nothrow) MCError();
@@ -1238,6 +1251,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
     MCwidgeteventmanager = new (nothrow) MCWidgetEventManager;
     
+    /* Now that the script engine state has been initialized, we can load all
+     * builtin extensions. */
+    if (!MCExtensionInitialize())
+    {
+        return false;
+    }
+    
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1249,6 +1269,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 int X_close(void)
 {
+    // MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
+    MCFontFinalize();
+    
+    /* Finalize all builtin extensions */
+    MCExtensionFinalize();
+
 	// MW-2008-01-18: [[ Bug 5711 ]] Make sure we disable the backdrop here otherwise we
 	//   get crashiness on Windows due to hiding the backdrop calling WindowProc which
 	//   attempts to access stacks that have been deleted...
@@ -1263,7 +1289,8 @@ int X_close(void)
 
 	MCstacks->closeall();
 	MCselected->clear(False);
-
+    MCundos->freestate();
+    
 	MCU_play_stop();
 #ifdef FEATURE_PLATFORM_RECORDER
     if (MCrecorder != nil)
@@ -1472,8 +1499,6 @@ int X_close(void)
 	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();
-	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
-	MCFontFinalize();
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
@@ -1508,6 +1533,11 @@ int X_close(void)
         MCLocaleRelease(kMCSystemLocale);
     if (kMCBasicLocale != nil)
         MCLocaleRelease(kMCBasicLocale);
+    
+    if (MCappcodepath != nullptr)
+        MCValueRelease(MCappcodepath);
+    if (MCcmd != nullptr)
+        MCValueRelease(MCcmd);
     
 	return MCretcode;
 }

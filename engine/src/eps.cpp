@@ -504,7 +504,7 @@ Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 	uindex_t t_sep;
     MCStringRef t_fname;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_sep + 1, MCStringGetLength(fname)), t_fname);
     else
         t_fname = MCValueRetain(fname);
     

@@ -24,6 +24,8 @@
 #include "player.h"
 #include "exec.h"
 
+#include "globals.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCPlayer::kProperties[] =
@@ -78,3 +80,142 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 	&kProperties[0],
 };
 
+void MCPlayer::removereferences()
+{
+    // OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
+    while (opened)
+        close();
+    
+    playstop();
+    
+    MCObject::removereferences();
+}
+
+void MCPlayer::removefromplayers()
+{
+    if (MCplayers)
+    {
+        if (MCplayers == this)
+            MCplayers = nextplayer;
+        else
+        {
+            MCPlayer *tptr = MCplayers;
+            while (tptr->nextplayer.IsValid() && tptr->nextplayer != this)
+                tptr = tptr->nextplayer;
+            
+            if (tptr->nextplayer.IsValid() && tptr->nextplayer == this)
+                tptr->nextplayer = nextplayer;
+        }
+     }
+     nextplayer = nullptr;
+}
+
+void MCPlayer::SyncPlayers(MCStack* p_stack, MCContext *p_context)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (p_stack == nullptr ||
+            t_player -> getstack() == p_stack)
+            t_player -> syncbuffering(p_context);
+    }
+}
+
+#ifdef FEATURE_PLATFORM_PLAYER
+void MCPlayer::DetachPlayers(MCStack* p_stack)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (t_player -> getstack() == p_stack)
+            t_player -> detachplayer();
+    }
+}
+
+void MCPlayer::AttachPlayers(MCStack* p_stack)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (t_player -> getstack() == p_stack)
+            t_player -> attachplayer();
+    }
+}
+#endif
+
+void MCPlayer::StopPlayers(MCStack* p_stack)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while(t_player.IsValid())
+    {
+        if (t_player -> getstack() == p_stack)
+        {
+#ifdef FEATURE_PLATFORM_PLAYER
+            t_player->playstop();
+#else
+            if (t_player->playstop())
+            {
+                // player was removed from list, start search over
+                t_player = MCplayers;
+                continue;
+            }
+                
+#endif
+        }
+        t_player = t_player->getnextplayer();
+    }
+}
+
+void MCPlayer::ClosePlayers(MCStack* p_stack)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while(t_player.IsValid())
+    {
+        MCPlayer *oldptr = t_player;
+        t_player = t_player->getnextplayer();
+        if (oldptr->getstack() == p_stack)
+            oldptr->close();
+    }
+}
+
+MCPlayer* MCPlayer::FindPlayerByName(MCNameRef p_name)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        if (t_player -> hasname(p_name))
+        {
+            return t_player;
+        }
+        t_player = t_player->getnextplayer();
+    }
+    
+    return nil;
+}
+
+MCPlayer* MCPlayer::FindPlayerById(uint32_t p_id)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        if (t_player -> getaltid() == p_id)
+        {
+            return t_player;
+        }
+        t_player = t_player->getnextplayer();
+    }
+    return nil;
+}
+
+void MCPlayer::SetPlayersVolume(uinteger_t p_volume)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        t_player -> setvolume(p_volume);
+        t_player = t_player->getnextplayer();
+    }
+}

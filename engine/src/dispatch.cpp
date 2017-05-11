@@ -287,8 +287,8 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
         stat = MCEngineHandleLibraryMessage(mess, params);
     }
     
-	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr . object -> sendmessage(htype, mess, False);
+	if (MCmessagemessages && stat != ES_PASS && MCtargetptr)
+		MCtargetptr -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;
@@ -336,7 +336,9 @@ void MCDispatch::removestack(MCStack *sptr)
 void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
-		removestack(sptr);
+    {
+        sptr -> dodel();
+    }
 	if (sptr == MCstaticdefaultstackptr)
 		MCstaticdefaultstackptr = stacks;
 	if (sptr == MCdefaultstackptr)
@@ -476,7 +478,13 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
     {
         return IO_ERROR;
     }
-
+    
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list. This must happen prior to resolving parent scripts
+    // because otherwise there are no mainstacks, which can cause a
+    // crash when searching substacks.
+    stacks = t_stack;
+    
 #ifndef _MOBILE
 	// Make sure parent script references are up to date.
 	if (s_loaded_parent_script_reference)
@@ -487,10 +495,6 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	if (s_loaded_parent_script_reference)
 		t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
 #endif
-    
-    // We are reading the startup stack, so this becomes the root of the
-    // stack list.
-    stacks = t_stack;
     
     r_stack = t_stack;
 	return IO_NORMAL;
@@ -961,7 +965,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
         MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMakeMinMax(t_leaf_index + 1, MCStringGetLength(p_name)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
@@ -1262,6 +1266,9 @@ void send_relaunch(void)
 #endif
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 void send_startup_message(bool p_do_relaunch = true)
 {
 	if (p_do_relaunch)
@@ -2108,7 +2115,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
     
 	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
     {
-		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+		if (!MCStringCopySubstring(p_external, MCRangeMakeMinMax(t_slash_index + 1, t_ext_length), t_external_leaf))
             return false;
     }
     else

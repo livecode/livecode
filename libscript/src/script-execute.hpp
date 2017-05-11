@@ -585,7 +585,8 @@ MCScriptExecuteContext::CheckedFetchRegisterAsBool(uindex_t p_index)
     {
         t_value_as_bool = (t_value == kMCTrue);
     }
-    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo ||
+             MCValueGetTypeInfo(t_value) == kMCCBoolTypeInfo)
     {
         t_value_as_bool = *(bool *)MCForeignValueGetContentsPtr(t_value);
     }
@@ -1232,11 +1233,11 @@ MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupD
 	MCAutoProperListRef t_args;
 	if (!MCProperListCreateMutable(&t_args))
 		return;
-	
-	for(uindex_t i = 0; i < p_arguments.size(); i++)
-	{
+
+    for (const uindex_t t_argument : p_arguments)
+    {
 		MCValueRef t_value;
-		t_value = FetchRegister(p_arguments[i]);
+		t_value = FetchRegister(t_argument);
 		
 		if (t_value == nil)
 		{

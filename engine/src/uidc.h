@@ -672,6 +672,9 @@ public:
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     
+    // Returns true if there are any pending messages to dispatch right now.
+    bool hasmessagestodispatch(void);
+    
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	Boolean getlockmoves() const;
 	void setlockmoves(Boolean b);
@@ -691,6 +694,7 @@ public:
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
 
+    
 	Boolean hasmessages()
 	{
 		return m_messages.GetCount() != 0;

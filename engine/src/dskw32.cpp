@@ -114,7 +114,7 @@ static void legacy_path_to_nt_path(MCStringRef p_legacy, MCStringRef &r_nt)
 		MCStringRef t_temp;
 		/* UNCHECKED */ MCStringCreateMutable(0, t_temp);
 		/* UNCHECKED */ MCStringAppend(t_temp, MCSTR("\\\\?\\UNC\\"));
-		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMake(2, MCStringGetLength(p_legacy) - 2));
+		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMakeMinMax(2, MCStringGetLength(p_legacy)));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_nt);
 	}
 	else
@@ -131,13 +131,13 @@ static void nt_path_to_legacy_path(MCStringRef p_nt, MCStringRef &r_legacy)
 	if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\UNC\\", kMCStringOptionCompareCaseless))
 	{
 		MCStringRef t_temp;
-		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMake(8, MCStringGetLength(p_nt) - 8), t_temp);
+		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMakeMinMax(8, MCStringGetLength(p_nt)), t_temp);
 		/* UNCHECKED */ MCStringPrepend(t_temp, MCSTR("\\\\"));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_legacy);
 	}
 	else if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\", kMCStringOptionCompareCaseless))
 	{
-		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMake(4, MCStringGetLength(p_nt) - 4), r_legacy);
+		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMakeMinMax(4, MCStringGetLength(p_nt)), r_legacy);
 	}
 	else
 	{
@@ -338,9 +338,9 @@ bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef
 		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
 		{
 			if (t_value_offset > t_path_offset)
-				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_path_offset + 1, t_value_offset), r_key);
 		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length - t_value_offset - 1), r_value);
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_value_offset + 1, t_length), r_value);
 	}
 	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
 }
@@ -442,7 +442,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 static MMRESULT tid;
 
-void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK MCS_tp(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCalarm = True;
 }
@@ -702,7 +702,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 		if (t_chars[i] == ' ' || t_chars[i] == ',' || t_chars[i] == '\n')
 		{
 			MCAutoStringRef t_substring;
-			if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, i - t_start), &t_substring) || 
+			if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, i), &t_substring) || 
 					!MCListAppend(*t_list, *t_substring))
 				return false;
 			t_start = i + 1;
@@ -711,7 +711,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 	if (t_start < t_char_count)
 	{
 		MCAutoStringRef t_final_string;
-		if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, MCStringGetLength(t_string) - t_start), &t_final_string) ||
+		if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, MCStringGetLength(t_string)), &t_final_string) ||
 			!MCListAppend(*t_list, *t_final_string))
 			return false;
 	}
@@ -1615,13 +1615,19 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-		r_string = MCValueRetain(MCNameGetString(MCN_x86));
+		r_string = MCValueRetain(MCNameGetString(GetProcessor()));
 		return true;
     }
     
 	virtual MCNameRef GetProcessor(void)
     {
+#if defined _M_IX86
         return MCN_x86;
+#elif defined _M_AMD64
+		return MCN_x86_64;
+#else
+#  error Unknown processor
+#endif
     }
     
 	virtual bool GetAddress(MCStringRef& r_address)
@@ -3509,23 +3515,13 @@ cleanup:
 			MCresult -> sets("alternate language not found");
 		else
 		{
-			MCAutoStringRefAsUTF8String t_utf8;
-			/* UNCHECKED */ t_utf8.Lock(p_script);
-			
 			MCAutoStringRef t_result;
-			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
-			t_environment -> Run(*t_string, &t_result);
+			t_environment -> Run(p_script, &t_result);
 			t_environment -> Release();
 
 			if (*t_result != nil)
 			{
-				MCAutoDataRef t_data;
-				MCAutoStringRef t_native;
-				MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_result), MCStringGetLength(*t_result), &t_data);
-
-				MCStringDecode(*t_data, kMCStringEncodingUTF8, false, &t_native);
-				MCresult -> setvalueref(*t_native);
+				MCresult -> setvalueref(*t_result);
 			}
 			else
 				MCresult -> sets("execution error");

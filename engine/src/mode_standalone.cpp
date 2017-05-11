@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #if defined(_WINDOWS_DESKTOP)
 #include "prefix.h"
@@ -737,6 +738,9 @@ MCDispatch::startup()
 
 #else
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 IO_stat MCDispatch::startup(void)
 {
     char *t_mccmd;
@@ -1127,7 +1131,7 @@ bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+	t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
 	/* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
 	return t_do_relaunch;
 #else
@@ -1360,3 +1364,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

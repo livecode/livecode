@@ -1757,15 +1757,28 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 				keysym = 0x0D;
 			keysym |= 0xFF00;
 		}
-		else if (keysym > 0x7F)
-			keysym |= XK_Class_codepoint;
 		else
         {
+            /* If the character is in the BMP *and* it has a native mapping then
+             * we use the mapped native char as the keycode. This makes things
+             * consistent with normal keyboard entry. Any non-native unicode char
+             * will pass through with a keycode with the XK_Class_codepoint bit
+             * set. */
+            unichar_t t_bmp_codepoint = t_cp_char & 0xFFFF;
+            char_t t_native_char = 0;
+            if (t_cp_char <= 0xFFFF &&
+                MCUnicodeMapToNative(&t_bmp_codepoint, 1, t_native_char))
+            {
+                keysym = t_native_char;
+            }
+            else if (keysym > 0x7F)
+                keysym |= XK_Class_codepoint;
+		
             if (!MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char))
-			{
-				ctxt . Throw();
-				break;
-			}
+            {
+                ctxt.Throw();
+                break;
+            }
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
 		if (*t_char == nil)
@@ -2323,7 +2336,7 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
 			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish));
 			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
 			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 			MCValueRelease(t_value);
@@ -2958,8 +2971,8 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 		
 		while (t_state)
 		{
-			if (t_state & 0x1)
-				MCtargetptr . object -> mup(t_which, true);
+			if ((t_state & 0x1) && MCtargetptr)
+				MCtargetptr -> mup(t_which, true);
 			t_state >>= 1;
 			t_which += 1;
 		}
@@ -2988,7 +3001,10 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		added = True;
 	}
     
-	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
+	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned) != ES_NORMAL)
+    {
+        ctxt.Throw();
+    }
 
 	if (MCwatchcursor)
 	{
@@ -3088,14 +3104,20 @@ void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNa
 	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
 }
 
+static MCStack* open_stack_relative_to(MCStack *p_target)
+{
+    if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
+        return MCdefaultstackptr;
+    else if (MCtopstackptr && MCtopstackptr->isvisible())
+        return MCtopstackptr;
+    else
+        return p_target;
+}
+
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
 {
-	if (MCdefaultstackptr->getopened() && MCdefaultstackptr->isvisible())
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCdefaultstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else if (MCtopstackptr && MCtopstackptr->isvisible())
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
-	else
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, p_target->getrect(), WP_DEFAULT, OP_NONE, p_mode);
+    MCStack* t_stack = open_stack_relative_to(p_target);
+    MCInterfaceExecSubwindow(ctxt, p_target, nil, t_stack->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 }
 
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
@@ -3115,14 +3137,20 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
 {
+    if (!MCtargetptr)
+    {
+        ctxt . LegacyThrow(EE_NOTARGET);
+        return;
+    }
+
 	// MW-2007-04-10: [[ Bug 4260 ]] We shouldn't attempt to attach a menu to a control that is descendent of itself
-	if (MCtargetptr . object -> getstack() == p_target)
+	if (MCtargetptr -> getstack() == p_target)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
 		return;
 	}
 
-	if (MCtargetptr . object -> attachmenu(p_target))
+	if (MCtargetptr -> attachmenu(p_target))
 	{
 		if (p_mode == WM_POPUP && p_at != nil)
 		{
@@ -3130,7 +3158,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 			MCmousey = p_at -> y;
 		}
 		MCRectangle t_rect;
-		t_rect = MCU_recttoroot(MCtargetptr . object -> getstack(), MCtargetptr . object -> getrect());
+		t_rect = MCU_recttoroot(MCtargetptr -> getstack(), MCtargetptr -> getrect());
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode);
 		if (!MCabortscript)
 			return;
@@ -3567,7 +3595,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
         if (ctxt . HasError() || !MCStringMutableCopy(*t_text, &t_string))
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), p_string);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
@@ -3606,7 +3634,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
         if (ctxt . HasError())
             return;
         
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), *t_string_value);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(t_start, t_finish), *t_string_value);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
@@ -4485,7 +4513,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
     t_stack = p_card -> getstack();
     
 	MCRectangle rel;
-	MCStack *parentptr;
+	MCStack *parentptr = nullptr;
 
 	if (p_mode == WM_PULLDOWN || p_mode == WM_POPUP || p_mode == WM_OPTION)
 	{
@@ -4500,14 +4528,15 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	}
 	else
 	{
-		// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
-		if (ctxt . GetObject()->getstack()->getopened() || !MCtopstackptr)
+        // MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
+		if (ctxt . GetObject()->getstack()->getopened())
 			parentptr = ctxt . GetObject() -> getstack();
 		else
-			parentptr = MCtopstackptr;
+			parentptr = open_stack_relative_to(t_stack);
 
 		rel = parentptr -> getrect();
-	}
+        
+    }
 
 	Window_mode wm = (Window_mode)p_mode;
 	if (wm == WM_LAST && t_stack->userlevel() != 0 && p_window == nil && !p_this_stack)
@@ -4567,14 +4596,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 			oldstack->kunfocus();
 			t_stack->close();
 			
-			MCPlayer *tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				MCPlayer *oldptr = tptr;
-				tptr = tptr->getnextplayer();
-				if (oldptr->getstack() == oldstack)
-					oldptr->close();
-			}
+            MCPlayer::ClosePlayers(oldstack);
 
 			if (!t_stack->takewindow(oldstack))
 			{
@@ -4589,6 +4611,13 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		// MW-2011-08-18: [[ Redraw ]] Move to use redraw lock/unlock.
 		MCRedrawForceUnlockScreen();
 	}
+    
+    // Need a parentptr that is an open stack
+    if (parentptr == t_stack && (wm == WM_SHEET || wm == WM_DRAWER))
+    {
+        ctxt . LegacyThrow(EE_GO_BADWINDOWEXP);
+        return;
+    }
 
 	Boolean oldtrace = MCtrace;
 	MCtrace = False;

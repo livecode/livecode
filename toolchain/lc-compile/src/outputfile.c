@@ -28,7 +28,7 @@
 static const char *ImportedModuleDir[8];
 static int ImportedModuleDirCount = 0;
 static const char *s_interface_output_file = NULL;
-static const char *ImportedModuleNames[32];
+static const char *ImportedModuleNames[4096];
 static int ImportedModuleNameCount = 0;
 
 static int IsImportedModuleName(const char *p_name)

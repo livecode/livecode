@@ -145,6 +145,14 @@ public:
 		return m_values[p_index];
 	}
 
+    MCSpan<T> Release(void)
+    {
+        MCSpan<T> t_value = Span();
+        m_values = nullptr;
+        m_count = 0;
+        return t_value;
+    }
+
 private:
 	T *m_values;
 	uindex_t m_count;

@@ -1348,12 +1348,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     else
         t_scale_x = t_scale_y = 1.0;
     
-    MCGFloat t_stop, t_sleft, t_sright, t_sbottom;
-    t_sleft = t_src_center . origin . x;
-    t_stop = t_src_center . origin . y;
-    t_sright = t_src_center . origin . x + t_src_center . size . width;
-    t_sbottom = t_src_center . origin . y + t_src_center . size . height;
-    
     MCGFloat t_top, t_left, t_right, t_bottom;
     t_left = MCMax(0.0f, t_src_center . origin . x);
     t_top = MCMax(0.0f, t_src_center . origin . y);

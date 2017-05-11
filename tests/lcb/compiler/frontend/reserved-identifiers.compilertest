@@ -1,0 +1,42 @@
+%% Copyright (C) 2017 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%% We produce a warning for any identifier matching the pattern
+%% _*[a-z]+
+%TEST WarnOnReservedIdentifiers
+module \
+		compiler_test
+
+variable _Unreserved1
+variable __Unreserved2
+variable _Unreserved_1
+variable __Unreserved_2
+variable Unreserved3
+variable Unreserved_3
+
+variable unreserved4
+variable unreserved_4
+
+variable %{BEFORE1}thisisreserved
+variable %{BEFORE2}_thisisreserved
+variable %{BEFORE3}__thisisreserved
+
+end module
+%EXPECT PASS
+%WARNING "All-lowercase name 'thisisreserved' may cause future syntax error" AT BEFORE1
+%WARNING "All-lowercase name '_thisisreserved' may cause future syntax error" AT BEFORE2
+%WARNING "All-lowercase name '__thisisreserved' may cause future syntax error" AT BEFORE3
+%ENDTEST

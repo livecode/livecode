@@ -38,3 +38,88 @@ on TestDeleteStackWithSubstack
 	
 	TestAssert "delete stack with substack no crash", true
 end TestDeleteStackWithSubstack
+
+on TestDeleteSelectedObjects
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	create field
+	select button 1 and field 1
+	
+	delete
+	
+	TestAssert "delete selected objects", the number of controls is 0
+end TestDeleteSelectedObjects
+
+on TestDeleteSelectedCantDelete
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	
+	local tGroup
+	create group
+	put it into tGroup
+	
+	create field in tGroup
+	set the cantDelete of tGroup to true
+	
+	select button 1
+	delete
+	
+	select tGroup
+	delete
+	
+	local tThereIsAGroup
+	put there is a tGroup into tThereIsAGroup
+		
+	undo
+	
+	TestAssert "can't delete group with cantDelete true", tThereIsAGroup
+	TestAssert "undo previous delete after failed delete", there is a button 1
+end TestDeleteSelectedCantDelete
+
+on TestUndoAfterDeleteNothing
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	select button 1
+	delete
+
+	select empty
+	delete
+	undo
+	
+	TestAssert "undo previous delete after failed delete", there is a button 1
+end TestUndoAfterDeleteNothing
+
+on TestDeleteComboBox
+	create stack
+	set the defaultStack to the short name of it
+	
+	create button
+	set the style of it to "menu"
+	set the menumode of it to "combobox"
+	select it
+	delete
+	undo
+		
+	TestAssert "undo delete of combo box", there is a button 1
+end TestDeleteComboBox
+
+on TestDeleteUndoChanged
+	create stack
+	set the defaultStack to the short name of it
+	set the script of this card to \ 
+		"on undoChanged; set the cCardReceived of this stack to true; end undoChanged"
+	
+	create button
+	set the script of it to \ 
+		"on undoChanged; set the cCardReceived of this stack to false; end undoChanged"
+	select it
+	delete
+
+	TestAssert "undoChanged sent to current card", the cCardReceived of this stack
+end TestDeleteUndoChanged

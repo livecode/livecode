@@ -86,12 +86,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 
 MCPlayer::~MCPlayer()
 {
-	// OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
-	while (opened)
-		close();
-	
-	playstop();
-	
+    removefromplayers();
+    
 	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
 }

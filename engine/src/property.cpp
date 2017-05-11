@@ -121,6 +121,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_SCRIPT_EXECUTION_ERRORS, String, Engine, ScriptExecutionErrors)
 	DEFINE_RO_PROPERTY(P_SCRIPT_PARSING_ERRORS, String, Engine, ScriptParsingErrors)
 	
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, License, RevLicenseInfoByKey)
+	DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, License, RevLicenseInfo)
+	DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, License, RevLicenseLimits)
 	DEFINE_RW_PROPERTY(P_REV_RUNTIME_BEHAVIOUR, UInt16, Legacy, RevRuntimeBehaviour)
 	DEFINE_RW_PROPERTY(P_HC_IMPORT_STAT, String, Legacy, HcImportStat)
 	DEFINE_RW_PROPERTY(P_SCRIPT_TEXT_FONT, String, Legacy, ScriptTextFont)
@@ -144,7 +147,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_RECORD_SAMPLESIZE, UInt16, Multimedia, RecordSampleSize)
 	DEFINE_RW_PROPERTY(P_RECORD_RATE, Double, Multimedia, RecordRate)
 	DEFINE_RW_PROPERTY(P_RECORD_CHANNELS, UInt16, Multimedia, RecordChannels)
-	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat) 
+	DEFINE_RW_CUSTOM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat)
 	DEFINE_RW_PROPERTY(P_RECORD_COMPRESSION, String, Multimedia, RecordCompression)
 	DEFINE_RW_PROPERTY(P_RECORD_INPUT, String, Multimedia, RecordInput)
 
@@ -1218,7 +1221,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
                 t_end_offset--;
             }
             
-            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+            if (!MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_offset + 1, t_end_offset), &t_icarray))
                 return false;
         }
         else

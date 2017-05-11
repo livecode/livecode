@@ -166,7 +166,7 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_
     bool t_success = true;
     DWORD t_private = NULL;
     
-    if (p_globally)
+    if (!p_globally)
         t_private = FR_PRIVATE;
     
     MCAutoStringRefAsWString t_wide_path;

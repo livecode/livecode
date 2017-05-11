@@ -45,6 +45,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, AnswerRecord, 0)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTVersion, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTEffects, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordCompressionTypes, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordFormats, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordLoudness, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Movie, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, MCISendString, 2)
@@ -90,24 +91,116 @@ MC_EXEC_DEFINE_SET_METHOD(Multimedia, Recording, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCExecEnumTypeElementInfo _kMCMultimediaRecordFormatElementInfo[] =
+struct MCMultimediaRecordFormat
 {
-	{ "aiff", EX_AIFF, false },
-	{ "wave", EX_WAVE, false },
-	{ "ulaw", EX_ULAW, false },
-	{ "movie", EX_MOVIE, false },
+    intenum_t format;
 };
 
-static MCExecEnumTypeInfo _kMCMultimediaRecordFormatTypeInfo =
+struct MCMultimediaRecordFormatDataState
 {
-	"Multimedia.RecordFormat",
-	sizeof(_kMCMultimediaRecordFormatElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCMultimediaRecordFormatElementInfo
+    intenum_t format;
+    MCStringRef label;
 };
 
-//////////
+static bool get_record_format_id(void *context, intenum_t p_id, MCStringRef p_label)
+{
+    auto *t_state = static_cast<MCMultimediaRecordFormatDataState *>(context);
+    
+    if (MCStringIsEqualTo(t_state -> label, p_label, kMCCompareCaseless))
+    {
+        t_state -> format = p_id;
+    }
+    
+    return true;
+}
 
-MCExecEnumTypeInfo *kMCMultimediaRecordFormatTypeInfo = &_kMCMultimediaRecordFormatTypeInfo;
+static bool get_record_format_label(void *context, intenum_t p_id, MCStringRef p_label)
+{
+    auto *t_state = static_cast<MCMultimediaRecordFormatDataState *>(context);
+    
+    if (t_state -> format == p_id)
+    {
+        t_state -> label = p_label;
+    }
+    
+    return true;
+}
+
+
+static void MCMultimediaRecordFormatParse(MCExecContext& ctxt, MCStringRef p_input, MCMultimediaRecordFormat& r_format)
+{
+    intenum_t t_format = 0;
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCMultimediaRecordFormatDataState t_state = { 0, p_input };
+        MCPlatformSoundRecorderListFormats(MCrecorder, get_record_format_id, &t_state);
+        t_format = t_state.format;
+    }
+#else
+    extern intenum_t MCQTGetRecordFormatId(MCStringRef);
+    t_format = MCQTGetRecordFormatId(p_input);
+#endif
+    
+    r_format.format = t_format;
+}
+
+static void MCMultimediaRecordFormatFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_format, MCStringRef& r_output)
+{
+    MCStringRef t_label = kMCEmptyString;
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCMultimediaRecordFormatDataState t_state = { p_format.format, nil };
+        MCPlatformSoundRecorderListFormats(MCrecorder, get_record_format_label, &t_state);
+        t_label = t_state.label;
+    }
+#else
+    extern MCStringRef MCQTGetRecordFormatLabel(intenum_t);
+    t_label = MCQTGetRecordFormatLabel(p_format.format);
+#endif
+    
+    r_output = MCValueRetain(t_label);
+}
+
+static void MCMultimediaRecordFormatInit(MCExecContext& ctxt, MCMultimediaRecordFormat& r_format)
+{
+    MCMemoryClear(&r_format, sizeof(MCMultimediaRecordFormat));
+}
+
+static void MCMultimediaRecordFormatFree(MCExecContext& ctxt, MCMultimediaRecordFormat& p_format)
+{
+}
+
+static void MCMultimediaRecordFormatCopy(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_source, MCMultimediaRecordFormat& r_target)
+{
+}
+
+static bool MCMultimediaRecordFormatIsEqualTo(const MCMultimediaRecordFormat& p_left, const MCMultimediaRecordFormat& p_right)
+{
+    return p_left . format == p_right . format;
+}
+
+static MCExecCustomTypeInfo _kMCMultimediaRecordFormatTypeInfo =
+{
+    "Multimedia.RecordFormat",
+    sizeof(MCMultimediaRecordFormat),
+    (void *)MCMultimediaRecordFormatParse,
+    (void *)MCMultimediaRecordFormatFormat,
+    (void *)MCMultimediaRecordFormatFree,
+};
+
+MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo = &_kMCMultimediaRecordFormatTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -143,6 +236,12 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
     MCListAppend(*t_state, *t_compressor_info);
     return true;
 }
+
+static bool list_formats_callback(void *context, intenum_t id, MCStringRef label)
+{
+    MCListRef *t_state = static_cast<MCListRef *>(context);
+    return MCListAppend(*t_state, label);
+}
 #endif /* FEATURE_PLATFORM_RECORDER */
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
@@ -171,6 +270,37 @@ void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
 #endif
+}
+
+void MCMultimediaEvalRecordFormats(MCExecContext& ctxt, MCStringRef& r_string)
+{
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nullptr)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder == nullptr)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    MCListRef t_state = nullptr;
+    if (MCListCreateMutable('\n', t_state) &&
+        MCPlatformSoundRecorderListFormats(MCrecorder,
+                                           list_formats_callback,
+                                           &t_state) &&
+        MCListCopyAsStringAndRelease(t_state, r_string))
+        return;
+    
+    MCValueRelease(t_state);
+#else
+    extern bool MCQTGetRecordFormatList(MCStringRef &r_string);
+    if (MCQTGetRecordFormatList(r_string))
+        return;
+#endif
+    ctxt . Throw();
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
@@ -213,16 +343,16 @@ void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string)
 	{
 		t_success = MCListCreateMutable('\n', &t_list);
 
-		MCPlayer *tptr = MCplayers;
-		while (t_success && tptr != NULL)
+		MCPlayerHandle t_player = MCplayers;
+		while (t_success && t_player.IsValid())
 		{
-			if (tptr->isdisposable())
+			if (t_player->isdisposable())
 			{
 				MCAutoValueRef t_string;
-				t_success = tptr->names(P_NAME, &t_string) && MCListAppend(*t_list, *t_string);
+				t_success = t_player->names(P_NAME, &t_string) && MCListAppend(*t_list, *t_string);
 				t_playing = true;
 			}
-			tptr = tptr->getnextplayer();
+			t_player = t_player->getnextplayer();
 		}
 	}
 	if (t_success)
@@ -440,43 +570,27 @@ void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 static MCPlayer* MCMultimediaExecGetClip(MCExecContext& ctxt, MCStringRef p_clip, int p_chunk_type)
 {
 	IO_cleanprocesses();
-	MCPlayer *tptr;
 	// Lookup the name we are searching for. If it doesn't exist, then no object can
 	// have it as a name.
-	tptr = nil;
 	if (p_chunk_type == CT_EXPRESSION)
 	{
         // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
-		MCNameRef t_obj_name;
-		t_obj_name = MCNameLookup(p_clip);
-		if (t_obj_name != nil)
-		{
-			tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				if (tptr -> hasname(t_obj_name))
-					break;
-				tptr = tptr->getnextplayer();
-			}
-		}
+		return MCPlayer::FindPlayerByName(MCNameLookup(p_clip));
 	}
-	else if (p_chunk_type == CT_ID)
+	
+    if (p_chunk_type == CT_ID)
 	{
-		tptr = MCplayers;
-		uint4 t_id;
-		if (!MCU_stoui4(p_clip, t_id))
-		{
-			ctxt . LegacyThrow(EE_PLAY_BADCLIP);
-			return nil;
-		}
-		while (tptr != NULL)
-		{
-			if (tptr -> getaltid() == t_id)
-				break;
-			tptr = tptr->getnextplayer();
-		}
+        uint4 t_id;
+        if (!MCU_stoui4(p_clip, t_id))
+        {
+        	ctxt . LegacyThrow(EE_PLAY_BADCLIP);
+            return nullptr;
+        }
+
+        return MCPlayer::FindPlayerById(t_id);
 	}
-	return tptr;
+
+    MCUnreachableReturn(nullptr);
 }
 
 void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_filename, bool p_looping, MCPoint *p_at, MCStringRef p_options, bool p_prepare)
@@ -750,14 +864,14 @@ void MCMultimediaExecPlayLastVideoOperation(MCExecContext& ctxt, int p_operation
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMultimediaGetRecordFormat(MCExecContext& ctxt, intenum_t &r_value)
+void MCMultimediaGetRecordFormat(MCExecContext& ctxt, MCMultimediaRecordFormat& r_value)
 {
-	r_value = (Export_format)MCrecordformat;
+    r_value.format = MCrecordformat;
 }
 
-void MCMultimediaSetRecordFormat(MCExecContext& ctxt, intenum_t p_value)
+void MCMultimediaSetRecordFormat(MCExecContext& ctxt, const MCMultimediaRecordFormat& p_value)
 {
-	MCrecordformat = p_value;
+    MCrecordformat = p_value.format;
 }
 
 void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value)
@@ -881,15 +995,9 @@ void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
     if (MCSystemSetPlayLoudness(p_loudness))
         return;
 #endif
-    if (MCplayers)
-    {
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            tptr->setvolume(p_loudness);
-            tptr = tptr->getnextplayer();
-        }
-    }
+    
+    MCPlayer::SetPlayersVolume(p_loudness);
+    
     MCS_setplayloudness(p_loudness);
 
 	MCtemplateaudio -> SetPlayLoudness(ctxt, p_loudness);

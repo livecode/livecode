@@ -33,7 +33,7 @@
 						{
 							'include_dirs':
 							[
-								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+								'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
 							],
 						},
 					],
@@ -146,7 +146,7 @@
 						{
 							'library_dirs':
 							[
-								'unpacked/icu/<(target_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
+								'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

@@ -88,17 +88,25 @@ uinteger_t MCChunkCountElementChunkCallback(void *context, MCRange *p_range)
 bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
-    uinteger_t t_count;
-    bool t_counted;
-    t_counted = false;
-    
+
+    /* Helper closure for making sure that the chunk counting callback
+     * is called exactly once. */
+    int32_t t_count = 0;
+    bool t_counted = false;
+    auto t_get_count = [&] {
+        if (!t_counted)
+        {
+            t_count = MCMin<uinteger_t>(INT32_MAX, p_callback(p_context, p_range));
+            t_counted = true;
+        }
+        return t_count;
+    };
+
     // If the first index is negative, count chunks and adjust accordingly.
     // Resolved index should be the index *before* the target first chunk.
     if (p_first < 0)
     {
-        t_count = p_callback(p_context, p_range);
-        t_counted = true;
-        p_first += t_count;
+        p_first += t_get_count();
     }
     else
         p_first--;
@@ -107,13 +115,7 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
     // Resolved index should be the index of the target last chunk.
     if (p_last < 0)
     {
-        if (!t_counted)
-        {
-            t_count = p_callback(p_context, p_range);
-            t_counted = true;
-        }
-        
-        p_last += t_count + 1;
+        p_last += t_get_count() + 1;
     }
     
     t_chunk_count = p_last - p_first;
@@ -132,12 +134,10 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
         if (t_chunk_count == 0)
             return false;
         
-        if (!t_counted)
-            t_count = p_callback(p_context, p_range);
-        
         // If the range extends beyond the number of chunks, the end index is out of range unless we are
         // looking for an end boundary, in which case it can exceed the end index by 1.
-        if (p_first + t_chunk_count > t_count + 1 || (!p_boundary_end && p_first + t_chunk_count == t_count + 1))
+        if (p_first + t_chunk_count > t_get_count() + 1 ||
+            (!p_boundary_end && p_first + t_chunk_count == t_get_count() + 1))
             return false;
     }
     
@@ -542,7 +542,7 @@ bool MCTextChunkIterator_Delimited::Next()
     MCRange t_found_range;
     // calculate the length of the line / item
     // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
-    if (!MCStringFind(m_text, MCRangeMake(t_offset, m_length - t_offset), m_delimiter, m_options, &t_found_range))
+    if (!MCStringFind(m_text, MCRangeMakeMinMax(t_offset, m_length), m_delimiter, m_options, &t_found_range))
     {
         m_range . length = m_length - m_range . offset;
         m_exhausted = true;
@@ -569,7 +569,7 @@ bool MCTextChunkIterator_Delimited::IsAmong(MCStringRef p_needle)
         // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
         // This is because of the case where the delimiter is within p_needle - e.g.
         // "a,b" is among the items of "a,b,c,d" should return true.
-        return MCChunkIsAmongTheChunksOfRange(p_needle, m_text, m_delimiter, m_options, MCRangeMake(m_range . offset, m_length - m_range . offset));
+        return MCChunkIsAmongTheChunksOfRange(p_needle, m_text, m_delimiter, m_options, MCRangeMakeMinMax(m_range . offset, m_length));
     }
     
     while (Next())
@@ -614,12 +614,12 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
     if (!MCStringIsEmpty(p_needle))
     {
         uindex_t t_found_offset;
-        if (!MCChunkOffsetOfChunkInRange(m_text, p_needle, m_delimiter, p_whole_matches, m_options, MCRangeMake(m_range . offset, m_length - m_range . offset), t_found_offset))
+        if (!MCChunkOffsetOfChunkInRange(m_text, p_needle, m_delimiter, p_whole_matches, m_options, MCRangeMakeMinMax(m_range . offset, m_length), t_found_offset))
             return 0;
         
         // Count the number of delimiters between the start of the first chunk
         // and the start of the found string.
-        t_chunk_offset += MCStringCount(m_text, MCRangeMake(m_range . offset, t_found_offset - m_range . offset), m_delimiter, m_options);
+        t_chunk_offset += MCStringCount(m_text, MCRangeMakeMinMax(m_range . offset, t_found_offset), m_delimiter, m_options);
         
         // AL-2015-07-20: [[ Bug 15618 ]] If the chunk found is outside the specified range, return 0 (not found)
         if (p_end_offset != nil && t_chunk_offset > *p_end_offset)
@@ -637,12 +637,12 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
         
         if (p_whole_matches)
         {
-            if (MCStringSubstringIsEqualTo(m_text, MCRangeMake(m_range . offset, m_length - m_range . offset), p_needle, m_options))
+            if (MCStringSubstringIsEqualTo(m_text, MCRangeMakeMinMax(m_range . offset, m_length), p_needle, m_options))
                 return t_chunk_offset;
         }
         else
         {
-            if (MCStringSubstringContains(m_text, MCRangeMake(m_range . offset, m_length - m_range . offset), p_needle, m_options))
+            if (MCStringSubstringContains(m_text, MCRangeMakeMinMax(m_range . offset, m_length), p_needle, m_options))
                 return t_chunk_offset;
         }
         t_chunk_offset++;

@@ -135,6 +135,10 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 
 NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 {
+	// IM-2017-04-20: [[ Bug 19327 ]] Transform rect to ui view coords
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleGetTransformedBounds(p_rect, m_object->getstack()->getviewtransform());
+	
 	int32_t t_gp_height;
 	
 	NSWindow *t_window = getStackWindow();
@@ -144,7 +148,7 @@ NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 		t_gp_height = m_object->getcard()->getrect().height;
 	
 	NSRect t_rect;
-	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+	t_rect = NSMakeRect(t_view_rect.x, t_gp_height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
 	
 	return t_rect;
 }
@@ -269,6 +273,22 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 
 - (void)setFrameOrigin:(NSPoint)newOrigin
 {
+    /* By default, NSViews don't adjust the positions or sizes of their
+     * contents when their geometry changes.  There is an autoresizing
+     * behaviour that we could turn on, but we don't because it doesn't have
+     * the properties that we require for a LiveCode group.  It's therefore
+     * necessary to manually nudge subviews around when the position of a
+     * container view is adjusted. */
+    NSPoint t_origin = [self frame].origin;
+    NSPoint t_delta = {newOrigin.x - t_origin.x, newOrigin.y - t_origin.y};
+
+    for (NSView *t_subview in [self subviews])
+    {
+        NSPoint t_suborigin = [t_subview frame].origin;
+        [t_subview setFrameOrigin: {t_suborigin.x + t_delta.x,
+                                    t_suborigin.y + t_delta.y}];
+    }
+
 	[super setFrameOrigin:newOrigin];
 	[self setBoundsOrigin:newOrigin];
 }

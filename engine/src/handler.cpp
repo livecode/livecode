@@ -126,7 +126,7 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	else
 	{
 		t_is_reference = true;
-		/* UNCHECKED */ MCStringCopySubstring(t_token, MCRangeMake(1, MCStringGetLength(t_token) - 1), &t_token_name);
+		/* UNCHECKED */ MCStringCopySubstring(t_token, MCRangeMakeMinMax(1, MCStringGetLength(t_token)), &t_token_name);
 	}
 
 	MCNameRef t_name;
@@ -701,6 +701,26 @@ bool MCHandler::getparamnames(MCListRef& r_list)
 			return false;
 
 	return MCListCopy(*t_list, r_list);
+}
+
+bool MCHandler::getparamnames_as_properlist(MCProperListRef& r_list)
+{
+	MCAutoProperListRef t_list;
+	if (!MCProperListCreateMutable(&t_list))
+		return false;
+	
+	for (uinteger_t i = 0; i < npnames; i++)
+		if (!MCProperListPushElementOntoBack(*t_list, pinfo[i].name))
+			return false;
+	
+	if (!t_list.MakeImmutable())
+	{
+		return false;
+	}
+	
+	r_list = t_list.Take();
+	
+	return true;
 }
 
 bool MCHandler::getvariablenames(MCListRef& r_list)

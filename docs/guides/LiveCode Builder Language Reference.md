@@ -430,31 +430,50 @@ statement blocks.
     ForeignHandlerDefinition
       : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
-    ForeignType
-      : Type
-      | 'CBool'
-      | 'CInt'
-      | 'CUInt'
-      | 'CFloat'
-      | 'CDouble'
-
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
-Foreign handler definitions can contain more types in their parameters
-than elsewhere - those specified in the ForeignType clause. These allow
-low-level types to be specified making it easier to interoperate.
+There are a number of types defined in the foreign module which map to
+the appropriate foreign type when used in foreign handler signatures.
 
-Foreign types map to high-level types as follows:
+There are the standard machine types:
 
- - bool maps to boolean
- - int and uint map to integer (number)
- - float and double map to real (number)
+ - Bool maps to an 8-bit boolean
+ - Int8/SInt8 and UInt8 map to 8-bit integers
+ - Int16/SInt16 and UInt16 map to 16-bit integers
+ - Int32/SInt32 and UInt32 map to 32-bit integers
+ - Int64/SInt64 and UInt64 map to 64-bit integers
+ - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
+ - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
 
-This mapping means that a foreign handler with a bool parameter say,
-will accept a boolean from LiveCode Builder code when called.
+There are the standard C primitive types:
 
-At present, only C and Java binding is allowed and follow these rules:
+ - CBool maps to 'bool'
+ - CChar, CSChar and CUChar map to 'char', 'signed char' and 'unsigned char'
+ - CShort/CSShort and CUShort map to 'signed short' and 'unsigned short'
+ - CInt/CSInt and CUInt map to 'signed int' and 'unsigned int'
+ - CLong/CSLong and CULong map to 'signed long' and 'unsigned long'
+ - CLongLong/CSLongLong and CULongLong map to 'signed long long' and 'unsigned long long'
+ - CFloat maps to 'float'
+ - CDouble maps to 'double'
+
+There are aliases for the Java primitive types:
+
+ - JBoolean maps to Bool
+ - JByte maps to Int8
+ - JShort maps to Int16
+ - JInt maps to Int32
+ - JLong maps to Int64
+ - JFloat maps to Float32
+ - JDouble maps to Float64
+
+All the primitive types above will implicitly bridge between corresponding
+high level types:
+
+  - CBool and Bool bridge to and from Boolean
+  - All integer and real types bridge to and from Number
+
+Other LCB types pass as follows into foreign handlers:
 
  - any type passes an MCValueRef
  - nothing type passes as the null pointer
@@ -466,12 +485,11 @@ At present, only C and Java binding is allowed and follow these rules:
  - Data type passes an MCDataRef
  - Array type passes an MCArrayRef
  - List type passes an MCProperListRef
- - Pointer type passes a void *
- - CBool type passes a bool (i.e. an int - pre-C99).
- - CInt type passes an int
- - CUInt type passes an unsigned int
- - CFloat type passes a float
- - CDouble type passes a double
+
+Finally, the Pointer type passes as void * to foreign handlers. If you want
+a pointer which can be null, then use optional Pointer - LCB will throw an
+error if there is an attempt to map from the null pointer value to a slot
+with a non-optional Pointer type.
 
 Modes map as follows:
 
@@ -967,9 +985,9 @@ available as **the result**.
 
 ## Namespaces
 
-Identifiers declared in a module are placed in a scope named using the 
+Identifiers declared in a module are placed in a scope named using the
 module name. This allows disambiguation between an identifier declared
-in a module and an identical one declared in any of its imports, by 
+in a module and an identical one declared in any of its imports, by
 using a fully qualified name.
 
 For example:
@@ -997,23 +1015,51 @@ For example:
 
 	handler TestImports()
 		variable tVar as String
-		put MyName into tVar 
+		put MyName into tVar
 		-- tVar contains "Uses Import"
-	
+
 		put com.livecode.module.importee.MyName into tVar
 		-- tVar contains "Importee"
-	
+
 		put com.livecode.module.usesimport.MyName into tVar
 		-- tVar contains "Uses Import"
-	
+
 		put com.livecode.module.importee.GetMyName() into tVar
 		-- tVar contains "Importee"
-	
+
 		variable tVarMyType as MyType
 		put tVar into tVar1 -- valid
-	
+
 		variable tVarImportedType as com.livecode.module.importee.MyType
 		put tVar into tVarImportedType -- compile error
 	end handler
 
 	end module
+
+## Experimental Features
+
+**Warning**: This section describes current language features and syntax
+that are considered experimental and unstable.  They are likely to change
+or go away without warning.
+
+### Safe Foreign Handlers
+
+    SafeForeignHandler
+      : '__safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
+
+By default foreign handlers are considered unsafe and thus can only be used in
+unsafe blocks, or unsafe handlers. However, at the moment it is possible for a
+foreign handler to actually be safe if it has been explicitly written to wrap
+a foreign function so it can be easily used from LCB.
+
+Specifically, it is reasonable to consider a foreign handler safe if it
+conforms to the following rules:
+
+ - Parameter types and return type are either ValueRefs, or bridgeable types
+ - Return values of ValueRef type are retained
+ - If the function fails then MCErrorThrow has been used
+ - 'out' mode parameters are only changed if the function succeeds
+ - A return value is only provided if the function succeeds
+
+Examples of foreign handlers which can be considered safe are all the foreign
+handlers which bind to syntax in the LCB standard library.
