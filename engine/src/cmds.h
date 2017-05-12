@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "regex.h"
 #include "util.h"
 #include "uidc.h"
+#include "variable.h"
 
 // general commands in cmds.cc
 
