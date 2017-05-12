@@ -348,6 +348,8 @@ void MCGroup::geometrychanged(const MCRectangle &p_rect)
 
 void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
 {
+    MCControl::viewportgeometrychanged(p_rect);
+
 	MCRectangle t_viewport;
 	t_viewport = MCU_intersect_rect(p_rect, getrect());
 
