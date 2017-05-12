@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <time.h>
 
+#include "SkStippleMaskFilter.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -2245,8 +2247,8 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_paint_style == kMCGPaintStyleStippled)
 		{
-			//t_stipple = new (nothrow) SkStippleMaskFilter();
-			//t_success = t_stipple != NULL;			
+            t_stipple = sk_sp<SkMaskFilter>(new (nothrow) SkStippleMaskFilter());
+			t_success = t_stipple != NULL;
 		}
 	}	
 	
