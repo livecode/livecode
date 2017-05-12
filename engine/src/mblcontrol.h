@@ -114,6 +114,7 @@ enum MCNativeControlProperty
 	
 	// TextField-specific properties
 	kMCNativeControlPropertyMinimumFontSize,
+    kMCNativeControlPropertyMaximumTextLength,
 	kMCNativeControlPropertyAutoClear,
 	kMCNativeControlPropertyClearButtonMode,
 	kMCNativeControlPropertyBorderStyle,

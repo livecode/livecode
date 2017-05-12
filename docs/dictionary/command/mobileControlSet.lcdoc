@@ -319,6 +319,10 @@ adjustsFontSizeToFitWidth property). This is a boolean value.
 to satisfy autoFit requirements (maps to the native minimumFontSize
 property). This is an integer value.
 
+- "maximumTextLength" (iOS only): The maximum number of characters that
+
+can be entered in the field. This is an integer value.
+
 - "autoClear" (iOS only): Determines whether the control is emptied
 
 automatically when editing begins (maps to the native
