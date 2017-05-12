@@ -36,7 +36,7 @@ the shape. The allowed keys are as follows:
 strokeGradient["type"]
 
     The type of gradient, can take the values, "linear", "radial",
-    "conical"
+    "conical", "spiral", "diamond", "xy", "sqrtxy"
 
 
 strokeGradient["ramp"]
