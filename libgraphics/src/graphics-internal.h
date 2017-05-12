@@ -22,10 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkDashPathEffect.h>
 #include <SkMask.h>
 #include <SkShader.h>
-
-#ifndef M_PI
-#define M_PI 3.141592653589793238462643
-#endif
+#include <SkSurface.h>
 
 #ifdef __MOBILE
 #define kMCGTextMeasureCacheTableSize 16384
@@ -52,7 +49,7 @@ struct __MCGPattern
 bool MCGPatternCreate(MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter, MCGPatternRef& r_pattern);
 MCGPatternRef MCGPatternRetain(MCGPatternRef pattern);
 void MCGPatternRelease(MCGPatternRef pattern);
-bool MCGPatternToSkShader(MCGPatternRef pattern, SkShader*& r_shader);
+bool MCGPatternToSkShader(MCGPatternRef pattern, sk_sp<SkShader>& r_shader);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,13 +58,13 @@ typedef struct __MCGGradient *MCGGradientRef;
 struct __MCGGradient
 {
 	MCGGradientFunction	function;	
-	MCGColor			*colors;
+	MCGColor            *colors;
 	MCGFloat			*stops;
 	uindex_t			ramp_length;	
 	bool				mirror;
 	bool				wrap;
 	uint32_t			repeats;	
-	MCGAffineTransform	transform;
+	SkMatrix            transform;
 	MCGImageFilter		filter;	
 	uint32_t			references;
 };
@@ -75,7 +72,7 @@ struct __MCGGradient
 bool MCGGradientCreate(MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGGradientRef& r_gradient);
 MCGGradientRef MCGGradientRetain(MCGGradientRef gradient);
 void MCGGradientRelease(MCGGradientRef gradient);
-bool MCGGradientToSkShader(MCGGradientRef gradient, MCGRectangle clip, SkShader*& r_shader);
+bool MCGGradientToSkShader(MCGGradientRef gradient, MCGRectangle clip, sk_sp<SkShader>& r_shader);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,6 +108,7 @@ typedef struct __MCGContextLayer *MCGContextLayerRef;
 struct __MCGContextLayer
 {
 	SkCanvas *canvas;
+	sk_sp<SkSurface> m_surface;
 	
 	uint32_t nesting;
 	
@@ -169,7 +167,7 @@ struct __MCGDashes
 bool MCGDashesCreate(MCGFloat phase, const MCGFloat *lengths, uindex_t arity, MCGDashesRef& r_dashes);
 MCGDashesRef MCGDashesRetain(MCGDashesRef dashes);
 void MCGDashesRelease(MCGDashesRef dashes);
-bool MCGDashesToSkDashPathEffect(MCGDashesRef dashes, SkDashPathEffect*& r_path_effect);
+bool MCGDashesToSkDashPathEffect(MCGDashesRef dashes, sk_sp<SkPathEffect>& r_path_effect);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -216,8 +214,7 @@ enum MCGPixelOwnershipType
 };
 
 bool MCGRasterToSkBitmap(const MCGRaster& raster, MCGPixelOwnershipType p_ownership, SkBitmap& bitmap);
-SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode mode);
-MCGBlendMode MCGBlendModeToSkXfermode(SkXfermode* mode);
+SkBlendMode MCGBlendModeToSkBlendMode(MCGBlendMode);
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform& transform, SkMatrix& r_matrix);
 void MCGAffineTransformFromSkMatrix(const SkMatrix &matrix, MCGAffineTransform &r_transform);
 
@@ -387,29 +384,30 @@ inline MCGFillRule MCGFillRuleToSkFillType(SkPath::FillType p_fill_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format)
+inline SkColorType MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format)
 {
 	switch (p_format)
 	{
 	case kMCGRasterFormat_A:
-		return SkBitmap::kA8_Config;
+		return kAlpha_8_SkColorType;
 	case kMCGRasterFormat_ARGB:
 	case kMCGRasterFormat_U_ARGB:
 	case kMCGRasterFormat_xRGB:
-		return SkBitmap::kARGB_8888_Config;
+		return kN32_SkColorType;
     default:
-        MCUnreachableReturn(SkBitmap::kA8_Config);
+        MCUnreachableReturn(kAlpha_8_SkColorType);
 	}
 }
 
 // IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when determining raster format
-inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config, bool p_opaque)
+inline MCGRasterFormat MCGRasterFormatFromSkImageInfo(const SkImageInfo& p_config, bool p_opaque)
 {
-	switch (p_config)
+	switch (p_config.colorType())
 	{
-	case SkBitmap::kA8_Config:
+	case kAlpha_8_SkColorType:
 		return kMCGRasterFormat_A;
-	case SkBitmap::kARGB_8888_Config:
+	case kBGRA_8888_SkColorType:
+	case kRGBA_8888_SkColorType:
 		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
     default:
         MCUnreachableReturn(kMCGRasterFormat_A);
@@ -458,59 +456,6 @@ void MCGTextMeasureCacheCompact(void);
 
 void MCGBlendModesInitialize(void);
 void MCGBlendModesFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MCGLegacyBlendMode : public SkXfermode
-{
-public:
-	MCGLegacyBlendMode(MCGBlendMode blend_mode);
-	
-    /*virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;*/
-	
-	virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
-	
-	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
-	virtual bool asMode(Mode* mode) const;
-	
-    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
-	virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE {}
-	
-private:
-	uint32_t m_function;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct MCGradientAffineCombiner MCGradientCombiner_t;
-
-class MCGLegacyGradientShader : public SkShader
-{
-public:
-	MCGLegacyGradientShader(MCGGradientRef gradient_ref, MCGRectangle clip);
-	~MCGLegacyGradientShader();
-	
-    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&) SK_OVERRIDE;
-    virtual uint32_t getFlags() SK_OVERRIDE;
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
-	virtual SkShader::BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const SK_OVERRIDE;
-	
-	virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE {} ;
-    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
-	
-private:
-	MCGGradientRef			m_gradient_ref;
-	int32_t					m_y;
-	uint8_t					*m_mask;
-	MCGRectangle			m_clip;
-	MCGradientCombiner_t	*m_gradient_combiner;
-	
-    typedef SkShader INHERITED;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 

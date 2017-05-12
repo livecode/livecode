@@ -928,7 +928,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
         
-#if defined _MACOSX
+#if defined _MAC_DESKTOP
         
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).

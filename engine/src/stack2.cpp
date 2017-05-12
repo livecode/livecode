@@ -2073,7 +2073,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		}
 	}
 	
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	// MW-2008-02-28: [[ Bug 4614 ]] Ensure that sheeting inside a not yet visible window causes
 	//   it to be displayed as modal.
 	// MW-2008-03-03: [[ Bug 5985 ]] Crash when using 'sheet' command. It seems that 'go' is not

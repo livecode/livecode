@@ -43,7 +43,7 @@ corresponding array value containing the value to set the property to.
 The properties array should contain one of more of the following
 key|value pairs:
 
-- "type": One of: linear, radial, conical, spiral, diamond, xy or sqrtxy
+- "type": One of: linear, radial, or conical
 - "ramp": A return delimited list of gradient stops that define the
   layout of the of the gradient. A gradient stop is a comma delimited
   list with the following structure: position,color,alpa. For example
