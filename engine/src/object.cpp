@@ -2931,11 +2931,8 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     swap(MCtargetptr, oldtargetptr);
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
-	else
-	{
-		MCeerror->clear(); // clear out bogus error messages
-		return ES_ERROR;
-	}
+
+	return ES_ERROR;
 }
 
 void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)
