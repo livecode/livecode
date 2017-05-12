@@ -139,22 +139,23 @@ NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 	MCRectangle t_view_rect;
 	t_view_rect = MCRectangleGetTransformedBounds(p_rect, m_object->getstack()->getviewtransform());
 	
-	int32_t t_gp_height;
-	
-	NSWindow *t_window = getStackWindow();
-	if (t_window != nil)
-		t_gp_height = (int32_t)[[t_window contentView] frame].size.height;
-	else
-		t_gp_height = m_object->getcard()->getrect().height;
-	
+    MCRectangle t_parent_view_rect;
+    t_parent_view_rect = MCRectangleGetTransformedBounds(m_object->getparent()->getrect(), m_object->getstack()->getviewtransform());
+    
+    // First compute rect of this object relative to parent
+    t_view_rect.y -= t_parent_view_rect.y;
+    t_view_rect.x -= t_parent_view_rect.x;
+    
+    // Now compute the (y-inverted) NSView rect
 	NSRect t_rect;
-	t_rect = NSMakeRect(t_view_rect.x, t_gp_height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
+	t_rect = NSMakeRect(t_view_rect.x, t_parent_view_rect.height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
 	
 	return t_rect;
 }
 
 void MCNativeLayerMac::doSetViewportGeometry(const MCRectangle &p_rect)
 {
+    doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
@@ -256,48 +257,13 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 
 //////////
 
-// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
-//                the top-level window view by keeping its bounds the same as its frame.
-//                This allows us to place contents in terms of window coords without having to
-//                adjust for the location of the group container.
 @interface com_runrev_livecode_MCContainerView: NSView
-
-- (void)setFrameOrigin:(NSPoint)newOrigin;
-- (void)setFrameSize:(NSSize)newSize;
 
 @end
 
 @compatibility_alias MCContainerView com_runrev_livecode_MCContainerView;
 
 @implementation com_runrev_livecode_MCContainerView
-
-- (void)setFrameOrigin:(NSPoint)newOrigin
-{
-    /* By default, NSViews don't adjust the positions or sizes of their
-     * contents when their geometry changes.  There is an autoresizing
-     * behaviour that we could turn on, but we don't because it doesn't have
-     * the properties that we require for a LiveCode group.  It's therefore
-     * necessary to manually nudge subviews around when the position of a
-     * container view is adjusted. */
-    NSPoint t_origin = [self frame].origin;
-    NSPoint t_delta = {newOrigin.x - t_origin.x, newOrigin.y - t_origin.y};
-
-    for (NSView *t_subview in [self subviews])
-    {
-        NSPoint t_suborigin = [t_subview frame].origin;
-        [t_subview setFrameOrigin: {t_suborigin.x + t_delta.x,
-                                    t_suborigin.y + t_delta.y}];
-    }
-
-	[super setFrameOrigin:newOrigin];
-	[self setBoundsOrigin:newOrigin];
-}
-
-- (void)setFrameSize:(NSSize)newSize
-{
-	[super setFrameSize:newSize];
-	[self setBoundsSize:newSize];
-}
 
 @end
 

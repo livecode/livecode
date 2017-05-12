@@ -1077,6 +1077,10 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
 
+    // TODO[19681]: This can be removed when all engine messages are sent with
+    // target.
+    bool t_target_was_valid = MCtargetptr.IsValid();
+    
 	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
@@ -1137,6 +1141,14 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 		if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
 			return t_stat;
 	}
+    
+    if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
+    {
+        if (t_target_was_valid && !MCtargetptr.IsValid())
+        {
+            t_main_stat = ES_NORMAL;
+        }
+    }
 
 	// Return the result of executing the main handler in the object
 	return t_main_stat;
@@ -2081,7 +2093,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
         MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
         if (MCtargetptr)
         {
-            MCObjectExecutionLock t_target_lock(this);
+            // MAY-DELETE: Handle the message - this (MCtargetptr) might be unbound
+            // after this call if it is deleted.
             t_stat = handle(p_type, p_message, p_params, this);
         }
         else
@@ -2163,8 +2176,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
                  * frontscript did not pass the message. */
                 if (t_self_handle)
                 {
-                    MCObjectExecutionLock t_self_lock(this);
-                    // PASS STATE FIX
+                    // MAY-DELETE: Handle the message - this might be unbound after
+                    // this call if it is deleted.
                     Exec_stat oldstat = stat;
                     stat = handle(HT_MESSAGE, mess, paramptr, this);
                     if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
