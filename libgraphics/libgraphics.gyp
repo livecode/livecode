@@ -41,6 +41,7 @@
 				'src/spread.cpp',
 				'src/utils.cpp',
 				'src/w32text.cpp',
+                'src/legacygradients.cpp',
 			],
 			
 			'conditions':
