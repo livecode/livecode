@@ -865,14 +865,24 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
     
 	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 	//   execution outwith a handler.
+	MCerrorlock++;
 	Symbol_type type;
+	MCScriptPoint tsp(sp);
 	if (sp.next(type) != PS_NORMAL || type != ST_ID
 	        || sp.findvar(sp.gettoken_nameref(), &(&destvar)) != PS_NORMAL
 			|| destvar -> parsearray(sp) != PS_NORMAL)
 	{
-		MCperror->add(PE_ARRAYOP_BADARRAY, sp);
-		return PS_ERROR;
-	}
+        sp = tsp;
+        MCerrorlock--;
+        destvar.Reset();
+        if (sp.parseexp(False, True, &(&destexpr)) != PS_NORMAL)
+        {
+            MCperror->add(PE_ARRAYOP_BADARRAY, sp);
+            return PS_ERROR;
+        }
+    }
+    else
+        MCerrorlock--;
 
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_ERROR
 	        && sp.skip_token(SP_FACTOR, TT_PREP, PT_BY) == PS_ERROR)
@@ -900,6 +910,31 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
             return PS_ERROR;
         }
     }
+    
+    if (sp.skip_token(SP_FACTOR, TT_PREP, PT_INTO) == PS_NORMAL)
+    {
+        if (!destexpr)
+        {
+            destexpr.Reset(destvar.Release());
+        }
+        
+        Symbol_type ttype;
+        if (sp.next(ttype) != PS_NORMAL || ttype != ST_ID
+                || sp.findvar(sp.gettoken_nameref(), &(&destvar)) != PS_NORMAL
+                || destvar -> parsearray(sp) != PS_NORMAL)
+        {
+            MCperror->add(PE_ARRAYOP_BADARRAY, sp);
+            return PS_ERROR;
+        }
+
+        is_into = true;
+    }
+    
+    if (!destvar && is_into)
+    {
+        MCperror->add(PE_ARRAYOP_DSTNOTCONTAINER, sp);
+        return PS_ERROR;
+    }
 
 	return PS_NORMAL;
 }
@@ -911,16 +946,26 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . EvalExprAsValueRef(*source, EE_ARRAYOP_BADEXP, &t_src))
         return;
     
-	MCContainer t_container;
-    if (!destvar -> evalcontainer(ctxt, t_container))
-	{
-        ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
-        return;
-	}
-
     MCAutoValueRef t_dst;
-    if (!t_container.eval(ctxt, &t_dst))
-        return;
+	MCContainer t_container;
+    if (!is_into)
+    {
+        if (!destvar -> evalcontainer(ctxt, t_container))
+        {
+            ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
+            return;
+        }
+
+        if (!t_container.eval(ctxt, &t_dst))
+            return;
+    }
+    else
+    {
+        if (!ctxt.EvalExprAsValueRef(*destexpr, EE_ARRAYOP_BADEXP, &t_dst))
+        {
+            return;
+        }
+    }
 
     MCAutoValueRef t_dst_value;
 	switch(op)
@@ -949,7 +994,12 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     }
 
 	if (!ctxt . HasError())
-        t_container.set(ctxt, *t_dst_value);
+    {
+        if (!is_into)
+            t_container.set(ctxt, *t_dst_value);
+        else
+            destvar->set(ctxt, *t_dst_value);
+    }
 }
 
 void MCSetOp::compile(MCSyntaxFactoryRef ctxt)

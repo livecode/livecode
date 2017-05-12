@@ -1770,10 +1770,10 @@ public:
     
 private:
 	MCAutoPointer<MCVarref> destvar;
+    MCAutoPointer<MCExpression> destexpr;
 	MCAutoPointer<MCExpression> source;
-    
-protected:
     Op op = kOpNone;
+    bool is_into = false;
     
 public:
     MCSetOp(Op p_op)
