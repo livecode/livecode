@@ -24,11 +24,16 @@
 static bool __check_conformance(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex_t p_value_count, uindex_t& x_offset)
 {
     if (x_offset + p_typeinfo -> record . field_count > p_value_count)
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("record does not conform to target type: not enough fields"));
     
     for(uindex_t i = 0; i < p_typeinfo -> record . field_count; i++)
         if (MCTypeInfoConforms(MCValueGetTypeInfo(p_values[x_offset + i]), p_typeinfo -> record . fields[i] . type))
-            return MCErrorThrowGeneric(nil);
+            return MCErrorThrowGenericWithMessage(MCSTR("record field %{field} does not conform to target type %{type}"),
+                                                  "field",
+                                                  p_values[x_offset + i],
+                                                  "type",
+                                                  p_typeinfo->record.fields[i].type,
+                                                  nullptr);
     
     return true;
 }

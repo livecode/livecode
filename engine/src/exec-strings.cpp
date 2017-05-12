@@ -1055,7 +1055,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                     /* UNCHECKED */ MCNumberParseUnicodeChars(t_hexa_num, 4, &t_number);
 
                     t_result_char = MCNumberFetchAsUnsignedInteger(*t_number);
-                    format += 2;
+                    format++;
 				}
 				break;
 			default:
