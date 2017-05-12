@@ -850,21 +850,24 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-
-MCSetOp::~MCSetOp()
-{
-	delete destvar;
-	delete source;
-}
-
 Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
+    
+    if (op == kOpSymmetricDifference)
+    {
+        if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_DIFFERENCE) == PS_ERROR)
+        {
+            MCperror->add(PE_ARRAYOP_NODIFFERENCE, sp);
+            return PS_ERROR;
+        }
+    }
+    
 	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 	//   execution outwith a handler.
 	Symbol_type type;
 	if (sp.next(type) != PS_NORMAL || type != ST_ID
-	        || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
+	        || sp.findvar(sp.gettoken_nameref(), &(&destvar)) != PS_NORMAL
 			|| destvar -> parsearray(sp) != PS_NORMAL)
 	{
 		MCperror->add(PE_ARRAYOP_BADARRAY, sp);
@@ -878,14 +881,25 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 
-	if (sp.parseexp(True, False, &source) != PS_NORMAL)
+	if (sp.parseexp(True, False, &(&source)) != PS_NORMAL)
 	{
 		MCperror->add(PE_ARRAYOP_BADEXP, sp);
 		return PS_ERROR;
 	}
     
     // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-    recursive = sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RECURSIVELY) == PS_NORMAL;
+    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RECURSIVELY) == PS_NORMAL)
+    {
+        if (op == kOpIntersect)
+            op = kOpIntersectRecursively;
+        else if (op == kOpUnion)
+            op = kOpUnionRecursively;
+        else
+        {
+            MCperror->add(PE_ARRAYOP_BADRECURSIVE, sp);
+            return PS_ERROR;
+        }
+    }
 
 	return PS_NORMAL;
 }
@@ -894,7 +908,7 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
 {
 	// ARRAYEVAL
     MCAutoValueRef t_src;
-    if (!ctxt . EvalExprAsValueRef(source, EE_ARRAYOP_BADEXP, &t_src))
+    if (!ctxt . EvalExprAsValueRef(*source, EE_ARRAYOP_BADEXP, &t_src))
         return;
     
 	MCContainer t_container;
@@ -909,21 +923,29 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
         return;
 
     MCAutoValueRef t_dst_value;
-	if (intersect)
+	switch(op)
     {
-        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-        if (recursive)
-            MCArraysExecIntersectRecursive(ctxt, *t_dst, *t_src, &t_dst_value);
-        else
+        case kOpIntersect:
             MCArraysExecIntersect(ctxt, *t_dst, *t_src, &t_dst_value);
-    }
-	else
-    {
-        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-        if (recursive)
-            MCArraysExecUnionRecursive(ctxt, *t_dst, *t_src, &t_dst_value);
-        else
+            break;
+        case kOpIntersectRecursively:
+            MCArraysExecIntersectRecursively(ctxt, *t_dst, *t_src, &t_dst_value);
+            break;
+        case kOpUnion:
             MCArraysExecUnion(ctxt, *t_dst, *t_src, &t_dst_value);
+            break;
+        case kOpUnionRecursively:
+            MCArraysExecUnionRecursively(ctxt, *t_dst, *t_src, &t_dst_value);
+            break;
+        case kOpDifference:
+            MCArraysExecDifference(ctxt, *t_dst, *t_src, &t_dst_value);
+            break;
+        case kOpSymmetricDifference:
+            MCArraysExecSymmetricDifference(ctxt, *t_dst, *t_src, &t_dst_value);
+            break;
+        case kOpNone:
+            MCUnreachable();
+            break;
     }
 
 	if (!ctxt . HasError())
@@ -938,19 +960,29 @@ void MCSetOp::compile(MCSyntaxFactoryRef ctxt)
 	destvar -> compile(ctxt);
 	source -> compile(ctxt);
 
-    if (intersect)
+	switch(op)
     {
-        if (recursive)
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecIntersectRecursiveMethodInfo, 0, 1, 0);
-        else
+        case kOpIntersect:
             MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecIntersectMethodInfo, 0, 1, 0);
-    }
-    else
-    {
-        if (recursive)
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecUnionRecursiveMethodInfo, 0, 1, 0);
-        else
+            break;
+        case kOpIntersectRecursively:
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecIntersectRecursivelyMethodInfo, 0, 1, 0);
+            break;
+        case kOpUnion:
             MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecUnionMethodInfo, 0, 1, 0);
+            break;
+        case kOpUnionRecursively:
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecUnionRecursivelyMethodInfo, 0, 1, 0);
+            break;
+        case kOpDifference:
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecDifferenceMethodInfo, 0, 1, 0);
+            break;
+        case kOpSymmetricDifference:
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSymmetricDifferenceMethodInfo, 0, 1, 0);
+            break;
+        case kOpNone:
+            MCUnreachable();
+            break;
     }
 
 	MCSyntaxFactoryEndStatement(ctxt);

@@ -309,6 +309,7 @@ LT command_table[] =
         {"define", TT_STATEMENT, S_DEFINE},
         {"dehilite", TT_STATEMENT, S_UNHILITE},
         {"delete", TT_STATEMENT, S_DELETE},
+        {"difference", TT_STATEMENT, S_DIFFERENCE},
 		// MW-2008-11-05: [[ Dispatch Command ]] 'dispatch' is a statement keyword
         {"disable", TT_STATEMENT, S_DISABLE},
 		{"dispatch", TT_STATEMENT, S_DISPATCH},
@@ -410,6 +411,7 @@ LT command_table[] =
         {"stop", TT_STATEMENT, S_STOP},
         {"subtract", TT_STATEMENT, S_SUBTRACT},
         {"switch", TT_STATEMENT, S_SWITCH},
+        {"symmetric", TT_STATEMENT, S_SYMMETRIC},
         {"then", TT_THEN, S_UNDEFINED},
         {"throw", TT_STATEMENT, S_THROW},
         {"toplevel", TT_STATEMENT, S_TOP_LEVEL},

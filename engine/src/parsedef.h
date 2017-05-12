@@ -2016,6 +2016,7 @@ enum Statements {
     S_DECRYPT,
     S_DEFINE,
     S_DELETE,
+    S_DIFFERENCE,
     S_DISABLE,
 	// MW-2008-11-05: [[ Dispatch Command ]] This is the 'dispatch' token's tag
 	S_DISPATCH,
@@ -2109,6 +2110,7 @@ enum Statements {
     S_START,
     S_STOP,
     S_SUBTRACT,
+    S_SYMMETRIC,
     S_SWITCH,
     S_THROW,
     S_TOP_LEVEL,

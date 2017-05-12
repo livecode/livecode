@@ -110,6 +110,81 @@ on TestNestedArrayRecursiveUnion
 end TestNestedArrayRecursiveUnion
 
 /*
+Semantics of array symmetric difference:
+
+function ArraySymmetricDifference(pLeft, pRight)
+	repeat for each key tKey in pRight
+		if tKey is not among the keys of pLeft then
+			put pRight[tKey] into pLeft[tKey]
+		else 
+			delete pLeft[tKey]
+		end if
+	end repeat
+	
+	return pLeft
+end ArraySymmetricDifference
+
+*/
+on TestArraySymmetricDifference
+	local tLeftNonArray, tRightNonArray
+
+	put "a" into tLeftNonArray
+	put "b" into tRightNonArray
+	symmetric difference tLeftNonArray with tRightNonArray
+	TestAssert "symmetric difference: left non-array, right non-array", tLeftNonArray is "a"
+	
+	local tRightArray
+	put "a" into tLeftNonArray
+	put "b" into tRightArray[1]
+	symmetric difference tLeftNonArray with tRightArray
+	TestAssert "symmetric difference: left non-array, right array", tLeftNonArray[1] is "b"
+	
+	local tLeftArray
+	put "a" into tLeftArray[1]
+	symmetric difference tLeftArray with tRightNonArray
+	TestAssert "symmetric difference: left array, right non-array", tLeftArray[1] is "a"
+	
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	symmetric difference tLeftArray with tRightArray
+	TestAssert "symmetric difference: left array, right array, same key", \
+			tLeftArray is not an array
+	
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	put "c" into tRightArray[2]
+	symmetric difference tLeftArray with tRightArray
+	TestAssert "symmetric difference: left array, right array, right superset of left", \
+			"1" is not among the keys of tLeftArray and tLeftArray[2] is "c"
+
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put "c" into tLeftArray[2]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	symmetric difference tLeftArray with tRightArray
+	TestAssert "symmetric difference: left array, right array, right subset of left", \
+			"1" is not among the keys of tLeftArray and tLeftArray[2] is "c"
+
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put "c" into tLeftArray[2]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	put "d" into tRightArray[3]
+	symmetric difference tLeftArray with tRightArray
+	TestAssert "symmetric difference: left array, right array, neither is subset of other", \
+			the number of elements in tLeftArray is 2 and \
+			"1" is not among the keys of tLeftArray and \
+			tLeftArray[2] is "c" and \
+			tLeftArray[3] is "d"
+end TestArraySymmetricDifference
+
+/*
 Semantics of array intersect:
 
 function ArrayIntersect(pLeft, pRight, pRecursive)
@@ -209,3 +284,75 @@ on TestNestedArrayRecursiveIntersect
 	TestAssert "recursive intersect: left value array, right value array, key present in left and right", tLeftArray4[1][2] is "b"
 	
 end TestNestedArrayRecursiveIntersect
+
+/*
+Semantics of array difference:
+
+function ArrayDifference(pLeft, pRight)
+	repeat for each key tKey in pLeft
+		if tKey is among the keys of pRight then
+			delete pLeft[tKey]
+		end if
+	end repeat
+	
+	return pLeft
+end ArrayDifference
+
+*/
+on TestArrayDifference
+	local tLeftNonArray, tRightNonArray
+
+	put "a" into tLeftNonArray
+	put "b" into tRightNonArray
+	difference tLeftNonArray with tRightNonArray
+	TestAssert "difference: left non-array, right non-array", tLeftNonArray is "a"
+	
+	local tRightArray
+	put "a" into tLeftNonArray
+	put "b" into tRightArray[1]
+	difference tLeftNonArray with tRightArray
+	TestAssert "difference: left non-array, right array", tLeftNonArray is "a"
+	
+	local tLeftArray
+	put "a" into tLeftArray[1]
+	difference tLeftArray with tRightNonArray
+	TestAssert "difference: left array, right non-array", tLeftArray[1] is "a"
+	
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	difference tLeftArray with tRightArray
+	TestAssert "difference: left array, right array, same key", \
+			tLeftArray is not an array
+	
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	put "c" into tRightArray[2]
+	difference tLeftArray with tRightArray
+	TestAssert "difference: left array, right array, right superset of left", \
+			tLeftArray is not an array
+
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put "c" into tLeftArray[2]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	difference tLeftArray with tRightArray
+	TestAssert "difference: left array, right array, right subset of left", \
+			the number of elements in tLeftArray is 1 and \
+			tLeftArray[2] is "c"
+
+	put empty into tLeftArray
+	put "a" into tLeftArray[1]
+	put "c" into tLeftArray[2]
+	put empty into tRightArray
+	put "b" into tRightArray[1]
+	put "d" into tRightArray[3]
+	difference tLeftArray with tRightArray
+	TestAssert "difference: left array, right array, neither is subset of other", \
+			the number of elements in tLeftArray is 1 and \
+			tLeftArray[2] is "c"
+end TestArrayDifference
