@@ -306,7 +306,10 @@ command revDoSaveAsStandalone pStack, pFolder
    if tHasDesktop then
       put the effective filename of stack pStack into tStackFileName
       if the mode of stack pStack > 0 then
-         put the long name of stack pStack & return after sResetA["Reopen"]
+         local tLongName
+         put the long name of stack pStack into tLongName
+         put stackIsInGlobalMessagePath(tLongName) into \ 
+               sResetA["Reopen"][tLongName]["Restore Message Path"]
       end if
       __SendSavingStandaloneMessage pStack
       
@@ -1009,6 +1012,8 @@ private command revCloseOpenStacks pStackFileList, pStack
          set the itemDel to comma
       end if
    end repeat
+   
+   local tLongName
    lock messages
    -- remove the stacks from memory and keep a note of them for later
    repeat for each line tStack in pStackFileList["full"]
@@ -1016,10 +1021,11 @@ private command revCloseOpenStacks pStackFileList, pStack
          put the subStacks of stack tStack into tSubList
          repeat for each line tSubStack in tSubList
             if the short name of stack tSubStack is among the lines of openstacks() then
-               put the long name of stack tSubStack & cr after sResetA["Reopen"]
+               put the long name of stack tSubStack into tLongName
                
                # OK-2008-11-10 : Bug 7382 - Remember if stacks were in message path
-               put stackIsInGlobalMessagePath(the long name of stack tSubStack) & return after sResetA["Restore Message Path"]
+               put stackIsInGlobalMessagePath(tLongName) into \ 
+                     sResetA["Reopen"][tLongName]["Restore Message Path"]
                
             end if
             #LG-2008-01-24
@@ -1028,12 +1034,15 @@ private command revCloseOpenStacks pStackFileList, pStack
             --delete stack tSubStack
             close stack tSubStack
          end repeat
+         
          if the short name of stack tStack is among the lines of openstacks() then
-            put the long name of stack tStack & cr after sResetA["Reopen"]
+            put the long name of stack tStack into tLongName
             
             # OK-2008-11-10 : Bug 7382 - Remember if stacks were in message path
-            put stackIsInGlobalMessagePath(the long name of stack tStack) & return after sResetA["Restore Message Path"]
+            put stackIsInGlobalMessagePath(tLongName) into \ 
+                  sResetA["Reopen"][tLongName]["Restore Message Path"]
          end if
+         
          close stack tStack
       end if
    end repeat
@@ -1591,7 +1600,7 @@ private command revCleanOutputFolders
 end revCleanOutputFolders
 
 private command revCleanBuildStacks
-   repeat for each line tLine in sResetA["Reopen"]
+   repeat for each key tLine in sResetA["Reopen"]
       if there is a stack tLine then
          if the mode of stack tLine is not 0 then
             repeat for each line tSub in the substacks of stack tLine
@@ -1634,12 +1643,10 @@ command revReset
       lock messages
       local tLineNumber
       put 0 into tLineNumber
-      repeat for each line tLine in sResetA["Reopen"]
-         add 1 to tLineNumber
-         go tLine
-         
+      repeat for each key tStack in sResetA["Reopen"]
+         go tStack
          # OK-2008-11-10 : Bug 7382 - Restores the stack's position in the message path if there was one
-         restoreStackToMessagePath tLine, line tLineNumber of sResetA["Restore Message Path"]
+         restoreStackToMessagePath tStack, sResetA["Reopen"][tStack]["Restore Message Path"]
       end repeat
       unlock messages
    end try
