@@ -149,6 +149,7 @@ void MCWin32RawClipboardCommon::Clear()
 	if (m_item)
 		m_item->Release();
 	m_item = NULL;
+	CreateNewItem();
 }
 
 bool MCWin32RawClipboardCommon::IsExternalData() const
@@ -660,10 +661,15 @@ MCStringRef MCWin32RawClipboardCommon::CopyTypeForAtom(UINT p_atom)
 
 bool MCWin32RawClipboard::IsOwned() const
 {
+	// Get the IDataObject that we are placing onto the clipboard
+	IDataObject* t_data_object = NULL;
+	if (m_item != NULL)
+		t_data_object = m_item->GetIDataObject();
+
 	// Check if our data object is the current clipboard data object
-	if (m_item == NULL)
-		return false;
-	return S_OK == OleIsCurrentClipboard(m_item->GetIDataObject());
+	if (t_data_object == NULL)
+		return true;
+	return S_OK == OleIsCurrentClipboard(t_data_object);
 }
 
 
@@ -694,7 +700,7 @@ bool MCWin32RawClipboard::PushUpdates()
 bool MCWin32RawClipboard::PullUpdates()
 {
 	// If we're still the owner of the clipboard, do nothing
-	if (IsOwned())
+	if (m_item != NULL && IsOwned())
 		return true;
 
 	// Release the current clipboard contents
