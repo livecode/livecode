@@ -1487,71 +1487,71 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
     
     // AL-2014-08-20: [[ ArrayElementRefParams ]] If the Varref refers to a container then
     //  resolving the path requires appending the new dimensions to the old path
-    
-	MCNameRef *t_path;
     MCSpan<MCNameRef> t_old_path = getpath(ctxt);
-    uindex_t t_path_length = t_old_path.size();
-    
-    uindex_t t_new_dimension_count;
-	t_new_dimension_count = dimensions + t_path_length;
+    MCAutoNameRefArray t_path;
+    if (!t_path . New(t_old_path.size()))
+        return false;
 
-    /* UNCHECKED */ MCMemoryNewArray(t_new_dimension_count, t_path, t_new_dimension_count);
-
-    for (uindex_t i = 0; i < t_path_length; i++)
+    for (uindex_t i = 0; i < t_old_path.size(); i++)
         t_path[i] = MCValueRetain(t_old_path[i]);
     
-    for(uindex_t i = 0; i < dimensions && !ctxt . HasError(); i++)
+    auto t_push_value_as_name = [&](MCValueRef p_value) {
+        MCNewAutoNameRef t_key;
+        if (!ctxt . ConvertToName(p_value, &t_key))
+        {
+            ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
+            return false;
+        }
+        
+        if (!t_path.Push(*t_key))
+            return false;
+        
+        MCValueRetain(*t_key);
+        return true;
+    };
+    
+    for(uindex_t i = 0; i < dimensions; i++)
 	{
         MCAutoValueRef t_value;
-        if (ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
+        if (!ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
+            return false;
+        
+        MCAutoArrayRef t_array;
+        if (ctxt . ConvertToArray(*t_value, &t_array)
+                && !MCArrayIsEmpty(*t_array))
         {
-            MCAutoArrayRef t_array;
-
-            if (ctxt . ConvertToArray(*t_value, &t_array)
-                    && !MCArrayIsEmpty(*t_array))
+            if (!MCArrayIsSequence(*t_array))
             {
-                if (!MCArrayIsSequence(*t_array))
-                    ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-                else
-				{
-					uindex_t t_length;
-                    t_length = MCArrayGetCount(*t_array);
-                    
-					/* UNCHECKED */ MCMemoryResizeArray(t_new_dimension_count + t_length, t_path, t_new_dimension_count);
-
-					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
-                    {
-                        MCValueRef t_value_fetched;
-                        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, t_index, t_value_fetched);
-
-                        if (!ctxt . ConvertToName(t_value_fetched, t_path[t_path_length++]))
-                        {
-                            ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-							break;
-						}
-					}
-				}
-			}
-            else if (!ctxt . ConvertToName(*t_value, t_path[t_path_length++]))
                 ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-		}
+                return false;
+            }
+
+            uindex_t t_length = MCArrayGetCount(*t_array);
+            for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
+            {
+                MCValueRef t_value_fetched;
+                if (!MCArrayFetchValueAtIndex(*t_array, t_index, t_value_fetched))
+                    return false;
+
+                if (!t_push_value_as_name(t_value_fetched))
+                    return false;
+            }
+        }
+        else
+        {
+            if (!t_push_value_as_name(*t_value))
+                return false;
+        }
 	}
 
-    if (!ctxt . HasError())
-    {
-        if (isparam)
-            return MCContainer::copywithpath(fetchcontainer(ctxt), t_path, t_path_length, r_container);
-        else
-            return MCContainer::createwithpath(fetchvar(ctxt), t_path, t_path_length, r_container);
-    }
-	else
-	{
-		for(uindex_t i = 0; i < t_path_length; i++)
-			MCValueRelease(t_path[i]);
-        MCMemoryDeleteArray(t_path);
-
-        return false;
-    }
+    MCNameRef *t_path_values = nullptr;
+    uindex_t t_count = 0;
+    t_path . Take(t_path_values, t_count);
+    
+    if (isparam)
+        return MCContainer::copywithpath(fetchcontainer(ctxt), t_path_values, t_count, r_container);
+    else
+        return MCContainer::createwithpath(fetchvar(ctxt), t_path_values, t_count, r_container);
 }
 
 MCSpan<MCNameRef> MCVarref::getpath(MCExecContext& ctxt)
