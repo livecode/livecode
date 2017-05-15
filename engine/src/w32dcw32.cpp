@@ -1108,7 +1108,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (curinfo->live && !pms->isgrabbed() && LOWORD(lParam) != HTCLIENT)
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		MCmousestackptr = MCdispatcher->findstackd(dw);
-		if (!MCmousestackptr)
+		if (MCmousestackptr)
 		{
 			MCmousestackptr->resetcursor(True);
 			if (pms->getmousetimer() == 0)

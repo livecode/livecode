@@ -190,84 +190,95 @@ void MCGGradientRelease(MCGGradientRef self)
 
 bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, sk_sp<SkShader>& r_shader)
 {
-    // Gradient mode
-    SkShader::TileMode t_tile_mode = SkShader::kClamp_TileMode;
-    if (self->wrap)
-        t_tile_mode = SkShader::kRepeat_TileMode;
-    
-    // Convert the stops into the form Skia expects.
-    // Because it implements repeats and mirroring differently, we need to synthesize extra stops for it
-    uindex_t t_count = self->ramp_length;
-    uindex_t t_repeats = MCMax(1, self->repeats);
-    uindex_t t_length = t_count * t_repeats;
-    MCGFloat t_scale = MCGFloat(1)/t_repeats;
-    MCAutoArray<SkColor> t_colors;
-    MCAutoArray<SkScalar> t_stops;
-    if (!t_colors.Extend(t_length) || !t_stops.Extend(t_length))
-        return false;
-    for (uindex_t i = 0; i < t_repeats; i++)
-    {
-        // Offset added to stops
-        MCGFloat t_offset = t_scale * i;
-        
-        // If mirrored, odd-numbered repeats need to be handled specially
-        if (self->mirror && (i % 2))
-        {
-            // Copy the colours and stops in reverse order
-            for (uindex_t j = 0; j < t_count; j++)
-            {
-                t_colors[i * t_count + j] = self->colors[t_count - j - 1];
-                t_stops[i * t_count + j] = t_offset + t_scale * (1 - self->stops[t_count - j - 1]);
-            }
-        }
-        else
-        {
-            // Copy the colours and stops in original order
-            for (uindex_t j = 0; j < t_count; j++)
-            {
-                t_colors[i * t_count + j] = self->colors[j];
-                t_stops[i * t_count + j] = t_offset + t_scale * self->stops[j];
-            }
-        }
-    }
-    
-	// What kind of shader is being created?
     sk_sp<SkShader> t_shader;
+    
     switch (self->function)
     {
-        case kMCGGradientFunctionLinear:
-        {
-            // The end points are always (0,0) and (1,0)
-            SkPoint t_points[2] = {{0,0}, {1,0}};
-            t_shader = SkGradientShader::MakeLinear(t_points, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
-            break;
-        }
-            
-        case kMCGGradientFunctionRadial:
-        {
-            // The gradient is always from (0,0) with a unit radius
-            t_shader = SkGradientShader::MakeRadial({0,0}, 1, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
-            break;
-        }
-            
-        case kMCGGradientFunctionSweep:
-        {
-            // The gradient is always centered on (0, 0)
-            t_shader = SkGradientShader::MakeSweep(0, 0, t_colors.Ptr(), t_stops.Ptr(), t_length, 0, &self->transform);
-            break;
-        }
-        
-        // The following gradient types are no longer supported
+        // Use legacy implementation for any gradient typs not supported by skia
         case kMCGLegacyGradientDiamond:
         case kMCGLegacyGradientSpiral:
         case kMCGLegacyGradientXY:
         case kMCGLegacyGradientSqrtXY:
-            return false;
+            t_shader = sk_sp<SkShader>(new (nothrow) MCGLegacyGradientShader(self, p_clip));
+            break;
+
+        default:
+        {
+            // Gradient mode
+            SkShader::TileMode t_tile_mode = SkShader::kClamp_TileMode;
+            if (self->wrap)
+                t_tile_mode = SkShader::kRepeat_TileMode;
+
+            // Convert the stops into the form Skia expects.
+            // Because it implements repeats and mirroring differently, we need to synthesize extra stops for it
+            uindex_t t_count = self->ramp_length;
+            uindex_t t_repeats = MCMax(1, self->repeats);
+            uindex_t t_length = t_count * t_repeats;
+            MCGFloat t_scale = MCGFloat(1)/t_repeats;
+            MCAutoArray<SkColor> t_colors;
+            MCAutoArray<SkScalar> t_stops;
+            if (!t_colors.Extend(t_length) || !t_stops.Extend(t_length))
+                return false;
+            for (uindex_t i = 0; i < t_repeats; i++)
+            {
+                // Offset added to stops
+                MCGFloat t_offset = t_scale * i;
+
+                // If mirrored, odd-numbered repeats need to be handled specially
+                if (self->mirror && (i % 2))
+                {
+                    // Copy the colours and stops in reverse order
+                    for (uindex_t j = 0; j < t_count; j++)
+                    {
+                        t_colors[i * t_count + j] = self->colors[t_count - j - 1];
+                        t_stops[i * t_count + j] = t_offset + t_scale * (1 - self->stops[t_count - j - 1]);
+                    }
+                }
+                else
+                {
+                    // Copy the colours and stops in original order
+                    for (uindex_t j = 0; j < t_count; j++)
+                    {
+                        t_colors[i * t_count + j] = self->colors[j];
+                        t_stops[i * t_count + j] = t_offset + t_scale * self->stops[j];
+                    }
+                }
+            }
+
+            // What kind of shader is being created?
+            switch (self->function)
+            {
+                case kMCGGradientFunctionLinear:
+                {
+                    // The end points are always (0,0) and (1,0)
+                    SkPoint t_points[2] = {{0,0}, {1,0}};
+                    t_shader = SkGradientShader::MakeLinear(t_points, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
+                    break;
+                }
+
+                case kMCGGradientFunctionRadial:
+                {
+                    // The gradient is always from (0,0) with a unit radius
+                    t_shader = SkGradientShader::MakeRadial({0,0}, 1, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
+                    break;
+                }
+
+                case kMCGGradientFunctionSweep:
+                {
+                    // The gradient is always centered on (0, 0)
+                    t_shader = SkGradientShader::MakeSweep(0, 0, t_colors.Ptr(), t_stops.Ptr(), t_length, 0, &self->transform);
+                    break;
+                }
+
+                default:
+                    return false;
+            }
+        }
     }
-    
+
     if (!t_shader)
         return false;
-    
+
     r_shader = t_shader;
     return true;
 }

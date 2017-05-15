@@ -292,7 +292,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
             MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
             if (MCtargetptr)
             {
-                MCObjectExecutionLock t_self_lock(this);
+                // MAY-DELETE: Handle the message - this/MCtargetptr might be unbound after
+                // this call if it is deleted.
                 t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
             }
             else
@@ -396,7 +397,8 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
             MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
             if (MCtargetptr)
             {
-                MCObjectExecutionLock t_self_lock(this);
+                // MAY-DELETE: Handle the message - this/MCtargetptr might be unbound after
+                // this call if it is deleted.
                 t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
             }
             else

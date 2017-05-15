@@ -470,7 +470,10 @@ bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 	MCAssert(MCTypeInfoIsNamed(self));
 	__MCAssertIsTypeInfo(p_target);
     if (self -> named . typeinfo != nil)
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGenericWithMessage(MCSTR("Can't bind typeinfo %{name}: already bound to %{self}"),
+                                              "name", p_target->named.name,
+                                              "self", self->named.name,
+                                              nullptr);
     
     self -> named . typeinfo = MCValueRetain(p_target);
     
@@ -483,7 +486,7 @@ bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 	MCAssert(MCTypeInfoIsNamed(self));
 
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("Can't unbind typeinfo: not bound"));
     
     MCValueRelease(self -> named . typeinfo);
     self -> named . typeinfo = nil;
@@ -497,7 +500,7 @@ bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
 	MCAssert(MCTypeInfoIsNamed(self));
 
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("Can't resolve typeinfo: not bound"));
     
     r_bound_type = self -> named . typeinfo;
     

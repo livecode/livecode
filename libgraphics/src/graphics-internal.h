@@ -466,4 +466,44 @@ struct __MCGRegion
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct MCGradientAffineCombiner MCGradientCombiner_t;
+
+class MCGLegacyGradientShader : public SkShader
+{
+public:
+    MCGLegacyGradientShader(MCGGradientRef gradient_ref, MCGRectangle clip);
+    ~MCGLegacyGradientShader();
+
+    class MCGLegacyGradientShaderContext : public SkShader::Context
+    {
+    public:
+        MCGLegacyGradientShaderContext(const MCGLegacyGradientShader& shader, const ContextRec& rec, MCGGradientRef gradient_ref, MCGRectangle clip);
+        ~MCGLegacyGradientShaderContext();
+
+        virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) override;
+
+    private:
+        int32_t					m_y;
+        uint8_t					*m_mask;
+        MCGradientCombiner_t	*m_gradient_combiner;
+
+        typedef SkShader::Context INHERITED;
+    };
+
+    SK_TO_STRING_OVERRIDE()
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(MCGLegacyGradientShader)
+
+protected:
+    size_t onContextSize(const ContextRec&) const override;
+    Context* onCreateContext(const ContextRec&, void* storage) const override;
+
+private:
+    MCGGradientRef			m_gradient_ref;
+    MCGRectangle			m_clip;
+
+    typedef SkShader::Context INHERITED;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

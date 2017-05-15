@@ -1674,7 +1674,7 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	if (!MCCStringIsEmpty(t_new_handlers))
 	{
 		if (t_success)
-			t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
+			t_success = MCCStringSplit(t_new_handlers, '\n', t_handlers, t_handler_count);
 		
 		if (t_success)
 			t_success = t_handler_list->SetSize(t_handler_count);

@@ -42,6 +42,7 @@
 				'src/utils.cpp',
 				'src/w32text.cpp',
 				'src/SkStippleMaskFilter.cpp',
+				'src/legacygradients.cpp',
 			],
 			
 			'conditions':

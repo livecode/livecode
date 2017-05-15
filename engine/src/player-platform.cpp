@@ -2345,8 +2345,14 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					MCGImageCreateWithRaster(t_raster, t_image.image);
 				else
 					MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+				
 				if (t_image . image != nil)
+				{
+					// IM-2017-05-11: [[ Bug 18939 ]] Set x/y scales for image, which may be scaled.
+					t_image.x_scale = MCGFloat(MCGImageGetWidth(t_image.image)) / MCGFloat(trect.width);
+					t_image.y_scale = MCGFloat(MCGImageGetHeight(t_image.image)) / MCGFloat(trect.height);
 					dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+				}
 				
 				MCGImageRelease(t_image.image);
 				MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);

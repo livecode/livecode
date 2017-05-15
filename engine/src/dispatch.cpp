@@ -246,6 +246,10 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	if ((stat == ES_NOT_HANDLED || stat == ES_PASS) && m_externals != nil)
 	{
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+    
 		Exec_stat oldstat = stat;
 		stat = m_externals -> Handle(this, htype, mess, params);
 
@@ -256,6 +260,15 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
 	}
 
 //#ifdef TARGET_SUBPLATFORM_IPHONE
@@ -283,8 +296,21 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
     if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
     {
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+        
         extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
         stat = MCEngineHandleLibraryMessage(mess, params);
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
     }
     
 	if (MCmessagemessages && stat != ES_PASS && MCtargetptr)
