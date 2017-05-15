@@ -25,7 +25,7 @@
 	
 	'ldflags':
 	[
-		'fuse-ld=bfd',
+		'-fuse-ld=bfd',
 	],
 	
 	'target_conditions':
