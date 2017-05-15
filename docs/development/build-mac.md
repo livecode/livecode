@@ -26,7 +26,8 @@ Download and install each of the following versions of Xcode, placing their app 
 
 | Xcode version | App path                                |
 | ------------- | --------------------------------------- |
-| 8.0           | /Applications/Xcode-Dev/Xcode_8_0.app   |
+| 8.3           | /Applications/Xcode-Dev/Xcode_8_3.app   |
+| 8.2           | /Applications/Xcode-Dev/Xcode_8_2.app   |
 | 7.2.1         | /Applications/Xcode-Dev/Xcode_7_2_1.app |
 | 6.2 [1]       | /Applications/Xcode-Dev/Xcode_6_2.app   |
 
