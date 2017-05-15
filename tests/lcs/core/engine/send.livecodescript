@@ -55,3 +55,12 @@ on TestSendToSubobj
 
 	TestAssert "message canceled on delete", not MessageExists(tMsgId)
 end TestSendToSubobj
+
+on __SendError
+	send "--execute this" & return & "put the name of stack nonexistent"
+end __SendError
+
+on TestSendError
+	TestAssertThrow "send throws correct error", __SendError, \ 
+		the long id of me, 91
+end TestSendError
