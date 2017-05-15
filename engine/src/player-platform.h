@@ -86,8 +86,6 @@ private:
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
 
-    bool m_should_recreate : 1;
-
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
 
