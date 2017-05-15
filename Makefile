@@ -58,7 +58,7 @@ all: all-$(guess_platform)
 check: check-$(guess_platform)
 
 # [[ MDW-2017-05-09 ]] feature_clean_target
-clean:
+clean-linux:
 	rm -rf linux-*-bin
 	rm -rf build-linux-*
 	rm -rf prebuilt/fetched
