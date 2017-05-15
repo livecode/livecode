@@ -149,7 +149,6 @@ void MCWin32RawClipboardCommon::Clear()
 	if (m_item)
 		m_item->Release();
 	m_item = NULL;
-	CreateNewItem();
 }
 
 bool MCWin32RawClipboardCommon::IsExternalData() const
