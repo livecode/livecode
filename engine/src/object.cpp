@@ -2901,7 +2901,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr)
+Exec_stat MCObject::domess(MCStringRef sptr, bool p_ignore_errors)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
@@ -2931,8 +2931,12 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     swap(MCtargetptr, oldtargetptr);
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
-
-	return ES_ERROR;
+    else
+    {
+        if (p_ignore_errors)
+            MCeerror->clear(); // clear out bogus error messages
+        return ES_ERROR;
+    }
 }
 
 void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)

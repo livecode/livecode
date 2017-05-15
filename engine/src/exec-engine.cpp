@@ -1448,7 +1448,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
         else
             tptr = MCNameGetString(*t_message);
         
-        if (optr->domess(*tptr) == ES_ERROR)
+        if (optr->domess(*tptr, false) == ES_ERROR)
             ctxt . Throw();
 	}
 	else if (stat == ES_PASS)
