@@ -50,7 +50,7 @@ However, if you wish to compile something more specific than "everything", you'l
 The x86-64 and x86 Linux build environments used for compiling
 LiveCode are based on Debian Wheezy.
 
-The following additional packages are installed:
+The following additional packages should be installed before building:
 
 * build-essential
 * automake
@@ -73,3 +73,13 @@ The following additional packages are installed:
 * pkg-config
 * libgtk2.0-dev
 * zip
+
+
+Use 
+
+    sudo apt-get install build-essential automake libtool git curl flex &&
+    sudo apt-get install bison libx11-dev libxext-dev libxrender-dev libxft-dev &&
+    sudo apt-get install libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev && 
+    sudo apt-get install libpopt-dev libesd0-dev liblcms2-dev pkg-config libgtk2.0-dev zip
+
+or equivalent in order to assure all the necessary dependencies are installed on your machine.
