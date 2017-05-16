@@ -190,6 +190,16 @@ on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode, pParam
     TestAssert pDescription, pErrorCode is item 1 of line 1 of tError
 end TestAssertThrow
 
+on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
+  local tError
+  try
+    dispatch pHandler to pTarget with pParam
+  catch tError
+  end try
+
+  TestAssert pDescription, tError is empty 
+end TestAssertDoesNotThrow
+
 on ErrorDialog executionError, parseError
    write executionError & return to stderr
    quit 1
