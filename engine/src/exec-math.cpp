@@ -528,7 +528,7 @@ void MCMathEvalRandom(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 	p_in = floor(p_in + 0.5);
 	// MW-2007-07-03: [[ Bug 4506 ]] - Large integers result in negative numbers
 	// being generated.
-	if (p_in < 1.0 || p_in >= 4294967296.0)
+	if (p_in < 1.0 || p_in >= DBL_INT_MAX)
 	{
 		ctxt.LegacyThrow(EE_RANDOM_BADSOURCE);
 		return;

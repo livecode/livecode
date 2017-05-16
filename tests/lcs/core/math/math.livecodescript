@@ -918,3 +918,37 @@ repeat with i = 1 to 10
 end repeat
 
 end TestMathArrayWrapArray
+
+on _RandomMaxLimitTestThrows
+
+	local tN1, tN2
+
+	put 2^53 into tN1
+	
+	local rN1
+
+	put rand(tN1) into rN1
+	
+end _RandomMaxLimitTestThrows
+
+
+
+on _RandomMaxLimitTestNoThrow
+
+	local tN1, tN2
+
+	put 2^53 - 1 into tN1
+
+	put rand(tN1) into rN1
+
+end _RandomMaxLimitTestNoThrow
+
+on TestRandomGenLimits
+
+	TestAssertThrow "checks if bad input to random throws exception" , "_RandomMaxLimitTestThrows" , \
+		the long id of me , 469
+
+	TestAssertNoThrow "checks if correct input to random doesn't throw exception" \ 
+		, "_RandomMaxLimitTestNoThrow" , the long id of me
+
+end TestRandomGenLimits
