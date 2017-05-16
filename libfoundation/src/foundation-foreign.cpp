@@ -742,8 +742,8 @@ struct DoExport<
         // First check that the value is within the contiguous integer range
         // of doubles. If that succeeds, then check it fits within the target
         // integer type.
-        if (t_value < double(-(1LL << std::numeric_limits<double>::digits)) ||
-            t_value > double(1LL << std::numeric_limits<double>::digits) ||
+        if (t_value < double(DBL_INT_MIN) ||
+            t_value > double(DBL_INT_MAX) ||
             t_value < double(std::numeric_limits<typename IntType::c_type>::min()) ||
             t_value > double(std::numeric_limits<typename IntType::c_type>::max()))
         {
@@ -767,8 +767,8 @@ struct DoImport<
         {
             return MCNumberCreateWithInteger(integer_t(p_value), r_boxed_value);
         }
-        else if (p_value >= -(1LL << std::numeric_limits<double>::digits) &&
-                 p_value <= (1LL << std::numeric_limits<double>::digits))
+        else if (p_value >= DBL_INT_MIN &&
+                 p_value <= (DBL_INT_MAX))
         {
             return MCNumberCreateWithReal(double(p_value), r_boxed_value);
         }
