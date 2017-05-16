@@ -60,6 +60,8 @@ before_install:
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
       sudo apt-get -qq update
       sudo apt-get -qq install g++-4.9    
+      export CXX="g++-4.9"
+      export CC="gcc-4.9"
     fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
@@ -76,8 +78,6 @@ script: |
       CHECK_COMMAND=xvfb-run
       LICENSE_DIR="${HOME}/.runrev/licenses"
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
-      export CXX="g++-4.9"
-      export CC="gcc-4.9"
       ;;
     osx)
       BUILD_PLATFORM=mac
@@ -107,6 +107,7 @@ addons:
       name: "livecode/livecode"
       description: "Build submitted via Travis CI"
     notification_email: engineteam@livecode.com
+    build_command_prepend: "cov-configure --comptype gcc --compiler gcc-4.9 --template"
     build_command: "make all-linux"
     branch_pattern: coverity_scan
 
