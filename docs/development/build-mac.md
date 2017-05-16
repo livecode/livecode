@@ -57,7 +57,7 @@ save disk space), you can run:
 
 If you have installed the `Xcode.app` to a non-standard location, or you wish to switch between multiple versions of Xcode, you will need to set the `XCODEBUILD` environment variable.  For example:
 
-    export XCODEBUILD=/Applications/Xcode-Dev/Xcode.app
+    export XCODEBUILD=/Applications/Xcode-Dev/Xcode.app/Contents/Developer/usr/bin/xcodebuild
 
 ### Generating Xcode project files
 
