@@ -49,6 +49,7 @@ matrix:
 
 # Install any required tools
 before_install:
+  - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
       rvm --default use 2.2.1
