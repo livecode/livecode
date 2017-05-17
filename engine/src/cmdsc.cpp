@@ -660,7 +660,7 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                     uint4 parid;
 
                     if (!container->getobj(ctxt, parent, parid, True)
-                            || parent->gettype() != CT_GROUP)
+                            || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD) )
                     {
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;

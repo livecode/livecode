@@ -32,6 +32,7 @@ on TestCreateControlInCard
 	create stack "Temp"
 
 	create card "Other"
+	create card "Other2"
 
 	create button "Test" in card "Other"
 
@@ -40,10 +41,10 @@ end TestCreateControlInCard
 
 on TestCreateControlInStack	
 	create stack "Temp"
+	create stack "Temp2"
 
 	create card "Other" in stack "Temp"
 
-	put there is a card "Other"
 
 	TestAssert "test if the card was created in the correct stack" , there is a card "Other" of stack "Temp"
 end TestCreateControlInStack

@@ -3299,7 +3299,7 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, MCSt
     ctxt . SetItToValue(*t_id);
 }
 
-MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type, MCGroup *&r_parent)
+MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type, MCObject *&r_parent)
 {
 	switch (p_type)
 	{
@@ -3328,9 +3328,9 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 	}
 }
 
-void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCGroup *p_container, bool p_force_invisible)
+void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCObject *p_container, bool p_force_invisible)
 {
-	if (MCdefaultstackptr->islocked())
+    if (MCdefaultstackptr->islocked())
 	{
 		ctxt . LegacyThrow(EE_CREATE_LOCKED);
 		return;
