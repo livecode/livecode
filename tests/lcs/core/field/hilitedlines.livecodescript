@@ -69,3 +69,13 @@ on TestNonContiguousSelection
    set the hilitedLines of field kFieldName to empty
    TestAssert "selectedText of a list field without selected lines", the hilitedLines of field kFieldName is empty
 end TestNonContiguousSelection
+
+on TestCanSelectTextOf65535Length
+    createField
+
+    put repeatedString("abcde",13107) into kFieldName
+
+    select chars 1 to -1 of kFieldName
+
+    TestAssert true    
+end TestCanSelectTextOf65535Length

@@ -946,7 +946,7 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 		sethilitedlines(NULL, 0);
 		drect = rect;
 	}
-	uint2 l;
+	findex_t l;
 	do
 	{
 		l = pgptr->gettextlengthcr();
