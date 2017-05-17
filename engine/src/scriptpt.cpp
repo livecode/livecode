@@ -1744,10 +1744,10 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					{
 						delete newfact;
 						*this = thesp;
-						if (MCexplicitvariables)
+						if (doingthe || MCexplicitvariables)
 						{
 							MCerrorlock--;
-							MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
+							MCperror->add(PE_PROPERTY_NOTOF, *this);
 							return PS_ERROR;
 						}
 						newfact = new (nothrow) MCLiteral(gettoken_nameref());

@@ -1437,8 +1437,8 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
         else
             tptr = MCNameGetString(*t_message);
         
-        if ((stat = optr->domess(*tptr)) == ES_ERROR)
-            ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
+        if (optr->domess(*tptr, nil, false) == ES_ERROR)
+            ctxt . Throw();
 	}
 	else if (stat == ES_PASS)
 		stat = ES_NORMAL;
