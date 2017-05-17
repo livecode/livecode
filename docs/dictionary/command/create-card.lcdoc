@@ -47,7 +47,7 @@ stack>.
 
 The new card is placed after the current card. If <stackName>
 is specified, it will be placed in <stackName>, otherwise 
-in defualtStack When the <card> is created, you go to the new <card>.
+in the <defaultStack>. When the <card> is created, you go to the new <card>.
 
 Any groups on the current card whose backgroundBehavior is set to true
 will be placed on the newly-created <card> automatically.

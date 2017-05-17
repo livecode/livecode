@@ -3330,7 +3330,10 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 
 void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCObject *p_container, bool p_force_invisible)
 {
-    if (MCdefaultstackptr->islocked())
+    
+    MCStack *t_current_stack = p_container == nullptr ? MCdefaultstackptr : p_container->getstack();
+    
+    if (t_current_stack->islocked())
 	{
 		ctxt . LegacyThrow(EE_CREATE_LOCKED);
 		return;
@@ -3367,9 +3370,12 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	ctxt . SetItToValue(*t_id);
 }
 
-void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCGroup* p_container, bool p_force_invisible)
+void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCObject* p_container, bool p_force_invisible)
 {
-    if (MCdefaultstackptr->islocked())
+    
+    MCStack *t_current_stack = p_container == nullptr ? MCdefaultstackptr : p_container->getstack();
+    
+    if (t_current_stack->islocked())
     {
         ctxt . LegacyThrow(EE_CREATE_LOCKED);
         return;
