@@ -73,9 +73,9 @@ end TestNonContiguousSelection
 on TestCanSelectTextOf65535Length
     createField
 
-    put repeatedString("abcde",13107) into kFieldName
+    put format("%065535d",0) into field kFieldName
 
-    select chars 1 to -1 of kFieldName
+    select char 1 to -1 of field kFieldName
 
-    TestAssert true    
+    TestAssert "no crash implies correctly selected text" , true    
 end TestCanSelectTextOf65535Length
