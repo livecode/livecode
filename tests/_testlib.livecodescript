@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
 	insert the script of me into back
+	set the lockErrorDialogs to true
 end revLoadLibrary
 
 ----------------------------------------------------------------
@@ -200,8 +201,10 @@ on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
   TestAssert pDescription, tError is empty 
 end TestAssertDoesNotThrow
 
-on ErrorDialog executionError, parseError
-   write executionError & return to stderr
+on ErrorDialog pError
+   TestAssert "test runs without error - " && line 1 of pError \
+      , false
+   TestDiagnostic pError
    quit 1
 end ErrorDialog
 
