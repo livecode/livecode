@@ -4,7 +4,7 @@ Synonyms: new
 
 Type: command
 
-Syntax: create [invisible] <objectType> [<objectName>] [in <group>]
+Syntax: create [invisible] <objectType> [<objectName>] [in {group|card}]
 
 Summary:
 Creates a new object on the current card.
@@ -20,6 +20,9 @@ create button "Click Me"
 
 Example:
 create invisible field in group 1
+
+Example:
+create button "Click me" in card "Card1"
 
 Parameters:
 objectType (enum):
@@ -40,8 +43,13 @@ group:
 A reference or and expression that evaluates to a reference to a
 group on the current card. If you specify a group, the new object is a 
 member of the group, and exists on each card that has the group. If you 
-don't specify a group, the object is created on the current card and 
-appears only on that card.
+don't specify neither a group nor a card, the object is created on the 
+current card and appears only on that card.
+
+card:
+A reference or and expression that evaluates to a reference to a
+card. If you specify a card, the control will be a member of that
+card, otherwise it will be a member of the current card.
 
 It:
 The <create> command places the ID property of the newly created
@@ -88,6 +96,11 @@ not in standalone applications.
     set the defaultStack to "My Stack"
     create button "My Button"
 
+or create the control in a card attached to the specific stack:
+
+    create stack "Specific stack"
+    create card "Example Card" in stack "Specific stack"
+    create button "My Button" in card "Example Card"
 
 References: create stack (command), create card (command),
 templateButton (keyword), lockMessages (property),
