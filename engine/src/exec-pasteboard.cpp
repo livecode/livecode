@@ -1261,7 +1261,7 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
     // clipboard under the appropriate type.
     //
     // If either of these is missing, do nothing but don't throw an error.
-	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
+	if (t_type != TRANSFER_TYPE_NULL && p_data != nil && !MCValueIsEmpty(p_data))
 	{
 		switch (t_type)
 		{

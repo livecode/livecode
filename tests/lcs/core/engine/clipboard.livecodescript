@@ -219,3 +219,14 @@ on TestClipboardTextToStyled
    TestAssert "plain text should remain plain in htmltext", \
       the clipboardData["html"] is "<p>Hello World</p>"
 end TestClipboardTextToStyled
+
+on _SetToEmpty 
+
+   set clipboardData["image"] to empty
+
+end _SetToEmpty
+
+# This is a test for Bug 17416
+on TestCanSetClipboardImageToEmpty
+   TestAssertDoesNotThrow "Can set clipboardData image to empty", "_SetToEmpty", the long id of me
+end TestCanSetClipboardImageToEmpty
