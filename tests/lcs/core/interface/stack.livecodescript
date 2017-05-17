@@ -28,3 +28,22 @@ on TestStackNameProp
 	TestAssert "Variable used to set stack name is unmodified", tVar is "Test 1,2,3"
 end TestStackNameProp
 
+on TestCreateControlInCard	
+	create stack "Temp"
+
+	create card "Other"
+
+	create button "Test" in card "Other"
+
+	TestAssert "test if the button was created in the correct card" , there is a button "Test" of card "Other"
+end TestCreateControlInCard
+
+on TestCreateControlInStack	
+	create stack "Temp"
+
+	create card "Other" in stack "Temp"
+
+	put there is a card "Other"
+
+	TestAssert "test if the card was created in the correct stack" , there is a card "Other" of stack "Temp"
+end TestCreateControlInStack

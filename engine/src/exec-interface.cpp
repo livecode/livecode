@@ -226,7 +226,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, PopupStack, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, PopupStackByName, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, CreateStack, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, CreateStackWithGroup, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, CreateCard, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, CreateCard, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, CreateControl, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, Clone, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, Find, 3)
@@ -3272,23 +3272,31 @@ void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_t
 	MCInterfaceExecCreateStack(ctxt, p_group_to_copy, p_new_name, p_force_invisible, true);
 }
 
-void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool p_force_invisible)
+
+void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, MCStack *p_parent, bool p_force_invisible)
 {
-	if (MCdefaultstackptr->islocked())
-	{
-		ctxt . LegacyThrow(EE_CREATE_LOCKED);
-		return;
-	}
-
-	MCdefaultstackptr->stopedit();
-	MCObject *t_object = MCtemplatecard->clone(True, False);
-
-	if (p_new_name != nil)
-		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
-	
-	MCAutoValueRef t_id;
-	t_object->names(P_LONG_ID, &t_id);
-	ctxt . SetItToValue(*t_id);
+    if (p_parent == nullptr)
+    {
+        p_parent = MCdefaultstackptr;
+    }
+    
+    if (p_parent->islocked())
+    {
+    		ctxt . LegacyThrow(EE_CREATE_LOCKED);
+    		return;
+    }
+    
+    p_parent->stopedit();
+    MCObject *t_object = MCtemplatecard->clone(True, False,p_parent);
+    
+    if (p_new_name != nil)
+    {
+     	t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+    }
+    
+    MCAutoValueRef t_id;
+    t_object->names(P_LONG_ID, &t_id);
+    ctxt . SetItToValue(*t_id);
 }
 
 MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type, MCGroup *&r_parent)

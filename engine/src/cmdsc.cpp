@@ -614,7 +614,20 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
             }
                 break;
             case CT_CARD:
-                MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
+            {
+                MCObject *parent = nil;
+                if (container != nil)
+                {
+                    uint32_t parid;
+                  
+                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_STACK)
+                    {
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateCard(ctxt, *t_new_name, static_cast<MCStack *>(parent), visible==False);
+            }
                 break;
             case CT_WIDGET:
             {
