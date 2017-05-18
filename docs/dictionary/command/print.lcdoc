@@ -76,14 +76,6 @@ printed. (You can print a stack even if its window isn't visible).
 number:
 The number of cards to print, starting with the current card.
 
-leftTop:
-The points specifying the portion of the card to be printed. Each point
-consists of two integers separated by a comma: the horizontal distance
-in pixels from the left edge of the card window to the point, the
-vertical distance from the top edge to the point. '0,0'. If you don't
-specify a leftTop and rightBottom, the entire visible portion of the
-card is printed.
-
 Description:
 Use the <print> <command> to print out a <card(keyword)>, a set of
 <card(object)|cards>, or all the <card(object)|cards> of a <stack>.
