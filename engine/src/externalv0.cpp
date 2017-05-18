@@ -592,11 +592,13 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
     }
-	
-	MCAutoStringRef t_return;
-	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
+
+    MCAutoStringRef t_result_string;
+    /* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_result_string);
+    char *t_return = nullptr;
+    /* UNCHECKED */ MCStringConvertToCString(*t_result_string, t_return);
 	*retval = xresSucc;
-    return MCStringGetOldString(*t_return).clone();
+    return t_return;
 }
 
 static char *get_global(const char *arg1, const char *arg2,
@@ -846,7 +848,7 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var.eval_on_path(*MCECptr, &t_key, 1, &t_value);
+		var.eval_on_path(*MCECptr, {&t_key, 1}, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
@@ -885,7 +887,7 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var.set_on_path(*MCECptr, &t_key, 1, *t_string);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 		MCValueRelease(t_key);
 	}
 	else
@@ -1017,7 +1019,7 @@ static char *set_array(const char *arg1, const char *arg2,
 		}
 		else
 			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
-		var.set_on_path(*MCECptr, &t_key, 1, *t_string);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 	}
 	return NULL;
 }
@@ -1365,7 +1367,7 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
         MCAutoStringRef t_key_as_string;
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg2, strlen(arg2), kMCStringEncodingUTF8, false, &t_key_as_string);
 		/* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
-		var.eval_on_path(*MCECptr, &t_key, 1, &t_value);
+		var.eval_on_path(*MCECptr, {&t_key, 1}, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
@@ -1427,7 +1429,7 @@ static char *set_variable_ex_utf8(const char *arg1, const char *arg2,
         MCAutoStringRef t_key_as_string;
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg2, strlen(arg2), kMCStringEncodingUTF8, false, &t_key_as_string);
 		/* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
-		var.set_on_path(*MCECptr, &t_key, 1, *t_string);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 		MCValueRelease(t_key);
 	}
 	else
@@ -1588,7 +1590,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
             MCStringCreateWithBytes((byte_t*)value -> keys[i], strlen(value -> keys[i]), kMCStringEncodingUTF8, false, &t_key_as_string);
             /* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
         }
-		var.set_on_path(*MCECptr, &t_key, 1, *t_string);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
         
         MCNameDelete(t_key);
 	}

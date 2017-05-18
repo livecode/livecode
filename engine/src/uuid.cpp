@@ -59,7 +59,7 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid)
 	return true;
 }
 
-void MCUuidGenerateMD5(const MCUuid& p_namespace_id, const MCString& p_name, MCUuid& r_uuid)
+void MCUuidGenerateMD5(const MCUuid& p_namespace_id, MCStringRef p_name, MCUuid& r_uuid)
 {
 	// Initialize an md5 context.
 	md5_state_t t_md5;
@@ -73,7 +73,10 @@ void MCUuidGenerateMD5(const MCUuid& p_namespace_id, const MCString& p_name, MCU
 	md5_append(&t_md5, t_namespace_bytes, sizeof(t_namespace_bytes));
 	
 	// Append the name bytes to the md5 stream.
-	md5_append(&t_md5, (const md5_byte_t *)p_name . getstring(), p_name . getlength());
+    MCAutoStringRefAsCString t_name;
+    /* UNCHECKED */ t_name.Lock(p_name);
+    md5_append(&t_md5, reinterpret_cast<const md5_byte_t*>(*t_name),
+               t_name.Size());
 	
 	// Extract the resulting digest from the md5 stream.
 	uint8_t t_uuid_bytes[16];
@@ -86,7 +89,7 @@ void MCUuidGenerateMD5(const MCUuid& p_namespace_id, const MCString& p_name, MCU
 	MCUuidBrand(r_uuid, 3);
 }
 
-void MCUuidGenerateSHA1(const MCUuid& p_namespace_id, const MCString& p_name, MCUuid& r_uuid)
+void MCUuidGenerateSHA1(const MCUuid& p_namespace_id, MCStringRef p_name, MCUuid& r_uuid)
 {
 	// Initialize an sha1 context.
 	sha1_state_t t_sha1;
@@ -100,7 +103,9 @@ void MCUuidGenerateSHA1(const MCUuid& p_namespace_id, const MCString& p_name, MC
 	sha1_append(&t_sha1, t_namespace_bytes, sizeof(t_namespace_bytes));
 	
 	// Append the name bytes to the sha1 stream.
-	sha1_append(&t_sha1, p_name . getstring(), p_name . getlength());
+    MCAutoStringRefAsCString t_name;
+    /* UNCHECKED */ t_name.Lock(p_name);
+    sha1_append(&t_sha1, *t_name, t_name.Size());
 	
 	// Extract the resulting digest from the sha1 stream.
 	uint8_t t_uuid_bytes[20];

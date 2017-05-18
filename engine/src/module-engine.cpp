@@ -126,7 +126,7 @@ void MCEngineScriptObjectAllowAccess(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCValueRef
+MCValueRef
 MCEngineEvalScriptResult (MCExecContext& ctxt)
 {
 	if (MCresult->isclear())
@@ -230,7 +230,7 @@ static Properties parse_property_name(MCStringRef p_name)
 	return P_CUSTOM;
 }
 
-static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_object, uint32_t &r_part_id)
+bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_object, uint32_t &r_part_id)
 {
 	__MCScriptObjectImpl *t_script_object_imp;
 	t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -431,7 +431,7 @@ void MCEngineFreeScriptParameters(MCParameter* p_params)
 	}
 }
 
-static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params)
+bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params)
 {
     MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
     MCParameter *t_last_param = nullptr;

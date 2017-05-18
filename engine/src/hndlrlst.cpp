@@ -710,6 +710,40 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_cou
 	return p_first;
 }
 
+bool MCHandlerlist::listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context)
+{
+	for(uint2 i = 0; i < nconstants; i++)
+	{
+		if (!p_callback(p_context,
+						&cinfo[i]))
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+bool MCHandlerlist::listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context)
+{
+	for(int t_htype = HT_MIN; t_htype < HT_MAX; t_htype++)
+	{
+        int t_htype_index = static_cast<int>(t_htype - HT_MIN);
+        
+		for(uint2 i = 0; i < handlers[t_htype_index].count(); i++)
+		{
+			if (!p_callback(p_context,
+							static_cast<Handler_type>(t_htype),
+							handlers[t_htype_index].get()[i]))
+			{
+				return false;
+			}
+		}
+	}
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)

@@ -23,47 +23,64 @@
  * Emscripten Handle Class
  * ================================================================ */
 
-/* The __MCSLibraryHandleEmscripten class is a specialization of the POSIX handle
- * implementation. It only supports manipulating the handle returned by passing
- * NULL to dlopen (which is the main executable) as loadable modules are not
- * currently used.
+/* The __MCSLibraryHandleEmscripten class is a dummy implementation which
+ * notionally represents a handle to the main executable. It currently will
+ * not find any symbols.
  */
-
-#include "system-library-posix.hpp"
 
 #include <link.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-class __MCSLibraryHandleEmscripten: public __MCSLibraryHandlePosix
+class __MCSLibraryHandleEmscripten
 {
 public:
+    __MCSLibraryHandleEmscripten(void)
+    {
+    }
+    
+    ~__MCSLibraryHandleEmscripten(void)
+    {
+    }
+    
+    bool IsDefined(void) const
+    {
+        return m_defined;
+    }
+    
+    bool IsEqualTo(const __MCSLibraryHandleEmscripten& p_other) const
+    {
+        return false;
+    }
+    
+    bool Hash(void) const
+    {
+        return MCHashPointer(nullptr);
+    }
+    
     bool CreateWithNativePath(MCStringRef p_native_path)
     {
-        return CreateWithAddress(nullptr);
+        return false;
     }
     
     bool CreateWithAddress(void *p_address)
     {
-        void *t_dl_handle = dlopen(NULL,
-                                     RTLD_LAZY);
-
-        if (t_dl_handle == nullptr)
-        {
-            /* TODO: Use dlerror */
-            return __MCSLibraryThrowCreateWithAddressFailed(p_address);
-        }
-        
-        m_handle = t_dl_handle;
-        
+        m_defined = true;
         return true;
     }
     
-    bool
-    CopyNativePath(MCStringRef& r_native_path) const
+    void *LookupSymbol(MCStringRef p_symbol) const
     {
-        return MCSCommandLineGetName(r_native_path);
+        return nullptr;
     }
+    
+    bool CopyNativePath(MCStringRef& r_native_path) const
+    {
+        return MCStringCreateWithCString("<main>", r_native_path);
+    }
+
+private:
+    bool m_defined = false;
 };
 
 typedef class __MCSLibraryHandleEmscripten __MCSLibraryHandle;

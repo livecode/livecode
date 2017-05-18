@@ -147,7 +147,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_RECORD_SAMPLESIZE, UInt16, Multimedia, RecordSampleSize)
 	DEFINE_RW_PROPERTY(P_RECORD_RATE, Double, Multimedia, RecordRate)
 	DEFINE_RW_PROPERTY(P_RECORD_CHANNELS, UInt16, Multimedia, RecordChannels)
-	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat) 
+	DEFINE_RW_CUSTOM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat)
 	DEFINE_RW_PROPERTY(P_RECORD_COMPRESSION, String, Multimedia, RecordCompression)
 	DEFINE_RW_PROPERTY(P_RECORD_INPUT, String, Multimedia, RecordInput)
 
@@ -1221,7 +1221,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
                 t_end_offset--;
             }
             
-            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+            if (!MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_offset + 1, t_end_offset), &t_icarray))
                 return false;
         }
         else

@@ -96,29 +96,24 @@ void MCGPatternRelease(MCGPatternRef self)
 	}
 }
 
-bool MCGPatternToSkShader(MCGPatternRef self, SkShader*& r_shader)
+bool MCGPatternToSkShader(MCGPatternRef self, sk_sp<SkShader>& r_shader)
 {
 	bool t_success;
 	t_success = true;
 	
-	SkShader *t_pattern_shader;
-	t_pattern_shader = NULL;
+	SkMatrix t_transform;
+	MCGAffineTransformToSkMatrix(self->transform, t_transform);
+
+	sk_sp<SkShader> t_pattern_shader;
 	if (t_success)
 	{
-		t_pattern_shader = SkShader::CreateBitmapShader(*self -> pattern -> bitmap, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode);
+		t_pattern_shader = SkShader::MakeBitmapShader(*self -> pattern -> bitmap, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode, &t_transform);
 		t_success = t_pattern_shader != NULL;
 	}
-	
+
 	if (t_success)
-	{
-		SkMatrix t_transform;
-		MCGAffineTransformToSkMatrix(self -> transform, t_transform);
-		t_pattern_shader -> setLocalMatrix(t_transform);
 		r_shader = t_pattern_shader;
-	}
-	else if (t_pattern_shader != NULL)
-		t_pattern_shader -> unref();
-	
+
 	return t_success;	
 }
 
@@ -163,9 +158,11 @@ bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, 
 		t_gradient -> mirror = p_mirror;
 		t_gradient -> wrap = p_wrap;
 		t_gradient -> repeats = p_repeats;
-		t_gradient -> transform = p_transform;
 		t_gradient -> filter = p_filter;
 		t_gradient -> references = 1;
+        
+        MCGAffineTransformToSkMatrix(p_transform, t_gradient->transform);
+        
 		r_gradient = t_gradient;
 	}
 	else
@@ -191,22 +188,99 @@ void MCGGradientRelease(MCGGradientRef self)
 	}
 }
 
-bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, SkShader*& r_shader)
+bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, sk_sp<SkShader>& r_shader)
 {
-	bool t_success;
-	t_success = true;	
-	
-	// MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
-	SkShader *t_gradient_shader;
-	t_gradient_shader = new (nothrow) MCGLegacyGradientShader(self, p_clip);
-	t_success = t_gradient_shader != NULL;
-	
-	if (t_success)
-		r_shader = t_gradient_shader;
-	else if (t_gradient_shader != NULL)
-		t_gradient_shader -> unref();		
+    sk_sp<SkShader> t_shader;
+    
+    switch (self->function)
+    {
+        // Use legacy implementation for any gradient typs not supported by skia
+        case kMCGLegacyGradientDiamond:
+        case kMCGLegacyGradientSpiral:
+        case kMCGLegacyGradientXY:
+        case kMCGLegacyGradientSqrtXY:
+            t_shader = sk_sp<SkShader>(new (nothrow) MCGLegacyGradientShader(self, p_clip));
+            break;
 
-	return t_success;
+        default:
+        {
+            // Gradient mode
+            SkShader::TileMode t_tile_mode = SkShader::kClamp_TileMode;
+            if (self->wrap)
+                t_tile_mode = SkShader::kRepeat_TileMode;
+
+            // Convert the stops into the form Skia expects.
+            // Because it implements repeats and mirroring differently, we need to synthesize extra stops for it
+            uindex_t t_count = self->ramp_length;
+            uindex_t t_repeats = MCMax(1, self->repeats);
+            uindex_t t_length = t_count * t_repeats;
+            MCGFloat t_scale = MCGFloat(1)/t_repeats;
+            MCAutoArray<SkColor> t_colors;
+            MCAutoArray<SkScalar> t_stops;
+            if (!t_colors.Extend(t_length) || !t_stops.Extend(t_length))
+                return false;
+            for (uindex_t i = 0; i < t_repeats; i++)
+            {
+                // Offset added to stops
+                MCGFloat t_offset = t_scale * i;
+
+                // If mirrored, odd-numbered repeats need to be handled specially
+                if (self->mirror && (i % 2))
+                {
+                    // Copy the colours and stops in reverse order
+                    for (uindex_t j = 0; j < t_count; j++)
+                    {
+                        t_colors[i * t_count + j] = self->colors[t_count - j - 1];
+                        t_stops[i * t_count + j] = t_offset + t_scale * (1 - self->stops[t_count - j - 1]);
+                    }
+                }
+                else
+                {
+                    // Copy the colours and stops in original order
+                    for (uindex_t j = 0; j < t_count; j++)
+                    {
+                        t_colors[i * t_count + j] = self->colors[j];
+                        t_stops[i * t_count + j] = t_offset + t_scale * self->stops[j];
+                    }
+                }
+            }
+
+            // What kind of shader is being created?
+            switch (self->function)
+            {
+                case kMCGGradientFunctionLinear:
+                {
+                    // The end points are always (0,0) and (1,0)
+                    SkPoint t_points[2] = {{0,0}, {1,0}};
+                    t_shader = SkGradientShader::MakeLinear(t_points, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
+                    break;
+                }
+
+                case kMCGGradientFunctionRadial:
+                {
+                    // The gradient is always from (0,0) with a unit radius
+                    t_shader = SkGradientShader::MakeRadial({0,0}, 1, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
+                    break;
+                }
+
+                case kMCGGradientFunctionSweep:
+                {
+                    // The gradient is always centered on (0, 0)
+                    t_shader = SkGradientShader::MakeSweep(0, 0, t_colors.Ptr(), t_stops.Ptr(), t_length, 0, &self->transform);
+                    break;
+                }
+
+                default:
+                    return false;
+            }
+        }
+    }
+
+    if (!t_shader)
+        return false;
+
+    r_shader = t_shader;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,11 +347,11 @@ void MCGDashesRelease(MCGDashesRef self)
 	}	
 }
 
-bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_effect)
+bool MCGDashesToSkDashPathEffect(MCGDashesRef self, sk_sp<SkPathEffect>& r_path_effect)
 {
 	if (self -> count <= 0)
 	{
-		r_path_effect = NULL;
+		r_path_effect = nullptr;
 		return true;
 	}
 
@@ -291,11 +365,11 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 
     for (uint32_t i = 0; i < t_dash_count; i++)
         t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
+    
+    sk_sp<SkPathEffect> t_dash_effect =
+        SkDashPathEffect::Make(*t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
 
-    SkDashPathEffect *t_dash_effect =
-        new (nothrow) SkDashPathEffect(t_dashes.Get(), (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
-
-    if (!t_dash_effect)
+    if (t_dash_effect == nullptr)
         return false;
 
     r_path_effect = t_dash_effect;
@@ -327,11 +401,10 @@ bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& p_info, MCGMaskRef
 				t_mask -> mask . fFormat = SkMask::kA8_Format;
 				t_mask -> mask . fRowBytes = p_info . width;
 				break;
-				
-			case kMCGMaskFormat_LCD32:
-				t_mask -> mask . fFormat = SkMask::kLCD32_Format;
-				t_mask -> mask . fRowBytes = p_info . width * 4;
-				break;				
+                
+            case kMCGMaskFormat_LCD32:
+                MCUnreachable();
+                break;
 		}		
 		
 		t_mask -> mask . fBounds . setXYWH(p_info . x, p_info . y, p_info . width, p_info . height);
@@ -366,102 +439,77 @@ MCGRectangle MCGMaskGetBounds(MCGMaskRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static SkXfermode** s_skia_blend_modes = NULL;
-
 void MCGBlendModesInitialize(void)
 {
-	/* UNCHECKED */ MCMemoryNewArray(kMCGBlendModeCount, s_skia_blend_modes);	
-	
-	s_skia_blend_modes[kMCGBlendModeClear] = SkXfermode::Create(SkXfermode::kClear_Mode);
-	s_skia_blend_modes[kMCGBlendModeCopy] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceOver] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceIn] = SkXfermode::Create(SkXfermode::kSrcIn_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceOut] = SkXfermode::Create(SkXfermode::kSrcOut_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceAtop] = SkXfermode::Create(SkXfermode::kSrcATop_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationOver] = SkXfermode::Create(SkXfermode::kDstOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationIn] = SkXfermode::Create(SkXfermode::kDstIn_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationOut] = SkXfermode::Create(SkXfermode::kDstOut_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationAtop] = SkXfermode::Create(SkXfermode::kDstATop_Mode);
-	s_skia_blend_modes[kMCGBlendModeXor] = SkXfermode::Create(SkXfermode::kXor_Mode);		
-	
-	// the non porter duff blend modes don't appear to be officially documented
-	s_skia_blend_modes[kMCGBlendModePlusLighter] = SkXfermode::Create(SkXfermode::kPlus_Mode);
-	s_skia_blend_modes[kMCGBlendModeScreen] = SkXfermode::Create(SkXfermode::kScreen_Mode);
-	s_skia_blend_modes[kMCGBlendModeOverlay] = SkXfermode::Create(SkXfermode::kOverlay_Mode);
-	s_skia_blend_modes[kMCGBlendModeDarken] = SkXfermode::Create(SkXfermode::kDarken_Mode);
-	s_skia_blend_modes[kMCGBlendModeLighten] = SkXfermode::Create(SkXfermode::kLighten_Mode);		
-	s_skia_blend_modes[kMCGBlendModeColorDodge] = SkXfermode::Create(SkXfermode::kColorDodge_Mode);
-	s_skia_blend_modes[kMCGBlendModeColorBurn] = SkXfermode::Create(SkXfermode::kColorBurn_Mode);
-	s_skia_blend_modes[kMCGBlendModeHardLight] = SkXfermode::Create(SkXfermode::kHardLight_Mode);
-	s_skia_blend_modes[kMCGBlendModeSoftLight] = SkXfermode::Create(SkXfermode::kSoftLight_Mode);
-	s_skia_blend_modes[kMCGBlendModeDifference] = SkXfermode::Create(SkXfermode::kDifference_Mode);
-	s_skia_blend_modes[kMCGBlendModeExclusion] = SkXfermode::Create(SkXfermode::kExclusion_Mode);
-	
-	// legacy blend modes
-	s_skia_blend_modes[kMCGBlendModeLegacyClear] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyClear);
-	s_skia_blend_modes[kMCGBlendModeLegacyAnd] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAnd);
-	s_skia_blend_modes[kMCGBlendModeLegacyAndReverse] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAndReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopy] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyCopy);
-	s_skia_blend_modes[kMCGBlendModeLegacyInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNoop] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNoop);
-	s_skia_blend_modes[kMCGBlendModeLegacyXor] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyXor);
-	s_skia_blend_modes[kMCGBlendModeLegacyOr] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOr);
-	s_skia_blend_modes[kMCGBlendModeLegacyNor] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNor);
-	s_skia_blend_modes[kMCGBlendModeLegacyEquiv] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyEquiv);
-	s_skia_blend_modes[kMCGBlendModeLegacyInvert] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyInvert);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrReverse] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOrReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopyInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyCopyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrInverted] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyOrInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNand] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyNand);
-	s_skia_blend_modes[kMCGBlendModeLegacySet] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySet);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlend] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlend);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddPin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAddPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddOver] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAddOver);
-	s_skia_blend_modes[kMCGBlendModeLegacySubPin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySubPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyTransparent] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyTransparent);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMax] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAdMax);
-	s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);		
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendSource] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlendSource);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendDestination] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeLegacyBlendDestination);
-	
-	// MM-2013-11-11: [[ Bug 11422 ]] Use legacy multiply. Skia's multiply appears to blend differently.
-	s_skia_blend_modes[kMCGBlendModeMultiply] = new (nothrow) MCGLegacyBlendMode(kMCGBlendModeMultiply);
-	
-	// TODO: non-separable blend modes and plus darker?
-	// kMCGBlendModeHue
-	// kMCGBlendModeSaturation
-	// kMCGBlendModeColor
-	// kMCGBlendModeLuminosity	
 }
 
 void MCGBlendModesFinalize(void)
 {
-	if (s_skia_blend_modes != NULL)
-		for (uint32_t i = 0; i < kMCGBlendModeCount; i++)
-			if (s_skia_blend_modes[i] != NULL)
-				s_skia_blend_modes[i] -> unref();
-	MCMemoryDeleteArray(s_skia_blend_modes);
 }
 
-SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
+SkBlendMode MCGBlendModeToSkBlendMode(MCGBlendMode p_mode)
 {
-	SkXfermode *t_blend_mode;
-	t_blend_mode = NULL;
-	if (s_skia_blend_modes != NULL)
+	switch (p_mode)
 	{
-		if (p_mode < kMCGBlendModeCount)
-			t_blend_mode = s_skia_blend_modes[p_mode];
-		if (t_blend_mode != NULL) 
-			t_blend_mode -> ref();		
-	}
-	return t_blend_mode;
-}
+	case kMCGBlendModeClear:
+		return SkBlendMode::kClear;
+	case kMCGBlendModeCopy:
+	case kMCGBlendModeSourceOver:
+		return SkBlendMode::kSrcOver;
+	case kMCGBlendModeSourceIn:
+		return SkBlendMode::kSrcIn;
+	case kMCGBlendModeSourceOut:
+		return SkBlendMode::kSrcOut;
+	case kMCGBlendModeSourceAtop:
+		return SkBlendMode::kSrcATop;
+	case kMCGBlendModeDestinationOver:
+		return SkBlendMode::kDstOver;
+	case kMCGBlendModeDestinationIn:
+		return SkBlendMode::kDstIn;
+	case kMCGBlendModeDestinationOut:
+		return SkBlendMode::kDstOut;
+	case kMCGBlendModeDestinationAtop:
+		return SkBlendMode::kDstATop;
+	case kMCGBlendModeXor:
+		return SkBlendMode::kXor;
+	case kMCGBlendModePlusDarker:
+	case kMCGBlendModePlusLighter:
+		return SkBlendMode::kPlus;
+	case kMCGBlendModeMultiply:
+		return SkBlendMode::kMultiply;
+	case kMCGBlendModeScreen:
+		return SkBlendMode::kScreen;
+	case kMCGBlendModeOverlay:
+		return SkBlendMode::kOverlay;
+	case kMCGBlendModeDarken:
+		return SkBlendMode::kDarken;
+	case kMCGBlendModeLighten:
+		return SkBlendMode::kLighten;
+	case kMCGBlendModeColorDodge:
+		return SkBlendMode::kColorDodge;
+	case kMCGBlendModeColorBurn:
+		return SkBlendMode::kColorBurn;
+	case kMCGBlendModeSoftLight:
+		return SkBlendMode::kSoftLight;
+	case kMCGBlendModeHardLight:
+		return SkBlendMode::kHardLight;
+	case kMCGBlendModeDifference:
+		return SkBlendMode::kDifference;
+	case kMCGBlendModeExclusion:
+		return SkBlendMode::kExclusion;
+	case kMCGBlendModeHue:
+		return SkBlendMode::kHue;
+	case kMCGBlendModeSaturation:
+		return SkBlendMode::kSaturation;
+	case kMCGBlendModeColor:
+		return SkBlendMode::kColor;
+	case kMCGBlendModeLuminosity:
+		return SkBlendMode::kLuminosity;
 
-MCGBlendMode MCGBlendModeFromSkXfermode(SkXfermode *p_mode)
-{
-	// TODO: Implement
-	return kMCGBlendModeSourceOver;
+	default:
+            return SkBlendMode::kSrcOver;
+		MCUnreachableReturn(SkBlendMode::kSrcOver);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -473,12 +521,9 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 	
 	if (t_success)
 	{		
-		SkBitmap::Config t_config = MCGRasterFormatToSkBitmapConfig(p_raster . format);
-		r_bitmap . setConfig(t_config, p_raster . width, p_raster . height, p_raster . stride);
-        if (p_raster . format == kMCGRasterFormat_xRGB)
-            r_bitmap . setAlphaType(kOpaque_SkAlphaType);
-        else
-            r_bitmap . setAlphaType(kPremul_SkAlphaType);
+		SkColorType t_color_type = MCGRasterFormatToSkBitmapConfig(p_raster . format);
+		SkImageInfo t_info = SkImageInfo::Make(p_raster.width, p_raster.height, t_color_type, p_raster.format == kMCGRasterFormat_xRGB ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+		r_bitmap.setInfo(t_info);
 		
 		// for non-premultiplied bitmaps, allocate the space then set pixels one by one
 		// for premultiplied bitmaps, just set the pixels in the target directly
@@ -491,49 +536,41 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 		switch (p_ownership)
 		{
 			case kMCGPixelOwnershipTypeBorrow:
-				r_bitmap . setPixels(p_raster . pixels);
+				r_bitmap.installPixels(t_info, p_raster.pixels, p_raster.stride);
 				break;
 				
 			case kMCGPixelOwnershipTypeTake:
             {
-                SkImageInfo t_image_info;
-                if (t_success)
-                    t_success = r_bitmap  . asImageInfo(&t_image_info);
-                
-                SkData *t_data = NULL;
+                sk_sp<SkData> t_data;
                 if (t_success)
                 {
-                    t_data = SkData::NewFromMalloc(p_raster . pixels, p_raster . stride * p_raster . height);
-                    t_success = t_data != NULL;
+                    t_data = SkData::MakeFromMalloc(p_raster.pixels, p_raster.stride * p_raster.height);
+                    t_success = t_data != nullptr;
                 }
                 
-				SkMallocPixelRef *t_pixelref = NULL;
+				SkMallocPixelRef *t_pixelref = nullptr;
                 if (t_success)
                 {
-                    t_pixelref = SkMallocPixelRef::NewWithData(t_image_info, p_raster . stride, NULL, t_data, 0);
-                    t_success = t_pixelref != NULL;
+                    t_pixelref = SkMallocPixelRef::NewWithData(t_info, p_raster.stride, nullptr, t_data.get());
+                    t_success = t_pixelref != nullptr;
                 }
                 if (t_success)
 				{
-					r_bitmap . setPixelRef(t_pixelref);
+					r_bitmap.setPixelRef(t_pixelref);
 					t_pixelref -> unref();
-					// MM-2014-03-07: [[ Bug 11885 ]] Make sure we free up the data as well as pixel ref.
-                    t_data -> unref();
 				}
                 
                 if (!t_success)
                 {
                     if (t_pixelref != NULL)
                         t_pixelref -> unref();
-                    if (t_data != NULL)
-                        t_data -> unref();
                 }
                 
                 break;
             }
 				
 			case kMCGPixelOwnershipTypeCopy:
-				t_success = r_bitmap . allocPixels();
+				t_success = r_bitmap.tryAllocPixels(t_info);
 				break;
 		}
 	}

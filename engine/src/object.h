@@ -31,11 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <utility>
 
-// Disabled until C++11 support is available on all platforms
-#if 0
-#include <type_traits>
-#endif
-
 enum {
     MAC_SHADOW,
     MAC_THUMB_TOP,
@@ -438,8 +433,20 @@ public:
         return MCObjectProxy<U>::Handle(static_cast<MCObjectProxy<U>*>(m_proxy));
     }
 #endif
-    
-    
+
+    /* Swap the contents of two object handles. Allows std::swap() to be
+     * used on MCObjectHandle instances of exactly the same type. */
+    void swap(Handle& x_other)
+    {
+        using std::swap;
+        swap(m_proxy, x_other.m_proxy);
+    }
+
+    friend void swap(Handle& x_left, Handle& x_right)
+    {
+	    x_left.swap(x_right);
+    }
+
 private:
     
     // The proxy for the object this is a handle to
@@ -817,13 +824,6 @@ public:
 		return *_name;
 	}
 
-    /*
-	MCString getname_oldstring(void) const
-	{
-		return MCNameGetOldString(_name);
-	}
-    */
-
 	// Tests to see if the object has the given name, interpreting unnamed as
 	// the empty string.
 	bool hasname(MCNameRef p_other_name);
@@ -1033,7 +1033,8 @@ public:
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
 
-	Exec_stat domess(MCStringRef sptr, MCParameter *args = nil);
+	Exec_stat domess(MCStringRef sptr, MCParameter *args = nil, bool p_ignore_errors = true);
+    
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
     void editscript(MCStringRef p_at = nil);
@@ -1688,6 +1689,12 @@ class MCObjectExecutionLock
 {
     MCObjectHandle m_handle;
 public:
+    MCObjectExecutionLock(const MCObjectHandle& obj) : m_handle(obj)
+    {
+        if (m_handle.IsValid())
+            m_handle->lockforexecution();
+    }
+
     MCObjectExecutionLock(MCObject* obj) : m_handle(obj)
     {
         if (m_handle.IsValid())
@@ -1698,6 +1705,59 @@ public:
         if (m_handle.IsValid())
             m_handle->unlockforexecution();
     }
+};
+
+/* Object handle class that incorporates a part ID, allowing objects
+ * to be disambiguated with respect to which card they are on.
+ * Basically the same as an MCObjectPtr except for weakly referencing
+ * its target object. */
+class MCObjectPartHandle: public MCObjectHandle
+{
+    /* TODO[C++11] uint32_t m_part_id = 0; */
+    uint32_t m_part_id;
+public:
+    /* TODO[2017-04-27] These constructors should be constexpr */
+    /* TODO[C++11] constexpr MCObjectPartHandle() = default; */
+    MCObjectPartHandle() : MCObjectHandle(), m_part_id(0) {}
+    MCObjectPartHandle(decltype(nullptr))
+      : MCObjectHandle(nullptr), m_part_id(0) {}
+
+    /* TODO[C++11] MCObjectPartHandle(const MCObjectPartHandle&) = default; */
+    MCObjectPartHandle(const MCObjectPartHandle& other)
+      : MCObjectHandle(other), m_part_id(other.m_part_id) {}
+    /* TODO[C++11] MCObjectPartHandle(MCObjectPartHandle&& other) = deafult; */
+    MCObjectPartHandle(MCObjectPartHandle&& other)
+      : MCObjectHandle(nullptr), m_part_id(0)
+    {
+        using std::swap;
+        swap(*this, other);
+    }
+
+    MCObjectPartHandle(MCObject* p_object, uint32_t p_part_id = 0);
+    MCObjectPartHandle(const MCObjectPtr&);
+
+    /* TODO[C++11] MCObjectPartHandle& operator=(const MCObjectPartHandle&) = default; */
+    MCObjectPartHandle& operator=(const MCObjectPartHandle& other)
+    {
+        MCObjectHandle::operator=(other);
+        m_part_id = other.m_part_id;
+        return *this;
+    }
+    /* TODO[C++11] MCObjectPartHandle& operator=(MCObjectPartHandle&&) = default; */
+    MCObjectPartHandle& operator=(MCObjectPartHandle&& other)
+    {
+        MCObjectHandle::operator=(std::move(other));
+        m_part_id = other.m_part_id;
+        return *this;
+    }
+
+    MCObjectPartHandle& operator=(decltype(nullptr));
+    MCObjectPartHandle& operator=(const MCObjectPtr&);
+
+    uint32_t getPart() const { return m_part_id; }
+    MCObjectPtr getObjectPtr() const;
+
+    friend void swap(MCObjectPartHandle&, MCObjectPartHandle&);
 };
 
 #endif

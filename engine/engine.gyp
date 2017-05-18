@@ -73,6 +73,8 @@
 				'../extensions/script-libraries/oauth2/oauth2.livecodescript',
 				'../extensions/script-libraries/getopt/getopt.livecodescript',
 				'../extensions/script-libraries/mime/mime.livecodescript',
+				'../extensions/script-libraries/dropbox/dropbox.livecodescript',
+				'../extensions/script-libraries/diff/diff.livecodescript',
 			],
 			
 			'actions':
@@ -365,7 +367,7 @@
 						'product_prefix': '',
 						'product_extension': '',
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
-						'type': 'shared_library',
+						'type': 'loadable_module',		# Shared library imples --whole-archive
 						
 						'sources':
 						[

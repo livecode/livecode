@@ -122,7 +122,7 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
-		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+		if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, t_found), t_strings[t_count++]))
 			return false;
         
 		t_current = t_found + 1;
@@ -130,7 +130,7 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
     
 	if (!t_strings.Extend(t_count + 1))
 		return false;
-	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+	if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, MCStringGetLength(p_string)), t_strings[t_count++]))
 		return false;
     
 	t_strings.Take(r_strings, r_count);
@@ -150,7 +150,7 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
-		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+		if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, t_found), t_strings[t_count++]))
 			return false;
 
 		t_current = t_found + MCStringGetLength(p_separator);
@@ -158,7 +158,7 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 	if (!t_strings.Extend(t_count + 1))
 		return false;
-	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+	if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, MCStringGetLength(p_string)), t_strings[t_count++]))
 		return false;
 
 	t_strings.Take(r_strings, r_count);
@@ -916,7 +916,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -943,7 +943,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     MCAutoStringRef t_post_match;
     if (t_success)
-        t_success = MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, t_source_length - t_source_offset), &t_post_match) &&
+        t_success = MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_source_offset, t_source_length), &t_post_match) &&
             MCStringAppend(*t_result, *t_post_match);
     
     if (t_success)
@@ -1055,7 +1055,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                     /* UNCHECKED */ MCNumberParseUnicodeChars(t_hexa_num, 4, &t_number);
 
                     t_result_char = MCNumberFetchAsUnsignedInteger(*t_number);
-                    format += 2;
+                    format++;
 				}
 				break;
 			default:
@@ -2269,7 +2269,7 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
                     
                     MCAutoStringRef t_numeric_part;
                     if (t_end != t_start &&
-                        MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) &&
+                        MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_start, t_end), &t_numeric_part) &&
                         ctxt . ConvertToNumber(*t_numeric_part, items[nitems].nvalue))
                         break;
                 }
@@ -2581,7 +2581,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                     
                     MCAutoStringRef t_numeric_part;
                     if (t_end == t_start ||
-                        !MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) ||
+                        !MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_start, t_end), &t_numeric_part) ||
                         !ctxt . ConvertToReal(*t_numeric_part, t_numbers[i]))
                     {
                         t_numbers[i] = -MAXREAL8;

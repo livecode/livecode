@@ -699,6 +699,14 @@ public:
 
 };
 
+class MCRecordFormats: public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalRecordFormats>
+{
+public:
+    // virtual Exec_stat eval(MCExecPoint &);
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordFormatsMethodInfo; }
+    
+};
+
 class MCRecordLoudness : public MCConstantFunctionCtxt<integer_t, MCMultimediaEvalRecordLoudness>
 {
 public:

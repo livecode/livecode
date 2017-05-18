@@ -47,7 +47,7 @@ colors of an <object(glossary)> or the colors underneath the
 <object(glossary)>, or to combine the <object|object's> colors with the
 colors under the <object(glossary)>.
 
-There are 48 transfer modes:
+There are 25 transfer modes:
 
 Structural Blends (Porter Duff operators):
 
@@ -81,35 +81,9 @@ Image Processing Blends (SVG/PDF operators):
         * blendExclusion
 
 
-Bitwise - These inks have been deprecated from version 5.0
+Bitwise - This ink has been deprecated from version 5.0
 
-        * clear
-        * noop
-        * notSrcAnd
-        * notSrcAndReverse
-        * notSrcCopy
-        * notSrcOr
-        * notSrcOrReverse
-        * notSrcXor
-        * reverse
-        * set
-        * srcAnd
-        * srcAndReverse
         * srcCopy
-        * srcOr
-        * srcOrReverse
-        * srcXor
-
-Arithmetc:- These inks have been deprecated from version 5.0
-
-        * blend
-        * addPin
-        * addOver
-        * subPin
-        * transparent
-        * adMin
-        * addMax
-
 
 The rendered pixels of an object are combined with the corresponding
 background pixels using the specified ink before the blendLevel is
@@ -121,12 +95,6 @@ applied.
 > can be forced to have an alpha channel by setting their ink to
 > something other than srcCopy, or by setting their blendLevel to
 > something other than 0.
-
->*Note:* 
-The bitwise and arithmetic inks (apart from srcCopy) should be
-considered as legacy modes and not used in new applications. In general,
-the behaviour of the structural and image processing blends should be
-preferred as these naturally work well with alpha-channels.
 
 References: object (glossary), property (glossary), pixel (glossary),
 background (glossary), transfer mode (glossary), string (keyword),

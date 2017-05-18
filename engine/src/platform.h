@@ -676,6 +676,7 @@ struct MCPlatformSoundRecorderConfiguration
 
 typedef bool (*MCPlatformSoundRecorderListInputsCallback)(void *context, unsigned int input_id, const char *label);
 typedef bool (*MCPlatformSoundRecorderListCompressorsCallback)(void *context, unsigned int compressor_id, const char *label);
+typedef bool (*MCPlatformSoundRecorderListFormatsCallback)(void *context, intenum_t format_id, MCStringRef label);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2382,6 +2383,7 @@ public:
     
     virtual bool ListInputs(MCPlatformSoundRecorderListInputsCallback callback, void *context) = 0;
     virtual bool ListCompressors(MCPlatformSoundRecorderListCompressorsCallback callback, void *context) = 0;
+    virtual bool ListFormats(MCPlatformSoundRecorderListFormatsCallback callback, void *context) = 0;
     
 protected:
     
@@ -2429,8 +2431,7 @@ namespace MCPlatform
         virtual void Detach() = 0;
         
         virtual bool Paint(MCGContextRef p_context) = 0;
-        virtual void SetGeometry(const MCRectangle &p_rect) = 0;
-        virtual void SetViewportGeometry(const MCRectangle &p_rect) = 0;
+        virtual void SetGeometry(const MCRectangle &p_rect, const MCRectangle &p_parent_rect, const MCGAffineTransform p_stack_transform) = 0;
         virtual void SetVisible(bool p_visible) = 0;
         
         // Performs a relayering operation

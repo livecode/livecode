@@ -1522,8 +1522,7 @@ public:
     virtual void Detach();
     
     virtual bool Paint(MCGContextRef p_context);
-    virtual void SetGeometry(const MCRectangle &p_rect);
-    virtual void SetViewportGeometry(const MCRectangle &p_rect);
+    virtual void SetGeometry(const MCRectangle &p_rect, const MCRectangle &p_parent_rect, const MCGAffineTransform p_stack_transform);
     virtual void SetVisible(bool p_visible);
     
     // Performs a relayering operation
@@ -1534,7 +1533,7 @@ private:
     NSView* m_view = nil;
     NSBitmapImageRep *m_cached = nil;
     MCPlatformWindowRef m_window = nil;
-    NSRect calculateFrameRect(const MCRectangle &p_rect);
+    NSRect calculateFrameRect(const MCRectangle &p_rect, const MCRectangle &p_parent_rect, const MCGAffineTransform p_stack_transform);
     
 };
 

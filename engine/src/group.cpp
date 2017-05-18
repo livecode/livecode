@@ -103,10 +103,6 @@ MCPropertyInfo MCGroup::kProperties[] =
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     DEFINE_RW_OBJ_PROPERTY(P_CLIPS_TO_RECT, Bool, MCGroup, ClipsToRect)
     // PM-2015-07-02: [[ Bug 13262 ]] Make sure we attach/detach the player when showing/hiding a group that has a player
-#ifdef PLATFORM_PLAYER
-    DEFINE_WO_OBJ_PART_PROPERTY(P_VISIBLE, Bool, MCGroup, Visible)
-    DEFINE_WO_OBJ_PART_PROPERTY(P_INVISIBLE, Bool, MCGroup, Invisible)
-#endif
 };
 
 MCObjectPropertyTable MCGroup::kPropertyTable =
@@ -352,6 +348,8 @@ void MCGroup::geometrychanged(const MCRectangle &p_rect)
 
 void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
 {
+    MCControl::viewportgeometrychanged(p_rect);
+
 	MCRectangle t_viewport;
 	t_viewport = MCU_intersect_rect(p_rect, getrect());
 

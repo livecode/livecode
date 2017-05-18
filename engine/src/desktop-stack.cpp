@@ -243,6 +243,9 @@ void MCStack::syncscroll(void)
     // AL-2014-07-22: [[ Bug 12764 ]] Update the stack viewport after applying menu scroll
     view_setstackviewport(rect);
 	// COCOA-TODO: Make sure contained views also scroll (?)
+
+	// IM-2017-05-04: [[ Bug 19327 ]] Notify layers of transform change after scroll sync
+	OnViewTransformChanged();
 }
 
 void MCStack::start_externals()
@@ -255,27 +258,10 @@ void MCStack::stop_externals()
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
 	
-	MCPlayer *tptr = MCplayers;
-	
-#ifdef FEATURE_PLATFORM_PLAYER
-    while(tptr != NULL)
-    {
-        if (tptr -> getstack() == this)
-            tptr -> playstop();
-        tptr = tptr -> getnextplayer();
-    }
-#else
-	while (tptr != NULL)
-	{
-		if (tptr->getstack() == this)
-		{
-			if (tptr->playstop())
-				tptr = MCplayers; // was removed, start search over
-		}
-		else
-			tptr = tptr->getnextplayer();
-	}
-#endif
+    MCPlayer::SyncPlayers(this, nil);
+    
+    MCPlayer::StopPlayers(this);
+    
 	destroywindowshape();
 	
 	MClockmessages = oldlock;

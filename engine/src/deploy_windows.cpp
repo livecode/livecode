@@ -1116,9 +1116,13 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
             !t_bytes . Push('\0'))
             return false;
 	}
-	
+
+    MCAutoStringRefAsCString t_key_str;
+    if (!t_key_str.Lock(MCNameGetString(p_key)))
+        return false;
+
     MCWindowsVersionInfo *t_string;
-    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes . Ptr(), t_bytes . Size(), t_string);
+    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, *t_key_str, true, t_bytes . Ptr(), t_bytes . Size(), t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)

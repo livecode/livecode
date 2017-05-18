@@ -1,0 +1,6 @@
+This file has some text, different from 'a', with the final line NOT terminated by LF
+
+********
+
+********
+Alternative sample text

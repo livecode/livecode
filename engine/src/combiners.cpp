@@ -301,32 +301,9 @@ static INLINE uint16_t long_scaled_divide(uint32_t n, uint8_t s, uint16_t d)
 	return d != 0 ? uint16_t((n * s) / d) : 0;
 }
 
-extern uint16_t g_sqrt_table[1024];
 static INLINE uint8_t sqrt(uint16_t n)
 {
-#ifdef __VISUALC__
-	__asm
-	{
-		xor ebx, ebx
-		mov bx, n
-		mov dx, 11
-		bsr cx, bx
-		sub cx, 9
-		jle less_than_9_bits
-		shr cx, 1
-		adc cx, 0
-		sub dx, cx
-		shl cx, 1
-		shr bx, cl
-  less_than_9_bits:
-		xor ax, ax
-		mov  ax, g_sqrt_table[ebx*2]
-		mov cx, dx
-		shr ax, cl
-	}
-#else
 	return 1;
-#endif
 }
 
 template<typename Type> INLINE Type fastmin(Type a, Type b)

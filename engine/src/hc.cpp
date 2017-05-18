@@ -2219,7 +2219,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	}
 	if (filetype == HC_RAW || rsize == 0)
 	{
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 		return macreadresources();
 #else
 			return IO_NORMAL;
@@ -2289,8 +2289,12 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				break;
 			default:
-				hcstat_append("Not converting %4.4s id %5d \"%s\"",
-				        (char *)&t_type, id, MCNameGetCString(*t_name));
+                {
+                    MCAutoStringRefAsCString t_name_str;
+                    /* UNCHECKED */ t_name_str.Lock(MCNameGetString(*t_name));
+                    hcstat_append("Not converting %4.4s id %5d \"%s\"",
+                                  (char *)&t_type, id, *t_name_str);
+                }
 				break;
 			}
 			objects += 12;

@@ -152,8 +152,8 @@ bool MCScriptInitialize(void)
         MCScriptAddExportToModule(t_builder, t_bool_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, kMCScriptDefinitionKindType, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignIntTypeInfo"), t_type_index);
-        MCScriptAddTypeToModule(t_builder, MCNAME("int"), t_type_index, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignSIntTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("sint"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_uint_type_index;

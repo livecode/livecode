@@ -672,7 +672,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 
 		// We now add the range initial...final as a block.
         MCAutoStringRef t_substring;
-        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+        MCStringCopySubstring(*t_temp, MCRangeMakeMinMax(t_text_initial_start_index, t_text_end_index), &t_substring);
 		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.

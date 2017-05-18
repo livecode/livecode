@@ -143,7 +143,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
     uindex_t t_last_slash;
     MCStringRef t_path;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_last_slash))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_last_slash + 1, MCStringGetLength(fname) - t_last_slash - 1), t_path);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(fname)), t_path);
     else
         t_path = MCValueRetain(fname);
     

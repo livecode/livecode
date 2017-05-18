@@ -790,7 +790,6 @@
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
-			'src/em-dc-mainloop.h',
 			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
@@ -1030,6 +1029,7 @@
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
 			'test/test_rgb.cpp',
+            'test/test_path.cpp',
 		],
 	},
 	
@@ -1069,7 +1069,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/srvmac.cpp',
 						'src/native-layer-mac.cpp',
 					],
 				},

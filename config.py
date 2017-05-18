@@ -215,16 +215,13 @@ def validate_target_arch(opts):
         platform = opts['PLATFORM']
         if platform == 'emscripten':
             opts['TARGET_ARCH'] = 'js'
-            return
-
-        # Windows builds don't understand 'x86_64'
-        if platform == 'win-x86_64':
-            opts['TARGET_ARCH'] = 'x64'
+            opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
             return
 
         platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
         if platform_arch is not None:
             opts['TARGET_ARCH'] = platform_arch.group(1)
+            opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
             return
 
         if re.match('^(ios|mac)', platform) is not None:
@@ -232,9 +229,12 @@ def validate_target_arch(opts):
             arch = guess_xcode_arch(opts['XCODE_TARGET_SDK'])
             if arch is not None:
                 opts['TARGET_ARCH'] = arch
+                opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
                 return
 
         error("Couldn't guess target architecture for '{}'".format(platform))
+    else:
+        opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
 
 ################################################################
 # Guess other general options
@@ -346,6 +346,8 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
+    	# TODO [2017-04-11]: This should be 2017, but it is not 
+    	# compatible with our gyp as is.
         opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
@@ -471,6 +473,10 @@ def core_gyp_args(opts):
 
     if opts['BUILD_EDITION'] == 'commercial':
         args.append(os.path.join('..', 'livecode-commercial.gyp'))
+        
+    args.append('-Dbuild_edition=' + opts['BUILD_EDITION'])
+
+    args.append('-Duniform_arch=' + opts['UNIFORM_ARCH'])
 
     return args
 
@@ -517,6 +523,14 @@ def configure_android(opts):
 def configure_win(opts):
     validate_target_arch(opts)
     validate_windows_tools(opts)
+
+    # Make sure we strictly enforce TARGET_ARCH being x86 or x86_64
+    if opts['TARGET_ARCH'] != 'x86' and opts['TARGET_ARCH'] != 'x86_64':
+        error("TARGET_ARCH must be x86 or x86_64")
+
+    # Map target_arch for gyp - x86_64 -> x64
+    if opts['TARGET_ARCH'] == 'x86_64':
+        opts['TARGET_ARCH'] = 'x64'
 
     args = core_gyp_args(opts) + ['-Gmsvs_version=' + opts['WIN_MSVS_VERSION']]
     args += gyp_define_args(opts, {'target_arch':    'TARGET_ARCH',

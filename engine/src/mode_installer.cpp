@@ -612,7 +612,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> GetHandle();
+			t_context . target = MCtargetptr;
 			t_context . name = *t_item;
             if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
                 return;
@@ -1581,7 +1581,7 @@ bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-    t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+    t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
     /* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
     return t_do_relaunch;
 #else
@@ -1727,13 +1727,6 @@ void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, 
 void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
-
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack)
-{
-	return 0;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

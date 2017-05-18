@@ -1,6 +1,6 @@
-/*                                                                     -*-c++-*-
-
-Copyright (C) 2003-2015 LiveCode Ltd.
+script "DateTime"
+/*
+Copyright (C) 2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,13 +16,15 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MC_EMSCRIPTEN_DC_MAINLOOP_H__
-#define __MC_EMSCRIPTEN_DC_MAINLOOP_H__
 
-#include <foundation.h>
+on TestLongTime24Hours
+ local tDateItems
+ set the twelveHourTime to false
+ put "2017,3,28,2,0,0,3" into tDateItems
+ convert tDateItems to long time
 
-bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
-bool X_main_loop_iteration(void);
-int X_close(void);
+ TestAssert "Test 24-hour format 1", char 1 to 2 of tDateItems is a number
+ TestAssert "Test 24-hour format 2", char 3 of tDateItems is ":"
+ TestAssert "Test 24-hour format 3", tDateItems is "02:00:00"
+end TestLongTime24Hours
 
-#endif /* !__MC_EMSCRIPTEN_DC_MAINLOOP_H__ */

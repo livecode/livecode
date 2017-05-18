@@ -16,7 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "em-dc-mainloop.h"
 #include "em-dc.h"
 #include "em-standalone.h"
 #include "em-util.h"
@@ -38,9 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* Functions that incomprehensibly fail to appear in any header
  * files. */
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_clear_globals(void);
-void MCU_initialize_names(void);
 
 /* ================================================================
  * Platform-specific initialisation
@@ -109,12 +105,37 @@ static bool
 
 /* ================================================================ */
 
-bool
-X_init(int argc,
-       MCStringRef argv[],
-       int envc,
-       MCStringRef envp[])
+static bool
+X_initialize_mccmd(const X_init_options& p_options)
 {
+    return MCsystem->PathFromNative(p_options.argv[0],
+                                    MCcmd);
+}
+
+static bool
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    if (p_options.app_code_path != nullptr)
+    {
+        MCappcodepath = MCValueRetain(p_options.app_code_path);
+        return true;
+    }
+    
+    return MCU_path_split(MCcmd,
+                          &MCappcodepath,
+                          nullptr);
+}
+
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
+bool
+X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+
 	/* ---------- Set up global variables */
 	X_clear_globals();
 
@@ -131,7 +152,18 @@ X_init(int argc,
 
 	/* ---------- Initialise all the things */
 	MCS_init();
-	MCU_initialize_names();
+    
+    if (!X_initialize_mccmd(p_options))
+    {
+        goto error_cleanup;
+    }
+
+    if (!X_initialize_mcappcodepath(p_options))
+    {
+        goto error_cleanup;
+    }
+    
+	X_initialize_names();
 
 	if (!MCFontInitialize())
 	{
@@ -144,12 +176,6 @@ X_init(int argc,
 	}
 
 	/* ---------- More globals */
-
-	/* executable file name */
-	if (!MCsystem->PathFromNative(argv[0], MCcmd))
-	{
-		goto error_cleanup;
-	}
 
 	/* Locales */
 	if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))

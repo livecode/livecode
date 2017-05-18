@@ -488,7 +488,7 @@ MCDataRef MCWin32RawClipboardCommon::EncodeBMPForTransfer(MCDataRef p_bmp) const
 	// Strip the BITMAPFILEHEADER structure from the BMP and pass the BMP in its in-memory form
 	MCAutoDataRef t_data;
 	size_t t_offset = sizeof(BITMAPFILEHEADER);
-	if (!MCDataCopyRange(p_bmp, MCRangeMake(t_offset, MCDataGetLength(p_bmp) - t_offset), &t_data))
+	if (!MCDataCopyRange(p_bmp, MCRangeMakeMinMax(t_offset, MCDataGetLength(p_bmp)), &t_data))
 		return nil;
 	return *t_data;
 }
@@ -644,10 +644,15 @@ MCStringRef MCWin32RawClipboardCommon::CopyTypeForAtom(UINT p_atom)
 
 bool MCWin32RawClipboard::IsOwned() const
 {
+	// Get the IDataObject that we are placing onto the clipboard
+	IDataObject* t_data_object = NULL;
+	if (m_item != NULL)
+		t_data_object = m_item->GetIDataObject();
+
 	// Check if our data object is the current clipboard data object
-	if (m_item == NULL)
-		return false;
-	return S_OK == OleIsCurrentClipboard(m_item->GetIDataObject());
+	if (t_data_object == NULL)
+		return true;
+	return S_OK == OleIsCurrentClipboard(t_data_object);
 }
 
 
@@ -678,7 +683,7 @@ bool MCWin32RawClipboard::PushUpdates()
 bool MCWin32RawClipboard::PullUpdates()
 {
 	// If we're still the owner of the clipboard, do nothing
-	if (IsOwned())
+	if (m_item != NULL && IsOwned())
 		return true;
 
 	// Release the current clipboard contents

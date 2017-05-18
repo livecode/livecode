@@ -133,7 +133,7 @@ void MCScreenDC::appendevent(MCEventnode *tptr)
 	tptr->appendto(pendingevents);
 }
 
-void CALLBACK mouseproc(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK mouseproc(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	pms->setmousetimer(0);
@@ -1108,7 +1108,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (curinfo->live && !pms->isgrabbed() && LOWORD(lParam) != HTCLIENT)
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		MCmousestackptr = MCdispatcher->findstackd(dw);
-		if (!MCmousestackptr)
+		if (MCmousestackptr)
 		{
 			MCmousestackptr->resetcursor(True);
 			if (pms->getmousetimer() == 0)

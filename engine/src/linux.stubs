@@ -110,7 +110,7 @@ pango libpango-1.0.so.0
 	pango_font_metrics_get_underline_thickness: (pointer) -> (integer)
 	pango_font_metrics_unref: (pointer) -> ()
 
-lcms liblcms.so.1
+lcms liblcms2.so.2
 	cmsOpenProfileFromFile: (pointer, pointer) -> (pointer)
 	cmsOpenProfileFromMem: (pointer, integer) -> (pointer)
 	cmsCloseProfile: (pointer) -> (integer)
@@ -126,7 +126,7 @@ lcms liblcms.so.1
 	cmsGetColorSpace: (pointer) -> (integer)
 	
 	cmsBuildGamma: (integer, double) -> (pointer)
-	cmsFreeGamma: (pointer) -> ()
+	cmsFreeToneCurve: (pointer) -> ()
 
 gdk libgdk-x11-2.0.so.0
 	gdk_drawable_get_image: (pointer, integer, integer, integer, integer) -> (pointer)
@@ -626,11 +626,11 @@ gobject libgobject-2.0.so.0
 	g_free: (pointer) -> ()
 	g_object_ref: (pointer) -> (pointer)
 	g_object_unref: (pointer) -> ()
-	g_type_class_peek: (integer) -> (pointer)
-	g_type_class_ref: (integer) -> (pointer)
+	g_type_class_peek: (pointer) -> (pointer)
+	g_type_class_ref: (pointer) -> (pointer)
 	g_type_class_unref: (pointer) -> ()
-	g_type_check_instance_cast: (pointer, integer) -> (pointer)
-	g_type_check_instance_is_a: (pointer, integer) -> (integer)
+	g_type_check_instance_cast: (pointer, pointer) -> (pointer)
+	g_type_check_instance_is_a: (pointer, pointer) -> (integer)
 	g_type_init: () -> ()
 	@ g_object_get
 	g_object_get_valist: (pointer, pointer, pointer) -> ()
@@ -661,11 +661,3 @@ esd libesd.so.0
 	esd_play_stream: (integer, integer, pointer, pointer) -> (integer)
 	esd_open_sound: (pointer) -> (integer)
 
-fontconfig libfontconfig.so.1
-	FcInit: () -> (integer)
-	FcInitLoadConfigAndFonts: () -> (pointer)
-	FcConfigAppFontAddFile: (pointer, pointer) -> (integer)
-	FcConfigAppFontClear: (pointer) -> ()
-	FcConfigBuildFonts: (pointer) -> (integer)
-	FcConfigSetCurrent: (pointer) -> (integer)
-    

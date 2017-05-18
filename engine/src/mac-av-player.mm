@@ -242,8 +242,8 @@ private:
     AVPlayerLayer *t_layer;
     t_layer = [AVPlayerLayer playerLayerWithPlayer: player];
     [t_layer setVideoGravity: AVLayerVideoGravityResize];
-    [self setLayer: t_layer];
     [self setWantsLayer: YES];
+    [self setLayer: t_layer];
     self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 }
 
@@ -795,8 +795,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // Now set the player of the view.
     [m_view setPlayer: m_player];
 
-    m_view.layer.affineTransform = CGAffineTransformMakeScale(-1, 1);
-    
+    Synchronize();
+
     m_last_marker = UINT32_MAX;
 
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
@@ -822,12 +822,12 @@ void MCAVFoundationPlayer::Mirror(void)
     
     CGAffineTransform t_flip_horizontally = CGAffineTransformConcat(t_transform1, t_transform2);
     
-    m_view.layer.affineTransform = t_flip_horizontally;
+    m_view.layer.sublayerTransform = CATransform3DMakeAffineTransform(t_flip_horizontally);
 }
 
 void MCAVFoundationPlayer::Unmirror(void)
 {
-    m_view.layer.affineTransform = CGAffineTransformMakeScale(1, 1);
+    m_view.layer.sublayerTransform = CATransform3DMakeAffineTransform(CGAffineTransformMakeScale(1, 1));
 }
 
 void MCAVFoundationPlayer::Synchronize(void)

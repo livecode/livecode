@@ -405,7 +405,7 @@ bool MCCefInitialise(void)
 	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
-	t_settings.log_severity = LOGSEVERITY_VERBOSE;
+	t_settings.log_severity = LOGSEVERITY_DISABLE;
 	
     bool t_success = true;
     if (t_success)
@@ -1674,7 +1674,7 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	if (!MCCStringIsEmpty(t_new_handlers))
 	{
 		if (t_success)
-			t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
+			t_success = MCCStringSplit(t_new_handlers, '\n', t_handlers, t_handler_count);
 		
 		if (t_success)
 			t_success = t_handler_list->SetSize(t_handler_count);

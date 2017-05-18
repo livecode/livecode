@@ -191,7 +191,7 @@ extern void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
-extern bool MCU_couldbeurl(const MCString& potential_url);
+extern bool MCU_couldbeurl(MCStringRef potential_url);
 extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef p_data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
@@ -284,5 +284,41 @@ extern "C" void MCSupportLibraryUnload(void *handle);
 extern "C" char *MCSupportLibraryCopyNativePath(void *handle);
 extern "C" void *MCSupportLibraryLookupSymbol(void *handle,
                                               const char *symbol);
+
+/* Split a LiveCode path into dirname and basename, using the current platform's
+ * rules. Any unnecessary trailing slashes will be trimmed from dir. */
+bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using unix rules.
+ * In this case, the string is split at the last '/' into prefix and suffix.
+ * If the prefix is '/', then dir is '/' and base is the rest of the path;
+ * Otherwise, dir is prefix and base is suffix - in this case dir will not end
+ * with '/'. */
+bool
+MCU_path_split_unix(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using win32 rules.
+ * Win32 paths can have the following forms in addition to unix forms.
+ *   //[Share]/[Folder][/Base]
+ *   Drive:[Folder]/[Base]
+ * In the first case, dir is //Share/Folder and base is Base
+ * In the second case, if Folder is not present then
+ *   dir is Drive:/
+ *   base is Base
+ * If Folder is present then
+ *   dir is Drive:Folder
+ *   base is Base
+ * The addition of a trailing '/' in the case of Folder not being present is
+ * necessary to distinguish between drive relative and drive absolute paths.
+ */
+bool
+MCU_path_split_win32(MCStringRef p_path,
+                     MCStringRef* r_dir,
+                     MCStringRef* r_base);
 
 #endif

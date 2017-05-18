@@ -27,53 +27,56 @@ bool MCAndroidTypefaceCreateWithData(void *p_data, uint32_t p_length, MCAndroidT
 {
 	bool t_success = true;
 	
-    SkMemoryStream *t_stream;
-    t_stream = nil;
+    SkMemoryStream *t_stream = nil;
     if (t_success)
     {
         t_stream = new (nothrow) SkMemoryStream(p_data, p_length, false);
         t_success = t_stream != nil;
     }
     
-    SkTypeface *t_type_face;
-    t_type_face = nil;
+    sk_sp<SkTypeface> t_type_face;
     if (t_success)
     {
-        t_type_face = SkTypeface::CreateFromStream(t_stream);
+        t_type_face = SkTypeface::MakeFromStream(t_stream);
         t_success = t_type_face != nil;
     }
+    
+    // SkTypeface::MakeFromStream takes ownership of the stream
+    if (!t_success && t_stream != nil)
+        delete t_stream;
 	
 	if (t_success)
-		r_typeface = (MCAndroidTypefaceRef)t_type_face;
-	else
-	{
-		if (t_stream != nil)
-			delete t_stream;
-	}
+		r_typeface = (MCAndroidTypefaceRef)(t_type_face.release());
 	
 	return t_success;
 }
 
 bool MCAndroidTypefaceCreateWithName(const char *p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface)
 {
-	SkTypeface::Style t_style = SkTypeface::kNormal;
+    SkFontStyle::Weight t_weight;
+    SkFontStyle::Width t_width;
+    SkFontStyle::Slant t_slant;
+    
 	if (p_bold)
-	{
-		if (p_italic)
-			t_style = SkTypeface::kBoldItalic;
-		else
-			t_style = SkTypeface::kBold;
-	}
-	else if (p_italic)
-		t_style = SkTypeface::kItalic;
+        t_weight = SkFontStyle::kBold_Weight;
+    else
+        t_weight = SkFontStyle::kNormal_Weight;
+    
+    t_width = SkFontStyle::kNormal_Width;
+    
+    if (p_italic)
+        t_slant = SkFontStyle::kItalic_Slant;
+    else
+        t_slant = SkFontStyle::kUpright_Slant;
 	
-	SkTypeface *t_typeface = nil;
-	t_typeface = SkTypeface::CreateFromName(p_name, t_style);
+    SkFontStyle t_style(t_weight, t_width, t_slant);
+    
+	sk_sp<SkTypeface> t_typeface = SkTypeface::MakeFromName(p_name, t_style);
 	
 	if (t_typeface == nil)
 		return false;
 	
-	r_typeface = (MCAndroidTypefaceRef)t_typeface;
+	r_typeface = (MCAndroidTypefaceRef)(t_typeface.release());
 	return true;
 }
 
@@ -87,10 +90,11 @@ void MCAndroidTypefaceRelease(MCAndroidTypefaceRef p_typeface)
 
 bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_size, float &r_ascent, float &r_descent, float &r_leading, float &r_xheight)
 {
-	bool t_success = true;
-	
+    // Skia APIs expect typefaces to be passed as shared pointers
+    sk_sp<SkTypeface> t_typeface = sk_ref_sp((SkTypeface *)p_typeface);
+    
 	SkPaint t_paint;
-	t_paint.setTypeface((SkTypeface*)p_typeface);
+	t_paint.setTypeface(t_typeface);
 	t_paint.setTextSize(p_size);
     
 	SkPaint::FontMetrics t_metrics;
@@ -108,8 +112,11 @@ bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_siz
 
 bool MCAndroidTypefaceMeasureText(MCAndroidTypefaceRef p_typeface, uint32_t p_size, const char *p_text, uint32_t p_text_length, bool p_utf16, float &r_length)
 {
-	SkPaint t_paint;
-	t_paint.setTypeface((SkTypeface*)p_typeface);
+    // Skia APIs expect typefaces to be passed as shared pointers
+    sk_sp<SkTypeface> t_typeface = sk_ref_sp((SkTypeface *)p_typeface);
+    
+    SkPaint t_paint;
+	t_paint.setTypeface(t_typeface);
 	t_paint.setTextSize(p_size);
     
 	t_paint.setTextEncoding(p_utf16 ? SkPaint::kUTF16_TextEncoding : SkPaint::kUTF8_TextEncoding);

@@ -646,7 +646,7 @@ MCNameRef MCN_font_message;
 MCNameRef MCN_font_tooltip;
 MCNameRef MCN_font_system;
 
-void MCU_initialize_names(void)
+void X_initialize_names(void)
 {
 	/* UNCHECKED */ MCNameCreateWithCString("msg", MCN_msg);
 	/* UNCHECKED */ MCNameCreateWithCString("each", MCN_each);

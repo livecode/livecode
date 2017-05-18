@@ -248,6 +248,10 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	if ((stat == ES_NOT_HANDLED || stat == ES_PASS) && m_externals != nil)
 	{
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+    
 		Exec_stat oldstat = stat;
 		stat = m_externals -> Handle(this, htype, mess, params);
 
@@ -258,6 +262,15 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
 	}
 
 //#ifdef TARGET_SUBPLATFORM_IPHONE
@@ -285,12 +298,25 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
     if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
     {
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+        
         extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
         stat = MCEngineHandleLibraryMessage(mess, params);
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
     }
     
-	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr . object -> sendmessage(htype, mess, False);
+	if (MCmessagemessages && stat != ES_PASS && MCtargetptr)
+		MCtargetptr -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;
@@ -338,7 +364,9 @@ void MCDispatch::removestack(MCStack *sptr)
 void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
-		removestack(sptr);
+    {
+        sptr -> dodel();
+    }
 	if (sptr == MCstaticdefaultstackptr)
 		MCstaticdefaultstackptr = stacks;
 	if (sptr == MCdefaultstackptr)
@@ -965,7 +993,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
         MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMakeMinMax(t_leaf_index + 1, MCStringGetLength(p_name)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
@@ -1266,6 +1294,9 @@ void send_relaunch(void)
 #endif
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 void send_startup_message(bool p_do_relaunch = true)
 {
 	if (p_do_relaunch)
@@ -2112,7 +2143,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
     
 	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
     {
-		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+		if (!MCStringCopySubstring(p_external, MCRangeMakeMinMax(t_slash_index + 1, t_ext_length), t_external_leaf))
             return false;
     }
     else

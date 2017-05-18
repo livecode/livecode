@@ -33,17 +33,16 @@
 				'src/context.cpp',
 				'src/coretext.cpp',
 				'src/image.cpp',
-				'src/legacyblendmodes.cpp',
-				'src/legacygradients.cpp',
 				'src/lnxtext.cpp',
 				'src/harfbuzztext.cpp',
 				'src/hb-sk.cpp',
-				#'src/osxtext.cpp', # UNUSED?
 				'src/path.cpp',
 				'src/region.cpp',
 				'src/spread.cpp',
 				'src/utils.cpp',
 				'src/w32text.cpp',
+				'src/SkStippleMaskFilter.cpp',
+				'src/legacygradients.cpp',
 			],
 			
 			'conditions':

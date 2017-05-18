@@ -45,7 +45,7 @@ settings are used.
 > speaking, use the <revIsSpeaking> <function>, as in the following
 > example: 
 
-    if revIsSpeaking then answer "Just a moment..."
+    if revIsSpeaking() then answer "Just a moment..."
     else revSpeak it
 
 

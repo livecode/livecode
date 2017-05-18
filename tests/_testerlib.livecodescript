@@ -52,14 +52,9 @@ end TesterGetTestFileNames
 
 -- Helper command used by runGetTestFileNames
 private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, @xFiles, @xCount
-   -- Save the CWD
-   local tSaveFolder
-   put the defaultfolder into tSaveFolder
-   set the defaultfolder to pPath
-
    -- Process files in the current directory
    local tFile
-   repeat for each line tFile in the files
+   repeat for each line tFile in files(pPath)
       if tFile ends with ("." & pExtension) and \
             not (tFile begins with "." or tFile begins with "_") then
 
@@ -74,7 +69,7 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
    -- Process subdirectories
    local tFolder, tFolderPath
-   repeat for each line tFolder in the folders
+   repeat for each line tFolder in folders(pPath)
       if tFolder begins with "." then
          next repeat
       end if
@@ -87,9 +82,6 @@ private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, 
 
       TesterGetActualFileNames_Recursive tFolderPath, tFolder, pExtension, xFiles, xCount
    end repeat
-
-   -- Restore the CWD
-   set the defaultfolder to tSaveFolder
 end TesterGetActualFileNames_Recursive
 
 -- Get a number-indexed array contain the names of all "test"

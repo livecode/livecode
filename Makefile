@@ -25,8 +25,8 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 9.2 10.2
-IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2
+IPHONEOS_VERSIONS ?= 9.2 10.2 10.3
+IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2 10.3
 SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1
 
 IOS_SDKS ?= \
@@ -46,7 +46,7 @@ else
 endif
 
 # Prettifying output for CI builds
-XCODEBUILD_FILTER ?= 
+XCODEBUILD_FILTER ?=
 
 include Makefile.common
 
@@ -56,6 +56,15 @@ include Makefile.common
 
 all: all-$(guess_platform)
 check: check-$(guess_platform)
+
+# [[ MDW-2017-05-09 ]] feature_clean_target
+clean-linux:
+	rm -rf linux-*-bin
+	rm -rf build-linux-*
+	rm -rf prebuilt/fetched
+	rm -rf prebuilt/include
+	rm -rf prebuilt/lib
+	find . -name \*.lcb | xargs touch
 
 check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin

@@ -720,6 +720,17 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
                 return false;
             }
 
+#ifdef SO_REUSEPORT
+            // some platforms also require the SO_REUSEPORT option to be set in order to use the same local port for multiple connections
+            t_port_reuse = 1;
+            if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
+            {
+                p_socket->error = strclone("can't use the local port");
+                p_socket->doclose();
+                return false;
+            }
+#endif
+
             if (bind(p_socket->fd, (struct sockaddr *)&t_bind_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 p_socket->error = strclone("can't bind to local host and port");
@@ -1133,6 +1144,15 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	int on = 1;
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 
+#ifdef SO_REUSEPORT
+    on = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const char *)&on, sizeof(on)) != 0)
+    {
+        MCresult->sets("can't reuse port");
+        return NULL;
+    }
+#endif
+
 	mc_sockaddr_in_t addr;
 
 	memset((char *)&addr, 0, sizeof(addr));
@@ -1217,7 +1237,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 
 bool MCS_hostaddress(MCStringRef &r_host_address)
 {
-#if defined(_MACOSX)
+#if defined(_MAC_DESKTOP)
     bool t_success;
     t_success = true;
     
@@ -1591,7 +1611,7 @@ void MCSocket::readsome()
 				MCAutoStringRef n;
 				MCNewAutoNameRef t_name;
 				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
-				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCStringAppendFormat(*n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
 				uindex_t index;
 				if (accepting && !IO_findsocket(*t_name, index))
@@ -2168,9 +2188,9 @@ Boolean MCSocket::sslconnect()
 
     uindex_t t_pos;
     if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
     else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
 
     MCAutoPointer<char> t_host;
     /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
@@ -2374,9 +2394,9 @@ Boolean MCSocket::sslaccept()
             /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
             uindex_t t_pos;
             if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMakeMinMax(t_pos, MCStringGetLength(*t_hostname)));
 			
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
             // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL

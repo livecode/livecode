@@ -1,0 +1,10 @@
+--- b-context.txt	2017-01-17 17:08:51.000000000 +0000
++++ a-context.txt	2017-01-17 17:08:31.000000000 +0000
+@@ -3,5 +3,5 @@
+ ********
+ 
+ ********
+-Alternative sample text
++Sample text
+ Context
+\ No newline at end of file

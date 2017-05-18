@@ -552,9 +552,11 @@ Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, 
 
 			// MW-2008-07-30: [[ Bug 6415 ]] Inserting data into SQL Server doesn't work.
 			//   This is because the bind parameter call was only being issued for binary columns!
+			SQLLEN t_argument_size;
 			SQLBindParameter(p_cursor, i + 1, SQL_PARAM_INPUT,
 				t_value -> isbinary ? SQL_C_BINARY : SQL_C_CHAR, t_data_type,
-				t_value -> length, 0, (void *)t_value -> sptr, t_value -> length, (long int *)&p_argument_sizes[i]);
+				t_value -> length, 0, (void *)t_value -> sptr, t_value -> length, &t_argument_size);
+			p_argument_sizes[i] = t_argument_size;
 			}
 		else
 		{
@@ -566,9 +568,11 @@ Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, 
 			// The parameters are binded slightly differently here. Notice that we pass the actual DBString pointer instead
 			// of the value buffer. This pointer will be returned by ODBC for us later, meaning that we don't need to look up
 			// which parameter is needed again.
+			SQLLEN t_argument_size;
 			SQLBindParameter(p_cursor, i + 1, SQL_PARAM_INPUT,
 				t_value -> isbinary ? SQL_C_BINARY : SQL_C_CHAR, t_data_type,
-				t_value -> length, 0, (void *)t_value, t_value -> length, (long int *)&p_argument_sizes[i]);
+				t_value -> length, 0, (void *)t_value, t_value -> length, &t_argument_size);
+			p_argument_sizes[i] = t_argument_size;
 		}
 	}
 

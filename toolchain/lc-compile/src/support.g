@@ -191,12 +191,6 @@
     EmitDefinedType
     EmitForeignType
     EmitOptionalType
-    EmitPointerType
-    EmitBoolType
-    EmitIntType
-    EmitUIntType
-    EmitFloatType
-    EmitDoubleType
     EmitAnyType
     EmitBooleanType
     EmitIntegerType
@@ -598,12 +592,6 @@
 'action' EmitOptionalType(INT -> INT)
 --'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
 --'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
-'action' EmitPointerType(-> INT)
-'action' EmitBoolType(-> INT)
-'action' EmitIntType(-> INT)
-'action' EmitUIntType(-> INT)
-'action' EmitFloatType(-> INT)
-'action' EmitDoubleType(-> INT)
 'action' EmitAnyType(-> INT)
 'action' EmitBooleanType(-> INT)
 'action' EmitIntegerType(-> INT)

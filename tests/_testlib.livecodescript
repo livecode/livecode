@@ -184,15 +184,35 @@ on TestAssertBroken pDescription, pExpectTrue, pReasonBroken
    _TestOutput pExpectTrue, pDescription, "TODO", pReasonBroken
 end TestAssertBroken
 
-on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode, pParam
+on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
    local tError
    try
       dispatch pHandler to pTarget with pParam
-    catch tError
-    end try
+   catch tError
+   end try
 
-    TestAssert pDescription, pErrorCode is item 1 of line 1 of tError
+   TestDiagnostic tError
+
+   local tSuccess
+   put true into tSuccess
+   repeat for each item tErrorCode in pErrorCodes
+      put tSuccess and \
+             (tErrorCode is item 1 of the first line of tError) into tSuccess
+      delete the first line of tError
+   end repeat
+
+   TestAssert pDescription, tSuccess
 end TestAssertThrow
+
+on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
+  local tError
+  try
+    dispatch pHandler to pTarget with pParam
+  catch tError
+  end try
+
+  TestAssert pDescription, tError is empty 
+end TestAssertDoesNotThrow
 
 on ErrorDialog executionError, parseError
    write executionError & return to stderr
@@ -240,8 +260,8 @@ on TestLoadExtension pName
 
    if tExtensionFile is not empty then
       _TestLoadExtension tExtensionFolder, tExtensionFile
+      put the result into tError
    end if
-   put the result into tError
 
    if tError is not empty then
       write tError & return to stderr
@@ -340,7 +360,7 @@ on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
 
     put false into tResult
 
-    local tTimer, tTimeout
+    local tTimer, tTimeout, tTimerStart
     put false into tTimeout
     put the millisecs into tTimerStart
 

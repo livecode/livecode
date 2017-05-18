@@ -50,10 +50,6 @@
 
 #if defined(FEATURE_PLATFORM_APPLICATION)
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_main_loop_iteration();
-int X_close();
-
 void X_main_loop(void)
 {
 	while(!MCquit)
@@ -64,16 +60,38 @@ void X_main_loop(void)
 
 void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
-	if (X_init(p_argc, p_argv, p_envp))
+    struct X_init_options t_options;
+    t_options.argc = p_argc;
+    t_options.argv = p_argv;
+    t_options.envp = p_envp;
+    t_options.app_code_path = nullptr;
+
+	if (X_init(t_options))
 	{
 		r_error_code = 0;
 		r_error_message = nil;
 		return;
 	}
-	
-	r_error_code = -1;
-    if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+
+    r_error_code = -1;
+
+    if (MCresult == nullptr)
+    {
+        /* TODO[2017-04-05] X_init() failed before initialising global
+         * variables.  This could be because something horrible happened, or it
+         * could be because it found "-h" in the arguments.  It's better to
+         * quit without an error message than to crash, but it the future it
+         * would be good to distinguish between the two. */
+        r_error_message = MCValueRetain(kMCEmptyString);
+    }
+    else if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+    {
         r_error_message = (MCStringRef)MCValueRetain(MCresult->getvalueref());
+    }
+    else
+    {
+        r_error_message = MCValueRetain(MCSTR("Unknown error occurred"));
+    }
 }
 
 void MCPlatformHandleApplicationShutdown(int& r_exit_code)
@@ -778,11 +796,11 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	int4 si, ei;
 	MCactivefield -> selectedmark(False, si, ei, False);
 	MCactivefield -> unresolvechars(0, si, ei);
-	r_selected_range = MCRangeMake(si, ei - si);
+	r_selected_range = MCRangeMakeMinMax(si, ei);
 	if (MCactivefield -> getcompositionrange(si, ei))
 	{
 		MCactivefield -> unresolvechars(0, si, ei);
-		r_marked_range = MCRangeMake(si, ei - si);
+		r_marked_range = MCRangeMakeMinMax(si, ei);
 	}
 	else
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
@@ -832,7 +850,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 	t_bottom_right = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x + t_rect . width, t_rect . y + t_rect . height));
 	
 	r_first_line_rect = MCRectangleMake(t_top_left . x, t_top_left . y, t_bottom_right . x - t_top_left . x, t_bottom_right . y - t_top_left . y);
-	r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+	r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
@@ -856,7 +874,7 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 	MCactivefield -> unresolvechars(0, t_si, t_ei);
     
     /* UNCHECKED */ MCStringConvertToUnicode(*t_text, r_chars, r_char_count);
-    r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+    r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
@@ -1333,7 +1351,7 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+	for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
             return t_player;

@@ -101,6 +101,7 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
 	bool getparamnames(MCListRef& r_list);
+	bool getparamnames_as_properlist(MCProperListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
 	bool getvarnames(bool p_all, MCListRef& r_list);
@@ -148,12 +149,6 @@ public:
 	{
 		r_vars = vars;
 		r_var_count = nvnames;
-	}
-	
-	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
-	{
-		r_vars = params;
-		r_param_count = npnames;
 	}
 	
 	void getgloballist(MCVariable**& r_vars, uint32_t& r_var_count)

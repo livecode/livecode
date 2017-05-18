@@ -811,6 +811,13 @@ inline bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef p_
     return p_recorder -> ListCompressors(callback, context);
 }
 
+// Call callback for each possible output format available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+inline bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context)
+{
+    return p_recorder -> ListFormats(callback, context);
+}
+
 // Get the current sound recording configuration. The caller is responsible for freeing 'extra_info'.
 inline void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderConfiguration& r_config)
 {

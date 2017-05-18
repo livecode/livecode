@@ -359,7 +359,7 @@ bool MCImageSplitScaledFilename(MCStringRef p_filename, MCStringRef &r_base, MCS
 	else
 	{
 		MCAutoStringRef t_label;
-        /* UNCHECKED */ MCStringCopySubstring(p_filename, MCRangeMake(t_label_start, t_ext_start - t_label_start), &t_label);
+        /* UNCHECKED */ MCStringCopySubstring(p_filename, MCRangeMakeMinMax(t_label_start, t_ext_start), &t_label);
         
         t_has_scale = MCImageGetScaleForLabel(*t_label, t_scale);
 		
@@ -372,7 +372,7 @@ bool MCImageSplitScaledFilename(MCStringRef p_filename, MCStringRef &r_base, MCS
 	
 	MCAutoStringRef t_base, t_extension;
     t_success = MCStringCopySubstring(p_filename, MCRangeMake(0, t_label_start), &t_base)
-    && MCStringCopySubstring(p_filename, MCRangeMake(t_ext_start, t_length - t_ext_start), &t_extension);
+    && MCStringCopySubstring(p_filename, MCRangeMakeMinMax(t_ext_start, t_length), &t_extension);
 	
 	if (t_success)
 	{

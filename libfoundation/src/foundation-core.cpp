@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation-hash.h"
 #include "foundation-string-hash.h"
 
+#if defined(__WINDOWS__)
+#   include <Windows.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __LINUX__
@@ -215,6 +219,31 @@ void MCMemoryDeleteArray(void *p_array)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Securely clear the memory located at dst, using volatile to try to
+ * ensure that the compiler doesn't optimise it out. */
+MC_DLLEXPORT
+void MCMemoryClearSecure(byte_t* dst,
+                         size_t size)
+{
+#if defined(__WINDOWS__)
+    SecureZeroMemory(dst, size);
+#else
+    MCMemoryClear(dst, size);
+    /* Add a barrier to prevent the compiler from optimizing the above
+     * MCMemoryClear() call away.  Without this, both clang and GCC
+     * will optimise out the memory clear.*/
+    __asm__ __volatile__ ( "" : : "r"(dst) : "memory" );
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
+hash_t MCHashBool(bool b)
+{
+    return hash_t(b);
+}
+
 MC_DLLEXPORT_DEF
 hash_t MCHashInteger(integer_t i)
 {
@@ -235,12 +264,25 @@ MCHashSize (ssize_t i)
 	return MCHashInt(i);
 }
 
+MC_DLLEXPORT_DEF
 hash_t
 MCHashUSize (size_t i)
 {
 	return MCHashInt(i);
 }
 
+MC_DLLEXPORT_DEF
+hash_t
+MCHashInt64(int64_t i)
+{
+	return MCHashInt(i);
+}
+
+hash_t
+MCHashUInt64(uint64_t i)
+{
+	return MCHashInt(i);
+}
 MC_DLLEXPORT_DEF
 hash_t MCHashPointer(const void *p)
 {

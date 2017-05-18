@@ -54,7 +54,7 @@ bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path)
     if (MCStringGetNativeCharAtIndex(p_path, MCStringGetLength(MCcmd)) == '/')
         t_start++;
         
-    return MCStringCopySubstring(p_path, MCRangeMake(t_start, MCStringGetLength(p_path) - t_start), r_apk_path);
+    return MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_start, MCStringGetLength(p_path)), r_apk_path);
 }
 
 bool path_from_apk_path(MCStringRef p_apk_path, MCStringRef& r_path)

@@ -1883,7 +1883,7 @@ void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
 {
 	MChidepalettes = p_value ? True : False;
     // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
     MCstacks->hidepaletteschanged();
 #endif
 }
@@ -2663,16 +2663,7 @@ void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {
         IO_cleanprocesses();
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            if (tptr -> hasname(p_name))
-            {
-                t_clip = tptr;
-                break;
-            }
-            tptr = tptr->getnextplayer();
-        }
+        t_clip = MCPlayer::FindPlayerByName(p_name);
     }
     
     if (t_clip != nil)

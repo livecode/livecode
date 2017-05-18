@@ -232,29 +232,6 @@ PACKED_INLINE uint4 packed_avg(uint4 x, uint4 y)
 	return u | v;
 }
 
-PACKED_INLINE float magic_sqrt (float number)
-{
-	float x = number;
-	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
-	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
-	x = x*(1.5f-xhalf*x*x);
-	return number * x;
-	
-}
-
-PACKED_INLINE float inv_sqrt (float x)
-{
-	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
-	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
-	x = x*(1.5f-xhalf*x*x);
-	return x;
-	
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline uint4 MCU_abs(int4 source)
@@ -794,8 +771,11 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	(*t_combiner) -> advance = gradient_affine_combiner_advance;
 	(*t_combiner) -> combine = NULL;
 	
+    MCGAffineTransform t_matrix;
+    MCGAffineTransformFromSkMatrix(p_gradient_ref -> transform, t_matrix);
+    
     MCGAffineTransform t_transform;
-    t_transform = MCGAffineTransformConcat(p_transform, p_gradient_ref -> transform);
+    t_transform = MCGAffineTransformConcat(p_transform, t_matrix);
     
     int4 vx = (int4) t_transform . a;
     int4 vy = (int4) t_transform . b;
@@ -961,26 +941,46 @@ MCGLegacyGradientShader::MCGLegacyGradientShader(MCGGradientRef p_gradient_ref, 
 {
 	m_gradient_ref = MCGGradientRetain(p_gradient_ref);
 	m_clip = p_clip;
-	m_y = 0;
-	m_mask = NULL;	
-	m_gradient_combiner = NULL;
 }
 
 MCGLegacyGradientShader::~MCGLegacyGradientShader()
 {
 	MCGGradientRelease(m_gradient_ref);
-	MCMemoryDeallocate(m_mask);
-	MCGradientFillDeleteCombiner(m_gradient_combiner);
 }
 
-bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint& p_paint, const SkMatrix& p_matrix)
+size_t MCGLegacyGradientShader::onContextSize(const ContextRec&) const
 {
+    return sizeof(MCGLegacyGradientShader::MCGLegacyGradientShaderContext);
+}
+
+SkShader::Context* MCGLegacyGradientShader::onCreateContext(const ContextRec& p_rec, void* p_storage) const
+{
+    return new (nothrow) MCGLegacyGradientShaderContext(*this, p_rec, m_gradient_ref, m_clip);
+}
+
+#ifndef SK_IGNORE_TO_STRING
+void MCGLegacyGradientShader::toString(SkString* p_str) const
+{
+    p_str->append("MCGLegacyGradientShader: ()");
+}
+#endif
+
+sk_sp<SkFlattenable> MCGLegacyGradientShader::CreateProc(SkReadBuffer& buffer)
+{
+    return NULL;
+}
+
+MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShaderContext(const MCGLegacyGradientShader& p_shader, const ContextRec& p_rec, MCGGradientRef p_gradient_ref, MCGRectangle p_clip)
+: INHERITED(p_shader, p_rec), m_y(0), m_mask(NULL), m_gradient_combiner(NULL)
+{
+    MCGRectangle t_clip;
+    
 	MCGAffineTransform t_matrix;
-	MCGAffineTransformFromSkMatrix(p_matrix, t_matrix);	
-	m_clip = MCGRectangleApplyAffineTransform(m_clip, t_matrix);
+	MCGAffineTransformFromSkMatrix(*p_rec.fMatrix, t_matrix);
+	t_clip = MCGRectangleApplyAffineTransform(p_shader.m_clip, t_matrix);
 	
 	uint32_t t_width;
-	t_width = (uint32_t) ceilf(m_clip . size . width);
+	t_width = (uint32_t) ceilf(p_shader.m_clip . size . width);
 	
 	bool t_success;
 	t_success = true;
@@ -991,37 +991,26 @@ bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint
 	if (t_success)
 	{	
 		memset(m_mask, 0xFF, t_width);
-		m_gradient_combiner = MCGradientFillCreateCombiner(m_gradient_ref, m_clip, t_matrix);
+		m_gradient_combiner = MCGradientFillCreateCombiner(p_gradient_ref, t_clip, t_matrix);
 		t_success = m_gradient_combiner != NULL;		
 	}
 	
 	if (t_success)
 	{
 		int32_t t_y;
-		t_y = (int32_t) m_clip . origin . y;
+		t_y = (int32_t) t_clip . origin . y;
 		m_gradient_combiner -> begin(m_gradient_combiner, t_y);
 		m_y = t_y;
-		t_success = SkShader::setContext(p_bitmap, p_paint, p_matrix);
 	}
-	
-	return t_success;
 }
 
-uint32_t MCGLegacyGradientShader::getFlags()
+MCGLegacyGradientShader::MCGLegacyGradientShaderContext::~MCGLegacyGradientShaderContext()
 {
-	return 0; 
+    MCMemoryDeallocate(m_mask);
+    MCGradientFillDeleteCombiner(m_gradient_combiner);
 }
 
-SkShader::BitmapType MCGLegacyGradientShader::asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const
-{
-	return SkShader::kNone_BitmapType;
-}
-
-void MCGLegacyGradientShader::shadeSpan16(int x, int y, uint16_t dstC[], int count) 
-{
-}
-
-void MCGLegacyGradientShader::shadeSpan(int x, int y, SkPMColor dstC[], int count)
+void MCGLegacyGradientShader::MCGLegacyGradientShaderContext::shadeSpan(int x, int y, SkPMColor dstC[], int count)
 {
 	if (m_gradient_combiner != NULL)
 	{

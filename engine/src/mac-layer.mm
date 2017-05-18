@@ -122,25 +122,29 @@ bool MCMacPlatformNativeLayer::Paint(MCGContextRef p_context)
     return true;
 }
 
-NSRect MCMacPlatformNativeLayer::calculateFrameRect(const MCRectangle &p_rect)
+NSRect MCMacPlatformNativeLayer::calculateFrameRect(const MCRectangle &p_rect, const MCRectangle &p_parent_rect, const MCGAffineTransform p_stack_transform)
 {
-    MCRectangle t_window_rect;
-    t_window_rect = MCRectangleMake(0, 0, 0, 0);
-    m_window -> GetProperty(kMCPlatformWindowPropertyContentRect, kMCPlatformPropertyTypeRectangle, &t_window_rect);
-    
-    NSRect t_rect;
-    t_rect = NSMakeRect(p_rect.x, t_window_rect.height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+   // IM-2017-04-20: [[ Bug 19327 ]] Transform rect to ui view coords
+  MCRectangle t_view_rect;
+  t_view_rect = MCRectangleGetTransformedBounds(p_rect, p_stack_transform);
+  
+   MCRectangle t_parent_view_rect;
+   t_parent_view_rect = MCRectangleGetTransformedBounds(p_parent_rect, p_stack_transform);
+   
+   // First compute rect of this object relative to parent
+   t_view_rect.y -= t_parent_view_rect.y;
+   t_view_rect.x -= t_parent_view_rect.x;
+   
+   // Now compute the (y-inverted) NSView rect
+  NSRect t_rect;
+  t_rect = NSMakeRect(t_view_rect.x, t_parent_view_rect.height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
     
     return t_rect;
 }
 
-void MCMacPlatformNativeLayer::SetViewportGeometry(const MCRectangle &p_rect)
+void MCMacPlatformNativeLayer::SetGeometry(const MCRectangle &p_rect, const MCRectangle &p_parent_rect, const MCGAffineTransform p_stack_transform)
 {
-}
-
-void MCMacPlatformNativeLayer::SetGeometry(const MCRectangle &p_rect)
-{
-    [m_view setFrame:calculateFrameRect(p_rect)];
+    [m_view setFrame:calculateFrameRect(p_rect, p_parent_rect, p_stack_transform)];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
     m_cached = nil;

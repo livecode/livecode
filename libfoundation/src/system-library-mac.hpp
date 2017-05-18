@@ -23,48 +23,31 @@
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
 
+#include <memory>
+#include <type_traits>
+
 /* ---------------------------------------------------------------- */
 
-template<typename T>
-class MCAutoCF
-{
-public:
-    MCAutoCF(void)
-        : m_ref(nullptr)
-    {
-    }
-    
-    MCAutoCF(T p_ref)
-        : m_ref(p_ref)
-    {
-    }
-    
-    ~MCAutoCF(void)
-    {
-        if (m_ref)
-            CFRelease(m_ref);
-    }
-    
-    MCAutoCF& operator = (T p_ref)
-    {
-        if (m_ref)
-            CFRelease(m_ref);
-        m_ref = p_ref;
-    }
-    
-    operator bool (void)
-    {
-        return m_ref != nullptr;
-    }
-    
-    operator T (void)
-    {
-        return m_ref;
-    }
-    
-private:
-    T m_ref;
+/* We want a managed pointer for CF pointers which releases them after they're
+ * no longer needed.  This can be achieved by specializing std::unique_ptr with
+ * a custom deleter.  Main differences between std::unique_ptr and most the
+ * MCAuto custom classes:
+ *
+ * - You can't set a unique_ptr via an raw pointer output parameter (by design);
+ *   there's no equivalent to MCAutoPointer::operator&
+ * - unique_ptr::operator* returns a _reference_; use the get() method to
+ *   return a pointer
+ * - You can't use "=" to construct a unique_ptr with a pointer (because the
+ *   constructor has two arguments, one of which is defaulted).  Use brace
+ *   initialisation.
+ */
+
+template <typename T> struct CFReleaseFunctor {
+    void operator()(T p) { CFRelease(p); }
 };
+template <typename T> using MCAutoCF =
+    std::unique_ptr<typename std::remove_pointer<T>::type, CFReleaseFunctor<T>>;
+
 
 /* ================================================================
  * Mac Handle Class
@@ -202,33 +185,30 @@ private:
             return false;
         }
         
-        MCAutoCF<CFURLRef> t_url =
+        MCAutoCF<CFURLRef> t_url {
         CFURLCreateFromFileSystemRepresentation(nullptr,
                                                 reinterpret_cast<const UInt8 *>(*t_sys_path),
                                                 t_sys_path.Size(),
-                                                true);
+                                                true)};
         if (!t_url)
         {
             return false;
         }
         
-        MCAutoCF<CFBundleRef> t_bundle =
-                CFBundleCreate(nullptr,
-                               t_url);
+        MCAutoCF<CFBundleRef> t_bundle {CFBundleCreate(nullptr, t_url.get())};
         if (!t_bundle)
         {
             return false;
         }
         
-        MCAutoCF<CFURLRef> t_bundle_exe_url =
-                CFBundleCopyExecutableURL(t_bundle);
+        MCAutoCF<CFURLRef> t_bundle_exe_url {CFBundleCopyExecutableURL(t_bundle.get())};
         if (!t_bundle_exe_url)
         {
             return false;
         }
         
         char t_sys_exe_path[PATH_MAX];
-        if (!CFURLGetFileSystemRepresentation(t_bundle_exe_url,
+        if (!CFURLGetFileSystemRepresentation(t_bundle_exe_url.get(),
                                               true,
                                               reinterpret_cast<UInt8 *>(t_sys_exe_path),
                                               PATH_MAX))

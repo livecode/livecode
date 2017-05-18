@@ -326,14 +326,14 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         
         while (t_success && MCStringFirstIndexOfChar(p_option_lists[i], t_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
         {
-            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_option);
+            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, t_new_offset), t_option);
             if (t_success)
                 t_options . Push(t_option);
             
             t_old_offset = t_new_offset + 1;
         }
         // Append the remaining part of the options
-        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, MCStringGetLength(p_option_lists[i]) - t_old_offset), t_option);
+        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, MCStringGetLength(p_option_lists[i])), t_option);
         if (t_success)
             t_options . Push(t_option);
         

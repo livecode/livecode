@@ -366,7 +366,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			else
 			{
 				if (t_last_slash < MCStringGetLength(*t_fixed_path) - 1)
-					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(t_last_slash + 1, MCStringGetLength(*t_fixed_path) - (t_last_slash + 1)), &t_initial_file);
+					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(*t_fixed_path)), &t_initial_file);
 
 				MCAutoStringRef t_folder_split;
 				// SN-2014-10-29: [[ Bug 13850 ]] The length is t_last_slash, not t_last_slash - 1
@@ -698,7 +698,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			t_end = UINDEX_MAX;
 			/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_end);
             
-			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_offset, t_end-t_offset), r_result);
+			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMakeMinMax(t_offset, t_end), r_result);
 		}
 
 		t_result = 0;

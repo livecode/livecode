@@ -94,11 +94,12 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 
 void MCNativeLayerMac::doSetViewportGeometry(const MCRectangle &p_rect)
 {
+	doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 {
-    m_layer -> SetGeometry(p_rect);
+    m_layer -> SetGeometry(p_rect, m_object -> getparent() -> getrect(), m_object -> getstack() -> gettransform());
 }
 
 void MCNativeLayerMac::doSetVisible(bool p_visible)

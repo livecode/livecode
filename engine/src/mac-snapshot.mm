@@ -405,8 +405,13 @@ void MCMacPlatformCore::ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_siz
     // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
     WaitForDisplayRefresh();
     
+	// IM-2017-04-21: [[ Bug 19529 ]] CGWindowListCreateImage assumes coords with origin at top-left of primary screen,
+	//    so our capture area needs to be offset onto that coordinate system
+	MCRectangle t_origin;
+	MCPlatformGetScreenViewport(0, t_origin);
+	
 	CGRect t_area;
-	t_area = CGRectMake(p_screen_rect . x, p_screen_rect . y, p_screen_rect . width, p_screen_rect . height);
+	t_area = CGRectMake(p_screen_rect.x - t_origin.x, p_screen_rect.y - t_origin.y, p_screen_rect.width, p_screen_rect.height);
 	
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);

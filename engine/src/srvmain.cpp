@@ -330,16 +330,39 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-extern void X_clear_globals(void);
-int X_close();
-
 extern bool cgi_initialize();
 extern void cgi_finalize(void);
-extern void MCU_initialize_names();
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
+static void
+X_initialize_mccmd(const X_init_options& p_options)
 {
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mccmd),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+}
+
+static void
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    if (p_options.app_code_path != nullptr)
+    {
+        MCappcodepath = MCValueRetain(p_options.app_code_path);
+        return;
+    }
+    
+    MCU_path_split(MCcmd,
+                   &MCappcodepath,
+                   nullptr);
+}
+
+bool X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+    
 	int t_bottom;
 	MCstackbottom = (char *)&t_bottom;
 
@@ -370,12 +393,20 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 #endif
 
 	////
-
+    
 	MCS_init();
+
+    /* Set up MCcmd correctly - this is the path to the loadable object
+     * containing this folder. */
+    X_initialize_mccmd(p_options);
+    
+    /* Setup MCappcodepath correctly - this is the folder containing the
+     * MCcmd. */
+    X_initialize_mcappcodepath(p_options);
 
 	////
 	
-	MCU_initialize_names();
+	X_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.
 	MCFontInitialize();
@@ -651,7 +682,12 @@ int platform_main(int argc, char *argv[], char *envp[])
 	t_new_envp[t_env] = nil;
 // END MAC SPECIFIC	
 
-	if (!X_init(argc, t_new_argv, t_new_envp))
+    struct X_init_options t_options;
+    t_options.argc = argc;
+    t_options.argv = t_new_argv;
+    t_options.envp = t_new_envp;
+    t_options.app_code_path = nullptr;
+	if (!X_init(t_options))
 		exit(-1);
 	
 	X_main_loop();

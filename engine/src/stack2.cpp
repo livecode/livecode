@@ -921,6 +921,7 @@ void MCStack::stopedit()
 	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    oldcard->removereferences();
 	oldcard->scheduledelete();
 	kfocus();
 	dirtywindowname();
@@ -2073,7 +2074,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		}
 	}
 	
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	// MW-2008-02-28: [[ Bug 4614 ]] Ensure that sheeting inside a not yet visible window causes
 	//   it to be displayed as modal.
 	// MW-2008-03-03: [[ Bug 5985 ]] Crash when using 'sheet' command. It seems that 'go' is not
@@ -2296,9 +2297,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
     
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == curcard -> getstack())
-            t_player -> detachplayer();
+    MCPlayer::DetachPlayers(curcard -> getstack());
 #endif
 		
 	// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
@@ -2323,9 +2322,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-        if (t_player -> getstack() == curcard -> getstack())
-            t_player -> attachplayer();
+    MCPlayer::AttachPlayers(curcard -> getstack());
 #endif
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
@@ -2649,7 +2646,7 @@ bool MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
 		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
         
-		t_success = MCStringCopySubstring(d_strref, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);
+		t_success = MCStringCopySubstring(d_strref, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_line);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			MCAutoStringRef t_stack_name;
@@ -2976,12 +2973,7 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	t_tilecache = view_gettilecache();
 	
     // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
-    for(MCPlayerHandle t_player = MCplayers; t_player.IsValid(); t_player = t_player -> getnextplayer())
-	{
-        	if (t_player -> getstack() == this)
-            	t_player -> syncbuffering(nil);
-	}
-    
+    MCPlayer::SyncPlayers(this, nil);
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
         MCGIntegerRectangle t_bounds;

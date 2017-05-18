@@ -535,17 +535,15 @@ Summary:        Repeat over the chars of a string
 Iterand:        A string container.
 
 Example:
-	variable tString as String
-	put "stressed" into tString
-	
-	variable tReversed as String
 	variable tChar as String
-	put "" into tReversed
-	repeat for each char tChar in tString
-		put tChar before tReversed
+	variable tSpaceCount as Number
+	repeat for each char tChar in \
+			"the quick brown fox jumps over the lazy dog"
+		if tChar is " " then
+			add 1 to tSpaceCount
+		end if
 	end repeat
-
-    // tReversed is "desserts"
+	expect that tSpaceCount is 8
 
 Description:
 Use repeat for each to perform an operation on each char of a string. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
@@ -557,6 +555,32 @@ syntax RepeatForEachChar is iterator
     "char" <Iterand: Expression>
 begin
     MCCharRepeatForEachChar(iterator, Iterand, container)
+end syntax
+
+--
+
+public foreign handler MCStringExecReverseCharsOf(inout Target as String) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse a string
+Target:	A string
+
+Example:
+	variable tString
+	put "abcdef" into tString
+	reverse tString
+	expect that tString is "fedcba"
+
+Description:
+Reverses the order of characters in the <Target>.
+
+Tags: Strings
+*/
+syntax ReverseCharsOf is statement
+	"reverse" <Target: Expression>
+begin
+	MCStringExecReverseCharsOf(Target)
 end syntax
 
 ----------------------------------------------------------------

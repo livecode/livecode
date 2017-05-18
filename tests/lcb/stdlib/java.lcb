@@ -40,7 +40,7 @@ end handler
 
 foreign handler CreateJavaString(in pBytes as JByteArray) returns JString binds to "java:java.lang.String>new([B)"
 
-foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as CUInt, out rData as Data) returns CBool binds to "<builtin>"
+foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as LCUIndex, out rData as Data) returns CBool binds to "<builtin>"
 
 public handler TestCreateJString()
    	if not the operating system is in ["mac", "linux"] then
@@ -120,7 +120,7 @@ public handler TestGetConstant()
 		when tPiTrunc is 3
 end handler
 
-foreign handler CallJavaAdd(in pLeft as CInt, in pRight as CInt) returns CInt binds to "java:java.lang.Math>addExact(JJ)J!static"
+foreign handler CallJavaAdd(in pLeft as JLong, in pRight as JLong) returns JLong binds to "java:java.lang.Math>addExact(JJ)J!static"
 
 public handler TestCallStaticMethod()
 	variable tLeft as Number
@@ -135,7 +135,7 @@ public handler TestCallStaticMethod()
 	test "call java class static method" when tResult is 2
 end handler
 
-foreign handler JavaStringIsEmpty(in pString as JString) returns CBool binds to "java:java.lang.String>isEmpty()Z"
+foreign handler JavaStringIsEmpty(in pString as JString) returns JBoolean binds to "java:java.lang.String>isEmpty()Z"
 
 public handler TestCallInstanceMethod()
 	variable tJavaString as JString
@@ -182,8 +182,8 @@ end handler
 
 foreign handler JavaCreateEmptyList() returns JObject binds to "java:java.util.LinkedList>new()"
 foreign handler JavaPeekList(in pList as JObject) returns JObject binds to "java:java.util.LinkedList>peek()Ljava/lang/Object;"
-foreign handler JavaAddList(in pList as JObject, in pToAdd as JObject) returns CBool binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
-foreign handler JavaAddListOptional(in pList as JObject, in pToAdd as optional JObject) returns CBool binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+foreign handler JavaAddList(in pList as JObject, in pToAdd as JObject) returns JBoolean binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+foreign handler JavaAddListOptional(in pList as JObject, in pToAdd as optional JObject) returns JBoolean binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
 
 public handler NullIntoOptionalJObject()
 	unsafe
@@ -233,7 +233,7 @@ public handler TestNullJObjectParam()
 	MCUnitTestHandlerThrows(NullParamJObject, "type mismatch when passing NULL as non-optional JObject")
 end handler
 
-foreign handler StringCodepointAt(in pSequence as JObject, in pIndex as CInt) returns CInt binds to "java:java.lang.Character>codePointAt(Ljava/lang/CharSequence;I)I!static"
+foreign handler StringCodepointAt(in pSequence as JObject, in pIndex as JInt) returns JInt binds to "java:java.lang.Character>codePointAt(Ljava/lang/CharSequence;I)I!static"
 
 public handler TestNativeTypeAfterObjectType()
 	unsafe

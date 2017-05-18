@@ -1207,9 +1207,6 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
-bool X_main_loop_iteration(void);
-int X_close(void);
 void send_startup_message(bool p_do_relaunch = true);
 extern void MCQuit(void);
 
@@ -1241,8 +1238,6 @@ static void *mobile_main(void *arg)
 	// completely unaware that we exist. This is not good, since we will want
 	// to call into Dalvik via the JNI from this thread. So we need to bind
 	// our current thread to the VM.
-    
-    //MCInitialize();
     
 	MCLog("Attaching thread to VM %p", s_java_vm);
 
@@ -1290,7 +1285,6 @@ static void *mobile_main(void *arg)
 	// (The only argument is the name and there are no env vars)
 	MCStringRef t_args[1], t_env[1];
 	int argc = 1;
-	int envc = 0;
 	MCAndroidEngineCall("getPackagePath", "x", &t_args[0]);
 	t_env[0] = nil;
 
@@ -1305,7 +1299,12 @@ static void *mobile_main(void *arg)
 
 	MCLog("Calling X_init");
 
-	if (!X_init(argc, t_args, envc, t_env))
+    struct X_init_options t_options;
+    t_options.argc = argc;
+    t_options.argv = t_args;
+    t_options.envp = t_env;
+    t_options.app_code_path = nullptr;
+	if (!X_init(t_options))
 	{
 		MCLog("X_init failed");
 
@@ -1372,7 +1371,7 @@ static void *mobile_main(void *arg)
 	// Free arguments and environment vars
 	for (int i = 0; i < argc; i++)
 		MCValueRelease(t_args[i]);
-	for (int i = 0; i < envc; i++)
+	for (int i = 0; t_env[i] != nullptr; i++)
 		MCValueRelease(t_env[i]);
 
     // Free global refs
@@ -1985,8 +1984,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 {
     MCPlatformInitialize();
     MCInitialize();
-    MCSInitialize();
-    MCScriptInitialize();
     
 	MCLog("doCreate called");
 

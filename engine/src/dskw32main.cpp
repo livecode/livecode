@@ -37,10 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_main_loop_iteration();
-int X_close();
-
 HINSTANCE MChInst;
 MCStringRef MCcmdline;
 
@@ -113,7 +109,12 @@ static void CALLBACK InitializeFiberRoutine(void *p_context)
 	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF|_CRTDBG_DELAY_FREE_MEM_DF|_CRTDBG_CHECK_CRT_DF);
 #endif
 
-	context -> success = X_init(context -> argc, context -> argv, context -> envp);
+    struct X_init_options t_options;
+    t_options.argc = context -> argc;
+    t_options.argv = context -> argv;
+    t_options.envp = context -> envp;
+    t_options.app_code_path = nullptr;
+	context -> success = X_init(t_options);
 
 	SwitchToFiber(s_main_fiber);
 }

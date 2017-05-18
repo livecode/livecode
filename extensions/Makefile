@@ -12,6 +12,8 @@ extensions-check: lcb-check lcs-check
 
 top_srcdir ?= ..
 
+LCS_TESTS_DIR =
+
 # Things have now been setup enough that the engine's test Makefile
 # can perform the tests without any further configuration.
 include $(top_srcdir)/tests/Makefile

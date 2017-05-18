@@ -694,6 +694,20 @@ bool MCDataPad(MCDataRef self, byte_t p_byte, uindex_t p_count)
 }
 
 MC_DLLEXPORT_DEF
+bool MCDataReverse(MCDataRef self)
+{
+    MCAssert(MCDataIsMutable(self));
+
+    // Ensure the data ref is not indirect
+    if (__MCDataIsIndirect(self))
+        if (!__MCDataResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->bytes, self->byte_count);
+    return true;
+}
+
+MC_DLLEXPORT_DEF
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 {
 	__MCAssertIsData(p_left);

@@ -15,11 +15,19 @@ IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION="community"
 REM Target architecture currently defaults to 32-bit x86
 IF NOT DEFINED TARGET_ARCH SET TARGET_ARCH=x86
 
-REM The internal MSVC/Gyp name for x86_64 is x64
-IF %TARGET_ARCH%==x86_64 (
-  SET MSVC_ARCH=x64
+REM Make sure TARGET_ARCH is always x86 or x86_64
+
+IF %TARGET_ARCH%==x64 (
+  SET TARGET_ARCH=x86_64
+) ELSE IF %TARGET_ARCH%==i386 (
+  SET TARGET_ARCH=x86
+) ELSE IF %TARGET_ARCH% ==x86 (
+  REM Valid
+) ELSE IF %TARGET_ARCH% == x86_64 (
+  REM Valid
 ) ELSE (
-  SET MSVC_ARCH=%TARGET_ARCH%
+  ECHO >&2 Error: invalid target arch %TARGET_ARCH%
+  EXIT /B 1
 )
 
 REM Note: to test whether a directory exists in batch script, you need to check
@@ -54,7 +62,7 @@ REM Pause so any warnings can be seen
 IF %warnings% NEQ 0 PAUSE
 
 REM Run the configure step
-%python% config.py --platform win-x86 -Dtarget_arch=%MSVC_ARCH% %extra_options% %gypfile%
+%python% config.py --platform win-%TARGET_ARCH% %extra_options% %gypfile%
 PAUSE
 
 REM Pause if there was an error so that the user gets a chance to see it

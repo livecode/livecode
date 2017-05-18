@@ -9,6 +9,7 @@
 		'module_test_sources':
 		[
 			'test/environment.cpp',
+            'test/test_foreign.cpp',
 			'test/test_hash.cpp',
 			'test/test_proper-list.cpp',
 			'test/test_string.cpp',
@@ -218,7 +219,7 @@
                 
                 # Set java-related defines and includes
                 [
-					'host_os == "mac" and OS != "ios"',
+					'host_os == "mac" and OS != "ios" and OS != "emscripten"',
 					{
 						'defines':
 						[

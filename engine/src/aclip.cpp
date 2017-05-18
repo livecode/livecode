@@ -472,7 +472,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
     uindex_t t_sep;
     MCStringRef t_fname;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_sep + 1, MCStringGetLength(fname)), t_fname);
     else
         t_fname = MCValueRetain(fname);
     
@@ -599,7 +599,7 @@ Boolean MCAudioClip::open_audio()
 	}
 	return True;
 }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 Boolean MCAudioClip::open_audio() //plays a sound immediately
 {
 	if (sound != NULL)  //if sound is already open and constructed
@@ -653,7 +653,7 @@ Boolean MCAudioClip::open_audio() //plays a sound immediately
 	else
 		return True;
 }
-#elif defined _LINUX
+#elif defined TARGET_PLATFORM_LINUX
 // TS-2007-11-20 : Stopping LINUX from playing any sound - for 2.9.0-DP-2
 // TS-2007-12-04 : Adding in support for ESD
 Boolean MCAudioClip::open_audio()
@@ -714,7 +714,7 @@ Boolean MCAudioClip::play()
 		return False;
 	}
 	return True;
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 	SCStatus cs;       //channel status record
 	OSErr err = noErr;
 	// the sizeof(SCStatus) gives 27 bytes, but the actual record size is 24
@@ -746,7 +746,7 @@ Boolean MCAudioClip::play()
 			return False;
 		}
 	return True;
-#elif defined(_LINUX)
+#elif defined(TARGET_PLATFORM_LINUX)
 	if (looping || curindex < size)
 	{
 		while (True)
@@ -822,7 +822,7 @@ void MCAudioClip::stop(Boolean abort)
 		waveOutClose(hwaveout);
 		hwaveout = NULL;
 	}
-#elif defined _MACOSX  //minshe
+#elif defined _MAC_DESKTOP  //minshe
 	//MAC stuff here.... Send a quiet command to stop a sound that is currenty playing
 	if (sound != NULL)
 	{
@@ -959,7 +959,7 @@ uint2 MCS_getplayloudness()
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume;
     GetDefaultOutputVolume(&volume);
     t_loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
@@ -1003,7 +1003,7 @@ void MCS_setplayloudness(uint2 p_loudness)
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume = p_loudness * 255 / 100;
     SetDefaultOutputVolume(volume | volume << 16);
 #elif defined TARGET_PLATFORM_LINUX

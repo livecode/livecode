@@ -1984,7 +1984,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 						{
 							MCStringCopySubstring(*t_position_data, MCRangeMake(0, t_delimiter), &t_position);
 							t_delimiter++;
-							MCStringCopySubstring(*t_position_data, MCRangeMake(t_delimiter, MCStringGetLength(*t_position_data) - t_delimiter), &t_alignment);
+							MCStringCopySubstring(*t_position_data, MCRangeMakeMinMax(t_delimiter, MCStringGetLength(*t_position_data)), &t_alignment);
 						}
                         // AL-2014-04-07: [[ Bug 12138 ]] 'drawer ... at <position>' codepath resulted in t_position uninitialised
                         else

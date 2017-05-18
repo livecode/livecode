@@ -1,0 +1,6 @@
+This file has some text, with the final line terminated by LF
+
+********
+
+********
+Sample text

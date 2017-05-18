@@ -206,10 +206,6 @@ bool MCModeMakeLocalWindows(void);
 void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message);
 void MCModeHideToolTip(void);
 
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack);
-#endif
-
 // This hook is used to handle the reset cursors action.
 void MCModeResetCursors(void);
 

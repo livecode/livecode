@@ -113,7 +113,8 @@ void MCStacklist::destroy()
 		while (stacks != NULL)
 		{
 			MCStacknode *tptr = stacks->remove(stacks);
-			MCdispatcher->destroystack(tptr->getstack(), True);
+			if (tptr -> getstack() -> del(false))
+                tptr->getstack()->scheduledelete();
 			delete tptr;
 		}
 		MClockmessages = oldstate;

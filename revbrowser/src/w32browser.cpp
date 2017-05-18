@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef long SHANDLE_PTR;
 int CWebBrowser::browseridcounter= 121;
 HRESULT LoadWebBrowserFromStream(IWebBrowser2* pWebBrowser, HGLOBAL pText);
 HRESULT LoadWebBrowserFromStreamDo(IDispatch *pHtmlDoc, HGLOBAL pText);

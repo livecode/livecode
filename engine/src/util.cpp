@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <mach-o/dyld.h>
 #endif
 
+#include <algorithm>
+
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
 
@@ -1884,8 +1886,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     }
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
-    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
-        t_player -> syncbuffering(nil);
+    MCPlayer::SyncPlayers(nil, nil);
     
     MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     
@@ -2243,38 +2244,37 @@ void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
 // MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
-bool MCU_couldbeurl(const MCString& p_potential_url)
+bool MCU_couldbeurl(MCStringRef p_potential_url)
 {
-	uint4 t_length;
-	const char *t_url;
-	t_length = p_potential_url . getlength();
-	t_url = p_potential_url . getstring();
-	
+    MCAutoStringRefAsCString t_potential_url;
+    if (!t_potential_url.Lock(p_potential_url))
+        return false;
+    const auto&& t_url = t_potential_url.Span();
+
 	// If the first char isn't a letter, then we are done.
-	if (t_length == 0 || !isalpha(t_url[0]))
+	if (t_url.empty() || !isalpha(t_url[0]))
 		return false;
-	
-	uint4 t_colon_index;
-	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
-	{
-		char t_char;
-		t_char = t_url[t_colon_index];
-		
-		// If we find the ':' we are done (end of scheme).
-		if (t_url[t_colon_index] == ':')
-			break;
-		
-		// If the character isn't something allowed in a scheme name, we are done.
-		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
-			return false;
-	}
-	
-	// If the scheme name < 2 chars, or there is nothing after it, we are done.
-	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
-		return false;
-	
-	// If we get here then we could well have a url.
-	return true;
+
+    auto t_is_scheme_char = [](const char p_char) {
+        return (isalpha(p_char) || isdigit(p_char) ||
+                p_char == '+' || p_char == '.' || p_char == '-');
+    };
+    auto t_colon =
+        std::find_if_not(t_url.begin(), t_url.end(), t_is_scheme_char);
+
+    /* If no scheme name or non-scheme characters were found, this
+     * could still be a URL. */
+    if (t_colon == t_url.end())
+        return true;
+    /* If there was a non-scheme character, this can't be a URL */
+    if (*t_colon != ':')
+        return false;
+    /* If the scheme name is < 2 characters, or there is nothing after
+       the scheme, this can't be a URL. */
+    if (t_url.end() - t_colon <= 1 || t_colon - t_url.begin() <= 1)
+        return false;
+
+    return true;
 }
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
@@ -2283,20 +2283,20 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 	MCAutoStringRef t_filename;
 	if (MCStringGetLength(p_url) > 5 && MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url)-5), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadtextfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		// Send a "getURL" message
 		Boolean oldlock = MClockmessages;
@@ -2344,14 +2344,14 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path, t_data;
 		/* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_path);
 		MCS_savetextfile(*t_path, *t_data);
 	}
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_savebinaryfile(*t_path, *t_data);
 	}
@@ -2359,11 +2359,11 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		MCAutoDataRef t_data;
 
@@ -2917,6 +2917,221 @@ MCU_path_has_extension(MCStringRef p_path)
                                     t_ext);
 }
 
+static void
+MCU_path_compute_split_unix(MCStringRef p_path,
+                            uindex_t p_split_at,
+                            uindex_t& x_dir_end,
+                            uindex_t& x_base_start)
+
+{
+    if (MCStringGetLength(p_path) > 0 &&
+        MCStringGetCharAtIndex(p_path, 0) == '/')
+    {
+        if (p_split_at == 0)
+        {
+            /* Make sure dir is / and base is everything after */
+            x_dir_end = 1;
+        }
+    }
+    else
+    {
+        if (p_split_at == 0)
+        {
+            x_dir_end = 0;
+            x_base_start = 0;
+        }
+    }
+
+    /* Trim any trailing slashes, down to one in the first position */
+    while(x_dir_end > 1 &&
+          MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+    {
+        x_dir_end -= 1;
+    }
+}
+
+static void
+MCU_path_compute_split_win32(MCStringRef p_path,
+                             uindex_t p_split_at,
+                             uindex_t& x_dir_end,
+                             uindex_t& x_base_start)
+{
+   if (MCStringBeginsWithCString(p_path,
+                                 (const char_t *)"//",
+                                 kMCStringOptionCompareExact))
+    {
+        /* UNC */
+        
+        uindex_t t_end_of_share = 0;
+        uindex_t t_end_of_folder = 0;
+        if (MCStringFirstIndexOfChar(p_path,
+                                     '/',
+                                     2,
+                                     kMCStringOptionCompareExact,
+                                     t_end_of_share))
+        {
+            if (!MCStringFirstIndexOfChar(p_path,
+                                          '/',
+                                          t_end_of_share + 1,
+                                          kMCStringOptionCompareExact,
+                                          t_end_of_folder))
+            {
+                t_end_of_folder = UINDEX_MAX;
+            }
+        }
+        else
+        {
+            t_end_of_folder = UINDEX_MAX;
+        }
+        
+        if (t_end_of_folder >= p_split_at)
+        {
+            x_dir_end = t_end_of_folder;
+            if (t_end_of_folder != UINDEX_MAX)
+            {
+                x_base_start = t_end_of_folder + 1;
+            }
+            else
+            {
+                x_base_start = UINDEX_MAX;
+            }
+        }
+        
+        /* Trim any slashes down to the end of the UNC folder component */
+        while(x_dir_end > t_end_of_folder &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else if (MCStringGetLength(p_path) > 1 &&
+             MCStringGetCharAtIndex(p_path, 1) == ':')
+    {
+        /* DRIVE */
+    
+        if (MCStringGetLength(p_path) > 2 &&
+            MCStringGetCharAtIndex(p_path, 2) == '/')
+        {
+            /* DRIVE:/ (absolute) */
+        
+            if (p_split_at == 2)
+            {
+                /* Make sure we include the / after the drive in the dir */
+                x_dir_end = p_split_at + 1;
+            }
+        }
+        else
+        {
+            /* DRIVE: (DRIVE relative) */
+        
+            if (p_split_at == 0)
+            {
+                /* Make sure dir is DRIVE: and base is everything after */
+                x_dir_end = 2;
+                x_base_start = 2;
+            }
+        }
+        
+        /* Trim any trailing slashes, down to one in the third position */
+        while(x_dir_end > 3 &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    p_split_at,
+                                    x_dir_end,
+                                    x_base_start);
+    }
+}
+
+static bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base,
+               bool p_win32)
+{
+    uindex_t t_split_at = 0;
+    if (!MCStringLastIndexOfChar(p_path,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_split_at))
+    {
+        t_split_at = 0;
+    }
+    
+    uindex_t t_dir_end = t_split_at;
+    uindex_t t_base_start = t_split_at + 1;
+
+    if (p_win32)
+    {
+        MCU_path_compute_split_win32(p_path,
+                                     t_split_at,
+                                     t_dir_end,
+                                     t_base_start);
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    t_split_at,
+                                    t_dir_end,
+                                    t_base_start);
+    }
+
+    if (r_dir != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(0, t_dir_end),
+                                   *r_dir))
+        {
+            return false;
+        }
+    }
+    
+    if (r_base != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(t_base_start, UINDEX_MAX),
+                                   *r_base))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool MCU_path_split(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base)
+{
+#ifdef __WINDOWS__
+    return MCU_path_split(p_path, r_dir, r_base, true);
+#else
+    return MCU_path_split(p_path, r_dir, r_base, false);
+#endif
+}
+
+bool MCU_path_split_unix(MCStringRef p_path,
+                         MCStringRef* r_dir,
+                         MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, false);
+}
+
+bool MCU_path_split_win32(MCStringRef p_path,
+                          MCStringRef* r_dir,
+                          MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 static bool
 __MCU_library_load_verbatim(MCStringRef p_path,
                             MCSLibraryRef& r_library)
@@ -2981,27 +3196,14 @@ __MCU_library_map_path(MCStringRef p_path,
         t_mapped_path = *t_base_path;
     }
     
-    // Now compute the engine folder and construct the absolute mapped path.
-    uindex_t t_last_slash;
-    if (!MCStringLastIndexOfChar(MCcmd,
-                                 '/',
-                                 UINDEX_MAX,
-                                 kMCStringOptionCompareExact,
-                                 t_last_slash))
-        t_last_slash = MCStringGetLength(MCcmd);
-    
-    MCRange t_engine_folder =
-            MCRangeMake(0, t_last_slash);
-    
-    // Concatenate the mapped path onto the engine path, and then resolve
+    // Concatenate the mapped path onto the app code path, and then resolve
     // it to ensure that all '.' and '..' type components are removed.
     // (otherwise things might go awry if we have a //?/ type path on
     // Windows).
     MCAutoStringRef t_unresolved_library_path;
     if (!MCStringFormat(&t_unresolved_library_path,
-                        "%*@/%@",
-                        &t_engine_folder,
-                        MCcmd,
+                        "%@/%@",
+                        MCappcodepath,
                         *t_mapped_path) ||
         !MCS_resolvepath(*t_unresolved_library_path,
                          r_mapped_library_path))

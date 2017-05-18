@@ -180,7 +180,28 @@ See also [C++ Feature Usage Guidelines for LiveCode](C++-features.md).
   functions or templates instead.
 
 * Avoid using the ternary `/*condition*/ ? /*if_true*/ : /*if_false*/`
-  operator.
+  operator.  You may need to use one when initialising a `const`
+  value.  However, when the condition or the true/false values require
+  large expressions, or when there are more than two possible values,
+  an immediately-invoked function expression can do the job more
+  clearly:
+
+      const auto&& t_value = [&, this]() {
+          if (/*condition*/)
+          {
+              return /* compute value if true */;
+          }
+          else
+          {
+              return /* compute value if false */;
+          })();
+
+* When writing lambda expressions, try to avoid return type
+  specification; use inference or, if necessary, cast or construct a
+  value in the `return` statement.
+
+      auto t_valid_handle =
+          [](const ObjectHandle& p_obj) { return bool{p_obj}; }
 
 ## Code layout, indentation and whitespace
 

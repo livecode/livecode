@@ -336,7 +336,7 @@ static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &c
             // No ending curly brace: error
             return false;
         
-        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMake(x_offset, t_brace_end - x_offset), &t_encoding_string);
+        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMakeMinMax(x_offset, t_brace_end), &t_encoding_string);
         
         x_offset = t_brace_end + 1;
         

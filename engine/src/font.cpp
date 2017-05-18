@@ -79,6 +79,10 @@ bool MCFontInitialize(void)
 
 void MCFontFinalize(void)
 {
+    while(s_loaded_fonts != nullptr)
+    {
+        MCFontUnload(s_loaded_fonts->path);
+    }
 }
 
 bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontRef& r_font)
@@ -897,7 +901,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 			//   fontname.
 			uindex_t t_offset;
 			if (MCStringFirstIndexOfChar(data, ',', 0, kMCCompareExact, t_offset))
-				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_offset + 1, MCStringGetLength(data) - (t_offset + 1)), fname);
+				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMakeMinMax(t_offset + 1, MCStringGetLength(data)), fname);
 			else
 				fname = MCValueRetain(data);
 		}
@@ -948,7 +952,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
                         t_end_pos = t_comma;
                     
                     MCAutoStringRef tdata;
-                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &tdata);
+                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, t_end_pos), &tdata);
                     t_end_pos++;
                     if (MCF_setweightstring(style, *tdata))
 						continue;

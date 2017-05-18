@@ -2,9 +2,11 @@
 
 # Update these lists if you need different SDK versions!
 
-iphoneos_versions = ["10.2", "9.2"]
-iphonesimulator_versions = ["10.2", "9.2", "8.2"]
-macosx_versions = ["10.9", "10.6"]
+iphoneos_versions = ["10.3", "10.2","9.2"]
+iphonesimulator_versions = ["10.3", "10.2","9.2", "8.2"]
+macosx_versions = ["10.9"]
+
+
 
 # This tool creates the symlinks required for Xcode builds of LiveCode.
 #
@@ -67,9 +69,18 @@ def is_sdk_present(xcode_app, platform, version):
     return check_sdk_path(xcode_app, platform, version) is not None
 
 def xcode_paths(base_dir):
-    return [entry
-            for entry in os.listdir(base_dir)
-            if re.match(r"^Xcode_.*\.app$", entry) is not None]
+    return_list = []
+    level_0 = os.listdir(base_dir)
+    for entry in level_0:
+        if(re.match(r"Xcode.*\.app", entry)):
+            return_list.append(entry)
+        if(not os.path.isdir(entry)):
+            continue
+        level_1 = os.listdir(entry)
+        for l1_entry in level_1:
+            if(re.match(r"Xcode.*\.app", l1_entry)):
+                return_list.append(entry + "/" + l1_entry)
+    return return_list
 
 def target_xcode(base_dir):
     return "{}/{}".format(base_dir, "Xcode.app")

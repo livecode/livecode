@@ -18,21 +18,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
    create button "script"
-   set the script of button "script" to "on doSomething; delete the target; end doSomething"
-   
+   set the script of button "script" to "on doSomething; delete the target; pass doSomething; end doSomething"
+
    create button "test"
-   
 end TestSetup
 
 on TestDeleteTargetInFrontScript
    insert the script of button "script" into front
-   TestAssertThrow "Delete target in frontscript", "__TestDeleteTarget", the long id me, 347
+   dispatch "doSomething" to button "test"
+   TestAssert "Delete target in frontscript", there is no button "test"
+   TestAssert "Delete target in frontscript blocks message", it is "handled"
    remove the script of button "script" from front
 end TestDeleteTargetInFrontScript
 
 on TestDeleteTargetInBackScript
    insert the script of button "script" into back
-   TestAssertThrow "Delete target in backscript", "__TestDeleteTarget", the long id me, 347
+   dispatch "doSomething" to button "test"
+   TestAssert "Delete target in backscript", there is no button "test"
+   TestAssert "Delete target in backscript blocks message", it is "handled"
    remove the script of button "script" from back
 end TestDeleteTargetInBackScript
 
@@ -43,9 +46,13 @@ on TestDeleteTargetInBehavior
 end TestDeleteTargetInBehavior
 
 on TestDeleteTargetInOwner
-   set the script of the owner of btn "test" to "on doSomething; delete the target; end doSomething"
-   TestAssertThrow "Delete target in owner", "__TestDeleteTarget", the long id me, 347
+   set the script of the owner of btn "test" to "on doSomething; delete the target; pass doSomething; end doSomething"
+   dispatch "doSomething" to button "test"
+   TestAssert "Delete target in owner", there is no button "test"
+   TestAssert "Delete target in owner blocks message", it is "handled"
 end TestDeleteTargetInOwner
+
+/**/
 
 on __TestDeleteTarget
    send "doSomething" to button "test"

@@ -171,6 +171,10 @@ MCScreenDC::GetCurrentStack()
  * Event loop
  * ================================================================ */
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
+
 /* Returns true if quit is requested, or from any inner main loop. */
 Boolean
 MCScreenDC::wait(real64_t p_duration,
