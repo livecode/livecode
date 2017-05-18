@@ -415,7 +415,9 @@ void MCMutableImageRep::startdraw()
 		MCundos->freestate();
 		Ustruct *us = new Ustruct;
 		us->type = UT_PAINT;
+		Lock();
 		MCundos->savestate(m_owner, us);
+		Unlock();
 		MCImageFreeBitmap(m_undo_image);
 		m_undo_image = nil;
 		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
@@ -1672,8 +1674,11 @@ void MCMutableImageRep::selimage()
 	Ustruct *us = new Ustruct;
 	us->type = UT_PAINT;
 
-	MCundos->savestate(m_owner, us);
-	if (m_undo_image != nil)
+    Lock();
+    MCundos->savestate(m_owner, us);
+    Unlock();
+    
+    if (m_undo_image != nil)
 		MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
@@ -1834,8 +1839,10 @@ void MCMutableImageRep::rotatesel(int2 angle)
 		MCundos->freestate();
 		Ustruct *us = new Ustruct;
 		us->type = UT_PAINT;
+        Lock();
 		MCundos->savestate(m_owner, us);
-		MCImageFreeBitmap(m_undo_image);
+        Unlock();
+        MCImageFreeBitmap(m_undo_image);
 		m_undo_image = nil;
 		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
 	}

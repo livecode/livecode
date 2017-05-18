@@ -131,6 +131,13 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
+    if (m_rep)
+    {
+        if (m_rep->IsLocked())
+        {
+            ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        }
+    }
     // MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
     //   empty, and the filename is already empty, do nothing.
 	if ((m_rep != nil && m_rep->GetType() == kMCImageRepReferenced &&
@@ -313,8 +320,11 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-	recompress();
-	if (m_rep == nil || m_rep->GetType() == kMCImageRepReferenced)
+    MCImageRep *t_rep = m_rep->Retain();
+    
+    recompress();
+	
+    if (m_rep == nil || m_rep->GetType() == kMCImageRepReferenced)
 	{
 		r_text = MCValueRetain(kMCEmptyData);
 		return;
@@ -344,7 +354,12 @@ void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 		}
 
 		if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
-			return;
+        {
+            setrep(t_rep);
+            t_rep->Release();
+            MCactiveimage = this;
+            return;
+        }
 	}
 	
 	ctxt . Throw();
@@ -352,6 +367,14 @@ void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 
 void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 {
+    if (m_rep)
+    {
+        if (m_rep->IsLocked())
+        {
+            ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        }
+    }
+    
 	bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
@@ -468,6 +491,14 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 
 void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 {
+    if (m_rep)
+    {
+        if (m_rep->IsLocked())
+        {
+            ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        }
+    }
+
 	uindex_t t_length;
 	t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
