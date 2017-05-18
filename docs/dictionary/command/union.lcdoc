@@ -2,7 +2,7 @@ Name: union
 
 Type: command
 
-Syntax: union <targetArray> with <templateArray> [recursively]
+Syntax: union <targetArray> with <templateArray> [recursively] [into <destinationArray>]
 
 Summary:
 Combines two arrays.
@@ -79,6 +79,8 @@ The value to modify.
 templateArray (array):
 The array to intersect <array> with.
 
+destinationArray (optional array):
+A variable to set as the destination instead of mutating <targetArray>
 
 Description:
 Use the <union> <command> to combine two <array|arrays>, eliminating
@@ -106,9 +108,17 @@ in the <templateArray>, not their content, controls which
 <keys> but different content in each <element(keyword)>, the <union>
 <command> does not change the value of <targetArray>.
 
+If the into clause is used the operation of the commands is the same as
+the non-into form except that <targetArray> does not have to be a
+variable, and the result of the operation is placed into
+<destinationArray> rather than mutating <targetArray>.
+
+Changes:
+The `into` clause was added in LiveCode 9.
+
 References: add (command), intersect (command), keys (function),
 element (glossary), key (glossary), command (glossary), array (glossary),
-execute (glossary), element (keyword), + (operator)
+execute (glossary), element (keyword), + (operator),
+difference (command), symmetric difference (command)
 
 Tags: properties
-
