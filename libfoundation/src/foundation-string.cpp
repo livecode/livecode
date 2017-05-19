@@ -1090,8 +1090,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
                     case 'n':
                     default:
                         // Oh dear. Something we didn't recognise!
-                        MCAssert(false);
-                        t_success = false;
+                        MCUnreachable();
                         break;
                 }
                 
