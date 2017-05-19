@@ -145,6 +145,11 @@
                                     'lib/linux/<(target_arch)/CEF/cef_extensions.pak',
                                     'lib/linux/<(target_arch)/CEF/devtools_resources.pak',
                                     'lib/linux/<(target_arch)/CEF/libcef.so',
+                                    
+                                    # These are needed in both <(PRODUCT_DIR) and <(PRODUCT_DIR)/CEF
+                                    'lib/linux/<(target_arch)/CEF/natives_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
                                 ],
                             },
                             {
@@ -211,8 +216,14 @@
 					    {
 						    'variables':
 						    {
-							    'dist_aux_files': [ 'lib/linux/<(target_arch)/CEF/', ],
-						    },
+							    'dist_aux_files': 
+                                [ 
+                                    'lib/linux/<(target_arch)/CEF/', 
+                                    'lib/linux/<(target_arch)/CEF/natives_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
+                                ],
+                            },
 					    },
 				    },
 				],
