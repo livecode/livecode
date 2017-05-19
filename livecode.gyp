@@ -176,6 +176,7 @@
 			{
 				'dist_files': [],
 				'dist_aux_files': [],
+                'dist_cef_files': [],
 			},
 			
 			'dependencies':
@@ -185,12 +186,19 @@
 			],
 			
 			'copies':
-			[{
-				'destination': '<(output_dir)',
-				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
-			}],
+			[
+                {
+    				'destination': '<(output_dir)',
+    				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
+    			},
+
+			    {
+				    'destination': '<(output_dir)/CEF',
+				    'files': [ '>@(dist_cef_files)', ],
+			    },
+            ],
 		},
-		
+
 		{
 			'target_name': 'cpptest-run-all',
 			'type': 'none',
