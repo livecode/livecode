@@ -641,9 +641,15 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 		[(NSOpenPanel *)t_panel setCanChooseFiles: YES];
 		[(NSOpenPanel *)t_panel setCanChooseDirectories: NO];
 		[(NSOpenPanel *)t_panel setAllowsMultipleSelection: p_kind == kMCPlatformFileDialogKindOpenMultiple ? YES : NO];
+		
+		if ([(NSOpenPanel *)t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
+		{
+			// show accessory view when dialog opens
+			[(NSOpenPanel *)t_panel setAccessoryViewDisclosed: YES];
+		}
 	}
 	// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for save dialogs
-	else 
+	else
 		[t_panel setCanCreateDirectories: YES];
 	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
