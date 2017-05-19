@@ -1248,7 +1248,8 @@ enum MCPlatformControlType
     kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
     kMCPlatformControlTypeTooltip,      // Tooltip popups
     kMCPlatformControlTypeWindow,       // Windows can have theming props too
-    kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
+    kMCPlatformControlTypeMessageBox,    // Pop-up alert dialogue
+    kMCPlatformControlTypeGraphic,      // Graphic
 };
 
 typedef unsigned int MCPlatformControlState;

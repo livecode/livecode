@@ -198,6 +198,7 @@ void MCGraphic::initialise(void)
 	minrect.height = 0;
 
 	m_stroke_miter_limit = 10.0;
+    m_theme_type = kMCPlatformControlTypeGraphic;
 }
 
 void MCGraphic::finalise(void)

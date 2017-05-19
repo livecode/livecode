@@ -1,0 +1,1 @@
+# Fixed bug setting the background color of graphics created in legacy themed stacks to grey
