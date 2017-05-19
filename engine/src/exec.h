@@ -4752,7 +4752,6 @@ void MCLegacyExecDoMenu(MCExecContext& ctxt, MCStringRef p_option);
 void MCLegacyExecLockColormap(MCExecContext& ctxt);
 void MCLegacyExecUnlockColormap(MCExecContext& ctxt);
 
-void MCLegacyExecImportEps(MCExecContext& ctxt, MCStringRef p_filename);
 void MCLegacyExecImportHypercardStack(MCExecContext& ctxt, MCStringRef p_filename);
 
 void MCLegacyGetRevRuntimeBehaviour(MCExecContext& ctxt, uinteger_t &r_value);

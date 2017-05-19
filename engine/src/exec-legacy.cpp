@@ -446,14 +446,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	}
 	else
 	{
-		MCEPS *eptr = new MCEPS;
-		if (!eptr->import(p_filename, t_stream))
-		{
-            delete eptr;
-			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
-			return;
-		}
-		eptr->attach(OP_CENTER, false);
+        return;
 	}
 
 	// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
@@ -461,10 +454,6 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	MCU_unwatchcursor(ctxt . GetObject()->getstack(), True);
 }
 
-void MCLegacyExecImportEps(MCExecContext& ctxt, MCStringRef p_filename)
-{
-	MCLegacyExecImport(ctxt, p_filename, false);
-}
 void MCLegacyExecImportHypercardStack(MCExecContext& ctxt, MCStringRef p_filename)
 {
 	MCLegacyExecImport(ctxt, p_filename, true);

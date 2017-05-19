@@ -29,3 +29,12 @@ on TestReadForFixedEof
 
    TestAssert "reading past end of file returns eof", tResult is "eof"
 end TestReadForFixedEof
+
+on TestImportEPS
+    local tFile
+    
+    put "icon_android.eps" into tFile
+    import eps from file tFile
+
+    TestAssert "did not crash", true
+end TestImportEPS
