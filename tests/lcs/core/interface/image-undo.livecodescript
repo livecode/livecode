@@ -1,4 +1,4 @@
-script "CoreEngineClipboard"
+script "CoreInterfaceImageUndo"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
@@ -35,12 +35,38 @@ on TestFlipImageWorks
     TestAssert "didn't throw", true
 end TestFlipImageWorks
 
+on TestClickImageWorks
+    create stack
+    set the defaultStack to the short name of it
+
+    import snapshot from rect 0,0,100,100
+    
+    set the tool of this card to bucketTool
+
+    click at the loc of image 1
+
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the prop of this card to the text of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    click at the loc of image 1
+
+    TestAssert "check if there is an image", there is an image 1
+
+    TestAssert "check if undo worked", the prop of this card is not empty
+
+    TestAssert "didn't throw", true
+end TestClickImageWorks
+
 
 on TestRotateImageWorks
     create stack
     set the defaultStack to the short name of it
 
-    import snapshot from rect 0,0,100,100
+    create image
+    set the imageData of it to randomBytes(10000)
     
     local tScript
     put "on undoChanged" into tScript
