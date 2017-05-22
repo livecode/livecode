@@ -28,8 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCImageRep::MCImageRep()
 {
-    m_locked = false;
-    
+   
 	m_reference_count = 0;
     
     MCMemoryClear(&m_metadata, sizeof(m_metadata));
@@ -52,34 +51,11 @@ void MCImageRep::Release()
         delete this;
 }
 
-bool MCImageRep::Lock()
+bool MCImageRep::IsLocked() const
 {
-    if (m_locked)
-    {
-        return false;
-    }
-    
-    m_locked = true;
-    
-    return true;
+    return false;
 }
 
-bool MCImageRep::Unlock()
-{
-    if (!m_locked)
-    {
-        return false;
-    }
-    
-    m_locked = false;
-    
-    return true;
-}
-
-bool MCImageRep::IsLocked()
-{
-    return m_locked;
-}
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _MOBILE

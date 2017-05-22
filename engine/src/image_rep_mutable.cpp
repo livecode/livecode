@@ -193,6 +193,8 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_gframe.image = nil;
 	
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
+    
+    m_is_locked = false;
 }
 
 MCMutableImageRep::~MCMutableImageRep()
@@ -2028,4 +2030,21 @@ bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
     r_metadata = m_metadata;
     
     return true;
+}
+
+void MCMutableImageRep::Lock()
+{
+    MCAssert(!m_is_locked);
+    m_is_locked = true;
+}
+
+void MCMutableImageRep::Unlock()
+{
+    MCAssert(m_is_locked);
+    m_is_locked = false;
+}
+
+bool MCMutableImageRep::IsLocked() const
+{
+    return m_is_locked;
 }
