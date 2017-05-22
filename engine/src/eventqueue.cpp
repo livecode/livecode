@@ -502,7 +502,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			// UTF-16 codeunits
 			unichar_t t_unichars[2];
             uindex_t t_length = 1;
-            if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars))
+            if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars[0], t_unichars[1]))
                 t_length = 2;
 
 			// Now the string is created with the appropriate unicode-capable function
