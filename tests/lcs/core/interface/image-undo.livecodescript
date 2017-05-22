@@ -39,11 +39,8 @@ on TestClickImageWorks
     create stack
     set the defaultStack to the short name of it
 
-    import snapshot from rect 0,0,100,100
-    
-    set the tool of this card to bucketTool
-
-    click at the loc of image 1
+    create image
+    set the imageData of it to randomBytes(10000)
 
     local tScript
     put "on undoChanged" into tScript
@@ -51,6 +48,7 @@ on TestClickImageWorks
     put return & "end undoChanged" after tScript
     set the script of this card to tScript
 
+    choose bucket tool
     click at the loc of image 1
 
     TestAssert "check if there is an image", there is an image 1
