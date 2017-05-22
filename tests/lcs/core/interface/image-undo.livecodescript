@@ -31,8 +31,6 @@ on TestFlipImageWorks
     flip image 1 horizontal
 
     TestAssert "check if undo worked", the testProperty of this card is not empty
-
-    TestAssert "didn't throw", true
 end TestFlipImageWorks
 
 on TestClickImageWorks
@@ -76,9 +74,57 @@ on TestRotateImageWorks
 
     rotate image 1 by 20
 
-    TestAssert "check if there is an image", there is an image 1
-
     TestAssert "check if undo worked", the prop of this card is not empty
-
-    TestAssert "didn't throw", true
 end TestRotateImageWorks
+
+global gLastSentImageError
+
+on errorDialog pError
+   put pError into gLastSentImageError
+end errorDialog
+
+
+on TestSetTextLockThrows
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    set the imageData of it to randomBytes(10000)
+    
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the prop of this card to the text of image 1" after tScript
+    put return & "try" after tScript
+    put return & "set the text of image 1 to txt" after tScript
+    put return & "catch tError" after tScript
+    put return & "set the errorProp of this card to true" after tScript
+    put return & "end try" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    flip image 1 horizontal
+    TestAssert "did throw" , the errorProp of this card is true
+end TestSetTextLockThrows
+
+on TestSetFilenameThrows
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    set the imageData of it to randomBytes(10000)
+    
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the prop of this card to the text of image 1" after tScript
+    put return & "try" after tScript
+    put return & "set the filename of image 1 to txt" after tScript
+    put return & "catch tError" after tScript
+    put return & "set the errorProp of this card to true" after tScript
+    put return & "end try" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    flip image 1 horizontal
+    TestAssert "did throw" , the errorProp of this card is true
+end TestSetFilenameThrows
+
