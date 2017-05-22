@@ -66,7 +66,7 @@
 					},
 				],
                 [
-                    'OS == "linux"',
+                    'OS == "android" or OS == "linux"',
                     {
                         'direct_dependent_settings':
                         {
