@@ -126,6 +126,9 @@ private command doRun pInfo
    put tLogForWriting into url ("binfile:" & kLogFilename)
    
    if TesterTapGetWorstResult(tAnalysis) is "FAIL" then
+      if $V is not empty then
+         write tLogForWriting to stdout
+   	  end if
       quit 1
    end if
 end doRun
