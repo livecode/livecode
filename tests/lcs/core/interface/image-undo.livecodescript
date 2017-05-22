@@ -128,3 +128,25 @@ on TestSetFilenameThrows
     TestAssert "did throw" , the errorProp of this card is true
 end TestSetFilenameThrows
 
+on TestSetImageDataThrows
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    set the imageData of it to randomBytes(10000)
+    
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the prop of this card to the text of image 1" after tScript
+    put return & "try" after tScript
+    put return & "set the imageData of image 1 to randomBytes(100)" after tScript
+    put return & "catch tError" after tScript
+    put return & "set the errorProp of this card to true" after tScript
+    put return & "end try" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    flip image 1 horizontal
+    TestAssert "did throw" , the errorProp of this card is true
+end TestSetImageDataThrows
+
