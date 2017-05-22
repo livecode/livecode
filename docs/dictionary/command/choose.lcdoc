@@ -36,8 +36,7 @@ toolName (enum):
 -   curve: draw a curved line in an image 
 -   regular polygon: draw a regular polygon shape in an image 
 -   dropper: pick up a color from an image
--   browse: perform actions such as clicking buttons and typing in
-    fields 
+-   browse: perform actions such as clicking buttons and typing in fields 
 -   pointer: select, move, or resize objects
 -   button: create all styles of button objects
 -   field: create all styles of field objects
