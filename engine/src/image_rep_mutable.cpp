@@ -412,18 +412,15 @@ void MCMutableImageRep::startdraw()
 		MCactiveimage->endsel();
 
 	state |= CS_EDITED;
-	if (!MCscreen->getlockmods())
-	{
-		MCundos->freestate();
-		Ustruct *us = new Ustruct;
-		us->type = UT_PAINT;
-		Lock();
-		MCundos->savestate(m_owner, us);
-		Unlock();
-		MCImageFreeBitmap(m_undo_image);
-		m_undo_image = nil;
-		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
-	}
+	MCundos->freestate();
+	Ustruct *us = new Ustruct;
+	us->type = UT_PAINT;
+	Lock();
+	MCundos->savestate(m_owner, us);
+	Unlock();
+	MCImageFreeBitmap(m_undo_image);
+	m_undo_image = nil;
+	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
 	switch (t_tool)
 	{
 	case T_BRUSH:
