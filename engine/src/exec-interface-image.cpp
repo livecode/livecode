@@ -319,13 +319,14 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
     
-    bool t_success;
     
     if (m_rep == nullptr || m_rep->GetType() == kMCImageRepReferenced)
     {
         r_text = MCValueRetain(kMCEmptyData);
-        t_success = true;
+        return;
     }
+    
+    bool t_success = false;
     
     
     MCImage* t_image_to_work_on = this;
