@@ -36,6 +36,12 @@ on TestFlipImageWorks
 end TestFlipImageWorks
 
 on TestClickImageWorks
+
+    if the environment is "command line" then
+        TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
+        exit TestClickImageWorks        
+    end if 
+
     create stack
     set the defaultStack to the short name of it
 
