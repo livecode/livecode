@@ -724,7 +724,7 @@ void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
 {
     MCExecValue t_value;
-    t_value . dataref_value = MCValueRetain(p_value);
+    t_value . dataref_value = p_value;
     t_value . type = kMCExecValueTypeDataRef;
 	if (setprop(ctxt, p_part_id, p_which, nil, p_effective, t_value))
 		return;

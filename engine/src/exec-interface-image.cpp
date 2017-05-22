@@ -317,68 +317,63 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
+    
+    bool t_success;
+    
+    if (m_rep == nullptr || m_rep->GetType() == kMCImageRepReferenced)
+    {
+        r_text = MCValueRetain(kMCEmptyData);
+        t_success = true;
+    }
+    
+    
     MCImage* t_image_to_work_on = this;
     
     if (m_rep && m_rep->IsLocked())
     {
         t_image_to_work_on = new MCImage(*this);
     }
-    
-    if (t_image_to_work_on == this)
+    else
     {
         t_image_to_work_on->recompress();
     }
     
-    if (t_image_to_work_on->m_rep == nil || t_image_to_work_on->m_rep->GetType() == kMCImageRepReferenced)
+    void *t_data = nil;
+	uindex_t t_size = 0;
+	if (t_image_to_work_on->m_rep->GetType() == kMCImageRepResident)
+		static_cast<MCResidentImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
+	else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepVector)
+		static_cast<MCVectorImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
+	else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepCompressed)
 	{
-        if (t_image_to_work_on != this)
-        {
-            delete t_image_to_work_on;
-        }
-		r_text = MCValueRetain(kMCEmptyData);
-		return;
-	}
-	else
-	{
-		void *t_data = nil;
-		uindex_t t_size = 0;
-		if (t_image_to_work_on->m_rep->GetType() == kMCImageRepResident)
-			static_cast<MCResidentImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
-		else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepVector)
-			static_cast<MCVectorImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
-		else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepCompressed)
+		MCImageCompressedBitmap *t_compressed = nil;
+		t_compressed = static_cast<MCCompressedImageRep*>(t_image_to_work_on->m_rep)->GetCompressed();
+		if (t_compressed->data != nil)
 		{
-			MCImageCompressedBitmap *t_compressed = nil;
-			t_compressed = static_cast<MCCompressedImageRep*>(t_image_to_work_on->m_rep)->GetCompressed();
-			if (t_compressed->data != nil)
-			{
-				t_data = t_compressed->data;
-				t_size = t_compressed->size;
-			}
-			else
-			{
-				t_data = t_compressed->planes[0];
-				t_size = t_compressed->plane_sizes[0];
-			}
+			t_data = t_compressed->data;
+			t_size = t_compressed->size;
 		}
-
-		if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
-        {
-            MCactiveimage = this;
-            if (t_image_to_work_on != this)
-            {
-                delete t_image_to_work_on;
-            }
-            return;
-        }
+		else
+		{
+			t_data = t_compressed->planes[0];
+			t_size = t_compressed->plane_sizes[0];
+		}
 	}
-    
+	
+    if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
+    {
+        t_success = true;
+    }
+
     if (t_image_to_work_on != this)
     {
         delete t_image_to_work_on;
     }
-	
-    ctxt . Throw();
+    if (!t_success)
+    {
+        ctxt . Throw();
+        
+    }
 }
 
 
