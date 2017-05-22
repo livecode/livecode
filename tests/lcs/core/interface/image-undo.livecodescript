@@ -57,11 +57,7 @@ on TestClickImageWorks
     choose bucket tool
     click at the loc of image 1
 
-    TestAssert "check if there is an image", there is an image 1
-
     TestAssert "check if undo worked", the prop of this card is not empty
-
-    TestAssert "didn't throw", true
 end TestClickImageWorks
 
 

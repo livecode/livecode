@@ -134,6 +134,7 @@ void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
     if (m_rep && m_rep->IsLocked())
     {
         ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
     }
     // MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
     //   empty, and the filename is already empty, do nothing.
@@ -382,6 +383,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
     if (m_rep && m_rep->IsLocked())
     {
         ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
     }
     bool t_success = true;
 	
@@ -501,7 +503,8 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 {
     if (m_rep && m_rep->IsLocked())
     {
-            ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
     }
     uindex_t t_length;
 	t_length = MCDataGetLength(p_data);
