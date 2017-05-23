@@ -33,6 +33,14 @@ on TestFlipImageWorks
     TestAssert "check if undo worked", the testProperty of this card is not empty
 end TestFlipImageWorks
 
+private command RandomFillImage pImage
+    local tData
+	repeat the width of pImage * the height of pImage
+		put numToByte(random(256)) after tData
+	end repeat
+	set the imageData of pImage to tData
+end RandomFillImage
+
 on TestClickImageWorks
     if the environment is "command line" then
         TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
@@ -43,7 +51,7 @@ on TestClickImageWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
 
     local tScript
     put "on undoChanged" into tScript
@@ -63,7 +71,7 @@ on TestRotateImageWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
@@ -88,7 +96,7 @@ on TestSetTextLockThrows
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
@@ -110,7 +118,7 @@ on TestSetFilenameThrows
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
@@ -132,7 +140,7 @@ on TestSetImageDataThrows
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
