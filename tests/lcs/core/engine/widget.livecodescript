@@ -62,6 +62,7 @@ private command _DoTestWidgetScriptObjectAccess pMode
 end _DoTestWidgetScriptObjectAccess
 
 on TestWidgetScriptObjectAccess
+   set the lockErrorDialogs to true
    create stack "WidgetScriptAccessTest"
    set the defaultStack to "WidgetScriptAccessTest"
 
