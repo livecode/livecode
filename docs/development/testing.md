@@ -2,11 +2,12 @@
 
 Tests are small programs that check that a particular, specific function works correctly.  They are run automatically to check whether LiveCode works properly.  They're really useful for ensuring that changes to one part of LiveCode don't break other things!
 
-The main LiveCode engine repository contains four sets of tests ("test suites"):
+The main LiveCode engine repository contains the following sets of tests ("test suites"):
 
 * **LiveCode Script tests:** script-only stacks that are run using the LiveCode standalone engine.  They test features of the LiveCode Script language.
 * **LiveCode Builder tests:** LCB modules that are run using the **lc-run** tool.   They test features of the LCB core language and standard library.
 * **LiveCode Builder Compiler Frontend tests:** Fragments of LCB code which are run through the compiler and check that the compile succeeds, or emits the correct warnings or errors.
+* **LiveCode Script parser tests:** Fragments of LCS code which are run through the parser and check that the compile succeeds, or emits the correct warnings or errors.
 * **C++ tests:** low-level tests written in C++ using [Google Test](https://github.com/google/googletest).  These perform low-level checks for things that can't be tested any other way.
 
 ## Running the Tests
@@ -163,6 +164,52 @@ For example, to check whether the scope of variables within 'repeat forever' sta
 When compiled, lc-compile will emit an error on the 'put' line because tInnerVariable is not declared at that point. This matches the specified '%ERROR' assertion and so the test will pass (i.e. the compiler is correctly identifying the fact that tInnerVariable is not declared outside of the scope of the 'repeat forever' construct).
 
 To help debug compiler tests, set the LCC_VERBOSE environment variable to 1 before running the compiler test. This will cause the compiler testrunner to emit diagnostic information, including the full output of the compile command which is being run.
+
+### LiveCode Script Parser Tests
+
+The syntax for LiveCode Script parser tests is the same as that of the 
+LCB compiler frontent tests above. LCS parser test files all have the 
+extension '.parsertest'.
+
+Expected errors are referred to by their name in the parse errors 
+enumeration. For example the following tests the variable shadowing 
+parse error "local: name shadows another variable or constant":
+
+	%TEST ShadowVariable
+	local sVar
+	local %{BEFORE_SHADOW}sVar
+	%EXPECT PASS
+	%ERROR PE_LOCAL_SHADOW AT BEFORE_SHADOW
+	%ENDTEST
+
+The directive `%SET` can be used to specify the value of global properties
+used when running the test. In particular, it can be used to set the 
+value of the `explicitvariables` property. If the `explicitvariables` 
+property is not set then the test will be run with it set to `true` and 
+to `false`, and the test will fail if the result differs. For example:
+
+	%TEST CommentedContinuation
+	on compiler_test
+	-- comment \
+ 	with%{SYNTAX} continuation character
+	end compiler_test
+	%EXPECT PASS
+	%ERROR PE_EXPRESSION_NOTLITERAL AT SYNTAX
+	%ENDTEST
+
+will fail with "error: test ambiguity with explicit vars".
+
+	%TEST CommentedContinuationExplicit
+	%SET explicitvariables true
+	on compiler_test
+	-- comment \
+	with %{SYNTAX}continuation character
+	end compiler_test
+	%EXPECT PASS
+	%ERROR PE_EXPRESSION_NOTLITERAL AT SYNTAX
+	%ENDTEST
+
+will succeed.
 
 ### C++ tests with Google Test
 

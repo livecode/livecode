@@ -206,7 +206,7 @@ end TestRunnerInvokeTestCommand
 ----------------------------------------------------------------
 
 -- Add the test runner library stack to the backscripts
-constant kRunLibraries = "_testerlib"
+constant kRunLibraries = "_testerlib,_testlib"
 command TestRunnerRunLoadLibraries
    TestRunnerLoadLibraries kRunLibraries
 end TestRunnerRunLoadLibraries

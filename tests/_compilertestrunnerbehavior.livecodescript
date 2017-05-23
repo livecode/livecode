@@ -199,16 +199,16 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
    if the result is not empty then
       throw format("can't open file '%s'", pScriptFile)
    end if
-
+   
    local tScript
    read from file pScriptFile until end
    put it into tScript
-
+   
    close file pScriptFile
-
+   
    -- First extract the test block we are wanting to run
    local tLine, tLineNumber, tTestLineNumber, tState
-   local tName, tCode, tExpectation, tExpectationReason, tAssertions, tPositions
+   local tName, tCode, tExpectation, tExpectationReason, tAssertions, tPositions, tSet, tSetCount
    put empty into tLine
    put 0 into tLineNumber
    put 0 into tTestLineNumber
@@ -219,26 +219,28 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
    put empty into tExpectationReason
    put empty into tAssertions
    put empty into tPositions
+   put empty into tSet
+   put 0 into tSetCount
    repeat for each line tLine in tScript
       add 1 to tLineNumber
-
+      
       local tIsDirective
       put false into tIsDirective
       if tState is "code" then
          if word 1 of tLine begins with "%" and \
                not (word 1 of tLine begins with "%{") then
-               put true into tIsDirective
+            put true into tIsDirective
          end if
       else
          if word 1 of tLine begins with "%" then
             put true into tIsDirective
          end if
       end if
-
+      
       if tIsDirective then
          local tToken
          put word 1 of tLine into tToken
-
+         
          if tToken is "%%" then
             -- We don't allow comment directives inside code blocks
             if tState is "code" then
@@ -251,7 +253,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             if tState is not empty then
                reportCompilerTestError pScriptFile, tLineNumber, "%TEST directive not allowed inside test block"
             end if
-
+            
             -- We've started a new test clause, so record the name and move to
             -- code state.
             reportCompilerTestDiag format("found test '%s' at line %d", word 2 of tLine, tLineNumber)
@@ -261,23 +263,24 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             put empty into tExpectation
             put empty into tAssertions
             put empty into tPositions
-            put "code" into tState
+            put "set" into tState
+            put 0 into tSetCount
          else if tToken is "%EXPECT" then
             -- We only allow %EXPECT directives after code blocks
             if tState is not "code" then
                reportCompilerTestError pScriptFile, tLineNumber, "%EXPECT directive only allowed after code block"
             end if
-
+            
             -- If the expectation isn't one of PASS, FAIL, XFAIL, SKIP then it
             -- is an error
             if word 2 of tLine is not among the items of "PASS,FAIL,SKIP" then
                reportCompilerTestError pScriptFile, tLineNumber, format("invalid expectation '%s'", word 2 of tLine)
             end if
-
+            
             if word 3 of tLine contains "#" then
                reportCompilerTestError pScriptFile, tLineNumber, format("expectation reason cannot contain '#'")
             end if
-
+            
             -- Record the expectation, and move to assertions state.
             put word 2 of tLine into tExpectation
             put word 3 of tLine into tExpectationReason
@@ -290,40 +293,40 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             if tState is not "assertions" then
                reportCompilerTestError pScriptFile, tLineNumber, "assertion directive outside of assertion block"
             end if
-
+            
             if tToken is "%SUCCESS" then
                if the number of words in tLine is not 1 then
                   reportCompilerTestError pScriptFile, tLineNumber, "incorrect syntax, expected: %SUCCESS"
                end if
-
+               
                reportCompilerTestDiag format("found assert success at line %d", tLineNumber)
                put "success" & return after tAssertions
             else if tToken is "%WARNING" then
                if (the number of words in tLine is 4 and \
-                        word 3 of tLine is "AT") then
-
+                     word 3 of tLine is "AT") then
+                  
                   -- Check that the position exists
                   if tPositions[word 4 of tLine] is empty then
                      reportCompilerTestError pScriptFile, tLineNumber, format("unknown position '%s'", word 4 of tLine)
                   end if
-
+                  
                   reportCompilerTestDiag format("found assert warning %s for position %s (with '%s') at line %d", word 2 of tLine, word 4 of tLine, word 6 of tLine, tLineNumber)
-
+                  
                   put "warning", word 2 of tLine, word 4 of tLine & return after tAssertions
                else
                   reportCompilerTestError pScriptFile, tLineNumber, "incorrect syntax, expected: %WARNING <id> AT <position>"
                end if
             else if tToken is "%ERROR" then
                if (the number of words in tLine is 4 and \
-                        word 3 of tLine is "AT") then
-
+                     word 3 of tLine is "AT") then
+                  
                   -- Check that the position exists
                   if tPositions[word 4 of tLine] is empty then
                      reportCompilerTestError pScriptFile, tLineNumber, format("unknown position '%s'", word 4 of tLine)
                   end if
-
+                  
                   reportCompilerTestDiag format("found assert error %s for position %s at line %d", word 2 of tLine, word 4 of tLine, tLineNumber)
-
+                  
                   put "error", word 2 of tLine, word 4 of tLine & return after tAssertions
                else
                   reportCompilerTestError pScriptFile, tLineNumber, "incorrect syntax, expected: %ERROR <id> AT <position>"
@@ -335,24 +338,30 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             if tState is not "assertions" then
                reportCompilerTestError pScriptFile, tLineNumber, "premature %ENDTEST directive"
             end if
-
+            
             if tAssertions is empty then
                reportCompilerTestError pScriptFile, tLineNumber, "no assertions specified"
             end if
-
+            
             if tAssertions contains "%SUCCESS" and \
-               tAssertions contains "%ERROR" then
+                  tAssertions contains "%ERROR" then
                reportCompilerTestError pScriptFile, tLineNumber, "both %SUCCESS and %ERROR not allowed in the same set of assertions"
             end if
-
+            
             -- If this is the test we are looking for, we are done
             if tName is pTest then
                exit repeat
             end if
-
+            
             -- Move back to initial state
             put empty into tName
             put empty into tState
+         else if tToken is "%SET" then
+            if tState is not "set" then
+               reportCompilerTestError pScriptFile, tLineNumber, "set directive must precede code"
+            end if
+            add 1 to tSetCount
+            put word 3 of tLine into tSet[word 2 of tLine]
          else
             -- We've encountered an illegal directive
             reportCompilerTestError pScriptFile, tLineNumber, format("unknown directive '%s'", tToken)
@@ -362,10 +371,11 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
          if word 1 to -1 of tLine is not empty then
             reportCompilerTestError pScriptFile, tLineNumber, "junk outside of test clause"
          end if
-      else if tState is "code" then
+      else if tState is "code" or tState is "set" then
+         put "code" into tState
          -- If we are in a code block, then accumulate the code line after
          -- processing for position directives %{...}.
-
+         
          -- We loop through the line, searching for %{...}, and accumulating the
          -- code in between as we go.
          local tPositionSkip
@@ -388,25 +398,25 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
                reportCompilerTestError pScriptFile, tLineNumber, "unterminated named position"
             end if
             add tPositionOffset to tPositionEndOffset
-
+            
             -- Check that the name is not empty
             local tPositionName
             put char tPositionOffset + 2 to tPositionEndOffset - 1 of tLine into tPositionName
             if tPositionName is empty then
                reportCompilerTestError pScriptFile, tLineNumber, "empty named position"
             end if
-
+            
             -- Check that the position hasn't already been defined
             if tPositions[tPositionName] is not empty then
                reportCompilerTestError pScriptFile, tLineNumber, "named position already defined"
             end if
-
+            
             reportCompilerTestDiag format("found position '%s' at line %d", tPositionName, tLineNumber)
-            put tLineNumber - tTestLineNumber + 1 into tPositions[tPositionName]
-
+            put tLineNumber - tTestLineNumber - tSetCount + 1 into tPositions[tPositionName]
+            
             put tPositionEndOffset + 1 into tPositionSkip
          end repeat
-
+         
          -- Add the newline to the code
          put return after tCode
       else if tState is "assertions" then
@@ -416,20 +426,21 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
          end if
       end if
    end repeat
-
+   
    if tName is empty then
       reportCompilerTestError pScriptFile, tLineNumber, format("test '%s' not found in file", pTest)
    end if
-
+   
    -- We now have the code for the test, the expectation and a list of
    -- assertions.
-
+   
    put tName into rCompilerTest["name"]
    put tCode into rCompilerTest["code"]
    put tPositions into rCompilerTest["positions"]
    put tExpectation into rCompilerTest["expectation"]
    put tExpectation into rCompilerTest["reason"]
    put tAssertions into rCompilerTest["assertions"]
+   put tSet into rCompilerTest["set"]
 end processCompilerTest
 
 private command reportCompilerTestError pFile, pLine, pMessage
