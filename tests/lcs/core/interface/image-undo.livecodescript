@@ -34,7 +34,6 @@ on TestFlipImageWorks
 end TestFlipImageWorks
 
 on TestClickImageWorks
-
     if the environment is "command line" then
         TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
         exit TestClickImageWorks        
