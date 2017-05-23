@@ -193,6 +193,8 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_gframe.image = nil;
 	
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
+    
+    m_is_locked = false;
 }
 
 MCMutableImageRep::~MCMutableImageRep()
@@ -410,16 +412,15 @@ void MCMutableImageRep::startdraw()
 		MCactiveimage->endsel();
 
 	state |= CS_EDITED;
-	if (!MCscreen->getlockmods())
-	{
-		MCundos->freestate();
-		Ustruct *us = new Ustruct;
-		us->type = UT_PAINT;
-		MCundos->savestate(m_owner, us);
-		MCImageFreeBitmap(m_undo_image);
-		m_undo_image = nil;
-		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
-	}
+	MCundos->freestate();
+	Ustruct *us = new Ustruct;
+	us->type = UT_PAINT;
+	Lock();
+	MCundos->savestate(m_owner, us);
+	Unlock();
+	MCImageFreeBitmap(m_undo_image);
+	m_undo_image = nil;
+	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
 	switch (t_tool)
 	{
 	case T_BRUSH:
@@ -1672,8 +1673,11 @@ void MCMutableImageRep::selimage()
 	Ustruct *us = new Ustruct;
 	us->type = UT_PAINT;
 
-	MCundos->savestate(m_owner, us);
-	if (m_undo_image != nil)
+    Lock();
+    MCundos->savestate(m_owner, us);
+    Unlock();
+    
+    if (m_undo_image != nil)
 		MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
@@ -1834,8 +1838,10 @@ void MCMutableImageRep::rotatesel(int2 angle)
 		MCundos->freestate();
 		Ustruct *us = new Ustruct;
 		us->type = UT_PAINT;
+        Lock();
 		MCundos->savestate(m_owner, us);
-		MCImageFreeBitmap(m_undo_image);
+        Unlock();
+        MCImageFreeBitmap(m_undo_image);
 		m_undo_image = nil;
 		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
 	}
@@ -2021,4 +2027,21 @@ bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
     r_metadata = m_metadata;
     
     return true;
+}
+
+void MCMutableImageRep::Lock()
+{
+    MCAssert(!m_is_locked);
+    m_is_locked = true;
+}
+
+void MCMutableImageRep::Unlock()
+{
+    MCAssert(m_is_locked);
+    m_is_locked = false;
+}
+
+bool MCMutableImageRep::IsLocked() const
+{
+    return m_is_locked;
 }
