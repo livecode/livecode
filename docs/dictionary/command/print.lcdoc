@@ -2,11 +2,11 @@ Name: print
 
 Type: command
 
-Syntax: print <card> [from <topLeft> to <rightBottom>] [into <pageRect>]
+Syntax: print <card> [from <topLeft> to <bottomRight>] [into <pageRect>]
 
 Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [into <pageRect>]
 
-Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <leftTop> to <rightBottom>]
+Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <topLeft> to <bottomRight>]
 
 Syntax: print break&gt;
 
@@ -45,15 +45,22 @@ card:
 Any card reference. If you specify a card, that single card is printed.
 
 topLeft:
+The point specifying the topLeft of the area of the card to be printed.
+The point consists of two integers separated by a comma: the horizontal 
+distance in pixels from the left edge of the card window to the left edge 
+of the area to be printed, the vertical distance from the top edge of the
+card window to the top edge of the area to be printed. (Coodinates are in
+left,top - x,y order.) If you don't specify a topLeft and bottomRight, the
+entire visible portion of the card is printed.
 
-
-rightBottom:
-The points specifying the portion of the card to be printed. Each point
-consists of two integers separated by a comma:the horizontal distance in
-pixels from the left edge of the card window to the point, the vertical
-distance from the top edge to the point. '0,0'. If you don't specify a
-leftTop and rightBottom, the entire visible portion of the card is
-printed. 
+bottomRight:
+The point specifying the bottomRight of the area of the card to be printed.
+The point consists of two integers separated by a comma: the horizontal
+distance in pixels from the left edge of the card window to the right edge of
+the area to be printed, the vertical distance from the top edge of the card
+window to the bottom edge of the area to be printed. (Coodinates are in
+right,bottom - x,y order.) If you don't specify a topLeft and bottomRight,
+the entire visible portion of the card is printed.
 
 pageRect:
 The rectangle into which the card is printed, and consists of four
@@ -62,20 +69,12 @@ the printed card, in points. (There are 72 points to an inch.) The card
 is scaled to fit the specified pageRect. If you don't specify a
 pageRect, the card's size depends on the printScale property.
 
-stack:
+stack: 
 Any open stack. If you specify a stack, all the cards of that stack are
 printed. (You can print a stack even if its window isn't visible).
 
 number:
 The number of cards to print, starting with the current card.
-
-leftTop:
-The points specifying the portion of the card to be printed. Each point
-consists of two integers separated by a comma: the horizontal distance
-in pixels from the left edge of the card window to the point, the
-vertical distance from the top edge to the point. '0,0'. If you don't
-specify a leftTop and rightBottom, the entire visible portion of the
-card is printed.
 
 Description:
 Use the <print> <command> to print out a <card(keyword)>, a set of
