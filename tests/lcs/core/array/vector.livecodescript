@@ -57,5 +57,6 @@ on TestVectorDotProduct
    TestAssert "non-integer keys (1,2,3) dot (2,3,5) is 23", \
       vectorDotProduct(tLeft, tRight) is 23
    TestAssertThrow "dot of mismatched vectors is error", \
-      "DoTestVectorDotMismatchedArrays", the long id of me, 891
+      "DoTestVectorDotMismatchedArrays", the long id of me, \ 
+      "EE_VECTORDOT_MISMATCH"
 end TestVectorDotProduct
