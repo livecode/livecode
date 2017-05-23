@@ -1607,7 +1607,6 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
                 MCInterfaceExecImportVideoClip(ctxt, *t_filename);
                 break;
             case EX_EPS:
-                MCLegacyExecImportEps(ctxt, *t_filename);
                 break;
             case EX_STACK:
                 MCLegacyExecImportHypercardStack(ctxt, *t_filename);
