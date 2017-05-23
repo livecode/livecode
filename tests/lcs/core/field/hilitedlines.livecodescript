@@ -69,3 +69,13 @@ on TestNonContiguousSelection
    set the hilitedLines of field kFieldName to empty
    TestAssert "selectedText of a list field without selected lines", the hilitedLines of field kFieldName is empty
 end TestNonContiguousSelection
+
+on TestCanSelectTextOf65535Length
+    createField
+
+    put format("%065535d",0) into field kFieldName
+
+    select char 1 to -1 of field kFieldName
+
+    TestAssert "no crash implies correctly selected text" , true    
+end TestCanSelectTextOf65535Length

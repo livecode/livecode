@@ -50,6 +50,11 @@ void MCImageRep::Release()
         delete this;
 }
 
+bool MCImageRep::IsLocked() const
+{
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _MOBILE

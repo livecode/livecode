@@ -165,8 +165,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 	m_needs = nil;
-
-	if (iref.isediting())
+    
+    filename = MCValueRetain(iref.filename);
+	
+    if (iref.isediting())
 	{
 		MCImageBitmap *t_bitmap = nil;
 		/* UNCHECKED */static_cast<MCMutableImageRep*>(iref.m_rep)->copy_selection(t_bitmap);
@@ -185,9 +187,6 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		if (iref . m_rep != nil)
 			m_rep = iref . m_rep->Retain();
 	}
-
-	
-	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
