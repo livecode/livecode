@@ -33,7 +33,9 @@ on TestPatternExistence
          TestAssert "patternNumber" && tPattern && "round trips", the brushPattern is tPattern
       else
          TestAssert "patternNumber" && tPattern && "documented as unavailable", it is empty
-         TestAssertThrow "patternNumber" && tPattern && "unavailable", "SetPatternToNonExistantImage", the long id of me, 447, tPattern
+         TestAssertThrow "patternNumber" && tPattern && "unavailable", \ 
+            "SetPatternToNonExistantImage", the long id of me, \ 
+            "EE_PROPERTY_BRUSHPATNOIMAGE", tPattern
       end if 
    end repeat
 end TestPatternExistence
