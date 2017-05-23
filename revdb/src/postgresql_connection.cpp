@@ -439,40 +439,38 @@ char *DBConnection_POSTGRESQL::getErrorMessage(Bool p_last)
 
 void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
 {
-	int rowseplen = 1;
-	char rowsep[] = "\n";
-	if (!buffer) {
-		*bufsize = 2500;
-		return;
-	}
-	char tsql[] = "SELECT tablename FROM pg_tables WHERE tablename NOT LIKE 'pg%'";
-	DBCursor *newcursor = sqlQuery(tsql , NULL, 0, 0);
-	if (newcursor)
-	{
-		char *result = buffer;
-		char *resultptr = result;
-		unsigned int colsize = 0;
-		if (!newcursor->getEOF())
-		{
-			while (True){
-				unsigned int colsize;
-				char *coldata = newcursor->getFieldDataBinary(1,colsize);
-				colsize = strlen(coldata);
-				if (((resultptr-result) + (int)colsize + rowseplen + 16 ) > *bufsize)
-					break;
-				memcpy(resultptr,coldata,colsize);
-				resultptr+=colsize;
-				newcursor->next();
-				if (newcursor->getEOF()) break;
-				memcpy(resultptr,rowsep,rowseplen);
-				resultptr+=rowseplen;
-			}
-		}
-		deleteCursor(newcursor->GetID());
-		*resultptr++ = '\0';
-		*bufsize = resultptr-result;
-	}
-	newcursor = NULL;
+	if (!buffer)
+    {
+        if (!m_internal_buffer)
+        {
+            m_internal_buffer = new large_buffer_t;
+        }
+        
+        long buffersize = 0;
+        char tsql[] = "SELECT tablename FROM pg_tables WHERE tablename NOT LIKE 'pg%'";
+        DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
+        if (newcursor) {
+            if (!newcursor->getEOF()){
+                while (True){
+                    unsigned int colsize;
+                    char *coldata = newcursor->getFieldDataBinary(1,colsize);
+                    colsize = strlen(coldata);
+                    m_internal_buffer->append(coldata, colsize);
+                    m_internal_buffer->append('\n');
+                    buffersize += colsize + 1;
+                    newcursor->next();
+                    if (newcursor->getEOF()) break;
+                }
+            }
+            deleteCursor(newcursor->GetID());
+            *bufsize = buffersize+1;
+            m_internal_buffer->append('\0');
+        }
+        return;
+    }
+    memcpy((void *) buffer, m_internal_buffer->ptr(), m_internal_buffer->length());
+    delete m_internal_buffer;
+    m_internal_buffer = nullptr;
 }
 
 void DBConnection_POSTGRESQL::transBegin()
