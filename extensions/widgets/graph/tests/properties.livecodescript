@@ -57,5 +57,5 @@ on _TestEmptyGraphData
 end _TestEmptyGraphData
 on TestEmptyGraphData
 	TestAssertThrow "set graph data to empty", "_TestEmptyGraphData", \
-		the long id of me, 863 -- Error occurred in extension
+		the long id of me, "EE_EXTENSION_ERROR_DOMAIN"
 end TestEmptyGraphData
