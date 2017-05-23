@@ -83,8 +83,18 @@ command TestRunnerMain
          doUsage 1
          break
    end switch
-   quit 0
+  
+   send "DoQuit" to me
 end TestRunnerMain
+
+on DoQuit
+   -- Allow errorDialog message to be sent
+   if "errorDialog" is in the pendingMessages then
+ 	  send "DoQuit" to me in 0 millisecs
+   else
+      quit 0
+   end if
+end DoQuit
 
 private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
