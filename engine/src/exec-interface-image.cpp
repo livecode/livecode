@@ -318,8 +318,6 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-    
-    
     if (m_rep == nullptr || m_rep->GetType() == kMCImageRepReferenced)
     {
         r_text = MCValueRetain(kMCEmptyData);
@@ -328,9 +326,7 @@ void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
     
     bool t_success = false;
     
-    
-    MCImage* t_image_to_work_on = this;
-    
+    MCImage* t_image_to_work_on = this;   
     if (m_rep && m_rep->IsLocked())
     {
         t_image_to_work_on = new MCImage(*this);
@@ -386,6 +382,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
         ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
         return;
     }
+	
     bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
@@ -507,6 +504,7 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
         ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
         return;
     }
+	
     uindex_t t_length;
 	t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
