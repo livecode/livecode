@@ -1333,23 +1333,24 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCStringsEvalMatchText(ctxt, *t_source, *t_pattern, *t_results, t_result_count, r_value . bool_value);
     r_value .type = kMCExecValueTypeBool;
     
-    if (!ctxt.HasError())
+    if (!r_value . bool_value || ctxt . HasError())
     {
-        for (uindex_t i = 0; i < t_result_count; i++)
+        return;
+    }
+    
+    for (uindex_t i = 0; i < t_result_count; i++)
+    {
+        // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
+        // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
+        MCAutoPointer<MCContainer> t_container;
+        if (!t_result_params->evalcontainer(ctxt, &t_container))
         {
-            // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
-            // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-            MCAutoPointer<MCContainer> t_container;
-            if (!t_result_params->evalcontainer(ctxt, &t_container))
-            {
-                ctxt . LegacyThrow(EE_MATCH_BADDEST);
-                return;
-            }
-
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
-            
-            t_result_params = t_result_params->getnext();
+            ctxt . LegacyThrow(EE_MATCH_BADDEST);
+            return;
         }
+        /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+        
+        t_result_params = t_result_params->getnext();
     }
 }
 
