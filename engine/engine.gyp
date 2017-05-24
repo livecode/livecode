@@ -75,6 +75,7 @@
 				'../extensions/script-libraries/mime/mime.livecodescript',
 				'../extensions/script-libraries/dropbox/dropbox.livecodescript',
 				'../extensions/script-libraries/diff/diff.livecodescript',
+				'../extensions/script-libraries/messageauthentication/messageauthentication.livecodescript',
 			],
 			
 			'actions':
