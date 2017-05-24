@@ -88,16 +88,16 @@ end TesterGetActualFileNames_Recursive
 -- commands in pFilename.
 function TesterParseTestCommandNames pFilename
    local tScript
-
    -- Get the contents of the file
+   local tResult
    open file pFilename for "UTF-8" text read
-   if the result is not empty then
-      throw the result
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
    end if
 
    read from file pFilename until end
    put it into tScript
-
    close file pFilename
 
    -- Scan the file for "on Test*" definitions
