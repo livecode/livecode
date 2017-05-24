@@ -20,10 +20,10 @@ on _TestSetReadOnlyProperty
 	set the screenPixelScale to 2
 end _TestSetReadOnlyProperty
 
-constant kCantSetPropertyCode = 448
 on TestSetReadOnlyProperty
 	TestAssertThrow "setting read-only global property throws", \
-		 "_TestSetReadOnlyProperty", the long id of me, kCantSetPropertyCode
+		 "_TestSetReadOnlyProperty", the long id of me, \
+		 "EE_PROPERTY_CANTSET"
 end TestSetReadOnlyProperty
 
 on TestGetSetSecurityPermissions
