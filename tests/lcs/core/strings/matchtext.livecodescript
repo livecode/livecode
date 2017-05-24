@@ -21,3 +21,18 @@ on TestMatchTextRecursion
    get matchText(tTarget, kRecursionExpr)
 
 end TestMatchTextRecursion
+
+on TestMatchTextMultipleMatches
+    local tFound
+    repeat for each item tItem in "a1,b1,a2,a3,a4,a5,a0"
+         get matchText(tItem, "a([0-9])", tFound)
+   end repeat
+
+   TestAssert "check that tFound is not empty", tFound is 0
+
+   repeat for each item tItem in "c1,c2,c3,c4"
+        get matchText(tItem, "a([0-9])", tFound)
+   end repeat
+
+   TestAssert "check that tFound is empty", tFound is 0
+end TestMatchTextMultipleMatches
