@@ -389,7 +389,7 @@ bool X_init(const X_init_options& p_options)
 
 	////
     
-	MCS_init();
+	MCS_init(p_options.should_handle_signals);
 
     /* Set up MCcmd correctly - this is the path to the loadable object
      * containing this folder. */

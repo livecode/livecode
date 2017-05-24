@@ -227,9 +227,18 @@ static MCHookNativeControlsDescriptor s_native_control_desc =
 };
 #endif
 
-void MCS_common_init(void)
+void MCS_common_init(bool p_handle_signals)
 {
-	MCsystem -> Initialize();    
+	MCsystem -> Initialize(p_handle_signals);
+
+#if !defined(__EMSCRIPTEN__)
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(MCS_common_init),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+#endif
+    
     MCsystem -> SetErrno(errno);
 	
 	MCinfinity = HUGE_VAL;
@@ -279,34 +288,36 @@ void MCS_preinit()
 #endif
 }
 
-void MCS_init()
+void MCS_init(bool p_handle_signals)
 {
     // Do the pre-init if not already complete
     if (MCsystem == nil)
         MCS_preinit();
     
 #ifdef _SERVER
+    if (p_handle_signals)
+    {
 #ifndef _WINDOWS_SERVER
-	signal(SIGUSR1, handle_signal);
-	signal(SIGUSR2, handle_signal);
-	signal(SIGBUS, handle_signal);
-	signal(SIGHUP, handle_signal);
-	signal(SIGQUIT, handle_signal);
-	signal(SIGCHLD, handle_signal);
-	signal(SIGALRM, handle_signal);
-	signal(SIGPIPE, handle_signal);
+        signal(SIGUSR1, handle_signal);
+        signal(SIGUSR2, handle_signal);
+        signal(SIGBUS, handle_signal);
+        signal(SIGHUP, handle_signal);
+        signal(SIGQUIT, handle_signal);
+        signal(SIGCHLD, handle_signal);
+        signal(SIGALRM, handle_signal);
+        signal(SIGPIPE, handle_signal);
 #endif
 	
-	signal(SIGTERM, handle_signal);
-	signal(SIGILL, handle_signal);
-	signal(SIGSEGV, handle_signal);
-	signal(SIGINT, handle_signal);
-	signal(SIGABRT, handle_signal);
-	signal(SIGFPE, handle_signal);
-    
+        signal(SIGTERM, handle_signal);
+        signal(SIGILL, handle_signal);
+        signal(SIGSEGV, handle_signal);
+        signal(SIGINT, handle_signal);
+        signal(SIGABRT, handle_signal);
+        signal(SIGFPE, handle_signal);
+    }
 #endif // _SERVER
 
-	MCS_common_init();
+	MCS_common_init(p_handle_signals);
 }
 
 void MCS_shutdown(void)

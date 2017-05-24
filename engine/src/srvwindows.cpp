@@ -1199,7 +1199,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	//////////////////
 	
-	bool Initialize(void)
+	bool Initialize(bool p_handle_signals)
 	{
 		WORD request = MAKEWORD(1, 1);
 		WSADATA t_data;

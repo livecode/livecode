@@ -124,7 +124,7 @@ bool X_init(const X_init_options& p_options)
 	////
 
 #ifndef _WINDOWS_DESKTOP
-	MCS_init();
+	MCS_init(p_options.should_handle_signals);
 #endif
 	
 	////
