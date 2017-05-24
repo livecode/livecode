@@ -299,7 +299,11 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                         t_is_pattern = true;
                         t_color = [NSColor windowBackgroundColor];
                         break;
-                        
+                    case kMCPlatformControlTypeGraphic:
+                        if (p_state & kMCPlatformControlStateCompatibility)
+                        {
+                            return false;
+                        }
                     default:
                         // controlColor is a pattern
                         t_is_pattern = true;

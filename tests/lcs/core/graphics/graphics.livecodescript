@@ -250,3 +250,12 @@ on TestTeardown
 	end if
 end TestTeardown
 
+on TestLegacyThemeGraphics
+	create stack
+	set the theme of this stack to legacy
+
+	create graphic "g"
+
+	TestAssert "see the actual color is empty", the backColor of graphic "g" is empty
+	TestAssert "see the effective color is white", the effective backColor of graphic "g" is white 
+end TestLegacyThemeGraphics
