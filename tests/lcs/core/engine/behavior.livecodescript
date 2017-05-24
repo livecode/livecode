@@ -46,7 +46,7 @@ on TestInvalidBehaviorChange
    create stack
    set the behavior of it to the long id of stack "Behavior"
    TestAssertThrow "behavior change while parent script is executing throws", \
-      "changeBehavior", it, 896
+      "changeBehavior", it, 897
 end TestInvalidBehaviorChange
 
 on _TestInvalidObjectBehavior pStack

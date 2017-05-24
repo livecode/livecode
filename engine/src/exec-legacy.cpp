@@ -453,6 +453,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			return;
 		}
+        eptr->setparent(MCdefaultstackptr);
 		eptr->attach(OP_CENTER, false);
 	}
 

@@ -77,6 +77,8 @@ public:
     // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
     virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
     
+    virtual bool IsLocked(void) const;
+    
 protected:
     MCImageMetadata m_metadata;
 

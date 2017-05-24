@@ -96,6 +96,7 @@ private command _TestBuildStandaloneWithWidget pDir, pWidget
    if the environment contains "command line" then
       put " -ui" after tShellCmd
    end if
+
    get shell(tShellCmd)
    put the result into tResult
    
@@ -116,5 +117,3 @@ private command _TestBuildStandalone pStackPath, @xStandalonePath
 	StandaloneBuilderSaveAsStandalone tStackName, xStandalonePath
 	return the result
 end _TestBuildStandalone
-
-

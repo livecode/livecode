@@ -29,3 +29,19 @@ on TestReadForFixedEof
 
    TestAssert "reading past end of file returns eof", tResult is "eof"
 end TestReadForFixedEof
+
+on TestImportEPS
+   local tStackPath
+   
+   put the filename of this stack into tStackPath
+   
+   set the itemDel to "/"
+   
+   put item 1 to -2 of tStackPath into tStackPath
+   
+   set the defaultFolder to tStackPath
+   
+   import eps from file "icon_android.eps"
+   
+   TestAssert "eps object created", there is an eps 1
+ end TestImportEPS 
