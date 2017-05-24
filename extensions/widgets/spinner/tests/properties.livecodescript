@@ -33,5 +33,5 @@ end _TestOutOfRangeMarkerCount
 
 on TestOutOfRangeMarkerCount
 	TestAssertThrow "set markerCount to 4", "_TestOutOfRangeMarkerCount", \
-		the long id of me, 863 -- Error occurred in extension
+		the long id of me, "EE_EXTENSION_ERROR_DOMAIN"
 end TestOutOfRangeMarkerCount
