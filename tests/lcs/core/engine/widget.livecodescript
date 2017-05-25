@@ -19,6 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //////////
 
 on TestSetup
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      return "SKIP No lcb support in standalone test runner"
+   end if
+   
    TestLoadAuxillaryExtension "_widget"
    TestLoadAuxillaryExtension "_widget_support"
    TestLoadAuxillaryExtension "_widgetthrow"
