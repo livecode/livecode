@@ -67,8 +67,18 @@ clean-linux:
 	find . -name \*.lcb | xargs touch
 
 check-common-%:
-	$(MAKE) -C tests bin_dir=../$*-bin
+	$(MAKE) check-lcs-$*
+	$(MAKE) check-ide-$*	
+	$(MAKE) check-lcb-$*
+
+check-lcs-%:
+	$(MAKE) -C tests lcs-check lcs-parser-check bin_dir=../$*-bin
+
+check-ide-%:
 	$(MAKE) -C ide/tests bin_dir=../../$*-bin
+	
+check-lcb-%:
+	$(MAKE) -C tests lcb-check compiler-check lc-compile-ffi-java-check bin_dir=../$*-bin
 	$(MAKE) -C extensions bin_dir=../$*-bin
 
 ################################################################
@@ -84,12 +94,15 @@ compile-linux-%:
 	$(MAKE) -C build-linux-$*/livecode default
 
 check-linux-%:
-	$(MAKE) -C build-linux-$*/livecode check
+	$(MAKE) check-build-linux-$*
 	$(MAKE) check-common-linux-$*
 
 all-linux-%:
 	$(MAKE) config-linux-$*
 	$(MAKE) compile-linux-$*
+
+check-build-linux-%:
+	$(MAKE) -C build-linux-$*/livecode check
 
 $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 
@@ -126,14 +139,16 @@ compile-mac:
 	  $(XCODEBUILD_FILTER)
 
 check-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
-	  $(XCODEBUILD_FILTER)
+	$(MAKE) check-build-mac
 	$(MAKE) check-common-mac
-
 
 all-mac:
 	$(MAKE) config-mac
 	$(MAKE) compile-mac
+	
+check-build-mac:
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
+	  $(XCODEBUILD_FILTER)
 
 ################################################################
 # iOS rules
@@ -185,13 +200,16 @@ compile-win-%:
 	cd build-win-$* && $(WINE) /K ../make.cmd
 
 check-win-%:
-	# windows builds occur under Wine
-	cd build-win-$* && $(WINE) /K ../make.cmd check
+	$(MAKE) check-build-win-$*
 	$(MAKE) check-common-win-$*
 
 all-win-%:
 	$(MAKE) config-win-$*
 	$(MAKE) compile-win-$*
+
+check-build-win-%:
+	# windows builds occur under Wine
+	cd build-win-$* && $(WINE) /K ../make.cmd check
 
 $(addsuffix -win,all config compile): %: %-x86
 
