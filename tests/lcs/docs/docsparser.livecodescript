@@ -17,6 +17,10 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      return "SKIP No docs in standalone test runner"
+   end if
+   
    -- Only run these tests on desktop platforms
    if the platform is not among the items of "MacOS,Windows,Linux" then
       return "SKIP Tests are not runnable on" && the platform
