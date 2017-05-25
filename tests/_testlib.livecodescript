@@ -307,6 +307,10 @@ function TestGetExtractedDocsFolder
 end TestGetExtractedDocsFolder
 
 on TestLoadExtension pName
+   if pName is among the lines of the loadedExtensions then
+      return empty
+   end if
+   
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
