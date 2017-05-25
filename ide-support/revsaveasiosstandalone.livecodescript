@@ -1231,7 +1231,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
-   --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
+   put pSettings["ios,exits on suspend"] into tExitsOnSuspend
    
    put  pSettings["ios,background audio"] into tBackgroundAudio
    put pSettings["ios,file sharing"] into tFileSharing
@@ -1256,11 +1256,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "false" into tPrerenderedIcon
    end if
    
+   if tExitsOnSuspend is empty then
+      put "true" into tExitsOnSuspend
+   end if
+   
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
    if tBackgroundAudio is true then 
       put "false" into tExitsOnSuspend
-   else -- false or empty
-      put "true" into tExitsOnSuspend
    end if
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
