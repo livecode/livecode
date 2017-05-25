@@ -614,7 +614,20 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
             }
                 break;
             case CT_CARD:
-                MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
+            {
+                MCObject *parent = nil;
+                if (container != nil)
+                {
+                    uint32_t parid;
+                  
+                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_STACK)
+                    {
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateCard(ctxt, *t_new_name, static_cast<MCStack *>(parent), visible==False);
+            }
                 break;
             case CT_WIDGET:
             {
@@ -630,13 +643,14 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                 {
                     uint32_t parid;
                     
-                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_GROUP)
+                    if (!container->getobj(ctxt, parent, parid, True) 
+							|| (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
                     {
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
-                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, (MCGroup *)parent, visible == False);
+                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, parent, visible == False);
                 break;
             }
             default:
@@ -647,13 +661,13 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                     uint4 parid;
 
                     if (!container->getobj(ctxt, parent, parid, True)
-                            || parent->gettype() != CT_GROUP)
+                            || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD) )
                     {
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
-                MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
+                MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, parent, visible == False);
             }
                 break;
             }

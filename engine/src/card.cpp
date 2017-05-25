@@ -1406,13 +1406,16 @@ void MCCard::kfocusset(MCControl *target)
 	}
 }
 
-MCCard *MCCard::clone(Boolean attach, Boolean controls)
+MCCard *MCCard::clone(Boolean attach, Boolean controls, MCStack *p_parent)
 {
 	clean();
 	MCCard *newcptr = new (nothrow) MCCard(*this);
-	newcptr->parent = MCdefaultstackptr;
+    if (p_parent == nullptr)
+    {
+        p_parent = MCdefaultstackptr;
+    }
+	newcptr->parent = p_parent;
 	Boolean diffstack = getstack() != MCdefaultstackptr;
-
 	if (controls)
 	{
 		if (objptrs != NULL)
