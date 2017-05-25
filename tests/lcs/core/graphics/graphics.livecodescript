@@ -16,6 +16,13 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on TestSetup
+   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
+      -- load stack 
+      get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
+   end if
+end TestSetup
+
 on TestGraphicsColors
 
 
@@ -98,10 +105,20 @@ end TestGraphicsIsNotWithin
 -- brush > 136 = brush
 
 on TestBrushWithNoIcons
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "set brush with revicons stack not loaded", "brushes not in standalones"
+      return empty
+   end if
+   
 	TestAssert "set brush with revicons stack not loaded", SetBrushNoIcons() is not 2
 end TestBrushWithNoIcons
 
 on TestInitialPaintConditions
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "brush is initially", "brushes not in standalones"
+      return empty
+   end if
+   
 #	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	TestAssert "brush is initially 8", the brush is 8
 	TestAssert "spray is initially 34", the spray is 34
@@ -130,14 +147,22 @@ on TestInitialPaintConditions
 end TestInitialPaintConditions
 
 on TestBadBrush100
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "no brush with id=100", "brushes not in standalones"
+      return empty
+   end if
+   
 	set the brush to 8
 	TestAssert "no brush with id=100", SetBrush100() is not 100
 	TestAssert "brush image not found", the brush is 8
 end TestBadBrush100
 
 on TestBadBrushZero
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "nno brush with id=0", "brushes not in standalones"
+      return empty
+   end if
+   
 	set the brush to 8
 	TestAssert "no brush with id=0", SetBrushZero() is not zero
 	TestAssert "brush image not found", the brush is 8
@@ -171,15 +196,23 @@ function SetBrushZero
 end SetBrushZero
 
 on TestBrush
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "brush < 37 unchanged", "brushes not in standalones"
+      return empty
+   end if
+   
 	set the brush to 30
 	TestAssert "brush < 37 unchanged", the brush is 30
 end TestBrush
 
 on TestRemappedBrush
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "setting brush to", "brushes not in standalones"
+      return empty
+   end if
+   
 	local tBrush
 	
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	repeat with tBrush = 101 to 136
 		set the brush to tBrush
 		TestAssert "setting brush to" && tBrush && "subtracts 100", the brush is (tBrush-100)
@@ -187,9 +220,13 @@ on TestRemappedBrush
 end TestRemappedBrush
 
 on TestBrushInBounds
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "setting brush to", "brushes not in standalones"
+      return empty
+   end if
+   
 	local tBrush
 	
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	repeat with tBrush = 1 to 36
 		set the brush to tBrush
 		TestAssert "setting brush to" && tBrush && "is unchanged", the brush is tBrush
@@ -197,7 +234,11 @@ on TestBrushInBounds
 end TestBrushInBounds
 
 on TestBrushBoundaries
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "brush can be set to a pattern", "brushes not in standalones"
+      return empty
+   end if
+   
 #	set the brush to 99
 #	TestAssert "brush = 99 unchanged", the brush is 99
 	set the brush to 137
@@ -205,19 +246,31 @@ on TestBrushBoundaries
 end TestBrushBoundaries
 
 on TestSpray
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "directly setting the spray", "brushes not in standalones"
+      return empty
+   end if
+   
 	set the spray to 2
 	TestAssert "directly setting the spray", the spray is 2
 end TestSpray
 
 on TestEraser
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "directly setting the erasery", "brushes not in standalones"
+      return empty
+   end if
+   
 	set the eraser to 8
 	TestAssert "directly setting the eraser", the eraser is 8
 end TestEraser
 
 on TestResetPaint
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	if "StandaloneTestRunnerMainstack" is in the mainstacks then
+      TestSkip "reset paint", "brushes not in standalones"
+      return empty
+   end if
+   
 	reset paint
 	TestAssert "brush is reset to 8", the brush is 8
 	TestAssert "spray is reset to 34", the spray is 34
@@ -243,13 +296,6 @@ on TestResetPaint
 	TestAssert "the penColor is reset to 0,0,0", the penColor is "0,0,0"
 	TestAssert "the brushColor is reset to 255,255,255", the brushColor is "255,255,255"
 end TestResetPaint
-
-on TestTeardown
-	if there is a stack "revicons" then
-		close stack "revicons"
-	end if
-end TestTeardown
-
 
 command _TestGraphicsPointOverflowNoThrow
 	local tPoints
@@ -407,3 +453,9 @@ on TestGraphicPointOverflow
 	_TestGraphicsPointOverflowNoThrow
 	TestAssert "didn't throw", true
 end TestGraphicPointOverflow
+
+on TestTeardown
+	if there is a stack "revicons" then
+		close stack "revicons"
+	end if
+end TestTeardown
