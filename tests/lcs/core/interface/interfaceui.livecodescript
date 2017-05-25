@@ -26,6 +26,10 @@ on TestSetup
 end TestSetup
 
 on TestInterface2
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface2
+   end if
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
@@ -37,16 +41,19 @@ get the formattedRect of char 1 of field "tf"
 local tPoint
 put (item 1 of it + item 3 of it) div 2 & "," & (item 2 of it + item 4 of it) div 2 into tPoint
 
-click at tPoint
-TestAssert "test", the clickChar is "a"
+click button 3 at tPoint
+TestAssert "the clickChar is a", the clickChar is "a"
 
 click at "0,0"
-TestAssert "test", the clickChar is empty
-
+TestAssert "the clickChar is empty", the clickChar is empty
+delete stack "Test"
 end TestInterface2
 
 on TestInterface3
-
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface3
+   end if
 create stack "Test"
 set the defaultstack to "Test"
 create field
@@ -55,16 +62,20 @@ set the rect of the last field to 100,100,200,200
 set the text of the last field to "a"
 get the formattedRect of char 1 of field 1
 
-click at (item 1 of it + item 3 of it) div 2, (item 2 of it + item 4 of it) div 2
-TestAssert "test", the clickCharChunk is "char 1 to 1 of field 1"
+click button 3 at (item 1 of it + item 3 of it) div 2, (item 2 of it + item 4 of it) div 2
+TestAssert "the clickCharChunk is char 1 to 1 of field 1", the clickCharChunk is "char 1 to 1 of field 1"
 
 click at 0,0
-TestAssert "test", the clickCharChunk is empty
+TestAssert "the clickCharChunk is empty", the clickCharChunk is empty
+delete stack "Test"
 
 end TestInterface3
 
 on TestInterface4
-
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface4
+   end if
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
@@ -73,15 +84,19 @@ set the rect of field "tf" to 100,100,200,200
 set the text of field "tf" to "abcd"
 get the formattedRect of char 1 of field "tf"
 
-click at (item 1 of it + item 3 of it) div 2, (item 2 of it + item 4 of it) div 2
-TestAssert "test", the clickChunk is "char 1 to 4 of field 1" or the clickChunk is "char 1 to 4 of field 2"
+click button 3 at (item 1 of it + item 3 of it) div 2, (item 2 of it + item 4 of it) div 2
+TestAssert "the clickChunk is char 1 to 4 of field 1 or the clickChunk is char 1 to 4 of field 2", the clickChunk is "char 1 to 4 of field 1" or the clickChunk is "char 1 to 4 of field 2"
 
 click at 0,0
-TestAssert "test", the clickChunk is empty
+TestAssert "the clickChunk is empty", the clickChunk is empty
+delete stack "Test"
 
 end TestInterface4
 on TestInterface5
-
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface5
+   end if
 
 create stack "Test"
 set the defaultstack to "Test"
@@ -115,7 +130,10 @@ TestAssert "test", the clickH is 0
 
 end TestInterface6
 on TestInterface7
-
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface7
+   end if
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
@@ -144,7 +162,10 @@ TestAssert "test", the clickLoc is "0,0"
 
 end TestInterface8
 on TestInterface9
-
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      TestSkip "the clickChar is a", "To fix: click fails in standalone test runner"
+      exit TestInterface9
+   end if
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
