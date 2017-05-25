@@ -8,10 +8,12 @@ on TestSetup
       return "SKIP Tests are not runnable on" && the platform
    end if
 
-   local tLibURl
-   put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
-
+   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
+      local tLibURl
+      put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
+      send "revLoadLibrary" to stack tLibUrl
+   end if
+   
    create field
    put it into sLogField
    libUrlSetLogField sLogField
@@ -61,3 +63,8 @@ on TestHostHeader
 
    TestAssert "exactly one host header", tHostCount is 1
 end TestHostHeader
+
+on TestTeardown
+   set the httpHeaders to empty
+   libUrlSetLogField empty
+end TestTeardown

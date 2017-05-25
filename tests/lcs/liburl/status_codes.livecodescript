@@ -7,10 +7,12 @@ on TestSetup
    if the platform is not among the items of "MacOS,Windows,Linux" then
       return "SKIP Tests are not runnable on" && the platform
    end if
-
-   local tLibURl
-   put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
+   
+   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
+      local tLibURl
+      put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
+      send "revLoadLibrary" to stack tLibUrl
+   end if
 end TestSetup
 
 

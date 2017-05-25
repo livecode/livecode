@@ -6,6 +6,11 @@ on TestSetup
       return "SKIP Tests are not runnable on" && the platform
    end if
 
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks and \
+         there is a stack "tsNetLibURL" then
+      return "SKIP Test not correct for tsNet"
+   end if
+      
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
    send "revLoadLibrary" to stack tLibUrl
