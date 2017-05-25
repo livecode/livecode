@@ -73,6 +73,7 @@ uint2 weighttable[] =
         FW_DONTCARE,
         FW_THIN,
         FW_EXTRALIGHT,
+		FW_EXTRALIGHT,
         FW_LIGHT,
         FW_NORMAL,
         FW_MEDIUM,

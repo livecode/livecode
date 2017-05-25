@@ -885,6 +885,9 @@ uint32_t MCGContextGetHeight(MCGContextRef context);
 // invalid and all further operations will be no-ops.
 bool MCGContextIsValid(MCGContextRef context);
 
+// Returns whether the current context layer is fully opaque or contains a transparency channel.
+bool MCGContextIsLayerOpaque(MCGContextRef context);
+
 // Graphics state operations
 void MCGContextSave(MCGContextRef context);
 void MCGContextRestore(MCGContextRef context);
