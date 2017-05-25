@@ -23,6 +23,10 @@ on TestSetup
       return "SKIP Tests are not runnable on" && the platform
    end if
    
+   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+      return "SKIP Tests are not runnable in standalone runner"
+   end if
+   
    local tBuilderUtilities
    put TestGetEngineRepositoryPath() & "/builder/builder_utilities.livecodescript" into tBuilderUtilities
    start using stack tBuilderUtilities
