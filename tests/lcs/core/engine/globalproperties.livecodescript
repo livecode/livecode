@@ -28,6 +28,12 @@ end TestSetReadOnlyProperty
 
 on TestGetSetSecurityPermissions
    TestAssert "Getting default securityPermissions", the securityPermissions is the securityCategories
+		
+	if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
+		TestSkip "Setting new securityPermissions correctly", "Setting in standalone stack runner will break too much"
+      exit TestGetSetSecurityPermissions
+   end if
+
    local tNewPermissions
    put "disk,network" into tNewPermissions
    set the securityPermissions to tNewPermissions
