@@ -1206,16 +1206,20 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
+   local tExeName, tBundleId, tBundleVersion,tBundleBuild,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
+   put pSettings["ios,bundle build"] into tBundleBuild
    
    -- MW-2011-03-15: Make sure the bundle version is defaulted to 1.0.0 if empty
    if tBundleVersion is empty then
       put "1.0.0" into tBundleVersion
    end if
    
+   if tBundleBuild is empty then
+      put "1" into tBundleBuild
+   end if
    ----------
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
@@ -1341,6 +1345,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_BUILD}" with tBundleBuild in pPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
    		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
    		
