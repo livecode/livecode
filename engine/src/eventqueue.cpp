@@ -499,13 +499,15 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			}
 
 			// Otherwise 'char_code' is the unicode codepoint, so first map to
-			// UTF-16 (not done properly yet...)
-			unichar_t t_unichar;
-			t_unichar = (unichar_t)t_event -> key . press . char_code;
+			// UTF-16 codeunits
+			unichar_t t_unichars[2];
+            uindex_t t_length = 1;
+            if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars[0], t_unichars[1]))
+                t_length = 2;
 
 			// Now the string is created with the appropriate unicode-capable function
 			MCAutoStringRef t_buffer;
-            MCStringCreateWithChars(&t_unichar, 1, &t_buffer);
+            MCStringCreateWithChars(t_unichars, t_length, &t_buffer);
 			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
 			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}

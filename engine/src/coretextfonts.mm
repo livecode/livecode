@@ -254,113 +254,41 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
 
 void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
-    /*bool t_success;
-    t_success = true;
-    
-    CFStringRef t_name;
-    t_name = NULL;
-    if (t_success)
-    {
-        t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
-        t_success = t_name != NULL;
-    }
-
-    CFDictionaryRef t_styles;
-    t_styles = NULL;
-    if (t_success)
-    {
-        CTFontSymbolicTraits t_symbolic_traits;
-        t_symbolic_traits = 0;
-        if (p_bold)
-            t_symbolic_traits |= kCTFontBoldTrait;
-        if (p_italic)
-            t_symbolic_traits |= kCTFontItalicTrait;
-        
-        CFNumberRef t_cfnumber_symbolic_traits;
-        t_cfnumber_symbolic_traits = NULL;
-        t_cfnumber_symbolic_traits = CFNumberCreate(NULL, kCFNumberIntType, &t_symbolic_traits);
-        
-        if (t_cfnumber_symbolic_traits != NULL)
-        {
-            CFStringRef t_keys[] =
-            {
-                kCTFontSymbolicTrait,
-            };
-            CFTypeRef t_values[] = {
-                t_cfnumber_symbolic_traits,
-            };
-            t_styles = CFDictionaryCreate(NULL,
-                                          (const void **)&t_keys, (const void **)&t_values,
-                                          sizeof(t_keys) / sizeof(t_keys[0]),
-                                          &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-            CFRelease(t_cfnumber_symbolic_traits);
-        }
-        
-        t_success = t_styles != NULL;
-    }
-    
-    CFDictionaryRef t_attributes;
-    t_attributes = NULL;
-    if (t_success)
-    {
-        CFStringRef t_keys[] =
-        {
-            kCTFontNameAttribute,
-            kCTFontTraitsAttribute,
-        };
-        CFTypeRef t_values[] = {
-            t_name,
-            t_styles,
-        };
-        t_attributes = CFDictionaryCreate(NULL,
-                                          (const void **)&t_keys, (const void **)&t_values,
-                                          sizeof(t_keys) / sizeof(t_keys[0]),
-                                          &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-        t_success = t_attributes != NULL;
-    }
-    
-    CTFontDescriptorRef t_descriptor;
-    t_descriptor = NULL;
-    if (t_success)
-    {
-        t_descriptor = CTFontDescriptorCreateWithAttributes(t_attributes);
-        t_success = t_descriptor != NULL;
-    }
-    
-    CTFontRef t_font;
-    t_font = NULL;
-    if (t_success)
-        t_font = CTFontCreateWithFontDescriptor(t_descriptor, p_size, NULL);
-    
-    if (t_descriptor != NULL)
-        CFRelease(t_descriptor);
-    if (t_attributes != NULL)
-        CFRelease(t_attributes);
-    if (t_styles != NULL)
-        CFRelease(t_styles);
-    if (t_name != NULL)
-        CFRelease(t_name);
-    
-    return (void *)t_font;*/
-    
     CTFontRef t_base_font;
     t_base_font = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
 	
 	CTFontRef t_font;
 	t_font = NULL;
     
-	if (p_bold && p_italic)
-		t_font = CTFontCreateCopyWithSymbolicTraits(t_base_font, p_size, NULL, kCTFontBoldTrait | kCTFontItalicTrait, kCTFontBoldTrait | kCTFontItalicTrait);
-	
-	if (t_font == NULL && p_bold)
-		t_font = CTFontCreateCopyWithSymbolicTraits(t_base_font, p_size, NULL, kCTFontBoldTrait, kCTFontBoldTrait);
-	
-	if (t_font == NULL && p_italic)
-		t_font = CTFontCreateCopyWithSymbolicTraits(t_base_font, p_size, NULL, kCTFontItalicTrait, kCTFontItalicTrait);
+    // Common traits for all fonts
+    CTFontSymbolicTraits t_traits = kCTFontColorGlyphsTrait;
+    CTFontSymbolicTraits t_excluded_traits = 0;
     
-	if (t_font == NULL)
-		t_font = t_base_font;
-     
+    if (p_bold)
+        t_traits |= kCTFontBoldTrait;
+    if (p_italic)
+        t_traits |= kCTFontItalicTrait;
+    
+    while (t_font == nil)
+    {
+        CTFontSymbolicTraits t_effective = t_traits & ~t_excluded_traits;
+        
+        t_font = CTFontCreateCopyWithSymbolicTraits(t_base_font, p_size, NULL,t_effective, t_effective);
+        
+        // Start removing requested traits if they can't be satisfied
+        if (t_font == nil)
+        {
+            if (t_effective & kCTFontColorGlyphsTrait)
+                t_excluded_traits |= kCTFontColorGlyphsTrait;
+            else if (t_effective & kCTFontItalicTrait)
+                t_excluded_traits |= kCTFontItalicTrait;
+            else if (t_effective & kCTFontBoldTrait)
+                t_excluded_traits |= kCTFontBoldTrait;
+            else
+                break;
+        }
+    }
+    
 	if (t_font != t_base_font && t_base_font != NULL)
 		CFRelease(t_base_font);
     

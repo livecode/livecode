@@ -254,26 +254,59 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 - (BOOL)textView: (UITextView *)textView shouldChangeTextInRange: (NSRange)range replacementText: (NSString*)text
 {
-	uint32_t t_key_code, t_char_code;
-    // PM-2015-01-16: Prevent crash when deleting accented characters
-	if (range . location == 0 || [text length] == 0)
+    // Handle deletion
+    if (range . location == 0 || [text length] == 0)
 	{
-		t_key_code = 0xff08;
-		t_char_code = 0;
+        MCIPhoneHandleProcessTextInput(0, 0xff08);
+        return NO;
 	}
-	else
-	{
-		t_key_code = 0;
-        t_char_code = [text characterAtIndex: 0];
-	}
-	
-	if (t_char_code == 10)
-	{
-		t_key_code = 0xff0d;
-		t_char_code = 0;
-	}
-	
-	MCIPhoneHandleProcessTextInput(t_char_code, t_key_code);
+    
+    // Handle newlines
+    if ([text characterAtIndex:0] == 0x0a)
+    {
+        MCIPhoneHandleProcessTextInput(0, 0xff0d);
+        return NO;
+    }
+
+    // Loop over the UTF-16 codeunits and insert them as codepoints
+    bool t_is_surrogate = false;
+    unichar_t t_surrogate = 0;
+    for (NSUInteger i = 0; i < [text length]; i++)
+    {
+        // Get the next character
+        unichar_t t_char = [text characterAtIndex:i];
+        
+        // Process based on whether we are dealing with a surrogate or not
+        codepoint_t t_codepoint;
+        if (t_is_surrogate)
+        {
+            // We're expecting a trailing surrogate
+            if (!MCUnicodeCodepointIsTrailingSurrogate(t_char))
+            {
+                // Something has gone wrong... abort processing of this text
+                return NO;
+            }
+            
+            // Re-combine the surrogate
+            t_codepoint = MCUnicodeCombineSurrogates(t_surrogate, t_char);
+            t_is_surrogate = false;
+            
+        }
+        else if (MCUnicodeCodepointIsLeadingSurrogate(t_char))
+        {
+            // Wait for the second half of the pair
+            t_is_surrogate = true;
+            t_surrogate = t_char;
+            continue;
+        }
+        else
+        {
+            // Not a surrogate - use directly as a codepoint
+            t_codepoint = t_char;
+        }
+        
+        MCIPhoneHandleProcessTextInput(t_codepoint, 0);
+    }
 	
 	return NO;
 }
