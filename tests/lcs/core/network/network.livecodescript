@@ -172,7 +172,7 @@ on TestOpenSocketFromMultipleHostsSameAddress
 
    if tLocalAddress is not empty then
       put "livecode.com|" & uuid() into tSock1
-      put "livecode.com|" & uuid() into tSock2
+      put "google.com|" & uuid() into tSock2
       open socket from tLocalAddress & ":8006" to tSock1
       TestAssert "open socket result is empty: " & the result, the result is empty
       open socket from tLocalAddress & ":8006" to tSock2
