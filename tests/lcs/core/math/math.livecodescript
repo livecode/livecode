@@ -923,7 +923,7 @@ on _RandomMaxLimitTestThrows
 
 	local tN1, tN2
 
-	put 2^53 into tN1
+	put 2^53 + 2 into tN1
 	
 	local rN1
 
