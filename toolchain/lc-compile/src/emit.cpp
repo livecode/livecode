@@ -268,6 +268,8 @@ static unsigned int s_ordered_module_count;
 static FILE *s_output_code_file = NULL;
 static const char *s_output_code_filename = NULL;
 
+//////////
+
 struct EmittedModule
 {
     EmittedModule *next;
@@ -276,6 +278,51 @@ struct EmittedModule
     bool has_foreign : 1;
 };
 static EmittedModule *s_emitted_modules = NULL;
+
+static void EmittedModuleAdd(NameRef p_module_name, char *p_modified_name)
+{
+    EmittedModule *t_mod;
+    t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
+    t_mod -> next = s_emitted_modules;
+    t_mod -> name = p_module_name;
+    t_mod -> modified_name = p_modified_name;
+    s_emitted_modules = t_mod;
+}
+
+static bool EmitEmittedModules(void)
+{
+    if (s_emitted_modules == nullptr)
+    {
+        return true;
+    }
+
+	FILE *t_file = s_output_code_file;
+	if (nullptr == t_file)
+    {
+		return false;
+    }
+    
+    for(EmittedModule *t_module = s_emitted_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        const char *t_modified_name = t_module->modified_name;
+    
+        if (0 > fprintf(t_file,
+                        "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n",
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name))
+            return false;
+        
+        if (0 > fprintf(t_file, "__builtin_module_loader __%s_loader(&__%s_module_info);\n\n",
+                        t_modified_name,
+                        t_modified_name))
+            return false;
+    }
+    
+    return true;
+}
 
 //////////
 
@@ -340,6 +387,11 @@ static void __EmitModuleOrder(NameRef p_name)
 
 void EmitFinish(void)
 {
+    if (!EmitEmittedModules())
+    {
+        goto error_cleanup;
+    }
+
 	if (nil != s_output_code_file)
     {
 		fclose (s_output_code_file);
@@ -494,18 +546,7 @@ EmitEndModuleOutputC (NameRef p_module_name,
 	if (0 > fprintf(t_file, "};\n"))
         goto error_cleanup;
 
-	if (0 > fprintf(t_file, "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n", t_modified_name, t_modified_name, t_modified_name, t_modified_name, t_modified_name))
-		goto error_cleanup;
-    
-    if (0 > fprintf(t_file, "__builtin_module_loader __%s_loader(&__%s_module_info);\n\n", t_modified_name, t_modified_name))
-        goto error_cleanup;
-    
-    EmittedModule *t_mod;
-    t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
-    t_mod -> next = s_emitted_modules;
-    t_mod -> name = p_module_name;
-    t_mod -> modified_name = t_modified_name;
-    s_emitted_modules = t_mod;
+    EmittedModuleAdd(p_module_name, t_modified_name);
     
 	fflush (t_file);
 	return true;
@@ -779,7 +820,9 @@ void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, Name
 {
     MCAutoStringRef t_binding_str;
     if (strcmp((const char *)p_binding, "<builtin>") == 0)
+    {
         t_binding_str = MCNameGetString(to_mcnameref(p_name));
+    }
     else
         t_binding_str = to_mcstringref(p_binding);
     
