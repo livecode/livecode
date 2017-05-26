@@ -38,9 +38,9 @@ command createTables pConnection, pStrings
    end repeat
 end createTables
 
-on TestDBTableGetters
+on TestDBTableGettersMySQL
    TestSkip "skipping DB test","cannot use revOpenDatabase"
-   exit TestDBTableGetters
+   exit TestDBTableGettersMySQL
    local tArray
    put generateStrings() into tArray
    local  tDatabaseID, tNames
@@ -48,4 +48,4 @@ on TestDBTableGetters
    createTables(tDatabaseID, tArray)
    put revDatabaseTableNames(tDatabaseID) into tNames
    TestAssert "check the correct things are returned", the number of lines in tNames is 1800
-end TestDBTableGetters
+end TestDBTableGettersMySQL
