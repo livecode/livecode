@@ -412,6 +412,54 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef builder, uindex_t op
 
 void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
 
+/* These methods are used to build shims for builtin foreign handlers. They
+   allow lc-compiles 'emit' module to get the details of a handler type. The
+   types returned are the raw types of the arguments after taking into account
+   mode which means we only (currently) need void, pointer, bool and the number
+   types (both fixed and C). We need to enumerate them all separately, as some
+   int types change depending on the architecture. */
+
+enum MCScriptForeignPrimitiveType
+{
+    kMCScriptForeignPrimitiveTypeUnknown,
+    kMCScriptForeignPrimitiveTypeVoid,
+    kMCScriptForeignPrimitiveTypePointer,
+    kMCScriptForeignPrimitiveTypeSInt8,
+    kMCScriptForeignPrimitiveTypeUInt8,
+    kMCScriptForeignPrimitiveTypeSInt16,
+    kMCScriptForeignPrimitiveTypeUInt16,
+    kMCScriptForeignPrimitiveTypeSInt32,
+    kMCScriptForeignPrimitiveTypeUInt32,
+    kMCScriptForeignPrimitiveTypeSInt64,
+    kMCScriptForeignPrimitiveTypeUInt64,
+    kMCScriptForeignPrimitiveTypeSIntSize,
+    kMCScriptForeignPrimitiveTypeUIntSize,
+    kMCScriptForeignPrimitiveTypeSIntPtr,
+    kMCScriptForeignPrimitiveTypeUIntPtr,
+    kMCScriptForeignPrimitiveTypeFloat32,
+    kMCScriptForeignPrimitiveTypeFloat64,
+    kMCScriptForeignPrimitiveTypeCBool,
+    kMCScriptForeignPrimitiveTypeCChar,
+    kMCScriptForeignPrimitiveTypeCSChar,
+    kMCScriptForeignPrimitiveTypeCUChar,
+    kMCScriptForeignPrimitiveTypeCSShort,
+    kMCScriptForeignPrimitiveTypeCUShort,
+    kMCScriptForeignPrimitiveTypeCSInt,
+    kMCScriptForeignPrimitiveTypeCUInt,
+    kMCScriptForeignPrimitiveTypeCSLong,
+    kMCScriptForeignPrimitiveTypeCULong,
+    kMCScriptForeignPrimitiveTypeCSLongLong,
+    kMCScriptForeignPrimitiveTypeCULongLong,
+    kMCScriptForeignPrimitiveTypeCFloat,
+    kMCScriptForeignPrimitiveTypeCDouble,
+    kMCScriptForeignPrimitiveTypeSInt,
+    kMCScriptForeignPrimitiveTypeUInt,
+};
+
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerReturnTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+uindex_t MCScriptQueryForeignHandlerParameterCountInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerParameterTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index, uindex_t arg_index);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

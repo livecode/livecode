@@ -735,17 +735,20 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptForeignType *t_type;
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
+                bool t_is_builtin = false;
                 void *t_symbol = nullptr;
                 integer_t t_ordinal = 0;
                 if (self->builtins != nullptr &&
                     MCTypeConvertStringToLongInteger(t_type->binding, t_ordinal))
                 {
                     t_symbol = self->builtins[t_ordinal];
+                    t_is_builtin = true;
                 }
                 else
                 {
                     t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
                                                       t_type->binding);
+                    t_is_builtin = false;
                 }
                 
                 if (t_symbol == nullptr)
@@ -758,8 +761,18 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 }
 
                 /* The symbol is a function that returns a type info reference. */
-                MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
-                t_typeinfo = MCValueRetain(t_type_func());
+                if (t_is_builtin)
+                {
+                    MCTypeInfoRef t_typeinfo_bare;
+                    void (*t_type_func_builtin)(void*rv, void**av) = (void(*)(void*, void**))t_symbol;
+                    t_type_func_builtin(&t_typeinfo_bare, nullptr);
+                    t_typeinfo = t_typeinfo_bare;
+                }
+                else
+                {
+                    MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
+                    t_typeinfo = t_type_func();
+                }
             }
             break;
             case kMCScriptTypeKindRecord:

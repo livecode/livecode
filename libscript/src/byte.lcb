@@ -28,7 +28,7 @@ public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as 
 public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCIndex, in Target as Data, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCByteEvalOffsetOfBytesAfter(in IsLast as CBool, in Needle as Data, in After as LCIndex, in Target as Data, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
+// public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
 
 public foreign handler MCByteEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCByteEvalBeginsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
