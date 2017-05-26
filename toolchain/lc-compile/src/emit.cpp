@@ -291,7 +291,7 @@ static void EmittedModuleAdd(NameRef p_module_name, char *p_modified_name)
 
 static bool EmitEmittedModules(void)
 {
-    if (s_emitted_modules == nullptr)
+    if (!OutputFileAsC)
     {
         return true;
     }
@@ -307,7 +307,7 @@ static bool EmitEmittedModules(void)
         const char *t_modified_name = t_module->modified_name;
     
         if (0 > fprintf(t_file,
-                        "static __builtin_module_info __%s_module_info = {\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize };\n",
+                        "static __builtin_module_info __%s_module_info =\n{\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize,\n    __builtin_ordinal_map\n};\n",
                         t_modified_name,
                         t_modified_name,
                         t_modified_name,
@@ -326,6 +326,109 @@ static bool EmitEmittedModules(void)
 
 //////////
 
+struct EmittedBuiltin
+{
+    EmittedBuiltin *next;
+    NameRef name;
+    uindex_t ordinal;
+    MCStringRef ordinal_stringref;
+};
+
+static EmittedBuiltin *s_emitted_builtins = nullptr;
+static uindex_t s_emitted_builtin_count = 0;
+
+static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name)
+{
+    if (!OutputFileAsC)
+    {
+        return MCNameGetString(to_mcnameref(p_symbol_name));
+    }
+    
+    for(EmittedBuiltin *t_builtin = s_emitted_builtins; t_builtin != nullptr; t_builtin = t_builtin->next)
+    {
+        if (t_builtin->name == p_symbol_name)
+        {
+            return t_builtin->ordinal_stringref;
+        }
+    }
+    
+    EmittedBuiltin *t_builtin;
+    t_builtin = (EmittedBuiltin *)Allocate(sizeof(EmittedModule));
+    t_builtin -> next = s_emitted_builtins;
+    t_builtin -> name = p_symbol_name;
+    t_builtin -> ordinal = s_emitted_builtin_count;
+    
+    char t_ordinal_str[32];
+    sprintf(t_ordinal_str, "%u", t_builtin->ordinal);
+    t_builtin->ordinal_stringref = to_mcstringref((intptr_t)t_ordinal_str);
+    
+    s_emitted_builtins = t_builtin;
+    s_emitted_builtin_count++;
+    
+    return t_builtin->ordinal_stringref;
+};
+
+static bool EmitEmittedBuiltins(void)
+{
+    if (!OutputFileAsC)
+    {
+        return true;
+    }
+    
+	FILE *t_file = s_output_code_file;
+	if (nullptr == t_file)
+    {
+		return false;
+    }
+    
+    MCAutoArray<EmittedBuiltin*> t_builtins;
+    if (!t_builtins.Resize(s_emitted_builtin_count))
+    {
+        return false;
+    }
+    
+    for(EmittedBuiltin *t_builtin = s_emitted_builtins; t_builtin != nullptr; t_builtin = t_builtin->next)
+    {
+        t_builtins[t_builtin->ordinal] = t_builtin;
+    }
+    
+    // Emit builtin symbol external references
+    if (0 > fprintf(t_file, "\n"))
+    {
+        return false;
+    }
+    
+    for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
+    {
+        if (0 > fprintf(t_file,
+                        "extern \"C\" void %s(void);\n", cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+    }
+    
+    // Emit builtin ordinal mapping array
+    if (0 > fprintf(t_file, "\nstatic void *__builtin_ordinal_map[] =\n{\n"))
+    {
+        return false;
+    }
+    for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
+    {
+        if (0 > fprintf(t_file, "    (void *)%s,\n", cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+    }
+    if (0 > fprintf(t_file, "};\n\n"))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+//////////
+
 static const char *kOutputCDefinitions =
     "struct __builtin_module_info\n"
     "{\n"
@@ -335,6 +438,7 @@ static const char *kOutputCDefinitions =
     "    unsigned long length;\n"
     "    bool (*initializer)();\n"
     "    void (*finalizer)();\n"
+    "    void **builtins;\n"
     "};\n"
     "extern \"C\" void MCScriptRegisterBuiltinModule(__builtin_module_info *desc);\n"
     "class __builtin_module_loader\n"
@@ -387,6 +491,11 @@ static void __EmitModuleOrder(NameRef p_name)
 
 void EmitFinish(void)
 {
+    if (!EmitEmittedBuiltins())
+    {
+        goto error_cleanup;
+    }
+
     if (!EmitEmittedModules())
     {
         goto error_cleanup;
@@ -821,7 +930,7 @@ void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, Name
     MCAutoStringRef t_binding_str;
     if (strcmp((const char *)p_binding, "<builtin>") == 0)
     {
-        t_binding_str = MCNameGetString(to_mcnameref(p_name));
+        t_binding_str = EmittedBuiltinAdd(p_name);
     }
     else
         t_binding_str = to_mcstringref(p_binding);
@@ -1118,8 +1227,12 @@ void EmitDefinedType(intptr_t index, intptr_t& r_type_index)
 void EmitForeignType(intptr_t p_binding, intptr_t& r_type_index)
 {
     uindex_t t_type_index;
-    MCScriptAddForeignTypeToModule(s_builder, to_mcstringref(p_binding), t_type_index);
+    MCStringRef t_binding_str = 
+            EmittedBuiltinAdd(nameref_from_mcstringref(to_mcstringref(p_binding)));
+    
+    MCScriptAddForeignTypeToModule(s_builder, t_binding_str, t_type_index);
     r_type_index = t_type_index;
+
 
     Debug_Emit("ForeignType(%s -> %ld)", (const char *)p_binding, r_type_index);
 }
