@@ -37,6 +37,8 @@
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
+extern "C" int OutputFileAsAuxC;
+int OutputFileAsAuxC = 0;
 extern "C" int OutputFileAsBytecode;
 int OutputFileAsBytecode = 0;
 
@@ -225,6 +227,14 @@ cstring_from_nameref(NameRef p_name)
 	return t_cstring;
 }
 
+static NameRef
+nameref_from_cstring(const char *p_cstring)
+{
+    NameRef t_name;
+    MakeNameLiteral(p_cstring, &t_name);
+    return t_name;
+}
+
 static MCStringRef to_mcstringref(intptr_t p_string)
 {
     MCAutoStringRef t_string;
@@ -289,6 +299,8 @@ static const char *kOutputCDefinitions =
     "    }\n"
     "};\n\n";
 
+static void BuildBuiltinModule(void);
+
 void EmitStart(void)
 {
     MCInitialize();
@@ -300,6 +312,9 @@ void EmitStart(void)
     {
         if (fprintf(s_output_code_file, "%s", kOutputCDefinitions) < 0)
             goto error_cleanup;
+        
+        if (!OutputFileAsAuxC)
+            BuildBuiltinModule();
     }
     
     return;
@@ -2085,6 +2100,128 @@ int BytecodeIsValidArgumentCount(intptr_t opcode, intptr_t count)
 void BytecodeDescribeParameter(intptr_t opcode, intptr_t index, intptr_t *r_type)
 {
     *r_type = (intptr_t)MCScriptDescribeBytecodeParameter((uindex_t)opcode, (uindex_t)index);
+}
+
+//////////
+
+static void BuildBuiltinModule_ForeignType(const char *p_name, const char *p_foreign_name, intptr_t* r_type_index = nullptr)
+{
+    intptr_t t_def_index = -1;
+    EmitDefinitionIndex("type", t_def_index);
+    intptr_t t_type_index = -1;
+    EmitForeignType((intptr_t)p_foreign_name, t_type_index);
+    EmitTypeDefinition(t_def_index, 0, nameref_from_cstring(p_name), t_type_index);
+    EmitExportedDefinition(t_def_index);
+    if (r_type_index != nullptr)
+        EmitDefinedType(t_def_index, *r_type_index);
+}
+
+static void BuildBuiltinModule_ForeignHandler1(intptr_t p_return_type, MCHandlerTypeFieldMode p_arg_mode_0, const char *p_arg_name_0, intptr_t p_arg_type_0, const char *p_name, const char *p_foreign_name)
+{
+    intptr_t t_handler_type_index = -1;
+    EmitBeginHandlerType(p_return_type);
+    EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
+    EmitEndHandlerType(t_handler_type_index);
+    
+    intptr_t t_handler_def = -1;
+    EmitDefinitionIndex("foreignhandler", t_handler_def);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name);
+    EmitExportedDefinition(t_handler_def);
+}
+
+static void BuildBuiltinModule_ForeignHandler2(intptr_t p_return_type,
+                                               MCHandlerTypeFieldMode p_arg_mode_0, const char *p_arg_name_0, intptr_t p_arg_type_0,
+                                               MCHandlerTypeFieldMode p_arg_mode_1, const char *p_arg_name_1, intptr_t p_arg_type_1,
+                                               const char *p_name, const char *p_foreign_name)
+{
+    intptr_t t_handler_type_index = -1;
+    EmitBeginHandlerType(p_return_type);
+    EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
+    EmitHandlerTypeParameter(p_arg_mode_1, nameref_from_cstring(p_arg_name_1), p_arg_type_1);
+    EmitEndHandlerType(t_handler_type_index);
+    
+    intptr_t t_handler_def = -1;
+    EmitDefinitionIndex("foreignhandler", t_handler_def);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name);
+    EmitExportedDefinition(t_handler_def);
+}
+
+void BuildBuiltinModule(void)
+{
+    intptr_t t_mod_index;
+    EmitBeginModule(nameref_from_cstring("__builtin__"), t_mod_index);
+    
+    intptr_t t_null_type_def, t_bool_type_def, t_double_type_def, t_uint_type_def, t_string_type_def;
+    BuildBuiltinModule_ForeignType("any", "MCAnyTypeInfo");
+    BuildBuiltinModule_ForeignType("undefined", "MCNullTypeInfo", &t_null_type_def);
+    BuildBuiltinModule_ForeignType("boolean", "MCBooleanTypeInfo");
+    BuildBuiltinModule_ForeignType("number", "MCNumberTypeInfo");
+    BuildBuiltinModule_ForeignType("string", "MCStringTypeInfo", &t_string_type_def);
+    BuildBuiltinModule_ForeignType("data", "MCDataTypeInfo");
+    BuildBuiltinModule_ForeignType("array", "MCArrayTypeInfo");
+    BuildBuiltinModule_ForeignType("list", "MCProperListTypeInfo");
+    BuildBuiltinModule_ForeignType("bool", "MCForeignBoolTypeInfo", &t_bool_type_def);
+    BuildBuiltinModule_ForeignType("sint", "MCForeignSIntTypeInfo");
+    BuildBuiltinModule_ForeignType("uint", "MCForeignUIntTypeInfo", &t_uint_type_def);
+    BuildBuiltinModule_ForeignType("float", "MCForeignFloatTypeInfo");
+    BuildBuiltinModule_ForeignType("double", "MCForeignDoubleTypeInfo", &t_double_type_def);
+    BuildBuiltinModule_ForeignType("pointer", "MCForeignPointerTypeInfo");
+    
+    BuildBuiltinModule_ForeignHandler1(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeInOut,
+                                       "count",
+                                       t_uint_type_def,
+                                       "RepeatCounted",
+                                       "MCScriptBuiltinRepeatCounted");
+    
+    BuildBuiltinModule_ForeignHandler2(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "limit",
+                                       t_double_type_def,
+                                       "RepeatUpToCondition",
+                                       "MCScriptBuiltinRepeatUpToCondition");
+                                       
+    BuildBuiltinModule_ForeignHandler2(t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatUpToIterate",
+                                       "MCScriptBuiltinRepeatUpToIterate");
+                                       
+    BuildBuiltinModule_ForeignHandler2(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatDownToCondition",
+                                       "MCScriptBuiltinRepeatDownToCondition");
+    
+    BuildBuiltinModule_ForeignHandler2(t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatDownToIterate",
+                                       "MCScriptBuiltinRepeatDownToIterate");
+                                       
+    BuildBuiltinModule_ForeignHandler1(t_null_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "reason",
+                                       t_string_type_def,
+                                       "Throw",
+                                       "MCScriptBuiltinThrow");
+    
+    EmitEndModule();
 }
 
 //////////
