@@ -937,7 +937,7 @@ on _RandomMaxLimitTestNoThrow
 
 	local tN1, tN2
 
-	put 2^53 - 1 into tN1
+	put 2^53 into tN1
 
 	put random(tN1) into rN1
 
