@@ -45,7 +45,6 @@ on TestDBTableGetters
    put generateStrings() into tArray
    local  tDatabaseID, tNames
    put revOpenDatabase("mysql","localhost","t2","root","test_password",false,"/tmp/mysql.sock",10,true) into tDatabaseID
-   createNewSchema(tDatabaseID)
    createTables(tDatabaseID, tArray)
    put revDatabaseTableNames(tDatabaseID) into tNames
    TestAssert "check the correct things are returned", the number of lines in tNames is 1800
