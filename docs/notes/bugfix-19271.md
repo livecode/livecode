@@ -1,1 +1,1 @@
-# Increased random function input limit to 2^53 - 1
+# Increased random function input limit to 2^53
