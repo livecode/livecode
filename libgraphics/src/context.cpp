@@ -1090,7 +1090,7 @@ public:
 #endif
 
 // Utility methods for drawing against a raster mask
-static void MCGMaskedFill(SkCanvas& p_canvas, const SkMask& p_mask, const SkPaint& p_paint)
+static void MCGMaskedDeviceFill(SkCanvas& p_canvas, const SkMask& p_mask, const SkPaint& p_paint)
 {
 	SkRect t_bounds = SkRect::Make(p_mask.fBounds);
 	SkImageInfo t_info = SkImageInfo::MakeA8(p_mask.fBounds.width(), p_mask.fBounds.height());
@@ -1098,12 +1098,9 @@ static void MCGMaskedFill(SkCanvas& p_canvas, const SkMask& p_mask, const SkPain
 	t_mask_bitmap.setInfo(t_info);
 	t_mask_bitmap.installMaskPixels(p_mask);
 
-	SkPaint t_paint;
-	t_paint.setBlendMode(SkBlendMode::kDstIn);
-
-	p_canvas.saveLayer(&t_bounds, &p_paint);
-	p_canvas.drawColor(SK_ColorWHITE);
-	p_canvas.drawBitmap(t_mask_bitmap, p_mask.fBounds.left(), p_mask.fBounds.top(), &t_paint);
+	p_canvas.save();
+	p_canvas.resetMatrix();
+	p_canvas.drawBitmap(t_mask_bitmap, t_bounds.x(), t_bounds.y(), &p_paint);
 	p_canvas.restore();
 }
 
@@ -1345,7 +1342,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 #endif
 
 	// Now paint.
-	MCGMaskedFill(*self->layer->canvas, t_blurred_mask, t_paint);
+	MCGMaskedDeviceFill(*self->layer->canvas, t_blurred_mask, t_paint);
 	
 	// Free the blurred mask.
 	SkMask::FreeImage(t_old_blurred_mask_fImage);
@@ -1435,7 +1432,7 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 		
 		t_paint.setBlendMode(MCGBlendModeToSkBlendMode(p_effects.color_overlay.blend_mode));
 
-		MCGMaskedFill(*self->layer->canvas, t_child_mask, t_paint);
+		MCGMaskedDeviceFill(*self->layer->canvas, t_child_mask, t_paint);
 	}
 	
 	SkMask::FreeImage(t_child_mask . fImage);
@@ -2726,7 +2723,7 @@ void MCGContextDrawDeviceMask(MCGContextRef self, MCGMaskRef p_mask, int32_t p_t
 	t_paint.setBlendMode(MCGBlendModeToSkBlendMode(self->state->blend_mode));
 
 	p_mask -> mask . fBounds . offset(p_tx, p_ty);
-	MCGMaskedFill(*self->layer->canvas, p_mask->mask, t_paint);
+	MCGMaskedDeviceFill(*self->layer->canvas, p_mask->mask, t_paint);
 	p_mask -> mask . fBounds . offset(-p_tx, -p_ty);
 }
 
