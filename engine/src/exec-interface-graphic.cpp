@@ -820,6 +820,12 @@ void MCGraphic::GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_po
 
 void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
+    if (p_count >= 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+    
     if (oldpoints != nil)
     {
         delete oldpoints;
@@ -864,6 +870,13 @@ void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoin
 
 void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
+    if (p_count >= 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+        
+    
     if (oldpoints != nil)
     {
         delete oldpoints;
