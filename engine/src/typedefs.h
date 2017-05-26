@@ -17,8 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_TYPEDEFS__
 #define __MC_TYPEDEFS__
 
-// IEEE floating-point limits
-
 // Old-style integer definitions and limits
 
 typedef unsigned char   uint1;
