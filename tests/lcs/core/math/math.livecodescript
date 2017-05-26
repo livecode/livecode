@@ -921,9 +921,17 @@ end TestMathArrayWrapArray
 
 on _RandomMaxLimitTestThrows
 
-	local tN1, tN2
+	local tX, tN2
 
-	put 2^53 + 2 into tN1
+	put 2^53 into tX
+	
+	repeat with i = 1 to 128
+  		if tX + i - tX is not 0 then
+     		exit repeat
+  		end if
+	end repeat
+	
+	put tX+i into tX
 	
 	local rN1
 
