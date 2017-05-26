@@ -485,7 +485,14 @@ void MCGraphic::SetMarkerOpaque(MCExecContext& ctxt, bool setting)
 	if (changeflag(setting, F_MARKER_OPAQUE))
 	{
 		if (flags & F_MARKER_OPAQUE)
-			closepolygon(markerpoints, nmarkerpoints);
+        {
+            bool t_succ = closepolygon(markerpoints, nmarkerpoints);
+            if (!t_succ)
+            {
+                ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+                return;
+            }
+        }
 		Redraw();
 	}
 }
@@ -630,7 +637,14 @@ void MCGraphic::SetFilled(MCExecContext& ctxt, bool setting)
 	if (changeflag(setting, F_OPAQUE))
 	{
 		if (flags & F_OPAQUE)
-			closepolygon(realpoints, nrealpoints);
+        {
+            bool t_succ = closepolygon(realpoints, nrealpoints);
+            if (!t_succ)
+            {
+                ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+                return;
+            }
+        }
 		Redraw();
 	}
 }
@@ -698,6 +712,12 @@ void MCGraphic::SetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop,
 
 void MCGraphic::DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points)
 {
+    if (p_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+    
     MCAutoArray<MCPoint> t_points;
     
     for (uindex_t i = 0; i < p_count; i++)
@@ -713,6 +733,11 @@ void MCGraphic::GetMarkerPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*
 
 void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
+    if (p_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+    }
+    
     if (p_count == 0)
         flags &= ~F_MARKER_DRAWN;
     else
@@ -724,7 +749,14 @@ void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* 
     }
     
     if (flags & F_MARKER_DRAWN && flags & F_MARKER_OPAQUE)
-        closepolygon(markerpoints, nmarkerpoints);
+    {
+        bool t_succ = closepolygon(markerpoints, nmarkerpoints);
+        if (!t_succ)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle
@@ -820,7 +852,7 @@ void MCGraphic::GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_po
 
 void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
-    if (p_count >= 65535)
+    if (p_count > 65535)
     {
         ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
         return;
@@ -836,7 +868,14 @@ void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_poin
     nrealpoints = (uint2)t_new_count;
     
     if (flags & F_OPAQUE)
-        closepolygon(realpoints, nrealpoints);
+    {
+        bool t_succ = closepolygon(realpoints, nrealpoints);
+        if (!t_succ)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // The rectangle might change, we need to redraw what was the previous size.
@@ -870,7 +909,7 @@ void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoin
 
 void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
-    if (p_count >= 65535)
+    if (p_count > 65535)
     {
         ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
         return;
@@ -887,12 +926,24 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     
     uindex_t t_new_count;
     DoCopyPoints(ctxt, p_count, p_points, t_new_count, realpoints);
+    if (t_new_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
     nrealpoints = (uint2)t_new_count;
     
     MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
     
     if (flags & F_OPAQUE)
-        closepolygon(realpoints, nrealpoints);
+    {
+        bool t_succ = closepolygon(realpoints, nrealpoints);
+        if (!t_succ)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle

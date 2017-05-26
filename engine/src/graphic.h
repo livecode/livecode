@@ -119,7 +119,7 @@ public:
 	// MCGraphic functions
 	uint2 get_arrow_size();
 	void draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2);
-	void draw_lines(MCDC *dc, MCPoint *pts, uint2 npts);
+	void draw_lines(MCDC *dc, MCPoint *pts, uindex_t npts);
 	void fill_polygons(MCDC *dc, MCPoint *pts, uint2 npts);
 	void compute_extents(MCPoint *pts, uint2 npts, int2 &minx, int2 &miny,
 	                     int2 &maxx, int2 &maxy);
@@ -128,7 +128,7 @@ public:
 	void compute_minrect();
 	virtual MCRectangle geteffectiverect(void) const;
 	void delpoints();
-	void closepolygon(MCPoint *&pts, uint2 &npts);
+	bool closepolygon(MCPoint *&pts, uint2 &npts);
 	MCStringRef getlabeltext();
 	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef& s, uint2 fstyle);
 
