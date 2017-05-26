@@ -925,6 +925,8 @@ on _RandomMaxLimitTestThrows
 
 	put 2^53 into tX
 	
+	-- this loop computes the next representable 
+	-- double after 2^53
 	repeat with i = 1 to 128
   		if tX + i - tX is not 0 then
      		exit repeat
