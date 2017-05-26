@@ -39,10 +39,11 @@ on TestGoCardUnquotedName
    local tStackName
    create stack
    put the short name of it into tStackName
+   set the defaultStack to tStackName
    
    create card "cardToGo"
    local tToGo
-   put "card cardToGo" && the long id of stack tStackName into tToGo
+   put "card cardToGo of" && the long id of stack tStackName into tToGo
    
    try
       go tToGo
