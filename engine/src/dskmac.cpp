@@ -920,7 +920,7 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
     
     // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
+    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
     
     if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
         return false;
@@ -3512,8 +3512,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
             if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
             {
-                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
+                MCAutoStringRef t_resources_folder;
+                if (!MCS_apply_redirect(*t_engine_folder, false, &t_resources_folder))
                     return False;
+                
+                if (MCStringEndsWith(*t_resources_folder, MCSTR("/"), kMCCompareExact))
+                {
+                    MCStringCopySubstring(*t_resources_folder, MCRangeMake(0, MCStringGetLength(*t_resources_folder) - 1), r_folder);
+                }
+                else
+                    r_folder = MCValueRetain(*t_resources_folder);
+                
             }
             else
                 r_folder = MCValueRetain(*t_engine_folder);
