@@ -47,55 +47,67 @@ matrix:
   - os: linux
     compiler: clang
 
-# Install any required tools
-before_install:
-  - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
-      rvm --default use 2.2.1
-      gem install xcpretty
-    fi
+jobs:
+  include:
+    - stage: export
+      script: |
+        case "${TRAVIS_OS_NAME}" in
+          linux)
+            export BUILD_PLATFORM=linux
+            export CHECK_COMMAND=xvfb-run
+            export LICENSE_DIR="${HOME}/.runrev/licenses"
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
+            export CXX="g++-4.9"
+            export CC="gcc-4.9"
+            ;;
+          osx)
+            export BUILD_PLATFORM=mac
+            export CHECK_COMMAND=
+            export LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses"
+            export XCODE_TARGET_SDK=macosx10.11
+            export XCODEBUILD="set -o pipefail && xcodebuild"
+            export XCODEBUILD_FILTER="| xcpretty"
+            export JAVA_HOME=$(/usr/libexec/java_home)
+            ;;
+        esac
+    - stage: build
+          # Install any required tools
+      before_install:
+        - |
+          if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+            rvm --default use 2.2.1
+            gem install xcpretty
+          fi
 
-  - |
-    if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
-      sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-      sudo apt-get -qq update
-      sudo apt-get -qq install g++-4.9    
-    fi
+        - |
+          if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
+            sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+            sudo apt-get -qq update
+            sudo apt-get -qq install g++-4.9    
+          fi
 
-# Set up the source tree by fetching Linux-specific prebuilt objects
-install: 
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
+      # Set up the source tree by fetching Linux-specific prebuilt objects
+      install: 
+        - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
+        - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
 
-# Bootstrap the LCB compiler, build the default target set and run a
-# the default test suite.
-script: |
-  case "${TRAVIS_OS_NAME}" in
-    linux)
-      BUILD_PLATFORM=linux
-      CHECK_COMMAND=xvfb-run
-      LICENSE_DIR="${HOME}/.runrev/licenses"
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"${JAVA_HOME}/jre/lib/amd64/server"
-      export CXX="g++-4.9"
-      export CC="gcc-4.9"
-      ;;
-    osx)
-      BUILD_PLATFORM=mac
-      CHECK_COMMAND=
-      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses"
-      export XCODE_TARGET_SDK=macosx10.11
-      export XCODEBUILD="set -o pipefail && xcodebuild"
-      export XCODEBUILD_FILTER="| xcpretty"
-      export JAVA_HOME=$(/usr/libexec/java_home)
-      ;;
-  esac
+      # Bootstrap the LCB compiler, build the default target set and run a
+      # the default test suite.
 
-  if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
-    mkdir -p "${LICENSE_DIR}" &&
-    touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
-    make all-${BUILD_PLATFORM} &&
-    ${CHECK_COMMAND} make check-${BUILD_PLATFORM}
-  fi
+      script: |
+        if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
+          mkdir -p "${LICENSE_DIR}" &&
+          touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
+          make all-${BUILD_PLATFORM}
+        fi
+    - stage: test
+      script: ${CHECK_COMMAND} make check-build-${BUILD_PLATFORM}
+    - stage: test
+      script: ${CHECK_COMMAND} make check-ide-${BUILD_PLATFORM}
+    - stage: test
+      script: ${CHECK_COMMAND} make check-lcs-${BUILD_PLATFORM}
+    - stage: test
+      script: ${CHECK_COMMAND} make check-lcb-${BUILD_PLATFORM}
 
 addons:
   # Configuration for Coverity Scan integration
