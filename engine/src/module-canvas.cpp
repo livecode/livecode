@@ -6334,6 +6334,8 @@ static MCValueCustomCallbacks kMCCanvasSvgCustomValueCallbacks =
 	__MCCanvasSvgEqual,
 	__MCCanvasSvgHash,
 	__MCCanvasSvgDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =

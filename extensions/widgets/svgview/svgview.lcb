@@ -23,6 +23,7 @@ widget com.livecode.widget.svgview
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -40,6 +41,87 @@ property visibleBox get GetVisibleBox set SetVisibleBox
 property viewBox get GetViewBox
 property boundingBox get GetBoundingBox
 
+/**
+Syntax:
+set the angle of <widget> to <pAngle>
+get the angle of <widget>
+
+Summary: The angle of rotation of the SVG path, in degrees clockwise.
+
+Description:
+The <angle> property controls the angle of rotation of for the SVG path
+around the centre of the path's bounding box.  The rotation is in clockwise
+degrees.
+*/
+private variable mAngle as Real
+property "angle" get mAngle set SetAngle
+metadata angle.editor is "com.livecode.pi.number"
+metadata angle.default is "0"
+metadata angle.label is "Rotation"
+
+/**
+Syntax:
+set the flipped of <widget> to {true|false}
+get the flipped of <widget>
+
+Summary: `true` if the SVG path is flipped top-to-bottom; `false` otherwise
+
+Description:
+When <flipped> is set to `true`, the SVG path is drawn upside down.
+*/
+private variable mFlipped as Boolean
+property "flipped" get mFlipped set SetFlipped
+metadata flipped.default is "false"
+metadata flipped.label is "Flip"
+
+/**
+Syntax:
+set the maintainAspectRatio of <widget> to {true|false}
+get the maintainAspectRatio of <widget>
+
+Summary: Whether the SVG path maintains its aspect ratio when resized.
+
+Description:
+If the <maintainAspectRatio> of the SVG path is `true`, the icon will be its
+maximum size within its bounds while maintaining the original ratio of width
+to height. If `false`, it will stretch to fit the extent of its bounds.
+*/
+private variable mMaintainAspectRatio as Boolean
+property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+metadata maintainAspectRatio.default is "true"
+metadata maintainAspectRatio.label is "Fix aspect ratio"
+
+/**
+Syntax:
+get the scaledWidth of <widget>
+
+Summary: The width of the bounding rect of the SVG path, in fractional pixels.
+
+Description:
+If the <maintainAspectRatio> of the SVG path is `true`, then the <scaledWidth>
+of the object will return the width of the bounding rect of the SVG path.
+Otherwise, it will return the width of the widget.
+
+Related: scaledHeight(property), maintainAspectRatio(property)
+*/
+private variable mScaledWidth as Real
+property "scaledWidth" get mScaledWidth
+
+/**
+Syntax:
+get the scaledHeight of <widget>
+
+Summary: The height of the bounding rect of the SVG path, in fractional pixels.
+
+Description:
+If the <maintainAspectRatio> of the SVG path is `true`, then the <scaledHeight>
+of the object will return the height of the bounding rect of the SVG path.
+Otherwise, it will return the height of the widget.
+
+Related: scaledWidth(property), maintainAspectRatio(property)
+*/
+private variable mScaledHeight as Real
+property "scaledHeight" get mScaledHeight
 --
 
 -- private instance variables
@@ -47,7 +129,7 @@ property boundingBox get GetBoundingBox
 variable mSvgText as String
 variable mSvg as optional Svg
 variable mVisibleBox as optional Rectangle
-
+variable mBox as Rectangle
 -- constants
 --
 
@@ -63,25 +145,120 @@ public handler OnCreate() returns nothing
     put the empty string into mSvgText
     put nothing into mSvg
     put nothing into mVisibleBox
+	 put 0 into mAngle
+	 put true into mMaintainAspectRatio
 end handler
 
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint() returns nothing
-    if mSvg is nothing then
+	if mSvg is nothing then
         return
     end if
+	 
+	if mFlipped or mAngle > 0 then
+		translate this canvas by \
+	  		[the width of my bounds / 2, the height of my bounds / 2]
+		
+		if mFlipped then
+		  scale this canvas by [-1,1]
+		end if
 
-    variable tBox as Rectangle
-    if mVisibleBox is nothing then
-        put the viewing box of mSvg into tBox
-    else
-        put mVisibleBox into tBox
-    end if
+		if mAngle > 0 then
+			rotate this canvas by mAngle
+		end if
 
-    draw from tBox of mSvg into my bounds of this canvas
+	   translate this canvas by \
+		 		[-the width of my bounds / 2, -the height of my bounds / 2]
+	end if
+
+	variable tBounds
+   put the bounding box of mSvg into tBounds
+  
+   draw from tBounds of mSvg into mBox of this canvas
 end handler
 
+private handler CalculateScaledSizes() returns nothing
+	if mSvg is nothing then
+		  return
+	end if
+ 
+	if mMaintainAspectRatio then
+		// Scale to fit
+		variable tBounds
+		put the bounding box of mSvg into tBounds
+		
+		variable tPath as Path
+		put rectangle path of tBounds into tPath
+		
+		if mFlipped or mAngle > 0 then
+			variable tHOffset as Real
+			put the right of tBounds / 2 into tHOffset
+			
+			variable tVOffset as Real
+			put the bottom of tBounds / 2 into tVOffset
+			
+		   translate tPath by \
+		  			[tHOffset, tVOffset]
+
+		   if mFlipped then
+			  scale tPath by [-1,1]
+			end if
+			
+			if mAngle > 0 then
+				rotate tPath by mAngle
+			end if
+
+		   translate tPath by \
+			 		[-tHOffset, -tVOffset]
+					
+		end if
+		
+		constrainPathToRect(my bounds, tPath)
+		put the width of the bounding box of tPath into mScaledWidth
+		put the height of the bounding box of tPath into mScaledHeight
+		
+		if mAngle > 0 then
+			rotate tPath by -mAngle
+		end if
+		put the bounding box of tPath into mBox
+		
+		set the left of mBox to \
+				(the width of my bounds - the width of mBox) / 2
+		set the top of mBox to \
+				(the height of my bounds - the height of mBox) / 2
+	else
+		put the width of my bounds into mScaledWidth
+		put the height of my bounds into mScaledHeight
+		put my bounds into mBox
+	end if
+end handler
+
+----------
+-- this handler is called when the widget is resized
+public handler OnGeometryChanged()
+	CalculateScaledSizes()
+end handler
+----------
+
 -- property handlers
+public handler SetMaintainAspectRatio(in pBoolean as Boolean)
+	put pBoolean into mMaintainAspectRatio
+	CalculateScaledSizes()
+	redraw all
+end handler
+
+public handler SetAngle(in pAngle as Number) returns nothing
+	put pAngle into mAngle
+	CalculateScaledSizes()
+	redraw all
+end handler
+
+public handler SetFlipped(in pBoolean as Boolean)
+	put pBoolean into mFlipped
+	CalculateScaledSizes()
+	redraw all
+end handler
+
 private handler GetSvgText() returns String
     return mSvgText
 end handler
@@ -96,7 +273,8 @@ private handler SetSvgText(in pSvgText as String) returns nothing
     
     put pSvgText into mSvgText
     put tNewSvg into mSvg
-    
+	 
+	 CalculateScaledSizes()
     redraw all
 end handler
 
@@ -118,6 +296,7 @@ private handler SetVisibleBox(in pVisibleBox as String) returns nothing
         return
     end if
     put tNewVisibleBox into mVisibleBox
+	 CalculateScaledSizes()
     redraw all
 end handler
 
