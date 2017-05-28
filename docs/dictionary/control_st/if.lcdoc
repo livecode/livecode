@@ -4,6 +4,15 @@ Type: control structure
 
 Syntax: if <condition> then <statementList> [else <elseStatementList>]
 
+Syntax:if <condition> then
+ <statementList>
+ [else if <condition> then
+   <elseifStatementList>]
+ [else 
+   <elseStatementList>]
+end if
+
+
 Summary:
 <execute|Executes> a list of <statement|statements> if a condition is
 true. 
@@ -27,16 +36,24 @@ end if
 
 Parameters:
 condition (bool):
+Any <expression>. (If the <condition> <evaluate|evaluates> to the true, the <statement|statements> execute for that <if>
+clause.) if the <condition> <evaluate|evaluates> to false, the statement or <statementList> is
+skipped. 
 
+statement|statementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
-elseStatementList:
+elseIfStatement|elseIfStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
-
-statementList:
-The <statementList> or <elseStatementList> consists of one or more LiveCode
-statements, and can also include if, switch, try, or repeat control
-structures. The statement or elseStatement consists of a single LiveCode
-statement. 
+elseStatement|elseStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
 Description:
 Use the <if> <control structure> to <execute> a <statementList|statement> 
