@@ -20,11 +20,7 @@ on TestSetup
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 
-    TestDiagnostic the defaultfolder
-    load extension from file "../_tests/_build/lcs/core/engine/_extension.lcm"
-    if the result is not empty then
-       throw "Failed to load test support extension:" && the result
-    end if
+	TestLoadAuxillaryExtension "_extension"
 end TestSetup
 
 /////////
