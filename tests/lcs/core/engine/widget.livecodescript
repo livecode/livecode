@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
    TestLoadAuxillaryExtension "_widget"
    TestLoadAuxillaryExtension "_widget_support"
+   TestLoadAuxillaryExtension "_widgetthrow"
 end TestSetup
 
 //////////
@@ -70,3 +71,15 @@ on TestWidgetScriptObjectAccess
 
    delete stack "WidgetScriptAccessTest"
 end TestWidgetScriptObjectAccess
+
+on TestWidgetThrowInOnCreate
+   create stack "WidgetThrowOnSaveTest"
+   set the defaultStack to "WidgetThrowOnSaveTest"
+   
+   create widget "Test" as "com.livecode.lcs_tests.core.widgetthrow"
+
+   TestAssertErrorDialog "error dialog when widget throws in OnCreate", \
+      "EE_EXTENSION_ERROR_DOMAIN"
+
+   delete stack "WidgetThrowOnSaveTest"
+end TestWidgetThrowInOnCreate
