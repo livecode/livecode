@@ -289,6 +289,8 @@ on TestGraphicPointOverflow
 		put tError into tE1
 	end try
 
+	TestAssert "throws (points)", item 1 of line 1 of tE1 is "0896"
+	
 	try 
 		create graphic "g1"
 		set the markerPoints of it to tPoints
@@ -296,6 +298,8 @@ on TestGraphicPointOverflow
 		put tError into tE2
 	end try
 
+	TestAssert "throws (markerPoints)", item 1 of line 1 of tE2 is "0896"
+	
 	try
 		create graphic "g2"
 		set the relativePoints of it to tPoints
@@ -303,6 +307,8 @@ on TestGraphicPointOverflow
 		put tError into tE3
 	end try
 
+	TestAssert "throws (relativePoints)", item 1 of line 1 of tE3 is "0896"
+	
 	create graphic "g3"
 	set the filled of graphic "g3" to false
 	set the style of graphic "g3" to "polygon"
@@ -314,21 +320,63 @@ on TestGraphicPointOverflow
 		put tError into tE4
 	end try
 
+	TestAssert "throws (switchOpaque)", item 1 of line 1 of tE4 is "0896"
+	TestAssert "internal object unchanged (switchOpaque)", the filled of graphic "g3" is false
+
+	local tClosedPoints
+
 	create graphic "g4"
 	set the style of graphic "g4" to "polygon"
 	set the filled of graphic "g4" to true
 	set the points of graphic "g4" to line 1 to 65534 of tPoints
+
+	put the points of graphic "g4" into tClosedPoints
 
 	try
 		set the points of graphic "g4" to line 1 to 65535 of tPoints
 	catch tError
 		put tError into tE5
 	end try
-
-	TestAssert "didn't throw", true
-	TestAssert "throws (points)", item 1 of line 1 of tE1 is "0896"
-	TestAssert "throws (markerPoints)", item 1 of line 1 of tE2 is "0896"
-	TestAssert "throws (relativePoints)", item 1 of line 1 of tE3 is "0896"
-	TestAssert "throws (switchOpaque)", item 1 of line 1 of tE4 is "0896"
 	TestAssert "throws (setOpaque)", item 1 of line 1 of tE5 is "0896"
+	TestAssert "internal object unchanged (setOpaque)", the points of graphic "g4" is tClosedPoints
+
+	local tClosedRelativePoints,tE6
+
+	create graphic "g5"
+	set the style of graphic "g5" to "polygon"
+	set the filled of graphic "g5" to true
+	set the relativePoints of graphic "g5" to line 1 to 65534 of tPoints
+	
+	TestAssert "points added", the number of lines in the points of graphic "g5" is 65535
+	put the points of graphic "g5" into tClosedRelativePoints
+
+	try
+		set the points of graphic "g5" to line 1 to 65535 of tPoints
+	catch tError
+		put tError into tE6
+	end try
+
+	TestAssert "throws (set relative opaque)", item 1 of line 1 of tE6 is "0896"
+	TestAssert "internal object unchanged (set relative opaque)", the points of graphic "g5" is tClosedRelativePoints
+
+	local tClosedMarkerPoints, tE7
+
+	create graphic "g6"
+	set the style of graphic "g6" to "polygon"
+	set the markerFilled of graphic "g6" to true
+	set the markerPoints of graphic "g6" to line 1 to 65534 of tPoints
+
+	put the points of graphic "g6" into tClosedMarkerPoints
+
+	try
+		set the markerPoints of graphic "g6" to line 1 to 65535 of tPoints
+	catch tError
+		put tError into tE7
+	end try
+
+	TestAssert "throws (set marker opaque)", tE7 is not empty
+	TestAssert "internal object unchanged (set marker opaque)", the points of graphic "g6" is tClosedMarkerPoints
+
+	_TestGraphicsPointOverflowNoThrow
+	TestAssert "didn't throw", true
 end TestGraphicPointOverflow
