@@ -106,41 +106,11 @@ local sErrorMap
 private command __BuildErrorMap
    if sErrorMap is not empty then
       exit __BuildErrorMap
-   end if
-   	
-   local tSourceFile
-   put TestGetEngineRepositoryPath() & slash & "engine/src/parseerrors.h" \
-         into tSourceFile
-   		
-   local tSource
-   put textDecode(url("binfile:" & tSourceFile), "utf-8") into tSource
+   end if 
    
-   local tErrorMap, tCurrentCode, tCodeFound
-   put false into tCodeFound
-   repeat for each line tLine in tSource
-      if tLine is empty then next repeat
-      if word 1 of tLine begins with "PE_UNDEFINED" then next repeat
-      
-      local tCode
-      if matchText(tLine, ".*\/\/ \{PE-([0-9]{4})\}.*", tCode) then
-         put tCode into tCurrentCode
-         put true into tCodeFound
-         next repeat
-      end if
-      if word 1 of tLine begins with "PE_" then
-         if tCodeFound is false then
-            if tCurrentCode is empty then 
-               throw "no parse error code found:" && tLine
-            else
-               throw "duplicate parse error code" && tCurrentCode && "found:" && tLine
-            end if
-            
-         end if
-         put item 1 of (word 1 of tLine) into tErrorMap[tCurrentCode]
-         put false into tCodeFound
-      end if
-   end repeat
-   put tErrorMap into sErrorMap
+   write the backscripts to stdout
+   	
+   put TestBuildErrorMap("parseerrors.h", "PE", "UNDEFINED") into sErrorMap
 end __BuildErrorMap
 
 function CompilerTestRunner_DoesOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pTestInfo

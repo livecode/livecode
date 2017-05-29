@@ -47,5 +47,5 @@ on TestImportLonelyInt
 	TestAssert "import lonely single-digit integer", tExpected is tValue
 
 	TestAssertThrow "import lonely minus sign", "__TestImportLonelyInt_Minus", \
-		the long id of me, 863, ""
+		the long id of me, "EE_EXTENSION_ERROR_DOMAIN"
 end TestImportLonelyInt

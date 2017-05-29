@@ -94,7 +94,7 @@ script: |
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
     make all-${BUILD_PLATFORM} &&
-    ${CHECK_COMMAND} make check-${BUILD_PLATFORM}
+    ${CHECK_COMMAND} make check-${BUILD_PLATFORM} V=1
   fi
 
 addons:

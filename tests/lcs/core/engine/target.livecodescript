@@ -41,7 +41,8 @@ end TestDeleteTargetInBackScript
 
 on TestDeleteTargetInBehavior
    set the behavior of button "test" to the long id of button "script"
-   TestAssertThrow "Delete target in behavior", "__TestDeleteTarget", the long id me, 347
+   TestAssertThrow "Delete target in behavior", "__TestDeleteTarget", \
+      the long id me, "EE_OBJECT_CANTREMOVE"
    set the behavior of button "test" to empty
 end TestDeleteTargetInBehavior
 

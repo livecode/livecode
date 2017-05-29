@@ -241,7 +241,8 @@ on TestSetLayerOfGroupedControl
 	put it into tButton
 	
 	TestAssertThrow "set layer of grouped control with relayerGroupedControls false", \
-		"_TestSetLayerOfGroupedControlError", the long id of me, 345, tButton
+		"_TestSetLayerOfGroupedControlError", the long id of me, \ 
+		"EE_OBJECT_BADRELAYER", tButton
 		
 	set the relayerGroupedControls to true
 	set the layer of tButton to "bottom"

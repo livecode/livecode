@@ -143,6 +143,64 @@ private command _TestLoadExtension pFolder, pPath
    return the result
 end _TestLoadExtension
 
+function TestBuildErrorMap pErrorFile, pErrorPrefix, pZerothError
+   local tSourceFile
+   put TestGetEngineRepositoryPath() & slash & "engine/src/" & \
+         pErrorFile into tSourceFile
+   		
+   local tSource
+   put textDecode(url("binfile:" & tSourceFile), "utf-8") into tSource
+   
+   local tErrorMap, tCurrentCode, tCodeFound
+   put false into tCodeFound
+   repeat for each line tLine in tSource
+      if tLine is empty then next repeat
+      if word 1 of tLine begins with pErrorPrefix & "_" & pZerothError then 
+      	  next repeat
+      end if
+      
+      local tCode
+      if matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
+         put tCode into tCurrentCode
+         put true into tCodeFound
+         next repeat
+      end if
+      if word 1 of tLine begins with pErrorPrefix & "_" then
+         if tCodeFound is false then
+            if tCurrentCode is empty then 
+               throw "no error code found:" && tLine
+            else
+               throw "duplicate error code" && tCurrentCode && "found:" && tLine
+            end if
+            
+         end if
+         put item 1 of (word 1 of tLine) into tErrorMap[tCurrentCode]
+         put false into tCodeFound
+      end if
+   end repeat
+   
+   return tErrorMap
+end TestBuildErrorMap
+
+local sExecErrorMap
+private command __TestEnsureExecErrorMap
+   if sExecErrorMap is not empty then
+      exit __TestEnsureExecErrorMap
+   end if
+   	
+   put TestBuildErrorMap("executionerrors.h", "EE", "UNDEFINED") \
+   	   into sExecErrorMap
+end __TestEnsureExecErrorMap
+
+private function __TestErrorMatches pError, pCode
+	__TestEnsureExecErrorMap
+	
+	local tErrorNumber
+	put format("%04d", item 1 of line 1 of pError) into tErrorNumber
+	
+	return sExecErrorMap[tErrorNumber] is pCode
+end __TestErrorMatches
+
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
@@ -197,8 +255,7 @@ on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
    local tSuccess
    put true into tSuccess
    repeat for each item tErrorCode in pErrorCodes
-      put tSuccess and \
-             (tErrorCode is item 1 of the first line of tError) into tSuccess
+      put tSuccess and __TestErrorMatches(tError, tErrorCode) into tSuccess
       delete the first line of tError
    end repeat
 

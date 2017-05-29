@@ -155,17 +155,17 @@ on TestExtensionLibraryHandlerCallErrors
    TestAssertThrow "library handler call throws correct error on type error", \
          "CallLibraryHandlerWithString", \
          the long id of me, \
-         (898, 219)
+         ("EE_INVOKE_TYPEERROR", "EE_FUNCTION_BADFUNCTION")
 
    TestAssertThrow "library handler call throws correct error on too few args error", \
          "CallLibraryHandlerWithTooFewParams", \
          the long id of me, \
-         (885, 219)
+         ("EE_INVOKE_TOOFEWARGS", "EE_FUNCTION_BADFUNCTION")
 
    TestAssertThrow "library handler call throws correct error on too many args error", \
          "CallLibraryHandlerWithTooManyParams", \
          the long id of me, \
-         (886, 219)
+         ("EE_INVOKE_TOOMANYARGS", "EE_FUNCTION_BADFUNCTION")
 end TestExtensionLibraryHandlerCallErrors
 
 //////////
