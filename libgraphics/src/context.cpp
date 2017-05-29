@@ -32,8 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkTypeface.h>
 #include <SkColorPriv.h>
 #include <SkSurface.h>
-#include <GrContext.h>
-#include <gl/GrGLInterface.h>
 
 #include <time.h>
 
