@@ -320,6 +320,7 @@
                                         'variables':
                                         {
                                             'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
+                                            'dist_cef_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
                                         },
                                     },
                                 },

@@ -316,6 +316,94 @@ static const char *kCefPathSeparatorStr = "/";
 static const char kCefPathSeparator = '/';
 #endif
 
+#if defined(TARGET_PLATFORM_LINUX)
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool get_link_size(const char *p_path, uint32_t &r_size)
+{
+    if (p_path == nil)
+        return false;
+    
+    struct stat t_stat;
+    if (lstat(p_path, &t_stat) == -1)
+        return false;
+    
+    r_size = t_stat.st_size;
+    return true;
+}
+
+static bool get_link_path(const char *p_link, char *&r_path)
+{
+    bool t_success;
+    t_success = true;
+    
+    char *t_buffer;
+    t_buffer = nil;
+    uint32_t t_buffer_size;
+    t_buffer_size = 0;
+    
+    uint32_t t_link_size;
+    t_success = get_link_size(p_link, t_link_size);
+    
+    while (t_success && t_link_size + 1 > t_buffer_size)
+    {
+        t_buffer_size = t_link_size + 1;
+        t_success = MCBrowserMemoryReallocate(t_buffer, t_buffer_size, t_buffer);
+        
+        if (t_success)
+        {
+            int32_t t_read;
+            t_read = readlink(p_link, t_buffer, t_buffer_size);
+            
+            t_success = t_read >= 0;
+            t_link_size = t_read;
+        }
+    }
+    
+    if (t_success)
+    {
+        t_buffer[t_link_size] = '\0';
+        r_path = t_buffer;
+    }
+    else
+        MCBrowserMemoryDeallocate(t_buffer);
+    
+    return t_success;
+}
+
+static bool get_exe_path_from_proc_fs(char *&r_path)
+{
+    return get_link_path("/proc/self/exe", r_path);
+}
+
+//////////
+
+const char *__MCCefPlatformGetExecutableFolder(void)
+{
+    static char *s_exe_path = nil;
+    
+    if (s_exe_path == nil)
+    {
+        bool t_success;
+        t_success = get_exe_path_from_proc_fs(s_exe_path);
+        if (t_success)
+        {
+            // remove library component from path
+            uint32_t t_index;
+            if (MCCStringLastIndexOf(s_exe_path, '/', t_index))
+                s_exe_path[t_index] = '\0';
+        }
+    }
+    
+    return s_exe_path;
+}
+#endif
+
 static bool __MCCefGetLibraryPath(char*& r_path)
 {
     void *t_module = nullptr;
@@ -408,8 +496,14 @@ bool MCCefInitialise(void)
 	t_settings.log_severity = LOGSEVERITY_DISABLE;
 	
     bool t_success = true;
+#ifdef TARGET_PLATFORM_LINUX
+    if (t_success)
+        t_success = __MCCefBuildPath(__MCCefPlatformGetExecutableFolder(), kCefProcessName, &t_settings.browser_subprocess_path);
+#else
     if (t_success)
         t_success = __MCCefBuildPath(t_library_path, kCefProcessName, &t_settings.browser_subprocess_path);
+#endif
+    
     if (t_success)
         t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
     if (t_success)
