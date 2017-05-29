@@ -119,7 +119,7 @@ public:
 	// MCGraphic functions
 	uint2 get_arrow_size();
 	void draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2);
-	void draw_lines(MCDC *dc, MCPoint *pts, uindex_t npts);
+	void draw_lines(MCDC *dc, MCPoint *pts, uint2 npts);
 	void fill_polygons(MCDC *dc, MCPoint *pts, uint2 npts);
 	void compute_extents(MCPoint *pts, uint2 npts, int2 &minx, int2 &miny,
 	                     int2 &maxx, int2 &maxy);

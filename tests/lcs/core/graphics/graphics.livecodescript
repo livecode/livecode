@@ -250,3 +250,85 @@ on TestTeardown
 	end if
 end TestTeardown
 
+
+command _TestGraphicsPointOverflowNoThrow
+	local tPoints
+
+	repeat with i = 1 to 256
+		repeat with j = 1 to 256
+			if i is 256 and j is 256 then
+				exit repeat 
+				exit repeat
+			end if
+			put (i,j) & cr after tPoints
+		end repeat
+	end repeat
+
+	TestAssert "the number of gen points is correct", the number of lines in tPoints is 65535
+
+	create graphic
+	set the points of it to tPoints
+	set the markerPoints of it to tPoints
+end _TestGraphicsPointOverflowNoThrow
+
+on TestGraphicPointOverflow
+	local tE1, tE2, tE3, tE4, tE5, tPoints
+
+	repeat with i = 1 to 256
+		repeat with j = 1 to 256
+			put (i,j) & cr after tPoints
+		end repeat
+	end repeat
+
+	TestAssert "generated correct number of points", the number of lines in tPoints is 65536
+
+	try
+		create graphic 
+		set the points of it to tPoints
+	catch tError
+		put tError into tE1
+	end try
+
+	try 
+		create graphic "g1"
+		set the markerPoints of it to tPoints
+	catch tError
+		put tError into tE2
+	end try
+
+	try
+		create graphic "g2"
+		set the relativePoints of it to tPoints
+	catch tError
+		put tError into tE3
+	end try
+
+	create graphic "g3"
+	set the filled of graphic "g3" to false
+	set the style of graphic "g3" to "polygon"
+	set the points of graphic "g3" to line 1 to 65535 of tPoints
+
+	try
+		set the filled of graphic "g3" to true
+	catch tError
+		put tError into tE4
+	end try
+
+	create graphic "g4"
+	set the style of graphic "g4" to "polygon"
+	set the filled of graphic "g4" to true
+	set the points of graphic "g4" to line 1 to 65534 of tPoints
+
+	try
+		set the points of graphic "g4" to line 1 to 65535 of tPoints
+	catch tError
+		put tError into tE5
+	end try
+
+	TestAssert "didn't throw", true
+	TestAssert "throws (points)", item 1 of line 1 of tE1 is "0896"
+	TestAssert "throws (markerPoints)", item 1 of line 1 of tE2 is "0896"
+	TestAssert "throws (relativePoints)", item 1 of line 1 of tE3 is "0896"
+	TestAssert "throws (switchOpaque)", item 1 of line 1 of tE4 is "0896"
+	TestAssert "throws (setOpaque)", item 1 of line 1 of tE5 is "0896"
+end TestGraphicPointOverflow

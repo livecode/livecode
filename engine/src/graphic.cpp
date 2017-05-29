@@ -745,10 +745,10 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 	dc->fillpolygon(pts, 3);
 }
 
-void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uindex_t npts)
+void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 {
 	uindex_t i = 0;
-	while (i < npts)
+	while (i < uindex_t(npts))
 	{
         bool t_degenerate;
 		t_degenerate = true;
@@ -1031,15 +1031,15 @@ bool MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
             npts -= 1;
         }
             
-		uint2 i ;
+		uindex_t i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
         
 		for (i=1; i<=npts; i++)
 		{
-			if ((i==npts) || (pts[i].x == MININT2))
+            if ((i==npts) || (pts[i].x == MININT2))
 			{
-				if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
+            	if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
 				{
 					t_count++ ;
 				}

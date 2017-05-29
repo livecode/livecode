@@ -736,6 +736,7 @@ void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* 
     if (p_count > 65535)
     {
         ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
     }
     
     if (p_count == 0)
