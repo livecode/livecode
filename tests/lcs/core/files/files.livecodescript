@@ -127,8 +127,7 @@ on TestSpecialFolderPath
    put specialFolderPath("resources") into tResources
    if the platform is "macos" and the environment is "standalone" then
       // Standalone on Mac have their non-executable resource in a specific folder
-      set the itemDelimiter to slash
-      TestAssert "Resources folder on standalone Mac app in is  Resources/_MacOS", item -2 to -1 of tResources is "Resources/_MacOS"
+      TestAssert "Resources folder on standalone Mac app in is  Resources/_MacOS", tResources ends with "Resources/_MacOS"
    else if the environment is "mobile" then
       testAssert "Resources and Engine specialfolderPaths are the same on mobile", tResources is tEngine
    else
