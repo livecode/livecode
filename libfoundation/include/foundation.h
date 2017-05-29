@@ -2007,6 +2007,10 @@ MC_DLLEXPORT extern MCNumberRef kMCZero;
 MC_DLLEXPORT extern MCNumberRef kMCOne;
 MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
 
+#define DBL_INT_MAX     (1LL << DBL_MANT_DIG)   /* the maximum integer faithfully representable by a double */
+#define DBL_INT_MIN     (-DBL_INT_MAX)          /* the minimum integer faithfully representable by a double */
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  NAME DEFINITIONS
