@@ -2,7 +2,7 @@ Name: intersect
 
 Type: command
 
-Syntax: intersect <targetArray> with <templateArray> [recursively]
+Syntax: intersect <targetArray> with <templateArray> [recursively] [into <destinationArray>]
 
 Summary:
 Removes <element(glossary)|elements> from an <array> if they have no
@@ -80,6 +80,8 @@ The value to modify.
 templateArray (array):
 The array to intersect <array> with.
 
+destinationArray (optional array):
+A variable to set as the destination instead of mutating <targetArray>
 
 Description:
 Use the <intersect> <command> to filter out <element(glossary)|elements>
@@ -106,8 +108,16 @@ removed. If <targetArray> and <templateArray> have the same set of
 <element(keyword)>, the <intersect> <command> does not change the value
 of <targetArray>.
 
+If the into clause is used the operation of the commands is the same as
+the non-into form except that <targetArray> does not have to be a
+variable, and the result of the operation is placed into
+<destinationArray> rather than mutating <targetArray>.
+
+Changes:
+The `into` clause was added in LiveCode 9.
+
 References: split (command), union (command), element (glossary),
-array (glossary), command (glossary), key (glossary), element (keyword)
+array (glossary), command (glossary), key (glossary), element (keyword),
+difference (command), symmetric difference (command)
 
 Tags: properties
-
