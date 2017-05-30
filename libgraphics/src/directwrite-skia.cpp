@@ -324,17 +324,23 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 	if (SUCCEEDED(s_DWFactory->CreateTextLayout(p_text, p_length / sizeof(unichar_t), t_format, INFINITY, INFINITY, &t_layout)))
 	{
 		// Get the text metrics for the layout
+		DWRITE_LINE_METRICS t_line_metrics;
+		UINT32 t_line_metrics_count = 1;
+
 		DWRITE_TEXT_METRICS t_metrics;
-		if (SUCCEEDED(t_layout->GetMetrics(&t_metrics)))
+		if (SUCCEEDED(t_layout->GetMetrics(&t_metrics)) && SUCCEEDED(t_layout->GetLineMetrics(&t_line_metrics, 1, &t_line_metrics_count)))
 		{
-			r_bounds = MCGRectangleMake(t_metrics.left, t_metrics.top, t_metrics.width, t_metrics.height);
+			r_bounds = MCGRectangleMake(t_metrics.left, -t_line_metrics.baseline, t_metrics.width, t_metrics.height);
 			t_success = true;
 		}
 	}
 
 	// Release the created objects and return
-	t_layout->Release();
-	t_format->Release();
+	if (t_layout != NULL)
+		t_layout->Release();
+	if (t_format != NULL)
+		t_format->Release();
+
 	return t_success;
 }
 
