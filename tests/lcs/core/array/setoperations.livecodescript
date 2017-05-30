@@ -154,7 +154,7 @@ function ArraySymmetricDifference(pLeft, pRight)
 		if tKey is not among the keys of pLeft then
 			put pRight[tKey] into pLeft[tKey]
 		else 
-			delete pLeft[tKey]
+			delete variable pLeft[tKey]
 		end if
 	end repeat
 	
@@ -384,7 +384,7 @@ Semantics of array difference:
 function ArrayDifference(pLeft, pRight)
 	repeat for each key tKey in pLeft
 		if tKey is among the keys of pRight then
-			delete pLeft[tKey]
+			delete variable pLeft[tKey]
 		end if
 	end repeat
 	
