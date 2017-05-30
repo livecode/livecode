@@ -25,7 +25,7 @@
 		<string>iPhoneOS</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>${BUNDLE_VERSION}</string>
+	<string>${BUNDLE_BUILD}</string>
 	<key>CFBundleShortVersionString</key>
 	<string>${BUNDLE_VERSION}</string>
 	<key>CFBundleIconFiles</key>

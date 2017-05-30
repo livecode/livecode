@@ -1637,7 +1637,7 @@ enum Parse_errors
 	PE_RESOLVE_BADOBJECT,
 	
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
-    // {EE-0536} edit script: no at expression
+    // {PE-0536} edit script: no at expression
 	PE_EDIT_NOAT,
 	
 	// MW-2013-11-14: [[ AssertCmd ]] Parsing errors for assert command.

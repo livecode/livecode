@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <float.h>
 
 extern "C" __declspec(noalias) void __cdecl free(void *memory);
 extern "C" __declspec(noalias) void * __cdecl malloc(size_t size);
@@ -50,6 +51,7 @@ extern "C" double __cdecl fmod(double x, double y);
 #include <math.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <float.h>
 
 #endif
 

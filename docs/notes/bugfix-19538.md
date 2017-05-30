@@ -1,0 +1,1 @@
+# Fixed bug preventing users from selecting text of length 65535

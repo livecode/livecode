@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 {
 	bool m_cancelled;
 	bool m_running;
+    bool m_lock_idle_timer;
 	int32_t m_max_width;
 	int32_t m_max_height;
 	UIImagePickerControllerSourceType m_source_type;
@@ -70,9 +71,17 @@ static com_runrev_livecode_MCIPhoneImagePickerDialog *s_image_picker = nil;
 	return t_data;
 }
 
+- (void)restoreIdleTimerDisabled
+{
+    if (m_lock_idle_timer)
+        MCSystemLockIdleTimer();
+}
+
 // PM-2015-02-17: [[ Bug 11544 ]] Make sure the visibility of the status bar is respected when presenting a UIImagePickerController
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
+    if (m_lock_idle_timer)
+        MCSystemUnlockIdleTimer();
     [[UIApplication sharedApplication] setStatusBarHidden:m_status_bar_hidden];
 }
 
@@ -140,7 +149,8 @@ static com_runrev_livecode_MCIPhoneImagePickerDialog *s_image_picker = nil;
 	// MM-2012-03-01: [[ BUG 10033 ]] Store the status bar style as it appears on iOS 5, this is overwittern by album picker
     m_status_bar_hidden = [[UIApplication sharedApplication] isStatusBarHidden];
     m_status_bar_style = [[UIApplication sharedApplication] statusBarStyle];
-	
+	m_lock_idle_timer = ([[UIApplication sharedApplication] isIdleTimerDisabled] == YES);
+    
 	[ self setSourceType: m_source_type ];
 	
 	if (m_source_type == UIImagePickerControllerSourceTypeCamera &&
@@ -211,6 +221,9 @@ static com_runrev_livecode_MCIPhoneImagePickerDialog *s_image_picker = nil;
 	// MM-2012-03-01: [[ BUG 10033 ]] Restore the status bar style after picker dismissed
     [[UIApplication sharedApplication] setStatusBarHidden: m_status_bar_hidden withAnimation: UIStatusBarAnimationNone];
     [[UIApplication sharedApplication] setStatusBarStyle: m_status_bar_style animated: NO];
+    
+    // PM-2017-05-17: [[Bug 19646]] We need at least a 0.6 delay, otherwise the value of lockIdleTimer is not restored, not sure why
+    [self performSelector:@selector(restoreIdleTimerDisabled) withObject:nil afterDelay:0.6];
 }
 
 + (void)prepare

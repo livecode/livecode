@@ -1206,16 +1206,20 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
+   local tExeName, tBundleId, tBundleVersion,tBundleBuild,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
+   put pSettings["ios,bundle build"] into tBundleBuild
    
    -- MW-2011-03-15: Make sure the bundle version is defaulted to 1.0.0 if empty
    if tBundleVersion is empty then
       put "1.0.0" into tBundleVersion
    end if
    
+   if tBundleBuild is empty then
+      put "1" into tBundleBuild
+   end if
    ----------
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
@@ -1227,7 +1231,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
-   --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
+   put pSettings["ios,exits on suspend"] into tExitsOnSuspend
    
    put  pSettings["ios,background audio"] into tBackgroundAudio
    put pSettings["ios,file sharing"] into tFileSharing
@@ -1252,11 +1256,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "false" into tPrerenderedIcon
    end if
    
+   if tExitsOnSuspend is empty then
+      put "true" into tExitsOnSuspend
+   end if
+   
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
    if tBackgroundAudio is true then 
       put "false" into tExitsOnSuspend
-   else -- false or empty
-      put "true" into tExitsOnSuspend
    end if
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
@@ -1341,6 +1347,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_BUILD}" with tBundleBuild in pPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
    		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
    		

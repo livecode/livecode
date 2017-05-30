@@ -2,7 +2,7 @@ Name: create widget
 
 Type: command
 
-Syntax: create [invisible] widget [<controlName>] as <widgetKind> [in <group>]
+Syntax: create [invisible] widget [<controlName>] as <widgetKind> [in {<group>|<card>}]
 
 Summary:
 Create a <widget> control of the specified <kind>.
@@ -39,6 +39,12 @@ the current card. If you specify a group, the new <widget> is a member
 of the <group>, and exists on each <card> that has the <group>. If you
 don't specify a <group>, the <widget> is created on the current <card>
 and appears only on that <card>.
+
+card:
+A reference or an expression that evaluates to a reference to a card.
+If you specify a card, the new <widget> is a member of the <card>. 
+If you specify neither a <group> nor a <card>, the <widget> 
+is created on the current <card> and appears only on that <card>.
 
 It:
 The <create widget> command places the ID property of the newly created

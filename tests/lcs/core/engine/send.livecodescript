@@ -62,5 +62,5 @@ end __SendError
 
 on TestSendError
 	TestAssertThrow "send throws correct error", __SendError, \ 
-		the long id of me, 91
+		the long id of me, "EE_CHUNK_NOSTACK"
 end TestSendError

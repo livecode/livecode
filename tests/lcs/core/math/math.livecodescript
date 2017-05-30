@@ -918,3 +918,47 @@ repeat with i = 1 to 10
 end repeat
 
 end TestMathArrayWrapArray
+
+on _RandomMaxLimitTestThrows
+
+	local tX, tN2
+
+	put 2^53 into tX
+	
+	-- this loop computes the next representable 
+	-- double after 2^53
+	repeat with i = 1 to 128
+  		if tX + i - tX is not 0 then
+     		exit repeat
+  		end if
+	end repeat
+	
+	put tX+i into tX
+	
+	local rN1
+
+	put random(tN1) into rN1
+	
+end _RandomMaxLimitTestThrows
+
+
+
+on _RandomMaxLimitTestNoThrow
+
+	local tN1, tN2
+
+	put 2^53 into tN1
+
+	put random(tN1) into rN1
+
+end _RandomMaxLimitTestNoThrow
+
+on TestRandomGenLimits
+
+	TestAssertThrow "checks if bad input to random throws exception" , "_RandomMaxLimitTestThrows" , \
+		the long id of me , 469
+
+	TestAssertDoesNotThrow "checks if correct input to random doesn't throw exception" \ 
+		, "_RandomMaxLimitTestNoThrow" , the long id of me
+
+end TestRandomGenLimits

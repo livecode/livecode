@@ -29,7 +29,8 @@ on TestCyclicBehavior
    create stack
    set the behavior of it to the long id of stack "Behavior"
    TestAssertThrow "cycle in behavior script hierarchy throws", \
-      "_TestCyclicBehavior", the long id of me, 678, it
+      "_TestCyclicBehavior", the long id of me, \ 
+      "EE_PARENTSCRIPT_CYCLICOBJECT", it
 end TestCyclicBehavior
 
 on TestInvalidBehaviorChange
@@ -46,7 +47,7 @@ on TestInvalidBehaviorChange
    create stack
    set the behavior of it to the long id of stack "Behavior"
    TestAssertThrow "behavior change while parent script is executing throws", \
-      "changeBehavior", it, 896
+      "changeBehavior", it, "EE_PARENTSCRIPT_EXECUTING"
 end TestInvalidBehaviorChange
 
 on _TestInvalidObjectBehavior pStack
@@ -60,7 +61,8 @@ on TestInvalidObjectTypeBehavior
    put it into tStack 
 
    TestAssertThrow "set behavior to non-button control throws", \
-      "_TestInvalidObjectBehavior", the long id of me, 673, tStack
+      "_TestInvalidObjectBehavior", the long id of me, \
+      "EE_PARENTSCRIPT_BADOBJECT", tStack
 end TestInvalidObjectTypeBehavior
 
 ----------------------------------------------------------------

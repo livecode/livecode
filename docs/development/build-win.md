@@ -28,6 +28,10 @@ In addition, you should install
 [Microsoft Speech SDK 5.1](https://www.microsoft.com/en-gb/download/details.aspx?id=10121)
 in order to allow you to compile the `revspeech` external.
 
+Note : If Using Microsoft Visual Studio 2017, you will need to add C++ support and 
+support for the Windows 8.1 SDK to your Visual Studio installation as these features are currently
+not installed by default with Visual Studio 2017 and are necessary for building LiveCode.
+
 ### Cygwin
 
 The build currently requires the use of some tools from the Cygwin distribution of GNU and other open source tools.

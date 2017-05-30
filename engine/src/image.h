@@ -253,6 +253,11 @@ public:
     
     // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
     bool GetMetadata(MCImageMetadata& r_metadata);
+    
+    void Lock();
+    void Unlock();
+    
+    bool IsLocked() const;
 
 private:
 	MCImage *m_owner;
@@ -282,6 +287,8 @@ private:
 	static MCPoint *points;
 	static uint2 npoints;
 	static uint2 polypoints;
+    
+    bool m_is_locked;
 };
 
 class MCImageNeed
@@ -666,7 +673,7 @@ public:
 	void GetText(MCExecContext& ctxt, MCDataRef& r_text);
 	void SetText(MCExecContext& ctxt, MCDataRef p_text);
 	void GetImageData(MCExecContext& ctxt, MCDataRef& r_data);
-	void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
+    void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetMaskData(MCExecContext& ctxt, MCDataRef& r_data);
 	void SetMaskData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data);

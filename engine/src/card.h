@@ -136,7 +136,7 @@ public:
 	IO_stat loadobjects(IO_handle stream, uint32_t version);
 
 	void kfocusset(MCControl *target);
-	MCCard *clone(Boolean attach, Boolean controls);
+	MCCard *clone(Boolean attach, Boolean controls, MCStack *p_parent = nullptr);
 	void clonedata(MCCard *source);
 	void replacedata(MCStack *source);
 	Exec_stat relayer(MCControl *optr, uint2 newlayer);

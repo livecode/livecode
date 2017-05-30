@@ -25,6 +25,10 @@ replace somethingOld with "\" in it
 Example:
 replace ".com" with somethingNew in URL "file:stuff.txt"
 
+Example:
+put "12.34.56.78" into p
+replace "." with empty in char 4 to -1 of p  -- 12.345678
+
 Parameters:
 oldString (string):
 Any expression that evaluates to a string, and specifies the text to

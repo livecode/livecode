@@ -31,6 +31,7 @@ static int s_is_bootstrap = 0;
 
 extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
+extern int OutputFileAsAuxC;
 extern int OutputFileAsBytecode;
 
 int IsBootstrapCompile(void)
@@ -105,6 +106,9 @@ usage(int status)
 "      --modulepath PATH      Search PATH for module interface files.\n"
 "      --output OUTFILE       Filename for bytecode output.\n"
 "      --outputc OUTFILE      Filename for C source code output.\n"
+"      --outputauxc OUTFILE   Filename for C source code output in auxillary mode.\n"
+"                             This generates an auxillary set of C source code\n"
+"                             modules, which do *not* include the builtin module.\n"
 "      --deps make            Generate lci file dependencies in make format for\n"
 "                             the input source files.\n"
 "      --deps order           Generate the order the input source files should be\n"
@@ -177,6 +181,7 @@ static void full_main(int argc, char *argv[])
                 SetOutputBytecodeFile(argv[++argi]);
                 OutputFileAsBytecode = 1;
                 OutputFileAsC = 0;
+                OutputFileAsAuxC = 0;
                 have_output_file = 1;
                 continue;
             }
@@ -184,6 +189,16 @@ static void full_main(int argc, char *argv[])
             {
                 SetOutputCodeFile(argv[++argi]);
                 OutputFileAsC = 1;
+                OutputFileAsAuxC = 0;
+                OutputFileAsBytecode = 0;
+                have_output_file = 1;
+                continue;
+            }
+            if (0 == strcmp(opt, "--outputauxc") && optarg)
+            {
+                SetOutputCodeFile(argv[++argi]);
+                OutputFileAsC = 1;
+                OutputFileAsAuxC = 1;
                 OutputFileAsBytecode = 0;
                 have_output_file = 1;
                 continue;

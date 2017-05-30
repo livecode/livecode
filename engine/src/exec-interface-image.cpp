@@ -131,6 +131,11 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
+    if (m_rep && m_rep->IsLocked())
+    {
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
+    }
     // MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
     //   empty, and the filename is already empty, do nothing.
 	if ((m_rep != nil && m_rep->GetType() == kMCImageRepReferenced &&
@@ -313,46 +318,72 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-	recompress();
-	if (m_rep == nil || m_rep->GetType() == kMCImageRepReferenced)
+    if (m_rep == nullptr || m_rep->GetType() == kMCImageRepReferenced)
+    {
+        r_text = MCValueRetain(kMCEmptyData);
+        return;
+    }
+    
+    bool t_success = false;
+    
+    MCImage* t_image_to_work_on = this;   
+    if (m_rep && m_rep->IsLocked())
+    {
+        t_image_to_work_on = new MCImage(*this);
+    }
+    else
+    {
+        t_image_to_work_on->recompress();
+    }
+    
+    void *t_data = nil;
+	uindex_t t_size = 0;
+	if (t_image_to_work_on->m_rep->GetType() == kMCImageRepResident)
+		static_cast<MCResidentImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
+	else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepVector)
+		static_cast<MCVectorImageRep*>(t_image_to_work_on->m_rep)->GetData(t_data, t_size);
+	else if (t_image_to_work_on->m_rep->GetType() == kMCImageRepCompressed)
 	{
-		r_text = MCValueRetain(kMCEmptyData);
-		return;
-	}
-	else
-	{
-		void *t_data = nil;
-		uindex_t t_size = 0;
-		if (m_rep->GetType() == kMCImageRepResident)
-			static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-		else if (m_rep->GetType() == kMCImageRepVector)
-			static_cast<MCVectorImageRep*>(m_rep)->GetData(t_data, t_size);
-		else if (m_rep->GetType() == kMCImageRepCompressed)
+		MCImageCompressedBitmap *t_compressed = nil;
+		t_compressed = static_cast<MCCompressedImageRep*>(t_image_to_work_on->m_rep)->GetCompressed();
+		if (t_compressed->data != nil)
 		{
-			MCImageCompressedBitmap *t_compressed = nil;
-			t_compressed = static_cast<MCCompressedImageRep*>(m_rep)->GetCompressed();
-			if (t_compressed->data != nil)
-			{
-				t_data = t_compressed->data;
-				t_size = t_compressed->size;
-			}
-			else
-			{
-				t_data = t_compressed->planes[0];
-				t_size = t_compressed->plane_sizes[0];
-			}
+			t_data = t_compressed->data;
+			t_size = t_compressed->size;
 		}
-
-		if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
-			return;
+		else
+		{
+			t_data = t_compressed->planes[0];
+			t_size = t_compressed->plane_sizes[0];
+		}
 	}
 	
-	ctxt . Throw();
+    if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
+    {
+        t_success = true;
+    }
+
+    if (t_image_to_work_on != this)
+    {
+        delete t_image_to_work_on;
+    }
+    if (!t_success)
+    {
+        ctxt . Throw();
+        
+    }
 }
+
 
 void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 {
-	bool t_success = true;
+    if (m_rep && m_rep->IsLocked())
+    {
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
+    }
+	
+    bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
 	MCImageCompressedBitmap *t_compressed = nil;
@@ -468,7 +499,13 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 
 void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 {
-	uindex_t t_length;
+    if (m_rep && m_rep->IsLocked())
+    {
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
+    }
+	
+    uindex_t t_length;
 	t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
 	{

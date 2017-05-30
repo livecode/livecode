@@ -73,8 +73,18 @@ command TestRunnerMain
          doUsage 1
          break
    end switch
-   quit 0
+   
+   send "DoQuit" to me
 end TestRunnerMain
+
+on DoQuit
+   -- Allow errorDialog message to be sent
+   if "errorDialog" is in the pendingMessages then
+ 	  send "DoQuit" to me in 0 millisecs
+   else
+      quit 0
+   end if
+end DoQuit
 
 private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
@@ -108,6 +118,9 @@ private command doRun pInfo
    put tLogForWriting into url ("binfile:" & tLogFilename)
    
    if TesterTapGetWorstResult(tAnalysis) is "FAIL" then
+      if $V is not empty then
+         write tLogForWriting to stdout
+   	  end if
       quit 1
    end if
 end doRun
@@ -115,11 +128,6 @@ end doRun
 private command doUsage pStatus
    dispatch "TestRunnerImpl_DoUsage" to me with pStatus
 end doUsage
-
-on ErrorDialog pExecutionError
-   write "ERROR:" && pExecutionError & return to stderr
-   quit 1
-end ErrorDialog
 
 private function getStackFolder
    local tFilename
@@ -206,7 +214,7 @@ end TestRunnerInvokeTestCommand
 ----------------------------------------------------------------
 
 -- Add the test runner library stack to the backscripts
-constant kRunLibraries = "_testerlib"
+constant kRunLibraries = "_testerlib,_testlib"
 command TestRunnerRunLoadLibraries
    TestRunnerLoadLibraries kRunLibraries
 end TestRunnerRunLoadLibraries
