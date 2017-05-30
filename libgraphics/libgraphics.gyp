@@ -57,6 +57,15 @@
 					},
 				],
 				[
+					'OS != "win"',
+					{
+						'sources!':
+						[
+							'src/directwrite-skia.cpp',
+						],
+					},
+				],
+				[
 					'OS != "android" and OS != "emscripten"',
 					{
 						'sources!':
