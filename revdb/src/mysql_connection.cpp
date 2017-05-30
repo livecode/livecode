@@ -379,38 +379,38 @@ bool DBConnection_MYSQL::BindVariables(MYSQL_STMT *p_statement, DBString *p_argu
 
 void DBConnection_MYSQL::getTables(char *buffer, int *bufsize)
 {
-	int rowseplen = 1;
-	char rowsep[] = "\n";
 	if (!buffer) {
-		*bufsize = 2500;
+        if (!m_internal_buffer)
+        {
+            m_internal_buffer = new large_buffer_t;
+            
+        }
+        long buffersize = 0;
+        char tsql[] = "SHOW tables";
+        DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
+        if (newcursor) {
+            if (!newcursor->getEOF()){
+                while (True){
+                    unsigned int colsize;
+                    char *coldata = newcursor->getFieldDataBinary(1,colsize);
+                    colsize = strlen(coldata);
+                    m_internal_buffer->append(coldata, colsize);
+                    m_internal_buffer->append('\n');
+                    buffersize += colsize + 1;
+                    newcursor->next();
+                    if (newcursor->getEOF()) break;
+                }
+            }
+            deleteCursor(newcursor->GetID());
+            *bufsize = buffersize+1;
+            m_internal_buffer->append('\0');
+            fprintf(stderr, "\n%d\n", *bufsize);
+        }
 		return;
 	}
-	char tsql[] = "SHOW tables";
-	DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
-	if (newcursor) {
-		char *result = buffer;
-		char *resultptr = result;
-		if (!newcursor->getEOF()){
-			while (True){
-				unsigned int colsize;
-				char *coldata = newcursor->getFieldDataBinary(1,colsize);
-				colsize = strlen(coldata);
-				if (((resultptr-result) + colsize + rowseplen + 16 ) 
-					> *bufsize)
-					break;
-				memcpy(resultptr,coldata,colsize);
-				resultptr+=colsize;
-				newcursor->next();
-				if (newcursor->getEOF()) break;
-				memcpy(resultptr,rowsep,rowseplen);
-				resultptr+=rowseplen;
-			}
-		}
-		deleteCursor(newcursor->GetID());
-		*resultptr++ = '\0';
-		*bufsize = resultptr-result;
-	}
-	newcursor = NULL;
+    memcpy((void *) buffer, m_internal_buffer->ptr(), m_internal_buffer->length());
+    delete m_internal_buffer;
+    m_internal_buffer = nullptr;
 }
 
 /*MYSQL doesn't support transactions so leave blank for now*/

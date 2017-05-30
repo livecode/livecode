@@ -1059,7 +1059,7 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 		uint2 i;
 		for (i = 0 ; i < MCnwatchedvars ; i++)
 		{
-			if ((!MCwatchedvars[i].object.IsBound() || MCwatchedvars[i].object == ctxt.GetObject()) 
+			if ((!MCwatchedvars[i].object.IsValid() || MCwatchedvars[i].object == ctxt.GetObject())
 				&& (!MCwatchedvars[i].handlername.IsSet() 
 					|| (ctxt.GetHandler() != nil && ctxt.GetHandler()->hasname(*MCwatchedvars[i].handlername)))
 				&& hasname(*MCwatchedvars[i].varname))

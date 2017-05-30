@@ -161,7 +161,9 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
+                
+                if (s->object.IsValid())
+                    MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
@@ -187,7 +189,8 @@ void IO_freeobject(MCObject *o)
 	while (i < MCnsockets)
 #if 1
 	{
-		if (MCsockets[i]->object == o)
+		if (!MCsockets[i]->object.IsValid() ||
+            MCsockets[i]->object == o)
 			MCsockets[i]->doclose();
 		i++;
 	}
