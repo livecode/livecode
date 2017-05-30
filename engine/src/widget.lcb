@@ -646,7 +646,7 @@ public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton 
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
 --public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
+--public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
 /**
 Summary:		Determines the location of the mouse pointer relative to the widget.
@@ -1033,8 +1033,8 @@ public foreign handler MCWidgetExecPlaceWidget(in pChild as Widget) returns noth
 public foreign handler MCWidgetExecPlaceWidgetAt(in pChild as Widget, in pAtBottom as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecPlaceWidgetRelative(in pChild as Widget, in pIsBelow as CBool, in pOtherChild as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecUnplaceWidget(in pChild as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSnapshotWidget(in pChild as Widget) returns Image binds to "<builtin>"
-public foreign handler MCWidgetSnapshotWidgetAtSizeAsList(in pChild as Widget, in pSize as List) returns Image binds to "<builtin>"
+--public foreign handler MCWidgetSnapshotWidget(in pChild as Widget) returns Image binds to "<builtin>"
+--public foreign handler MCWidgetSnapshotWidgetAtSizeAsList(in pChild as Widget, in pSize as List) returns Image binds to "<builtin>"
 
 public foreign handler MCWidgetGetPropertyOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetPropertyOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
@@ -1045,13 +1045,17 @@ public foreign handler MCWidgetSetWidthOfWidget(in pWidth as CanvasFloat, in pWi
 public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetHeightOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetLocationOfWidget(in pWidget as Widget, out rHeight as Point) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSetLocationOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetLocationOfWidget(in pLocation as Point, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetEnabledOfWidget(in pWidget as Widget, out rEnabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetEnabledOfWidget(in pEnabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetDisabledOfWidget(in pWidget as Widget, out rDisabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetDisabledOfWidget(in pDisabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
+
+/*
+No implementation
 public foreign handler MCWidgetGetFontOfWidget(in pWidget as Widget, out rFont as optional Font) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetFontOfWidget(in pFont as optional Font, in pWidget as Widget) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCWidgetGetAnnotationOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetAnnotationOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
@@ -1526,12 +1530,14 @@ Return a font which reflects the current (effective) settings of
 
 References: MyFont (expression)
 */
+/* No implementation
 syntax WidgetFontProperty is prefix operator with property precedence
 	"the" "font" "of" <Widget: Expression>
 begin
 	MCWidgetGetFontOfWidget(Widget, output)
 	MCWidgetSetFontOfWidget(input, Widget)
 end syntax
+*/
 
 //
 
