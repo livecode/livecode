@@ -385,6 +385,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 			t_paint.setColor(MCGColorToSkColor(self->state->fill_color));
 			t_paint.setBlendMode(MCGBlendModeToSkBlendMode(self->state->blend_mode));
 
+			// disable LCD rendering when backing layer may be transparent
+			if (!MCGContextIsLayerOpaque(self))
+				t_paint.setLCDRenderText(false);
+
 			// Force anti-aliasing on so that we get nicely-rendered text
 			t_paint.setAntiAlias(true);
 
