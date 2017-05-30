@@ -893,7 +893,9 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 			return false;
 		}
 		
-		p_handler->is_bound = t_bound;
+        // If t_bound_ptr == nullptr, then if we get here we will be bound.
+        // Otherwise, whether we are bound or not depends on t_bound.
+		p_handler->is_bound = t_bound_ptr != nullptr ? t_bound : true;
 	}
 	
 	// If we are 'try to bind' and the foreign binding failed, then
