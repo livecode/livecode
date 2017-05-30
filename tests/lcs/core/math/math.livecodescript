@@ -956,7 +956,7 @@ end _RandomMaxLimitTestNoThrow
 on TestRandomGenLimits
 
 	TestAssertThrow "checks if bad input to random throws exception" , "_RandomMaxLimitTestThrows" , \
-		the long id of me , 469
+		the long id of me , "EE_RANDOM_BADSOURCE"
 
 	TestAssertDoesNotThrow "checks if correct input to random doesn't throw exception" \ 
 		, "_RandomMaxLimitTestNoThrow" , the long id of me
