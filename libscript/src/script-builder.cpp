@@ -1910,6 +1910,10 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             /* Foundation Types */
             { "undefined", kMCScriptForeignPrimitiveTypePointer },
             { "any", kMCScriptForeignPrimitiveTypePointer },
+            { "bool", kMCScriptForeignPrimitiveTypeCBool },
+            { "double", kMCScriptForeignPrimitiveTypeCDouble },
+            { "sint", kMCScriptForeignPrimitiveTypeSInt },
+            { "uint", kMCScriptForeignPrimitiveTypeUInt },
             
             { "Boolean", kMCScriptForeignPrimitiveTypePointer },
             { "Number", kMCScriptForeignPrimitiveTypePointer },

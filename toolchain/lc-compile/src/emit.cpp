@@ -368,7 +368,9 @@ static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name, uindex_t p_type_inde
         t_builtin->parameter_count = MCScriptQueryForeignHandlerParameterCountInModule(s_builder, p_type_index);
         t_builtin->parameter_types = new MCScriptForeignPrimitiveType[t_builtin->parameter_count];
         for(uindex_t i = 0; i < t_builtin->parameter_count; i++)
+        {
             t_builtin->parameter_types[i] = MCScriptQueryForeignHandlerParameterTypeInModule(s_builder, p_type_index, i);
+        }
     }
     else
     {
@@ -1065,12 +1067,12 @@ void EmitVariableDefinition(intptr_t p_index, PositionRef p_position, NameRef p_
                cstring_from_nameref(p_name), p_type_index);
 }
 
-void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index, intptr_t p_binding)
+static void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index, intptr_t p_binding, bool p_force_builtin)
 {
     MCAutoStringRef t_binding_str;
-    if (strcmp((const char *)p_binding, "<builtin>") == 0)
+    if (strcmp((const char *)p_binding, "<builtin>") == 0 || p_force_builtin)
     {
-        t_binding_str = EmittedBuiltinAdd(p_name, p_type_index);
+        t_binding_str = EmittedBuiltinAdd(p_force_builtin ? nameref_from_cstring((const char *)p_binding) : p_name, p_type_index);
     }
     else
         t_binding_str = to_mcstringref(p_binding);
@@ -1107,6 +1109,11 @@ void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, Name
     Debug_Emit("ForeignHandlerDefinition(%ld, %s, %ld, %s)", p_index,
                cstring_from_nameref(p_name), p_type_index,
                (const char *) p_binding);
+}
+
+void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index, intptr_t p_binding)
+{
+    EmitForeignHandlerDefinition(p_index, p_position, p_name, p_type_index, p_binding, false);
 }
 
 void EmitPropertyDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_getter, intptr_t p_setter)
@@ -2415,13 +2422,13 @@ static void BuildBuiltinModule_ForeignType(const char *p_name, const char *p_for
 static void BuildBuiltinModule_ForeignHandler1(intptr_t p_return_type, MCHandlerTypeFieldMode p_arg_mode_0, const char *p_arg_name_0, intptr_t p_arg_type_0, const char *p_name, const char *p_foreign_name)
 {
     intptr_t t_handler_type_index = -1;
-    EmitBeginHandlerType(p_return_type);
+    EmitBeginForeignHandlerType(p_return_type);
     EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
     EmitEndHandlerType(t_handler_type_index);
     
     intptr_t t_handler_def = -1;
     EmitDefinitionIndex("foreignhandler", t_handler_def);
-    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name, true);
     EmitExportedDefinition(t_handler_def);
 }
 
@@ -2431,14 +2438,14 @@ static void BuildBuiltinModule_ForeignHandler2(intptr_t p_return_type,
                                                const char *p_name, const char *p_foreign_name)
 {
     intptr_t t_handler_type_index = -1;
-    EmitBeginHandlerType(p_return_type);
+    EmitBeginForeignHandlerType(p_return_type);
     EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
     EmitHandlerTypeParameter(p_arg_mode_1, nameref_from_cstring(p_arg_name_1), p_arg_type_1);
     EmitEndHandlerType(t_handler_type_index);
     
     intptr_t t_handler_def = -1;
     EmitDefinitionIndex("foreignhandler", t_handler_def);
-    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name, true);
     EmitExportedDefinition(t_handler_def);
 }
 
