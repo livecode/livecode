@@ -31,8 +31,10 @@ public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count 
 
 public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
 
+/* No implementation
 public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
