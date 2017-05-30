@@ -20,4 +20,20 @@ public handler TestExtensionBridgeNames_Send()
 	return the result is a string
 end handler
 
+public handler TestExtensionLog_String()
+	log "log"
+end handler
+
+public handler TestExtensionLog_Integer()
+	log 1
+end handler
+
+public handler TestExtensionLog_List()
+	log [1,2,3]
+end handler
+
+public handler TestExtensionLog_Array()
+	log {"a": 1}
+end handler
+
 end library
