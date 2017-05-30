@@ -916,14 +916,25 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     
     // Construct the new path from the path after MacOS/ inside Resources/_macos.
     MCAutoStringRef t_new_path;
-    MCRange t_cmd_range, t_path_range;
-    t_cmd_range = MCRangeMake(0, t_engine_path_length - 6);
-    t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
-    
-    // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
-    
-    if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
+	MCRange t_cmd_range = MCRangeMake(0, t_engine_path_length - 6);
+	uindex_t t_path_end = MCStringGetLength(p_path);
+	bool t_success = true;
+	
+	if (MCStringGetCodepointAtIndex(p_path, t_path_end) == '/')
+		t_path_end--;
+	
+	if (t_engine_path_length == t_path_end)
+	{
+		t_success = MCStringFormat(&t_new_path, "%*@/Resources/_MacOS", &t_cmd_range, MCcmd);
+	}
+	else
+	{
+	    MCRange t_path_range = MCRangeMakeMinMax(t_engine_path_length + 1, t_path_end);
+		// AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+		t_success = MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
+	}
+	
+    if (!t_success || (p_is_file && !MCS_file_exists_at_path(*t_new_path)))
         return false;
 
     r_redirected = MCValueRetain(*t_new_path);
