@@ -647,6 +647,19 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 										ffi_abi& r_abi,
 										bool* r_bound)
 {
+    integer_t t_ordinal = 0;
+    if (p_instance->module->builtins != nullptr &&
+        MCTypeConvertStringToLongInteger(p_handler->binding, t_ordinal))
+    {
+        p_handler->native.function = p_instance->module->builtins[t_ordinal];
+        r_abi = FFI_DEFAULT_ABI;
+        if (r_bound != nullptr)
+        {
+            *r_bound = true;
+        }
+        return true;
+    }
+
 	MCStringRef t_rest;
 	t_rest = MCValueRetain(p_handler -> binding);
 	

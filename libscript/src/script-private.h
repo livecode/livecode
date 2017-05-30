@@ -449,6 +449,9 @@ struct MCScriptModule: public MCScriptObject
     // These are the native code initializer/finalizer (if any) -- not pickled
     bool (*initializer)(void);
     void (*finalizer)(void);
+    
+    // This is the ordinal mapping array (if any) -- not pickled
+    void **builtins;
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);

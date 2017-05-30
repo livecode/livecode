@@ -500,12 +500,14 @@ MCScriptCreateModulesFromData(MCDataRef p_data,
 }
 
 void
-MCScriptSetModuleLifecycleFunctions(MCScriptModuleRef p_module,
-                                    bool (*p_initializer)(void),
-                                    void (*p_finalizer)(void))
+MCScriptConfigureBuiltinModule(MCScriptModuleRef p_module,
+                               bool (*p_initializer)(void),
+                               void (*p_finalizer)(void),
+                               void **p_builtins)
 {
     p_module->initializer = p_initializer;
     p_module->finalizer = p_finalizer;
+    p_module->builtins = p_builtins;
 }
 
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
@@ -734,8 +736,17 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
                 void *t_symbol = nullptr;
-                t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
-                                                  t_type->binding);
+                integer_t t_ordinal = 0;
+                if (self->builtins != nullptr &&
+                    MCTypeConvertStringToLongInteger(t_type->binding, t_ordinal))
+                {
+                    t_symbol = self->builtins[t_ordinal];
+                }
+                else
+                {
+                    t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
+                                                      t_type->binding);
+                }
                 
                 if (t_symbol == nullptr)
                 {
