@@ -241,3 +241,32 @@ on TestExtensionLogString
 	wait for 0 with messages
 	TestAssert "extension log string", sLastLog is quote & "log" & quote
 end TestExtensionLogString
+
+on TestExtensionLogScriptObject
+  // resolve script object "button 1"
+  // log the result
+  create button
+  get TestExtensionLog_ScriptObject()
+  wait for 0 with messages
+  TestDiagnostic sLastLog
+  TestAssert "extension log unnamed scriptobject", \
+              sLastLog is format("<script object button id %d of card id %d of stack %s>", \
+                                  the id of button 1, \
+                                  the id of this card, \
+                                  quote & the short name of this stack & quote)
+
+  set the name of button 1 to "foo"
+  get TestExtensionLog_ScriptObject()
+  wait for 0 with messages
+  TestDiagnostic sLastLog
+  TestAssert "extension log named scriptobject", \
+              sLastLog is format("<script object button %s of card id %d of stack %s>", \
+                                  quote & the short name of button 1 & quote, \
+                                  the id of this card, \
+                                  quote & the short name of this stack & quote)
+
+  get TestExtensionLog_DeletedScriptObject()
+  wait for 0 with messages
+  TestDiagnostic sLastLog
+  TestAssert "extension log deleted scriptobject", sLastLog is "<deleted script object>"
+end TestExtensionLogScriptObject
