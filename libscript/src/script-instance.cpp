@@ -652,6 +652,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
         MCTypeConvertStringToLongInteger(p_handler->binding, t_ordinal))
     {
         p_handler->native.function = p_instance->module->builtins[t_ordinal];
+        p_handler->is_builtin = true;
         r_abi = FFI_DEFAULT_ABI;
         if (r_bound != nullptr)
         {
@@ -782,6 +783,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		}
 		
 		p_handler -> native . function = t_pointer;
+        p_handler->is_builtin = false;
 	}
 	else if (MCStringIsEqualToCString(*t_language,
 									  "cpp",
@@ -809,6 +811,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
 		p_handler -> is_java = true;
+        p_handler->is_builtin = false;
 	
         p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
                                                                   *t_function,

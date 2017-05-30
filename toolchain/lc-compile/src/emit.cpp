@@ -332,12 +332,16 @@ struct EmittedBuiltin
     NameRef name;
     uindex_t ordinal;
     MCStringRef ordinal_stringref;
+    
+    MCScriptForeignPrimitiveType return_type;
+    uindex_t parameter_count;
+    MCScriptForeignPrimitiveType *parameter_types;
 };
 
 static EmittedBuiltin *s_emitted_builtins = nullptr;
 static uindex_t s_emitted_builtin_count = 0;
 
-static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name)
+static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name, uindex_t p_type_index)
 {
     if (!OutputFileAsC)
     {
@@ -353,10 +357,25 @@ static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name)
     }
     
     EmittedBuiltin *t_builtin;
-    t_builtin = (EmittedBuiltin *)Allocate(sizeof(EmittedModule));
+    t_builtin = (EmittedBuiltin *)Allocate(sizeof(EmittedBuiltin));
     t_builtin -> next = s_emitted_builtins;
     t_builtin -> name = p_symbol_name;
     t_builtin -> ordinal = s_emitted_builtin_count;
+    
+    if (p_type_index != UINDEX_MAX)
+    {
+        t_builtin->return_type = MCScriptQueryForeignHandlerReturnTypeInModule(s_builder, p_type_index);
+        t_builtin->parameter_count = MCScriptQueryForeignHandlerParameterCountInModule(s_builder, p_type_index);
+        t_builtin->parameter_types = new MCScriptForeignPrimitiveType[t_builtin->parameter_count];
+        for(uindex_t i = 0; i < t_builtin->parameter_count; i++)
+            t_builtin->parameter_types[i] = MCScriptQueryForeignHandlerParameterTypeInModule(s_builder, p_type_index, i);
+    }
+    else
+    {
+        t_builtin->return_type = kMCScriptForeignPrimitiveTypePointer;
+        t_builtin->parameter_count = 0;
+        t_builtin->parameter_types = nullptr;
+    }
     
     char t_ordinal_str[32];
     sprintf(t_ordinal_str, "%u", t_builtin->ordinal);
@@ -367,6 +386,65 @@ static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name)
     
     return t_builtin->ordinal_stringref;
 };
+
+#define DEFINE_PRIMITIVE_TYPE_MAPPING(PType, CType) \
+    { kMCScriptForeignPrimitiveType##PType, #CType },
+
+static struct { MCScriptForeignPrimitiveType type; const char *ctype; } s_primitive_type_map[] =
+{
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Unknown, void)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Void, void)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Pointer, void*)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt8, int8_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt8, uint8_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt16, int16_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt16, uint16_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt32, int32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt32, uint32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt64, int64_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt64, uint64_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntSize, intsize_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntSize, uintsize_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntPtr, intptr_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntPtr, uintptr_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Float32, float)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Float64, double)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CBool, bool)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CChar, char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSChar, signed char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUChar, unsigned char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSShort, signed short)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUShort, unsigned short)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSInt, signed int)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUInt, unsigned int)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSLong, signed long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CULong, unsigned long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSLongLong, signed long long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CULongLong, unsigned long long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CFloat, float)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CDouble, double)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt, int32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt, uint32_t)
+};
+
+#undef DEFINE_PRIMITIVE_TYPE_MAPPING
+
+static const char *CTypeFromPrimitiveType(MCScriptForeignPrimitiveType p_type)
+{
+    if (p_type == kMCScriptForeignPrimitiveTypeUnknown)
+    {
+        Fatal_InternalInconsistency("type bound in foreign handler unknown");
+        return nullptr;
+    }
+
+    if (s_primitive_type_map[p_type].type != p_type)
+    {
+        Fatal_InternalInconsistency("s_primitive_type_map out of order");
+        return nullptr;
+    }
+    
+    return s_primitive_type_map[p_type].ctype;
+}
 
 static bool EmitEmittedBuiltins(void)
 {
@@ -400,21 +478,80 @@ static bool EmitEmittedBuiltins(void)
     
     for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
     {
+        /* Generate extern for original function */
         if (0 > fprintf(t_file,
-                        "extern \"C\" void %s(void);\n", cstring_from_nameref(t_builtins[i]->name)))
+                        "extern \"C\" %s %s(",
+                        CTypeFromPrimitiveType(t_builtins[i]->return_type),
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        for(uindex_t t_arg_index = 0; t_arg_index < t_builtins[i]->parameter_count; t_arg_index++)
+        {
+            if (0 > fprintf(t_file,
+                            "%s%s",
+                            t_arg_index > 0 ? ", " : "",
+                            CTypeFromPrimitiveType(t_builtins[i]->parameter_types[t_arg_index])))
+            {
+                return false;
+            }
+        }
+        if (0 > fprintf(t_file,
+                        ");\n"))
+        {
+            return false;
+        }
+        
+        /* Generate shim around original function */
+        if (0 > fprintf(t_file,
+                        "static void shim__%s(void *rv, void **av)\n{\n",
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        
+        if (t_builtins[i]->return_type != kMCScriptForeignPrimitiveTypeVoid)
+        {
+            if (0 > fprintf(t_file,
+                            "\t*(%s *)rv =",
+                            CTypeFromPrimitiveType(t_builtins[i]->return_type)))
+            {
+                return false;
+            }
+        }
+            
+        if (0 > fprintf(t_file,
+                        "%s(",
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        for(uindex_t t_arg_index = 0; t_arg_index < t_builtins[i]->parameter_count; t_arg_index++)
+        {
+            if (0 > fprintf(t_file,
+                            "%s*(%s *)av[%d]",
+                            t_arg_index > 0 ? ", " : "",
+                            CTypeFromPrimitiveType(t_builtins[i]->parameter_types[t_arg_index]),
+                            t_arg_index))
+            {
+                return false;
+            }
+        }
+        if (0 > fprintf(t_file,
+                        ");\n}\n\n"))
         {
             return false;
         }
     }
     
     // Emit builtin ordinal mapping array
-    if (0 > fprintf(t_file, "\nstatic void *__builtin_ordinal_map[] =\n{\n"))
+    if (0 > fprintf(t_file, "static __builtin_shim_type __builtin_ordinal_map[] =\n{\n"))
     {
         return false;
     }
     for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
     {
-        if (0 > fprintf(t_file, "    (void *)%s,\n", cstring_from_nameref(t_builtins[i]->name)))
+        if (0 > fprintf(t_file, "\tshim__%s,\n", cstring_from_nameref(t_builtins[i]->name)))
         {
             return false;
         }
@@ -430,6 +567,8 @@ static bool EmitEmittedBuiltins(void)
 //////////
 
 static const char *kOutputCDefinitions =
+    "#include <stdint.h>\n"
+    "typedef void (*__builtin_shim_type)(void*, void**);\n"
     "struct __builtin_module_info\n"
     "{\n"
     "    void *next;\n"
@@ -438,7 +577,7 @@ static const char *kOutputCDefinitions =
     "    unsigned long length;\n"
     "    bool (*initializer)();\n"
     "    void (*finalizer)();\n"
-    "    void **builtins;\n"
+    "    __builtin_shim_type *builtins;\n"
     "};\n"
     "extern \"C\" void MCScriptRegisterBuiltinModule(__builtin_module_info *desc);\n"
     "class __builtin_module_loader\n"
@@ -464,7 +603,8 @@ void EmitStart(void)
         if (fprintf(s_output_code_file, "%s", kOutputCDefinitions) < 0)
             goto error_cleanup;
         
-        if (!OutputFileAsAuxC)
+        if (OutputFileAsC &&
+            !OutputFileAsAuxC)
             BuildBuiltinModule();
     }
     
@@ -930,7 +1070,7 @@ void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, Name
     MCAutoStringRef t_binding_str;
     if (strcmp((const char *)p_binding, "<builtin>") == 0)
     {
-        t_binding_str = EmittedBuiltinAdd(p_name);
+        t_binding_str = EmittedBuiltinAdd(p_name, p_type_index);
     }
     else
         t_binding_str = to_mcstringref(p_binding);
@@ -1228,7 +1368,7 @@ void EmitForeignType(intptr_t p_binding, intptr_t& r_type_index)
 {
     uindex_t t_type_index;
     MCStringRef t_binding_str = 
-            EmittedBuiltinAdd(nameref_from_mcstringref(to_mcstringref(p_binding)));
+            EmittedBuiltinAdd(nameref_from_mcstringref(to_mcstringref(p_binding)), UINDEX_MAX);
     
     MCScriptAddForeignTypeToModule(s_builder, t_binding_str, t_type_index);
     r_type_index = t_type_index;
