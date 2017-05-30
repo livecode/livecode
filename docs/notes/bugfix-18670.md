@@ -1,0 +1,1 @@
+# Fixed bug preventing all table names being retrieved in MySQL db's
