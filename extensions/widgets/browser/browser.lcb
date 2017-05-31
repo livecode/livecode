@@ -425,9 +425,8 @@ private unsafe handler InitBrowserView()
 
 	variable tBrowserView as Pointer
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
-
-	// set my native layer to tBrowserView
-	MCWidgetSetMyNativeLayer(tBrowserView)
+	set my native layer to tBrowserView
+	
 	// tell native layer that we can't render a snapshot of the browser view.
 	MCWidgetSetMyNativeLayerCanRenderToContext(false)
 
@@ -438,8 +437,7 @@ private unsafe handler InitBrowserView()
 end handler
 
 private unsafe handler FinalizeBrowserView()
-	//set my native layer to nothing
-	MCWidgetSetMyNativeLayer(nothing)
+	set my native layer to nothing
 
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
