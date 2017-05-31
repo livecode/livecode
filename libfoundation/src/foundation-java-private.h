@@ -58,6 +58,7 @@ bool MCJavaPrivateConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRe
 bool MCJavaPrivateConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);
 bool MCJavaPrivateConvertDataRefToJByteArray(MCDataRef p_string, MCJavaObjectRef &r_object);
 bool MCJavaPrivateConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_string);
+
 void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type);
 void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object);
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type);

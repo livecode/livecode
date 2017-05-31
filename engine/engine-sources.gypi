@@ -444,6 +444,7 @@
 			'src/mblandroidinput.cpp',
 			'src/mblandroidio.cpp',
 			'src/mblandroidjava.cpp',
+			'src/mblandroidlcb.cpp',
 			'src/mblandroidmail.cpp',
 			'src/mblandroidmediapick.cpp',
 			'src/mblandroidmisc.cpp',
