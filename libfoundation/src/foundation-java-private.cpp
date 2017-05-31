@@ -1497,6 +1497,61 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
     
     s_env -> DeleteGlobalRef(t_obj);
 }
+
+void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
+{
+    MCAutoStringRef t_method_name;
+    if (!__MCJavaStringFromJString(p_method_name, &t_method_name))
+        return;
+ 
+    MCValueRef t_handler = nullptr;
+    MCValueRef t_handlers = reinterpret_cast<MCValueRef>(p_handler);
+    if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeArray)
+    {
+        // Array of handlers for interface proxy
+        MCNewAutoNameRef t_key;
+        if (!MCNameCreate(*t_method_name, &t_key) ||
+            !MCArrayFetchValue(static_cast<MCArrayRef>(t_handlers),
+                              false, *t_key, t_handler) ||
+            MCValueGetTypeCode(t_handler) != kMCValueTypeCodeHandler)
+        {
+            t_handler = nullptr;
+        }
+    }
+    else
+    {
+        MCAssert(MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeHandler);
+        // Single handler for listener interface
+        t_handler = t_handlers;
+    }
+    
+    if (t_handler == nullptr)
+    {
+        MCErrorThrowGenericWithMessage(MCSTR("callback handler not found for listener method %{method}"),
+                                       "method", *t_method_name, nullptr);
+        return;
+    }
+
+    // We have an LCB handler, so just invoke with the args.
+    MCValueRef t_result;
+    MCAutoProperListRef t_list;
+    if (!__MCJavaProperListFromJObjectArray(p_args, &t_list))
+        return;
+    
+    MCProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(*t_list, t_mutable_list))
+        return;
+    
+    MCErrorRef t_error =
+        MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
+                                     t_mutable_list, t_result);
+    
+    MCValueRelease(t_result);
+    MCValueRelease(t_mutable_list);
+    
+    if (t_error != nil)
+        MCErrorThrow(t_error);
+}
 #else
 
 bool initialise_jvm()
