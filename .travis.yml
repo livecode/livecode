@@ -37,7 +37,7 @@ env:
    - CXX_STD: "c++11"
 
 jdk:
-  - openjdk6
+  - openjdk8
 
 # Build using clang on mac and gcc on linux
 matrix:
