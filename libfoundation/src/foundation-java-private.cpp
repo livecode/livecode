@@ -423,6 +423,39 @@ static bool __MCJavaDataToJByteArray(MCDataRef p_data, jbyteArray& r_byte_array)
     return true;
 }
 
+static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCProperListRef& r_list)
+{
+    MCJavaDoAttachCurrentThread();
+    
+    if (p_obj_array == nullptr)
+    {
+        r_list = MCValueRetain(kMCEmptyProperList);
+        return true;
+    }
+    
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    uint32_t t_size = s_env -> GetArrayLength(p_obj_array);
+    
+    for (uint32_t i = 0; i < t_size; i++)
+    {
+        MCAutoValueRef t_value;
+        
+        jobject t_object = s_env -> GetObjectArrayElement(p_obj_array, i);
+        
+        MCAutoJavaObjectRef t_obj;
+        if (!MCJavaObjectCreate(t_object, &t_obj))
+            return false;
+
+        if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
+            return false;
+    }
+    
+    return MCProperListCopy(*t_list, r_list);
+}
+
 bool MCJavaObjectCreateGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
 {
     MCAssert(p_object != nullptr);
