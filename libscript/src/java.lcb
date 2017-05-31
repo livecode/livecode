@@ -52,7 +52,8 @@ foreign handler MCJavaDataFromJByteArray(in pByteArray as JObject, out rData as 
 foreign handler MCJavaDataToJByteArray(in pData as Data, out rByteArray as JObject) returns nothing binds to "<builtin>"
 
 foreign handler MCJavaGetClassName(in pObject as JObject, out rName as String) returns nothing binds to "<builtin>"
-
+foreign handler MCJavaUnwrapJObject(in pObject as JObject, out rPointer as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCJavaWrapJObject(in pPointer as Pointer, out rObj as JObject) returns nothing binds to "<builtin>"
 
 /**
 Summary:    Get Java class name of a Java object
@@ -174,6 +175,73 @@ public handler DataFromJByteArray(in pBytes as JByteArray) returns Data
 		MCJavaDataFromJByteArray(pBytes, tData)
     end unsafe
 	return tData
+end handler
+
+/**
+Summary:    Convert a JObject into a Pointer
+
+Parameters:
+pObj: The JObject to convert
+
+Returns:
+The jobject Pointer wrapped by the JObject type
+
+Example:
+	handler SetNativeLayerToView(in pView as JObject)
+		variable tViewPtr as Pointer
+		put PointerFromJObject(pView) into tViewPtr
+		set my native layer to tViewPtr
+	end handler
+	 
+Description:
+Use <PointerFromJObject> to convert a variable of type JObject to one of
+type Pointer, i.e. to extract the underlying jobject pointer from a JObject
+*/
+
+public handler PointerFromJObject(in pObj as JObject) returns Pointer
+	variable tPointer as Pointer
+    unsafe
+		MCJavaUnwrapJObject(pObj, tPointer)
+    end unsafe
+	return tPointer
+end handler
+
+/**
+Summary:    Convert a Pointer into a JObject
+
+Parameters:
+pPointer: The Pointer to convert
+
+Returns:
+A JObject wrapping the jobject Pointer
+
+Example:
+	foreign handler _JNI_SetTextViewText(in pView as JObject, in pValue as JString) returns nothing binds to "java:android.widget.TextView>setText(Ljava/lang/CharSequence;)V"
+	
+	-- set the text of a view
+	unsafe handler ViewSetText(in pString as String)
+		variable tViewPtr as Pointer
+		put my native layer into tPointer
+		
+		variable tView as JObject
+		put PointerToJObject into tView
+		_JNI_SetTextViewText(tView, StringToJString(pString))
+	end handler
+	 
+Description:
+Use <PointerToJObject> to convert a variable of type Pointer to one of 
+type JObject. 
+
+> *Important:* Your application will likely crash if the underlying type
+> of the Pointer is not actually jobject.
+*/
+
+public handler PointerToJObject(in pPointer as Pointer) returns JObject
+	variable tObj as JObject
+    unsafe
+		MCJavaWrapJObject(pPointer, tObj)
+    end unsafe
+	return tObj
 end handler
 
 end module

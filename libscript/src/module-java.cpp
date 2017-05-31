@@ -43,6 +43,7 @@ MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJStringToStringErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotGetObjectClassNameErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotCreateJObjectErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -91,6 +92,17 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaGetClassName(MCJavaObjectRef p_obj, MCStr
         MCJavaErrorThrow(kMCJavaCouldNotGetObjectClassNameErrorTypeInfo);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCJavaUnwrapJObject(MCJavaObjectRef p_obj, void*&r_pointer)
+{
+    r_pointer = MCJavaObjectGetObject(p_obj);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCJavaWrapJObject(void *p_pointer, MCJavaObjectRef& r_obj)
+{
+    if (!MCJavaObjectCreate(p_pointer, r_obj))
+        MCJavaErrorThrow(kMCJavaCouldNotCreateJObjectErrorTypeInfo);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCJavaErrorsInitialize()
@@ -109,6 +121,9 @@ bool MCJavaErrorsInitialize()
         
     if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.FetchJavaClassNameError"), MCNAME("java"), MCSTR("Could not get Java object class name"), kMCJavaCouldNotGetObjectClassNameErrorTypeInfo))
         return false;
+
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.CreateJObjectError"), MCNAME("java"), MCSTR("Could not create JObject from Pointer"), kMCJavaCouldNotCreateJObjectErrorTypeInfo))
+        return false;
     
     return true;
 }
@@ -120,6 +135,7 @@ void MCJavaErrorsFinalize()
     MCValueRelease(kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotGetObjectClassNameErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotCreateJObjectErrorTypeInfo);
 }
 
 extern "C" bool com_livecode_java_Initialize(void)
