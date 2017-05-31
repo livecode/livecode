@@ -900,6 +900,7 @@
 			'src/java/com/runrev/android/Engine.java',
 			'src/java/com/runrev/android/EngineApi.java',
 			'src/java/com/runrev/android/EngineReceiver.java',
+			'src/java/com/runrev/android/LCBInvocationHandler.java',
 			'src/java/com/runrev/android/LiveCodeActivity.java',
 			'src/java/com/runrev/android/NetworkModule.java',
 			'src/java/com/runrev/android/NFCModule.java',
