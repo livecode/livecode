@@ -610,6 +610,9 @@ static MCJavaCallType __MCScriptGetJavaCallType(MCStringRef p_class, MCStringRef
     if (MCStringIsEqualToCString(p_function, "new", kMCStringOptionCompareExact))
         return MCJavaCallTypeConstructor;
     
+    if (MCStringIsEqualToCString(p_function, "interface", kMCStringOptionCompareExact))
+        return MCJavaCallTypeInterfaceProxy;
+    
     bool t_is_static =
         MCStringIsEqualToCString(p_calling, "static", kMCStringOptionCompareCaseless);
     

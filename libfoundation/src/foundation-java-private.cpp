@@ -128,6 +128,7 @@ static bool __MCJavaCallNeedsClassInstance(MCJavaCallType p_type)
     {
         case MCJavaCallTypeStatic:
         case MCJavaCallTypeConstructor:
+        case MCJavaCallTypeInterfaceProxy:
         case MCJavaCallTypeStaticGetter:
         case MCJavaCallTypeStaticSetter:
             return false;
@@ -150,10 +151,14 @@ static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
 
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
+    MCJavaCallType t_call_type = static_cast<MCJavaCallType>(p_call_type);
+    if (t_call_type == MCJavaCallTypeInterfaceProxy)
+        return true;
+    
     uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
     
     uindex_t t_first_param = 0;
-    if (__MCJavaCallNeedsClassInstance(static_cast<MCJavaCallType>(p_call_type)))
+    if (__MCJavaCallNeedsClassInstance(t_call_type))
     {
         t_first_param = 1;
     }
@@ -183,6 +188,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
     switch (p_call_type)
     {
         case MCJavaCallTypeConstructor:
+        case MCJavaCallTypeInterfaceProxy:
             return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeObject);
         case MCJavaCallTypeSetter:
         case MCJavaCallTypeStaticSetter:
@@ -1198,6 +1204,46 @@ static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
     return s_env->FindClass(*t_class_cstring);
 }
 
+bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signature, void *p_method_id, void *r_result, void **p_args, uindex_t p_arg_count)
+{
+    if (MCHandlerTypeInfoGetParameterCount(p_signature) != 1)
+        return false;
+    
+    MCValueRef t_handlers = *(static_cast<MCValueRef *>(p_args[0]));
+    if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeArray)
+    {
+        // Array of handlers for interface proxy
+    }
+    else if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeHandler)
+    {
+        // Single handler for listener interface
+    }
+    else
+    {
+        return false;
+    }
+    
+    jclass t_inv_handler_class =
+        MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
+
+    jmethodID t_method = static_cast<jmethodID>(p_method_id);
+    
+    jclass t_interface = MCJavaPrivateFindClass(p_class_name);
+    
+    jlong t_handler = reinterpret_cast<jlong>(MCValueRetain(t_handlers));
+    
+    jobject t_proxy = s_env->CallStaticObjectMethod(t_inv_handler_class,
+                                                    t_method,
+                                                    t_interface,
+                                                    t_handler);
+    
+    MCJavaObjectRef t_result_value;
+    if (!MCJavaObjectCreateNullableGlobalRef(t_proxy, t_result_value))
+        return false;
+    *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
+    return true;
+}
+
 bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
     if (p_method_id == nullptr)
@@ -1210,11 +1256,20 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         return false;
     
     jvalue *t_params = nullptr;
-    if (!__JavaJNIGetParams(p_args, p_signature, t_params))
+    if (p_call_type != MCJavaCallTypeInterfaceProxy &&
+        !__JavaJNIGetParams(p_args, p_signature, t_params))
         return false;
     
     switch (p_call_type)
     {
+        case MCJavaCallTypeInterfaceProxy:
+            MCAssert(t_return_type == kMCJavaTypeObject);
+            if (!MCJavaCreateInterfaceProxy(p_class_name, p_signature,
+                                            p_method_id, r_return,
+                                            p_args, p_arg_count))
+                return false;
+            break;
+            
         // JavaJNI...Result functions only return false due to memory
         // allocation failures. If they succeed, fall through the switch
         // statement and check the JNIEnv for exceptions.
@@ -1467,6 +1522,16 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
                     return nullptr;
     
                 t_id = s_env->GetMethodID(t_java_class, "<init>", *t_signature_cstring);
+                break;
+            }
+            case MCJavaCallTypeInterfaceProxy:
+            {
+                jclass t_inv_handler_class =
+                    MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
+                
+                t_id = s_env->GetStaticMethodID(t_inv_handler_class,
+                                                "getProxy",
+                                                "(Ljava/lang/Class;J)Ljava/lang/Object;");
                 break;
             }
             case MCJavaCallTypeGetter:

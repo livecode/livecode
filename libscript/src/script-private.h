@@ -329,6 +329,7 @@ enum MCJavaCallType {
     MCJavaCallTypeStatic,
     MCJavaCallTypeNonVirtual,
     MCJavaCallTypeConstructor,
+    MCJavaCallTypeInterfaceProxy,
     MCJavaCallTypeGetter,
     MCJavaCallTypeSetter,
     MCJavaCallTypeStaticGetter,
