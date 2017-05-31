@@ -93,12 +93,12 @@ static jmethodID s_openglview_configure_method = 0;
 
 // The Java VM that we are bound to. This is set in the JNI_OnLoad startup
 // function.
-static JavaVM *s_java_vm = nil;
+static JavaVM *s_java_vm = nullptr;
 // The JNIEnv for the android UI thread.
 static JNIEnv *s_android_ui_env;
 // The JNI environment pointer *for our auxiliary thread*. This only has lifetime
 // as long as 'mobile_main' is running.
-static JNIEnv *s_java_env = nil;
+static JNIEnv *s_java_env = nullptr;
 
 // Wakeup vars - used to determine whether to post a wakeup message on yield
 // to android.
@@ -107,11 +107,11 @@ static uint32_t s_schedule_wakeup_timeout = 0;
 static bool s_schedule_wakeup_breakable = false;
 static bool s_schedule_wakeup_was_broken = false;
 
-static co_yield_callback_t s_yield_callback = nil;
-static void *s_yield_callback_context = nil;
+static co_yield_callback_t s_yield_callback = nullptr;
+static void *s_yield_callback_context = nullptr;
 
 // The bitmap containing the current visible state of the view
-static jobject s_android_bitmap = nil;
+static jobject s_android_bitmap = nullptr;
 static int s_android_bitmap_loc_x = 0;
 static int s_android_bitmap_loc_y = 0;
 static int s_android_bitmap_width = 0;
@@ -126,13 +126,14 @@ static MCRectangle s_android_bitmap_dirty;
 // If non-nil, then we are in opengl mode.
 static bool s_android_opengl_enabled = false;
 static bool s_android_opengl_visible = false;
-static jobject s_android_opengl_view = nil;
+static jobject s_android_opengl_view = nullptr;
 
 // This is the JNI reference to our display/view instance.
-static jobject s_android_activity = nil;
-static jobject s_android_container = nil;
-static jobject s_android_view = nil;
-static jobject s_android_view_class = nil;
+static jobject s_android_activity = nullptr;
+static jobject s_android_container = nullptr;
+static jobject s_android_view = nullptr;
+static jobject s_android_view_class = nullptr;
+static jobject s_android_class_loader = nullptr;
 
 // If this is false, then it means the engine broke somehow.
 static bool s_engine_running = false;
@@ -143,8 +144,8 @@ int32_t g_android_keyboard_type = 1;
 
 // IM-2014-01-31: [[ HiDPI ]] Refactor view_platform_updatewindowwithcallback to use
 //   view_platform_updatewindow method
-static MCStackUpdateCallback s_updatewindow_callback = nil;
-static void *s_updatewindow_context = nil;
+static MCStackUpdateCallback s_updatewindow_callback = nullptr;
+static void *s_updatewindow_context = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1925,6 +1926,11 @@ void *MCAndroidGetContainer(void)
 	return (void *)s_android_container;
 }
 
+void *MCAndroidGetClassLoader(void)
+{
+    return (void *)s_android_class_loader;
+}
+
 // MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the Android system
 //   thread.
 void *MCAndroidGetSystemJavaEnv(void)
@@ -2012,6 +2018,29 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 	s_android_activity = env -> NewGlobalRef(activity);
 	MCLog("Got global android activity: %p\n", s_android_activity);
 	
+    // Cache the class loader
+    jclass t_object_class = env->FindClass("java/lang/Object");
+    
+    jmethodID t_get_class = env->GetMethodID(t_object_class, "getClass",
+                                             "()Ljava/lang/Class;");
+    
+    jobject t_activity_class =
+        env->CallObjectMethod(s_android_activity, t_get_class);
+    
+    jclass t_class_class = env->FindClass("java/lang/Class");
+    
+    jmethodID t_get_class_loader =
+        env->GetMethodID(t_class_class, "getClassLoader",
+                                  "()Ljava/lang/ClassLoader;");
+    
+    jobject t_class_loader =
+        env->CallObjectMethod(t_activity_class, t_get_class_loader);
+    
+    MCLog("Got class loader: %p\n", t_class_loader);
+    
+    // The class loader - make sure we hold a global ref.
+    s_android_class_loader = env->NewGlobalRef(t_class_loader);
+    
 	// The android container - make sure we hold a global ref.
 	s_android_container = env -> NewGlobalRef(container);
 	MCLog("Got global android activity: %p\n", s_android_container);
@@ -2064,21 +2093,23 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 	pthread_mutex_destroy(&s_android_bitmap_mutex);
 
 	// Free the global bitmap ref (if any)
-	if (s_android_bitmap != nil)
+	if (s_android_bitmap != nullptr)
 	{
 		env -> DeleteGlobalRef(s_android_bitmap);
-		s_android_bitmap = nil;
+		s_android_bitmap = nullptr;
 	}
 
 	// Free the global ref
 	env -> DeleteGlobalRef(s_android_view);
-	s_android_view = nil;
+	s_android_view = nullptr;
 	env -> DeleteGlobalRef(s_android_view_class);
-	s_android_view_class = nil;
+	s_android_view_class = nullptr;
 	env -> DeleteGlobalRef(s_android_container);
-	s_android_container = nil;
+	s_android_container = nullptr;
+    env -> DeleteGlobalRef(s_android_class_loader);
+    s_android_class_loader = nullptr;
 	env -> DeleteGlobalRef(s_android_activity);
-	s_android_activity = nil;
+	s_android_activity = nullptr;
 
 	void *t_result;
 	MCLog("Engine has finalized");
