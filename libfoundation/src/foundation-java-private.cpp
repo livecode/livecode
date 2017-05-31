@@ -1158,19 +1158,51 @@ static bool MCJavaClassNameToPathString(MCNameRef p_class_name, MCStringRef& r_s
     return MCStringCopy(*t_escaped, r_string);
 }
 
+static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
+{
+    if (MCStringBeginsWith(MCNameGetString(p_class_name),
+                           MCSTR("com.runrev.android"),
+                           kMCStringOptionCompareExact))
+    {
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+        jstring t_class_string;
+        if (!__MCJavaStringToJString(MCNameGetString(p_class_name), t_class_string))
+            return nullptr;
+        
+        extern void* MCAndroidGetClassLoader(void);
+        jobject t_class_loader = static_cast<jobject>(MCAndroidGetClassLoader());
+        
+        jclass t_class_loader_class = s_env->FindClass("java/lang/ClassLoader");
+        jmethodID t_find_class = s_env->GetMethodID(t_class_loader_class,
+                                                    "findClass",
+                                                    "(Ljava/lang/String;)Ljava/lang/Class;");
+        
+        jobject t_class = s_env->CallObjectMethod(t_class_loader,
+                                                  t_find_class,
+                                                  t_class_string);
+        
+        return static_cast<jclass>(t_class);
+#else
+        return nullptr;
+#endif
+    }
+    
+    MCAutoStringRef t_class_path;
+    if (!MCJavaClassNameToPathString(p_class_name, &t_class_path))
+        return nullptr;
+    
+    MCAutoStringRefAsCString t_class_cstring;
+    if (!t_class_cstring.Lock(*t_class_path))
+        return nullptr;
+    
+    return s_env->FindClass(*t_class_cstring);
+}
+
 bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
     if (p_method_id == nullptr)
         return false;
-    
-    MCAutoStringRef t_class;
-    if (!MCJavaClassNameToPathString(p_class_name, &t_class))
-        return false;
 
-    MCAutoStringRefAsCString t_class_cstring;
-    if (!t_class_cstring . Lock(*t_class))
-        return false;
-    
     uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
     
     MCJavaType t_return_type;
@@ -1189,7 +1221,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         case MCJavaCallTypeConstructor:
         {
             MCAssert(t_return_type == kMCJavaTypeObject);
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (!__JavaJNIConstructorResult(t_target_class,
                                             static_cast<jmethodID>(p_method_id),
                                             &t_params[0],
@@ -1225,7 +1257,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         }
         case MCJavaCallTypeStatic:
         {
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (! __JavaJNIStaticMethodResult(t_target_class,
                                               static_cast<jmethodID>(p_method_id),
                                               t_params, t_return_type,
@@ -1238,7 +1270,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         {
             MCAssert(t_param_count > 0);
             jobject t_instance = t_params[0].l;
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (t_param_count > 1)
             {
                 if (!__JavaJNINonVirtualMethodResult(t_instance,
@@ -1292,7 +1324,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         case MCJavaCallTypeStaticGetter:
         case MCJavaCallTypeStaticSetter:
         {
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (p_call_type == MCJavaCallTypeStaticGetter)
             {
                 if (!__JavaJNIGetStaticFieldResult(t_target_class,
@@ -1388,18 +1420,13 @@ bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_n
 
 void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type)
 {
-    MCAutoStringRef t_class_path;
-    if (!MCJavaClassNameToPathString(p_class_name, &t_class_path))
-        return nullptr;
-    
-    MCAutoStringRefAsCString t_class_cstring, t_method_cstring, t_return_cstring;
-    t_class_cstring . Lock(*t_class_path);
+    MCAutoStringRefAsCString t_method_cstring, t_return_cstring;
     t_method_cstring . Lock(p_method_name);
     t_return_cstring . Lock(p_return);
     
     MCJavaDoAttachCurrentThread();
     
-    jclass t_java_class = s_env->FindClass(*t_class_cstring);
+    jclass t_java_class = MCJavaPrivateFindClass(p_class_name);
     
     void *t_id = nullptr;
     if (t_java_class != nullptr)
