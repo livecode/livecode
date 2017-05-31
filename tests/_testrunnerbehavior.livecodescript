@@ -207,6 +207,13 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       TestAssert "tear down test", false
       TestDiagnostic tError  
    end try
+   
+      -- Check for uncaught errors
+   put TestGetUncaughtErrorDialog() into tError
+   if tError is not empty then
+      TestAssert "uncaught error dialog", line 1 of tError
+      TestDiagnostic tError
+   end if
 end TestRunnerInvokeTestCommand
 
 ----------------------------------------------------------------

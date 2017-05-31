@@ -395,6 +395,9 @@ void MCButton::removelink(MCObject *optr)
 {
 	if (menu.IsBound() && optr == menu)
     {
+        if (this == MCmenuobjectptr)
+            MCmenuobjectptr = nil;
+        
         MCValueAssign(menuname, kMCEmptyName);
         menu = nil;
     }

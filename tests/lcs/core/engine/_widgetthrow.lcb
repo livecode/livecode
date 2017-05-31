@@ -1,0 +1,7 @@
+widget com.livecode.lcs_tests.core.widgetthrow
+
+public handler OnCreate() returns nothing
+	throw "error"
+end handler
+
+end widget

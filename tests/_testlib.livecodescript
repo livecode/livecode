@@ -272,12 +272,20 @@ on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
   TestAssert pDescription, tError is empty 
 end TestAssertDoesNotThrow
 
+local sError
 on ErrorDialog pError
-   TestAssert "test runs without error - " && line 1 of pError \
-      , false
-   TestDiagnostic pError
-   quit 1
+	put pError into sError
 end ErrorDialog
+
+on TestAssertErrorDialog pDescription, pErrorCode
+	wait for messages
+	TestAssert pDescription, __TestErrorMatches(sError, pErrorCode)
+	put empty into sError
+end TestAssertErrorDialog
+
+function TestGetUncaughtErrorDialog
+	return sError
+end TestGetUncaughtErrorDialog
 
 function TestGetEngineRepositoryPath
   set the itemdelimiter to "/"
