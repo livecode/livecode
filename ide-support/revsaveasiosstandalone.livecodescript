@@ -1224,7 +1224,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
    local tDisableATS
-   local tFileSharing, tPrerenderedIcon, tBackGroundAudio
+   local tFileSharing, tPrerenderedIcon
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
@@ -1233,9 +1233,27 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
    put pSettings["ios,exits on suspend"] into tExitsOnSuspend
    
-   put  pSettings["ios,background audio"] into tBackgroundAudio
+   -- AB-2017-05-31: Add more background modes
+   local tBackgroundModes
+   put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+   put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+   put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
+   put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+   put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+   put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
+   put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
+   put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
+   put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"]   
+   
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
+   
+   local tURLWhitelist
+   put pSettings["ios,urlwhitelist"] into tURLWhitelist
+   
+   if tURLWhitelist is empty then
+      put "" into tURLWhitelist
+   end if
    
    if tDisplayName is empty then
       put tExeName into tDisplayName
@@ -1261,9 +1279,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
-   if tBackgroundAudio is true then 
-      put "false" into tExitsOnSuspend
-   end if
+   repeat for each key tKey in tBackgroundModes
+      if tBackgroundModes[tKey] is empty then
+         put false into tBackgroundModes[tKey]
+      end if
+   end repeat   
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
    if pSettings["ios,disable ATS"] then
@@ -1339,7 +1359,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end repeat
    
    ----------
-
+   
    if pPlist is empty then
       put url ("binfile:" & tTemplateFile) into pPlist
    end if
@@ -1349,7 +1369,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
    replace "${BUNDLE_BUILD}" with tBundleBuild in pPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
-   		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
+         textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
    		
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
@@ -1507,13 +1527,35 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${LOCATION_AUTH_TYPE}" with it in pPlist
    
+   -- AB : helper stmts to generate the actual strings that we are going to insert 
+   -- the background modes into the plist file
+   
+   local tBackgroundValues
+   put "<string>audio</string>" into tBackgroundValues["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+   put "<string>location</string>" into tBackgroundValues["${BACKGROUND_LOCATION_UPDATE}"]
+   put "<string>voip</string>" into tBackgroundValues["${BACKGROUND_VOIP}"]
+   put "<string>newsstand-content</string>" into tBackgroundValues["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+   put "<string>external-accessory</string>" into tBackgroundValues["${EXTERNAL_ACC_COMM}"]
+   put "<string>bluetooth-central</string>" into tBackgroundValues["${USE_BT_LE}"]
+   put "<string>bluetooth-peripherla</string>" into tBackgroundValues["${ACTS_AS_BT_LE}"]
+   put "<string>fetch</string>" into tBackgroundValues["${BACKGROUND_FETCH}"]
+   put "<string>remote-notification</string>" into tBackgroundValues["${REMOTE_NOTIFICATIONS}"]
+   
    -- PM-2015-10-08:  [[ Bug 16154 ]] Allow audio playing when the app is on background
-   if tBackgroundAudio is true then
-      get "<string>audio</string>"
-   else -- false or empty
-      get empty
-   end if
-   replace "${PLAY_AUDIO_WHEN_IN_BACKGROUND}" with it in pPlist
+   -- AB-2017-05-31: Add BackgroundModes to Plist
+   repeat for each key tKey in tBackgroundModes
+      if tBackgroundModes[tKey] is true then
+         replace tKey with tBackgroundValues[tKey] in pPlist
+      end if
+   end repeat
+   
+   -- AB-2017-05-31: Add App URL Query Whitelist
+   local tWhitelistStrings
+   repeat for each item tItem in tURLWhitelist 
+      put "<string>" & tItem & "</string>" & return after tWhitelistStrings
+   end repeat
+   replace "${APP_URL_WHITELIST}" with tWhitelistStrings in pPlist
+   
    
    ----------   
    
