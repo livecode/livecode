@@ -206,6 +206,7 @@ MCTypeInfoRef kMCJavaNativeMethodCallErrorTypeInfo;
 MCTypeInfoRef kMCJavaBindingStringSignatureErrorTypeInfo;
 MCTypeInfoRef kMCJavaCouldNotInitialiseJREErrorTypeInfo;
 MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
+MCTypeInfoRef kMCJavaInterfaceCallbackSignatureErrorTypeInfo;
 
 bool MCJavaPrivateErrorsInitialize()
 {
@@ -223,6 +224,9 @@ bool MCJavaPrivateErrorsInitialize()
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.JRENotSupported"), MCNAME("java"), MCSTR("Java Runtime Environment no supported with current configuration"), kMCJavaJRENotSupportedErrorTypeInfo))
         return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.InterfaceCallbackSignatureError"), MCNAME("java"), MCSTR("Handler for interface callback does not match callback signature"), kMCJavaInterfaceCallbackSignatureErrorTypeInfo))
+        return false;
 
     return true;
 }
@@ -234,6 +238,7 @@ void MCJavaPrivateErrorsFinalize()
     MCValueRelease(kMCJavaBindingStringSignatureErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotInitialiseJREErrorTypeInfo);
     MCValueRelease(kMCJavaJRENotSupportedErrorTypeInfo);
+    MCValueRelease(kMCJavaInterfaceCallbackSignatureErrorTypeInfo);
 }
 
 bool MCJavaPrivateErrorThrow(MCTypeInfoRef p_error_type)
@@ -1204,24 +1209,162 @@ static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
     return s_env->FindClass(*t_class_cstring);
 }
 
+static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValueRef p_handlers)
+{
+    jclass t_class_class = s_env->FindClass("java/lang/Class");
+    jmethodID t_get_methods = s_env->GetMethodID(t_class_class, "getMethods",
+                                                 "()[Ljava/lang/reflect/Method;");
+ 
+    jclass t_class = MCJavaPrivateFindClass(p_class_name);
+    
+    jobjectArray t_methods =
+        static_cast<jobjectArray>(s_env->CallObjectMethod(t_class,
+                                                          t_get_methods));
+
+    jclass t_method_class = s_env->FindClass("java/lang/reflect/Method");
+    
+    jmethodID t_get_parameters = s_env->GetMethodID(t_method_class,
+                                                    "getParameterTypes",
+                                                    "()[Ljava/lang/Class;");
+    
+    // Lambda to check if a handler is suitable for the given method
+    auto t_check_handler = [&](MCHandlerRef p_handler, jobject p_method)
+    {
+        MCTypeInfoRef t_type_info = MCValueGetTypeInfo(p_handler);
+
+        // Ensure all callback handler parameters are of JavaObject type
+        uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_type_info);
+        
+        for (uindex_t i = 0; i < t_param_count; ++i)
+        {
+            if (!__MCTypeInfoConformsToJavaType(MCHandlerTypeInfoGetParameterType(t_type_info, i),
+                                                kMCJavaTypeObject))
+            {
+                return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                        MCSTR("Callback handler %{handler} parameters must conform to JObject type"),
+                                                        "handler", p_handler,
+                                                        nullptr);
+            }
+        }
+        
+        // Ensure the correct number of parameters
+        jobjectArray t_params =
+            static_cast<jobjectArray>(s_env->CallObjectMethod(p_method,
+                                                              t_get_parameters));
+        uindex_t t_expected_param_count =
+            static_cast<uindex_t>(s_env->GetArrayLength(t_params));
+        if (t_param_count != t_expected_param_count)
+        {
+            MCAutoNumberRef t_exp;
+            if (!MCNumberCreateWithUnsignedInteger(t_expected_param_count,
+                                                   &t_exp))
+                return false;
+            
+            return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                    MCSTR("Wrong number of parameters for callback handler %{handler}: expected %{number}"),
+                                                    "handler", p_handler,
+                                                    "number", *t_exp,
+                                                    nullptr);
+        }
+        
+        return true;
+    };
+
+    uindex_t t_num_methods = s_env->GetArrayLength(t_methods);
+    if (t_num_methods == 0)
+    {
+        return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Target interface has no callback methods"),
+                                                nullptr);
+    }
+    
+    if (MCValueGetTypeCode(p_handlers) == kMCValueTypeCodeArray)
+    {
+        // Collect all the method names of this interface
+        jmethodID t_get_method_name = s_env->GetMethodID(t_method_class,
+                                                         "getName",
+                                                         "()Ljava/lang/String;");
+        MCAutoStringRefArray t_names;
+        for (uindex_t i = 0; i < t_num_methods; i++)
+        {
+            jobject t_object = s_env->GetObjectArrayElement(t_methods, i);
+            jstring t_name =
+                static_cast<jstring>(s_env->CallObjectMethod(t_object,
+                                                             t_get_method_name));
+            MCAutoStringRef t_name_stringref;
+            if (!__MCJavaStringFromJString(t_name, &t_name_stringref))
+                return false;
+            
+            if (!t_names.Push(*t_name_stringref))
+                return false;
+        }
+        
+        // Array of handlers for interface proxy
+        uintptr_t t_iterator = 0;
+        MCNameRef t_key;
+        MCValueRef t_value;
+        while (MCArrayIterate(static_cast<MCArrayRef>(p_handlers),
+                             t_iterator, t_key, t_value))
+        {
+            MCStringRef t_match = nullptr;
+            uindex_t j = 0;
+            for (; j < t_names.Size(); j++)
+            {
+                if (MCStringIsEqualTo(MCNameGetString(t_key),
+                                      t_names[j],
+                                      kMCStringOptionCompareCaseless))
+                {
+                    t_match = t_names[j];
+                    break;
+                }
+            }
+            if (t_match == nullptr)
+            {
+                // No method with matching name found
+                return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                        MCSTR("No callback method with name %{name}"),
+                                                        "name", t_key,
+                                                        nullptr);
+            }
+            
+            // If we get here, we have a matching name, so check the handler
+            if (!t_check_handler(static_cast<MCHandlerRef>(t_value),
+                                 s_env->GetObjectArrayElement(t_methods, j)))
+                return false;
+        }
+        
+        // If we get here, then all handlers were assigned to valid callbacks
+        // in the interface
+        return true;
+        
+    }
+    else if (MCValueGetTypeCode(p_handlers) == kMCValueTypeCodeHandler)
+    {
+        // Only one handler provided - ensure there is only one callback
+        if (t_num_methods != 1)
+        {
+            return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                    MCSTR("Ambiguous callback assignment - target interface has multiple callback methods"),
+                                                    nullptr);
+        }
+        
+        return t_check_handler(static_cast<MCHandlerRef>(p_handlers),
+                               s_env->GetObjectArrayElement(t_methods, 0));
+    }
+
+    // Value was not of correct type
+    return false;
+}
+
 bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signature, void *p_method_id, void *r_result, void **p_args, uindex_t p_arg_count)
 {
     if (MCHandlerTypeInfoGetParameterCount(p_signature) != 1)
         return false;
     
     MCValueRef t_handlers = *(static_cast<MCValueRef *>(p_args[0]));
-    if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeArray)
-    {
-        // Array of handlers for interface proxy
-    }
-    else if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeHandler)
-    {
-        // Single handler for listener interface
-    }
-    else
-    {
+
+    if (!__MCJavaIsHandlerSuitableForListener(p_class_name, t_handlers))
         return false;
-    }
     
     jclass t_inv_handler_class =
         MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
@@ -1240,6 +1383,7 @@ bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signatur
     MCJavaObjectRef t_result_value;
     if (!MCJavaObjectCreateNullableGlobalRef(t_proxy, t_result_value))
         return false;
+    
     *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
     return true;
 }

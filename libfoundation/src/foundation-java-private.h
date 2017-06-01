@@ -74,5 +74,6 @@ extern MCTypeInfoRef kMCJavaNativeMethodCallErrorTypeInfo;
 extern MCTypeInfoRef kMCJavaBindingStringSignatureErrorTypeInfo;
 extern MCTypeInfoRef kMCJavaCouldNotInitialiseJREErrorTypeInfo;
 extern MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
+extern MCTypeInfoRef kMCJavaInterfaceCallbackSignatureErrorTypeInfo;
 
 #endif

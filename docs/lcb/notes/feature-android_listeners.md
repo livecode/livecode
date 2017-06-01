@@ -11,11 +11,11 @@ The syntax is as follows:
 
 	foreign handler _JNI_CreateListener(in pMapping) returns JObject binds to "java:listener.class.path>interface()"
 
-The foreign handler binding to such a function takes a value that should 
-either be a `Handler` or an `Array` - if it is a `Handler`, the handler 
-will be called for all callbacks from the specified listener. An array
-can be used to assign different handlers to differently named callbacks
-to the specified listener.
+The foreign handler binding to such a function takes a value that should
+either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
+listener should only have one available callback. If the listener has 
+multiple callbacks, an array can be used to assign handlers to each. Each 
+key in the array must match the name of a callback in the listener.  
 
 For example:
 
