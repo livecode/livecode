@@ -470,11 +470,14 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeKeyFocus:
     {
 		MCStackHandle t_stack = t_event->key.stack;
-        
-        if (t_event -> key . focus . owner)
-			t_stack->kfocus();
-		else
-			t_stack->kunfocus();
+		
+		if (t_stack.IsValid())
+		{
+			if (t_event -> key . focus . owner)
+				t_stack->kfocus();
+			else
+				t_stack->kunfocus();
+		}
 		break;
     }
 
