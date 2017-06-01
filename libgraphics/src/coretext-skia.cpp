@@ -336,84 +336,45 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
-    // The transform that drawing will be using
-    MCGAffineTransform t_transform;
-    if (self != nil)
-        t_transform = MCGContextGetDeviceTransform(self);
-    else
-        t_transform = MCGAffineTransformMakeIdentity();
-    
     // Create a fully laid-out line of text
-    CTLineRef t_line = MCGCreateCTLineFromText(p_text, p_length, p_font);
+    CTLineRef t_line =
+            MCGCreateCTLineFromText(p_text, p_length, p_font);
     
-    // Left and right bounds of the line
-    MCGFloat t_left = 0;
-    MCGFloat t_right = 0;
-    
-    // Iterate over the runs of text within the line
-    MCGForEachRunInLine(t_line,
-    [=, &t_left, &t_right](CTRunRef p_run)
+    if (t_line == nullptr)
     {
-        // Get the attribute dictionary for this run
-        CFDictionaryRef t_attributes = CTRunGetAttributes(p_run);
-        
-        // Get the CTFontRef used for drawing this run
-        CTFontRef t_font = static_cast<CTFontRef>(CFDictionaryGetValue(t_attributes, kCTFontAttributeName));
-        
-        // Calculate the origin of this run
-        CGAffineTransform t_text_transform = CTRunGetTextMatrix(p_run);
-        MCGFloat t_x = t_text_transform.tx;
-        
-        // Create a Skia paint object wrapping the font
-        SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_font, t_transform);
-        
-        // Force anti-aliasing on so that we get nicely-rendered text
-        t_paint.setAntiAlias(true);
-        
-        // We are going to draw text by glyph ID rather than by codeunit
-        t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-        
-        // Get the glyphs belonging to this run
-        CFIndex t_glyph_count = CTRunGetGlyphCount(p_run);
-        MCGMaybeOwnedArray<CGGlyph> t_glyphs(t_glyph_count);
-        if (!t_glyphs.TryBorrow(CTRunGetGlyphsPtr(p_run)))
-        {
-            if (t_glyphs.Allocate())
-                CTRunGetGlyphs(p_run, CFRangeMake(0, t_glyph_count), t_glyphs);
-        }
-        
-        // Measure the run
-        // This line depends on the assumption that CGGlyph and SkGlyphID are the same type
-        MCGFloat t_width = t_paint.measureText(t_glyphs, t_glyph_count * sizeof(CGGlyph));
-        
-        // Check for extension of the left-hand bound of the run
-        t_left = MCMin(t_left, t_x);
-        
-        // Check for extension of the right-hand bound of the run
-        t_right = MCMax(t_right, t_x + t_width);
-    });
+        return 0.0;
+    }
     
-    // Release typeset line
+	MCGFloat t_width =
+            CTLineGetTypographicBounds(t_line, NULL, NULL, NULL);
+    
     CFRelease(t_line);
     
-    // Return the width of the run
-    return t_right - t_left;
+    return t_width;
 }
 
-// TODO: this seems to have no callers
 bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
 {
-	// Convert the CTFontRef to a Skia paint object
-    CTFontRef t_ctfont = static_cast<CTFontRef>(p_font.fid);
-    SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_ctfont, p_transform);
+    // Create a fully laid-out line of text
+    CTLineRef t_line =
+            MCGCreateCTLineFromText(p_text, p_length, p_font);
     
-    // Calculate the bounds of the text
-    SkRect t_rect;
-    t_paint.measureText(p_text, p_length, &t_rect);
+    if (t_line == nullptr)
+    {
+        return 0.0;
+    }
     
-    // Return the bounds
-    r_bounds = MCGRectangleFromSkRect(t_rect);
-    return true;
+	CGRect t_bounds =
+            CTLineGetImageBounds(t_line, s_measure_context);
+    
+    r_bounds = MCGRectangleMake(t_bounds.origin.x,
+                                -(t_bounds.origin.y + t_bounds.size.height),
+                                t_bounds.size.width,
+                                t_bounds.size.height);
+    
+    CFRelease(t_line);
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
