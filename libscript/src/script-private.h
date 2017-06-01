@@ -342,6 +342,7 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
     // Bound function information - not pickled.
     bool is_java: 1;
     bool is_bound: 1;
+    bool is_builtin: 1;
     
     union
     {
@@ -449,6 +450,9 @@ struct MCScriptModule: public MCScriptObject
     // These are the native code initializer/finalizer (if any) -- not pickled
     bool (*initializer)(void);
     void (*finalizer)(void);
+    
+    // This is the ordinal mapping array (if any) -- not pickled
+    void **builtins;
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);

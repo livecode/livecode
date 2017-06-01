@@ -49,6 +49,7 @@ struct MCBuiltinModule
     long size;
     bool (*initializer)(void);
     void (*finalizer)(void);
+    void **builtins;
 };
 
 static MCBuiltinModule *s_builtin_modules = nil;
@@ -85,9 +86,10 @@ bool MCScriptInitialize(void)
         if (!MCScriptCreateModuleFromStream(t_stream, t_module->handle))
             return false;
         
-        MCScriptSetModuleLifecycleFunctions(t_module->handle,
-                                            t_module->initializer,
-                                            t_module->finalizer);
+        MCScriptConfigureBuiltinModule(t_module->handle,
+                                       t_module->initializer,
+                                       t_module->finalizer,
+                                       t_module->builtins);
         
         MCValueRelease(t_stream);
     }

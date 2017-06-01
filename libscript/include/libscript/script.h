@@ -171,8 +171,8 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
 // Load a module from a blob
 MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
 
-// Set initializer / finalizer
-void MCScriptSetModuleLifecycleFunctions(MCScriptModuleRef module, bool (*initializer)(void), void (*finalizer)(void));
+// Set initializer / finalizer / builtins
+void MCScriptConfigureBuiltinModule(MCScriptModuleRef module, bool (*initializer)(void), void (*finalizer)(void), void **builtins);
 
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
@@ -411,6 +411,54 @@ void MCScriptEmitBytecodeInModuleV(MCScriptModuleBuilderRef builder, uindex_t op
 void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef builder, uindex_t opcode, uindex_t *arguments, uindex_t argument_count);
 
 void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
+
+/* These methods are used to build shims for builtin foreign handlers. They
+   allow lc-compiles 'emit' module to get the details of a handler type. The
+   types returned are the raw types of the arguments after taking into account
+   mode which means we only (currently) need void, pointer, bool and the number
+   types (both fixed and C). We need to enumerate them all separately, as some
+   int types change depending on the architecture. */
+
+enum MCScriptForeignPrimitiveType
+{
+    kMCScriptForeignPrimitiveTypeUnknown,
+    kMCScriptForeignPrimitiveTypeVoid,
+    kMCScriptForeignPrimitiveTypePointer,
+    kMCScriptForeignPrimitiveTypeSInt8,
+    kMCScriptForeignPrimitiveTypeUInt8,
+    kMCScriptForeignPrimitiveTypeSInt16,
+    kMCScriptForeignPrimitiveTypeUInt16,
+    kMCScriptForeignPrimitiveTypeSInt32,
+    kMCScriptForeignPrimitiveTypeUInt32,
+    kMCScriptForeignPrimitiveTypeSInt64,
+    kMCScriptForeignPrimitiveTypeUInt64,
+    kMCScriptForeignPrimitiveTypeSIntSize,
+    kMCScriptForeignPrimitiveTypeUIntSize,
+    kMCScriptForeignPrimitiveTypeSIntPtr,
+    kMCScriptForeignPrimitiveTypeUIntPtr,
+    kMCScriptForeignPrimitiveTypeFloat32,
+    kMCScriptForeignPrimitiveTypeFloat64,
+    kMCScriptForeignPrimitiveTypeCBool,
+    kMCScriptForeignPrimitiveTypeCChar,
+    kMCScriptForeignPrimitiveTypeCSChar,
+    kMCScriptForeignPrimitiveTypeCUChar,
+    kMCScriptForeignPrimitiveTypeCSShort,
+    kMCScriptForeignPrimitiveTypeCUShort,
+    kMCScriptForeignPrimitiveTypeCSInt,
+    kMCScriptForeignPrimitiveTypeCUInt,
+    kMCScriptForeignPrimitiveTypeCSLong,
+    kMCScriptForeignPrimitiveTypeCULong,
+    kMCScriptForeignPrimitiveTypeCSLongLong,
+    kMCScriptForeignPrimitiveTypeCULongLong,
+    kMCScriptForeignPrimitiveTypeCFloat,
+    kMCScriptForeignPrimitiveTypeCDouble,
+    kMCScriptForeignPrimitiveTypeSInt,
+    kMCScriptForeignPrimitiveTypeUInt,
+};
+
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerReturnTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+uindex_t MCScriptQueryForeignHandlerParameterCountInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerParameterTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index, uindex_t arg_index);
 
 ////////////////////////////////////////////////////////////////////////////////
 

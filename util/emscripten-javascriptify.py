@@ -67,7 +67,9 @@ if options.has_key('whitelist'):
 
 command = emcc + optimisation_flags + cflags
 
-command.append(options['input'][0])
+for input in options['input']:
+    command.append(input)
+    
 command += ['-o', options['output'][0]]
 
 for setting in sorted(settings.keys()):

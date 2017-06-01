@@ -1861,3 +1861,209 @@ void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef self, MCNa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static MCScriptForeignPrimitiveType
+MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_type_index, bool p_is_return_type = false)
+{
+    MCScriptType *t_type = self->module.types[p_type_index];
+    if (t_type->kind == kMCScriptTypeKindDefined)
+    {
+        auto t_def_type = static_cast<MCScriptDefinedType *>(t_type);
+        
+        MCNameRef t_name = nullptr;
+
+        MCScriptDefinition *t_def = self->module.definitions[t_def_type->index];
+        if (t_def->kind == kMCScriptDefinitionKindType)
+        {
+            uindex_t t_other_type_index = static_cast<MCScriptTypeDefinition *>(t_def)->type;
+            MCScriptType *t_other_type = self->module.types[t_other_type_index];
+            if (t_other_type->kind != kMCScriptTypeKindForeign)
+            {
+                return MCScriptMapTypeToForeignPrimitiveTypeInModule(self, t_other_type_index);
+            }
+            
+            t_name = self->module.definition_names[t_def_type->index];
+        }
+        else if (t_def->kind == kMCScriptDefinitionKindExternal)
+        {
+            const MCScriptImportedDefinition& t_imp_def = self->module.imported_definitions[static_cast<MCScriptExternalDefinition *>(t_def)->index];
+            t_name = t_imp_def.name;
+        }
+        else
+        {
+            MCLog("can't handle type of kind %d", t_def->kind);
+            return kMCScriptForeignPrimitiveTypeUnknown;
+        }
+        
+        if (p_is_return_type &&
+            MCStringIsEqualToCString(MCNameGetString(t_name),
+                                     "undefined",
+                                     kMCStringOptionCompareCaseless))
+        {
+            return kMCScriptForeignPrimitiveTypeVoid;
+        }
+        
+        /* This list must be kept up to date with all types which we bind to
+         * to in foreign handlers in the modules embedded in the engine. */
+        static struct { const char *name; MCScriptForeignPrimitiveType type; } s_ext_mappings[] =
+        {
+            /* Foundation Types */
+            { "undefined", kMCScriptForeignPrimitiveTypePointer },
+            { "any", kMCScriptForeignPrimitiveTypePointer },
+            { "bool", kMCScriptForeignPrimitiveTypeCBool },
+            { "double", kMCScriptForeignPrimitiveTypeCDouble },
+            { "sint", kMCScriptForeignPrimitiveTypeSInt },
+            { "uint", kMCScriptForeignPrimitiveTypeUInt },
+            
+            { "Boolean", kMCScriptForeignPrimitiveTypePointer },
+            { "Number", kMCScriptForeignPrimitiveTypePointer },
+            { "String", kMCScriptForeignPrimitiveTypePointer },
+            { "Data", kMCScriptForeignPrimitiveTypePointer },
+            { "Array", kMCScriptForeignPrimitiveTypePointer },
+            { "List", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* Foreign C Types */
+            { "SInt8", kMCScriptForeignPrimitiveTypeSInt8 },
+            { "UInt8", kMCScriptForeignPrimitiveTypeUInt8 },
+            { "SInt16", kMCScriptForeignPrimitiveTypeSInt16 },
+            { "UInt16", kMCScriptForeignPrimitiveTypeUInt16 },
+            { "SInt32", kMCScriptForeignPrimitiveTypeSInt32 },
+            { "UInt32", kMCScriptForeignPrimitiveTypeUInt32 },
+            { "SInt64", kMCScriptForeignPrimitiveTypeSInt64 },
+            { "UInt64", kMCScriptForeignPrimitiveTypeUInt64 },
+            
+            { "CSIntSize", kMCScriptForeignPrimitiveTypeSIntSize },
+            { "CUIntSize", kMCScriptForeignPrimitiveTypeUIntSize },
+            { "CSIntPtr", kMCScriptForeignPrimitiveTypeSIntPtr },
+            { "CUIntPtr", kMCScriptForeignPrimitiveTypeUIntPtr },
+            
+            { "CBool", kMCScriptForeignPrimitiveTypeCBool },
+            { "CChar", kMCScriptForeignPrimitiveTypeCChar },
+            { "CSChar", kMCScriptForeignPrimitiveTypeCSChar },
+            { "CUChar", kMCScriptForeignPrimitiveTypeCUChar },
+            { "CSShort", kMCScriptForeignPrimitiveTypeCSShort },
+            { "CUShort", kMCScriptForeignPrimitiveTypeCUShort },
+            { "CSInt", kMCScriptForeignPrimitiveTypeCSInt },
+            { "CUInt", kMCScriptForeignPrimitiveTypeCUInt },
+            { "CSLong", kMCScriptForeignPrimitiveTypeCSLong },
+            { "CULong", kMCScriptForeignPrimitiveTypeCULong },
+            { "CULongLong", kMCScriptForeignPrimitiveTypeCSLongLong },
+            { "CULongLong", kMCScriptForeignPrimitiveTypeCULongLong },
+            { "CDouble", kMCScriptForeignPrimitiveTypeCDouble },
+            { "CFloat", kMCScriptForeignPrimitiveTypeCFloat },
+            { "LCSInt", kMCScriptForeignPrimitiveTypeSInt },
+            { "LCUInt", kMCScriptForeignPrimitiveTypeUInt },
+            
+            { "Float32", kMCScriptForeignPrimitiveTypeFloat32 },
+            { "Float64", kMCScriptForeignPrimitiveTypeFloat64 },
+            
+            { "Pointer", kMCScriptForeignPrimitiveTypePointer },
+            
+            { "ZStringUTF8", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* Java FFI Types */
+            { "JObject", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* Extra Foundation Types */
+            { "Stream", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* Canvas Types */
+            { "Rectangle", kMCScriptForeignPrimitiveTypePointer },
+            { "Point", kMCScriptForeignPrimitiveTypePointer },
+            { "Image", kMCScriptForeignPrimitiveTypePointer },
+            { "Color", kMCScriptForeignPrimitiveTypePointer },
+            { "Paint", kMCScriptForeignPrimitiveTypePointer },
+            { "SolidPaint", kMCScriptForeignPrimitiveTypePointer },
+            { "Pattern", kMCScriptForeignPrimitiveTypePointer },
+            { "Gradient", kMCScriptForeignPrimitiveTypePointer },
+            { "GradientStop", kMCScriptForeignPrimitiveTypePointer },
+            { "Path", kMCScriptForeignPrimitiveTypePointer },
+            { "Effect", kMCScriptForeignPrimitiveTypePointer },
+            { "Font", kMCScriptForeignPrimitiveTypePointer },
+            { "Canvas", kMCScriptForeignPrimitiveTypePointer },
+            { "Transform", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* Engine Types */
+            { "Widget", kMCScriptForeignPrimitiveTypePointer },
+            { "ScriptObject", kMCScriptForeignPrimitiveTypePointer },
+        };
+        
+        for(const auto t_mapping : s_ext_mappings)
+        {
+            if (MCStringIsEqualToCString(MCNameGetString(t_name), t_mapping.name, kMCStringOptionCompareCaseless))
+            {
+                return t_mapping.type;
+            }
+        }
+
+        return kMCScriptForeignPrimitiveTypeUnknown;
+    }
+    else if (t_type->kind == kMCScriptTypeKindForeign)
+    {
+        return kMCScriptForeignPrimitiveTypeUnknown;
+    }
+    else if (t_type->kind == kMCScriptTypeKindOptional)
+    {
+        return kMCScriptForeignPrimitiveTypePointer;
+    }
+    else if (t_type->kind == kMCScriptTypeKindForeignHandler ||
+             t_type->kind == kMCScriptTypeKindHandler)
+    {
+        return kMCScriptForeignPrimitiveTypePointer;
+    }
+    
+    return kMCScriptForeignPrimitiveTypeUnknown;
+}
+
+MCScriptForeignPrimitiveType
+MCScriptQueryForeignHandlerReturnTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_type_index)
+{
+    if (self->module.types[p_type_index]->kind != kMCScriptTypeKindForeignHandler)
+    {
+        return kMCScriptForeignPrimitiveTypeUnknown;
+    }
+    
+    auto t_handler_type = static_cast<MCScriptHandlerType *>(self -> module . types[p_type_index]);
+    
+    return MCScriptMapTypeToForeignPrimitiveTypeInModule(self, t_handler_type->return_type, true);
+}
+
+uindex_t
+MCScriptQueryForeignHandlerParameterCountInModule(MCScriptModuleBuilderRef self, uindex_t p_type_index)
+{
+    if (self->module.types[p_type_index]->kind != kMCScriptTypeKindForeignHandler)
+    {
+        return 0;
+    }
+    
+    auto t_handler_type = static_cast<MCScriptHandlerType *>(self -> module . types[p_type_index]);
+    
+    return t_handler_type->parameter_count;
+
+}
+
+MCScriptForeignPrimitiveType
+MCScriptQueryForeignHandlerParameterTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_type_index, uindex_t p_arg_index)
+{
+    if (self->module.types[p_type_index]->kind != kMCScriptTypeKindForeignHandler)
+    {
+        return kMCScriptForeignPrimitiveTypeUnknown;
+    }
+    
+    auto t_handler_type = static_cast<MCScriptHandlerType *>(self -> module . types[p_type_index]);
+    if (p_arg_index >= t_handler_type->parameter_count)
+    {
+        return kMCScriptForeignPrimitiveTypeUnknown;
+    }
+    
+    /* Non-in modes map to a primitive pointer type from the point of view of
+       FFI. */
+    if (t_handler_type->parameters[p_arg_index].mode != kMCScriptHandlerTypeParameterModeIn)
+    {
+        return kMCScriptForeignPrimitiveTypePointer;
+    }
+    
+    return MCScriptMapTypeToForeignPrimitiveTypeInModule(self, t_handler_type->parameters[p_arg_index].type);
+}
+
+////////////////////////////////////////////////////////////////////////////////

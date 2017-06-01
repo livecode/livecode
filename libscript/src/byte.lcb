@@ -28,12 +28,15 @@ public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as 
 public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCIndex, in Target as Data, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCByteEvalOffsetOfBytesAfter(in IsLast as CBool, in Needle as Data, in After as LCIndex, in Target as Data, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
+// public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
 
 public foreign handler MCByteEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCByteEvalIsInBytes(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCByteEvalBeginsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCByteEvalEndsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
+
+/* No implementation
+public foreign handler MCByteEvalIsInBytes(in Needle as Data, in Target as Data, out Value as CBool) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCByteFetchByteOf(in Index as LCIndex, in Target as Data, out Value as Data) returns nothing binds to "<builtin>"
 public foreign handler MCByteStoreByteOf(in Value as Data, in Index as LCIndex, inout Target as Data) returns nothing binds to "<builtin>"
@@ -169,11 +172,13 @@ Description:
 Tags: Binary
 */
 
+/* No implementation
 syntax ByteIsInData is neutral binary operator with comparison precedence
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCByteEvalIsInBytes(Needle, Target, output)
 end syntax
+*/
 
 --
 

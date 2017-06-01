@@ -149,7 +149,12 @@ public:
 								m_argument_values,
 								m_argument_count);
 		}
-		else
+		else if (p_handler->is_builtin)
+        {
+            ((void(*)(void*, void**))p_handler->native.function)(p_result_slot_ptr,
+                    m_argument_values);
+        }
+        else
 		{
 			ffi_call((ffi_cif *)p_handler -> native . function_cif,
 					 (void(*)())p_handler -> native . function,
