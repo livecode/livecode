@@ -58,6 +58,9 @@ public:
 	Boolean copy();
 	Boolean cut();
 	Boolean del();
+    Boolean usercopy();
+    Boolean usercut();
+    Boolean userdel();
 	void startmove(int2 x, int2 y, Boolean canclone);
 	void continuemove(int2 x, int2 y);
 	Boolean endmove();
