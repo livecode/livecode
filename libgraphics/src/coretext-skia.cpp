@@ -80,7 +80,7 @@ static inline sk_sp<SkTypeface> MCGSkTypefaceFromCTFontRef(CTFontRef p_ref)
 }
 
 // Creates an SkPaint from a CTFontRef
-static inline SkPaint MCGSkPaintFromCTFontRef(CTFontRef p_ref, const MCGAffineTransform& p_transform)
+static inline SkPaint MCGSkPaintFromCTFontRef(MCGContextRef p_ctxt, CTFontRef p_ref, const MCGAffineTransform& p_transform)
 {
     // Convert the CTFontRef into a Skia Typeface object
     auto t_typeface = MCGSkTypefaceFromCTFontRef(p_ref);
@@ -90,7 +90,8 @@ static inline SkPaint MCGSkPaintFromCTFontRef(CTFontRef p_ref, const MCGAffineTr
     SkPaint t_paint;
     t_paint.setTypeface(t_typeface);
     t_paint.setTextSize(CTFontGetSize(p_ref));
-    t_paint.setLCDRenderText(true);
+    // Only use LCD-style anti-aliasing if the layer is opaque.
+    t_paint.setLCDRenderText(p_ctxt != nullptr ? MCGContextIsLayerOpaque(p_ctxt) : true);
     t_paint.setEmbeddedBitmapText(true);
     
     // Set the transform we're using
@@ -298,7 +299,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         MCGFloat t_y = p_location.y + t_text_transform.ty;
         
         // Create a Skia paint object wrapping the font
-        SkPaint t_paint = MCGSkPaintFromCTFontRef(t_font, t_transform);
+        SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_font, t_transform);
         
         // Customise the paint based on the current settings
         t_paint.setStyle(SkPaint::kFill_Style);
@@ -364,7 +365,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
         MCGFloat t_x = t_text_transform.tx;
         
         // Create a Skia paint object wrapping the font
-        SkPaint t_paint = MCGSkPaintFromCTFontRef(t_font, t_transform);
+        SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_font, t_transform);
         
         // Force anti-aliasing on so that we get nicely-rendered text
         t_paint.setAntiAlias(true);
@@ -404,7 +405,7 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 {
 	// Convert the CTFontRef to a Skia paint object
     CTFontRef t_ctfont = static_cast<CTFontRef>(p_font.fid);
-    SkPaint t_paint = MCGSkPaintFromCTFontRef(t_ctfont, p_transform);
+    SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_ctfont, p_transform);
     
     // Calculate the bounds of the text
     SkRect t_rect;
