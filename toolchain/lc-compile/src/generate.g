@@ -1467,15 +1467,12 @@
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
-        [|
-            ne(Signature, nil)
-            EmitCreateRegister(-> IgnoredResultReg)
-            EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
-            EmitContinueInvoke(InputReg)
-            GenerateInvoke_EmitInvokeArguments(Arguments)
-            EmitEndInvoke()
-            EmitDestroyRegister(IgnoredResultReg)
-        |]
+        EmitCreateRegister(-> IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitContinueInvoke(InputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
