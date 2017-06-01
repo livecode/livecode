@@ -295,7 +295,7 @@ MCObject::~MCObject()
 	// MW-2009-11-03: Clear all current breakpoints for this object
 	MCB_clearbreaks(this);
 
-	if (MCerrorptr == this)
+	if (!MCerrorptr.IsValid() || MCerrorptr == this)
 		MCerrorptr = nil;
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
