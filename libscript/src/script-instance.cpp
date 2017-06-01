@@ -876,56 +876,38 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 								 MCScriptForeignHandlerDefinition *p_handler,
 								 bool *r_bound)
 {
-	bool t_bound = p_handler->is_bound;
-	
-	ffi_abi t_abi;
-	if (!t_bound)
-	{
-        bool *t_bound_ptr = nullptr;
+    // If the handler is already bound, then do nothing.
+    if (p_handler->is_bound)
+    {
         if (r_bound != nullptr)
-            t_bound_ptr = &t_bound;
+        {
+            *r_bound = true;
+        }
         
-		if (!__MCScriptResolveForeignFunctionBinding(p_instance,
-													 p_handler,
-													 t_abi,
-													 t_bound_ptr))
-		{
-			return false;
-		}
-		
-		p_handler->is_bound = t_bound;
-	}
-	
-	// If we are 'try to bind' and the foreign binding failed, then
+        return true;
+    }
+    
+    // Attempt to resolve the foreign function binding. If r_bound == nullptr,
+    // then this will fail if binding fails. If r_bound != nullptr, then *r_bound
+    // will indicate whether the function was bound or not.
+	ffi_abi t_abi;
+    if (!__MCScriptResolveForeignFunctionBinding(p_instance,
+                                                 p_handler,
+                                                 t_abi,
+                                                 r_bound))
+    {
+        return false;
+    }
+    
+    // If we are 'try to bind' and the foreign binding failed, then
 	// return the bound status to the caller and return.
 	if (r_bound != nullptr &&
-		!t_bound)
+		!*r_bound)
 	{
-		*r_bound = false;
 		return true;
 	}
-	
-	// If the function didn't produce a valid pointer either throw, or return
-	// unbound depending on the r_bound out ptr.
-	bool t_resolved;
-	if (p_handler -> is_java)
-		t_resolved = p_handler -> java . method_id != nullptr;
-	else
-		t_resolved = p_handler -> native . function != nullptr;
-	
-	if (!t_resolved)
-	{
-		if (r_bound == nullptr)
-		{
-			return MCScriptThrowUnableToResolveForeignHandlerError(p_instance,
-																   p_handler);
-		}
-		
-		*r_bound = false;
-		
-		return true;
-	}
-	
+
+    // If we get here then it means that the binding succeeded.
 	MCTypeInfoRef t_signature;
 	t_signature = p_instance->module->types[p_handler->type]->typeinfo;
 	
@@ -940,12 +922,9 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 		return false;
 	}
 	
-	// If we are a non-trapping bind, then indicate that we bound successfully.
-	if (r_bound != nullptr)
-	{
-		*r_bound = true;
-	}
-	
+	// The function can only be considered bound, if it gets to this point.
+    p_handler->is_bound = true;
+    
 	return true;
 }
 
