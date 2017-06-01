@@ -185,6 +185,14 @@ private command invokeTest pInfo
 
    -- Do common cleanup tasks
    dispatch "TestTearDown" to tStackName
+   
+   -- Check for uncaught errors
+   local tError
+   put TestGetUncaughtErrorDialog() into tError
+   if tError is not empty then
+      TestAssert "uncaught error dialog", line 1 of tError
+      TestDiagnostic tError
+   end if
 end invokeTest
 
 -- Add the unit test library stack and the input library to the backscripts

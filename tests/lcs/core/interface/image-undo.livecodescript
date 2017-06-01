@@ -76,13 +76,6 @@ on TestRotateImageWorks
     TestAssert "check if undo worked", the prop of this card is not empty
 end TestRotateImageWorks
 
-global gLastSentImageError
-
-on errorDialog pError
-   put pError into gLastSentImageError
-end errorDialog
-
-
 on TestSetTextLockThrows
     create stack
     set the defaultStack to the short name of it

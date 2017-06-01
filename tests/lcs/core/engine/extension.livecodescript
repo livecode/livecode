@@ -20,11 +20,7 @@ on TestSetup
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 
-    TestDiagnostic the defaultfolder
-    load extension from file "../_tests/_build/lcs/core/engine/_extension.lcm"
-    if the result is not empty then
-       throw "Failed to load test support extension:" && the result
-    end if
+	TestLoadAuxillaryExtension "_extension"
 end TestSetup
 
 /////////
@@ -69,3 +65,38 @@ on TestExtensionBridgeNumbers
    TestAssert "LCS numbers bridge to LCB numbers in execute script", \
          TestExtensionBridgeNumbers_ExecuteScript()
 end TestExtensionBridgeNumbers
+
+/////////
+
+local sLastLog
+on logChanged pMsg
+   put pMsg into sLastLog
+end logChanged
+
+on TestExtensionLogInteger
+	// log 1
+	get TestExtensionLog_Integer()
+	wait for 0 with messages
+	TestAssert "extension log integer", sLastLog is 1
+end TestExtensionLogInteger
+
+on TestExtensionLogList
+	// log [1,2,3]
+	get TestExtensionLog_List()
+	wait for 0 with messages
+	TestAssert "extension log list", sLastLog is "[1, 2, 3]"
+end TestExtensionLogList
+
+on TestExtensionLogArray
+	// log {a: 1}
+	get TestExtensionLog_Array()
+	wait for 0 with messages
+	TestAssert "extension log array", sLastLog is "{a: 1}"
+end TestExtensionLogArray
+
+on TestExtensionLogString
+	// log "log"
+	get TestExtensionLog_String()
+	wait for 0 with messages
+	TestAssert "extension log string", sLastLog is quote & "log" & quote
+end TestExtensionLogString

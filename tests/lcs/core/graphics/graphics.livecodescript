@@ -271,6 +271,61 @@ command _TestGraphicsPointOverflowNoThrow
 	set the markerPoints of it to tPoints
 end _TestGraphicsPointOverflowNoThrow
 
+on _TestGraphicPointOverflowHandler1
+	local tPoints
+
+	repeat with i = 1 to 256
+		repeat with j = 1 to 256
+			put (i,j) & cr after tPoints
+		end repeat
+	end repeat
+
+	create graphic 
+	set the points of it to tPoints
+end _TestGraphicPointOverflowHandler1
+	
+on _TestGraphicPointOverflowHandler2
+	local tPoints
+
+	repeat with i = 1 to 256
+		repeat with j = 1 to 256
+			put (i,j) & cr after tPoints
+		end repeat
+	end repeat
+
+	create graphic "g1"
+	set the markerPoints of it to tPoints
+end _TestGraphicPointOverflowHandler2
+
+on _TestGraphicPointOverflowHandler3
+	local tPoints
+
+	repeat with i = 1 to 256
+		repeat with j = 1 to 256
+			put (i,j) & cr after tPoints
+		end repeat
+	end repeat
+
+	create graphic "g2"
+	set the relativePoints of it to tPoints
+end _TestGraphicPointOverflowHandler3
+
+on _TestGraphicPointOverflowHandler4 tGraphic
+	set the filled of tGraphic to true
+end _TestGraphicPointOverflowHandler4
+
+on _TestGraphicPointOverflowHandler5 tGraphic
+	set the points of tGraphic[1] to line 1 to 65535 of tGraphic[2]
+end _TestGraphicPointOverflowHandler5
+
+on _TestGraphicPointOverflowHandler6 tParams
+	set the relativePoints of tParams[1] to line 1 to 65535 of tParams[2]
+end _TestGraphicPointOverflowHandler6
+
+on _TestGraphicPointOverflowHandler7 tParams
+	set the markerPoints of tParams[1] to line 1 to 65535 of tParams[2]
+end _TestGraphicPointOverflowHandler7
+
 on TestGraphicPointOverflow
 	local tE1, tE2, tE3, tE4, tE5, tPoints
 
@@ -282,48 +337,26 @@ on TestGraphicPointOverflow
 
 	TestAssert "generated correct number of points", the number of lines in tPoints is 65536
 
-	try
-		create graphic 
-		set the points of it to tPoints
-	catch tError
-		put tError into tE1
-	end try
-
-	TestAssert "throws (points)", item 1 of line 1 of tE1 is "0896"
+	TestAssertThrow "handler 1" , "_TestGraphicPointOverflowHandler1", the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS"
 	
-	try 
-		create graphic "g1"
-		set the markerPoints of it to tPoints
-	catch tError
-		put tError into tE2
-	end try
-
-	TestAssert "throws (markerPoints)", item 1 of line 1 of tE2 is "0896"
+	TestAssertThrow "handler 2", "_TestGraphicPointOverflowHandler2" , the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS"
 	
-	try
-		create graphic "g2"
-		set the relativePoints of it to tPoints
-	catch tError
-		put tError into tE3
-	end try
-
-	TestAssert "throws (relativePoints)", item 1 of line 1 of tE3 is "0896"
+	TestAssertThrow "handler 3", "_TestGraphicPointOverflowHandler3", the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS"
 	
 	create graphic "g3"
 	set the filled of graphic "g3" to false
 	set the style of graphic "g3" to "polygon"
 	set the points of graphic "g3" to line 1 to 65535 of tPoints
 
-	try
-		set the filled of graphic "g3" to true
-	catch tError
-		put tError into tE4
-	end try
+	TestAssertThrow "handler 4", "_TestGraphicPointOverflowHandler4", the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS" , the long id of graphic "g3"
 
-	TestAssert "throws (switchOpaque)", item 1 of line 1 of tE4 is "0896"
 	TestAssert "internal object unchanged (switchOpaque)", the filled of graphic "g3" is false
-
-	local tClosedPoints
+	
+	local tClosedPoints, tParams
 
 	create graphic "g4"
 	set the style of graphic "g4" to "polygon"
@@ -332,12 +365,12 @@ on TestGraphicPointOverflow
 
 	put the points of graphic "g4" into tClosedPoints
 
-	try
-		set the points of graphic "g4" to line 1 to 65535 of tPoints
-	catch tError
-		put tError into tE5
-	end try
-	TestAssert "throws (setOpaque)", item 1 of line 1 of tE5 is "0896"
+	put the long id of graphic "g4" into tParams[1]
+	put tPoints into tParams[2]
+
+	TestAssertThrow "handler 5", "_TestGraphicPointOverflowHandler5", the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS", tParams
+
 	TestAssert "internal object unchanged (setOpaque)", the points of graphic "g4" is tClosedPoints
 
 	local tClosedRelativePoints,tE6
@@ -350,13 +383,10 @@ on TestGraphicPointOverflow
 	TestAssert "points added", the number of lines in the points of graphic "g5" is 65535
 	put the points of graphic "g5" into tClosedRelativePoints
 
-	try
-		set the points of graphic "g5" to line 1 to 65535 of tPoints
-	catch tError
-		put tError into tE6
-	end try
+	put the long id of graphic "g5" into tParams[1]
 
-	TestAssert "throws (set relative opaque)", item 1 of line 1 of tE6 is "0896"
+	TestAssertThrow "handler 6", "_TestGraphicPointOverflowHandler6", the long id of me, \
+		"EE_GRAPHIC_TOOMANYPOINTS", tParams
 	TestAssert "internal object unchanged (set relative opaque)", the points of graphic "g5" is tClosedRelativePoints
 
 	local tClosedMarkerPoints, tE7
@@ -367,15 +397,12 @@ on TestGraphicPointOverflow
 	set the markerPoints of graphic "g6" to line 1 to 65534 of tPoints
 
 	put the points of graphic "g6" into tClosedMarkerPoints
+	put the long id of graphic "g6" into tParams[1]
 
-	try
-		set the markerPoints of graphic "g6" to line 1 to 65535 of tPoints
-	catch tError
-		put tError into tE7
-	end try
-
-	TestAssert "throws (set marker opaque)", tE7 is not empty
+	TestAssertThrow "handler 7", "_TestGraphicPointOverflowHandler7", the long id of me ,\
+		"EE_GRAPHIC_TOOMANYPOINTS", tParams
 	TestAssert "internal object unchanged (set marker opaque)", the points of graphic "g6" is tClosedMarkerPoints
+
 
 	_TestGraphicsPointOverflowNoThrow
 	TestAssert "didn't throw", true

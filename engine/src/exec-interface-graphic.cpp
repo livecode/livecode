@@ -936,8 +936,6 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     }
     
     MCRectangle trect = reduce_minrect(rect);
-    MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
-    
     
     MCPoint *t_closed_points;
     uindex_t t_r_count;

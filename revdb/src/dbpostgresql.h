@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <libpq-fe.h>
 #include "dbdrivercommon.h"
+#include "large_buffer.h"
 
 #define DB_POSTGRESQL_STRING "POSTGRESQL";
 
@@ -139,5 +140,7 @@ public:
 protected:
 	PGconn *dbconn;
 	PGresult *ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count);
+private:
+    large_buffer_t *m_internal_buffer;
 };
 #endif

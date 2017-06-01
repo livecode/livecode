@@ -854,7 +854,9 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		DoRunloopActions();
 
 		real8 eventtime = exittime;
-		donepending = handlepending(curtime, eventtime, dispatch);
+        donepending = handlepending(curtime, eventtime, dispatch) ||
+            (dispatch && MCEventQueueDispatch());
+        
 		siguser();
         
 		MCModeQueueEvents();
