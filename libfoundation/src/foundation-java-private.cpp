@@ -350,9 +350,16 @@ void MCJavaDoAttachCurrentThread()
 static bool __MCJavaStringFromJString(jstring p_string, MCStringRef& r_string)
 {
     MCJavaDoAttachCurrentThread();
-    const char *nativeString = s_env -> GetStringUTFChars(p_string, 0);
-    bool t_success = MCStringCreateWithCString(nativeString, r_string);
-    s_env->ReleaseStringUTFChars(p_string, nativeString);
+    
+    const jchar *t_chars = s_env->GetStringChars(p_string, 0);
+    
+    auto t_unichars = reinterpret_cast<const unichar_t *>(t_chars);
+    uindex_t t_count = s_env->GetStringLength(p_string);
+
+    bool t_success = MCStringCreateWithChars(t_unichars, t_count,
+                                             r_string);
+    
+    s_env->ReleaseStringChars(p_string, t_chars);
     return t_success;
 }
 
@@ -360,11 +367,11 @@ static bool __MCJavaStringToJString(MCStringRef p_string, jstring& r_string)
 {
     MCJavaDoAttachCurrentThread();
     
-    MCAutoStringRefAsCString t_string_cstring;
-    t_string_cstring . Lock(p_string);
+    auto t_chars =
+        reinterpret_cast<const jchar *>(MCStringGetCharPtr(p_string));
     
-    jstring t_result;
-    t_result = s_env->NewStringUTF(*t_string_cstring);
+    jstring t_result = s_env->NewString(t_chars,
+                                        MCStringGetLength(p_string));
     
     if (t_result != nullptr)
     {
