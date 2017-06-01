@@ -742,7 +742,7 @@ on TestUndo
 
    __createFieldWithText "bar"
    
-   set the script of field kCreatedField to "on keyDown;select me;delete;undo;end keyDown"
+set the script of field kCreatedField to "on keyDown;select text of me;delete;undo;end keyDown"
    
    type "a"
    
