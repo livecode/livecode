@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "regex.h"
 #include "util.h"
 #include "uidc.h"
+#include "variable.h"
 
 // general commands in cmds.cc
 
@@ -1756,41 +1757,35 @@ public:
 
 class MCSetOp : public MCStatement
 {
-	MCVarref *destvar;
-	MCExpression *source;
-protected:
-	bool intersect : 1;
-    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-    bool recursive : 1;
 public:
-	MCSetOp()
-	{
-		source = NULL;
-		destvar = NULL;
-	}
-	virtual ~MCSetOp();
+    enum Op
+    {
+        kOpNone,
+        kOpUnion,
+        kOpUnionRecursively,
+        kOpIntersect,
+        kOpIntersectRecursively,
+        kOpDifference,
+        kOpSymmetricDifference
+    };
+    
+private:
+	MCAutoPointer<MCVarref> destvar;
+    MCAutoPointer<MCExpression> destexpr;
+	MCAutoPointer<MCExpression> source;
+    Op op = kOpNone;
+    bool is_into = false;
+    
+public:
+    MCSetOp(Op p_op)
+        : op(p_op)
+    {
+    }
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCArrayIntersectCmd : public MCSetOp
-{
-public:
-	MCArrayIntersectCmd()
-	{
-		intersect = True;
-	}
-};
-
-class MCArrayUnionCmd : public MCSetOp
-{
-public:
-	MCArrayUnionCmd()
-	{
-		intersect = False;
-	}
-};
 
 // MCStack manipulation comands in cmdss.cc
 

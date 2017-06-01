@@ -1780,6 +1780,15 @@ enum Parse_errors
 
     // {PE-0576} messageDigest: bad parameters
     PE_MESSAGEDIGEST_BADPARAM,
+    
+    // {PE-0577} setop: missing 'difference'
+    PE_ARRAYOP_NODIFFERENCE,
+    
+    // {PE-0578} setop: 'recursive' only makes sense for union or intersect
+    PE_ARRAYOP_BADRECURSIVE,
+    
+    // {PE-0579} setop: destination is not a container (did you mean to use 'into'?)
+    PE_ARRAYOP_DSTNOTCONTAINER,
 };
 
 extern const char *MCparsingerrors;

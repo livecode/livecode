@@ -49,9 +49,11 @@ MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByColumn, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitAsSet, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Union, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, UnionRecursively, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Intersect, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, UnionRecursive, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, IntersectRecursive, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, IntersectRecursively, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Difference, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SymmetricDifference, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayEncode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayDecode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, MatrixMultiply, 3)
@@ -581,8 +583,31 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 //    end if
 // end repeat
 //
+// if right is not an array then no-op
+// else if left is not an array then left = right
+//
+// Semantics of 'symmetric difference tLeft with tRight'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is among the keys of tLeft then
+//        delete tLeft[tKey]
+//    else if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    end if
+// end repeat
+//
+// if right is not an array then no-op
+// else if left is not an array then left = right
+//
 
-void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
+enum MCArrayDoUnionOp
+{
+    kMCArrayDoUnionOpUnion,
+    kMCArrayDoUnionOpUnionRecursively,
+    kMCArrayDoUnionOpSymmetricDifference,
+};
+
+static void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCArrayDoUnionOp p_op, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_src))
     {
@@ -617,27 +642,35 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
 	{
         bool t_key_exists;
         t_key_exists = MCArrayFetchValue(t_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value);
-        
-        if (t_key_exists && !p_recursive)
-            continue;
-        
-        MCAutoValueRef t_recursive_result;
+
         if (!t_key_exists)
         {
-            t_recursive_result = t_src_value;
+            if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, t_src_value))
+            {
+                ctxt . Throw();
+                return;
+            }
         }
-        else if (p_recursive)
+        else if (p_op == kMCArrayDoUnionOpUnionRecursively)
         {
-            MCArraysDoUnion(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
-            
+            MCAutoValueRef t_recursive_result;
+            MCArraysDoUnion(ctxt, t_dst_value, t_src_value, p_op, &t_recursive_result);
             if (ctxt . HasError())
                 return;
+            
+            if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
+            {
+                ctxt . Throw();
+                return;
+            }
         }
-        
-        if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
+        else if (p_op == kMCArrayDoUnionOpSymmetricDifference)
         {
-            ctxt . Throw();
-            return;
+            if (!MCArrayRemoveValue(*t_result, ctxt.GetCaseSensitive(), t_key))
+            {
+                ctxt.Throw();
+                return;
+            }
         }
 	}
     
@@ -655,8 +688,28 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
 //    end if
 // end repeat
 //
+// if left is not an array then no-op
+// else if right is not an array then left = empty
+//
+// Semantics of 'difference tLeft with tRight'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    end if
+// end repeat
+//
+// if left is not an array then no-op
+// else if right is not an array then no-op
 
-void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
+enum MCArrayDoIntersectOp
+{
+    kMCArrayDoIntersectOpIntersect,
+    kMCArrayDoIntersectOpIntersectRecursively,
+    kMCArrayDoIntersectOpDifference,
+};
+
+static void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCArrayDoIntersectOp p_op, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_dst))
     {
@@ -664,10 +717,17 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
         return;
         
     }
-    
+
     if (!MCValueIsArray(p_src))
     {
-        r_result = MCValueRetain(kMCEmptyString);
+        if (p_op != kMCArrayDoIntersectOpDifference)
+        {
+            r_result = MCValueRetain(kMCEmptyString);
+        }
+        else
+        {
+            r_result = MCValueRetain(p_dst);
+        }
         return;
     }
     
@@ -691,11 +751,8 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
     {
         bool t_key_exists;
         t_key_exists = MCArrayFetchValue(t_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value);
-        
-        if (t_key_exists && !p_recursive)
-            continue;
-        
-        if (!t_key_exists)
+
+        if (t_key_exists == (p_op == kMCArrayDoIntersectOpDifference))
         {
             if (!MCArrayRemoveValue(*t_result, ctxt . GetCaseSensitive(), t_key))
             {
@@ -703,10 +760,10 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
                 return;
             }
         }
-        else if (p_recursive)
+        else if (p_op == kMCArrayDoIntersectOpIntersectRecursively)
         {
             MCAutoValueRef t_recursive_result;
-            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
+            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, p_op, &t_recursive_result);
             
             if (ctxt . HasError())
                 return;
@@ -721,23 +778,34 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
 
 void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst, p_src, false, r_result);
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpUnion, r_result);
+}
+
+void MCArraysExecUnionRecursively(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+{
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpUnionRecursively, r_result);
+}
+
+void MCArraysExecSymmetricDifference(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+{
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpSymmetricDifference, r_result);
 }
 
 void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, false, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpIntersect, r_result);
 }
 
-void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+void MCArraysExecIntersectRecursively(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst, p_src, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpIntersectRecursively, r_result);
 }
 
-void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+void MCArraysExecDifference(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpDifference, r_result);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -91,6 +91,8 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCDefine;
 	case S_DELETE:
 		return new MCDelete;
+    case S_DIFFERENCE:
+        return new MCSetOp(MCSetOp::kOpDifference);
 	case S_DISABLE:
 		return new MCDisable;
 	// MW-2008-11-05: [[ Dispatch Command ]] Create a dispatch statement object
@@ -149,7 +151,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_INSERT:
 		return new MCInsert;
 	case S_INTERSECT:
-		return new MCArrayIntersectCmd;
+		return new MCSetOp(MCSetOp::kOpIntersect);
 	case S_KILL:
 		return new MCKill;
 	case S_LAUNCH:
@@ -269,6 +271,8 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCSubtract;
 	case S_SWITCH:
 		return new MCSwitch;
+    case S_SYMMETRIC:
+        return new MCSetOp(MCSetOp::kOpSymmetricDifference);
 	case S_THROW:
 		return new MCThrowKeyword;
 	case S_TOP_LEVEL:
@@ -286,7 +290,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_UNHILITE:
 		return new MCUnhilite;
 	case S_UNION:
-		return new MCArrayUnionCmd;
+		return new MCSetOp(MCSetOp::kOpUnion);
 	case S_UNLOAD:
 		return new MCUnload;
 	case S_UNLOCK:
