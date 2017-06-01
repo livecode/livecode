@@ -14,8 +14,11 @@ end if
 
 
 Summary:
-<execute|Executes> a list of <statement|statements> if a condition is
-true. 
+A <conditional statement> or series of <condtional statement|conditional statments> that
+if true will <execute> the <statement list|statementList> that follows that 
+<conditional statement>.  If none of the <condtional statement|conditional statments> are 
+true then the <statement list|elseStatementList> following the <else> keyword, if present,
+will execute.
 
 Introduced: 1.0
 
@@ -36,9 +39,11 @@ end if
 
 Parameters:
 condition (bool):
-Any <expression>. (If the <condition> <evaluate|evaluates> to the true, the <statement|statements> execute for that <if>
-clause.) if the <condition> <evaluate|evaluates> to false, the statement or <statementList> is
-skipped. 
+Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
+the <statement|statements> execute for that <condition>.
+If the <condition> <evaluate|evaluates> to false, the <statement> or 
+<statement list|statementList> following that <condition> is
+skipped.)
 
 statement|statementList:
 Of one or more <LiveCode> <statement|statements>, and can also include
@@ -56,8 +61,8 @@ Of one or more <LiveCode> <statement|statements>, and can also include
 structures>. 
 
 Description:
-Use the <if> <control structure> to <execute> a <statementList|statement> 
-(or list of <statementList|statements>) only under certain circumstances. 
+Use the <if> <control structure> to <execute> a <statement>
+(or <list of statements|statementList>) only under certain circumstances. 
 
 The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
 
