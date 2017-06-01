@@ -570,6 +570,11 @@ bool MCGContextIsValid(MCGContextRef self)
 	return self != NULL && self -> is_valid;
 }
 
+bool MCGContextIsLayerOpaque(MCGContextRef self)
+{
+	return SkAlphaTypeIsOpaque(self->layer->canvas->imageInfo().alphaType());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Graphics state operations
 
