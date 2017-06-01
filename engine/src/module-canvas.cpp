@@ -1766,6 +1766,7 @@ void MCCanvasTransformSkewWithList(MCCanvasTransformRef &x_transform, MCProperLi
 	MCCanvasTransformSkew(x_transform, t_skew.x, t_skew.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform)
 {
 	MCGAffineTransform t_transform;

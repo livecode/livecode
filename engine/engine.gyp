@@ -535,6 +535,11 @@
 							},
 						},
 
+						'sources':
+						[
+							'<(PRODUCT_DIR)/obj.target/engine_lcb_modules/geni/engine_lcb_modules.o',
+						],
+
 						'sources!':
 						[
 							'src/dummy.cpp',

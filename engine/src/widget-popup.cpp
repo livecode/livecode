@@ -465,7 +465,7 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_r
 	s_widget_popup->close();
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup()
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
 }

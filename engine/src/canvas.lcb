@@ -2284,10 +2284,10 @@ end syntax
 // TODO - add resize operation? "resize <image> to <width>,<height>"
 // TODO - implement image operations
 
-public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
 
 //syntax TransformImage is statement
 //	"transform" <mImage: Expression> "by" <mTransform: Expression>
@@ -4865,7 +4865,7 @@ end syntax
 ////////////////////////////////////////////////////////////////////////////////
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasPretendToAssignToThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as Data) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInt) returns nothing binds to "<builtin>"
@@ -4889,7 +4889,7 @@ syntax ThisCanvas is expression
     "this" "canvas"
 begin
     MCCanvasThisCanvas(output)
-    MCCanvasPretendToAssignThisCanvas(input)
+    MCCanvasPretendToAssignToThisCanvas(input)
 end syntax
 
 //////////

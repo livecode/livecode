@@ -61,6 +61,11 @@ platform_main(int argc, char *argv[], char *envp[])
     }
 	if (!MCScriptInitialize())
 	{
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+        {
+            MCLog("Error: %@", MCErrorGetMessage(*t_error));
+        }
 		MCEmscriptenBootError("LCB VM initialisation");
 	}
 

@@ -114,7 +114,8 @@ ffi_call(ffi_cif *p_cif,
 			// Get the actual JavaScript function
 			var func = Module.Runtime.functionPointers[index];
 
-			/*DEBUG // (no way to hide this behind an #ifdef, unfortunately)
+			/*DEBUG*/
+            // (no way to hide this behind an #ifdef, unfortunately)
 			// Get the function name
 			var DBG_func_name;
 			for (var key in Module) {
@@ -123,7 +124,6 @@ ffi_call(ffi_cif *p_cif,
 				}
 			}
 			var DBG_func_args = [];
-			*/
 
 			// ---------- Marshal arguments
 			var func_args = [];
@@ -139,9 +139,9 @@ ffi_call(ffi_cif *p_cif,
 
 				func_args.push(arg_val);
 
-				/*DEBUG
+				/*DEBUG*/
 				DBG_func_args.push('(' + arg_type + ')' + arg_val.toString(16));
-				*/
+				
 			}
 
 			var ret_type = null;
@@ -149,10 +149,10 @@ ffi_call(ffi_cif *p_cif,
 				ret_type = pointer_stringify(rvalue_type_ptr);
 			}
 
-			/*DEBUG
+			/*DEBUG*/
 			console.error('ffi_call: ' + fn.toString(16) + '=' + DBG_func_name +
 			              ' ' + DBG_func_args);
-			*/
+			
 
 			// ---------- Invoke
 			stack = Module.Runtime.stackSave();

@@ -29,8 +29,10 @@ public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Sta
 
 public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
+/* No implementation
 public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
