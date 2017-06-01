@@ -25,6 +25,7 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 
+				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/browser/browser.lcb',
 				#’widgets/chart/chart.lcb',
 				#'widgets/checkbox/checkbox.lcb',
