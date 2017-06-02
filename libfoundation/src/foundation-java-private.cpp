@@ -467,21 +467,21 @@ static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCPrope
     return MCProperListCopy(*t_list, r_list);
 }
 
-bool MCJavaObjectCreateGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
+void* MCJavaPrivateGlobalRef(void *p_object)
 {
-    MCAssert(p_object != nullptr);
-    void *t_obj_ptr = s_env -> NewGlobalRef(p_object);
-    return MCJavaObjectCreate(t_obj_ptr, r_object);
+    MCJavaDoAttachCurrentThread();
+    jobject t_obj = static_cast<jobject>(p_object);
+    return static_cast<void *>(s_env->NewGlobalRef(t_obj));
 }
 
-bool MCJavaObjectCreateNullableGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
+bool MCJavaObjectCreateNullable(jobject p_object, MCJavaObjectRef &r_object)
 {
     if (p_object == nullptr)
     {
         r_object = nullptr;
         return true;
     }
-    return MCJavaObjectCreateGlobalRef(p_object, r_object);
+    return MCJavaObjectCreate(p_object, r_object);
 }
 
 static jstring MCJavaGetJObjectClassName(jobject p_obj)
@@ -567,7 +567,7 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
                 s_env -> CallObjectMethodA(p_instance, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -649,7 +649,7 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
                 s_env -> CallStaticObjectMethodA(p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -731,7 +731,7 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
                 s_env -> CallNonvirtualObjectMethodA(p_instance, p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -813,7 +813,7 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
                 s_env -> GetObjectField(p_instance, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -894,7 +894,7 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
                 s_env -> GetStaticObjectField(p_class, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -1084,7 +1084,7 @@ static bool __JavaJNIConstructorResult(jclass p_class, jmethodID p_method_id, jv
     jobject t_result = s_env -> NewObjectA(p_class, p_method_id, p_params);
     
     MCJavaObjectRef t_result_value;
-    if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+    if (!MCJavaObjectCreate(t_result, t_result_value))
         return false;
     *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
 
@@ -1381,7 +1381,7 @@ bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signatur
                                                     t_handler);
     
     MCJavaObjectRef t_result_value;
-    if (!MCJavaObjectCreateNullableGlobalRef(t_proxy, t_result_value))
+    if (!MCJavaObjectCreateNullable(t_proxy, t_result_value))
         return false;
     
     *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
@@ -1586,7 +1586,7 @@ bool MCJavaPrivateConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRe
     if (!__MCJavaStringToJString(p_string, t_string))
         return false;
     
-    return MCJavaObjectCreateGlobalRef(t_string, r_object);
+    return MCJavaObjectCreate(t_string, r_object);
 }
 
 bool MCJavaPrivateConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string)
@@ -1601,7 +1601,7 @@ bool MCJavaPrivateConvertDataRefToJByteArray(MCDataRef p_data, MCJavaObjectRef &
     if (!__MCJavaDataToJByteArray(p_data, t_array))
         return false;
     
-    return MCJavaObjectCreateGlobalRef(t_array, r_object);
+    return MCJavaObjectCreate(t_array, r_object);
 }
 
 bool MCJavaPrivateConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_data)
@@ -1843,5 +1843,10 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
 bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name)
 {
     return false;
+}
+
+void* MCJavaPrivateGlobalRef(void *p_object)
+{
+    return p_object;
 }
 #endif
