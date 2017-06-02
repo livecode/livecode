@@ -23,15 +23,10 @@ Parameters:
 mode (enum):
 Specifies the action to take when an error occurs. The mode types are:
 
--   "debugger": is for information only and indicates that the script is
-    being run in 'remote debug' mode. This is only relevant to the
-    on-rev engine
--   "inline": indicates that the error should be output into the stdout
-    stream. In this case, the engine assumes that the output is HTML and
-    puts the error messages in a 'pre' block
+-   "debugger": is for information only and indicates that the script is being run in 'remote debug' mode. This is only relevant to the on-rev engine
+-   "inline": indicates that the error should be output into the stdout stream. In this case, the engine assumes that the output is HTML and puts the error messages in a 'pre' block
 -   "stderr": specifies that the error should be written out to stderr
--   "quiet": indicates that nothing is output anywhere when an error
-    occurs 
+-   "quiet": indicates that nothing is output anywhere when an error occurs 
 
 
 Description:
