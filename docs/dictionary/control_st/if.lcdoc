@@ -15,7 +15,7 @@ end if
 
 Summary:
 A <conditional statement> following an <if> or an optional series of
-<condtional statement|conditional statments> following an <else if>
+<condtional statement|conditional statments> following an <else if|else if>
 that if true will <execute> the <statement list|statementList>
 that follows that <conditional statement>.  If none of the
 <condtional statement|conditional statments> are true then the
