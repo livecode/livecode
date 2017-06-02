@@ -1,0 +1,3 @@
+- Added mobileGetDeviceToken as related to the pushNotificationRegistrationError dictionary entry
+- Added mobileGetDeviceToken as related to the pushNotificationReceived dictionary entry
+- Added mobileGetDeviceToken as related to the pushNotificationRegistered dictionary entry
