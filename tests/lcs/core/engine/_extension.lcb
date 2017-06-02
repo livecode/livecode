@@ -1,5 +1,6 @@
 library com.livecode.lcs_tests.core.extension
 
+use com.livecode.engine
 use com.livecode.lcs_tests.core.extension.support
 
 public handler TestExtensionBridgeNames_ExecuteScript()
@@ -66,6 +67,18 @@ end handler
 
 public handler TestExtensionLog_Array()
 	log {"a": 1}
+end handler
+
+public handler TestExtensionLog_ScriptObject()
+	resolve script object "button 1"
+	log the result
+end handler
+
+public handler TestExtensionLog_DeletedScriptObject()
+	variable tScriptObject as ScriptObject
+	resolve script object "button 1" into tScriptObject
+	execute script "delete button 1"
+	log tScriptObject
 end handler
 
 end library

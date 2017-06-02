@@ -2431,7 +2431,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
             //   but *only* for this control (continue with names the rest of the way).
             Properties t_which_requested;
             t_which_requested = which;
-            if (which == P_LONG_NAME && isunnamed())
+            if ((which == P_LONG_NAME || which == P_LONG_NAME_NO_FILENAME) && isunnamed())
                 which = P_LONG_ID;
             if (parent)
             {
