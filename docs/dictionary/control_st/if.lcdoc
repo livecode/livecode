@@ -21,7 +21,7 @@ that follows that <conditional statement>.  If none of the
 <condtional statement|conditional statments> are true then the
 <statement list|elseStatementList> following the <else> keyword,
 if present, will execute. If the <if> <control structure> contains
-more than one line the <if><control structure> must end with an 
+more than one line the <if> <control structure> must end with an 
 <end if> keyword.
 
 Introduced: 1.0
@@ -49,17 +49,17 @@ If the <condition> <evaluate|evaluates> to false, the <statement> or
 <statement list|statementList> following that <condition> is
 skipped.)
 
-statement|statementList:
+statementList:
 Of one or more <LiveCode> <statement|statements>, and can also include
 <if>, <switch>, <try>, or <repeat> <control structure|control
 structures>. 
 
-elseIfStatement|elseIfStatementList:
+elseIfStatementList:
 Of one or more <LiveCode> <statement|statements>, and can also include
 <if>, <switch>, <try>, or <repeat> <control structure|control
 structures>. 
 
-elseStatement|elseStatementList:
+elseStatementList:
 Of one or more <LiveCode> <statement|statements>, and can also include
 <if>, <switch>, <try>, or <repeat> <control structure|control
 structures>. 
