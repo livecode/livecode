@@ -513,6 +513,9 @@ static LT export_table[] =
 
 LT factor_table[] =
     {
+    	// MDW-2016-03-16 [[ feature_not_equal_operator ]] implement ! and != operators
+        {"!", TT_UNOP, O_NOT},
+        {"!=", TT_BINOP, O_NE},
         {"&", TT_BINOP, O_CONCAT},
         {"&&", TT_BINOP, O_CONCAT_SPACE},
         {"(", TT_LPAREN, O_GROUPING},
