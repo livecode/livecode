@@ -2031,6 +2031,8 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
    
+   appendToStringList "revInternal_SetJAVA_HOME", tStartupScript
+   
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
    repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
