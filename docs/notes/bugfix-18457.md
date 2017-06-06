@@ -1,0 +1,1 @@
+# Fixed bug not throwing error when evaluating functions in merge

@@ -1402,11 +1402,15 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 
 				MCExecContext t_ctxt(ctxt);
 
-				MCerrorlock++;
 				if (t_is_expression)
 				{
                     // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
                     ctxt.eval(t_ctxt, *t_expression, &t_value);
+                    if (*t_value == nullptr)
+                    {
+                        ctxt . LegacyThrow(EE_MERGE_BADSOURCE);
+                        return false;
+                    }
 				}
 				else
                 {
@@ -1418,8 +1422,7 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
                     ctxt . SetTheResultToEmpty();
 				}
 				t_valid = !t_ctxt.HasError();
-				MCerrorlock--;
-
+				
 				if (t_valid && !ctxt.ForceToString(*t_value, &t_replacement))
 					return false;
 			}
