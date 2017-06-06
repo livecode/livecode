@@ -15,7 +15,8 @@ The foreign handler binding to such a function takes a value that should
 either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
 listener should only have one available callback. If the listener has 
 multiple callbacks, an array can be used to assign handlers to each. Each 
-key in the array must match the name of a callback in the listener.  
+key in the array must match the name of a callback in the listener. 
+Overloaded methods in the interface are not currently supported.
 
 For example:
 
