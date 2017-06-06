@@ -197,11 +197,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	reqstyle = style;
 	reqprinter = printer;
 	font = new (nothrow) MCFontStruct;
-	if (MCnoui)
-	{
-		memset(font, 0, sizeof(MCFontStruct));
-		return;
-	}
+
 	LOGFONTW logfont;
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
