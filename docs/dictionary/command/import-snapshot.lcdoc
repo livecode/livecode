@@ -6,7 +6,7 @@ Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [(with | wi
 
 Summary:
 Creates an <image> of a portion of the screen, portion of a stack or a
-specific object.
+specific object and sets <it> to the long id of the created <image>.
 
 Introduced: 1.0
 
@@ -57,7 +57,8 @@ Use the <import snapshot> <command> to place a screenshot in the
 <current stack>.
 
 The <import snapshot> <command> creates a new <image> in the center of
-the <current card> and places the snapshot in the <image>.
+the <current card> and places the snapshot in the <image> and sets 
+the <it> variable to long id of the created <image>.
 
 iOS supports both the object and screen snapshot variants of the <import
 snapshot> command. In the screen snapshot case, coordinates are given
@@ -116,7 +117,7 @@ To import a snapshot of the screen in iOS use the form:
 References: select (command), export snapshot (command), import (command),
 property (glossary), current stack (glossary), current card (glossary),
 command (glossary), image (keyword), cursor (property),
-paintCompression (property), windowID (property)
+paintCompression (property), windowID (property), it (property)
 
 Tags: multimedia
 
