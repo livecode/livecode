@@ -684,19 +684,30 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 			MCValueRef t_orien_value = nil;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
 			MCStringRef t_orientation = (MCStringRef)(t_orien_value);
-            if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT;
-            else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
-            else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
-            else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
-            else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_UP;
-            else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_DOWN;
             
+            uindex_t t_start = 0;
+            uindex_t t_end = MCStringGetLength(t_orientation) - 1;
+            
+            // ignore spaces at the beginning
+            while (t_start < t_end && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(t_orientation, t_start)))
+                t_start++;
+            
+            // ignore spaces at the end
+            while (t_start < t_end && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(t_orientation, t_end)))
+                t_end--;
+            
+            if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1 ), MCSTR("portrait"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_PORTRAIT;
+            else if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1), MCSTR("portrait upside down"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+            else if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1), MCSTR("landscape right"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
+            else if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1), MCSTR("landscape left"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
+            else if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1), MCSTR("face up"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_FACE_UP;
+            else if (MCStringSubstringIsEqualTo(t_orientation, MCRangeMake(t_start, t_end - t_start + 1), MCSTR("face down"), kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_FACE_DOWN;
         }
 	}
 
