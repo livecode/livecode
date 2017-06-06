@@ -2752,6 +2752,9 @@ enum Exec_errors
 
     // {EE-0901} messageDigest: error in message data parameter
     EE_MESSAGEDIGEST_BADDATA,
+
+    // {EE-0902} snapshot: no screen
+    EE_SNAPSHOT_FAILED,
 };
 
 extern const char *MCexecutionerrors;

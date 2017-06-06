@@ -7,8 +7,8 @@ Syntax: import snapshot [from rect[angle] <rectDescription>] [of {<objectRef> | 
 Syntax: import snapshot from {<objectRef> [{with | without} effects] | <stackRef>} [at size <sizeDescription>]
 
 Summary:
-Creates an <image> of a portion of the screen, a portion of a stack 
-window, or a specific object.
+Creates an <image> of a portion of the screen, portion of a stack or a
+specific object and sets <it> to the long id of the created <image>.
 
 Introduced: 1.0
 
@@ -68,7 +68,8 @@ Use the <import snapshot> <command> to place a screenshot in the
 <current stack>.
 
 The <import snapshot> <command> creates a new <image> in the center of
-the <current card> and places the snapshot in the <image>.
+the <current card> and places the snapshot in the <image> and sets 
+the <it> variable to long id of the created <image>.
 
 iOS supports both the object and screen snapshot variants of the 
 <import snapshot> command. In the screen snapshot case, coordinates 
@@ -151,7 +152,7 @@ import (command), current stack (glossary), current card (glossary),
 command (glossary), object reference (glossary), property (glossary), 
 image (glossary), cursor (property), blendlevel (property), ink (property), 
 paintCompression (property), rectangle (property), select (glossary), 
-token (glossary), windowID (property)
+token (glossary), windowID (property), it (property)
 
 Tags: multimedia
 
