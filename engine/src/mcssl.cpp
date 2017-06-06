@@ -68,10 +68,12 @@ extern "C" void finalise_weak_link_ssl(void);
 
 static Boolean cryptinited = False;
 
+#ifdef MCSSL
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified root certificates
 static STACK_OF(X509) *s_ssl_system_root_certs;
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified CRLs
 static STACK_OF(X509_CRL) *s_ssl_system_crls;
+#endif
 
 Boolean load_crypto_symbols()
 {
@@ -676,12 +678,15 @@ void shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // IM-2014-07-28: [[ Bug 12822 ]] Common certificate loading code refactored from opensslsocket.cpp
 
+#ifdef MCSSL
 bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx);
+#endif
 
 bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, MCStringRef *r_error)
 {
+#ifdef MCSSL
 	bool t_success;
 	t_success = true;
 	
@@ -734,10 +739,13 @@ bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, MCStringRef *r_error)
 	}
 	
 	return t_success;
+#endif
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef MCSSL
 struct cert_folder_load_context_t
 {
 	const char *path;
@@ -1065,13 +1073,16 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 
 #endif
 
+#endif /* MCSSL */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 
-#include <Security/Security.h>
+#ifdef MCSSL
 
+#include <Security/Security.h>
 static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
 {
     bool t_success;
@@ -1112,6 +1123,7 @@ static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
     else
         return NULL;
 }
+#endif /* MCSSL */
 
 // MM-2015-06-04: [[ MobileSockets ]] Return true if we should trust the
 //   certificates in the given SSL connection, false otherwise.

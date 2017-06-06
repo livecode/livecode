@@ -1245,7 +1245,6 @@
 				{
 					'sources!':
 					[
-						'src/mcssl.cpp',
 						'src/notify.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
