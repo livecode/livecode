@@ -95,7 +95,7 @@ static jmethodID s_openglview_configure_method = 0;
 // function.
 static JavaVM *s_java_vm = nullptr;
 // The JNIEnv for the android UI thread.
-static JNIEnv *s_android_ui_env;
+static JNIEnv *s_android_ui_env = nullptr;
 // The JNI environment pointer *for our auxiliary thread*. This only has lifetime
 // as long as 'mobile_main' is running.
 static JNIEnv *s_java_env = nullptr;
