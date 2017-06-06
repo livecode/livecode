@@ -292,22 +292,25 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	
 	// Create a text format object describing the font
 	IDWriteTextFormat* t_format = MCGDWTextFormatFromHFONT(static_cast<HFONT>(p_font.fid), p_font.size);
+    if (t_format != nullptr)
+    {
+	    // Create a text layout for the string and this font
+	    IDWriteTextLayout* t_layout = nil;
+	    if (SUCCEEDED(s_DWFactory->CreateTextLayout(p_text, p_length / sizeof(unichar_t), t_format, INFINITY, INFINITY, &t_layout)))
+	    {
+		    // Get the text metrics for the layout
+		    DWRITE_TEXT_METRICS t_metrics;
+		    if (SUCCEEDED(t_layout->GetMetrics(&t_metrics)))
+		    {
+			    t_width = t_metrics.widthIncludingTrailingWhitespace;
+		    }
 
-	// Create a text layout for the string and this font
-	IDWriteTextLayout* t_layout = nil;
-	if (SUCCEEDED(s_DWFactory->CreateTextLayout(p_text, p_length / sizeof(unichar_t), t_format, INFINITY, INFINITY, &t_layout)))
-	{
-		// Get the text metrics for the layout
-		DWRITE_TEXT_METRICS t_metrics;
-		if (SUCCEEDED(t_layout->GetMetrics(&t_metrics)))
-		{
-			t_width = t_metrics.widthIncludingTrailingWhitespace;
-		}
-	}
+            t_layout->Release();
+	    }
 
-	// Release the created objects and return
-	t_layout->Release();
-	t_format->Release();
+	    t_format->Release();
+    }
+
 	return t_width;
 }
 
