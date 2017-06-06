@@ -2309,8 +2309,9 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
     // SN-2014-08-08: [[ Bug 13124 ]] Make sure we ignore the last empty block
     //  of the TAB-terminated paragraphs
     if (segment != last_segment
-            && segment -> next() -> GetFirstVisualBlock() -> m_size)
-        return segment -> next() -> GetFirstVisualBlock();
+            && segment -> next() -> GetFirstVisualBlock() -> m_size
+                && !last_segment -> GetFirstVisualBlock() -> m_size)
+            return segment -> next() -> GetFirstVisualBlock();
     
     return nil;
 }
