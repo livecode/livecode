@@ -377,7 +377,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 		// MW-2009-06-14: We will assume (perhaps unwisely) that is 'opaque' is set
 		//   then the background is now, completely opaque.
-		bool t_was_opaque;
+		bool t_was_opaque = false;
 		if (getflag(F_OPAQUE))
 			t_was_opaque = dc -> changeopaque(true);
 

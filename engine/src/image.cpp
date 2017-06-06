@@ -844,7 +844,7 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		}
 	}
 
-	bool t_need_group;
+	bool t_need_group = false;
 	if (!p_isolated)
 	{
 		// MW-2009-06-10: [[ Bitmap Effects ]]

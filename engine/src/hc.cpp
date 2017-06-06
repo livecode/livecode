@@ -674,9 +674,9 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 		string = MCU_empty();
 	char *eptr = string;
 	MCParagraph *paragraphs = NULL;
-	const char *tname;
-	uint2 tsize;
-	uint2 tstyle;
+	const char *tname = nullptr;
+	uint2 tsize = 0;
+	uint2 tstyle = 0;
 	uint2 aindex = 2;
 	uint2 aoffset = 0;
 	uint2 alength = 0;

@@ -2522,7 +2522,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
-	bool t_was_opaque;
+	bool t_was_opaque = false;
 	if (getflag(F_OPAQUE))
 		t_was_opaque = dc -> changeopaque(true);
 	drawrect(dc, dirty);

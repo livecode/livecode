@@ -858,7 +858,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_has_error = true;
 	}
 	
-	uint32_t t_platform;
+	uint32_t t_platform = PLATFORM_NONE;
 	switch(m_platform)
 	{
 		case PLATFORM_MACOSX:
