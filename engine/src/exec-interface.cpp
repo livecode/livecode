@@ -3623,6 +3623,8 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
+    
+    p_chunk.object->signallisteners(P_TEXT);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
