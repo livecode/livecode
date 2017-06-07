@@ -644,6 +644,10 @@ Instance and nonvirtual calling conventions require instances of the given
 Java class, so the foreign handler declaration will always require a Java
 object parameter.
 
+> **Warning:** At the moment it is not advised to use callbacks that may be
+> executed on arbitrary threads, as this is likely to cause your application
+> to crash.
+
 ### Properties
 
     PropertyDefinition
