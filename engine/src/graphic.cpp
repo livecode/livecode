@@ -747,13 +747,13 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 
 void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 {
-	uint2 i = 0;
-	while (i < npts)
+	uindex_t i = 0;
+	while (i < uindex_t(npts))
 	{
-		bool t_degenerate;
+        bool t_degenerate;
 		t_degenerate = true;
 		
-		uint2 count = 0;
+		uindex_t count = 0;
 		while (i + count < npts && pts[count + i].x != MININT2)
 		{
 			if (count > 0 &&
@@ -1016,7 +1016,7 @@ void MCGraphic::delpoints()
 	}
 }
 
-void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
+bool MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
@@ -1031,15 +1031,15 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
             npts -= 1;
         }
             
-		uint2 i ;
+		uindex_t i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
         
 		for (i=1; i<=npts; i++)
 		{
-			if ((i==npts) || (pts[i].x == MININT2))
+            if ((i==npts) || (pts[i].x == MININT2))
 			{
-				if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
+            	if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
 				{
 					t_count++ ;
 				}
@@ -1051,9 +1051,16 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
         if (t_has_trailing_break)
             t_count++;
 		
+        uindex_t t_check = (uindex_t) npts + (uindex_t) t_count;
+        
+        if (t_check > 65535)
+        {
+            return false;
+        }
+        
         if (t_count)
 		{
-			MCPoint *newpts = new MCPoint[npts+t_count] ;
+            MCPoint *newpts = new MCPoint[npts+t_count] ;
 			startpt = pts ;
 			MCPoint *currentpt = newpts ;
 			*(currentpt++) = pts[0] ;
@@ -1085,6 +1092,7 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			oldpoints = NULL;
 		}
 	}
+    return true;
 }
 
 MCStringRef MCGraphic::getlabeltext()
@@ -1147,7 +1155,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		// MDW-2014-06-18: [[ rect_points ]] refactored
 		uindex_t t_count;
 		/* UNCHECKED */ get_points_for_regular_polygon(points, t_count);
-		npoints = t_count;
+        npoints = t_count;
 	}
 	if (points == NULL && getstyleint(flags) == F_OVAL)
 	{
@@ -1458,7 +1466,13 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 		if (redraw)
 		{
 			if (flags & F_OPAQUE)
-				closepolygon(realpoints, nrealpoints);
+            {
+                bool t_succ = closepolygon(realpoints, nrealpoints);
+                if (!t_succ)
+                {
+                    return;
+                }
+            }
 			compute_minrect();
 			if (rect.x != drect.x || rect.y != drect.y
 					|| rect.width != drect.width || rect.height != drect.height)

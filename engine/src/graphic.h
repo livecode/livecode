@@ -128,7 +128,7 @@ public:
 	void compute_minrect();
 	virtual MCRectangle geteffectiverect(void) const;
 	void delpoints();
-	void closepolygon(MCPoint *&pts, uint2 &npts);
+	bool closepolygon(MCPoint *&pts, uint2 &npts);
 	MCStringRef getlabeltext();
 	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef& s, uint2 fstyle);
 
