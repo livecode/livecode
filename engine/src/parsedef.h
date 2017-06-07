@@ -196,7 +196,8 @@ enum Exec_stat {
     ES_PASS,
     ES_PASS_ALL,
     ES_NOT_HANDLED,
-    ES_NOT_FOUND
+    ES_NOT_FOUND,
+    ES_PASS_ERROR
 };
 
 enum Exit_to {

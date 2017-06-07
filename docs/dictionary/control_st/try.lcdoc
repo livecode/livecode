@@ -77,6 +77,9 @@ or not there is an <error>. Since the <finally> section is always
 deleting <variable|variables>. The <finally> section is an optional part
 of the <try> <control structure|structure>.
 
+Use the <pass> error <statement> to <pass> the error from the catch or
+finally statements of the <try> <control structure>.
+
 >*Note:* The <try> <control structure> is implemented internally as a
 > <command> and appears in the <commandNames>.
 

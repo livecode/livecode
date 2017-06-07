@@ -2,7 +2,7 @@ Name: pass
 
 Type: control structure
 
-Syntax: pass <messageName> [to top]
+Syntax: pass { <messageName> [to top] | error }
 
 Summary:
 Stops the current <handler> and <pass|passes> the <message> to the next
@@ -75,14 +75,19 @@ message path, use the <exit> <control structure> instead. To halt the
 current <handler> and return a result, use the <return> <control
 structure> instead.
 
+Use the <pass> error form to <pass> an error from within the catch or
+finally <statement|statements> of a <try> <control structure>. <Pass>
+error can not be used outside of a <try> <control structure>.
+
 >*Important:*  You cannot use the <pass> <command> to pass a <message>
 > that was originally sent with the <send> <command>.
 
 Changes:
 The pass...to top form was added in version 2.1.
+The pass error form was added in version 9.0
 
 References: call (command), send (command), return (constant),
-pass (control structure), exit (control structure),
+try (control structure), exit (control structure),
 setProp (control structure), if (control structure), pass (glossary),
 engine (glossary), built-in message (glossary), property (glossary),
 statement (glossary), execute (glossary), command (glossary),

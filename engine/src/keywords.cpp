@@ -931,27 +931,35 @@ Parse_stat MCPass::parse(MCScriptPoint &sp)
 	Symbol_type type;
 
 	initpoint(sp);
-	if (sp.next(type) != PS_NORMAL ||
-		!sp.gethandler()->hasname(sp.gettoken_nameref()))
-	{
-		MCperror->add(PE_PASS_NOMESSAGE, sp);
-		return PS_ERROR;
-	}
-	if (sp.skip_token(SP_FACTOR, TT_TO) == PS_NORMAL)
-	{
-		if (sp.next(type) != PS_NORMAL)
-		{
-			MCperror->add(PE_PASS_NOMESSAGE, sp);
-			return PS_ERROR;
-		}
-		all = True;
-	}
-	if (sp.gethandler() -> isprivate())
-	{
-		MCperror -> add(PE_PRIVATE_BADPASS, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
+    
+    if (sp.getcanpasserror() && sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_ERROR) == PS_NORMAL)
+    {
+        error = True;
+        return PS_NORMAL;
+    }
+    
+    if (sp.next(type) != PS_NORMAL ||
+        !sp.gethandler()->hasname(sp.gettoken_nameref()))
+    {
+        MCperror->add(PE_PASS_NOMESSAGE, sp);
+        return PS_ERROR;
+    }
+    if (sp.skip_token(SP_FACTOR, TT_TO) == PS_NORMAL)
+    {
+        if (sp.next(type) != PS_NORMAL)
+        {
+            MCperror->add(PE_PASS_NOMESSAGE, sp);
+            return PS_ERROR;
+        }
+        all = True;
+    }
+    if (sp.gethandler() -> isprivate())
+    {
+        MCperror -> add(PE_PRIVATE_BADPASS, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
 }
 
 uint4 MCPass::linecount()
@@ -963,7 +971,9 @@ void MCPass::exec_ctxt(MCExecContext& ctxt)
 {
 	if (all)
 		MCKeywordsExecPassAll(ctxt);
-	else
+	else if (error)
+        MCKeywordsExecPassError(ctxt);
+    else
 		MCKeywordsExecPass(ctxt);
 }
 
@@ -1211,15 +1221,18 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADNAME, sp);
 						return PS_ERROR;
 					}
+                    sp.setcanpasserror(true);
 					continue;
 					break;
 				case TT_FINALLY:
-					state = TS_FINALLY;
+                    sp.setcanpasserror(true);
+                    state = TS_FINALLY;
 					curstatement = NULL;
 					continue;
 					break;
 				case TT_END:
-					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
+                    sp.setcanpasserror(false);
+                    if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
 					{
 						MCperror->add
 						(PE_TRY_WANTEDENDTRY, sp);
