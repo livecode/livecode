@@ -34,10 +34,10 @@ on TestGetSetSecurityPermissions
    TestAssert "Getting new securityPermissions correctly", the securityPermissions is tNewPermissions
 end TestGetSetSecurityPermissions
 
-on TestDeleteGraphicRefToGlobals
+on TestDeletingMenubarGroupDereferencesProperly
     create group
     set the menubar to it
     set the defaultmenubar to it
     delete it
     TestAssert "did not crash", true
-end TestDeleteGraphicRefToGlobals
+end TestDeletingMenubarGroupDereferencesProperly
