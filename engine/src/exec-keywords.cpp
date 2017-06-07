@@ -830,8 +830,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
             default:
                 if (state == TS_FINALLY)
                 {
-                    MCeerror->clear();
-                    retcode = ES_NORMAL;
+                    retcode = stat;
                     tspr = NULL;
                 }
                 else
