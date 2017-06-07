@@ -709,6 +709,9 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 {
 	Try_state state = TS_TRY;
 	MCStatement *tspr = trystatements;
+    if (tspr == NULL)
+        tspr = finallystatements;
+    
 	Exec_stat stat;
 	Exec_stat retcode = ES_NORMAL;
 	MCtrylock++;
