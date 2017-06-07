@@ -1171,6 +1171,11 @@ static bool MCJavaClassNameToPathString(MCNameRef p_class_name, MCStringRef& r_s
 
 static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
 {
+    // The system class loader does not know about LC's android engine
+    // classes. We cache the android engine class loader on startup and
+    // call its findClass method to find any classes named
+    // com.runrev.android.<Class>. For all other classes we just use
+    // the JNIEnv FindClass method & system class loader.
     if (MCStringBeginsWith(MCNameGetString(p_class_name),
                            MCSTR("com.runrev.android"),
                            kMCStringOptionCompareExact))
