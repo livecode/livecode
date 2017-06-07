@@ -29,6 +29,7 @@
 #include "mblandroidutil.h"
 
 #include "mblsyntax.h"
+#include "system.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +40,19 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_d
 JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback(JNIEnv *env, jobject object, jlong p_handler, jstring p_method_name, jobjectArray p_args)
 {
     MCJavaPrivateDoNativeListenerCallback(p_handler, p_method_name, p_args);
+    
+    // At the moment we have no way of dealing with any errors thrown in
+    // the course of handling or attempting to handle the native listener
+    // callback, so
+    MCAutoErrorRef t_error;
+    if (MCErrorCatch(&t_error))
+    {
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringFormat(&t_string, "%@", *t_error);
+        
+        MCsystem->Debug(*t_string);
+    }
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
