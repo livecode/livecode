@@ -1235,17 +1235,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    -- AB-2017-05-31: Add more background modes
    local tBackgroundModes
-   if not tEnableBackgroundExecution then
-      put false into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
-      put false into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
-      put false into tBackgroundModes["${BACKGROUND_VOIP}"]
-      put false into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
-      put false into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
-      put false into tBackgroundModes["${USE_BT_LE}"]
-      put false into tBackgroundModes["${ACTS_AS_BT_LE}"]
-      put false into tBackgroundModes["${BACKGROUND_FETCH}"]
-      put false into tBackgroundModes["${REMOTE_NOTIFICATIONS}"]
-   else
+   
+    if tEnableBackgroundExecution is empty then
+      put "false" into tEnableBackgroundExecution
+   end if
+   
+   if tEnableBackgroundExecution then
       put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
       put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
       put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
@@ -1283,10 +1278,6 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    if tPrerenderedIcon is empty then
       put "false" into tPrerenderedIcon
-   end if
-   
-   if tEnableBackgroundExecution is empty then
-      put "true" into tEnableBackgroundExecution
    end if
    
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
