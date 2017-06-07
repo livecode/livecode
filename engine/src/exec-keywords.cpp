@@ -752,7 +752,10 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                 }
                 break;
             case ES_ERROR:
+            case ES_NOT_FOUND:
+            case ES_NOT_HANDLED:
                 if ((MCtrace || MCnbreakpoints) && state != TS_TRY)
+                {
                     do
                     {
                         if (MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT))
@@ -760,9 +763,10 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                         ctxt.IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
-				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
+                    while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
+                }
                 
-                if (stat == ES_ERROR)
+                if (stat == ES_ERROR || stat == ES_NOT_FOUND || stat == ES_NOT_HANDLED)
                 {
                     if (MCexitall)
                     {
