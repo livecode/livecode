@@ -3775,9 +3775,17 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
             // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
             iptr->setbitmap(t_bitmap, 1.0f, true);
             iptr->attach(OP_CENTER, false);
+            MCAutoValueRef t_id;
+            iptr -> names(P_LONG_ID, &t_id);
+            ctxt . SetItToValue(*t_id);
         }
         
         MCImageFreeBitmap(t_bitmap);
+    }
+    else
+    {
+        ctxt . LegacyThrow(EE_SNAPSHOT_FAILED);
+        return ;
     }
 }
 void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size)
@@ -3825,6 +3833,9 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
         // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
         iptr->setbitmap(t_bitmap, 1.0f, true);
         iptr->attach(OP_CENTER, false);
+        MCAutoValueRef t_id;
+        iptr -> names(P_LONG_ID, &t_id);
+        ctxt . SetItToValue(*t_id);
     }
     
     MCImageFreeBitmap(t_bitmap);
@@ -3910,7 +3921,7 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 			MCInterfaceExecImportGetStream(ctxt, p_mask_filename, t_mask_stream);
 		if (p_mask_filename == nil || t_mask_stream != NULL)
 		{
-			MCtemplateimage->setparent(p_container);
+			MCtemplateimage->setparent(nullptr);
 			MCImage *t_image = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			MCtemplateimage->setparent(NULL);
 			t_image->setflag(True, F_I_ALWAYS_BUFFER);
