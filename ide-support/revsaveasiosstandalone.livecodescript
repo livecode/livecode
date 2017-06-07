@@ -1539,7 +1539,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put "<string>newsstand-content</string>" into tBackgroundValues["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
    put "<string>external-accessory</string>" into tBackgroundValues["${EXTERNAL_ACC_COMM}"]
    put "<string>bluetooth-central</string>" into tBackgroundValues["${USE_BT_LE}"]
-   put "<string>bluetooth-peripherla</string>" into tBackgroundValues["${ACTS_AS_BT_LE}"]
+   put "<string>bluetooth-peripheral</string>" into tBackgroundValues["${ACTS_AS_BT_LE}"]
    put "<string>fetch</string>" into tBackgroundValues["${BACKGROUND_FETCH}"]
    put "<string>remote-notification</string>" into tBackgroundValues["${REMOTE_NOTIFICATIONS}"]
    
@@ -1548,6 +1548,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    repeat for each key tKey in tBackgroundModes
       if tBackgroundModes[tKey] is true then
          replace tKey with tBackgroundValues[tKey] in pPlist
+      else
+         replace tKey with empty in pPlist
       end if
    end repeat
    
