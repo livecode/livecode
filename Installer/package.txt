@@ -721,9 +721,7 @@ component Externals.MacOSX
 //////////
 
 component Externals.CEF.Linux
-	into [[TargetFolder]]/Externals/CEF place
-		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
-		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
+	into [[TargetFolder]]/CEF place
 		executable linux-[[TargetArchitecture]]:CEF/libcef.so
 		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
 		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
@@ -732,9 +730,6 @@ component Externals.CEF.Linux
 		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_extensions.pak
-		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
-		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
-		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat

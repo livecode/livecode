@@ -2255,7 +2255,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
-         put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
+         put tCurrentLocation & slash & "CEF" into tCEFDest
          
          revSBEnsureFolder tCEFDest
          if the result is not empty then
@@ -2296,12 +2296,12 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          end if
          
          repeat for each line tCEFFile in tCEFFiles
-            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
+            revSBCopyFileToFolder tCefResources & slash & ".." & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
             if the result is not empty then
                revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
             end if
          end repeat
-         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
+         --revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       default
          break
