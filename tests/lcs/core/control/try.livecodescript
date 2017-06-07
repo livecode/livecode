@@ -82,13 +82,12 @@ on TestTryMultipleEvents
 end TestTryMultipleEvents
 
 on TestTryErrorInCatch
-   TestAssertBroken "Error in catch is thrown", false, "Bug 19812"
-   /*TestAssertThrow "Error in catch is thrown", "__TestTryErrorInCatch", the long id of me, "EE_STATEMENT_BADCOMMAND"
+   TestAssertThrow "Error in catch is thrown", "__TestTryErrorInCatch", the long id of me, "EE_STATEMENT_BADCOMMAND"
    try
       NonExistantHandler3
    catch tError
       TestAssert "Unthrown errors in catch are cleared", line 1 of tError contains "NonExistantHandler3"
-   end try*/
+   end try
 end TestTryErrorInCatch
 
 on __TestTryErrorInCatch
@@ -100,14 +99,13 @@ on __TestTryErrorInCatch
 end __TestTryErrorInCatch
 
 on TestTryErrorInFinally
-   TestAssertBroken "Error in finally is thrown", false, "Bug 19812"
-   /*TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinally", the long id of me, "EE_STATEMENT_BADCOMMAND"
+   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinally", the long id of me, "EE_STATEMENT_BADCOMMAND"
    try
       NonExistantHandler3
    catch tError
       TestAssert "Unthrown errors in finally are cleared", line 1 of tError contains "NonExistantHandler3"
    end try
-   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinallyNoTryStatements", the long id of me, "EE_STATEMENT_BADCOMMAND"*/
+   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinallyNoTryStatements", the long id of me, "EE_STATEMENT_BADCOMMAND"
 end TestTryErrorInFinally
 
 on __TestTryErrorInFinally
@@ -124,6 +122,53 @@ on __TestTryErrorInFinallyNoTryStatements
       NonExistantHandler2
    end try
 end __TestTryErrorInFinallyNoTryStatements
+
+on TestTryThrowInCatch
+   local tUUID
+   put uuid() into tUUID
+   TestAssertThrow "Throw in finally is thrown", "__TestTryThrowInCatch", the long id of me, tUUID, tUUID
+   TestAssertThrow "Error in finally is thrown", "__TestTryThrowInCatchWithFinally", the long id of me, tUUID, tUUID
+end TestTryThrowInCatch
+
+on __TestTryThrowInCatch pUUID
+   try
+      NonExistantHandler1
+   catch tError
+      throw pUUID
+   end try
+end __TestTryThrowInCatch
+
+on __TestTryThrowInCatchWithFinally pUUID
+   try
+      NonExistantHandler1
+   catch tError
+      throw pUUID
+   finally
+      TestAssert "Finally executed after throw in catch", true
+   end try
+end __TestTryThrowInCatchWithFinally
+
+on TestTryThrowInFinally
+   local tUUID
+   put uuid() into tUUID
+   TestAssertThrow "Throw in finally is thrown", "__TestTryThrowInFinally", the long id of me, tUUID, tUUID
+   TestAssertThrow "Error in finally is thrown", "__TestTryThrowInFinallyNoTryStatements", the long id of me, tUUID, tUUID
+end TestTryThrowInFinally
+
+on __TestTryThrowInFinally pUUID
+   try
+      NonExistantHandler1
+   finally
+      throw pUUID
+   end try
+end __TestTryThrowInFinally
+
+on __TestTryThrowInFinallyNoTryStatements pUUID
+   try
+   finally
+      throw pUUID
+   end try
+end __TestTryThrowInFinallyNoTryStatements
 
 on TestTryErrorNoCatch
    try
