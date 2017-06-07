@@ -235,7 +235,7 @@ on TestTryFinallyPassHandlerToTop
    finally
       pass TestTryFinallyPassHandlerToTop to top
    end try
-   TestAssertBroken "Handler passed to top from finally", false, "Bug 11773"
+   TestAssert "Handler passed to top from finally", false
 end TestTryFinallyPassHandlerToTop
 
 on TestTryExitHandler
@@ -264,7 +264,7 @@ on TestTryFinallyExitHandler
    finally
       exit TestTryFinallyExitHandler
    end try
-   TestAssertBroken "Handler exit from finally", false, "Bug 11773"
+   TestAssert "Handler exit from finally", false
 end TestTryFinallyExitHandler
 
 on TestTryReturn
@@ -293,5 +293,5 @@ on TestTryFinallyReturn
    finally
       return empty
    end try
-   TestAssertBroken "Return from finally", false, "Bug 11773"
+   TestAssert "Return from finally", false
 end TestTryFinallyReturn
