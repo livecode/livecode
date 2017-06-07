@@ -46,7 +46,7 @@ on TestTryFinallyNoStatements
   finally
      put true into tTest
   end try
-  TestAssertBroken "Finally executes regardless of try statements", tTest, "Bug 19811"
+  TestAssert "Finally executes regardless of try statements", tTest, "Bug 19811"
 end TestTryFinallyNoStatements
 
 on TestTryNoCatchWithError
