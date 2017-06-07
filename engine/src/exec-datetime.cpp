@@ -34,6 +34,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Milliseconds, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Seconds, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Ticks, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Date, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(DateTime, DateOfFormat, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Time, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, DateFormat, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(DateTime, MonthNames, 1)
@@ -75,6 +76,11 @@ void MCDateTimeEvalTicks(MCExecContext& ctxt, real64_t& r_ticks)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCDateTimeEvalDateOfFormat(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string)
+{
+    MCDateTimeGetDateOfFormat(ctxt, p_format, r_string);
+}
+
 void MCDateTimeEvalDate(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCDateTimeGetDate(ctxt, P_UNDEFINED, r_string);
@@ -107,8 +113,9 @@ void MCDateTimeEvalWeekDayNames(MCExecContext& ctxt, MCStringRef& r_string)
 void MCDateTimeEvalIsADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
 	MCAutoStringRef t_string, t_converted;
-	r_result = ctxt.ConvertToString(p_value, &t_string) && MCD_convert(ctxt, *t_string, CF_UNDEFINED, CF_UNDEFINED,
-					   CF_SECONDS, CF_UNDEFINED, &t_converted);
+	r_result = ctxt.ConvertToString(p_value, &t_string) &&
+               MCD_convert(ctxt, *t_string, CF_UNDEFINED, CF_UNDEFINED, NULL,
+					   CF_SECONDS, CF_UNDEFINED, NULL, &t_converted);
 }
 
 void MCDateTimeEvalIsNotADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
@@ -119,9 +126,9 @@ void MCDateTimeEvalIsNotADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output)
+void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, MCStringRef p_from_format, int p_to_first, int p_to_second, MCStringRef p_to_format, MCStringRef &r_output)
 {
-	if (!MCD_convert(ctxt, p_input, (Convert_form)p_from_first, (Convert_form)p_from_second, (Convert_form)p_to_first, (Convert_form)p_to_second, r_output))
+	if (!MCD_convert(ctxt, p_input, (Convert_form)p_from_first, (Convert_form)p_from_second, p_from_format, (Convert_form)p_to_first, (Convert_form)p_to_second, p_to_format, r_output))
 	{
 		MCStringCopy(p_input, r_output);
 		ctxt .SetTheResultToStaticCString("invalid date");
@@ -130,10 +137,10 @@ void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_
     else
         ctxt . SetTheResultToEmpty();
 }
-void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second)
+void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, MCStringRef p_from_format, int p_to_first, int p_to_second, MCStringRef p_to_format)
 {
 	MCAutoStringRef t_output;
-	MCDateTimeExecConvert(ctxt, p_input, p_from_first, p_from_second, p_to_first, p_to_second, &t_output);
+	MCDateTimeExecConvert(ctxt, p_input, p_from_first, p_from_second, p_from_format, p_to_first, p_to_second, p_to_format, &t_output);
 	ctxt . SetItToValue(*t_output);
 }
 
@@ -154,6 +161,11 @@ void MCDateTimeSetTwelveTime(MCExecContext &ctxt, bool p_value)
 void MCDateTimeGetDate(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
 {
 	MCD_date(ctxt, p_type, r_value);
+}
+
+void MCDateTimeGetDateOfFormat(MCExecContext &ctxt, MCStringRef p_format, MCStringRef& r_value)
+{
+    MCD_date_of_format(ctxt, p_format, r_value);
 }
 
 void MCDateTimeGetTime(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)

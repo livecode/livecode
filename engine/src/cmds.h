@@ -68,8 +68,10 @@ class MCConvert : public MCStatement
 	MCExpression *source;
 	Convert_form fform;
 	Convert_form fsform;
+    MCExpression *m_from_format;
 	Convert_form pform;
 	Convert_form sform;
+    MCExpression *m_to_format;
 public:
 	MCConvert()
 	{
@@ -77,15 +79,17 @@ public:
 		source = NULL;
 		fform = CF_UNDEFINED;
 		fsform = CF_UNDEFINED;
+        m_from_format = NULL;
 		pform = CF_UNDEFINED;
 		sform = CF_UNDEFINED;
+        m_to_format = NULL;
 	}
 	virtual ~MCConvert();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 	Parse_stat parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
-	                         Convert_form &secondform);
+	                         Convert_form &secondform, MCExpression *&r_format);
 };
 
 class MCDo : public MCStatement

@@ -4500,6 +4500,7 @@ extern MCExecMethodInfo *kMCDateTimeEvalMillisecondsMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalSecondsMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalTicksMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalDateMethodInfo;
+extern MCExecMethodInfo *kMCDateTimeEvalDateOfFormatMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalTimeMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalDateFormatMethodInfo;
 extern MCExecMethodInfo *kMCDateTimeEvalMonthNamesMethodInfo;
@@ -4527,6 +4528,7 @@ void MCDateTimeEvalSeconds(MCExecContext& ctxt, real64_t& r_seconds);
 void MCDateTimeEvalTicks(MCExecContext& ctxt, real64_t& r_ticks);
 
 void MCDateTimeEvalDate(MCExecContext& ctxt, MCStringRef& r_string);
+void MCDateTimeEvalDateOfFormat(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string);
 void MCDateTimeEvalTime(MCExecContext& ctxt, MCStringRef& r_string);
 
 void MCDateTimeEvalDateFormat(MCExecContext& ctxt, MCStringRef& r_string);
@@ -4536,13 +4538,14 @@ void MCDateTimeEvalWeekDayNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCDateTimeEvalIsADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 void MCDateTimeEvalIsNotADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 
-void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output);
-void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second);
+void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, MCStringRef p_from_format, int p_to_first, int p_to_second, MCStringRef p_to_format, MCStringRef &r_output);
+void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, MCStringRef p_from_format, int p_to_first, int p_to_second, MCStringRef p_to_format);
 
 void MCDateTimeGetTwelveTime(MCExecContext &ctxt, bool& r_value);
 void MCDateTimeSetTwelveTime(MCExecContext &ctxt, bool p_value);
 
 void MCDateTimeGetDate(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value);
+void MCDateTimeGetDateOfFormat(MCExecContext &ctxt, MCStringRef p_format, MCStringRef& r_value);
 void MCDateTimeGetTime(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value);
 void MCDateTimeGetMilliseconds(MCExecContext &ctxt, double& r_value);
 void MCDateTimeGetLongMilliseconds(MCExecContext &ctxt, double& r_value);

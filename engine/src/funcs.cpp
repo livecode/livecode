@@ -648,6 +648,63 @@ void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
 }
 
+MCDate::~MCDate()
+{
+    delete m_format;
+}
+
+Parse_stat
+MCDate::parse(MCScriptPoint & sp, Boolean p_is_the)
+{
+    if (p_is_the)
+    {
+        initpoint(sp);
+    }
+    else
+    {
+        if (PS_NORMAL != get0or1param(sp, &m_format, p_is_the))
+        {
+            MCperror->add(PE_FOLDERS_BADPARAM, sp);
+            return PS_ERROR;
+        }
+    }
+    return PS_NORMAL;
+}
+
+void
+MCDate::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
+{
+    r_value.type = kMCExecValueTypeStringRef;
+    
+    if (m_format) {
+        MCAutoStringRef t_format;
+        if (!ctxt.EvalExprAsStringRef(m_format, EE_DATE_BADFORMAT, &t_format))
+            return;
+        
+        MCDateTimeEvalDateOfFormat(ctxt, *t_format, r_value.stringref_value);
+    }
+    else
+    {
+        MCDateTimeEvalDate(ctxt, r_value.stringref_value);
+    }
+}
+
+void
+MCDate::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    if (nil != m_format)
+    {
+        m_format -> compile(ctxt);
+        MCSyntaxFactoryEvalMethod(ctxt, kMCDateTimeEvalDateOfFormatMethodInfo);
+    }
+    else
+    {
+        MCSyntaxFactoryEvalMethod(ctxt, kMCDateTimeEvalDateMethodInfo);
+    }
+    MCSyntaxFactoryEndExpression(ctxt);
+}
+
 MCDirectories::~MCDirectories()
 {
 	delete m_folder;

@@ -28,37 +28,23 @@ The <dateFormat> <function> returns a <string> containing one or more
 formatting incantations, each of which describes a part of the requested
 date <format>. The possible incantations are as follows:
 
-%a
-Abbreviated weekday name:  the abbreviated day of the week, as reported
+* `%a` - Abbreviated weekday name:  the abbreviated day of the week, as reported
 by the <weekdayNames> function
-
-%A
-Full weekday name:  the full day of the week, as reported by the
+* `%A` - Full weekday name:  the full day of the week, as reported by the
 weekdayNames function
-
-%b
-Abbreviated month name:  the abbreviated month name, as reported by the
+* `%b` Abbreviated month name:  the abbreviated month name, as reported by the
 monthNames function
-
-%B
-Full month name:  the full month name, as reported by the monthNames
+* `%B` - Full month name:  the full month name, as reported by the monthNames
 function 
-
-%d
-Day of the month:  the day of the month as a number
-
-%m
-Month number:  the number of the month
-
-%y
-Two-digit year:  the year as a two-digit number
-
-%Y
-Four-digit year:  This incantation indicates the year as a four-digit
+* `%d` - Day of the month:  the day of the month as a number
+* `%m` - Month number:  the number of the month
+* `%y` - Two-digit year:  the year as a two-digit number
+* `%Y` - Four-digit year:  This incantation indicates the year as a four-digit
 number (including the century)
-
-%w
-Day of the week:  A number between 1 and 7
+* `%w` - Day of the week:  A number between 1 and 7
+* if `#` is after `%` then any leading zeros are not included
+in the format. For example for the first of the month the format `%d`
+would be `01` while the format `%#d` would be `1`.
 
 >*Note:* The <dateFormat> differs from other date/time functionality in
 > that the default is to return information relative to the system
