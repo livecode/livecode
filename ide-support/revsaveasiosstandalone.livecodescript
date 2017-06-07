@@ -1222,7 +1222,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    ----------
    
-   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
+   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tEnableBackgroundExecution
    local tDisableATS
    local tFileSharing, tPrerenderedIcon
    put pSettings["ios,display name"] into tDisplayName
@@ -1231,20 +1231,31 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
-   put pSettings["ios,exits on suspend"] into tExitsOnSuspend
+   put pSettings["ios,enable background execution"] into tEnableBackgroundExecution
    
    -- AB-2017-05-31: Add more background modes
    local tBackgroundModes
-   put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
-   put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
-   put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
-   put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
-   put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
-   put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
-   put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
-   put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
-   put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"]   
-   
+   if not tEnableBackgroundExecution then
+      put false into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+      put false into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+      put false into tBackgroundModes["${BACKGROUND_VOIP}"]
+      put false into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+      put false into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+      put false into tBackgroundModes["${USE_BT_LE}"]
+      put false into tBackgroundModes["${ACTS_AS_BT_LE}"]
+      put false into tBackgroundModes["${BACKGROUND_FETCH}"]
+      put false into tBackgroundModes["${REMOTE_NOTIFICATIONS}"]
+   else
+      put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+      put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+      put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
+      put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+      put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+      put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
+      put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
+      put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
+      put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"]   
+   end if
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
    
@@ -1274,8 +1285,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "false" into tPrerenderedIcon
    end if
    
-   if tExitsOnSuspend is empty then
-      put "true" into tExitsOnSuspend
+   if tEnableBackgroundExecution is empty then
+      put "true" into tEnableBackgroundExecution
    end if
    
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
@@ -1400,7 +1411,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${DEVICE_CAPABILITY}" with it in pPlist
    
    replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
-   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in pPlist
+   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & not tEnableBackgroundExecution & "/>" in pPlist
    replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in pPlist
    replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in pPlist
    
