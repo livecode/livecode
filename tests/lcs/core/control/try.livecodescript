@@ -295,3 +295,39 @@ on TestTryFinallyReturn
    end try
    TestAssert "Return from finally", false
 end TestTryFinallyReturn
+
+on TestTryPassError
+   try
+      try
+         NonExistantHandler
+      catch tError1
+         pass error
+      end try
+   catch tError2
+      TestAssert "Error passed from catch", line 1 of tError2 contains "NonExistantHandler"
+   end try
+   
+   try
+      try
+         NonExistantHandler
+      finally
+         pass error
+      end try
+   catch tError3
+      TestAssert "Error passed from finally", line 1 of tError3 contains "NonExistantHandler"
+   end try
+end TestTryPassError
+
+
+on TestTryPassMutatedError
+   try
+      try
+         NonExistantHandler
+      catch tError
+         put "foobar" into tError
+         pass error
+      end try
+   catch tError1
+      TestAssert "Mutated error variable content not passed", line 1 of tError1 contains "NonExistantHandler"
+   end try
+end TestTryPassMutatedError

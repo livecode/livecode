@@ -1800,6 +1800,7 @@ void MCKeywordsExecBreak(MCExecContext& ctxt);
 void MCKeywordsExecNext(MCExecContext& ctxt);
 void MCKeywordsExecPass(MCExecContext& ctxt);
 void MCKeywordsExecPassAll(MCExecContext& ctxt);
+void MCKeywordsExecPassError(MCExecContext& ctxt);
 void MCKeywordsExecThrow(MCExecContext& ctxt, MCStringRef string);
 void MCKeywordsExecResolveCommandOrFunction(MCExecContext& ctxt, MCNameRef p_name, bool is_function, MCHandler*& r_handler);
 bool MCKeywordsExecSetupCommandOrFunction(MCExecContext& ctxt, MCParameter *params, MCContainer *containers, uint2 line, uint2 pos, bool is_function);
