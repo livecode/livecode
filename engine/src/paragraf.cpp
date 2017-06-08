@@ -1288,12 +1288,14 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     temp_x = x + sgptr -> GetLeftEdge() + bix;
                 
                 // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                
+                srect.x = MCClamp(temp_x, INT16_MIN, INT16_MAX);
+                
                 if (t_segment_back)
                     temp_width = x + sgptr -> GetRight() - srect . x;
                 else
                     temp_width = x + sgptr -> GetLeftEdge() + bex - srect . x;
                 
-                srect.x = MCClamp(temp_x, INT16_MIN, INT16_MAX);
                 srect.width = MCClamp(temp_width, INT16_MIN, INT16_MAX);
                 
                 // Draw this block
