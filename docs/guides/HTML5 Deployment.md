@@ -31,12 +31,12 @@ The HTML5 engine in this release of LiveCode has a limited range of features.  Y
 * read and write temporary files in a special virtual filesystem (which is erased when the user navigates away from the page)
 * use LiveCode Builder widgets and extensions
 * interact with JavaScript code in the web page using `do <script> as "JavaScript"`
+* perform basic networking operations using the **load** command
 
 Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
 * multimedia (the "player" control)
-* networking
 * JavaScript in LiveCode Builder extensions
 
 Two important unsupported features are unlikely to be added in the near future:

@@ -9,9 +9,9 @@ Sent when updates on ongoing url requests are communicated.
 
 Introduced: 4.6.1
 
-OS: ios, android
+OS: ios, android, html5
 
-Platforms: mobile
+Platforms: mobile, desktop
 
 Example:
 on urlProgress pUrl, pStatus
