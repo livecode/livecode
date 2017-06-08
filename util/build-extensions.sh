@@ -70,7 +70,7 @@ readonly lc_compile=$3
 shift 3
 
 # Find the dependency/build ordering of the extensions
-readonly build_order=$(${lc_compile} --modulepath ${module_dir} --deps changed-order -- $@)
+readonly build_order=$(${lc_compile} --modulepath ${module_dir} --deps order -- $@)
 
 # Loop over the extensions that need to be (re-)built
 for ext in ${build_order} ; do
