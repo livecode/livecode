@@ -2115,7 +2115,7 @@ command revSBRemoveInclusions pStack, pPlatform, pConfirm, @xSettings
                put xSettings["overrideInclusions"] into tOverride
                put tInclude into tOverride[tName]
                set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
-               revSetEdited the short name of stack pStack
+               revIDESetEdited pStack
             end if
          end if
          
