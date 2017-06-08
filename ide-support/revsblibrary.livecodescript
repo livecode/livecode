@@ -794,7 +794,7 @@ constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
 
 // SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
+constant kInitialTargets = "Windows,MacOSX x86-64,Linux"
 
 on revSBDefaultStandaloneSettings pStack, @xSettingsA
    local tPlatform,tName
@@ -839,6 +839,9 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    
    -- build for every platform we have engines for
    repeat for each item tTarget in kInitialTargets
+      if tTarget is "MacOSX x86-64" then 
+         if xSettingsA["MacOSX x86-32"] then next repeat
+      end if
       if xSettingsA[tTarget] = "" then
          put revEngineCheck(tTarget) into xSettingsA[tTarget]
       end if
@@ -854,7 +857,9 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    
    -- Since the intel choice, set the default here:
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
-   if xSettingsA["MacOSX x86-32"] is empty then put true into xSettingsA["MacOSX x86-32"]
+   if xSettingsA["MacOSX x86-64"] is empty and xSettingsA["MacOSX x86-32"] is empty then
+      put true into xSettingsA["MacOSX x86-64"]
+   end if
    
    -- Auto-remove stack passwords from community stacks
    if revLicenseType() is "community" then
