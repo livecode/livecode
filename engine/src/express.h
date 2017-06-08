@@ -42,6 +42,8 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
+    uint2 getline() const {return line;}
+    uint2 getpos() const {return pos;}
 	
 	// Evaluate the expression as its natural type basic type (note that
 	// execvalue's cannot be set/enum/custom, they should all be resolved
