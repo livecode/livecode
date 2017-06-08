@@ -127,10 +127,12 @@ public:
 class MCPass : public MCStatement
 {
 	Boolean all;
+    Boolean error;
 public:
 	MCPass()
 	{
 		all = False;
+        error = False;
 	}
 	virtual Parse_stat parse(MCScriptPoint &sp);
 	virtual void exec_ctxt(MCExecContext&);

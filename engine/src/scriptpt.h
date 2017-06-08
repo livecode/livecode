@@ -63,6 +63,8 @@ class MCScriptPoint
 	Boolean in_tag;
 	// MW-2011-06-23: This is true if we backed up over a tag change point.
 	Boolean was_in_tag;
+    
+    bool m_can_pass_error = false;
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
@@ -185,6 +187,9 @@ public:
     codepoint_t getcodepointatindex(uindex_t index);
     
     void setcurptr(const unichar_t *ptr);
+    
+    bool getcanpasserror() { return m_can_pass_error; }
+    void setcanpasserror(bool p_can_pass_error) { m_can_pass_error = p_can_pass_error; }
 };
 #endif
 
