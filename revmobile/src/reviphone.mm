@@ -187,7 +187,8 @@ static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimul
 			if ([[t_candidate name] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
 				[[t_candidate identifier] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
 				[[t_candidate root] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
-				[[t_candidate versionString] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+				[[t_candidate versionString] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+                [[t_candidate versionString] hasPrefix: t_sdk_string])
 			{
 				t_runtime = t_candidate;
 				t_root = [s_simulator_proxy getRootWithSimRuntime: t_runtime];
