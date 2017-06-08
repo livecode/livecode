@@ -44,8 +44,15 @@ A list of all <transfer mode|transfer modes> can be found in the
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
-transfer mode (glossary), srcCopy (keyword), notSrcCopy (keyword),
-ink (property), pixels (property)
+transfer mode (glossary), addMax(keyword), adMin(keyword), 
+addPin(keyword), blend(keyword), clear(keyword), 
+noOp(keyword), notSrcAnd(keyword), notSrcAndReverse(keyword), 
+notSrcBic(keyword), notSrcCopy(keyword), notSrcOr(keyword), 
+notSrcOrReverse(keyword), notSrcXOr(keyword), reverse(keyword), 
+set(keyword), srcAnd(keyword), srcAndReverse(keyword), srcBic(keyword), 
+srcCopy(keyword), srcOr(keyword), srcOrReverse(keyword), 
+srcXOr(keyword), subOver(keyword), subPin(keyword), 
+transparent(keyword), ink (property), pixels (property)
 
 Tags: ui
 
