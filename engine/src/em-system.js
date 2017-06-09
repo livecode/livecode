@@ -55,7 +55,80 @@ mergeInto(LibraryManager.library, {
               {{{ makeSetValue('return_length', '0', 'buffer_length', 'i32') }}};
           
               return success;
-          }
+          },
+		
+		//////////
+		
+		_callStackHandler: function(stack, handler, paramList)
+		{
+			Module.ccall('MCEmscriptenSystemPostStackHandlerCall', null, ['number', 'number', 'number'], [stack, handler, paramList]);
+		},
+		
+		_getStackHandlerList: function(stack)
+		{
+			return Module.ccall('MCEmscriptenSystemGetJavascriptHandlersOfStack', 'number', ['number'], [stack]);
+		},
+		
+		// Convert from javascript list to MCProperListRef
+		_convertParams: function(paramList)
+		{
+			var listRef = LiveCodeUtil.properListCreateMutable();
+			var count = paramList.length;
+			
+			for (var i = 0; i < count; i++)
+			{
+				// For now, convert parameters to strings
+				// TODO - support other types
+				stringRef = LiveCodeUtil.stringToMCStringRef(String(paramList[i]));
+				LiveCodeUtil.properListPushElementOntoBack(listRef, stringRef);
+				LiveCodeUtil.valueRelease(stringRef)
+			}
+			
+			return listRef
+		},
+		  
+		_makeHandlerProxy: function(stack, handler)
+		{
+			return function(...params)
+			{
+				LiveCodeSystem._callStackHandler(stack, handler, _convertParams(params));
+			}
+		},
+		
+		_stackHandle: function(stack)
+		{
+			var stackHandle = { _stack: stack };
+			var handlerList = LiveCodeSystem._getStackHandlerList(stack);
+			var count = LiveCodeUtil.properListGetLength(handlerList);
+			for (var i = 0; i < count; i++)
+			{
+				var stringref = LiveCodeUtil.properListGetElementAtIndex(handlerList, i);
+				var handler_name = LiveCodeUtil.stringFromMCStringRef(stringref);
+				stackHandle[handler_name] = LiveCodeSystem._makeHandlerProxy(stack, handler_name);
+			}
+			
+			LiveCodeUtil.valueRelease(handlerList);
+			
+			return stackHandle;
+		},
+		
+		_resolveStack: function(stack_name)
+		{
+			var stringref = LiveCodeUtil.stringToMCStringRef(stack_name);
+			var stack = Module.ccall('MCEmscriptenResolveStack', 'number', ['number'], [stringref]);
+			LiveCodeUtil.valueRelease(stringref);
+			
+			return stack
+		},
+		
+		getStackWithName: function(name)
+		{
+			var stack = LiveCodeSystem._resolveStack(name);
+			if (stack == 0)
+				return null;
+			
+			return LiveCodeSystem._stackHandle(stack);
+		},
     },
     
     MCEmscriptenSystemEvaluateJavaScript__deps: ['$LiveCodeSystem'],

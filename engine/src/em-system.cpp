@@ -1156,3 +1156,94 @@ MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
 	t_message_u16.Lock(p_message);
 	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
 }
+
+///////////
+
+#include "dispatch.h"
+
+MCStack* _emscripten_get_stack(void *p_stack_ptr)
+{
+	MCStack *t_stacks = MCdispatcher->getstacks();
+	
+	MCStack *t_stack = t_stacks->next();
+	while (t_stacks != t_stack)
+	{
+		if (t_stack == p_stack_ptr)
+			return t_stack;
+	}
+	
+	return nil;
+}
+
+MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
+{
+	MCStackHandle t_stack(_emscripten_get_stack(p_stack));
+
+	// Ensure stack pointer is valid
+	if (!t_stack.IsValid())
+		return MCValueRetain(kMCEmptyProperList);
+	
+	bool t_success = true;
+	
+	// get javascripthandlers property
+	MCExecValue t_value;
+	MCExecContext ctxt(nil, nil, nil);
+	bool t_lock_messages = MClockmessages;
+	MClockmessages = true;
+	t_success = t_stack->getcustomprop(ctxt, t_stack->getdefaultpropsetname(), MCNAME("javascripthandlers"), nil, t_value);
+	MClockmessages = t_lock_messages;
+	
+	MCAutoStringRef t_prop_string;
+	if (t_success)
+	{
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, kMCExecValueTypeStringRef, &t_prop_string);
+		t_success = *t_prop_string != nil;
+	}
+
+	MCAutoProperListRef t_list;
+	if (t_success)
+		t_success = MCStringSplitByDelimiter(*t_prop_string, kMCLineEndString, kMCStringOptionCompareExact, &t_list);
+	
+	if (!t_success)
+		return MCValueRetain(kMCEmptyProperList);
+	
+	return t_list.Take();
+}
+
+bool MCEmscriptenSystemPostStackHandlerCall(MCStack *p_stack, MCStringRef p_handler, MCProperListRef p_params)
+{
+	return false;
+	// Ensure stack pointer is valid
+	
+	// call named handler
+}
+
+// Return the named stack, or NULL if not found
+MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
+{
+	MCNewAutoNameRef t_name;
+	if (!MCNameCreate(p_name, &t_name))
+		return nil;
+	
+	return MCdispatcher->findstackname(*t_name);
+}
+
+//////////
+
+MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_string, uint32_t p_length)
+{
+	MCStringRef t_string = nil;
+	if (!MCStringCreateWithCharsAndRelease(p_utf16_string, p_length, t_string))
+		return nil;
+	
+	return t_string;
+}
+
+MCProperListRef MCEmscriptenUtilCreateMutableProperList()
+{
+	MCProperListRef t_list = nil;
+	if (!MCProperListCreateMutable(t_list))
+		return nil;
+	
+	return t_list;
+}
