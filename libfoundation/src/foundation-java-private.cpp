@@ -128,6 +128,7 @@ static bool __MCJavaCallNeedsClassInstance(MCJavaCallType p_type)
     {
         case MCJavaCallTypeStatic:
         case MCJavaCallTypeConstructor:
+        case MCJavaCallTypeInterfaceProxy:
         case MCJavaCallTypeStaticGetter:
         case MCJavaCallTypeStaticSetter:
             return false;
@@ -150,10 +151,14 @@ static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
 
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
+    MCJavaCallType t_call_type = static_cast<MCJavaCallType>(p_call_type);
+    if (t_call_type == MCJavaCallTypeInterfaceProxy)
+        return true;
+    
     uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
     
     uindex_t t_first_param = 0;
-    if (__MCJavaCallNeedsClassInstance(static_cast<MCJavaCallType>(p_call_type)))
+    if (__MCJavaCallNeedsClassInstance(t_call_type))
     {
         t_first_param = 1;
     }
@@ -183,6 +188,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
     switch (p_call_type)
     {
         case MCJavaCallTypeConstructor:
+        case MCJavaCallTypeInterfaceProxy:
             return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeObject);
         case MCJavaCallTypeSetter:
         case MCJavaCallTypeStaticSetter:
@@ -200,6 +206,7 @@ MCTypeInfoRef kMCJavaNativeMethodCallErrorTypeInfo;
 MCTypeInfoRef kMCJavaBindingStringSignatureErrorTypeInfo;
 MCTypeInfoRef kMCJavaCouldNotInitialiseJREErrorTypeInfo;
 MCTypeInfoRef kMCJavaJRENotSupportedErrorTypeInfo;
+MCTypeInfoRef kMCJavaInterfaceCallbackSignatureErrorTypeInfo;
 
 bool MCJavaPrivateErrorsInitialize()
 {
@@ -217,6 +224,9 @@ bool MCJavaPrivateErrorsInitialize()
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.JRENotSupported"), MCNAME("java"), MCSTR("Java Runtime Environment no supported with current configuration"), kMCJavaJRENotSupportedErrorTypeInfo))
         return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.InterfaceCallbackSignatureError"), MCNAME("java"), MCSTR("Handler for interface callback does not match callback signature"), kMCJavaInterfaceCallbackSignatureErrorTypeInfo))
+        return false;
 
     return true;
 }
@@ -228,6 +238,7 @@ void MCJavaPrivateErrorsFinalize()
     MCValueRelease(kMCJavaBindingStringSignatureErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotInitialiseJREErrorTypeInfo);
     MCValueRelease(kMCJavaJRENotSupportedErrorTypeInfo);
+    MCValueRelease(kMCJavaInterfaceCallbackSignatureErrorTypeInfo);
 }
 
 bool MCJavaPrivateErrorThrow(MCTypeInfoRef p_error_type)
@@ -430,21 +441,54 @@ static bool __MCJavaDataToJByteArray(MCDataRef p_data, jbyteArray& r_byte_array)
     return true;
 }
 
-bool MCJavaObjectCreateGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
+static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCProperListRef& r_list)
 {
-    MCAssert(p_object != nullptr);
-    void *t_obj_ptr = s_env -> NewGlobalRef(p_object);
-    return MCJavaObjectCreate(t_obj_ptr, r_object);
+    MCJavaDoAttachCurrentThread();
+    
+    if (p_obj_array == nullptr)
+    {
+        r_list = MCValueRetain(kMCEmptyProperList);
+        return true;
+    }
+    
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    uint32_t t_size = s_env -> GetArrayLength(p_obj_array);
+    
+    for (uint32_t i = 0; i < t_size; i++)
+    {
+        MCAutoValueRef t_value;
+        
+        jobject t_object = s_env -> GetObjectArrayElement(p_obj_array, i);
+        
+        MCAutoJavaObjectRef t_obj;
+        if (!MCJavaObjectCreate(t_object, &t_obj))
+            return false;
+
+        if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
+            return false;
+    }
+    
+    return MCProperListCopy(*t_list, r_list);
 }
 
-bool MCJavaObjectCreateNullableGlobalRef(jobject p_object, MCJavaObjectRef &r_object)
+void* MCJavaPrivateGlobalRef(void *p_object)
+{
+    MCJavaDoAttachCurrentThread();
+    jobject t_obj = static_cast<jobject>(p_object);
+    return static_cast<void *>(s_env->NewGlobalRef(t_obj));
+}
+
+bool MCJavaObjectCreateNullable(jobject p_object, MCJavaObjectRef &r_object)
 {
     if (p_object == nullptr)
     {
         r_object = nullptr;
         return true;
     }
-    return MCJavaObjectCreateGlobalRef(p_object, r_object);
+    return MCJavaObjectCreate(p_object, r_object);
 }
 
 static jstring MCJavaGetJObjectClassName(jobject p_obj)
@@ -530,7 +574,7 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
                 s_env -> CallObjectMethodA(p_instance, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -612,7 +656,7 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
                 s_env -> CallStaticObjectMethodA(p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -694,7 +738,7 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
                 s_env -> CallNonvirtualObjectMethodA(p_instance, p_class, p_method_id, p_params);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -776,7 +820,7 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
                 s_env -> GetObjectField(p_instance, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -857,7 +901,7 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
                 s_env -> GetStaticObjectField(p_class, p_field_id);
             
             MCJavaObjectRef t_result_value;
-            if (!MCJavaObjectCreateNullableGlobalRef(t_result, t_result_value))
+            if (!MCJavaObjectCreateNullable(t_result, t_result_value))
                 return false;
             *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
             return true;
@@ -1047,7 +1091,7 @@ static bool __JavaJNIConstructorResult(jclass p_class, jmethodID p_method_id, jv
     jobject t_result = s_env -> NewObjectA(p_class, p_method_id, p_params);
     
     MCJavaObjectRef t_result_value;
-    if (!MCJavaObjectCreateGlobalRef(t_result, t_result_value))
+    if (!MCJavaObjectCreate(t_result, t_result_value))
         return false;
     *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
 
@@ -1132,19 +1176,235 @@ static bool MCJavaClassNameToPathString(MCNameRef p_class_name, MCStringRef& r_s
     return MCStringCopy(*t_escaped, r_string);
 }
 
+static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
+{
+    // The system class loader does not know about LC's android engine
+    // classes. We cache the android engine class loader on startup and
+    // call its findClass method to find any classes named
+    // com.runrev.android.<Class>. For all other classes we just use
+    // the JNIEnv FindClass method & system class loader.
+    if (MCStringBeginsWith(MCNameGetString(p_class_name),
+                           MCSTR("com.runrev.android"),
+                           kMCStringOptionCompareExact))
+    {
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+        jstring t_class_string;
+        if (!__MCJavaStringToJString(MCNameGetString(p_class_name), t_class_string))
+            return nullptr;
+        
+        extern void* MCAndroidGetClassLoader(void);
+        jobject t_class_loader = static_cast<jobject>(MCAndroidGetClassLoader());
+        
+        jclass t_class_loader_class = s_env->FindClass("java/lang/ClassLoader");
+        jmethodID t_find_class = s_env->GetMethodID(t_class_loader_class,
+                                                    "findClass",
+                                                    "(Ljava/lang/String;)Ljava/lang/Class;");
+        
+        jobject t_class = s_env->CallObjectMethod(t_class_loader,
+                                                  t_find_class,
+                                                  t_class_string);
+        
+        return static_cast<jclass>(t_class);
+#else
+        return nullptr;
+#endif
+    }
+    
+    MCAutoStringRef t_class_path;
+    if (!MCJavaClassNameToPathString(p_class_name, &t_class_path))
+        return nullptr;
+    
+    MCAutoStringRefAsCString t_class_cstring;
+    if (!t_class_cstring.Lock(*t_class_path))
+        return nullptr;
+    
+    return s_env->FindClass(*t_class_cstring);
+}
+
+static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValueRef p_handlers)
+{
+    jclass t_class_class = s_env->FindClass("java/lang/Class");
+    jmethodID t_get_methods = s_env->GetMethodID(t_class_class, "getMethods",
+                                                 "()[Ljava/lang/reflect/Method;");
+ 
+    jclass t_class = MCJavaPrivateFindClass(p_class_name);
+    
+    jobjectArray t_methods =
+        static_cast<jobjectArray>(s_env->CallObjectMethod(t_class,
+                                                          t_get_methods));
+
+    jclass t_method_class = s_env->FindClass("java/lang/reflect/Method");
+    
+    jmethodID t_get_parameters = s_env->GetMethodID(t_method_class,
+                                                    "getParameterTypes",
+                                                    "()[Ljava/lang/Class;");
+    
+    // Lambda to check if a handler is suitable for the given method
+    auto t_check_handler = [&](MCHandlerRef p_handler, jobject p_method)
+    {
+        MCTypeInfoRef t_type_info = MCValueGetTypeInfo(p_handler);
+
+        // Ensure all callback handler parameters are of JavaObject type
+        uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_type_info);
+        
+        for (uindex_t i = 0; i < t_param_count; ++i)
+        {
+            if (!__MCTypeInfoConformsToJavaType(MCHandlerTypeInfoGetParameterType(t_type_info, i),
+                                                kMCJavaTypeObject))
+            {
+                return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                        MCSTR("Callback handler %{handler} parameters must conform to JObject type"),
+                                                        "handler", p_handler,
+                                                        nullptr);
+            }
+        }
+        
+        // Ensure the correct number of parameters
+        jobjectArray t_params =
+            static_cast<jobjectArray>(s_env->CallObjectMethod(p_method,
+                                                              t_get_parameters));
+        uindex_t t_expected_param_count =
+            static_cast<uindex_t>(s_env->GetArrayLength(t_params));
+        if (t_param_count != t_expected_param_count)
+        {
+            MCAutoNumberRef t_exp;
+            if (!MCNumberCreateWithUnsignedInteger(t_expected_param_count,
+                                                   &t_exp))
+                return false;
+            
+            return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                    MCSTR("Wrong number of parameters for callback handler %{handler}: expected %{number}"),
+                                                    "handler", p_handler,
+                                                    "number", *t_exp,
+                                                    nullptr);
+        }
+        
+        return true;
+    };
+
+    uindex_t t_num_methods = s_env->GetArrayLength(t_methods);
+    if (t_num_methods == 0)
+    {
+        return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Target interface has no callback methods"),
+                                                nullptr);
+    }
+    
+    if (MCValueGetTypeCode(p_handlers) == kMCValueTypeCodeArray)
+    {
+        // Collect all the method names of this interface
+        jmethodID t_get_method_name = s_env->GetMethodID(t_method_class,
+                                                         "getName",
+                                                         "()Ljava/lang/String;");
+        MCAutoStringRefArray t_names;
+        for (uindex_t i = 0; i < t_num_methods; i++)
+        {
+            jobject t_object = s_env->GetObjectArrayElement(t_methods, i);
+            jstring t_name =
+                static_cast<jstring>(s_env->CallObjectMethod(t_object,
+                                                             t_get_method_name));
+            MCAutoStringRef t_name_stringref;
+            if (!__MCJavaStringFromJString(t_name, &t_name_stringref))
+                return false;
+            
+            if (!t_names.Push(*t_name_stringref))
+                return false;
+        }
+        
+        // Array of handlers for interface proxy
+        uintptr_t t_iterator = 0;
+        MCNameRef t_key;
+        MCValueRef t_value;
+        while (MCArrayIterate(static_cast<MCArrayRef>(p_handlers),
+                             t_iterator, t_key, t_value))
+        {
+            MCStringRef t_match = nullptr;
+            uindex_t j = 0;
+            for (; j < t_names.Size(); j++)
+            {
+                if (MCStringIsEqualTo(MCNameGetString(t_key),
+                                      t_names[j],
+                                      kMCStringOptionCompareCaseless))
+                {
+                    t_match = t_names[j];
+                    break;
+                }
+            }
+            if (t_match == nullptr)
+            {
+                // No method with matching name found
+                return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                        MCSTR("No callback method with name %{name}"),
+                                                        "name", t_key,
+                                                        nullptr);
+            }
+            
+            // If we get here, we have a matching name, so check the handler
+            if (!t_check_handler(static_cast<MCHandlerRef>(t_value),
+                                 s_env->GetObjectArrayElement(t_methods, j)))
+                return false;
+        }
+        
+        // If we get here, then all handlers were assigned to valid callbacks
+        // in the interface
+        return true;
+        
+    }
+    else if (MCValueGetTypeCode(p_handlers) == kMCValueTypeCodeHandler)
+    {
+        // Only one handler provided - ensure there is only one callback
+        if (t_num_methods != 1)
+        {
+            return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                    MCSTR("Ambiguous callback assignment - target interface has multiple callback methods"),
+                                                    nullptr);
+        }
+        
+        return t_check_handler(static_cast<MCHandlerRef>(p_handlers),
+                               s_env->GetObjectArrayElement(t_methods, 0));
+    }
+
+    // Value was not of correct type
+    return false;
+}
+
+bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signature, void *p_method_id, void *r_result, void **p_args, uindex_t p_arg_count)
+{
+    if (MCHandlerTypeInfoGetParameterCount(p_signature) != 1)
+        return false;
+    
+    MCValueRef t_handlers = *(static_cast<MCValueRef *>(p_args[0]));
+
+    if (!__MCJavaIsHandlerSuitableForListener(p_class_name, t_handlers))
+        return false;
+    
+    jclass t_inv_handler_class =
+        MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
+
+    jmethodID t_method = static_cast<jmethodID>(p_method_id);
+    
+    jclass t_interface = MCJavaPrivateFindClass(p_class_name);
+    
+    jlong t_handler = reinterpret_cast<jlong>(MCValueRetain(t_handlers));
+    
+    jobject t_proxy = s_env->CallStaticObjectMethod(t_inv_handler_class,
+                                                    t_method,
+                                                    t_interface,
+                                                    t_handler);
+    
+    MCJavaObjectRef t_result_value;
+    if (!MCJavaObjectCreateNullable(t_proxy, t_result_value))
+        return false;
+    
+    *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
+    return true;
+}
+
 bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
     if (p_method_id == nullptr)
         return false;
-    
-    MCAutoStringRef t_class;
-    if (!MCJavaClassNameToPathString(p_class_name, &t_class))
-        return false;
 
-    MCAutoStringRefAsCString t_class_cstring;
-    if (!t_class_cstring . Lock(*t_class))
-        return false;
-    
     uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
     
     MCJavaType t_return_type;
@@ -1152,18 +1412,27 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         return false;
     
     jvalue *t_params = nullptr;
-    if (!__JavaJNIGetParams(p_args, p_signature, t_params))
+    if (p_call_type != MCJavaCallTypeInterfaceProxy &&
+        !__JavaJNIGetParams(p_args, p_signature, t_params))
         return false;
     
     switch (p_call_type)
     {
+        case MCJavaCallTypeInterfaceProxy:
+            MCAssert(t_return_type == kMCJavaTypeObject);
+            if (!MCJavaCreateInterfaceProxy(p_class_name, p_signature,
+                                            p_method_id, r_return,
+                                            p_args, p_arg_count))
+                return false;
+            break;
+            
         // JavaJNI...Result functions only return false due to memory
         // allocation failures. If they succeed, fall through the switch
         // statement and check the JNIEnv for exceptions.
         case MCJavaCallTypeConstructor:
         {
             MCAssert(t_return_type == kMCJavaTypeObject);
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (!__JavaJNIConstructorResult(t_target_class,
                                             static_cast<jmethodID>(p_method_id),
                                             &t_params[0],
@@ -1199,7 +1468,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         }
         case MCJavaCallTypeStatic:
         {
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (! __JavaJNIStaticMethodResult(t_target_class,
                                               static_cast<jmethodID>(p_method_id),
                                               t_params, t_return_type,
@@ -1212,7 +1481,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         {
             MCAssert(t_param_count > 0);
             jobject t_instance = t_params[0].l;
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (t_param_count > 1)
             {
                 if (!__JavaJNINonVirtualMethodResult(t_instance,
@@ -1266,7 +1535,7 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         case MCJavaCallTypeStaticGetter:
         case MCJavaCallTypeStaticSetter:
         {
-            jclass t_target_class = s_env -> FindClass(*t_class_cstring);
+            jclass t_target_class = MCJavaPrivateFindClass(p_class_name);
             if (p_call_type == MCJavaCallTypeStaticGetter)
             {
                 if (!__JavaJNIGetStaticFieldResult(t_target_class,
@@ -1329,7 +1598,7 @@ bool MCJavaPrivateConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRe
     if (!__MCJavaStringToJString(p_string, t_string))
         return false;
     
-    return MCJavaObjectCreateGlobalRef(t_string, r_object);
+    return MCJavaObjectCreate(t_string, r_object);
 }
 
 bool MCJavaPrivateConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string)
@@ -1344,7 +1613,7 @@ bool MCJavaPrivateConvertDataRefToJByteArray(MCDataRef p_data, MCJavaObjectRef &
     if (!__MCJavaDataToJByteArray(p_data, t_array))
         return false;
     
-    return MCJavaObjectCreateGlobalRef(t_array, r_object);
+    return MCJavaObjectCreate(t_array, r_object);
 }
 
 bool MCJavaPrivateConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_data)
@@ -1362,18 +1631,13 @@ bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_n
 
 void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type)
 {
-    MCAutoStringRef t_class_path;
-    if (!MCJavaClassNameToPathString(p_class_name, &t_class_path))
-        return nullptr;
-    
-    MCAutoStringRefAsCString t_class_cstring, t_method_cstring, t_return_cstring;
-    t_class_cstring . Lock(*t_class_path);
+    MCAutoStringRefAsCString t_method_cstring, t_return_cstring;
     t_method_cstring . Lock(p_method_name);
     t_return_cstring . Lock(p_return);
     
     MCJavaDoAttachCurrentThread();
     
-    jclass t_java_class = s_env->FindClass(*t_class_cstring);
+    jclass t_java_class = MCJavaPrivateFindClass(p_class_name);
     
     void *t_id = nullptr;
     if (t_java_class != nullptr)
@@ -1414,6 +1678,16 @@ void* MCJavaPrivateGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name
                     return nullptr;
     
                 t_id = s_env->GetMethodID(t_java_class, "<init>", *t_signature_cstring);
+                break;
+            }
+            case MCJavaCallTypeInterfaceProxy:
+            {
+                jclass t_inv_handler_class =
+                    MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
+                
+                t_id = s_env->GetStaticMethodID(t_inv_handler_class,
+                                                "getProxy",
+                                                "(Ljava/lang/Class;J)Ljava/lang/Object;");
                 break;
             }
             case MCJavaCallTypeGetter:
@@ -1471,6 +1745,61 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
     
     s_env -> DeleteGlobalRef(t_obj);
 }
+
+void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
+{
+    MCAutoStringRef t_method_name;
+    if (!__MCJavaStringFromJString(p_method_name, &t_method_name))
+        return;
+ 
+    MCValueRef t_handler = nullptr;
+    MCValueRef t_handlers = reinterpret_cast<MCValueRef>(p_handler);
+    if (MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeArray)
+    {
+        // Array of handlers for interface proxy
+        MCNewAutoNameRef t_key;
+        if (!MCNameCreate(*t_method_name, &t_key) ||
+            !MCArrayFetchValue(static_cast<MCArrayRef>(t_handlers),
+                              false, *t_key, t_handler) ||
+            MCValueGetTypeCode(t_handler) != kMCValueTypeCodeHandler)
+        {
+            t_handler = nullptr;
+        }
+    }
+    else
+    {
+        MCAssert(MCValueGetTypeCode(t_handlers) == kMCValueTypeCodeHandler);
+        // Single handler for listener interface
+        t_handler = t_handlers;
+    }
+    
+    if (t_handler == nullptr)
+    {
+        MCErrorThrowGenericWithMessage(MCSTR("callback handler not found for listener method %{method}"),
+                                       "method", *t_method_name, nullptr);
+        return;
+    }
+
+    // We have an LCB handler, so just invoke with the args.
+    MCValueRef t_result;
+    MCAutoProperListRef t_list;
+    if (!__MCJavaProperListFromJObjectArray(p_args, &t_list))
+        return;
+    
+    MCProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(*t_list, t_mutable_list))
+        return;
+    
+    MCErrorRef t_error =
+        MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
+                                     t_mutable_list, t_result);
+    
+    MCValueRelease(t_result);
+    MCValueRelease(t_mutable_list);
+    
+    if (t_error != nil)
+        MCErrorThrow(t_error);
+}
 #else
 
 bool initialise_jvm()
@@ -1526,5 +1855,10 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
 bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name)
 {
     return false;
+}
+
+void* MCJavaPrivateGlobalRef(void *p_object)
+{
+    return p_object;
 }
 #endif

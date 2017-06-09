@@ -214,6 +214,7 @@ typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
 typedef MCAutoMutableValueRefBase<MCRecordRef, MCRecordMutableCopyAndRelease, MCRecordCopyAndRelease> MCAutoRecordRef;
 typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
 typedef MCAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRelease, MCProperListCopyAndRelease> MCAutoProperListRef;
+typedef MCAutoValueRefBase<MCJavaObjectRef> MCAutoJavaObjectRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 

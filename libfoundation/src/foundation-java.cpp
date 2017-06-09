@@ -128,8 +128,12 @@ MC_DLLEXPORT_DEF bool MCJavaObjectCreate(void *p_object, MCJavaObjectRef &r_obje
     if (!MCValueCreateCustom(kMCJavaObjectTypeInfo,
                              sizeof(__MCJavaObjectImpl), t_obj))
         return false;
-
-    *MCJavaObjectGet(t_obj) = MCJavaObjectImplMake(p_object);
+    
+    void *t_global_ref = nullptr;
+    if (p_object != nullptr)
+        t_global_ref = MCJavaPrivateGlobalRef(p_object);
+    
+    *MCJavaObjectGet(t_obj) = MCJavaObjectImplMake(t_global_ref);
     r_object = t_obj;
 
     return true;
