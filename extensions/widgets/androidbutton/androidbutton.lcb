@@ -209,7 +209,9 @@ private handler expandRectangle(in pRect as Rectangle, in pExp as Number) return
 end handler
 
 public handler OnPaint()
-    if IsAndroid() then
+	variable tIsAndroid as Boolean
+	put IsAndroid() into tIsAndroid
+    if tIsAndroid then
         updateProperties()
         return
     end if
