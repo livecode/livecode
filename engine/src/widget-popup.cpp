@@ -346,9 +346,11 @@ extern "C" MC_DLLEXPORT_DEF MCStringRef MCWidgetExecPopupMenuAtLocation(MCString
 	}
 	
 	t_button->SetVisible(ctxt, 0, false);
-	if (t_button->del(true))
+    MCerrorlock++;
+    if (t_button->del(false))
         t_button->scheduledelete();
-	
+    MCerrorlock--;
+    
 	MCAutoStringRef t_string;
 	
 	if (t_handler.GetPick() != nil)
@@ -403,9 +405,11 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	MCValueRef t_result;
 	t_result = MCValueRetain(t_popup->getpopupresult());
 	
-	if (t_popup->del(true))
+    MCerrorlock++;
+    if (t_popup->del(false))
         t_popup->scheduledelete();
-	
+    MCerrorlock--;
+    
 	s_widget_popup = t_old_popup;
 	
 	r_result = t_result;

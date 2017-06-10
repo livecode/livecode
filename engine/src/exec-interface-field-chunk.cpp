@@ -2326,6 +2326,20 @@ void MCField::SetInvisibleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 }
 
 //////////
+// AB : 2017-06-07 Fix bug 18407
+//////////
+
+void MCField::GetVisibleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+    GetInvisibleOfLineChunk(ctxt, p_part_id, si, ei, r_mixed, r_value);
+    r_value = !r_value;
+}
+void MCField::SetVisibleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool p_visible)
+{
+    SetInvisibleOfLineChunk(ctxt, p_part_id, si, ei, !p_visible);
+}
+
+//////////
 // Block color properties
 //////////
 

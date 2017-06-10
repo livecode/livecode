@@ -1151,7 +1151,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
     for(t_index = 0; t_index < m_messages.GetCount(); t_index++)
         if (m_messages[t_index].m_time > time)
             break;
-    
+
     m_messages.InsertMessageAtIndex(t_index, MCPendingMessage(optr, mptr, time, params, id));
 }
 
@@ -1278,6 +1278,9 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			MCAutoListRef t_msg_info;
 			MCAutoValueRef t_id_string;
 			MCAutoStringRef t_time_string;
+
+            if (!t_msg.m_object.IsValid())
+                continue;
 
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;

@@ -1306,7 +1306,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
     // nativize first.
     
 	Boolean allvalid = True;
-	uint2 npoints = 0;
+	uindex_t npoints = 0;
 	uint4 l = MCStringGetLength(data);
     MCAutoPointer<char> t_data;
     /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
