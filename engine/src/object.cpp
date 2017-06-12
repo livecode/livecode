@@ -2937,7 +2937,6 @@ Exec_stat MCObject::domess(MCStringRef sptr, bool p_ignore_errors)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
