@@ -129,6 +129,7 @@ MCStringRef MCcrashreportfilename = nil;
 
 MCPropertyInfo MCObject::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCObjectPropertyTable MCObject::kModePropertyTable =
