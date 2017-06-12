@@ -58,7 +58,7 @@ mergeInto(LibraryManager.library, {
 			for (var i = 0; i < t_length; i++)
 			{
 				var codeUnit = Module.ccall('MCStringGetCharAtIndex', 'number', ['number', 'number'] , [stringref, i]);
-				result == String.fromCharCode(codeUnit);
+				result += String.fromCharCode(codeUnit);
 			}
 
 			return result;
@@ -80,7 +80,7 @@ mergeInto(LibraryManager.library, {
 		// Create mutable (proper) list
 		properListCreateMutable: function()
 		{
-			return Module.ccall('MCEmscriptenCreateMutableProperList', 'number', [], []);
+			return Module.ccall('MCEmscriptenUtilCreateMutableProperList', 'number', [], []);
 		},
 		
 		properListPushElementOntoBack: function(listref, valueref)
@@ -93,9 +93,9 @@ mergeInto(LibraryManager.library, {
 			return Module.ccall('MCProperListGetLength', 'number', ['number'], [listref]);
 		},
 		  
-		properListGetElementAtIndex: function(listref, index)
+		properListFetchElementAtIndex: function(listref, index)
 		{
-			return Module.ccall('MCProperListGetElementAtIndex', 'number', ['number', 'number'], [listref, index]);
+			return Module.ccall('MCProperListFetchElementAtIndex', 'number', ['number', 'number'], [listref, index]);
 		},
 	},
 });

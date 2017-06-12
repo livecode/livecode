@@ -1165,16 +1165,20 @@ MCStack* _emscripten_get_stack(void *p_stack_ptr)
 {
 	MCStack *t_stacks = MCdispatcher->getstacks();
 	
-	MCStack *t_stack = t_stacks->next();
-	while (t_stacks != t_stack)
+	MCStack *t_stack = t_stacks;
+	do
 	{
 		if (t_stack == p_stack_ptr)
 			return t_stack;
+		
+		t_stack = t_stack->next();
 	}
+	while (t_stack != t_stacks);
 	
 	return nil;
 }
 
+extern "C" MC_DLLEXPORT_DEF
 MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
 {
 	MCStackHandle t_stack(_emscripten_get_stack(p_stack));
@@ -1196,7 +1200,7 @@ MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
 	MCAutoStringRef t_prop_string;
 	if (t_success)
 	{
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, kMCExecValueTypeStringRef, &t_prop_string);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, kMCExecValueTypeStringRef, &(&t_prop_string));
 		t_success = *t_prop_string != nil;
 	}
 
@@ -1210,6 +1214,7 @@ MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
 	return t_list.Take();
 }
 
+extern "C" MC_DLLEXPORT_DEF
 bool MCEmscriptenSystemPostStackHandlerCall(MCStack *p_stack, MCStringRef p_handler, MCProperListRef p_params)
 {
 	return false;
@@ -1219,6 +1224,7 @@ bool MCEmscriptenSystemPostStackHandlerCall(MCStack *p_stack, MCStringRef p_hand
 }
 
 // Return the named stack, or NULL if not found
+extern "C" MC_DLLEXPORT_DEF
 MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
 {
 	MCNewAutoNameRef t_name;
@@ -1230,6 +1236,7 @@ MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
 
 //////////
 
+extern "C" MC_DLLEXPORT_DEF
 MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_string, uint32_t p_length)
 {
 	MCStringRef t_string = nil;
@@ -1239,6 +1246,7 @@ MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_s
 	return t_string;
 }
 
+extern "C" MC_DLLEXPORT_DEF
 MCProperListRef MCEmscriptenUtilCreateMutableProperList()
 {
 	MCProperListRef t_list = nil;

@@ -102,7 +102,7 @@ mergeInto(LibraryManager.library, {
 			var count = LiveCodeUtil.properListGetLength(handlerList);
 			for (var i = 0; i < count; i++)
 			{
-				var stringref = LiveCodeUtil.properListGetElementAtIndex(handlerList, i);
+				var stringref = LiveCodeUtil.properListFetchElementAtIndex(handlerList, i);
 				var handler_name = LiveCodeUtil.stringFromMCStringRef(stringref);
 				stackHandle[handler_name] = LiveCodeSystem._makeHandlerProxy(stack, handler_name);
 			}
