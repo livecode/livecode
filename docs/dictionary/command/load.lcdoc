@@ -12,7 +12,7 @@ Associations: internet library
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -51,8 +51,12 @@ to it using the <URL> <keyword> as usual. When you request the original
 The <callbackMessage> is sent to the <object(glossary)> whose <script> 
 contains the <load> <command>, after the <URL> is <load|loaded>, so you 
 can handle the <callbackMessage> to perform any tasks you want to delay 
-until the URL has been <cache|cached>. Two <parameter|parameters> are 
-sent with the <message> : the <URL> and the <URLStatus> of the <file>.
+until the URL has been <cache|cached>. On iOS, Android and HTML5, four
+<parameter|parameters> are sent with the <message> : the <URL>, the
+<URLStatus> of the <file>, the contents of the <URL> or an error string
+and the total size of the <URL> in bytes. On all other platforms, two
+<parameter|parameters> are sent with the <message> : the <URL> and the
+<URLStatus> of the <file>.
 
 The <load> <command> is non-blocking, so it does not stop the current 
 <handler> while the <download> is completed. The <handler> continues 
@@ -83,17 +87,25 @@ remove it from the <cache>.
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
->*Cross-platform note:* On iOS and Android, the <load> <command>
+>*Cross-platform note:* On iOS, Android and HTML5, the <load> <command>
 > is implemented in the engine. Therefore the <Internet library> is not 
-> needed to ensure the <command> works in a mobile 
-> <standalone application>. If included, the <Internet library> 
-> implementation will be used instead of the engine implementation.
+> needed to ensure the <command> works in a <standalone application>. If
+> included, the <Internet library> implementation will be used instead of
+> the engine implementation.
+
+> *Note:* The current HTML5 support for 'load url' is experimental, and
+> will be replaced by a libUrl-like API in a subsequent DP ensuring it has
+> parity with other platforms when 'Internet Library' is used.
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
 > appropriate form that conforms to [RFC
 > 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
+
+> *Note:* The HTML5 engine only supports HTTP and HTTPs protocols.
+> Also, only URLs from the domain hosting the web page running the HTML5
+> engine can be fetched.
 
 References: unload (command), libURLftpUpload (command),
 libURLDownloadToFile (command), get (command), load (command),
