@@ -2737,6 +2737,9 @@ enum Exec_errors
     
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
+    
+    // {EE-0897} remove : cannot remove IDE front scripts
+    EE_REMOVE_IDEFRONTSCRIPT,
 };
 
 extern const char *MCexecutionerrors;
