@@ -16,23 +16,38 @@ Platforms: desktop, server, mobile
 
 Example:
 get last word of the long name of this stack
+put it
+
+Example:
+local tString
+put "Apples, peaches, and pears." into tString
+put word 2 of tString
+--> peaches,
 
 Description:
 Use the <word> <keyword> to refer to one or more <words> in a
 <container>. 
 
-A word is delimited by one or more spaces, tabs, or returns, or enclosed
-by double quotes. A single word can contain multiple characters and
-multiple items, but not multiple lines.
+A <word> is <delimit|delimited> by one or more spaces, tabs, or 
+returns, or enclose dby <double quote|double quotes>. A single <word> 
+can contain multiple <character|characters> and multiple <item|items>, 
+but not multiple <line|lines>.
 
->*Note:* <Words(keyword)> are <delimit|delimited> by <double
-> quote|double quotes> ("), but not by curved quotes (""). LiveCode does
-> not treat curved quotes as quotes.
+>*Note:* <Words(keyword)> are <delimit|delimited> by 
+> <double quote|double quotes> ("), but not by curved quotes 
+> (&ldquo;&rdquo;). LiveCode does not treat curved quotes as 
+> <double quote|quotes>.
 
-References: keyword (glossary), double quote (glossary),
-quoted (glossary), delimit (glossary), chunk expression (glossary),
-container (glossary), character (keyword), item (keyword),
-words (keyword), line (keyword), string (keyword), token (keyword)
+>*Note:* To refer to actual words in a chunk expression, i.e., words 
+> <delimit|delimited> by <Unicode> word breaks, use the <keyword> <trueWord>.
+
+References: byte (keyword), character (keyword), 
+chunk expression(glossary), codepoint (keyword), codeunit (keyword), 
+container (glossary), delimit (glossary), double quote (glossary), 
+item (keyword),keyword (glossary), line (keyword), quoted (glossary), 
+paragraph (keyword), segment (keyword), sentence (keyword), 
+string (keyword), token (keyword), trueWord (keyword), 
+Unicode (glossary), words (keyword)
 
 Tags: text processing
 
