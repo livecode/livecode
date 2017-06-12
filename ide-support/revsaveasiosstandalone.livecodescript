@@ -1241,15 +1241,15 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    
    if tEnableBackgroundExecution then
-      put computeDefault(pSettings["ios,background audio"],"false") into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
-      put computeDefault(pSettings["ios,background location update"],"false") into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
-      put computeDefault(pSettings["ios,background voip"],"false") into tBackgroundModes["${BACKGROUND_VOIP}"]
-      put computeDefault(pSettings["ios,background newsstand downloads"],"false") into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
-      put computeDefault(pSettings["ios,external acc comn"],"false") into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
-      put computeDefault(pSettings["ios,use bt le"],"false") into tBackgroundModes["${USE_BT_LE}"]
-      put computeDefault(pSettings["ios,acts as bt le"],"false") into tBackgroundModes["${ACTS_AS_BT_LE}"]
-      put computeDefault(pSettings["ios,background fetch"],"false") into tBackgroundModes["${BACKGROUND_FETCH}"]
-      put computeDefault(pSettings["ios,remote notifications"],"false") into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
+      put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+      put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+      put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
+      put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+      put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+      put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
+      put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
+      put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
+      put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
    else
       put false into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
       put false into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
