@@ -85,7 +85,7 @@ mergeInto(LibraryManager.library, {
 		
 		properListPushElementOntoBack: function(listref, valueref)
 		{
-			return Module.ccall('MCProperListPushElementOntoBack', 'number', ['number', 'number'], listref, valueref);
+			return Module.ccall('MCProperListPushElementOntoBack', 'number', ['number', 'number'], [listref, valueref]);
 		},
 		  
 		properListGetLength: function(listref)
