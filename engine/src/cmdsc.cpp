@@ -2028,7 +2028,16 @@ void MCRemove::exec_ctxt(MCExecContext& ctxt)
         }
 		
 		if (script)
-			MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
+        {
+            MCStringRef t_script_name;
+            optr . object->GetName(ctxt, t_script_name);
+            if (MCStringContains(t_script_name, MCSTR("revfrontscript"), 3))
+            {
+                ctxt . LegacyThrow(EE_REMOVE_IDEFRONTSCRIPT);
+                return ;
+            }
+            MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
+        }
 		else
 		{
 			if (optr . object->gettype() != CT_GROUP)

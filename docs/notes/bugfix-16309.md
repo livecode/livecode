@@ -1,0 +1,1 @@
+# Fixed crash of IDE when trying to remove front scripts
