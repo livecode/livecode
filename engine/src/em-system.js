@@ -18,7 +18,7 @@
 
 mergeInto(LibraryManager.library, {
           
-    $LiveCodeSystem__deps: ['$LiveCodeUtil'],
+    $LiveCodeSystem__deps: ['$LiveCodeUtil', '$LiveCodeAsync'],
     $LiveCodeSystem: {
           
           evaluateJavaScript: function(script_buffer, script_length, return_buffer, return_length) {
@@ -89,9 +89,16 @@ mergeInto(LibraryManager.library, {
 		  
 		_makeHandlerProxy: function(stack, handler)
 		{
-			return function(...params)
+			return function()
 			{
-				LiveCodeSystem._callStackHandler(stack, handler, _convertParams(params));
+				var tParams = Array.prototype.slice.call(arguments);
+				LiveCodeAsync.resume(function() {
+					var tHandlerName = LiveCodeUtil.stringToMCStringRef(handler);
+					var tConvertedParams = LiveCodeSystem._convertParams(tParams);
+					LiveCodeSystem._callStackHandler(stack, tHandlerName, tConvertedParams);
+					LiveCodeUtil.valueRelease(tHandlerName);
+					LiveCodeUtil.valueRelease(tConvertedParams);
+				});
 			}
 		},
 		
@@ -123,11 +130,14 @@ mergeInto(LibraryManager.library, {
 		
 		getStackWithName: function(name)
 		{
-			var stack = LiveCodeSystem._resolveStack(name);
-			if (stack == 0)
-				return null;
-			
-			return LiveCodeSystem._stackHandle(stack);
+			var stackHandle = null;
+			LiveCodeAsync.resume(function() {
+				var stack = LiveCodeSystem._resolveStack(name);
+				if (stack != 0)
+					stackHandle = LiveCodeSystem._stackHandle(stack);
+
+			});
+			return stackHandle;
 		},
     },
     
