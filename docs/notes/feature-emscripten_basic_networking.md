@@ -2,7 +2,7 @@
 
 Basic networking support has been added to the HTML5 engine by way of the **load** command. The HTML5 **load** command functions in the same way as the **load** command on mobile platforms, with a completion message being sent on download, containing the contents of the URL (or any error) and the **urlProgress** message being sent periodically during the request.
 
-**Note - this functionality is only temporary, with extended libURL style syntax coming soon.**
+** Note: The current HTML5 support for 'load url' is experimental, and will be replaced by a libUrl-like API in a subsequent DP ensuring it has parity with other platforms when 'Internet Library' is used.**
 
 **Note - only HTTP and HTTPS protocols are supported and URLs can only be fetched from the domain hosting the web page running the HTML5 engine.**
 
