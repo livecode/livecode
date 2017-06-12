@@ -4446,6 +4446,13 @@ static bool MCObjectListAppendObjectAndBehaviors(MCObjectList *&x_list, MCObject
         
         MCObject *t_parent_object = t_parent_script->GetObject();
         
+        // If the behavior object has been deleted, then it won't currently be
+        // blocked, but will have a null object.
+        if (t_parent_object == nullptr)
+        {
+            break;
+        }
+        
         // We have a parent object, so add it.
         if (!MCObjectListAppendObject(x_list, t_parent_object))
         {

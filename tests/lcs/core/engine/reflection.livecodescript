@@ -50,8 +50,39 @@ on TestRevEffectiveAvailableHandlersChainedBehavior
 end TestRevEffectiveAvailableHandlersChainedBehavior
 
 on TestRevEffectiveAvailableHandlersBlockedBehavior
+	-- Behaviors can only become 'blocked' when deserialized. Therefore, we
+	-- do this by creating a new behavior and user of the behavior, copying the
+	-- user to the clipboard (which serializes), then deleting both, and then
+	-- pasting to deserialize. At this point the new button's behavior will not
+	-- resolve and will be marked as blocked.
+	local tBehaviorButton
+	create button "BehaviorButton"
+	set the script of it to "command myBehaviorHandler; end myBehaviorHandler"
+	put the long id of it into tBehaviorButton
+
+	create stack "StackToSave"
+	set the defaultStack to "StackToSave"
+
+	create button "TestButton"
+	set the behavior of button "TestButton" to tBehaviorButton
+
+	local tTempFile
+	put tempName() into tTempFile
+	save stack "StackToSave" as tTempFile
+	delete stack "StackToSave"
+	delete tBehaviorButton
+
+	go stack tTempFile
+	delete file tTempFile
+	
+	TestAssert "ignores blocked behaviors", not (the effective revAvailableHandlers of button "TestButton" of stack "StackToSave" contains " myBehaviorHandler ")
+
+	delete stack "StackToSave"
+end TestRevEffectiveAvailableHandlersBlockedBehavior
+
+on TestRevEffectiveAvailableHandlersDeletedBehavior
 	clone button "IsolatedBehavior"
 	set the behavior of button "TestButton" to it
 	delete it
 	TestAssert "ignores blocked behaviors", the effective revAvailableHandlers of button "TestButton" contains " myHandler "
-end TestRevEffectiveAvailableHandlersBlockedBehavior
+end TestRevEffectiveAvailableHandlersDeletedBehavior
