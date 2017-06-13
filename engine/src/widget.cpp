@@ -111,6 +111,10 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     bool t_success;
     t_success = true;
     
+    // Make sure we set the widget barrier callbacks - this should be done in
+    // module init for 'extension' when we have such a mechanism.
+    MCScriptSetWidgetBarrierCallbacks(MCWidgetEnter, MCWidgetLeave);
+    
     // Create a new root widget.
     if (t_success)
         t_success = MCWidgetCreateRoot(this, p_kind, m_widget);

@@ -214,6 +214,9 @@ MCWidgetBase *MCWidgetAsBase(MCWidgetRef widget);
 MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef widget);
 MCWidgetChild *MCWidgetAsChild(MCWidgetRef widget);
 
+void *MCWidgetEnter(MCScriptInstanceRef instance, void *host_ptr);
+void MCWidgetLeave(MCScriptInstanceRef instance, void *host_ptr, void *cookie);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCWidgetRef MCcurrentwidget;

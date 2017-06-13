@@ -43,12 +43,17 @@ typedef bool (*MCScriptForEachBuiltinModuleCallback)(void *p_context, MCScriptMo
 
 typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
 
+typedef void *(*MCScriptWidgetEnterCallback)(MCScriptInstanceRef instance, void *host_ptr);
+typedef void (*MCScriptWidgetLeaveCallback)(MCScriptInstanceRef instance, void *host_ptr, void* p_cookie);
+
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
 
 bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback, void *p_context);
 
 void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
+
+void MCScriptSetWidgetBarrierCallbacks(MCScriptWidgetEnterCallback entry_callback, MCScriptWidgetLeaveCallback leave_callback);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -255,6 +260,13 @@ MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
 
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
+
+// Sets a private pointer unused by libscript, but passed to the entry/exit
+// callbacks.
+void MCScriptSetInstanceHostPtr(MCScriptInstanceRef instance, void *state_ptr);
+
+// Gets the host ptr.
+void *MCScriptGetInstanceHostPtr(MCScriptInstanceRef instance);
 
 // Get the module of an instance.
 MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef instance);

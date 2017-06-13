@@ -31,6 +31,17 @@
 // code can get some element of context.
 static MCScriptModuleRef s_current_module = nil;
 
+static MCScriptWidgetEnterCallback s_widget_enter_callback = nullptr;
+static MCScriptWidgetLeaveCallback s_widget_leave_callback = nullptr;
+
+void
+MCScriptSetWidgetBarrierCallbacks(MCScriptWidgetEnterCallback p_entry,
+                                  MCScriptWidgetLeaveCallback p_leave)
+{
+    s_widget_enter_callback = p_entry;
+    s_widget_leave_callback = p_leave;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool
@@ -167,6 +178,20 @@ MCScriptReleaseInstance(MCScriptInstanceRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void
+MCScriptSetInstanceHostPtr(MCScriptInstanceRef self, void *p_host_ptr)
+{
+    self->host_ptr = p_host_ptr;
+}
+
+void *
+MCScriptGetInstanceHostPtr(MCScriptInstanceRef self)
+{
+    return self->host_ptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCScriptModuleRef
 MCScriptGetModuleOfInstance(MCScriptInstanceRef self)
 {
@@ -196,6 +221,17 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 										  uindex_t p_argument_count,
 										  MCValueRef* r_value)
 {
+    void *t_cookie = nullptr;
+    
+    if (self->module->module_kind == kMCScriptModuleKindWidget)
+    {
+        if (s_widget_enter_callback != nullptr)
+        {
+            t_cookie = s_widget_enter_callback(self,
+                                               self->host_ptr);
+        }
+    }
+
 	MCScriptExecuteContext t_execute_ctxt;
 	t_execute_ctxt.Enter(self,
 						 p_handler_def,
@@ -207,6 +243,16 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 		MCScriptBytecodeExecute(t_execute_ctxt);
 	}
 	
+    if (self->module->module_kind == kMCScriptModuleKindWidget)
+    {
+        if (s_widget_leave_callback != nullptr)
+        {
+            s_widget_leave_callback(self,
+                                    self->host_ptr,
+                                    t_cookie);
+        }
+    }
+
 	if (!t_execute_ctxt.Leave())
 	{
 		return false;
