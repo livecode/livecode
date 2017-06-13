@@ -20,6 +20,20 @@ mergeInto(LibraryManager.library, {
           
     $LiveCodeSystem__deps: ['$LiveCodeUtil', '$LiveCodeAsync'],
     $LiveCodeSystem: {
+		
+		initialize: function() {
+			if (!document['liveCode'])
+				document['liveCode'] = {}
+			document['liveCode']['findStackWithName'] = function(name) {
+				return LiveCodeSystem.getStackWithName(name);
+			};
+		},
+		
+		finalize: function() {
+			delete document['liveCodeGetStackWithName'];
+		},
+		
+		//////////
           
           evaluateJavaScript: function(script_buffer, script_length, return_buffer, return_length) {
 			  var script = LiveCodeUtil.stringFromUTF16(script_buffer, script_length);
@@ -156,6 +170,18 @@ mergeInto(LibraryManager.library, {
     MCEmscriptenSystemEvaluateJavaScript: function(script_buffer, script_length, return_buffer, return_length) {
 		return LiveCodeSystem.evaluateJavaScript(script_buffer, script_length, return_buffer, return_length);
     },
+    
+	MCEmscriptenSystemInitializeJS__deps: ['$LiveCodeSystem'],
+	MCEmscriptenSystemInitializeJS: function() {
+		LiveCodeSystem.initialize();
+		return true;
+	},
+
+	MCEmscriptenSystemFinalizeJS__deps: ['$LiveCodeSystem'],
+	MCEmscriptenSystemFinalizeJS: function() {
+		LiveCodeSystem.finalize();
+	},
+
 });
 
 /*

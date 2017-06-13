@@ -37,7 +37,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/time.h>
 #include <emscripten.h>
 
-// These functions are implemented in javascript
+/* ----------------------------------------------------------------
+ * Functions implemented in em-system.js
+ * ---------------------------------------------------------------- */
+
+extern "C" bool MCEmscriptenSystemInitializeJS(void);
+extern "C" void MCEmscriptenSystemFinalizeJS(void);
 extern "C" int32_t MCEmscriptenSystemEvaluateJavaScript(const unichar_t* p_script, size_t p_script_length, unichar_t** r_result, size_t* r_result_length);
 
 /* ================================================================
@@ -110,12 +115,14 @@ MCEmscriptenSystem::Initialize()
 	IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
 	IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
 
+	MCEmscriptenSystemInitializeJS();
 	return true;
 }
 
 void
 MCEmscriptenSystem::Finalize()
 {
+	MCEmscriptenSystemFinalizeJS();
 }
 
 /* ----------------------------------------------------------------
