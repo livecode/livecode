@@ -2255,7 +2255,11 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
-         put (item 1 to -2 of tExternalPath) & "/Externals/CEF" into tCEFResources
+         if revEnvironmentIsInstalled() then
+            put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
+         else
+            put (item 1 to -2 of tExternalPath) & "/Externals/CEF" into tCEFResources
+         end if
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          
          revSBEnsureFolder tCEFDest
