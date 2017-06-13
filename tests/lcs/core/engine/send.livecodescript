@@ -64,3 +64,11 @@ on TestSendError
 	TestAssertThrow "send throws correct error", __SendError, \ 
 		the long id of me, "EE_CHUNK_NOSTACK"
 end TestSendError
+
+on TestSendDeleteMe
+	local tStack
+	create stack
+	send "--execute this" & return & "delete me" to it
+
+	TestAssert "execute 'delete me' using send", there is not a stack it
+end TestSendDeleteMe
