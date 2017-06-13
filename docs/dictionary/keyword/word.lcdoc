@@ -29,7 +29,7 @@ Use the <word> <keyword> to refer to one or more <words> in a
 <container>. 
 
 A <word> is <delimit|delimited> by one or more spaces, tabs, or 
-returns, or enclose dby <double quote|double quotes>. A single <word> 
+returns, or enclosed by <double quote|double quotes>. A single <word> 
 can contain multiple <character|characters> and multiple <item|items>, 
 but not multiple <line|lines>.
 
