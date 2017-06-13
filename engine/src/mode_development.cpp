@@ -511,10 +511,11 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
 
-// IM-2014-02-25: [[ Bug 11841 ]] MCObjectList helper functions
-bool MCObjectListAppend(MCObjectList *&x_list, MCObject *p_object, bool p_unique)
+/* This functions are designed for, and should only be used for
+ * revAvailableHandlers as they are tied to its requirements at present. */
+bool MCObjectListAppendObject(MCObjectList *&x_list, MCObject *p_object)
 {
-	if (p_unique && x_list != nil)
+	if (x_list != nil)
 	{
 		MCObjectList *t_object;
 		t_object = x_list;
@@ -531,6 +532,10 @@ bool MCObjectListAppend(MCObjectList *&x_list, MCObject *p_object, bool p_unique
 	MCObjectList *t_newobject;
 	t_newobject = nil;
 	
+    /* Make sure the object's script is compiled so that we can enumerate the
+     * handlers, assuming it compiles. */
+    p_object -> parsescript(False);
+    
 	t_newobject = new (nothrow) MCObjectList(p_object);
 	
 	if (t_newobject == nil)
@@ -544,7 +549,34 @@ bool MCObjectListAppend(MCObjectList *&x_list, MCObject *p_object, bool p_unique
 	return true;
 }
 
-bool MCObjectListAppend(MCObjectList *&x_list, MCObjectList *p_list, bool p_unique)
+bool MCObjectListAppendObjectAndBehaviors(MCObjectList *&x_list, MCObject *p_object)
+{
+    if (!MCObjectListAppendObject(x_list, p_object))
+    {
+        return false;
+    }
+    
+    MCParentScript *t_parent_script = p_object->getparentscript();
+    while(t_parent_script != nullptr)
+    {
+        if (t_parent_script->IsBlocked())
+        {
+            continue;
+        }
+        
+        MCObject *t_parent_object = t_parent_script->GetObject();
+        if (!MCObjectListAppendObject(x_list, t_parent_object))
+        {
+            return false;
+        }
+        
+        t_parent_script = t_parent_object->getparentscript();
+    }
+    
+    return true;
+}
+
+bool MCObjectListAppendObjectList(MCObjectList *&x_list, MCObjectList *p_list)
 {
 	bool t_success;
 	t_success = true;
@@ -557,7 +589,7 @@ bool MCObjectListAppend(MCObjectList *&x_list, MCObjectList *p_list, bool p_uniq
 		do
 		{
 			if (!t_object->getremoved())
-				t_success = MCObjectListAppend(x_list, t_object->getobject(), p_unique);
+				t_success = MCObjectListAppendObjectAndBehaviors(x_list, t_object->getobject());
 			t_object = t_object->next();
 		}
 		while (t_success && t_object != p_list);
@@ -1026,22 +1058,21 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
     t_success = true;
     
     // MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
-    t_success = MCObjectListAppend(t_object_list, MCfrontscripts, true);
+    t_success = MCObjectListAppendObjectList(t_object_list, MCfrontscripts);
     
     for (MCObject *t_object = this; t_success && t_object != NULL; t_object = t_object -> parent)
     {
-        t_object -> parsescript(False);
-        t_success = MCObjectListAppend(t_object_list, t_object, true);
+        t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, t_object);
     }
     
     if (t_success)
-        t_success = MCObjectListAppend(t_object_list, MCbackscripts, true);
+        t_success = MCObjectListAppendObjectList(t_object_list, MCbackscripts);
     
     for (uint32_t i = 0; t_success && i < MCnusing; i++)
     {
         if (MCusing[i] == this)
             continue;
-        t_success = MCObjectListAppend(t_object_list, MCusing[i], true);
+        t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, MCusing[i]);
     }
     
     // IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object

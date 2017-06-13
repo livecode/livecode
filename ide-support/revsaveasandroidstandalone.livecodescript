@@ -348,9 +348,16 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       else
          replace "${THEME}" with "@android:style/Theme.NoTitleBar" in tManifest
       end if
-      replace "${ORIENTATION}" with pSettings["android,initial orientation"] in tManifest
-      replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
       
+      local tInitialOrientation
+      put pSettings["android,initial orientation"] into tInitialOrientation
+      if tInitialOrientation is "landscape" then
+         put "sensorLandscape" into tInitialOrientation
+      end if
+      replace "${ORIENTATION}" with tInitialOrientation in tManifest
+      
+      replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
+     
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
       repeat for each key tFeature in pSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature

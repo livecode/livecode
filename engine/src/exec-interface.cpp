@@ -65,6 +65,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 #include "graphics_util.h"
+#include "mcerror.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 MC_EXEC_DEFINE_MAKE_METHOD(Interface, CustomImagePaletteSettings, 2)
@@ -2306,8 +2308,8 @@ void MCInterfaceExecDelete(MCExecContext& ctxt)
 		MCactivefield->deleteselection(False);
 	else if (MCactiveimage)
 		MCactiveimage->delimage();	
-	else
-		MCselected->del();
+	else if (!MCselected->del() && !MCeerror->isempty())
+        ctxt . Throw();
 }
 
 void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, uindex_t p_object_count)
@@ -3652,6 +3654,8 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
+    
+    p_chunk.object->signallisteners(P_TEXT);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

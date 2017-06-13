@@ -527,6 +527,30 @@ bool MCSellist::clipboard(bool p_is_cut)
 	return false;
 }
 
+Boolean MCSellist::usercopy()
+{
+    MCerrorlock++;
+    Boolean t_stat = clipboard(false);
+    MCerrorlock--;
+    return t_stat;
+}
+
+Boolean MCSellist::usercut()
+{
+    MCerrorlock++;
+    Boolean t_stat = clipboard(true);
+    MCerrorlock--;
+    return t_stat;
+}
+
+Boolean MCSellist::userdel()
+{
+    MCerrorlock++;
+    Boolean t_stat = del();
+    MCerrorlock--;
+    return t_stat;
+}
+
 Boolean MCSellist::copy()
 {
 	return clipboard(false);

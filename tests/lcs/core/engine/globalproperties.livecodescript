@@ -33,3 +33,11 @@ on TestGetSetSecurityPermissions
    set the securityPermissions to tNewPermissions
    TestAssert "Getting new securityPermissions correctly", the securityPermissions is tNewPermissions
 end TestGetSetSecurityPermissions
+
+on TestDeletingMenubarGroupDereferencesProperly
+    create group
+    set the menubar to it
+    set the defaultmenubar to it
+    delete it
+    TestAssert "did not crash", true
+end TestDeletingMenubarGroupDereferencesProperly

@@ -1526,12 +1526,6 @@ private command revCopyFiles pDirectory, pStackPath
    end repeat
 end revCopyFiles
 
-private command revDeleteFile pWhich
-   close file pWhich
-   if the platform is "MacOS" then put empty into URL ("resfile:"&pWhich)
-   put empty into URL ("binfile:"&pWhich)
-   delete file pWHich
-end revDeleteFile
 
 #####################################################################
 #

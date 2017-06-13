@@ -215,16 +215,6 @@ MCGroup::~MCGroup()
 		                  (controls);
 		delete cptr;
 	}
-	if (this == MCmenubar)
-	{
-		MCmenubar = nil;
-		MCscreen->updatemenubar(True);
-	}
-	if (this == MCdefaultmenubar)
-	{
-		MCdefaultmenubar = nil;
-		MCscreen->updatemenubar(True);
-	}
 	delete vscrollbar;
 	delete hscrollbar;
 }
@@ -1031,6 +1021,16 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 
 void MCGroup::removereferences()
 {
+    if (MCmenubar.IsBoundTo(this))
+    {
+        MCmenubar = nil;
+        MCscreen->updatemenubar(True);
+    }
+    if (MCdefaultmenubar.IsBoundTo(this))
+    {
+        MCdefaultmenubar = nil;
+        MCscreen->updatemenubar(True);
+    }
     if (controls != NULL)
     {
         MCControl *t_control;
