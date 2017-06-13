@@ -61,7 +61,7 @@ mergeInto(LibraryManager.library, {
 		
 		_callStackHandler: function(stack, handler, paramList)
 		{
-			Module.ccall('MCEmscriptenSystemPostStackHandlerCall', null, ['number', 'number', 'number'], [stack, handler, paramList]);
+			return Module.ccall('MCEmscriptenSystemCallStackHandler', 'number', ['number', 'number', 'number'], [stack, handler, paramList]);
 		},
 		
 		_getStackHandlerList: function(stack)
@@ -92,13 +92,24 @@ mergeInto(LibraryManager.library, {
 			return function()
 			{
 				var tParams = Array.prototype.slice.call(arguments);
+				var tResultString = null;
 				LiveCodeAsync.resume(function() {
 					var tHandlerName = LiveCodeUtil.stringToMCStringRef(handler);
 					var tConvertedParams = LiveCodeSystem._convertParams(tParams);
-					LiveCodeSystem._callStackHandler(stack, tHandlerName, tConvertedParams);
+					var tResult = LiveCodeSystem._callStackHandler(stack, tHandlerName, tConvertedParams);
 					LiveCodeUtil.valueRelease(tHandlerName);
 					LiveCodeUtil.valueRelease(tConvertedParams);
+
+					if (tResult == 0)
+						tResultString = null;
+					else
+					{
+						tResultString = LiveCodeUtil.stringFromMCStringRef(tResult);
+						LiveCodeUtil.valueRelease(tResult);
+					}
 				});
+				
+				return tResultString;
 			}
 		},
 		

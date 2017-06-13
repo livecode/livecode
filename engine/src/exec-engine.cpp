@@ -1175,12 +1175,12 @@ void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 			        
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
+Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
 {
 	if (MCscreen -> abortkey())
 	{
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
-		return;
+		return ES_ERROR;
 	}
 	
 	// Work out the target object
@@ -1236,6 +1236,32 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
         }
     }
 	
+	// Reset the default stack pointer and target - note that we use 'send'esque
+	// semantics here. i.e. If the default stack has been changed, the change sticks.
+	if (t_old_stack.IsValid() &&
+		MCdefaultstackptr == t_this_stack)
+		MCdefaultstackptr = t_old_stack;
+
+	// Reset target pointer
+    swap(MCtargetptr, t_old_target);
+	MCdynamicpath = olddynamic;
+	
+	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
+	MClockmessages = t_old_lock;
+	
+	// Remove our entry from the contexts list
+	MCECptr = oldctxt;
+	if (added)
+		MCnexecutioncontexts--;
+	
+	return t_stat;
+}
+
+void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
+{
+	Exec_stat t_stat;
+	t_stat = _MCEngineExecDoDispatch(ctxt, p_handler_type, p_message, p_target, p_parameters);
+	
 	// Set 'it' appropriately
 	switch(t_stat)
 	{
@@ -1260,24 +1286,6 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		ctxt . SetItToValue(kMCEmptyString);
 	break;
 	}
-	
-	// Reset the default stack pointer and target - note that we use 'send'esque
-	// semantics here. i.e. If the default stack has been changed, the change sticks.
-	if (t_old_stack.IsValid() &&
-		MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack;
-
-	// Reset target pointer
-    swap(MCtargetptr, t_old_target);
-	MCdynamicpath = olddynamic;
-	
-	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
-	MClockmessages = t_old_lock;
-	
-	// Remove our entry from the contexts list
-	MCECptr = oldctxt;
-	if (added)
-		MCnexecutioncontexts--;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

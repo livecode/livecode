@@ -1214,13 +1214,80 @@ MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
 	return t_list.Take();
 }
 
+extern void MCEngineFreeScriptParameters(MCParameter* p_params);
+extern bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params);
+
+extern Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters);
+
 extern "C" MC_DLLEXPORT_DEF
-bool MCEmscriptenSystemPostStackHandlerCall(MCStack *p_stack, MCStringRef p_handler, MCProperListRef p_params)
+MCStringRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_handler, MCProperListRef p_params)
 {
-	return false;
-	// Ensure stack pointer is valid
+	bool t_success = true;
 	
-	// call named handler
+	// Ensure stack pointer is valid
+	MCStackHandle t_stack;
+	
+	if (t_success)
+	{
+		t_stack = _emscripten_get_stack(p_stack);
+		t_success = t_stack.IsValid();
+	}
+	
+	// Ensure handler is allowed to be called from JavaScript
+	if (t_success)
+	{
+		MCAutoProperListRef t_handler_list;
+		t_handler_list.Give(MCEmscriptenSystemGetJavascriptHandlersOfStack(p_stack));
+		bool t_found = false;
+		for (uint32_t i = 0; !t_found && i < MCProperListGetLength(*t_handler_list); i++)
+		{
+			MCStringRef t_handler = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_handler_list, i));
+			t_found = MCStringIsEqualTo(t_handler, p_handler, kMCStringOptionCompareCaseless);
+		}
+		
+		t_success = t_found;
+	}
+	
+	MCNewAutoNameRef t_handler_name;
+	if (t_success)
+		t_success = MCNameCreate(p_handler, &t_handler_name);
+	
+	MCExecContext ctxt;
+	MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+	if (t_success)
+		t_success = MCEngineConvertToScriptParameters(ctxt, p_params, &t_params);
+
+	if (t_success)
+	{
+		MCObjectPtr t_stack_obj(t_stack, 0);
+		MCresult->clear();
+		
+		Exec_stat t_stat;
+		// try to dispatch handler as message
+		t_stat = _MCEngineExecDoDispatch(ctxt, HT_MESSAGE, *t_handler_name, &t_stack_obj, *t_params);
+		t_success = t_stat != ES_ERROR;
+		
+		if (t_success && t_stat != ES_NORMAL)
+		{
+			// not handled as message, try as function
+			t_stat = _MCEngineExecDoDispatch(ctxt, HT_FUNCTION, *t_handler_name, &t_stack_obj, *t_params);
+			t_success = t_stat != ES_ERROR;
+		}
+	}
+	
+	// fetch result (as string)
+	MCAutoValueRef t_result;
+	if (t_success)
+		t_success = MCresult->eval(ctxt, &t_result);
+	
+	MCAutoStringRef t_result_string;
+	if (t_success)
+		t_success = ctxt.ConvertToString(*t_result, &t_result_string);
+	
+	if (!t_success)
+		return nil;
+	
+	return t_result_string.Take();
 }
 
 // Return the named stack, or NULL if not found
