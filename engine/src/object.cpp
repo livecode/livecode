@@ -2944,7 +2944,6 @@ Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args, bool p_ignore_
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 
-    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, p_args);
 
 	MClockerrors = oldlock;
