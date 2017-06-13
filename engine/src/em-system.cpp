@@ -1201,7 +1201,7 @@ MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
 	MCExecContext ctxt(nil, nil, nil);
 	bool t_lock_messages = MClockmessages;
 	MClockmessages = true;
-	t_success = t_stack->getcustomprop(ctxt, t_stack->getdefaultpropsetname(), MCNAME("javascripthandlers"), nil, t_value);
+	t_success = t_stack->getcustomprop(ctxt, t_stack->getdefaultpropsetname(), MCNAME("cjavascripthandlers"), nil, t_value);
 	MClockmessages = t_lock_messages;
 	
 	MCAutoStringRef t_prop_string;
