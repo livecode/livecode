@@ -130,13 +130,13 @@
                                 'destination': '<(PRODUCT_DIR)/',
                                 'files':
                                 [
-                                    'lib/linux/<(target_arch)/natives_blob.bin',
-                                    'lib/linux/<(target_arch)/snapshot_blob.bin',
-                                    'lib/linux/<(target_arch)/icudtl.dat',
+                                    'lib/linux/<(target_arch)/CEF/natives_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
                                 ],
                             },
                             {
-                                'destination': '<(PRODUCT_DIR)/CEF',
+                                'destination': '<(PRODUCT_DIR)/Externals/CEF',
                                 'files':
                                 [
                                     'lib/linux/<(target_arch)/CEF/cef.pak',
@@ -148,7 +148,7 @@
                                 ],
                             },
                             {
-                                'destination': '<(PRODUCT_DIR)/CEF/locales',
+                                'destination': '<(PRODUCT_DIR)/Externals/CEF/locales',
                                 'files':
                                 [
                                     'lib/linux/<(target_arch)/CEF/locales/am.pak',
@@ -211,7 +211,13 @@
 					    {
 						    'variables':
 						    {
-							    'dist_aux_files': [ 'lib/linux/<(target_arch)/CEF/', ],
+							    'dist_aux_files':
+                                [
+                                    '<(PRODUCT_DIR)/Externals/',
+                                    '<(PRODUCT_DIR)/natives_blob.bin',
+                                    '<(PRODUCT_DIR)/snapshot_blob.bin',
+                                    '<(PRODUCT_DIR)/icudtl.dat',
+                                ],
 						    },
 					    },
 				    },

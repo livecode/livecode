@@ -143,22 +143,6 @@
 						},
 					},
 				],
-				
-				[
-					'OS == "linux"',
-					{
-						'copies':
-						[
-						    {
-							'destination':'<(PRODUCT_DIR)/CEF/',
-							'files':
-							[
-							    '<(PRODUCT_DIR)/libbrowser-cefprocess',
-							],
-						    },
-						],
-					},
-				],
 
 				[
 					# Only the CEF platforms need libbrowser-cefprocess
@@ -306,7 +290,7 @@
                                     'ldflags':
                                     [
                                         '-Wl,--allow-shlib-undefined',
-                                        '-Wl,-rpath=\\$$ORIGIN/CEF',
+                                        '-Wl,-rpath=\\$$ORIGIN/Externals/CEF',
                                     ],
                                 },
                             ],

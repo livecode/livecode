@@ -2217,10 +2217,10 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
    // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
    local tCurrentLocation, tCEFResources, tCEFDest
    set the itemdel to slash
-   put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    switch
       case pPlatform = "Windows"
+         put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          
          revSBEnsureFolder tCEFDest
@@ -2255,7 +2255,8 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       case pPlatform contains "Linux"
-         put tCurrentLocation & slash & "CEF" into tCEFDest
+         put (item 1 to -2 of tExternalPath) & "/Externals/CEF" into tCEFResources
+         put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          
          revSBEnsureFolder tCEFDest
          if the result is not empty then
@@ -2265,14 +2266,14 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          // make sure we only copy the required helper process executable
          put revListFiles(tCEFResources) into tCEFFiles
          filter lines of tCEFFiles not matching "*-cefprocess"
-
+         
          // The following files need to be placed alongside the executable
          local tCefTopLevelFiles = "icudtl.dat,natives_blob.bin,snapshot_blob.bin"
          replace comma with return in tCefTopLevelFiles
          repeat for each line tFile in tCefTopLevelFiles
             filter lines of tCEFFiles not matching tFile
          end repeat
-
+         
          // Copy files to CEF resource folder.
          repeat for each line tCEFFile in tCEFFiles
             revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
@@ -2285,7 +2286,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          if the result is not empty then
             revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
          end if
-
+         
          // Copy files to standalone folder
          put tCefTopLevelFiles & return into tCEFFiles
          if pCopyRevBrowserResources then
@@ -2296,12 +2297,12 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          end if
          
          repeat for each line tCEFFile in tCEFFiles
-            revSBCopyFileToFolder tCefResources & slash & ".." & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
+            revSBCopyFileToFolder tCefResources & slash & ".." & slash & ".." & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
             if the result is not empty then
                revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
             end if
          end repeat
-         --revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
+         revAddMapping pPlatform, "CEF/libcef", "Externals/CEF/libcef"
          break
       default
          break

@@ -407,10 +407,6 @@ const char *__MCCefPlatformGetExecutableFolder(void)
 static bool __MCCefGetLibraryPath(char*& r_path)
 {
     void *t_module = nullptr;
-    /* TODO[Bug 19381] Try libcef in the root folder to to workaround
-     * placement issues on Linux. */
-    /*if (t_module == nullptr)
-        t_module = MCSupportLibraryLoad("./libcef");*/
     if (t_module == nullptr)
         t_module = MCSupportLibraryLoad("./CEF/libcef");
     /* TODO[Bug 19381] On Linux and Windows, the in-git-checkout
