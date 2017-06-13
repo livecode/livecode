@@ -133,7 +133,7 @@
                         'copies':
                         [
                             {
-                                'destination':'<(PRODUCT_DIR)/CEF/',
+                                'destination':'<(PRODUCT_DIR)/',
                                 'files':
                                 [
                                     '<(PRODUCT_DIR)/revbrowser-cefprocess',
