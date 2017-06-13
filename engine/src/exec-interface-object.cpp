@@ -185,6 +185,7 @@ static PropList groupprops[] =
         {"boundingRect", P_BOUNDING_RECT},
         {"cantDelete", P_CANT_DELETE},
         {"cantSelect", P_CANT_SELECT},
+        {"clipsToRect", P_CLIPS_TO_RECT},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"disabled", P_DISABLED},
         {"dontSearch", P_DONT_SEARCH},
