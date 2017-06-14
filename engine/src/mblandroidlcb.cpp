@@ -56,12 +56,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeList
 {
 #ifdef TARGET_SUBPLATFORM_ANDROID
     extern bool MCAndroidIsOnSystemThread(void);
-    if (MCAndroidIsOnSystemThread())
+    if (!MCAndroidIsOnSystemThread())
     {
         typedef void (*co_yield_callback_t)(void *);
-        extern void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context);
+        extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
         remote_call_t t_context = {p_handler, p_method_name, p_args};
-        co_yield_to_engine_and_call(remote_call_func, &t_context);
+        co_yield_to_android_and_call(remote_call_func, &t_context);
     }
     else
     {
