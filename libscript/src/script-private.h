@@ -336,14 +336,32 @@ enum MCJavaCallType {
     MCJavaCallTypeStaticSetter
 };
 
+/* MCScriptForeignHandlerLanguage describes the type of foreign handler which
+ * has been bound - based on language. */
+enum MCScriptForeignHandlerLanguage
+{
+    /* The handler has not yet been bound, or failed to bind */
+    kMCScriptForeignHandlerLanguageUnknown,
+    
+    /* The handler should be called using libffi */
+    kMCScriptForeignHandlerLanguageC,
+    
+    /* The handler has a lc-compile generated shim, so can be called directly */
+    kMCScriptForeignHandlerLanguageBuiltinC,
+    
+    /* The handler should be called using objc_msgSend */
+    kMCScriptForeignHandlerLanguageObjC,
+    
+    /* The handler should be called using the JNI */
+    kMCScriptForeignHandlerLanguageJava,
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
     MCStringRef binding;
     
     // Bound function information - not pickled.
-    bool is_java: 1;
-    bool is_bound: 1;
-    bool is_builtin: 1;
+    MCScriptForeignHandlerLanguage language;
     
     union
     {

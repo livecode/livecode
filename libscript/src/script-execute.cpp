@@ -139,8 +139,9 @@ public:
 			  MCTypeInfoRef p_handler_signature,
 			  void *p_result_slot_ptr)
 	{
-		if (p_handler->is_java)
-		{
+        switch(p_handler->language)
+        {
+        case kMCScriptForeignHandlerLanguageJava:
 			MCJavaCallJNIMethod(p_handler -> java . class_name,
 								p_handler -> java . method_id,
 								p_handler -> java . call_type,
@@ -148,18 +149,26 @@ public:
 								p_result_slot_ptr,
 								m_argument_values,
 								m_argument_count);
-		}
-		else if (p_handler->is_builtin)
-        {
-            ((void(*)(void*, void**))p_handler->native.function)(p_result_slot_ptr,
-                    m_argument_values);
-        }
-        else
-		{
+            break;
+        
+        case kMCScriptForeignHandlerLanguageC:
 			ffi_call((ffi_cif *)p_handler -> native . function_cif,
 					 (void(*)())p_handler -> native . function,
 					 p_result_slot_ptr,
 					 m_argument_values);
+            break;
+            
+        case kMCScriptForeignHandlerLanguageBuiltinC:
+            ((void(*)(void*, void**))p_handler->native.function)(p_result_slot_ptr,
+                    m_argument_values);
+            break;
+        
+        case kMCScriptForeignHandlerLanguageObjC:
+            return MCErrorThrowUnimplemented(MCSTR("objc ffi"));
+            
+        case kMCScriptForeignHandlerLanguageUnknown:
+            MCUnreachableReturn(false);
+            break;
 		}
 		
 		return true;
@@ -244,7 +253,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		return;
 	}
 	
-	if (!p_handler_def->is_bound)
+	if (p_handler_def->language == kMCScriptForeignHandlerLanguageUnknown)
 	{
 		if (!MCScriptBindForeignHandlerInInstanceInternal(p_instance,
 														  p_handler_def))
@@ -254,6 +263,10 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		}
 	}
 	
+    /* If we get here then then handler *must* have been bound successfully, and
+     * so have a non 'unknown' language. */
+    MCAssert(p_handler_def->language != kMCScriptForeignHandlerLanguageUnknown);
+    
 	// Fetch the handler signature.
 	MCTypeInfoRef t_signature =
 			GetSignatureOfHandler(p_instance,

@@ -693,16 +693,14 @@ static MCJavaCallType __MCScriptGetJavaCallType(MCStringRef p_class, MCStringRef
 static bool
 __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 										MCScriptForeignHandlerDefinition *p_handler,
-										ffi_abi& r_abi,
 										bool* r_bound)
 {
     integer_t t_ordinal = 0;
     if (p_instance->module->builtins != nullptr &&
         MCTypeConvertStringToLongInteger(p_handler->binding, t_ordinal))
     {
+        p_handler->language = kMCScriptForeignHandlerLanguageBuiltinC;
         p_handler->native.function = p_instance->module->builtins[t_ordinal];
-        p_handler->is_builtin = true;
-        r_abi = FFI_DEFAULT_ABI;
         if (r_bound != nullptr)
         {
             *r_bound = true;
@@ -815,9 +813,15 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		    }
         }
 		
+        /* Resolve the symbol from the module which we've loaded */
 		void *t_pointer =
                 MCSLibraryLookupSymbol(t_module,
                                        *t_function);
+        
+        /* A nullptr pointer means that the symbol doesn't exist, so we either
+         * throw an error (if in 'must' bind mode - r_bound == nullptr) or
+         * indicate we succeeded, but the binding failed due to not finding the
+         * symbol (r_bound != nullptr). */
 		if (t_pointer == nullptr)
 		{
             if (r_bound == nullptr)
@@ -830,9 +834,28 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
             
 			return true;
 		}
+        
+        /* The ABI for all platforms is always DEFAULT, except on Win32 where
+         * it is specified as part of the signature. */
+        ffi_abi t_abi = FFI_DEFAULT_ABI;
+#ifdef _WIN32
+        t_abi = t_cc == 0 ? FFI_DEFAULT_ABI : (ffi_abi)t_cc;
+#endif
+
+        /* Now we must compute the libffi CIF for this C language handler. If
+         * this fails, it is an error - not a failure to bind - as it indicates
+         * OOM or something went wrong in libffi. */
+        if (!MCHandlerTypeInfoGetLayoutType(p_instance->module->types[p_handler->type]->typeinfo,
+                                            t_abi,
+                                            p_handler->native.function_cif))
+        {
+            /* The above call already throws an appropriate error, so we can
+             * just return false. */
+            return false;
+        }
 		
-		p_handler -> native . function = t_pointer;
-        p_handler->is_builtin = false;
+        p_handler->language = kMCScriptForeignHandlerLanguageC;
+		p_handler->native.function = t_pointer;
 	}
 	else if (MCStringIsEqualToCString(*t_language,
 									  "cpp",
@@ -859,9 +882,6 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 	}
 	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
-		p_handler -> is_java = true;
-        p_handler->is_builtin = false;
-	
         p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
                                                                   *t_function,
                                                                   *t_calling);
@@ -914,13 +934,9 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 			
 			return true;
 		}
+        
+        p_handler->language = kMCScriptForeignHandlerLanguageJava;
 	}
-
-#ifdef _WIN32
-	r_abi = t_cc == 0 ? FFI_DEFAULT_ABI : (ffi_abi)t_cc;
-#else
-	r_abi = FFI_DEFAULT_ABI;
-#endif
 
 	if (r_bound != nullptr)
 	{
@@ -942,7 +958,7 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 								 bool *r_bound)
 {
     // If the handler is already bound, then do nothing.
-    if (p_handler->is_bound)
+    if (p_handler->language != kMCScriptForeignHandlerLanguageUnknown)
     {
         if (r_bound != nullptr)
         {
@@ -955,10 +971,8 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
     // Attempt to resolve the foreign function binding. If r_bound == nullptr,
     // then this will fail if binding fails. If r_bound != nullptr, then *r_bound
     // will indicate whether the function was bound or not.
-	ffi_abi t_abi;
     if (!__MCScriptResolveForeignFunctionBinding(p_instance,
                                                  p_handler,
-                                                 t_abi,
                                                  r_bound))
     {
         return false;
@@ -971,24 +985,6 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 	{
 		return true;
 	}
-
-    // If we get here then it means that the binding succeeded.
-	MCTypeInfoRef t_signature;
-	t_signature = p_instance->module->types[p_handler->type]->typeinfo;
-	
-	// Ask the handler typeinfo to construct its ffi 'cif'. If this fails
-	// then it will already have thrown (either OOM, or there was a problem
-	// with libffi!).
-	if (!p_handler -> is_java &&
-        !MCHandlerTypeInfoGetLayoutType(t_signature,
-										t_abi,
-										p_handler->native.function_cif))
-	{
-		return false;
-	}
-	
-	// The function can only be considered bound, if it gets to this point.
-    p_handler->is_bound = true;
     
 	return true;
 }
