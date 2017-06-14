@@ -383,6 +383,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       --replace "${USES_PERMISSION}" with tPermissions in tManifest
       
       local tService, tReceiver
+      -- MW-2017-06-13: add generic service
+      put "<service android:enabled=" & quote & "true" & quote && "android:name=" & quote & ".mblandroidservice" & quote & "/>" & return after tService
+      
       -- IM-2012-02-28: need barebones receiver for local notifications
       put "<receiver android:name="&quote&"AppReceiver"&quote&">" into tReceiver
       --      if tBilling then
@@ -426,7 +429,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
                "</intent-filter>" & return & \
                "<meta-data android:name=" & quote & "android.nfc.action.TECH_DISCOVERED" & quote & \
                " android:resource=" & quote & "@xml/nfc_tech_filter" & quote & " />" & return into tNFCIntentFilter
-               
+         
          put "<uses-permission android:name=" & quote & "android.permission.NFC" & quote & " />" & return after tPermissions
       end if
       replace "${NFC_FILTER}" with tNFCIntentFilter in tManifest
@@ -537,17 +540,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put pSettings["android,identifier"] into tCompiledClassFilePath
       replace "." with "/" in tCompiledClassFilePath
       
-      local tClass, tClassFile
-      put tBuildFolder & slash  & "classes_app/mblandroid.java" into tClassFile
-      put "package" && pSettings["android,identifier"] & ";" & return into tClass
-      put "import com.runrev.android.LiveCodeActivity;" & return after tClass
-      put "public class mblandroid extends LiveCodeActivity {}" & return after tClass
-      put tClass into url ("binfile:" & tClassFile)
-      if the result is not empty then
-         throw "could not create activity class"
-      end if
-      put tClassFile & return after tBuiltClassFiles
-      
       local tLiveCodeClassesFile
       put tBuildFolder & slash & "LiveCode.jar" into tLiveCodeClassesFile
       put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Classes")) into url ("binfile:" & tLiveCodeClassesFile)
@@ -557,11 +549,37 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       local tClassPath
       if the platform is "win32" then
-         put pathToRootClasses() & ";" & tLiveCodeClassesFile into tClassPath
+         put pathToRootClasses() & ";" & tLiveCodeClassesFile & ";" & tClassesBuildFolder & ";" into tClassPath
       else
-         put pathToRootClasses() & ":" & tLiveCodeClassesFile into tClassPath
+         put pathToRootClasses() & ":" & tLiveCodeClassesFile & ":" & tClassesBuildFolder into tClassPath
       end if
-      -- MM-2011-08-16: Set to target JDK version 1.5.  This is expected target bytecode that will be encoded by dex.
+      
+      -- MW-2017-06-13: compile the renamed service class
+      local tClass, tClassFile
+      put tBuildFolder & slash & "classes_app/mblandroidservice.java" into tClassFile
+      put "package" && pSettings["android,identifier"] & ";" & return into tClass
+      put "import com.runrev.android.LiveCodeService;" & return after tClass
+      put "public class mblandroidservice extends LiveCodeService {}" & return after tClass
+      put tClass into url ("binfile:" & tClassFile)
+      if the result is not empty then
+         throw "could not create billing support class"
+      end if
+      put tClassFile & return after tBuiltClassFiles
+      executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tClassFile
+      if the result is not empty then
+         throw "could not compile service support class"
+      end if
+      put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/mblandroidservice.class" & return after tBuiltClassFiles
+      
+      put tBuildFolder & slash  & "classes_app/mblandroid.java" into tClassFile
+      put "package" && pSettings["android,identifier"] & ";" & return into tClass
+      put "import com.runrev.android.LiveCodeActivity; import java.lang.reflect.*;" & return after tClass
+      put "public class mblandroid extends LiveCodeActivity {public Class getServiceClass() {return mblandroidservice.class;}}" & return after tClass
+      put tClass into url ("binfile:" & tClassFile)
+      if the result is not empty then
+         throw "could not create activity class"
+      end if
+      put tClassFile & return after tBuiltClassFiles
       executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tClassFile
       if the result is not empty then
          throw "could not compile application class"

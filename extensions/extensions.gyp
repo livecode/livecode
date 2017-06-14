@@ -21,6 +21,7 @@
 				'modules/widget-utils/widget-utils.lcb',
 				'modules/scriptitems/scriptitems.lcb',
 
+				'libraries/androidbgaudio/androidbgaudio.lcb',
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',

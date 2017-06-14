@@ -1,0 +1,237 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+library com.livecode.library.androidbgaudio
+
+use com.livecode.foreign
+use com.livecode.java
+use com.livecode.engine
+
+metadata version is "0.0.0"
+metadata author is "LiveCode"
+metadata title is "Android Background Audio"
+
+----
+
+__safe foreign handler _JNI_EngineGet() returns JObject binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_EngineGetContext(in pEngine as JObject) returns JObject binds to "java:android.view.View>getContext()Landroid/content/Context;"
+
+__safe foreign handler _JNI_ContextGetAssets(in pContext as JObject) returns JObject \
+			binds to "java:android.content.Context>getAssets()Landroid/content/res/AssetManager;"
+
+__safe foreign handler _JNI_AssetManagerOpenFd(in pAssetManager as JObject, in pFileName as JString) returns JObject \
+			binds to "java:android.content.res.AssetManager>openFd(Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;"
+
+__safe foreign handler _JNI_AssetFileDescriptorGetFileDescriptor(in pFd as JObject) returns JObject \
+			binds to "java:android.content.res.AssetFileDescriptor>getFileDescriptor()Ljava/io/FileDescriptor;"
+__safe foreign handler _JNI_AssetFileDescriptorClose(in pFd as JObject) returns nothing \
+			binds to "java:android.content.res.AssetFileDescriptor>close()V"
+
+__safe foreign handler _JNI_EngineServiceListener(in pHandlers as Array) returns JObject binds to "java:com.runrev.android.Engine$ServiceListener>interface()"
+
+__safe foreign handler _JNI_EngineStartService(in pEngine as JObject, in pListener as JObject) returns nothing binds to "java:com.runrev.android.Engine>startService(Lcom/runrev/android/Engine$ServiceListener;)V"
+__safe foreign handler _JNI_EngineStopService(in pEngine as JObject, in pListener as JObject) returns nothing binds to "java:com.runrev.android.Engine>stopService(Lcom/runrev/android/Engine$ServiceListener;)V"
+
+----
+
+__safe foreign handler _JNI_MediaPlayerNew() returns JObject \
+			binds to "java:android.media.MediaPlayer>new()"
+__safe foreign handler _JNI_MediaPlayerSetDataSourceUri(in pMediaPlayer as JObject, in pContext as JObject, in pUri as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>setDataSource(Landroid/content/Context;Landroid/net/Uri;)V"
+__safe foreign handler _JNI_MediaPlayerSetDataSourceFd(in pMediaPlayer as JObject, in pUri as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>setDataSource(Ljava/io/FileDescriptor;)V"
+__safe foreign handler _JNI_MediaPlayerSetVolume(in pMediaPlayer as JObject, in pLeft as JFLoat, in pRight as JFloat) returns nothing \
+			binds to "java:android.media.MediaPlayer>setVolume(FF)V"
+__safe foreign handler _JNI_MediaPlayerPrepare(in pMediaPlayer as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>prepare()V"
+__safe foreign handler _JNI_MediaPlayerStart(in pMediaPlayer as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>start()V"
+__safe foreign handler _JNI_MediaPlayerStop(in pMediaPlayer as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>stop()V"
+__safe foreign handler _JNI_MediaPlayerPause(in pMediaPlayer as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>pause()V"
+__safe foreign handler _JNI_MediaPlayerRelease(in pMediaPlayer as JObject) returns nothing \
+			binds to "java:android.media.MediaPlayer>release()V"
+__safe foreign handler _JNI_MediaPlayerIsPlaying(in pMediaPlayer as JObject) returns JBoolean \
+			binds to "java:android.media.MediaPlayer>isPlaying()Z"
+
+__safe foreign handler _JNI_UriParse(in pString as JString) returns JObject \
+			binds to "java:android.net.Uri>parse(Ljava/lang/String;)Landroid/net/Uri;!static"
+
+----
+
+private variable mMediaPlayer as optional JObject
+
+private handler mediaplayerSetDataSource(in pString as String)
+	if mMediaPlayer is nothing then
+		return
+	end if
+
+	if pString begins with "asset://" then
+		variable tAssetFd as JObject
+		put _JNI_AssetManagerOpenFd(_JNI_ContextGetAssets(_JNI_EngineGetContext(_JNI_EngineGet())), StringToJString(char 9 to -1 of pString)) into tAssetFd
+		_JNI_MediaPlayerSetDataSourceFd(mMediaPlayer, _JNI_AssetFileDescriptorGetFileDescriptor(tAssetFd))
+		_JNI_AssetFileDescriptorClose(tAssetFd)
+	else
+		_JNI_MediaPlayerSetDataSourceUri(mMediaPlayer, _JNI_EngineGetContext(_JNI_EngineGet()), _JNI_UriParse(StringToJString(pString)))
+	end if
+end handler
+
+private handler mediaplayerSetVolume(in pVolume as Number)
+	if mMediaPlayer is nothing then
+		return
+	end if
+
+	_JNI_MediaPlayerSetVolume(mMediaPlayer, pVolume, pVolume)
+end handler
+
+private handler mediaplayerStart(in pDataSource as String)
+	if mMediaPlayer is not nothing then
+		mediaplayerStop()
+	end if
+
+	put _JNI_MediaPlayerNew() into mMediaPlayer
+	mediaplayerSetDataSource(pDataSource)
+	_JNI_MediaPlayerPrepare(mMediaPlayer)
+	mediaplayerSetVolume(100)
+	_JNI_MediaPlayerStart(mMediaPlayer)
+end handler
+
+private handler mediaplayerStop()
+	if mMediaPlayer is nothing then
+		return
+	end if
+	if mediaplayerIsPlaying() then
+		_JNI_MediaPlayerStop(mMediaPlayer)
+	end if
+	_JNI_MediaPlayerRelease(mMediaPlayer)
+	put nothing into mMediaPlayer
+end handler
+
+private handler mediaplayerPause()
+	if mMediaPlayer is nothing then
+		return
+	end if
+	if not mediaplayerIsPlaying() then
+		return
+	end if
+	_JNI_MediaPlayerPause(mMediaPlayer)
+end handler
+
+private handler mediaplayerResume()
+	if mMediaPlayer is nothing then
+		return
+	end if
+	if mediaplayerIsPlaying() then
+		return
+	end if
+	_JNI_MediaPlayerStart(mMediaPlayer)
+end handler
+
+private handler mediaplayerIsPlaying()
+	if mMediaPlayer is nothing then
+		return false
+	end if
+	return _JNI_MediaPlayerIsPlaying(mMediaPlayer)
+end handler
+
+----
+
+private variable mListener as optional JObject
+private variable mContext as optional JObject
+
+private variable mPendingAudio as optional String
+
+private handler bgaudioStartup(in pAudio as String)
+	-- If there is no context, then onStart hasn't been received, so cache
+	-- the requested Audio URI.
+	if mContext is nothing then
+		put pAudio into mPendingAudio
+	end if
+
+	-- If there is no listener, then we've not started the service yet, so
+	-- do so.
+	if mListener is nothing then
+		variable tCallbacks as Array
+		put bgaudioOnStart into tCallbacks["onStart"]
+		put bgaudioOnFinish into tCallbacks["onFinish"]
+		put _JNI_EngineServiceListener(tCallbacks) into mListener
+		_JNI_EngineStartService(_JNI_EngineGet(), mListener)
+	end if
+end handler
+
+private handler bgaudioTeardown()
+	if mListener is not nothing then
+		_JNI_EngineStopService(_JNI_EngineGet(), mListener)
+		put nothing into mListener
+	end if
+end handler
+
+private handler bgaudioOnStart(in pContext as JObject) returns nothing
+	-- If there is no listener, then the service must have been stopped
+	-- before it started.
+	if mListener is nothing then
+		return
+	end if
+
+	-- Otherwise cache the context
+	put pContext into mContext
+
+	-- Create the media player and start playing
+	mediaplayerStart(mPendingAudio)
+	put nothing into mPendingAudio
+end handler
+
+private handler bgaudioOnFinish(in pContext as JObject) returns nothing
+	mediaplayerStop()
+	put nothing into mContext
+	put nothing into mPendingAudio
+end handler
+
+----
+
+public handler androidStartAudioPlayingInBackground(in pAudio as String) returns nothing
+	if mMediaPlayer is not nothing then
+		-- If we have a media player, then the service is running so just
+		-- update its data source.
+		mediaplayerStart(pAudio)
+	else
+		-- We don't have a media player yet, so make sure the audio to play
+		-- when it is started is what has been most recently requested and
+		-- start it up.
+		bgaudioStartup(pAudio)
+	end if
+end handler
+
+public handler androidStopAudioPlayingInBackground() returns nothing
+	-- When we stop audio, we just teardown the service.
+	bgaudioTeardown()
+end handler
+
+public handler androidPauseAudioPlayingInBackground() returns nothing
+	mediaplayerPause()
+end handler
+
+public handler androidResumeAudioPlayingInBackground() returns nothing
+	mediaplayerResume()
+end handler
+
+public handler androidIsAudioPlayingInBackground() returns Boolean
+	return mediaplayerIsPlaying()
+end handler
+
+end library

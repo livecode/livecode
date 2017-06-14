@@ -3497,6 +3497,115 @@ public class Engine extends View implements EngineApi
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    public interface ServiceListener
+    {
+        public void onStart(Context context);
+        public void onFinish(Context context);
+    }
+    
+    Context m_service_context = null;
+    ArrayList<ServiceListener> m_running_services = null;
+    ArrayList<ServiceListener> m_pending_services = null;
+    
+    private int serviceListFind(ArrayList<ServiceListener> p_list, ServiceListener p_obj)
+    {
+        for(int i = 0; i < p_list.size(); i++)
+        {
+            if (p_list.get(i) == p_obj)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void startService(ServiceListener p_listener)
+    {
+        if (m_running_services == null)
+        {
+            m_pending_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_pending_services.add(p_listener);
+        
+        Intent t_service = new Intent(getContext(), getServiceClass());
+        getContext().startService(t_service);
+    }
+    
+    public void stopService(ServiceListener p_listener)
+    {
+        if (serviceListFind(m_pending_services, p_listener) != -1)
+        {
+            m_pending_services.remove(serviceListFind(m_pending_services, p_listener));
+            return;
+        }
+        
+        if (serviceListFind(m_running_services, p_listener) != -1)
+        {
+            p_listener.onFinish(m_service_context);
+            m_running_services.remove(serviceListFind(m_running_services, p_listener));
+        }
+        
+        if (m_pending_services.isEmpty() &&
+            m_running_services.isEmpty())
+        {
+            Intent t_service = new Intent(getContext(), getServiceClass());
+            getContext().stopService(t_service);
+        }
+    }
+    
+    public int handleStartService(Context p_service_context, Intent p_intent, int p_flags, int p_start_id)
+    {
+        if (m_pending_services == null ||
+            m_pending_services.isEmpty())
+        {
+            if (m_running_services == null ||
+                m_running_services.isEmpty())
+            {
+                Intent t_service = new Intent(getContext(), getServiceClass());
+                getContext().stopService(t_service);
+                return Service.START_NOT_STICKY;
+            }
+            return Service.START_STICKY;
+        }
+        
+        m_service_context = p_service_context;
+        
+        ServiceListener t_listener = m_pending_services.get(0);
+        m_pending_services.remove(0);
+        
+        if (m_running_services == null)
+        {
+            m_running_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_running_services.add(t_listener);
+        t_listener.onStart(p_service_context);
+        
+        return Service.START_STICKY;
+    }
+    
+    public void handleFinishService(Context p_service_context)
+    {
+        m_pending_services = null;
+        
+        while(!m_running_services.isEmpty())
+        {
+            m_running_services.get(0).onFinish(p_service_context);
+            m_running_services.remove(0);
+        }
+        m_running_services = null;
+        
+        m_service_context = null;
+    }
+    
+    public Class getServiceClass()
+    {
+        return ((LiveCodeActivity)getContext()).getServiceClass();
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback
