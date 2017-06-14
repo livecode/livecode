@@ -525,7 +525,7 @@ bool MCCefInitialise(void)
 	
 	if (t_success)
 	{
-#if defined(TARGET_PLATFORM_POSIX)
+#if defined(TARGET_PLATFORM_LINUX)
 		struct itimerval t_old_timer, t_new_timer;
 		memset(&t_new_timer, 0, sizeof(t_new_timer));
 		
@@ -534,9 +534,9 @@ bool MCCefInitialise(void)
 #endif
 		t_success = CefInitialize(t_args, t_settings, t_app, nil);
 		
-#if defined(TARGET_PLATFORM_POSIX)
-		RestoreSignalHandlers();
-		setitimer(ITIMER_REAL, &t_old_timer, nil);
+#if defined(TARGET_PLATFORM_LINUX)
+		//RestoreSignalHandlers();
+		//setitimer(ITIMER_REAL, &t_old_timer, nil);
 #endif
 	}
 	
