@@ -49,6 +49,54 @@ mergeInto(LibraryManager.library, {
 
 			return resultPtr;
 		},
+		
+		// Convert an MCStringRef to a JavaScript string
+		stringFromMCStringRef: function(stringref)
+		{
+			var result = '';
+			var t_length = Module.ccall('MCStringGetLength', 'number', ['number'], [stringref]);
+			for (var i = 0; i < t_length; i++)
+			{
+				var codeUnit = Module.ccall('MCStringGetCharAtIndex', 'number', ['number', 'number'] , [stringref, i]);
+				result += String.fromCharCode(codeUnit);
+			}
+
+			return result;
+		},
+		
+		// Convert a JavaScript string to an MCStringRef
+		stringToMCStringRef: function(str)
+		{
+			var charPtr = LiveCodeUtil.stringToUTF16(str);
+			return Module.ccall('MCEmscriptenUtilCreateStringWithCharsAndRelease', 'number', ['number', 'number'], [charPtr, str.length]);
+		},
+		
+		// Release MCValueRef
+		valueRelease: function(valueref)
+		{
+			Module.ccall('MCValueRelease', null, ['number'], [valueref]);
+		},
+		
+		// Create mutable (proper) list
+		properListCreateMutable: function()
+		{
+			return Module.ccall('MCEmscriptenUtilCreateMutableProperList', 'number', [], []);
+		},
+		
+		properListPushElementOntoBack: function(listref, valueref)
+		{
+			return Module.ccall('MCProperListPushElementOntoBack', 'number', ['number', 'number'], [listref, valueref]);
+		},
+		  
+		properListGetLength: function(listref)
+		{
+			return Module.ccall('MCProperListGetLength', 'number', ['number'], [listref]);
+		},
+		  
+		properListFetchElementAtIndex: function(listref, index)
+		{
+			return Module.ccall('MCProperListFetchElementAtIndex', 'number', ['number', 'number'], [listref, index]);
+		},
 	},
 });
 

@@ -37,7 +37,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/time.h>
 #include <emscripten.h>
 
-// These functions are implemented in javascript
+/* ----------------------------------------------------------------
+ * Functions implemented in em-system.js
+ * ---------------------------------------------------------------- */
+
+extern "C" bool MCEmscriptenSystemInitializeJS(void);
+extern "C" void MCEmscriptenSystemFinalizeJS(void);
 extern "C" int32_t MCEmscriptenSystemEvaluateJavaScript(const unichar_t* p_script, size_t p_script_length, unichar_t** r_result, size_t* r_result_length);
 
 /* ================================================================
@@ -110,12 +115,14 @@ MCEmscriptenSystem::Initialize()
 	IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
 	IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
 
+	MCEmscriptenSystemInitializeJS();
 	return true;
 }
 
 void
 MCEmscriptenSystem::Finalize()
 {
+	MCEmscriptenSystemFinalizeJS();
 }
 
 /* ----------------------------------------------------------------
@@ -1155,4 +1162,170 @@ MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
 	MCAutoStringRefAsUTF16String t_message_u16;
 	t_message_u16.Lock(p_message);
 	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
+}
+
+///////////
+
+#include "dispatch.h"
+
+MCStack* _emscripten_get_stack(void *p_stack_ptr)
+{
+	MCStack *t_stacks = MCdispatcher->getstacks();
+	
+	MCStack *t_stack = t_stacks;
+	do
+	{
+		if (t_stack == p_stack_ptr)
+			return t_stack;
+		
+		t_stack = t_stack->next();
+	}
+	while (t_stack != t_stacks);
+	
+	return nil;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
+{
+	MCStackHandle t_stack(_emscripten_get_stack(p_stack));
+
+	// Ensure stack pointer is valid
+	if (!t_stack.IsValid())
+		return MCValueRetain(kMCEmptyProperList);
+	
+	bool t_success = true;
+	
+	// get javascripthandlers property
+	MCExecValue t_value;
+	MCExecContext ctxt(nil, nil, nil);
+	bool t_lock_messages = MClockmessages;
+	MClockmessages = true;
+	t_success = t_stack->getcustomprop(ctxt, t_stack->getdefaultpropsetname(), MCNAME("cjavascripthandlers"), nil, t_value);
+	MClockmessages = t_lock_messages;
+	
+	MCAutoStringRef t_prop_string;
+	if (t_success)
+	{
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, kMCExecValueTypeStringRef, &(&t_prop_string));
+		t_success = *t_prop_string != nil;
+	}
+
+	MCAutoProperListRef t_list;
+	if (t_success)
+		t_success = MCStringSplitByDelimiter(*t_prop_string, kMCLineEndString, kMCStringOptionCompareExact, &t_list);
+	
+	if (!t_success)
+		return MCValueRetain(kMCEmptyProperList);
+	
+	return t_list.Take();
+}
+
+extern void MCEngineFreeScriptParameters(MCParameter* p_params);
+extern bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params);
+
+extern Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters);
+
+extern "C" MC_DLLEXPORT_DEF
+MCStringRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_handler, MCProperListRef p_params)
+{
+	bool t_success = true;
+	
+	// Ensure stack pointer is valid
+	MCStackHandle t_stack;
+	
+	if (t_success)
+	{
+		t_stack = _emscripten_get_stack(p_stack);
+		t_success = t_stack.IsValid();
+	}
+	
+	// Ensure handler is allowed to be called from JavaScript
+	if (t_success)
+	{
+		MCAutoProperListRef t_handler_list;
+		t_handler_list.Give(MCEmscriptenSystemGetJavascriptHandlersOfStack(p_stack));
+		bool t_found = false;
+		for (uint32_t i = 0; !t_found && i < MCProperListGetLength(*t_handler_list); i++)
+		{
+			MCStringRef t_handler = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_handler_list, i));
+			t_found = MCStringIsEqualTo(t_handler, p_handler, kMCStringOptionCompareCaseless);
+		}
+		
+		t_success = t_found;
+	}
+	
+	MCNewAutoNameRef t_handler_name;
+	if (t_success)
+		t_success = MCNameCreate(p_handler, &t_handler_name);
+	
+	MCExecContext ctxt;
+	MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+	if (t_success)
+		t_success = MCEngineConvertToScriptParameters(ctxt, p_params, &t_params);
+
+	if (t_success)
+	{
+		MCObjectPtr t_stack_obj(t_stack, 0);
+		MCresult->clear();
+		
+		Exec_stat t_stat;
+		// try to dispatch handler as message
+		t_stat = _MCEngineExecDoDispatch(ctxt, HT_MESSAGE, *t_handler_name, &t_stack_obj, *t_params);
+		t_success = t_stat != ES_ERROR;
+		
+		if (t_success && t_stat != ES_NORMAL)
+		{
+			// not handled as message, try as function
+			t_stat = _MCEngineExecDoDispatch(ctxt, HT_FUNCTION, *t_handler_name, &t_stack_obj, *t_params);
+			t_success = t_stat != ES_ERROR;
+		}
+	}
+	
+	// fetch result (as string)
+	MCAutoValueRef t_result;
+	if (t_success)
+		t_success = MCresult->eval(ctxt, &t_result);
+	
+	MCAutoStringRef t_result_string;
+	if (t_success)
+		t_success = ctxt.ConvertToString(*t_result, &t_result_string);
+	
+	if (!t_success)
+		return nil;
+	
+	return t_result_string.Take();
+}
+
+// Return the named stack, or NULL if not found
+extern "C" MC_DLLEXPORT_DEF
+MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
+{
+	MCNewAutoNameRef t_name;
+	if (!MCNameCreate(p_name, &t_name))
+		return nil;
+	
+	return MCdispatcher->findstackname(*t_name);
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF
+MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_string, uint32_t p_length)
+{
+	MCStringRef t_string = nil;
+	if (!MCStringCreateWithCharsAndRelease(p_utf16_string, p_length, t_string))
+		return nil;
+	
+	return t_string;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCProperListRef MCEmscriptenUtilCreateMutableProperList()
+{
+	MCProperListRef t_list = nil;
+	if (!MCProperListCreateMutable(t_list))
+		return nil;
+	
+	return t_list;
 }
