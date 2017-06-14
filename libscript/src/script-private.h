@@ -372,9 +372,18 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
         struct
         {
             void *function;
-            void *function_argtypes;
             void *function_cif;
-        } native;
+        } c;
+        struct
+        {
+            void *function;
+        } builtin_c;
+        struct
+        {
+            bool is_class_method;
+            void *objc_selector;
+            void *function_cif;
+        } objc;
         struct
         {
             MCNameRef class_name;

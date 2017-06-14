@@ -142,9 +142,9 @@ public:
         switch(p_handler->language)
         {
         case kMCScriptForeignHandlerLanguageJava:
-			MCJavaCallJNIMethod(p_handler -> java . class_name,
-								p_handler -> java . method_id,
-								p_handler -> java . call_type,
+			MCJavaCallJNIMethod(p_handler->java.class_name,
+								p_handler->java.method_id,
+								p_handler->java.call_type,
 								p_handler_signature,
 								p_result_slot_ptr,
 								m_argument_values,
@@ -152,19 +152,19 @@ public:
             break;
         
         case kMCScriptForeignHandlerLanguageC:
-			ffi_call((ffi_cif *)p_handler -> native . function_cif,
-					 (void(*)())p_handler -> native . function,
+			ffi_call((ffi_cif *)p_handler ->c.function_cif,
+					 (void(*)())p_handler ->c.function,
 					 p_result_slot_ptr,
 					 m_argument_values);
             break;
             
         case kMCScriptForeignHandlerLanguageBuiltinC:
-            ((void(*)(void*, void**))p_handler->native.function)(p_result_slot_ptr,
+            ((void(*)(void*, void**))p_handler->builtin_c.function)(p_result_slot_ptr,
                     m_argument_values);
             break;
         
         case kMCScriptForeignHandlerLanguageObjC:
-            return MCErrorThrowUnimplemented(MCSTR("objc ffi"));
+            return MCScriptThrowObjCBindingNotImplemented();
             
         case kMCScriptForeignHandlerLanguageUnknown:
             MCUnreachableReturn(false);

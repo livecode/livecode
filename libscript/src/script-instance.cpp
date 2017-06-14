@@ -24,6 +24,10 @@
 #include "script-private.h"
 #include "script-bytecode.hpp"
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+#include <objc/runtime.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This is the module of the most recent LCB stack frame on the current thread's
@@ -810,7 +814,7 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
      * OOM or something went wrong in libffi. */
     if (!MCHandlerTypeInfoGetLayoutType(p_instance->module->types[p_handler->type]->typeinfo,
                                         t_abi,
-                                        p_handler->native.function_cif))
+                                        p_handler->c.function_cif))
     {
         /* The above call already throws an appropriate error, so we can
          * just return false. */
@@ -818,7 +822,7 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     }
     
     p_handler->language = kMCScriptForeignHandlerLanguageC;
-    p_handler->native.function = t_pointer;
+    p_handler->c.function = t_pointer;
     
     if (r_bound != nullptr)
     {
@@ -827,6 +831,157 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     
     return true;
 }
+
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+/* objc:library>class.method */
+static bool
+__MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
+                                               MCScriptForeignHandlerDefinition *p_handler,
+                                               /* takes */ MCStringRef d_binding,
+                                               bool* r_bound)
+{	MCAutoStringRef t_library;
+	MCAutoStringRef t_class;
+	MCAutoStringRef t_method;
+	if (!__MCScriptSplitForeignBindingString(d_binding,
+											 '>',
+											 &t_library) ||
+		!__MCScriptSplitForeignBindingString(d_binding,
+											 '.',
+											 &t_class) ||
+        !MCStringCopy(d_binding,
+                      &t_method))
+	{
+		MCValueRelease(d_binding);
+		return false;
+	}
+    MCValueRelease(d_binding);
+
+    /* Make sure the method name is non-empty */
+    if (*t_method == nullptr ||
+        MCStringIsEmpty(*t_method))
+    {
+        return MCScriptThrowMissingFunctionInForeignBindingError();
+    }
+
+    uindex_t t_selector_start = 0;
+    bool t_is_class = false;
+    if (MCStringGetCharAtIndex(*t_method,
+                               0) == '+')
+    {
+        t_is_class = true;
+        t_selector_start = 1;
+    }
+    else if (MCStringGetCharAtIndex(*t_method,
+                                    0) == '-')
+    {
+        t_is_class = false;
+        t_selector_start = 1;
+    }
+    
+    MCAutoStringRef t_selector_name;
+    if (!MCStringCopySubstring(*t_method,
+                               MCRangeMake(t_selector_start, UINDEX_MAX),
+                               &t_selector_name))
+    {
+        return false;
+    }
+    
+    /* TODO: This leaks a module handle if library is not empty (builtin) */
+    MCSLibraryRef t_module;
+    if (MCStringIsEmpty(*t_library))
+    {
+        t_module = MCScriptGetLibrary();
+    }
+    else
+    {
+        if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                 *t_library,
+                                 t_module))
+        {
+            if (r_bound == nil)
+            {
+                return MCScriptThrowUnableToLoadForiegnLibraryError();
+            }
+        
+            *r_bound = false;
+        
+            return true;
+        }
+    }
+    
+    MCAutoStringRefAsUTF8String t_selector_name_cstring;
+    if (!t_selector_name_cstring.Lock(*t_selector_name))
+    {
+        return false;
+    }
+    
+    MCAutoStringRefAsUTF8String t_class_cstring;
+    if (!t_class_cstring.Lock(*t_class))
+    {
+        return false;
+    }
+
+    bool t_valid = true;
+    
+    /* Lookup the class, to make sure it exists.
+     * Notice that for instance methods, we use getClass, but for class methods
+     * we use getMetaClass. */
+    Class t_objc_class = nullptr;
+    if (!t_is_class)
+        t_objc_class = objc_getClass(*t_class_cstring);
+    else
+        t_objc_class = objc_getMetaClass(*t_class_cstring);
+    if (t_valid &&
+        t_objc_class == nullptr)
+    {
+        /* ERROR: should be class not found */
+        t_valid = false;
+    }
+    
+    /* Lookup the selector, if this doesn't work then we're screwed (OOM,
+     * probably). */
+    SEL t_objc_sel = sel_registerName(*t_selector_name_cstring);
+    if (t_valid &&
+        t_objc_sel == nullptr)
+    {
+        /* ERROR: objc runtime failure */
+        t_valid = false;
+    }
+    
+    /* Check the class responds to the selector. */
+    if (!class_respondsToSelector(t_objc_class,
+                                  t_objc_sel))
+    {
+        t_valid = false;
+    }
+    
+    /* Next check the method signature against what is held for the message
+     * implementation. */
+    
+    if (!t_valid)
+    {
+        if (r_bound != nullptr)
+        {
+            *r_bound = false;
+            return true;
+        }
+        
+        return MCScriptThrowUnableToResolveForeignHandlerError(p_instance, p_handler);
+    }
+
+    p_handler->objc.is_class_method = t_is_class;
+    p_handler->objc.objc_selector = t_objc_sel;
+    
+    p_handler->language = kMCScriptForeignHandlerLanguageObjC;
+
+    if (r_bound != nullptr)
+    {
+        *r_bound = true;
+    }
+    
+    return true;
+}
+#endif
 
 static bool
 __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
@@ -939,7 +1094,7 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
         MCTypeConvertStringToLongInteger(p_handler->binding, t_ordinal))
     {
         p_handler->language = kMCScriptForeignHandlerLanguageBuiltinC;
-        p_handler->native.function = p_instance->module->builtins[t_ordinal];
+        p_handler->builtin_c.function = p_instance->module->builtins[t_ordinal];
         if (r_bound != nullptr)
         {
             *r_bound = true;
@@ -973,14 +1128,18 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 									  "cpp",
 									  kMCStringOptionCompareExact))
 	{
-		return MCScriptThrowCXXBindingNotImplemented();
+        MCValueRelease(t_rest);
+		
+        return MCScriptThrowCXXBindingNotImplemented();
 	}
 	else if (MCStringIsEqualToCString(*t_language,
 									  "objc",
 									  kMCStringOptionCompareExact))
 	{
 #if !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE)
-		if (r_bound == nil)
+        MCValueRelease(t_rest);
+		
+        if (r_bound == nil)
 		{
 			return MCScriptThrowObjCBindingNotSupported();
 		}
@@ -989,7 +1148,10 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		
 		return true;
 #else
-		return MCScriptThrowObjCBindingNotImplemented();
+		return __MCScriptResolveForeignFunctionBindingForObjC(p_instance,
+                                                              p_handler,
+                                                              t_rest,
+                                                              r_bound);
 #endif
 	}
 	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
