@@ -316,6 +316,15 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef p_instance,
 }
 
 bool
+MCScriptThrowUnknownForeignLanguageError(void)
+{
+	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+								 "reason",
+								 MCSTR("unknown language"),
+								 nil);
+}
+
+bool
 MCScriptThrowUnknownForeignCallingConventionError(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
@@ -330,15 +339,6 @@ MCScriptThrowMissingFunctionInForeignBindingError(void)
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
 								 "reason",
 								 MCSTR("no function specified in binding string"),
-								 nil);
-}
-
-bool
-MCScriptThrowClassNotAllowedInCBindingError(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("class not allowed in c binding string"),
 								 nil);
 }
 

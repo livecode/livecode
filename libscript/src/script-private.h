@@ -333,7 +333,11 @@ enum MCJavaCallType {
     MCJavaCallTypeGetter,
     MCJavaCallTypeSetter,
     MCJavaCallTypeStaticGetter,
-    MCJavaCallTypeStaticSetter
+    MCJavaCallTypeStaticSetter,
+    
+    /* This value is used to indicate that the call type was not known - it is
+     * only used internally in libscript. */
+    MCJavaCallTypeUnknown = -1,
 };
 
 /* MCScriptForeignHandlerLanguage describes the type of foreign handler which
@@ -631,13 +635,13 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef instance,
 												MCScriptForeignHandlerDefinition *handler);
 
 bool
+MCScriptThrowUnknownForeignLanguageError(void);
+
+bool
 MCScriptThrowUnknownForeignCallingConventionError(void);
 
 bool
 MCScriptThrowMissingFunctionInForeignBindingError(void);
-
-bool
-MCScriptThrowClassNotAllowedInCBindingError(void);
 
 bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void);
