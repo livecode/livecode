@@ -36,6 +36,34 @@ static void __MCScriptDropValueRef(void *p_value)
 	MCValueRelease(*(MCValueRef *)p_value);
 }
 
+#ifdef TARGET_SUBPLATFORM_ANDROID
+struct remote_call_t
+{
+    MCScriptForeignHandlerDefinition *p_handler;
+    MCTypeInfoRef p_handler_signature;
+    void *p_result_slot_ptr;
+    void **m_argument_values;
+    uindex_t m_argument_count;
+};
+
+static void remote_call_func(void *p_context)
+{
+    extern void *MCAndroidGetSystemJavaEnv();
+    auto ctxt = static_cast<remote_call_t *>(p_context);
+
+    extern bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+
+    MCJavaPrivateCallJNIMethodOnEnv(MCAndroidGetSystemJavaEnv(),
+                             ctxt -> p_handler -> java . class_name,
+                             ctxt -> p_handler -> java . method_id,
+                             ctxt -> p_handler -> java . call_type,
+                             ctxt -> p_handler_signature,
+                             ctxt -> p_result_slot_ptr,
+                             ctxt -> m_argument_values,
+                             ctxt -> m_argument_count);
+}
+#endif
+
 class MCScriptForeignInvocation
 {
 public:
@@ -141,13 +169,35 @@ public:
 	{
 		if (p_handler->is_java)
 		{
-			MCJavaCallJNIMethod(p_handler -> java . class_name,
-								p_handler -> java . method_id,
-								p_handler -> java . call_type,
-								p_handler_signature,
-								p_result_slot_ptr,
-								m_argument_values,
-								m_argument_count);
+#ifdef TARGET_SUBPLATFORM_ANDROID
+            extern bool MCAndroidIsOnSystemThread();
+            if (!p_handler->is_ui_bound || MCAndroidIsOnSystemThread())
+#endif
+            {
+                MCJavaCallJNIMethod(p_handler -> java . class_name,
+                                    p_handler -> java . method_id,
+                                    p_handler -> java . call_type,
+                                    p_handler_signature,
+                                    p_result_slot_ptr,
+                                    m_argument_values,
+                                    m_argument_count);
+            }
+#ifdef TARGET_SUBPLATFORM_ANDROID
+            else
+            {
+                typedef void (*co_yield_callback_t)(void *);
+                extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+                remote_call_t t_context =
+                {
+                    p_handler,
+                    p_handler_signature,
+                    p_result_slot_ptr,
+                    m_argument_values,
+                    m_argument_count
+                };
+                co_yield_to_android_and_call(remote_call_func, &t_context);
+            }
+#endif
 		}
 		else if (p_handler->is_builtin)
         {
@@ -164,7 +214,7 @@ public:
 		
 		return true;
 	}
-	
+    
 	// Take the contents of a slot - this stops the invocation
 	// cleaning up the taken slot.
 	void *TakeArgument(uindex_t p_index)

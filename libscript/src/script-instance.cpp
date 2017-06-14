@@ -857,8 +857,11 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
 		return MCScriptThrowObjCBindingNotImplemented();
 #endif
 	}
-	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
+	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact) ||
+             MCStringIsEqualToCString(*t_language, "javaui", kMCStringOptionCompareExact))
     {
+        p_handler->is_ui_bound = MCStringIsEqualToCString(*t_language, "javaui", kMCStringOptionCompareExact);
+    
 		p_handler -> is_java = true;
         p_handler->is_builtin = false;
 	

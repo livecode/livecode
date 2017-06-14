@@ -342,6 +342,7 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
     
     // Bound function information - not pickled.
     bool is_java: 1;
+    bool is_ui_bound : 1;
     bool is_bound: 1;
     bool is_builtin: 1;
     

@@ -1400,6 +1400,16 @@ bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signatur
     return true;
 }
 
+bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
+{
+    JNIEnv *t_old_env;
+    t_old_env = s_env;
+    s_env = (JNIEnv *)p_env;
+    bool t_success = MCJavaPrivateCallJNIMethod(p_class_name, p_method_id, p_call_type, p_signature, r_return, p_args, p_arg_count);
+    s_env = t_old_env;
+    return t_success;
+}
+
 bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
     if (p_method_id == nullptr)
