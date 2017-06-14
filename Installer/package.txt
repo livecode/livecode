@@ -379,6 +379,8 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.androidbutton
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.clock
