@@ -84,6 +84,8 @@ bool MCWidgetBase::Create(MCNameRef p_kind)
     if (!MCScriptCreateInstanceOfModule(t_module, m_instance))
         return false;
     
+    MCScriptSetInstanceHostPtr(m_instance, AsWidget());
+    
     if (!DispatchRestricted(MCNAME("OnCreate")))
     {
         MCScriptReleaseInstance(m_instance);
@@ -153,46 +155,12 @@ bool MCWidgetBase::HasHandler(MCNameRef p_handler)
 
 bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
 {
-    MCWidgetRef t_old_widget;
-    t_old_widget = MCcurrentwidget;
-    MCcurrentwidget = AsWidget();
-	
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
-    bool t_success;
-    t_success = MCScriptSetPropertyInInstance(m_instance, p_property, p_value);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
-	
-    MCcurrentwidget = t_old_widget;
-    
-    return t_success;
+    return MCScriptSetPropertyInInstance(m_instance, p_property, p_value);
 }
 
 bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
 {
-    MCWidgetRef t_old_widget;
-    t_old_widget = MCcurrentwidget;
-    MCcurrentwidget = AsWidget();
-	
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
-    bool t_success;
-    t_success = MCScriptGetPropertyInInstance(m_instance, p_property, r_value);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
-	
-    MCcurrentwidget = t_old_widget;
-    
-    return t_success;
+    return MCScriptGetPropertyInInstance(m_instance, p_property, r_value);
 }
 
 static bool chunk_property_handler(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_get_operation, MCNameRef& r_handler)
@@ -848,33 +816,15 @@ MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
 
 bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCWidgetRef t_old_widget_object;
-	t_old_widget_object = MCcurrentwidget;
-	MCcurrentwidget = AsWidget();
-
-	// Make sure the host object's 'scriptdepth' is incremented and
-	// decremented appropriately. This prevents script from deleting
-	// a widget which has its LCB code on the stack (just as it would if
-	// it had its LCS code on the stack).
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
 	bool t_success;
 	MCAutoValueRef t_retval;
 	t_success = MCScriptCallHandlerInInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
 	
 	if (t_success)
 	{
 		if (r_result != NULL)
 			*r_result = t_retval . Take();
 	}
-	
-	MCcurrentwidget = t_old_widget_object;
 	
 	return t_success;
 	
@@ -1498,6 +1448,40 @@ MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef self)
     t_base = (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
     MCAssert(t_base -> IsRoot());
     return static_cast<MCWidgetRoot *>(t_base);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void *MCWidgetEnter(MCScriptInstanceRef p_instance, void *p_host_ptr)
+{
+    void *t_cookie = MCcurrentwidget;
+    
+    auto t_widget = static_cast<MCWidgetRef>(p_host_ptr);
+    
+	// Make sure the host object's 'scriptdepth' is incremented and
+	// decremented appropriately. This prevents script from deleting
+	// a widget which has its LCB code on the stack (just as it would if
+	// it had its LCS code on the stack).
+    MCWidget *t_host = MCWidgetAsBase(t_widget)->GetHost();
+    if (t_host != nullptr)
+        t_host->lockforexecution();
+    
+    // Update the current widget context
+    MCcurrentwidget = t_widget;
+    
+    return t_cookie;
+}
+
+void MCWidgetLeave(MCScriptInstanceRef p_instance, void *p_host_ptr, void *p_cookie)
+{
+    auto t_old_widget = static_cast<MCWidgetRef>(p_cookie);
+    MCcurrentwidget = t_old_widget;
+
+    auto t_widget = static_cast<MCWidgetRef>(p_host_ptr);
+    
+    MCWidget *t_host = MCWidgetAsBase(t_widget)->GetHost();
+    if (t_host != nullptr)
+        t_host->unlockforexecution();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

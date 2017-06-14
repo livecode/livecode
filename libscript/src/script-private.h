@@ -504,6 +504,9 @@ struct MCScriptInstance: public MCScriptObject
     // MCHandlerRef. The MCHandlerRefs are freed when the instance is freed.
     MCScriptHandlerValue *handlers;
     uindex_t handler_count;
+    
+    // The private host ptr, ignored by libscript but can be used by the host.
+    void *host_ptr;
 };
 
 void
