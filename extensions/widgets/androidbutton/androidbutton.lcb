@@ -48,22 +48,23 @@ metadata title is "Android Native Button"
 
 /**
 Syntax:
-set the label of <widget> to <pLabel>
-get the label of <widget>
+set the buttonLabel of <widget> to <pLabel>
+get the buttonLabel of <widget>
 
 Summary: The label displayed by the button.
 
 Value (string): The string to use as the button label
 
 Example:
-    set the label of widget "Android Button" to "Click me!"
+    set the buttonLabel of widget "Android Button" to "Click me!"
 
 Description:
-The <label> property is the label displayed by the button.
+The <buttonLabel> property is the label displayed by the button.
 */
 
-property "label" get mLabel set SetLabel
-metadata enabled.dummy is ""
+property buttonLabel get mLabel set SetLabel
+metadata buttonLabel.editor is "com.livecode.pi.string"
+metadata buttonLabel.default is ""
 
 /**
 Syntax:
