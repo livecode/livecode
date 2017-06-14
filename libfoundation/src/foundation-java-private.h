@@ -54,6 +54,7 @@ typedef struct __MCJavaObject *MCJavaObjectRef;
 
 
 bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
 bool MCJavaPrivateObjectDescribe(MCValueRef p_value, MCStringRef &r_desc);
 bool MCJavaPrivateConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string);
 bool MCJavaPrivateConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);

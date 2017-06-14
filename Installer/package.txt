@@ -379,7 +379,7 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.androidbutton
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.button
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place

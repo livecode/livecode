@@ -162,7 +162,7 @@ static void co_leave_engine(void);
 static void co_yield_to_engine(void);
 static void co_yield_to_android(void);
 static bool co_yield_to_android_and_wait(double sleep, bool wake_on_event);
-static void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
 
 static void revandroid_scheduleWakeUp(JNIEnv *env, jobject object, int32_t timeout, bool breakable);
 static void revandroid_invalidate(JNIEnv *env, jobject object, int32_t left, int32_t top, int32_t right, int32_t bottom);
@@ -1451,7 +1451,7 @@ static void co_yield_to_engine(void)
 	}
 }
 
-static void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context)
+void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context)
 {
 	void *t_stack;
 	s_yield_callback = callback;
@@ -1491,7 +1491,7 @@ static bool co_yield_to_android_and_wait(double p_sleep, bool p_wake_on_event)
 	return s_schedule_wakeup_was_broken;
 }
 
-static void co_yield_to_android_and_call(co_yield_callback_t callback, void *context)
+void co_yield_to_android_and_call(co_yield_callback_t callback, void *context)
 {
 	void *t_stack;
 	s_schedule_wakeup = false;
@@ -1949,6 +1949,11 @@ void *MCAndroidGetScriptJavaEnv(void)
 void *MCAndroidGetEngine(void)
 {
 	return s_android_view;
+}
+
+bool MCAndroidIsOnSystemThread(void)
+{
+    return s_android_ui_thread.IsCurrent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
