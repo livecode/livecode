@@ -409,7 +409,10 @@ Boolean MCScreenDC::open()
             vis = gdk_screen_get_rgba_visual(t_screen);
             cmap = gdk_screen_get_rgba_colormap(t_screen);
         }
-        else
+        
+        // If getting the RGBA visual fails, or we are not composited, then
+        // use the default visual.
+        if (vis == nullptr)
         {
             // Get the default visual and colormap
             vis = gdk_screen_get_system_visual(t_screen);
