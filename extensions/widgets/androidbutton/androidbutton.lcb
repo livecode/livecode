@@ -197,6 +197,9 @@ end handler
 
 public handler ButtonClicked(in pView as JObject)
 	post "mouseUp"
+	
+	// Wake the engine to deal with the posted signal
+	MCEngineRunloopBreakWait()
 end handler
 
 public handler OnClick()
