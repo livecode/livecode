@@ -294,6 +294,14 @@ public:
 	{
 		if (MCCefPlatformGetHiDPIEnabled())
 			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
+#ifdef TARGET_PLATFORM_LINUX
+        if (getenv("MC_CEF_ENABLE_GPU") == nullptr ||
+            atoi(getenv("MC_CEF_ENABLE_GPU")) == 1)
+        {
+            p_command_line->AppendSwitch("disable-gpu");
+            p_command_line->AppendSwitch("disable-gpu-compositing");
+        }
+#endif
 	}
 
 	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
