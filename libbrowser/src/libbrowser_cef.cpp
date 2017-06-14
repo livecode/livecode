@@ -300,7 +300,7 @@ public:
         {
             p_command_line->AppendSwitch("disable-gpu");
             p_command_line->AppendSwitch("disable-gpu-compositing");
-            p_command_line->AppendSwitch("disable-software-rasterizer");
+            p_command_line->AppendSwitch("in-process-gpu");
         }
 #endif
 	}
