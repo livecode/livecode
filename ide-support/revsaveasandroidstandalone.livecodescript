@@ -560,7 +560,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tClassFile & return after tBuiltClassFiles
       executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tClassFile
       if the result is not empty then
-         answer the result
          throw "could not compile service support class"
       end if
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/mblandroidservice.class" & return after tBuiltClassFiles
@@ -576,7 +575,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tClassFile & return after tBuiltClassFiles
       executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tClassFile
       if the result is not empty then
-         answer the result
          throw "could not compile application class"
       end if
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/mblandroid.class" & return after tBuiltClassFiles
