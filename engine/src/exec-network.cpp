@@ -603,13 +603,17 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 {
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
 	MCresult -> clear();
-
+    ctxt . SetItToValue(kMCEmptyData);
+    
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
 	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram ? True : False, p_secure ? True : False, p_with_verification ? True : False, kMCEmptyString);
 	if (s != NULL)
+    {
         MCSocketsAppendToSocketList(s);
+        ctxt . SetItToValue(s -> name);
+    }
 }
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message)

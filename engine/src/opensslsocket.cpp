@@ -1198,6 +1198,23 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 		listen(sock, SOMAXCONN);
 #endif
     
+    if (0 == port)
+    {
+        socklen_t addrsize = sizeof(addr);
+        if (getsockname(sock, (sockaddr *)&addr, &addrsize) < 0)
+        {
+            MCresult->sets("can't get bound port");
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+            closesocket(sock);
+#else
+            close(sock);
+#endif
+            return NULL;
+        }
+        
+        port =  MCSwapInt16NetworkToHost(((struct sockaddr_in *)&addr)->sin_port);
+    }
+    
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
     /* UNCHECKED */ MCAutoPointer<char_t[]> t_port_chars = new (nothrow) char_t[U2L];
