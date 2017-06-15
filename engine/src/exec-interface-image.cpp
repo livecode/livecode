@@ -431,53 +431,68 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 
 void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 {
-    // AB-2017-06-15 : Fix Bug causing crash when calling GetImageData from
-    // undoChanged
-    MCImage *t_work_im = this;
-    if (m_rep && m_rep->IsLocked())
+    if (m_rep && m_rep->GetType() != kMCImageRepMutable && m_rep->IsLocked())
     {
-        t_work_im = new MCImage(*this);
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
     }
     
-	// IM-2013-02-07: image data must return a block of data, even if the image is empty.
+    bool t_locked = false;
+    if (m_rep)
+    {
+        t_locked = m_rep->GetType() == kMCImageRepMutable && m_rep->IsLocked();
+    }
+    
+    // IM-2013-02-07: image data must return a block of data, even if the image is empty.
 	// image data should always be for an image the size of the rect.
-    uint32_t t_pixel_count = t_work_im->rect.width * t_work_im->rect.height;
-	uint32_t t_data_size = t_pixel_count * sizeof(uint32_t);
-	
-	MCAutoByteArray t_buffer;
-	
-	bool t_success = true;
-	
-	t_success = t_buffer.New(t_data_size);
-	
-	if (t_success)
-	{
+    uint32_t t_pixel_count = rect.width * rect.height;
+    uint32_t t_data_size = t_pixel_count * sizeof(uint32_t);
+    
+    MCAutoByteArray t_buffer;
+    
+    bool t_success = true;
+    
+    t_success = t_buffer.New(t_data_size);
+    
+    if (t_success)
+    {
         uint32_t *t_data_ptr = (uint32_t*)t_buffer.Bytes();
-		if (t_work_im->m_rep == nil)
-			MCMemoryClear(t_data_ptr, t_data_size);
-		else
-		{
+        if (m_rep == nil)
+            MCMemoryClear(t_data_ptr, t_data_size);
+        else
+        {
             // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
             // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
             // doesn't matter here - are read as they are stored.
             bool t_tmp_locked;
             t_tmp_locked = false;
             
-            if (!getflag(F_LOCK_LOCATION))
+            if (!t_locked)
             {
-                t_work_im->setflag(true, F_LOCK_LOCATION);
-                t_tmp_locked = true;
+                if (!getflag(F_LOCK_LOCATION))
+                {
+                    setflag(true, F_LOCK_LOCATION);
+                    t_tmp_locked = true;
+                }
+                openimage();
             }
             
-			t_work_im->openimage();
-			
-			MCImageBitmap *t_bitmap = nil;
-			
+            MCImageBitmap *t_bitmap = nil;
+            
             // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-            t_success = t_work_im->lockbitmap(t_bitmap, false);
-			if (t_success)
-			{
-				MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
+            
+            if (!t_locked)
+            {
+                t_success = lockbitmap(t_bitmap, false);
+            }
+            else
+            {
+                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
+            }
+            
+            if (t_success)
+            {
+                MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
                 // IM-2013-09-16: [[ RefactorGraphics ]] [[ Bug 11185 ]] Use correct pixel format (xrgb) for imagedata
 #if (kMCGPixelFormatNative != kMCGPixelFormatARGB)
                 while (t_pixel_count--)
@@ -487,22 +502,28 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
                     *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
                 }
 #endif
-                t_work_im->unlockbitmap(t_bitmap);
+                if (!t_locked)
+                {
+                    unlockbitmap(t_bitmap);
+                }
+                else
+                {
+                    static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
+                }
             }
             
-            if (t_tmp_locked)
-                t_work_im->setflag(false, F_LOCK_LOCATION);
+            if (!t_locked && t_tmp_locked)
+                setflag(false, F_LOCK_LOCATION);
             
-			t_work_im->closeimage();
-		}
-	}
+            if (!t_locked)
+            {
+                closeimage();
+            }
+        }
+    }
 	if (t_success)
     {
         t_success = t_buffer.CreateDataAndRelease(r_data);
-        if (t_work_im != this)
-        {
-            delete t_work_im;
-        }
         return;
     }
     
@@ -570,11 +591,23 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 
 void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data)
 {
+    if (m_rep && m_rep->GetType() != kMCImageRepMutable && m_rep->IsLocked())
+    {
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
+    }
+    
+    bool t_locked = false;
+    if (m_rep)
+    {
+        t_locked = m_rep->GetType() == kMCImageRepMutable && m_rep->IsLocked();
+    }
+    
 	uint32_t t_pixel_count = rect.width * rect.height;
 	uint32_t t_data_size = t_pixel_count;
-	
+    
 	bool t_success = true;
-	
+    
 	MCAutoByteArray t_buffer;
 	
 	t_success = t_buffer.New(t_data_size);
@@ -594,17 +627,27 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
             bool t_tmp_locked;
             t_tmp_locked = false;
 
-            if (!getflag(F_LOCK_LOCATION))
+            if (!t_locked)
             {
-                setflag(true, F_LOCK_LOCATION);
-                t_tmp_locked = true;
+                if (!getflag(F_LOCK_LOCATION))
+                {
+                    setflag(true, F_LOCK_LOCATION);
+                    t_tmp_locked = true;
+                }
+                openimage();
             }
-			openimage();
-			
+            
 			MCImageBitmap *t_bitmap = nil;
             
             // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-            t_success = lockbitmap(t_bitmap, true);
+            if (!t_locked)
+            {
+                t_success = lockbitmap(t_bitmap, true);
+            }
+            else
+            {
+                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
+            }
 			if (t_success)
 			{
 				uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -622,28 +665,42 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 					}
 					t_src_ptr += t_bitmap->stride;
 				}
-                unlockbitmap(t_bitmap);
+                if (!t_locked)
+                {
+                    unlockbitmap(t_bitmap);
+                }
+                else
+                {
+                    static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
+                }
 			}
 
             if (t_tmp_locked)
                 setflag(false, F_LOCK_LOCATION);
-			
-			closeimage();
+            if (!t_locked)
+            {
+                closeimage();
+            }
 		}
 	}
 	
 	if (t_success)
-		t_success = t_buffer.CreateDataAndRelease(r_data);
-	
-	if (t_success)
-		return;
-	
-	ctxt . Throw();
+    {
+        t_success = t_buffer.CreateDataAndRelease(r_data);
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
 extern void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_mask_size, bool p_is_alpha);
 void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data)
 {
+    if (m_rep && m_rep->IsLocked())
+    {
+        ctxt . LegacyThrow(EE_IMAGE_MUTABLELOCK);
+        return;
+    }
 	uindex_t t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
 	{
