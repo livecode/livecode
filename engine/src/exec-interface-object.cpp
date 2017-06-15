@@ -4511,7 +4511,7 @@ void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, M
         return;
     }
     
-    hlist -> enumerate(ctxt, true, r_count, r_handlers);
+    hlist -> enumerate(ctxt, true, true, r_count, r_handlers);
 }
 
 void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
@@ -4570,7 +4570,7 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
                 t_handler_array = nil;
                 uindex_t t_count;
                 
-                t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
+                t_first = t_handler_list -> enumerate(ctxt, t_object_ref->getobject() == this, t_first, t_count, t_handler_array);
             
                 for (uindex_t i = 0; i < t_count; i++)
                     t_handlers . Push(t_handler_array[i]);
