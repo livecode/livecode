@@ -431,9 +431,17 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 
 void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 {
+    // AB-2017-06-15 : Fix Bug causing crash when calling GetImageData from
+    // undoChanged
+    MCImage *t_work_im = this;
+    if (m_rep && m_rep->IsLocked())
+    {
+        t_work_im = new MCImage(*this);
+    }
+    
 	// IM-2013-02-07: image data must return a block of data, even if the image is empty.
 	// image data should always be for an image the size of the rect.
-	uint32_t t_pixel_count = rect.width * rect.height;
+    uint32_t t_pixel_count = t_work_im->rect.width * t_work_im->rect.height;
 	uint32_t t_data_size = t_pixel_count * sizeof(uint32_t);
 	
 	MCAutoByteArray t_buffer;
@@ -444,8 +452,8 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 	
 	if (t_success)
 	{
-		uint32_t *t_data_ptr = (uint32_t*)t_buffer.Bytes();
-		if (m_rep == nil)
+        uint32_t *t_data_ptr = (uint32_t*)t_buffer.Bytes();
+		if (t_work_im->m_rep == nil)
 			MCMemoryClear(t_data_ptr, t_data_size);
 		else
 		{
@@ -457,16 +465,16 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
             
             if (!getflag(F_LOCK_LOCATION))
             {
-                setflag(true, F_LOCK_LOCATION);
+                t_work_im->setflag(true, F_LOCK_LOCATION);
                 t_tmp_locked = true;
             }
             
-			openimage();
+			t_work_im->openimage();
 			
 			MCImageBitmap *t_bitmap = nil;
 			
             // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-            t_success = lockbitmap(t_bitmap, false);
+            t_success = t_work_im->lockbitmap(t_bitmap, false);
 			if (t_success)
 			{
 				MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -479,22 +487,26 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
                     *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
                 }
 #endif
-                unlockbitmap(t_bitmap);
+                t_work_im->unlockbitmap(t_bitmap);
             }
             
             if (t_tmp_locked)
-                setflag(false, F_LOCK_LOCATION);
+                t_work_im->setflag(false, F_LOCK_LOCATION);
             
-			closeimage();
+			t_work_im->closeimage();
 		}
 	}
 	if (t_success)
-		t_success = t_buffer.CreateDataAndRelease(r_data);
-	
-	if (t_success)
-		return;
-
-	ctxt . Throw();
+    {
+        t_success = t_buffer.CreateDataAndRelease(r_data);
+        if (t_work_im != this)
+        {
+            delete t_work_im;
+        }
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
 void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
