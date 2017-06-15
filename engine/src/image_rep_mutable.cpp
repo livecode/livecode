@@ -120,6 +120,8 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fram
 
 bool MCMutableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
+    MCAssert(m_locked_bitmap == nullptr);
+    
 	if (p_frame > 0)
 		return false;
 	
