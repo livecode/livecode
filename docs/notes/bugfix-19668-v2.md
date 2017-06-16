@@ -1,1 +1,0 @@
-# Fixed bug causing crash when accessing GetImageData in undoChanged Handler
