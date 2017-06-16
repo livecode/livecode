@@ -538,6 +538,8 @@ struct MCScriptInstance: public MCScriptObject
     void *host_ptr;
 };
 
+MCScriptModuleRef MCScriptSetCurrentModule(MCScriptModuleRef module);
+
 void
 MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
