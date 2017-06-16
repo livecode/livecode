@@ -26,7 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// This is the module of the most recent LCB stack frame on the current thread's
+// This is the module of themost recent LCB stack frame on the current thread's
 // stack. It is set before and after a foreign handler call so that the native
 // code can get some element of context.
 static MCScriptModuleRef s_current_module = nil;
@@ -232,7 +232,9 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
         }
     }
 
-	MCScriptExecuteContext t_execute_ctxt;
+    MCScriptModuleRef t_previous = MCScriptSetCurrentModule(self->module);
+	
+    MCScriptExecuteContext t_execute_ctxt;
 	t_execute_ctxt.Enter(self,
 						 p_handler_def,
 	                     MCMakeSpan(p_arguments, p_argument_count),
@@ -252,6 +254,8 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
                                     t_cookie);
         }
     }
+    
+    MCScriptSetCurrentModule(t_previous);
 
 	if (!t_execute_ctxt.Leave())
 	{
@@ -1200,6 +1204,13 @@ MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef p_instance,
 MCScriptModuleRef MCScriptGetCurrentModule(void)
 {
 	return s_current_module;
+}
+
+MCScriptModuleRef MCScriptSetCurrentModule(MCScriptModuleRef p_module)
+{
+    MCScriptModuleRef t_previous = s_current_module;
+    s_current_module = p_module;
+    return t_previous;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
