@@ -407,10 +407,13 @@ Boolean MCScreenDC::open()
             cmap = gdk_screen_get_system_colormap(t_screen);
         }
         
-        // Create a 32-bit visual for internal use
-        //vis32 = gdk_visual_get_best_with_depth(32);
-        //cmap32 = gdk_colormap_new(vis32, FALSE);
-        
+        // If getting the system visual fails then use the rgb visual.
+        if (vis == nullptr)
+        {
+            vis = gdk_screen_get_rgb_visual(t_screen);
+            cmap = gdk_screen_get_rgb_colormap(t_screen);
+        }
+
 		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
             gint t_redshift, t_greenshift, t_blueshift;
