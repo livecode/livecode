@@ -437,12 +437,6 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
         return;
     }
     
-    bool t_locked = false;
-    if (m_rep)
-    {
-        t_locked = m_rep->GetType() == kMCImageRepMutable && m_rep->IsLocked();
-    }
-    
     // IM-2013-02-07: image data must return a block of data, even if the image is empty.
 	// image data should always be for an image the size of the rect.
     uint32_t t_pixel_count = rect.width * rect.height;
@@ -467,7 +461,13 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
             bool t_tmp_locked;
             t_tmp_locked = false;
             
-            if (!t_locked)
+            MCImageBitmap *t_bitmap = nil;
+            
+            if (m_rep->GetType() == kMCImageRepMutable)
+            {
+                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
+            }
+            else
             {
                 if (!getflag(F_LOCK_LOCATION))
                 {
@@ -475,20 +475,9 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
                     t_tmp_locked = true;
                 }
                 openimage();
-            }
-            
-            MCImageBitmap *t_bitmap = nil;
-            
-            // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-            
-            if (!t_locked)
-            {
                 t_success = lockbitmap(t_bitmap, false);
             }
-            else
-            {
-                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
-            }
+            // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
             
             if (t_success)
             {
@@ -502,21 +491,17 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
                     *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
                 }
 #endif
-                if (!t_locked)
-                {
-                    unlockbitmap(t_bitmap);
-                }
-                else
-                {
-                    static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
-                }
             }
             
-            if (!t_locked && t_tmp_locked)
-                setflag(false, F_LOCK_LOCATION);
-            
-            if (!t_locked)
+            if (m_rep->GetType() == kMCImageRepMutable)
             {
+                static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
+            }
+            else
+            {
+                unlockbitmap(t_bitmap);
+                if (t_tmp_locked)
+                    setflag(false, F_LOCK_LOCATION);
                 closeimage();
             }
         }
@@ -597,13 +582,7 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
         return;
     }
     
-    bool t_locked = false;
-    if (m_rep)
-    {
-        t_locked = m_rep->GetType() == kMCImageRepMutable && m_rep->IsLocked();
-    }
-    
-	uint32_t t_pixel_count = rect.width * rect.height;
+    uint32_t t_pixel_count = rect.width * rect.height;
 	uint32_t t_data_size = t_pixel_count;
     
 	bool t_success = true;
@@ -626,8 +605,14 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
             // doesn't matter here - are read as they are stored.
             bool t_tmp_locked;
             t_tmp_locked = false;
-
-            if (!t_locked)
+            
+            MCImageBitmap *t_bitmap = nil;
+            
+            if (m_rep->GetType() == kMCImageRepMutable)
+            {
+                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
+            }
+            else
             {
                 if (!getflag(F_LOCK_LOCATION))
                 {
@@ -635,20 +620,10 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
                     t_tmp_locked = true;
                 }
                 openimage();
-            }
-            
-			MCImageBitmap *t_bitmap = nil;
-            
-            // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-            if (!t_locked)
-            {
                 t_success = lockbitmap(t_bitmap, true);
             }
-            else
-            {
-                t_success = static_cast<MCMutableImageRep *>(m_rep)->LockBitmap(0, 0, t_bitmap);
-            }
-			if (t_success)
+            
+            if (t_success)
 			{
 				uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
 				for (uindex_t y = 0; y < t_bitmap->height; y++)
@@ -665,20 +640,17 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 					}
 					t_src_ptr += t_bitmap->stride;
 				}
-                if (!t_locked)
-                {
-                    unlockbitmap(t_bitmap);
-                }
-                else
-                {
-                    static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
-                }
 			}
-
-            if (t_tmp_locked)
-                setflag(false, F_LOCK_LOCATION);
-            if (!t_locked)
+            
+            if (m_rep->GetType() == kMCImageRepMutable)
             {
+                static_cast<MCMutableImageRep *>(m_rep)->UnlockBitmap(0, t_bitmap);
+            }
+            else
+            {
+                unlockbitmap(t_bitmap);
+                if (t_tmp_locked)
+                    setflag(false, F_LOCK_LOCATION);
                 closeimage();
             }
 		}
