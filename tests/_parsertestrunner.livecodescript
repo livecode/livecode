@@ -35,7 +35,6 @@ on startup
    catch tError
       write "ERROR: " & tError & return to stderr
    end try
-   quit 0
 end startup
 
 ----------------------------------------------------------------
