@@ -7,7 +7,8 @@ Syntax: the machine
 Syntax: machine()
 
 Summary:
-<return|Returns> the type of hardware the <application> is running on.
+<return|Returns> a <string> describing the type of hardware the <application> 
+is running on.
 
 Introduced: 1.0
 
@@ -30,22 +31,24 @@ The <machine> <function> <return|returns> a <string>.
 -   iPhone Simulator: the device is a simulated iPhone
 -   iPad: the device is the iPad
 -   iPad Simulator: the device is a simulator iPad
-
+-   : macOS, Unix and Android returns described below
 
 Description:
 Use the <machine> function to detect what type of system your
 application is running on.
 
 On Mac OS systems, the <machine> <function> uses the Gestalt() system
-call to determine the machine type.
+call to determine the machine type returning the Model Identifier, for example, 
+'macbookpro10,1'.
 
 On Unix systems, the <machine> <function> uses the uname() system
-function. 
+function to determine the machine type.
 
 On Android devices, the <machine> <function> returns the manufacturer's
 name for the device. For example, if running on a Google Nexus One, the
 string is "Nexus One".
 
 References: function (control structure), processor (function),
-application (glossary), return (glossary), string (keyword)
+application (glossary), return (glossary), string (keyword),
+platform (function)
 
