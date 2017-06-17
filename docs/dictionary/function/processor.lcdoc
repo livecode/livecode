@@ -23,12 +23,11 @@ if the processor is "ARM" then ...
 
 Returns (enum):
 
--   x86: Windows systems (any architecture) and Mac OS X and Linux
-    systems with a 32 bit processor.
--   x86_64: Mac and Linux systems running a 64 bit processor
--   i386: iOS Simulator.
--   ARM: iOS and Android Devices and the Android simulator
-
+-   x86: 32 or 64 bit Windows systems and 32 bit macOS or Linux systems.
+-   x86_64: 64 bit macOS and Linux systems or 64 bit iOS simulator.
+-   i386: 32 bit iOS simulator.
+-   ARM: 32 bit iOS devices, Android devices and the Android simulator.
+-   arm64: 64 bit iOS device.
 
 Description:
 Use the <processor> function to determine which microprocessor the
@@ -36,4 +35,3 @@ device has.
 
 References: machine (function), platform (function), return (glossary),
 string (keyword)
-
