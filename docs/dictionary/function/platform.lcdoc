@@ -44,7 +44,6 @@ The possible values returned by the <platform> function are:
 * "android" on smartphones, tablets and other Android devices
 * "HTML5" when running in a web browser
 
-
 Changes:
 Support for HTML5 was added in version 8.0.0.
 
@@ -53,5 +52,5 @@ buildNumber (function), deleteRegistry (function), processor (function),
 MCISendString (function), return (glossary), OS X (glossary),
 engine (glossary), appearance (glossary), Unix (glossary),
 Mac OS (glossary), standalone application (glossary), behavior (glossary),
-stack (object)
+stack (object), machine (function)
 
