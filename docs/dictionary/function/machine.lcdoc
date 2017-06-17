@@ -37,11 +37,11 @@ Description:
 Use the <machine> function to detect what type of system your
 application is running on.
 
-On Mac OS systems, the <machine> <function> uses the Gestalt() system
+On <Mac OS> systems, the <machine> <function> uses the Gestalt() system
 call to determine the machine type returning the Model Identifier, for example, 
 'macbookpro10,1'.
 
-On Unix systems, the <machine> <function> uses the uname() system
+On <Unix> systems, the <machine> <function> uses the uname() system
 function to determine the machine type.
 
 On Android devices, the <machine> <function> returns the manufacturer's
@@ -50,5 +50,5 @@ string is "Nexus One".
 
 References: function (control structure), processor (function),
 application (glossary), return (glossary), string (keyword),
-platform (function)
+platform (function), Unix (glossary), Mac OS (glossary),
 
