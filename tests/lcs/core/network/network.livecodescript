@@ -195,3 +195,25 @@ on TestOpenSocketFromWithAddressAndPortUsingLocalServer
    close socket "127.0.0.1:8009"
    close socket "8009"
 end TestOpenSocketFromWithAddressAndPortUsingLocalServer
+
+on TestAcceptConnectionsInEphemeralPortRange
+   -- in lieu of coming up with a per-OS/config list of ephemeral ranges
+   -- we will just test if the port opened is greater than 1024 which
+   -- is the bare minimum for BSD sockets then try and connect to it
+   local tPort
+   accept connections on port "0" with message "connectedPlaceHolder"
+   put it into tPort
+   
+   TestAssert "accept on port 0 binds to socket in ephemeral port range", tPort > 1024
+   TestAssert "ephemeral port is in the open sockets", tPort is among the lines of the openSockets
+   TestAssert "Port 0 is not in the open sockets", 0 is not among the lines of the openSockets
+   
+   local tSocket
+   put "127.0.0.1:" & tPort into tSocket
+   
+   open socket to tSocket
+   TestAssert "open socket to ephemeral port", tSocket is among the lines of the openSockets
+   
+   close socket tSocket
+   close socket tPort
+end TestAcceptConnectionsInEphemeralPortRange
