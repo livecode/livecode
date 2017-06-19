@@ -741,8 +741,11 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                 
                 if (tspr == NULL && state != TS_FINALLY)
                 {
-                    if (state == TS_CATCH)
-                        MCeerror->clear();
+                    // Everything has executed normally but there may have been an
+                    // error added on another event. The trylock needs refactoring to
+                    // ensure a trylock on one event can't cause issues in another
+                    // event.
+                    MCeerror->clear();
                     
                     tspr = finallystatements;
                     state = TS_FINALLY;
