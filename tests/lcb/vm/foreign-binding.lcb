@@ -32,34 +32,6 @@ end handler
 
 ---------
 
--- NEED TO CHECK class and instance methods, existant and non-existant
--- also protocols and superclasses.
-
-foreign handler CreateObjCObject() returns Pointer binds to "objc:NSObject.+alloc"
-foreign handler CreateObjCObjectDoesntExist() returns Pointer binds to "objc:NSObject.-foobar"
-
-private handler TestForeignBinding_NonExistantObjC()
-   unsafe
-      CreateObjCObjectDoesntExist()
-   end unsafe
-end handler
-
-private handler TestForeignBinding_ExistantObjC()
-   unsafe
-      CreateObjCObject()
-   end unsafe
-end handler
-
-public handler TestForeignBinding_ObjC()
-   MCUnitTestHandlerThrowsNamed(TestForeignBinding_NonExistantObjC, "livecode.lang.ForeignHandlerBindingError", "Failure to bind to non-existant objc function throws error")
-   MCUnitTestHandlerDoesntThrow(TestForeignBinding_ExistantObjC, "Binding to existant objc function does not throw error")
-
-   test "Non-existant objc function gives nothing as handler value" when CreateObjCObjectDoesntExist is nothing
-   test "Existant objc function gives non-nothing as handler value" when CreateObjCObject is not nothing
-end handler
-
----------
-
 foreign handler CreateJavaObject() returns JObject binds to "java:java.lang.Object>new()"
 foreign handler CreateJavaObjectDoesntExist() returns JObject binds to "java:java.lang.Object>new_doesnt_exist()"
 

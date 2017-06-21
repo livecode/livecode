@@ -591,6 +591,9 @@ void __MCStreamFinalize(void);
 bool __MCJavaInitialize(void);
 void __MCJavaFinalize(void);
 
+bool __MCObjcInitialize(void);
+void __MCObjcFinalize(void);
+
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
 MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value);

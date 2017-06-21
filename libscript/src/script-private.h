@@ -360,6 +360,17 @@ enum MCScriptForeignHandlerLanguage
     kMCScriptForeignHandlerLanguageJava,
 };
 
+/* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
+ * method. */
+enum MCScriptForeignHandlerObjcCallType
+{
+    /* Call the method using method_invoke on the instance */
+    kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
+    
+    /* Call the method using method_invoke on the class instance */
+    kMCScriptForeignHandlerObjcCallTypeClassMethod,
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
     MCStringRef binding;
@@ -380,7 +391,8 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
         } builtin_c;
         struct
         {
-            bool is_class_method;
+            MCScriptForeignHandlerObjcCallType call_type;
+            void *objc_class;
             void *objc_selector;
             void *function_cif;
         } objc;

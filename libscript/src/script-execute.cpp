@@ -27,6 +27,10 @@
 #include <dlfcn.h>
 #endif
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+#include <objc/message.h>
+#endif
+
 #include "script-execute.hpp"
 
 typedef void (*__MCScriptValueDrop)(void *);
@@ -164,7 +168,49 @@ public:
             break;
         
         case kMCScriptForeignHandlerLanguageObjC:
-            return MCScriptThrowObjCBindingNotImplemented();
+        {
+            /* At this point we have a argument values array which will match
+             * the LCB signature - depending on the call type we need to modify
+             * it. */
+            void *t_objc_values[kMaxArguments];
+            if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeInstanceMethod)
+            {
+                /* In the case of an instance method call, we need to insert
+                 * the method pointer as the second argument. */
+                if (m_argument_count + 1 >= kMaxArguments)
+                {
+                    return MCErrorThrowOutOfMemory();
+                }
+                t_objc_values[0] = m_argument_values[0];
+                t_objc_values[1] = &p_handler->objc.objc_selector;
+                for(uindex_t i = 1; i < m_argument_count; i++)
+                    t_objc_values[i + 1] = m_argument_values[i];
+            }
+            else if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeClassMethod)
+            {
+                /* In the case of a class method call, we need to insert both
+                 * the class, and method pointer as the first two arguments. */
+                if (m_argument_count + 2 >= kMaxArguments)
+                {
+                    return MCErrorThrowOutOfMemory();
+                }
+                
+                t_objc_values[0] = &p_handler->objc.objc_class;
+                t_objc_values[1] = &p_handler->objc.objc_selector;
+                for(uindex_t i = 0; i < m_argument_count; i++)
+                    t_objc_values[i + 2] = m_argument_values[i];
+            }
+            else
+            {
+                return MCScriptThrowObjCBindingNotImplemented();
+            }
+            
+            ffi_call((ffi_cif *)p_handler->objc.function_cif,
+                     (void(*)())objc_msgSend,
+                     p_result_slot_ptr,
+                     t_objc_values);
+        }
+        break;
             
         case kMCScriptForeignHandlerLanguageUnknown:
             MCUnreachableReturn(false);
@@ -196,7 +242,7 @@ private:
 	uindex_t m_argument_count;
 	// The array of pointers which will be passed to libffi - this will
 	// be the pointers in m_argument_slots for normal parameters and
-	// a pointer to the points in m_argument_slots for reference
+	// a pointer to the pointers in m_argument_slots for reference
 	// parameters.
 	void *m_argument_values[kMaxArguments];
 	// The drops for the slot values in m_argument_slots.

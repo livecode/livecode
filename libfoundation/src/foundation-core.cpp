@@ -87,6 +87,11 @@ bool MCInitialize(void)
     if (!__MCJavaInitialize())
         return false;
     
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+    if (!__MCObjcInitialize())
+        return false;
+#endif
+    
 	return true;
 }
 
@@ -109,6 +114,10 @@ void MCFinalize(void)
     __MCUnicodeFinalize();
     __MCJavaFinalize();
     
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+    __MCObjcFinalize();
+#endif
+
     // Finalize values last
 	__MCValueFinalize();
 }

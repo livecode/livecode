@@ -833,6 +833,135 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
 }
 
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+static MCTypeInfoRef __MCScriptResolveForeignFunctionBindingForObjcType(const char *p_type)
+{
+    switch(p_type[0])
+    {
+    case 'c':
+        return kMCCSCharTypeInfo;
+    case 'i':
+        return kMCCSIntTypeInfo;
+    case 's':
+        return kMCCSShortTypeInfo;
+    case 'l':
+        return kMCCSLongTypeInfo;
+    case 'q':
+        return kMCCSLongLongTypeInfo;
+    case 'C':
+        return kMCCUCharTypeInfo;
+    case 'I':
+        return kMCCUIntTypeInfo;
+    case 'S':
+        return kMCCUShortTypeInfo;
+    case 'L':
+        return kMCCULongTypeInfo;
+    case 'Q':
+        return kMCCULongLongTypeInfo;
+    case 'f':
+        return kMCFloatTypeInfo;
+    case 'd':
+        return kMCDoubleTypeInfo;
+    case 'B':
+        return kMCCBoolTypeInfo;
+    case 'v':
+        return kMCVoidTypeInfo;
+    case '*':
+        MCLog("char string type encoding not implemented");
+        return nullptr;
+    case '@':
+        return kMCObjcIdTypeInfo;
+    case '#':
+        return kMCObjcIdTypeInfo;
+    case ':':
+        return kMCPointerTypeInfo;
+    case '[':
+        return kMCPointerTypeInfo;
+    case '{':
+        MCLog("struct type encoding not implemented");
+        return nullptr;
+    case '(':
+        MCLog("union type encoding not implemented");
+        return nullptr;
+    case 'b':
+        MCLog("bitfield type encoding not implemented");
+        return nullptr;
+    case '^':
+        return kMCPointerTypeInfo;
+    case '?':
+        MCLog("unspecified type encoding not implemented", p_type[0]);
+        return nullptr;
+    default:
+        break;
+    };
+    
+    MCLog("unknown type encoding '%c'", p_type[0]);
+    
+    return nullptr;
+}
+
+static bool
+__MCScriptResolveForeignFunctionBindingForObjcCheckTypes(MCTypeInfoRef p_foreign_type,
+                                                         MCTypeInfoRef p_native_type,
+                                                         ffi_type*& r_ffi_type)
+{
+    /* At the moment, the return type of signatures which return void is nullptr.
+     * So check that in this case, the foreign type (as returned by the function
+     * above) is Void. */
+    if (p_native_type == nullptr && p_foreign_type != kMCVoidTypeInfo)
+    {
+        /* ERROR: objc type mismatch */
+        return false;
+    }
+
+    /* Make sure we resolve the named typeinfo */
+    MCResolvedTypeInfo t_resolved_type;
+    if (!MCTypeInfoResolve(p_native_type,
+                           t_resolved_type))
+    {
+        return false;
+    }
+
+    /* If the foreign (from Obj-C) type is not the same as the declared
+     * signature's type then we must check for some allowed mappings. */
+    if (p_native_type != p_foreign_type)
+    {
+        if (p_foreign_type == kMCObjcIdTypeInfo)
+        {
+            /* If the Obj-C signature type is 'Id', then we allow the declared
+             * signature to be Id, RetainedId or AutoreleasedId */
+            if (p_native_type != kMCObjcRetainedIdTypeInfo &&
+                p_native_type != kMCObjcAutoreleasedIdTypeInfo)
+            {
+                /* ERROR: objc type mismatch */
+                return false;
+            }
+        }
+        else if (p_foreign_type == kMCCSCharTypeInfo)
+        {
+            /* If the Obj-C signature type is signed char (c), then we allow
+             * CBool to be used. This is needed since many Obj-C APIs use
+             * BOOL to denote a boolean value, and this maps to signed char in
+             * Obj-C type encodings. */
+            if (p_native_type != kMCCBoolTypeInfo)
+            {
+                /* ERROR: objc type mismatch */
+                return false;
+            }
+        }
+    }
+    
+    if (MCTypeInfoIsForeign(t_resolved_type.type))
+    {
+        r_ffi_type = static_cast<ffi_type*>(MCForeignTypeInfoGetLayoutType(t_resolved_type.type));
+    }
+    else
+    {
+        r_ffi_type = &ffi_type_pointer;
+    }
+    
+    return true;
+}
+
 /* objc:library>class.method */
 static bool
 __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
@@ -923,19 +1052,16 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
 
     bool t_valid = true;
     
-    /* Lookup the class, to make sure it exists.
-     * Notice that for instance methods, we use getClass, but for class methods
-     * we use getMetaClass. */
+    /* Lookup the class, to make sure it exists. */
     Class t_objc_class = nullptr;
-    if (!t_is_class)
-        t_objc_class = objc_getClass(*t_class_cstring);
-    else
-        t_objc_class = objc_getMetaClass(*t_class_cstring);
-    if (t_valid &&
-        t_objc_class == nullptr)
+    if (t_valid)
     {
-        /* ERROR: should be class not found */
-        t_valid = false;
+        t_objc_class = objc_getClass(*t_class_cstring);
+        if (t_objc_class == nullptr)
+        {
+            /* ERROR: should be class not found */
+            t_valid = false;
+        }
     }
     
     /* Lookup the selector, if this doesn't work then we're screwed (OOM,
@@ -948,15 +1074,142 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         t_valid = false;
     }
     
-    /* Check the class responds to the selector. */
-    if (!class_respondsToSelector(t_objc_class,
-                                  t_objc_sel))
+    /* Get the Method - either class or instance - from the class */
+    Method t_objc_method = nullptr;
+    if (t_valid)
     {
-        t_valid = false;
+        if (!t_is_class)
+        {
+            t_objc_method = class_getInstanceMethod(t_objc_class,
+                                               t_objc_sel);
+        }
+        else
+        {
+            t_objc_method = class_getClassMethod(t_objc_class,
+                                            t_objc_sel);
+        }
+        if (t_objc_method == nullptr)
+        {
+            /* ERROR: objc method not found */
+            t_valid = false;
+        }
     }
     
     /* Next check the method signature against what is held for the message
      * implementation. */
+    MCAutoPointer<void> t_layout_cif;
+    ffi_cif *t_cif = nullptr;
+    ffi_type *t_cif_return_type = nullptr;
+    ffi_type **t_cif_arg_types = nullptr;
+    unsigned int t_arg_count = 0;
+    if (t_valid)
+    {
+        MCTypeInfoRef t_signature = p_instance->module->types[p_handler->type]->typeinfo;
+    
+        char *t_return_type =
+                method_copyReturnType(t_objc_method);
+        MCTypeInfoRef t_return_typeinfo =
+                __MCScriptResolveForeignFunctionBindingForObjcType(t_return_type);
+        free(t_return_type);
+        
+        /* Currently the named typeinfo must match */
+        MCTypeInfoRef t_sig_return_typeinfo =
+                MCHandlerTypeInfoGetReturnType(t_signature);
+        
+        if (!__MCScriptResolveForeignFunctionBindingForObjcCheckTypes(t_return_typeinfo,
+                                                                      t_sig_return_typeinfo,
+                                                                      t_cif_return_type))
+        {
+            /* ERROR: objc return type mismatch */
+            t_valid = false;
+        }
+        
+        /* Allocate memory for the handler layout (array of ffi_type*) and
+         * ffi_cif. This is a single block which will contain the cif followed
+         * by the type array. */
+        if (t_valid)
+        {
+            t_arg_count = method_getNumberOfArguments(t_objc_method);
+            if (!MCMemoryAllocate(sizeof(ffi_type*) * t_arg_count + sizeof(ffi_cif),
+                                  &t_layout_cif))
+            {
+                /* ERROR: OOM */
+                t_valid = false;
+            }
+            t_cif = static_cast<ffi_cif *>(*t_layout_cif);
+            t_cif_arg_types = reinterpret_cast<ffi_type **>(t_cif + 1);
+        }
+        
+        /* i is the argument index for the objc Method, j is the argument index
+         * for the signature.
+         * The i == 0 argument is not present in the signature if this is a
+         * class method call, as we add the class object at call time.
+         * The i == 1 argument is not present in the signature as it is for the
+         * Method. */
+        for(unsigned int i = 0, j = 0; i < t_arg_count && t_valid; i++)
+        {
+            /* The i == 0 argument won't appear in the LCB signature for class
+             * methods. */
+            if (i == 0 &&
+                t_is_class)
+            {
+                t_cif_arg_types[i] = &ffi_type_pointer;
+                continue;
+            }
+        
+            /* The i == 1 argument won't appear in the LCB signature as it is
+             * the Method pointer, so we process specially. */
+            if (i == 1)
+            {
+                t_cif_arg_types[i] = &ffi_type_pointer;
+                continue;
+            }
+            
+            if (MCHandlerTypeInfoGetParameterMode(t_signature,
+                                                  j) != kMCHandlerTypeFieldModeIn)
+            {
+                /* ERROR: objc param mode not supported */
+                t_valid = false;
+                break;
+            }
+            
+            char *t_arg_type =
+                    method_copyArgumentType(t_objc_method,
+                                            i);
+            MCTypeInfoRef t_arg_typeinfo =
+                    __MCScriptResolveForeignFunctionBindingForObjcType(t_arg_type);
+            free(t_arg_type);
+            
+            if (!__MCScriptResolveForeignFunctionBindingForObjcCheckTypes(t_arg_typeinfo,
+                                                                          MCHandlerTypeInfoGetParameterType(t_signature,
+                                                                                                            j),
+                                                                          t_cif_arg_types[i]))
+            {
+                /* ERROR: objc param type mismatch */
+                t_valid = false;
+                break;
+            }
+            
+            /* Increment the signature arg index, as we've consumed one */
+            j++;
+        }
+    }
+    
+    /* Now can prep the cif for the var-args method_invoke* calls we need to
+     * make. */
+    if (t_valid)
+    {
+        if (ffi_prep_cif_var(t_cif,
+                             FFI_DEFAULT_ABI,
+                             2,
+                             t_arg_count,
+                             t_cif_return_type,
+                             t_cif_arg_types) != FFI_OK)
+        {
+            /* ERROR: libffi failure */
+            t_valid = false;
+        }
+    }
     
     if (!t_valid)
     {
@@ -969,8 +1222,17 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         return MCScriptThrowUnableToResolveForeignHandlerError(p_instance, p_handler);
     }
 
-    p_handler->objc.is_class_method = t_is_class;
+    if (t_is_class)
+    {
+        p_handler->objc.call_type = kMCScriptForeignHandlerObjcCallTypeClassMethod;
+    }
+    else
+    {
+        p_handler->objc.call_type = kMCScriptForeignHandlerObjcCallTypeInstanceMethod;
+    }
+    p_handler->objc.objc_class = t_objc_class;
     p_handler->objc.objc_selector = t_objc_sel;
+    p_handler->objc.function_cif = static_cast<ffi_cif*>(t_layout_cif.Release());
     
     p_handler->language = kMCScriptForeignHandlerLanguageObjC;
 

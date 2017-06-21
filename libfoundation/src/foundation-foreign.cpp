@@ -68,6 +68,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
  * type for CBool as (in theory) it could be any length, and not just a byte.
  */
 
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCVoidTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCBoolTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCCharTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCUCharTypeInfo;
@@ -121,8 +122,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCUIntTypeInfo() { return kMCCUIntTypeInf
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSIntTypeInfo() { return kMCCSIntTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongTypeInfo() { return kMCCULongTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongTypeInfo() { return kMCCSLongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongLongTypeInfo; }
 
 /**/
 
