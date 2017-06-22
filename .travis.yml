@@ -6,6 +6,9 @@
 sudo: required
 dist: trusty
 
+# FIXME: This will not work from September 2017
+group: deprecated-2017Q2
+
 # Build on both Linux and OSX
 os:
   - linux
