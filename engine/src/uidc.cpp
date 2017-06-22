@@ -373,11 +373,15 @@ void MCUIDC::setmouseloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCmousestackptr;
-	r_loc = MCPointMake(MCmousex, MCmousey);
-
-	if (MCmousestackptr)
-		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCmousex, MCmousey);
+    
+    if (MCmousestackptr)
+    {
+        r_target = MCmousestackptr;
+        r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
@@ -395,11 +399,15 @@ void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCclickstackptr;
-	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
-
-	if (MCclickstackptr)
-		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCclicklocx, MCclicklocy);
+    
+    if (MCclickstackptr)
+    {
+        r_target = MCclickstackptr;
+        r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
