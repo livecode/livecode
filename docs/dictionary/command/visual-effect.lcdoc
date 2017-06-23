@@ -178,9 +178,10 @@ alwaysBuffer (property), answer effect (command), black (keyword),
 card (keyword), card (object), command (glossary), 
 dontUseQT (property), dontUseQTEffects (property), 
 effectRate (property), exit (glossary), find (command), go (command), 
-gray (keyword), handler (glossary), inverse (glossary), 
+gray (keyword), handler (glossary), hide (command), inverse (glossary), 
 lock screen (command), multiEffect (property), player (object), 
 pop (command), property (glossary), QuickTime (glossary), 
-stack (object), unlock screen (command), white (keyword)
+show (command), stack (object), unlock screen (command), 
+white (keyword)
 
 Tags: multimedia
