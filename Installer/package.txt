@@ -753,8 +753,6 @@ component Externals.CEF.Linux
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:CEF/libcef.so
-		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
-		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
 		rfolder linux-[[TargetArchitecture]]:CEF/locales
 		file linux-[[TargetArchitecture]]:CEF/cef.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
@@ -777,12 +775,9 @@ component Externals.CEF.Windows
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:CEF/libcef.dll
 		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_46.dll
 		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/ffmpegsumo.dll
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
-		executable windows:CEF/pdf.dll
 		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak

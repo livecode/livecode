@@ -829,8 +829,7 @@ private command compilerExecuteCopy @self, pCommand
       end if
    else
       if not abstractThereIsAFile(tSourcePath) then
-         compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
-         exit compilerExecuteCopy
+         compilerExecutionError self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
       end if
       put pCommand["class"], empty into tItemManifest
    end if
@@ -856,7 +855,7 @@ private command compilerExecuteCopy @self, pCommand
       end if
       
       if tItemClass is not "folder" and not abstractThereIsAFile(tItemSourcePath) then
-         compilerBuildWarning self, "Bundle item '" & tItemSourcePath & "' could not be found", pCommand["line"]
+         compilerExecutionError self, "Bundle item '" & tItemSourcePath & "' could not be found", pCommand["line"]
       end if
       
       local tProcess, tSuffix, tManifestType
@@ -1130,8 +1129,7 @@ private command compilerExecuteDesktop @self, pCommand
    local tSourcePath
    put self["sources"][tSourceType] & slash & tSourceFile into tSourcePath
    if not abstractThereIsAFile(tSourcePath) then
-      compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
-      exit compilerExecuteDesktop
+      compilerExecutionError self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
    end if
    
    -- If its an application, process the data into a derived file
