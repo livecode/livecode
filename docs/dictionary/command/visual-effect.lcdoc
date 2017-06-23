@@ -15,7 +15,7 @@ OS: mac, windows, linux, ios, android, html5
 Platforms: desktop, mobile
 
 Example:
-visual effect dissolve
+visual effect "dissolve"
 go next card
 
 Example:
@@ -23,13 +23,13 @@ Example:
 --  with a visual effect when clicked.
 on mouseUp
   hide me
-  show me with visual effect iris close slow
+  show me with visual effect "iris" close slow
 end mouseUp
 
 Example:
 lock screen for visual effect
 show image "skull" 
-unlock screen with visual effect zoom open to inverse with sound "doom.wav"
+unlock screen with visual effect "zoom" open to inverse with sound "doom.wav"
 
 Parameters:
 effectName: One of the following. 
@@ -95,7 +95,7 @@ next time you navigate to another <card(object)> in the same window with the
 <command> immediately before these <command|commands> in a <handler>,
 like this:
 
-    visual effect dissolve -- sets up the effect
+    visual effect "dissolve" -- sets up the effect
     go to card Index       -- effect is seen during the go
 
 
@@ -109,7 +109,7 @@ The <visual effect> <command> affects only navigation within a window.
 If you want to create a transition effect when moving between <stack|stacks>,
 use the go...in window form of the go <command> :
 
-    visual effect wipe down
+    visual effect "wipe down"
     go stack Index in window "Part 2" -- replaces stack on screen
 
 You can issue more than one visual effect in order to stack up several
@@ -117,8 +117,8 @@ effects. All the pending visual effects are executed in the order they
 were issued during the <card(object)> transition. This example makes 
 the <card(object)> appear to shrink and then re-expand:
 
-    visual effect shrink to center to black
-    visual effect stretch from center to card
+    visual effect "shrink" to center to black
+    visual effect "stretch" from center to card
     go card "Showoff"
 
 
