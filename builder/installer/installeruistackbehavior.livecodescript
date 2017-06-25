@@ -453,8 +453,8 @@ command runFaceless
    local tOptions
    parseOptions tOptions
    if the result is not empty then
-      write "Usage: <exe> -noui [-location <path>] [-allusers] [-desktopshortcut] [-startmenu]" & return to stderr
-      exit runFaceless
+      write "Usage: <exe> -ui [-location <path>] [-allusers] [-desktopshortcut] [-startmenu]" & return to stderr
+      quit 1
    end if 
    
    -- Compute the target location based on install type, if non specified
@@ -478,7 +478,9 @@ end runFaceless
 
 private command parseOptions @rOptions
    local tIndex
-   put 3 into tIndex
+   -- Skip $0 (executable path) and $1 ('install')
+   -- '-ui' is not included in the cmd line arg vars
+   put 2 into tIndex
    repeat forever
       if tIndex >= $# then
          exit repeat

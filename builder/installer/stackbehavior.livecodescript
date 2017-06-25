@@ -26,7 +26,7 @@ on startup
    
    switch tAction
       case "install"
-         if $2 is "noui" then
+         if the environment is "installer command line" then
             runFacelessInstall
          else
             hide me
@@ -34,7 +34,7 @@ on startup
          end if
          break
       case "uninstall"
-         if $2 is "noui" then
+         if the environment is "installer command line" then
             runFacelessUninstall
          else
             hide me
@@ -117,7 +117,7 @@ command setTitleField pField, pTitle, pSubTitle
 end setTitleField
 
 on errorDialog pError
-   if $2 is "noui" then
+   if the environment is "installer command line" then
       write "[" && the internet date && "]" && ": ERROR " && pError & return to stdout
       quit 1
    else
