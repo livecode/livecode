@@ -104,7 +104,7 @@
             ResolveIdName(Id -> RealName)
         |)
         
-        OutputWrite("foreign handler ")
+        OutputWrite("__safe foreign handler ")
         OutputForeignHandlerName(Type, MethodName)
         OutputForeignHandlerSignatureWithParameter(Type, Signature, Modifiers)
         OutputMethodBindingString(Type, RealName, Signature, Modifiers)
@@ -120,7 +120,7 @@
             ResolveIdName(Id -> RealName)
         |)
         
-        OutputWrite("foreign handler ")
+        OutputWrite("__safe foreign handler ")
         OutputForeignHandlerName(Type, MethodName)
         OutputForeignSignatureWithReturnType(Type, Signature)
         OutputConstructorBindingString(Type, RealName, Signature)
@@ -146,7 +146,7 @@
 'action' GenerateForeignGetterOfClass(TYPE, NAME, TYPE, MODIFIER)
 	
 	'rule' GenerateForeignGetterOfClass(ClassType, Name, VarType, InstanceModifier)        
-		OutputWrite("foreign handler ")
+		OutputWrite("__safe foreign handler ")
         OutputForeignGetterName(ClassType, Name)
         OutputForeignGetterSignature(ClassType, Name, VarType, InstanceModifier)
         OutputGetVariableBindingString(ClassType, Name, VarType, InstanceModifier)
@@ -155,7 +155,7 @@
 'action' GenerateForeignSetterOfClass(TYPE, NAME, TYPE, MODIFIER)
 	
 	'rule' GenerateForeignSetterOfClass(ClassType, Name, VarType, InstanceModifier)        
-		OutputWrite("foreign handler ")
+		OutputWrite("__safe foreign handler ")
         OutputForeignSetterName(ClassType, Name)
         OutputForeignSetterSignature(ClassType, Name, VarType, InstanceModifier)
         OutputSetVariableBindingString(ClassType, Name, VarType, InstanceModifier)
@@ -447,13 +447,11 @@
 
     'rule' OutputCallForeignConstructor(ObjType, Name, signature(Params, nil))
      	OutputConvertToForeignParams(Params)
-		OutputWrite("\tunsafe\n\t\t")
-		OutputWrite("return ")
+		OutputWrite("\treturn ")
 		OutputForeignHandlerName(ObjType, Name)	
 		OutputWrite("(")
 		OutputForeignCallParams(Params)
 		OutputWrite(")\n")
-		OutputWrite("\tend unsafe\n")
 
 'action' OutputCallForeignHandlerParams(TYPE, NAME, PARAMETERLIST, MODIFIER)
 
@@ -488,56 +486,56 @@
 		OutputConvertToForeignParams(Params)
         (|
             where(ReturnType -> nil)
-            OutputWrite("\tunsafe\n\t\t")
+            OutputWrite("\t")
             OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
 			OutputWrite("\n")
-            OutputWrite("\tend unsafe\n")
         ||
-            OutputWrite("\tvariable tJNIResult as ")
             (|
                 RequiresConversion(ReturnType)
+                OutputWrite("\tvariable tJNIResult as ")
                 GenerateJavaType(ReturnType)
+                OutputWrite("\n\tput ")
+                OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
+                OutputWrite(" into tJNIResult\n")
+                OutputWrapperReturn(ReturnType)
             ||
-                GenerateType(ReturnType)
+                OutputWrite("\treturn ")
+                OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
             |)
-            OutputWrite("\n\tunsafe\n")
-            OutputWrite("\t\tput ")
-            OutputCallForeignHandlerParams(ObjType, Name, Params, InstanceModifier)
-            OutputWrite(" into tJNIResult\n")
-            OutputWrite("\tend unsafe\n")
-			OutputWrapperReturn(ReturnType)
 			OutputWrite("\n")
         |)
+
+'action' OutputForeignGetter(TYPE, NAME, MODIFIER)
+
+    'rule' OutputForeignGetter(ObjType, Name, class):
+        OutputForeignGetterName(ObjType, Name)
+        OutputWrite("(pObj)")
+
+    'rule' OutputForeignGetter(ObjType, Name, Instance):
+        OutputForeignGetterName(ObjType, Name)
+        OutputWrite("()")
 
 'action' OutputCallForeignGetter(TYPE, NAME, TYPE, MODIFIER)
 
 	'rule' OutputCallForeignGetter(ObjType, Name, Type, InstanceModifier)
-            OutputWrite("\tvariable tJNIResult as ")
             (|
                 RequiresConversion(Type)
+                OutputWrite("\tvariable tJNIResult as ")
                 GenerateJavaType(Type)
+                OutputWrite("\n\tput ")
+                OutputForeignGetter(ObjType, Name, InstanceModifier)
+                OutputWrite(" into tJNIResult\n")
+                OutputWrapperReturn(Type)
             ||
-                GenerateType(Type)
+                OutputWrite("\treturn ")
+                OutputForeignGetter(ObjType, Name, InstanceModifier)
             |)
-            OutputWrite("\n\tunsafe\n")
-            OutputWrite("\t\tput ")
-            OutputForeignGetterName(ObjType, Name)
-            OutputWrite("(")
-            (|
-            	where(InstanceModifier -> class)
-            ||
-            	OutputWrite("pObj")            
-            |)
-            OutputWrite(")")
-            OutputWrite(" into tJNIResult\n")
-            OutputWrite("\tend unsafe\n")
-			OutputWrapperReturn(Type)
-			
+
 'action' OutputCallForeignSetter(TYPE, NAME, TYPE, MODIFIER)
 
 	'rule' OutputCallForeignSetter(ObjType, Name, Type, InstanceModifier)
 			OutputConvertToForeignParameter(Name, Type)
-            OutputWrite("\tunsafe\n\t\t")
+            OutputWrite("\t")
             OutputForeignSetterName(ObjType, Name)
             OutputWrite("(")
             (|
@@ -552,7 +550,7 @@
         	    OutputWriteI("pParam_", Name, "")
 	        |)
             OutputWrite(")")            
-            OutputWrite("\n\tend unsafe\n")
+            OutputWrite("\n")
 
 'action' OutputConvertToForeignParams(PARAMETERLIST)
 
