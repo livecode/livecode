@@ -324,7 +324,7 @@
 		OutputWrite("(")
         OutputJavaParams(Params)
         OutputWrite(")")
-        OutputJavaTypeCode(ReturnType)
+        OutputJavaReturnTypeCode(ReturnType)
 		
 'action' OutputJavaParams(PARAMETERLIST)
 
@@ -959,6 +959,15 @@
         OutputJavaArrayTypeCode(Type, Dimension)
 
     'rule' OutputJavaTypeCode(nil):
+
+-- Ensure return type code is always specified as V if returning nothing
+'action' OutputJavaReturnTypeCode(TYPE)
+
+    'rule' OutputJavaReturnTypeCode(nil):
+        OutputWrite("V")
+
+    'rule' OutputJavaReturnTypeCode(Type):
+        OutputJavaTypeCode(Type)
 
 'action' OutputJavaArrayTypeCode(TYPE, INT)
 
