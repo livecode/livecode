@@ -808,28 +808,28 @@
 'action' GenerateJavaType(TYPE)
 
     'rule' GenerateJavaType(byte):
-        OutputWrite("CInt")
+        OutputWrite("JByte")
 
     'rule' GenerateJavaType(short):
-        OutputWrite("CInt")
+        OutputWrite("JShort")
 
     'rule' GenerateJavaType(int):
-        OutputWrite("CInt")
+        OutputWrite("JInt")
 
     'rule' GenerateJavaType(long):
-        OutputWrite("CInt")
+        OutputWrite("JLong")
 
     'rule' GenerateJavaType(float):
-        OutputWrite("CFloat")
+        OutputWrite("JFloat")
 
     'rule' GenerateJavaType(double):
-        OutputWrite("CDouble")
+        OutputWrite("JDouble")
 
     'rule' GenerateJavaType(boolean):
-        OutputWrite("CBool")
+        OutputWrite("JBoolean")
 
     'rule' GenerateJavaType(char):
-        OutputWrite("CInt")
+        OutputWrite("JChar")
 
     'rule' GenerateJavaType(string):
         OutputWrite("JString")
