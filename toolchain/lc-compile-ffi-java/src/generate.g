@@ -267,7 +267,7 @@
 
 'rule' OutputMethodBindingStringInstance(ClassType, MethodName, Signature, InstanceModifier):
         TypeToQualifiedName(ClassType -> QualifiedClass)
-		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI(" \\\nbinds to \"java:", QualifiedClass, ">")
 		OutputWriteI("", MethodName, "")
 		OutputJavaSignature(Signature)
         (|
@@ -281,7 +281,7 @@
 
 	'rule' OutputConstructorBindingString(ClassType, MethodName, Signature):
         TypeToQualifiedName(ClassType -> QualifiedClass)
-		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI(" \\\nbinds to \"java:", QualifiedClass, ">")
 		OutputWrite("new")
 		OutputJavaSignature(Signature)
 		OutputWrite("\"")
@@ -290,7 +290,7 @@
 
 	'rule' OutputSetVariableBindingString(ClassType, FieldName, VarType, InstanceModifier):
         TypeToQualifiedName(ClassType -> QualifiedClass)
-		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI(" \\\nbinds to \"java:", QualifiedClass, ">")
 		OutputWriteI("set.", FieldName, "")
 		OutputWrite("(")
         OutputJavaTypeCode(VarType)
@@ -306,7 +306,7 @@
 
 	'rule' OutputGetVariableBindingString(ClassType, FieldName, VarType, InstanceModifier):
         TypeToQualifiedName(ClassType -> QualifiedClass)
-		OutputWriteI(" binds to \"java:", QualifiedClass, ">")
+		OutputWriteI(" \\\nbinds to \"java:", QualifiedClass, ">")
 		OutputWriteI("get.", FieldName, "")
 		OutputWrite("(")
         OutputWrite(")")
