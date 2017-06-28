@@ -916,8 +916,10 @@ private command __RecursiveStackFileList pStack, @xStackFiles
    repeat for each key tStack in tStackFiles
       if there is not a stack tStackFiles[tStack] then put tFileName before tStackFiles[tStack]
       if there is a stack tStackFiles[tStack] then
-         if the effective fileName of stack  tStackFiles[tStack] is not among the lines of xStackFiles then
-            appendToStringList the effective fileName of stack tStackFiles[tStack], xStackFiles
+         local tEffectiveFilename
+         put the effective fileName of stack  tStackFiles[tStack] into tEffectiveFilename
+         if tEffectiveFilename is not among the lines of xStackFiles then
+            appendToStringList tEffectiveFilename, xStackFiles
             __RecursiveStackFileList tStack, xStackFiles
          end if
       end if
