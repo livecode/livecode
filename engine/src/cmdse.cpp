@@ -642,19 +642,11 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-MCMessage::~MCMessage()
-{
-	delete message;
-	delete eventtype;
-	delete target;
-	delete in;
-}
-
 Parse_stat MCMessage::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
 
-	if (sp.parseexp(False, True, &message) != PS_NORMAL)
+	if (sp.parseexp(False, True, &(&message)) != PS_NORMAL)
 	{
 		MCperror->add(PE_SEND_BADEXP, sp);
 		return PS_ERROR;
@@ -665,14 +657,14 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_ASK, TT_UNDEFINED, AT_PROGRAM) == PS_NORMAL)
 	{
 		program = True;
-		if (sp.parseexp(False, True, &in) != PS_NORMAL)
+		if (sp.parseexp(False, True, &(&in)) != PS_NORMAL)
 		{
 			MCperror->add(PE_SEND_BADTARGET, sp);
 			return PS_ERROR;
 		}
 		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
 		        && sp.skip_token(SP_COMMAND, TT_STATEMENT, S_REPLY) != PS_NORMAL)
-			if (sp.parseexp(False, True, &eventtype) != PS_NORMAL)
+			if (sp.parseexp(False, True, &(&eventtype)) != PS_NORMAL)
 			{
 				MCperror->add(PE_SEND_BADEVENTTYPE, sp);
 				return PS_ERROR;
@@ -692,7 +684,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 			MCperror->add(PE_SEND_BADTARGET, sp);
 			return PS_ERROR;
 		}
-		return gettime(sp, &in, units);
+		return gettime(sp, &(&in), units);
 	}
 	return PS_NORMAL;
 }
@@ -703,15 +695,15 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 	if (program)
 	{
         MCAutoStringRef t_message;
-        if (!ctxt . EvalExprAsStringRef(message, EE_SEND_BADEXP, &t_message))
+        if (!ctxt . EvalExprAsStringRef(*message, EE_SEND_BADEXP, &t_message))
             return;
 
         MCAutoStringRef t_program;
-        if (!ctxt . EvalExprAsStringRef(in, EE_SEND_BADPROGRAMEXP, &t_program))
+        if (!ctxt . EvalExprAsStringRef(*in, EE_SEND_BADPROGRAMEXP, &t_program))
             return;
 
         MCAutoStringRef t_event_type;
-        if (!ctxt . EvalOptionalExprAsNullableStringRef(eventtype, EE_SEND_BADEXP, &t_event_type))
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(*eventtype, EE_SEND_BADEXP, &t_event_type))
             return;
 
 		MCScriptingExecSendToProgram(ctxt, *t_message, *t_program, *t_event_type, reply == True);
@@ -719,12 +711,12 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 	else
 	{
         MCAutoStringRef t_message;
-        if (!ctxt . EvalExprAsStringRef(message, EE_SEND_BADEXP, &t_message))
+        if (!ctxt . EvalExprAsStringRef(*message, EE_SEND_BADEXP, &t_message))
             return;
 		
 		MCObjectPtr t_target;
 		MCObjectPtr *t_target_ptr;
-		if (target != nil)
+		if (*target != nil)
 		{
             if (!target -> getobj(ctxt, t_target, True))
 			{
@@ -736,11 +728,11 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		else
 			t_target_ptr = nil;
 
-		if (in != nil)
+		if (*in != nil)
 		{
             double t_delay;
 
-            if (!ctxt . EvalExprAsDouble(in, EE_SEND_BADINEXP, t_delay))
+            if (!ctxt . EvalExprAsDouble(*in, EE_SEND_BADINEXP, t_delay))
                 return;
 
             MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units);
