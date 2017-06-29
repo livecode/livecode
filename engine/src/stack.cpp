@@ -1506,6 +1506,11 @@ void MCStack::removereferences()
         else
             i++;
     
+    // COCOA-TODO: Remove dependence on ifdef
+#if !defined(_MAC_DESKTOP)
+    MCEventQueueFlush(this);
+#endif
+    
     MCObject::removereferences();
 }
 
