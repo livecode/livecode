@@ -1396,48 +1396,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
             goto cleanup;
         }
 
-        // The 'split into message and parameters' function above is used
-        // to ensure that all the parameters are evaluated in the current
-        // context (not the target). Since domess just takes a string, we
-        // convert the entire script back into a string with the params
-        // having been evaluated. This means in particular that variables
-        // containing arrays will not work here - they will be converted to
-        // the empty string.
-        
-        MCAutoListRef t_param_list;
-        MCListCreateMutable(',', &t_param_list);
-        MCParameter *t_param_ptr;
-        t_param_ptr = t_params;
-        
-        bool t_has_params;
-        t_has_params = t_params != nil;
-        while (t_param_ptr != NULL)
-        {
-            MCAutoValueRef t_value;
-            MCAutoStringRef t_value_string;
-            
-            if (!t_param_ptr->eval(ctxt, &t_value) ||
-                !ctxt . ConvertToString(*t_value, &t_value_string) ||
-                !MCListAppend(*t_param_list, *t_value_string))
-                goto cleanup;
-
-            t_param_ptr = t_param_ptr -> getnext();
-        }
-        
-        MCAutoStringRef tptr;
-        if (t_has_params)
-        {
-            MCAutoStringRef t_params_string;
-            if (!MCListCopyAsString(*t_param_list, &t_params_string) ||
-                !MCStringCreateWithStringsAndSeparator(&tptr, ' ',
-                                                       MCNameGetString(*t_message),
-                                                       *t_params_string))
-                goto cleanup;
-        }
-        else
-            tptr = MCNameGetString(*t_message);
-        
-        if (optr->domess(*tptr, false) == ES_ERROR)
+        if (optr->domess(p_script, false) == ES_ERROR)
             ctxt . Throw();
 	}
 	else if (stat == ES_PASS)

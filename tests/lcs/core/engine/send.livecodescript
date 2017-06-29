@@ -33,6 +33,24 @@ on TestSendParams
 	TestAssert "send script with multiple params", the result is "2"
 end TestSendParams
 
+-- Bug 19967
+on TestSendParamsEvaluated
+	local tScript, tStack
+	put "on testParameters p1, p2; return p2; end testParameters" \
+		into tScript
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tSendScript
+	put "--ensure this is executed as script not a handler name" \
+		into tSendScript
+	put return & "testParameters 1," && quote & "2 3" & quote after tSendScript
+	
+	send tSendScript to tStack
+	TestAssert "send script with quoted params containing space", the result is "2 3"
+end TestSendParamsEvaluated
+
 private function MessageExists pId
 	repeat for each line tLine in the pendingMessages
 		if item 1 of tLine is pId then
