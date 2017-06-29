@@ -2933,7 +2933,6 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlayerDuration t_current_time, t_duration;
             t_current_time = getmoviecurtime();
             t_duration = getduration();
-			
 			t_current_time = MCMin(t_current_time, t_duration);
 			
             MCRectangle t_well_rect;
@@ -3497,13 +3496,9 @@ void MCPlayer::handle_mstilldown(int p_which)
     {
         case kMCPlayerControllerPartScrubForward:
         {
-            MCPlayerDuration t_current_time, t_duration;
-            t_current_time = getmoviecurtime();
-            t_duration = getduration();
-            
-            t_current_time = MCMin(t_current_time, t_duration);
-            
-            double t_rate;
+			MCPlayerDuration t_current_time = MCMin(getmoviecurtime(), getduration());
+
+			double t_rate;
             if (m_inside)
             {
                 t_rate = 2.0;
@@ -3518,14 +3513,9 @@ void MCPlayer::handle_mstilldown(int p_which)
             
         case kMCPlayerControllerPartScrubBack:
         {
-            MCPlayerDuration t_current_time, t_duration;
-            t_current_time = getmoviecurtime();
-            t_duration = getduration();
-            
-            if (t_current_time < 0.0)
-                t_current_time = 0.0;
-            
-            double t_rate;
+			MCPlayerDuration t_current_time = MCMax(getmoviecurtime(), 0.0);
+
+			double t_rate;
             if (m_inside)
             {
                 t_rate = -2.0;
