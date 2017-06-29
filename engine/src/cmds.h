@@ -1099,6 +1099,7 @@ class MCMessage : public MCStatement
 	Boolean program;
 	Boolean reply;
 	Boolean send;
+    Boolean script;
 public:
     MCMessage(Boolean p_send) :
         message(nullptr),
@@ -1107,7 +1108,8 @@ public:
         in(nullptr),
         units(F_TICKS),
         program(False),
-        reply(True)
+        reply(True),
+        script(False)
 	{
         send = p_send;
     }

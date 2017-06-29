@@ -646,11 +646,27 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
 
-	if (sp.parseexp(False, True, &(&message)) != PS_NORMAL)
-	{
-		MCperror->add(PE_SEND_BADEXP, sp);
-		return PS_ERROR;
-	}
+    MCScriptPoint oldsp(sp);
+    if (send && sp.skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
+    {
+        MCerrorlock++;
+        if (sp.parseexp(False, True, &(&message)) != PS_NORMAL)
+        {
+            sp = oldsp;
+        }
+        else
+        {
+            script = True;
+        }
+        MCerrorlock--;
+    }
+
+    if (!script && sp.parseexp(False, True, &(&message)) != PS_NORMAL)
+    {
+        MCperror->add(PE_SEND_BADEXP, sp);
+        return PS_ERROR;
+    }
+    
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL
 	        && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
 		return PS_NORMAL;
@@ -684,7 +700,14 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 			MCperror->add(PE_SEND_BADTARGET, sp);
 			return PS_ERROR;
 		}
-		return gettime(sp, &(&in), units);
+
+        if (script && sp.skip_eol() != PS_NORMAL)
+        {
+            MCperror->add(PE_SEND_SCRIPTINTIME, sp);
+            return PS_ERROR;
+        }
+        
+        return gettime(sp, &(&in), units);
 	}
 	return PS_NORMAL;
 }
@@ -740,11 +763,17 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
         else
         {
             ctxt . SetLineAndPos(line, pos);
-
-            if (!send)
-                MCEngineExecCall(ctxt, *t_message, t_target_ptr);
+            if (!script)
+            {
+                if (!send)
+                    MCEngineExecCall(ctxt, *t_message, t_target_ptr);
+                else
+                    MCEngineExecSend(ctxt, *t_message, t_target_ptr);
+            }
             else
-                MCEngineExecSend(ctxt, *t_message, t_target_ptr);
+            {
+                MCEngineExecSendScript(ctxt, *t_message, t_target_ptr);
+            }
         }
     }
 }
@@ -758,7 +787,7 @@ void MCMessage::compile(MCSyntaxFactoryRef ctxt)
 		message -> compile(ctxt);
 		in -> compile(ctxt);
 
-		if (eventtype != nil)
+		if (*eventtype != nil)
 			eventtype -> compile(ctxt);
 		else
 			MCSyntaxFactoryEvalConstantNil(ctxt);
@@ -771,12 +800,12 @@ void MCMessage::compile(MCSyntaxFactoryRef ctxt)
 	{
 		message -> compile(ctxt);
 
-		if (target != nil)
+		if (*target != nil)
 			target -> compile_object_ptr(ctxt);
 		else
 			MCSyntaxFactoryEvalConstantNil(ctxt);
 
-		if (in != nil)
+		if (*in != nil)
 		{
 			in -> compile(ctxt);
 			MCSyntaxFactoryEvalConstantInt(ctxt, units);
