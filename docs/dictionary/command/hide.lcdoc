@@ -9,9 +9,6 @@ Makes an <object(glossary)> invisible.
 
 Introduced: 1.0
 
-Deprecated:
-8.1
-
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile
@@ -20,10 +17,10 @@ Example:
 hide button 14
 
 Example:
-hide field "New" with visual effect dissolve
+hide field "New" with visual effect "dissolve"
 
 Example:
-hide this stack with visual dissolve fast to black
+hide this stack with visual "dissolve" fast to black
 
 Parameters:
 object:
@@ -73,9 +70,10 @@ not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
 References: disable (command), answer effect (command), show (command),
-hide menubar (command), object (glossary), command (glossary),
-property (glossary), black (keyword), stack (object), showPict (property),
-imageSource (property), visible (property), showInvisibles (property)
+hide menubar (command), visual effect (command), object (glossary), 
+command (glossary), property (glossary), black (keyword), stack (object), 
+showPict (property), imageSource (property), visible (property), 
+showInvisibles (property)
 
 Tags: ui
 
