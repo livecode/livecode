@@ -115,7 +115,16 @@ on TestSetup
 end TestSetup
 ````
 
+
 Tests may need to clean up temporary files or other resources after running.  If a script test contains a handler called `TestTeardown`, this will be run after running each test command -- even if the test failed.  N.b. `TestTeardown` won't be run if running the test command causes an engine crash.
+
+Any new objects created on the test stack, `mainstacks`, `sockets`,
+`open processes` and `open files` are automatically cleared after each
+test and do not need to be included in the `TestTeardown` handler or
+teardown included in the test. Other global properties and variables
+should be reset in the test teardown. The test stack is deleted from
+memory and reloaded for the next test if multiple tests are being run
+within the same process as in the standalone test runner.
 
 Crashes or uncaught errors from a test command cause the test to immediately fail.
 
