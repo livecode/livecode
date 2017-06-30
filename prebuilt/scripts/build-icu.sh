@@ -219,8 +219,11 @@ function buildICU {
 		cp -r "${INSTALL_DIR}/${NAME}/include"/* "${OUTPUT_DIR}/include/"
 		
 		# Some header massaging is required in order to avoid Win32 link errors
-		sed -i "" -e 's/define U_IMPORT __declspec(dllimport)/define U_IMPORT/g' "${OUTPUT_DIR}/include/unicode/platform.h"
-		sed -i "" -e 's/define U_EXPORT __declspec(dllexport)/define U_EXPORT/g' "${OUTPUT_DIR}/include/unicode/platform.h"
+		# NOTE - need to provide backup file extension for compatability with both MacOSX & Linux
+		sed -i.bak -e 's/define U_IMPORT __declspec(dllimport)/define U_IMPORT/g' "${OUTPUT_DIR}/include/unicode/platform.h"
+		sed -i.bak -e 's/define U_EXPORT __declspec(dllexport)/define U_EXPORT/g' "${OUTPUT_DIR}/include/unicode/platform.h"
+		# Remove backup file
+		rm "${OUTPUT_DIR}/include/unicode/platform.h.bak"
 	fi
 }
 

@@ -147,6 +147,7 @@ EOF
 			cp "${INSTALL_DIR}/${NAME}/lib/libssl.a" "${OUTPUT_DIR}/lib/${NAME}/libcustomssl.a"
 		fi
 
+		mkdir -p "${OUTPUT_DIR}/include"
 		cp -R "${INSTALL_DIR}/${NAME}/include/openssl" "${OUTPUT_DIR}/include/openssl"
 	done
 
