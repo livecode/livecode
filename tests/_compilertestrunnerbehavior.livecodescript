@@ -71,7 +71,7 @@ private command runAllScripts pInfo
       runCompilerTestScript pInfo, tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
-   TestRunnerRunPrintSummary(tAnalysis)
+   TesterRunPrintSummary tAnalysis
    return tAnalysis
 end runAllScripts
 
