@@ -37,12 +37,10 @@ on TestScriptStatus
    
    delete stack "foo"
    
-   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
-      get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revaskdialog.rev")
+   TestSkipIfNot "ide"
+   
+   get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revaskdialog.rev")
       
-      TestAssert "script status is uncompiled when stack is only loaded", \
+   TestAssert "script status is uncompiled when stack is only loaded", \
             the scriptStatus of card 1 of it is "uncompiled"
-   else
-      TestSkip "script status is uncompiled when stack is only loaded"
-   end if
 end TestScriptStatus

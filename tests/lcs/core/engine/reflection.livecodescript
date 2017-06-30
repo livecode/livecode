@@ -54,6 +54,7 @@ on TestRevEffectiveAvailableHandlersChainedBehavior
 end TestRevEffectiveAvailableHandlersChainedBehavior
 
 on TestRevEffectiveAvailableHandlersBlockedBehavior
+	TestSkipIf "platform", "HTML5"
 	-- Behaviors can only become 'blocked' when deserialized. Therefore, we
 	-- do this by creating a new behavior and user of the behavior, copying the
 	-- user to the clipboard (which serializes), then deleting both, and then

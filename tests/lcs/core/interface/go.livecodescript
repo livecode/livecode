@@ -76,6 +76,7 @@ command _TestCleanupStack
 end _TestCleanupStack
 
 command _TestGoStackUrl pWhich
+   TestSkipIfNot "write"
    local tStack
    _TestCreateStack pWhich is "binary"
    put it into tStack

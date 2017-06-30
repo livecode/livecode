@@ -17,9 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
-      return "SKIP compatability patterns aren't included in standalones"
-   end if
+   TestSkipIfNot "ide"
    get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 end TestSetup
 

@@ -228,6 +228,7 @@ end TestMouse
 
 
 on TestMovingControls
+   TestSkipIfNot "wait"
 
    TestAssert "No moving controls", the movingControls is empty
    create button
@@ -412,6 +413,8 @@ end TestTopStack
 
 
 on TestWaitDepth
+   TestSkipIfNot "wait"
+   
    TestAssert "Waitdepth is an integer", the waitdepth is an integer
    
    global gWaitDepthTestResult
@@ -717,6 +720,7 @@ end TestSortField
 
 
 on TestMoveControl
+   TestSkipIfNot "wait"
 
    create button
    

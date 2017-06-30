@@ -51,10 +51,9 @@ on TestIconGravity
 end TestIconGravity
 
 on TestBug18293
-   if the environment is "command line" then
-      TestSkip "deleting popped up menu stack shouldn't crash", "not supported in no ui mode"
-      return empty
-   end if
+   TestSkipIf "environment", "command line"
+   TestSkipIfNot "wait"
+   
    create stack "popup menu"
    create stack "test"
    go stack "test"

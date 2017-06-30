@@ -211,6 +211,7 @@ end TestSpecialFolderPath
 
 
 on TestTempName
+   TestSkipIf "platform", "HTML5"
    local tPath
    put tempname() into tPath
    
@@ -322,10 +323,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML5" then
-      TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
-      exit TestLaunchWith
-   end if
+   TestSkipIf "platform", "HTML5,iPhone,Android"
 
    set the defaultFolder to specialFolderPath("Desktop")
    

@@ -98,19 +98,13 @@ end TestGraphicsIsNotWithin
 -- brush > 136 = brush
 
 on TestBrushWithNoIcons
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "set brush with revicons stack not loaded", "brushes not in standalones"
-      return empty
-   end if
-   
+	TestSkipIfNot "ide"
+	
 	TestAssert "set brush with revicons stack not loaded", SetBrushNoIcons() is not 2
 end TestBrushWithNoIcons
 
 on TestInitialPaintConditions
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "brush is initially", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	TestAssert "brush is initially 8", the brush is 8
@@ -139,10 +133,7 @@ on TestInitialPaintConditions
 end TestInitialPaintConditions
 
 on TestBadBrush100
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "no brush with id=100", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	set the brush to 8
@@ -151,10 +142,7 @@ on TestBadBrush100
 end TestBadBrush100
 
 on TestBadBrushZero
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "nno brush with id=0", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	set the brush to 8
@@ -190,10 +178,7 @@ function SetBrushZero
 end SetBrushZero
 
 on TestBrush
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "brush < 37 unchanged", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	set the brush to 30
@@ -201,10 +186,7 @@ on TestBrush
 end TestBrush
 
 on TestRemappedBrush
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "setting brush to", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	local tBrush
@@ -216,10 +198,7 @@ on TestRemappedBrush
 end TestRemappedBrush
 
 on TestBrushInBounds
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "setting brush to", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	local tBrush
@@ -231,10 +210,7 @@ on TestBrushInBounds
 end TestBrushInBounds
 
 on TestBrushBoundaries
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "brush can be set to a pattern", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 #	set the brush to 99
@@ -244,10 +220,7 @@ on TestBrushBoundaries
 end TestBrushBoundaries
 
 on TestSpray
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "directly setting the spray", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	set the spray to 2
@@ -255,10 +228,7 @@ on TestSpray
 end TestSpray
 
 on TestEraser
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "directly setting the erasery", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	set the eraser to 8
@@ -266,10 +236,7 @@ on TestEraser
 end TestEraser
 
 on TestResetPaint
-	if "StandaloneTestRunnerMainstack" is in the mainstacks then
-      TestSkip "reset paint", "brushes not in standalones"
-      return empty
-   end if
+	TestSkipIfNot "ide"
 	get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 
 	reset paint

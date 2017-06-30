@@ -24,17 +24,15 @@ on _TestImportScreenSnapshotFromRectHandler
 end _TestImportScreenSnapshotFromRectHandler
 
 on TestImportScreenSnapshotFromRectNoUI
-    if the environment is not "command line" then 
-        return "SKIP TEST"
-    end if  
-    TestAssertThrow "should now throw an error", "_TestImportScreenSnapshotFromRectHandler",\
+   TestSkipIfNot "environment", "command line"
+   TestSkipIf "platform", "HTML5"
+   TestAssertThrow "should now throw an error", "_TestImportScreenSnapshotFromRectHandler",\
         the long id of me, "EE_SNAPSHOT_FAILED"
 end TestImportScreenSnapshotFromRectNoUI
 
 on TestImportScreenSnapshotFromRectUI
-    if the environment is "command line" then
-        return "SKIP TEST IN UI MODE"
-    end if    
+    TestSkipIf "environment", "command line"
+    TestSkipIf "platform", "HTML5"
 
     _TestImportScreenSnapshotFromRectHandler
 end TestImportScreenSnapshotFromRectUI

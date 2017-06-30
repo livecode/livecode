@@ -1,16 +1,9 @@
 ﻿script "TestLibUrlCONNECT"
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
-
-   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks and \
-         there is a stack "tsNetLibURL" then
-      return "SKIP Test not correct for tsNet"
-   end if
-      
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "stack", "StandaloneTestRunnerMainstack"
+         
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
    send "revLoadLibrary" to stack tLibUrl

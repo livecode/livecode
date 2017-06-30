@@ -3,12 +3,10 @@
 local sLogField
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
-
-   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "stacks loaded", "tsNetLibURL"
+   
+   if not TestIsInStandalone() then
       local tLibURl
       put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
       send "revLoadLibrary" to stack tLibUrl

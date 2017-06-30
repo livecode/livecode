@@ -21,9 +21,7 @@ constant kBytecodePath = "../_tests/_build/lcs/core/engine"
 local sTestExtension
 
 on TestSetup
-   if "StandaloneTestRunnerMainstack" is among the lines of the mainstacks then
-      return "SKIP No lcb support in standalone test runner"
-   end if
+   TestSkipIfNot "lcb"
    
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
