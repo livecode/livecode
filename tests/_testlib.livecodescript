@@ -210,6 +210,10 @@ end __TestErrorMatches
 -- Unit test library functions
 ----------------------------------------------------------------
 
+on TestSetExecErrorMap pErrorMap
+   put pErrorMap into sExecErrorMap
+end TestSetExecErrorMap
+
 on TestOutputToVariable
    put true into sOutputToVariable
 end TestOutputToVariable
