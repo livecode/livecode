@@ -71,7 +71,9 @@ function doPackage {
 
 	# Package up CEF
 	if [ "$PLATFORM" = "win32" -o "$PLATFORM" = "linux" ] ; then
-		tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
+		if [ -f "${LIBPATH}/CEF" ] ; then
+			tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
+		fi
 	fi
 
 	# Compress the packages
@@ -89,27 +91,26 @@ function doPackage {
 	fi
 }
 
+PLATFORM=$1
+ARCH=$2
+
+#only mac, ios subplatforms are used
+if [ "${PLATFORM}" = "mac" -o "${PLATFORM}" = "ios" ] ; then
+	SUBPLATFORM=$3
+else
+	SUBPLATFORM=
+fi
+
 # Package up the various libraries and headers
-for PLATFORM in `find lib/ -mindepth 1 -maxdepth 1 -type d` ; do
-	PLATFORM=$(basename "${PLATFORM}")
-	if [ "${PLATFORM}" == "mac" ] ; then
-		doPackage "${PLATFORM}" "Universal" 
-	elif [ "${PLATFORM}" == "ios" ] ; then
-		for SUBPLATFORM in `find "lib/${PLATFORM}/" -mindepth 1 -maxdepth 1 -type d` ; do
-			doPackage "${PLATFORM}" "Universal" $(basename "${SUBPLATFORM}")
-		done
-	else
-		for ARCH in `find "lib/${PLATFORM}/" -mindepth 1 -maxdepth 1 -type d` ; do
-			doPackage "${PLATFORM}" $(basename "${ARCH}")
-		done
-	fi	
-done
+doPackage "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 
-# Package up the includes
-OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers.tar"
-ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
-tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
-tar -cf "${ICU_HDR_TAR}" include/layout/*.h include/unicode/*.h
-bzip2 -z --best "${OPENSSL_HDR_TAR}"
-bzip2 -z --best "${ICU_HDR_TAR}"
-
+# We only need shared headers to be packaged once, so only do this on linux-x86_64
+if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
+	# Package up the includes
+	OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers.tar"
+	ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
+	tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
+	tar -cf "${ICU_HDR_TAR}" include/unicode/*.h
+	bzip2 -z --best "${OPENSSL_HDR_TAR}"
+	bzip2 -z --best "${ICU_HDR_TAR}"
+fi
