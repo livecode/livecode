@@ -78,16 +78,16 @@ function doPackage {
 
 	# Compress the packages
 	if [ -f "${OPENSSL_TAR}" ] ; then
-		bzip2 -z --best "${OPENSSL_TAR}"
+		bzip2 -zf --best "${OPENSSL_TAR}"
 	fi
 	if [ -f "${CURL_TAR}" ] ; then
-		bzip2 -z --best "${CURL_TAR}"
+		bzip2 -zf --best "${CURL_TAR}"
 	fi
 	if [ -f "${ICU_TAR}" ] ; then
-		bzip2 -z --best "${ICU_TAR}"
+		bzip2 -zf --best "${ICU_TAR}"
 	fi
 	if [ -f "${CEF_TAR}" ] ; then
-		bzip2 -z --best "${CEF_TAR}"
+		bzip2 -zf --best "${CEF_TAR}"
 	fi
 }
 
@@ -111,6 +111,6 @@ if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
 	ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
 	tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
 	tar -cf "${ICU_HDR_TAR}" include/unicode/*.h
-	bzip2 -z --best "${OPENSSL_HDR_TAR}"
-	bzip2 -z --best "${ICU_HDR_TAR}"
+	bzip2 -zf --best "${OPENSSL_HDR_TAR}"
+	bzip2 -zf --best "${ICU_HDR_TAR}"
 fi
