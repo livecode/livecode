@@ -670,6 +670,17 @@ MCScriptCreateErrorExpectedError(MCErrorRef& r_error);
 // present then the instruction requires 15 + extension byte arguments up to a
 // maximum of 256.
 
+enum
+{
+    kMCScriptBytecodeOpCodeMask = 0x0f,
+    kMCScriptBytecodeOpCodeShift = 0,
+    kMCScriptBytecodeOpCodeMax = kMCScriptBytecodeOpCodeMask >> kMCScriptBytecodeOpCodeShift,
+    
+    kMCScriptBytecodeOpArityMask = 0xf0,
+    kMCScriptBytecodeOpArityShift = 4,
+    kMCScriptBytecodeOpArityMax = kMCScriptBytecodeOpArityMask >> kMCScriptBytecodeOpArityShift,
+};
+
 enum MCScriptBytecodeOp
 {
 	kMCScriptBytecodeOp__First,
@@ -793,14 +804,14 @@ MCScriptBytecodeDecodeOp(const byte_t*& x_bytecode_ptr,
 	
 	// The lower nibble is the bytecode operation.
 	MCScriptBytecodeOp t_op;
-	t_op = (MCScriptBytecodeOp)(t_op_byte & 0xf);
+	t_op = (MCScriptBytecodeOp)((t_op_byte & kMCScriptBytecodeOpCodeMask) >> kMCScriptBytecodeOpCodeShift);
 	
 	// The upper nibble is the arity.
 	uindex_t t_arity;
-	t_arity = (t_op_byte >> 4);
+	t_arity = (t_op_byte & kMCScriptBytecodeOpArityMask) >> kMCScriptBytecodeOpArityShift;
 	
 	// If the arity is 15, then overflow to a subsequent byte.
-	if (t_arity == 15)
+	if (t_arity == kMCScriptBytecodeOpArityMax)
 		t_arity += *x_bytecode_ptr++;
 	
 	r_op = t_op;

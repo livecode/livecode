@@ -1315,7 +1315,7 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
     uindex_t t_size;
     t_size = 1;
     
-    if (p_instruction -> arity >= 15)
+    if (p_instruction -> arity >= kMCScriptBytecodeOpArityMax)
         t_size += 1;
     
     if (p_instruction -> operation == kMCScriptBytecodeOpJump)
@@ -1567,10 +1567,10 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
-        __emit_bytecode_byte(self, (uint8_t)(t_op | (MCMin(t_arity, 15U) << 4)));
+        __emit_bytecode_byte(self, (uint8_t)(t_op | (MCMin(t_arity, kMCScriptBytecodeOpArityMax) << kMCScriptBytecodeOpArityShift)));
         
-        if (t_arity >= 15U)
-            __emit_bytecode_byte(self, uint8_t(t_arity - 15U));
+        if (t_arity >= kMCScriptBytecodeOpArityMax)
+            __emit_bytecode_byte(self, uint8_t(t_arity - kMCScriptBytecodeOpArityMax));
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);
