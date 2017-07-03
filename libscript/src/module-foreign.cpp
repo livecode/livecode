@@ -71,7 +71,7 @@ static bool __cbuffer_defined(void *contents)
     return *(void **)contents != nil;
 }
 
-static bool __cbuffer_move(void *from, void *to)
+static bool __cbuffer_move(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     *(void **)to = *(void **)from;
     return true;
@@ -79,7 +79,7 @@ static bool __cbuffer_move(void *from, void *to)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __cstring_copy(void *from, void *to)
+static bool __cstring_copy(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     if (*(void **)from == nil)
     {
@@ -103,7 +103,7 @@ static bool __cstring_copy(void *from, void *to)
     return true;
 }
 
-static bool __cstring_equal(void *left, void *right, bool& r_equal)
+static bool __cstring_equal(const MCForeignTypeDescriptor*, void *left, void *right, bool& r_equal)
 {
     if (*(void **)left == nil || *(void **)right == nil)
 		r_equal = (left == right);
@@ -112,7 +112,7 @@ static bool __cstring_equal(void *left, void *right, bool& r_equal)
 	return true;
 }
 
-static bool __cstring_hash(void *value, hash_t& r_hash)
+static bool __cstring_hash(const MCForeignTypeDescriptor*, void *value, hash_t& r_hash)
 {
     if (*(void **)value == nil)
     {
@@ -162,7 +162,8 @@ __wstring_len (const unichar_t *value)
 }
 
 static bool
-__wstring_copy (void *from,
+__wstring_copy (const MCForeignTypeDescriptor*,
+                void *from,
                 void *to)
 {
 	if (nil == *(void **) from)
@@ -189,7 +190,8 @@ __wstring_copy (void *from,
 }
 
 static bool
-__wstring_equal (void *left,
+__wstring_equal (const MCForeignTypeDescriptor*,
+                 void *left,
                  void *right,
                  bool & r_equal)
 {
@@ -212,7 +214,8 @@ __wstring_equal (void *left,
 }
 
 static bool
-__wstring_hash (void *value,
+__wstring_hash (const MCForeignTypeDescriptor*,
+                void *value,
                 hash_t & r_hash)
 {
 	if (nil == *(void **)value)
@@ -316,14 +319,11 @@ static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc
 
 extern "C" bool com_livecode_foreign_Initialize(void)
 {
-    MCForeignPrimitiveType p;
     MCForeignTypeDescriptor d;
     d . size = sizeof(char *);
     d . basetype = kMCNullTypeInfo;
     d . bridgetype = kMCStringTypeInfo;
-    p = kMCForeignPrimitiveTypePointer;
-    d . layout = &p;
-    d . layout_size = 1;
+    d . primitive = kMCForeignPrimitiveTypePointer;
     d . initialize = __cbuffer_initialize;
     d . finalize = __cbuffer_finalize;
     d . defined = __cbuffer_defined;
@@ -342,9 +342,7 @@ extern "C" bool com_livecode_foreign_Initialize(void)
 	d . size = sizeof(unichar_t *);
 	d . basetype = kMCNullTypeInfo;
 	d . bridgetype = kMCStringTypeInfo;
-	p = kMCForeignPrimitiveTypePointer;
-	d . layout = &p;
-	d . layout_size = 1;
+	d . primitive = kMCForeignPrimitiveTypePointer;
 	d . initialize = __cbuffer_initialize;
 	d . finalize = __cbuffer_finalize;
 	d . defined = __cbuffer_defined;
@@ -363,9 +361,7 @@ extern "C" bool com_livecode_foreign_Initialize(void)
 	d . size = sizeof(char *);
 	d . basetype = kMCNullTypeInfo;
 	d . bridgetype = kMCStringTypeInfo;
-	p = kMCForeignPrimitiveTypePointer;
-	d . layout = &p;
-	d . layout_size = 1;
+	d . primitive = kMCForeignPrimitiveTypePointer;
 	d . initialize = __cbuffer_initialize;
 	d . finalize = __cbuffer_finalize;
 	d . defined = __cbuffer_defined;

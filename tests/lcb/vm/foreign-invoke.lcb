@@ -55,4 +55,12 @@ public handler TestForeignInvoke_Varargs()
    test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
 end handler
 
+--
+
+foreign type NSRect binds to "MCAggregateTypeInfo:OOOO"
+
+public handler TestForeignInvoke_Aggregate()
+   variable tRect as NSRect
+end handler
+
 end module

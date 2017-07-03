@@ -61,6 +61,9 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSIntPtrTypeInfo;
  * provide an element of safety against nullptr vs non-nullptr. */
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 
+/* The fundamental address type. */
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCAddressTypeInfo;
+
 /* C Types
  *
  * These types represent the C types which are relative to the compiler,
@@ -134,6 +137,9 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo;
 static_assert(sizeof(int) == 4,
               "Assumption that int is 4 bytes in size not valid");
 
+static_assert(sizeof(bool) == 1,
+              "Assumption that bool is 1 byte in size not valid");
+
 template <typename CType, typename Enable = void>
 struct compute_primitive_type
 {
@@ -205,7 +211,7 @@ struct integral_type_desc_t: public numeric_type_desc_t<CType> {
 
 struct bool_type_desc_t {
     using c_type = bool;
-    static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt8;
     static constexpr MCTypeInfoRef& base_type_info() { return kMCNullTypeInfo; }
     static constexpr MCTypeInfoRef& type_info() { return kMCBoolTypeInfo; }
     static constexpr auto is_optional = false;
@@ -420,7 +426,7 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . copy(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.copy(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -447,7 +453,7 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.move(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -512,7 +518,7 @@ hash_t __MCForeignValueHash(__MCForeignValue *self)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     hash_t t_hash;
-    if (!t_resolved_typeinfo -> foreign . descriptor . hash(self + 1, t_hash))
+    if (!t_resolved_typeinfo -> foreign . descriptor . hash(&t_resolved_typeinfo -> foreign . descriptor, self + 1, t_hash))
         return 0;
     return t_hash;
 }
@@ -523,7 +529,7 @@ bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_s
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     bool t_result;
-    if (!t_resolved_typeinfo -> foreign . descriptor . equal(self + 1, other_self + 1, t_result))
+    if (!t_resolved_typeinfo -> foreign . descriptor . equal(&t_resolved_typeinfo -> foreign . descriptor, self + 1, other_self + 1, t_result))
         return false;
     
     return t_result;
@@ -534,11 +540,12 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 	MCTypeInfoRef t_resolved_typeinfo;
 	t_resolved_typeinfo = __MCTypeInfoResolve(self->typeinfo);
 
-	bool (*t_describe_func)(void *, MCStringRef &);
+	bool (*t_describe_func)(const MCForeignTypeDescriptor*, void *, MCStringRef &);
 	t_describe_func = t_resolved_typeinfo->foreign.descriptor.describe;
 
 	if (NULL != t_describe_func)
-		return t_describe_func (MCForeignValueGetContentsPtr (self),
+		return t_describe_func (&t_resolved_typeinfo->foreign.descriptor,
+                                MCForeignValueGetContentsPtr (self),
 		                        r_description);
 	else
 		return MCStringFormat(r_description, "<foreign: %p>", self);
@@ -633,34 +640,34 @@ bool defined(void *contents)
 }
 
 template <typename TypeDesc>
-bool equal(void *left, void *right, bool& r_equal)
+bool equal(const MCForeignTypeDescriptor*, void *left, void *right, bool& r_equal)
 {
     r_equal = *static_cast<typename TypeDesc::c_type *>(left) == *static_cast<typename TypeDesc::c_type *>(right);
     return true;
 }
 
 template <typename TypeDesc>
-bool copy(void *from, void *to)
+bool copy(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     *static_cast<typename TypeDesc::c_type *>(to) = *static_cast<typename TypeDesc::c_type *>(from);
     return true;
 }
 
 template <typename TypeDesc>
-bool move(void *from, void *to)
+bool move(const MCForeignTypeDescriptor* desc, void *from, void *to)
 {
-    return copy<TypeDesc>(from, to);
+    return copy<TypeDesc>(desc, from, to);
 }
 
 template <typename TypeDesc>
-bool hash(void *value, hash_t& r_hash)
+bool hash(const MCForeignTypeDescriptor*, void *value, hash_t& r_hash)
 {
     r_hash = TypeDesc::hash_func(*static_cast<typename TypeDesc::c_type *>(value));
     return true;
 }
 
 template <typename TypeDesc>
-bool describe(void *contents, MCStringRef& r_string)
+bool describe(const MCForeignTypeDescriptor*, void *contents, MCStringRef& r_string)
 {
     return Describe<TypeDesc>::describe(*static_cast<typename TypeDesc::c_type *>(contents), r_string);
 }
@@ -901,19 +908,17 @@ public:
     {
         MCTypeInfoRef& destination = TypeDesc::type_info();
 
-        MCForeignPrimitiveType primitive =
-            TypeDesc::primitive_type;
-
         /* TODO[C++17] Some of the fields in here are left empty, and
          * are filled in by calling setup_optional() and
          * setup_bridge().  We could use constexpr if instead (see
          * below). */
         MCForeignTypeDescriptor d = {
             sizeof(typename TypeDesc::c_type),
+            alignof(typename TypeDesc::c_type),
+            TypeDesc::primitive_type, /* primitive */
             TypeDesc::base_type_info(),
             nullptr, /* bridgetype */
-            &primitive, /* layout */
-            1, /* layout_size */
+            nullptr, /* promotedtype */
             nullptr, /* initialize */
             finalize<TypeDesc>,
             nullptr, /* defined */
@@ -924,7 +929,6 @@ public:
             nullptr, /* doimport */
             nullptr, /* doexport */
             describe<TypeDesc>,
-            nullptr, /* promotedtype */
             nullptr, /* promote */
         };
 
@@ -1018,6 +1022,145 @@ private:
 };
 
 } /* anonymous namespace */
+
+/* ---------------------------------------------------------------- */
+
+static bool _aggregate_initialize(void *contents)
+{
+    return true;
+}
+
+static void _aggregate_finalize(void *contents)
+{
+}
+
+static bool _aggregate_move(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memcpy(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_copy(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memmove(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_equal(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal)
+{
+    r_equal = (memcmp(left, right, desc->size) == 0);
+    return true;
+}
+
+static bool _aggregate_hash(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash)
+{
+    r_hash = MCHashBytes(contents, desc->size);
+    return true;
+}
+
+static bool _aggregate_describe(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef& r_desc)
+{
+    return MCStringFormat(r_desc, "<foreign aggregate>");
+}
+
+#ifdef __64_BIT__
+typedef int64_t arch_size_int_t;
+typedef uint64_t arch_size_uint_t;
+typedef double arch_size_real_t;
+typedef float arch_size_real_opp_t;
+#else
+typedef int32_t arch_size_int_t;
+typedef int64_t arch_size_uint_t;
+typedef float arch_size_real_t;
+typedef double arch_size_real_opp_t;
+#endif
+
+static bool _aggregate_compute(MCStringRef p_binding, size_t& r_size, size_t& r_alignment)
+{
+    size_t t_offset = 0;
+    size_t t_alignment = 0;
+    for(uindex_t i = 0; i < MCStringGetLength(p_binding); i++)
+    {
+        size_t t_size, t_align;
+#define FORMAT(Char, Type) case Char: t_align = alignof(Type), t_size = sizeof(Type); break;
+        switch(MCStringGetCharAtIndex(p_binding, i))
+        {
+        FORMAT('a', bool)
+        FORMAT('b', char)
+        FORMAT('c', unsigned char)
+        FORMAT('C', signed char)
+        FORMAT('d', unsigned short)
+        FORMAT('D', signed short)
+        FORMAT('e', unsigned int)
+        FORMAT('E', signed int)
+        FORMAT('f', unsigned long)
+        FORMAT('F', signed long)
+        FORMAT('g', unsigned long long)
+        FORMAT('G', signed long long)
+        FORMAT('h', uint8_t)
+        FORMAT('H', int8_t)
+        FORMAT('i', uint16_t)
+        FORMAT('I', int16_t)
+        FORMAT('j', uint32_t)
+        FORMAT('J', int32_t)
+        FORMAT('k', uint64_t)
+        FORMAT('K', int64_t)
+        FORMAT('l', uintptr_t)
+        FORMAT('L', intptr_t)
+        FORMAT('m', size_t)
+        FORMAT('M', ssize_t)
+        FORMAT('N', uintptr_t)
+        FORMAT('o', float)
+        FORMAT('O', double)
+        FORMAT('p', uinteger_t)
+        FORMAT('P', integer_t)
+        FORMAT('q', arch_size_uint_t);
+        FORMAT('Q', arch_size_int_t);
+        FORMAT('r', arch_size_real_t);
+        FORMAT('R', arch_size_real_opp_t);
+        default:
+            return false;
+        }
+#undef FORMAT
+
+        if (t_align > t_alignment)
+            t_alignment = t_align;
+        
+        t_offset = (t_offset + (t_alignment - 1)) & ~(t_alignment - 1);
+        t_offset += t_size;
+    }
+    
+    r_size = t_offset;
+    r_alignment = t_alignment;
+    
+    return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCAggregateTypeInfo(MCStringRef p_binding, MCTypeInfoRef& r_typeinfo)
+{
+    MCForeignTypeDescriptor d;
+    if (!_aggregate_compute(p_binding, d.size, d.alignment))
+    {
+        return false;
+    }
+    d.primitive = kMCForeignPrimitiveTypeAggregate;
+    d.basetype = kMCNullTypeInfo;
+    d.bridgetype = kMCNullTypeInfo;
+    d.promotedtype = kMCNullTypeInfo;
+    d.initialize = _aggregate_initialize;
+    d.finalize = _aggregate_finalize;
+    d.defined = nullptr;
+    d.move = _aggregate_move;
+    d.copy = _aggregate_copy;
+    d.equal = _aggregate_equal;
+    d.hash = _aggregate_hash;
+    d.doimport = nullptr;
+    d.doexport = nullptr;
+    d.describe = nullptr;
+    d.promote = nullptr;
+    return MCForeignTypeInfoCreate(&d, r_typeinfo);
+}
 
 /* ---------------------------------------------------------------- */
 

@@ -1745,7 +1745,6 @@ MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRe
 enum MCForeignPrimitiveType
 {
     kMCForeignPrimitiveTypeVoid,
-    kMCForeignPrimitiveTypeBool,
     kMCForeignPrimitiveTypeUInt8,
     kMCForeignPrimitiveTypeSInt8,
     kMCForeignPrimitiveTypeUInt16,
@@ -1757,30 +1756,31 @@ enum MCForeignPrimitiveType
     kMCForeignPrimitiveTypeFloat32,
     kMCForeignPrimitiveTypeFloat64,
     kMCForeignPrimitiveTypePointer,
+    kMCForeignPrimitiveTypeAggregate,
 };
 
 struct MCForeignTypeDescriptor
 {
     size_t size;
+    size_t alignment;
+    MCForeignPrimitiveType primitive;
     MCTypeInfoRef basetype;
     MCTypeInfoRef bridgetype;
-    MCForeignPrimitiveType *layout;
-    uindex_t layout_size;
-    bool (*initialize)(void *contents);
-    void (*finalize)(void *contents);
-    bool (*defined)(void *contents);
-    bool (*move)(void *source, void *target);
-    bool (*copy)(void *source, void *target);
-    bool (*equal)(void *left, void *right, bool& r_equal);
-    bool (*hash)(void *contents, hash_t& r_hash);
-    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
-    bool (*doexport)(MCValueRef value, bool release, void *contents);
-	bool (*describe)(void *contents, MCStringRef & r_desc);
-    
     /* The promotedtype typeinfo is the type to which this type must be promoted
      * when passed through variadic parameters. The 'promote' method does the
      * promotion. */
     MCTypeInfoRef promotedtype;
+    bool (*initialize)(void *contents);
+    void (*finalize)(void *contents);
+    bool (*defined)(void *contents);
+    bool (*move)(const MCForeignTypeDescriptor *desc, void *source, void *target);
+    bool (*copy)(const MCForeignTypeDescriptor *desc, void *source, void *target);
+    bool (*equal)(const MCForeignTypeDescriptor *desc, void *left, void *right, bool& r_equal);
+    bool (*hash)(const MCForeignTypeDescriptor *desc, void *contents, hash_t& r_hash);
+    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
+    bool (*doexport)(MCValueRef value, bool release, void *contents);
+	bool (*describe)(const MCForeignTypeDescriptor *desc, void *contents, MCStringRef & r_desc);
+    
     /* Promote the value in contents as necessary. The slot ptr must be big enough
      * to hold the promotedtype. */
     void (*promote)(void *contents);
