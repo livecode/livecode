@@ -251,6 +251,18 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
         {
             MCScriptForeignHandlerDefinition *t_def;
             t_def = static_cast<MCScriptForeignHandlerDefinition *>(self -> definitions[i]);
+            switch(t_def->language)
+            {
+            case kMCScriptForeignHandlerLanguageUnknown:
+                break;
+            case kMCScriptForeignHandlerLanguageC:
+                break;
+            case kMCScriptForeignHandlerLanguageBuiltinC:
+                break;
+            case kMCScriptForeignHandlerLanguageJava:
+                MCValueRelease(t_def->java.class_name);
+                break;
+            }
         }
     
     // Remove ourselves from the context slot owners list.

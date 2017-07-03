@@ -316,6 +316,15 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef p_instance,
 }
 
 bool
+MCScriptThrowUnknownForeignLanguageError(void)
+{
+	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+								 "reason",
+								 MCSTR("unknown language"),
+								 nil);
+}
+
+bool
 MCScriptThrowUnknownForeignCallingConventionError(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
@@ -334,38 +343,11 @@ MCScriptThrowMissingFunctionInForeignBindingError(void)
 }
 
 bool
-MCScriptThrowClassNotAllowedInCBindingError(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("class not allowed in c binding string"),
-								 nil);
-}
-
-bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
 								 "reason",
 								 MCSTR("unable to load foreign library"),
-								 nil);
-}
-	
-bool
-MCScriptThrowCXXBindingNotImplemented(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("c++ binding not implemented yet"),
-								 nil);
-}
-
-bool
-MCScriptThrowObjCBindingNotImplemented(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("objc binding not implemented yet"),
 								 nil);
 }
 
@@ -384,15 +366,6 @@ MCScriptThrowJavaBindingNotSupported(void)
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
 								 "reason",
 								 MCSTR("java binding not supported on this platform"),
-								 nil);
-}
-
-bool
-MCScriptThrowObjCBindingNotSupported(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("objc binding not supported on this platform"),
 								 nil);
 }
 

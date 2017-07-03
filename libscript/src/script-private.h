@@ -333,7 +333,28 @@ enum MCJavaCallType {
     MCJavaCallTypeGetter,
     MCJavaCallTypeSetter,
     MCJavaCallTypeStaticGetter,
-    MCJavaCallTypeStaticSetter
+    MCJavaCallTypeStaticSetter,
+    
+    /* This value is used to indicate that the call type was not known - it is
+     * only used internally in libscript. */
+    MCJavaCallTypeUnknown = -1,
+};
+
+/* MCScriptForeignHandlerLanguage describes the type of foreign handler which
+ * has been bound - based on language. */
+enum MCScriptForeignHandlerLanguage
+{
+    /* The handler has not yet been bound, or failed to bind */
+    kMCScriptForeignHandlerLanguageUnknown,
+    
+    /* The handler should be called using libffi */
+    kMCScriptForeignHandlerLanguageC,
+    
+    /* The handler has a lc-compile generated shim, so can be called directly */
+    kMCScriptForeignHandlerLanguageBuiltinC,
+    
+    /* The handler should be called using the JNI */
+    kMCScriptForeignHandlerLanguageJava,
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
@@ -341,24 +362,24 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
     MCStringRef binding;
     
     // Bound function information - not pickled.
-    bool is_java: 1;
-    bool is_ui_bound : 1;
-    bool is_bound: 1;
-    bool is_builtin: 1;
-    
+    MCScriptForeignHandlerLanguage language;
     union
     {
         struct
         {
             void *function;
-            void *function_argtypes;
             void *function_cif;
-        } native;
+        } c;
+        struct
+        {
+            void *function;
+        } builtin_c;
         struct
         {
             MCNameRef class_name;
             void *method_id;
-            int call_type;
+            int call_type : 8;
+            bool is_ui_bound : 1;
         } java;
     };
 };
@@ -614,31 +635,22 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef instance,
 												MCScriptForeignHandlerDefinition *handler);
 
 bool
+MCScriptThrowUnknownForeignLanguageError(void);
+
+bool
 MCScriptThrowUnknownForeignCallingConventionError(void);
 
 bool
 MCScriptThrowMissingFunctionInForeignBindingError(void);
 
 bool
-MCScriptThrowClassNotAllowedInCBindingError(void);
-
-bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void);
-
-bool
-MCScriptThrowCXXBindingNotImplemented(void);
-
-bool
-MCScriptThrowObjCBindingNotImplemented(void);
 
 bool
 MCScriptThrowJavaBindingNotImplemented(void);
 
 bool
 MCScriptThrowJavaBindingNotSupported(void);
-
-bool
-MCScriptThrowObjCBindingNotSupported(void);
 
 bool
 MCScriptCreateErrorExpectedError(MCErrorRef& r_error);
