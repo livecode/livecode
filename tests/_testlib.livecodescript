@@ -146,39 +146,44 @@ end _TestLoadExtension
 function TestBuildErrorMap pErrorFile, pErrorPrefix, pZerothError
    local tSourceFile
    put TestGetEngineRepositoryPath() & slash & "engine/src/" & \
-         pErrorFile into tSourceFile
-   		
+      pErrorFile into tSourceFile
+   
    local tSource
    put textDecode(url("binfile:" & tSourceFile), "utf-8") into tSource
    
-   local tErrorMap, tCurrentCode, tCodeFound
-   put false into tCodeFound
+   local tErrorMap, tCode
    repeat for each line tLine in tSource
       if tLine is empty then next repeat
       if word 1 of tLine begins with pErrorPrefix & "_" & pZerothError then 
-      	  next repeat
-      end if
-      
-      local tCode
-      if matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
-         put tCode into tCurrentCode
-         put true into tCodeFound
          next repeat
       end if
-      if word 1 of tLine begins with pErrorPrefix & "_" then
-         if tCodeFound is false then
-            if tCurrentCode is empty then 
-               throw "no error code found:" && tLine
-            else
-               throw "duplicate error code" && tCurrentCode && "found:" && tLine
-            end if
-            
+      
+      if tCode is empty and \
+            matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
+         next repeat
+      end if
+      
+      local tError
+      put item 1 of (word 1 of tLine) into tError
+      if tError begins with pErrorPrefix & "_" or \ 
+            tError begins with "NOTUSED__" & pErrorPrefix & "_" then
+         if tCode is empty then 
+            throw "no error code found for" && tError
          end if
-         put item 1 of (word 1 of tLine) into tErrorMap[tCurrentCode]
-         put false into tCodeFound
+         if tErrorMap[tCode] is not empty then
+            throw "duplicate error code" && tCode && "found for" && tError && \
+               "change to" && the number of elements of tErrorMap + 1
+         end if
+         if tCode - 1 is not the number of elements of tErrorMap then
+            throw "incorrect error code" && tCode && "for" && tError && \
+               "change to" && the number of elements of tErrorMap + 1
+         end if
+
+         put tError into tErrorMap[tCode]
+         put empty into tCode
       end if
    end repeat
-   
+
    return tErrorMap
 end TestBuildErrorMap
 

@@ -194,7 +194,7 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       try
          dispatch pCommand to tStackName
       catch tError      
-         TestAssert "execute test", false
+         TestAssert "execute test:" && line 1 of tError, false
          TestDiagnostic tError   
          -- don't exit here as test cleanup may still be useful
       end try
