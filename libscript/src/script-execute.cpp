@@ -167,16 +167,17 @@ public:
 			  MCTypeInfoRef p_handler_signature,
 			  void *p_result_slot_ptr)
 	{
-		if (p_handler->is_java)
-		{
+        switch(p_handler->language)
+        {
+        case kMCScriptForeignHandlerLanguageJava:
 #ifdef TARGET_SUBPLATFORM_ANDROID
             extern bool MCAndroidIsOnSystemThread();
             if (!p_handler->is_ui_bound || MCAndroidIsOnSystemThread())
 #endif
             {
-                MCJavaCallJNIMethod(p_handler -> java . class_name,
-                                    p_handler -> java . method_id,
-                                    p_handler -> java . call_type,
+                MCJavaCallJNIMethod(p_handler->java.class_name,
+                                    p_handler->java.method_id,
+                                    p_handler->java.call_type,
                                     p_handler_signature,
                                     p_result_slot_ptr,
                                     m_argument_values,
@@ -198,18 +199,23 @@ public:
                 co_yield_to_android_and_call(remote_call_func, &t_context);
             }
 #endif
-		}
-		else if (p_handler->is_builtin)
-        {
-            ((void(*)(void*, void**))p_handler->native.function)(p_result_slot_ptr,
-                    m_argument_values);
-        }
-        else
-		{
-			ffi_call((ffi_cif *)p_handler -> native . function_cif,
-					 (void(*)())p_handler -> native . function,
+            break;
+        
+        case kMCScriptForeignHandlerLanguageC:
+			ffi_call((ffi_cif *)p_handler ->c.function_cif,
+					 (void(*)())p_handler ->c.function,
 					 p_result_slot_ptr,
 					 m_argument_values);
+            break;
+            
+        case kMCScriptForeignHandlerLanguageBuiltinC:
+            ((void(*)(void*, void**))p_handler->builtin_c.function)(p_result_slot_ptr,
+                    m_argument_values);
+            break;
+
+        case kMCScriptForeignHandlerLanguageUnknown:
+            MCUnreachableReturn(false);
+            break;
 		}
 		
 		return true;
@@ -294,7 +300,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		return;
 	}
 	
-	if (!p_handler_def->is_bound)
+	if (p_handler_def->language == kMCScriptForeignHandlerLanguageUnknown)
 	{
 		if (!MCScriptBindForeignHandlerInInstanceInternal(p_instance,
 														  p_handler_def))
@@ -304,6 +310,10 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		}
 	}
 	
+    /* If we get here then then handler *must* have been bound successfully, and
+     * so have a non 'unknown' language. */
+    MCAssert(p_handler_def->language != kMCScriptForeignHandlerLanguageUnknown);
+    
 	// Fetch the handler signature.
 	MCTypeInfoRef t_signature =
 			GetSignatureOfHandler(p_instance,
