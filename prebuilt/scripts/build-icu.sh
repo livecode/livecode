@@ -100,7 +100,6 @@ function buildICU {
 		fi
 		
 		ICU_ARCH_SRC="${ICU_SRC}-${PLATFORM_NAME}-${ARCH}"
-		ICU_ARCH_LOG="${ICU_ARCH_SRC}.log"
 	
 		# Copy the source to a target-specific directory
 		if [ ! -d "${ICU_ARCH_SRC}" ] ; then
@@ -126,9 +125,9 @@ function buildICU {
 			
 			# Method for configuration depends on the platform
 			if [ -z "${CONFIG_TYPE}" ] ; then
-				${EMCONFIGURE} "../${ICU_SRC}/source/configure" ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
+				${EMCONFIGURE} "../${ICU_SRC}/source/configure" ${ICU_CONFIG} ${CONFIG_FLAGS}
 			else
-				"../${ICU_SRC}/source/runConfigureICU" ${CONFIG_TYPE} ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
+				"../${ICU_SRC}/source/runConfigureICU" ${CONFIG_TYPE} ${ICU_CONFIG} ${CONFIG_FLAGS}
 			fi
 			
 			# Disable C++11 support on platforms where we can't guarantee a compatible runtime
@@ -140,9 +139,9 @@ function buildICU {
 
 			echo "Building ICU for ${NAME}"
 			export VERBOSE=1
-			${EMMAKE} make clean >> "${ICU_ARCH_LOG}" 2>&1 && \
-			    ${EMMAKE} make ${MAKEFLAGS} >> "${ICU_ARCH_LOG}" 2>&1 && \
-			    ${EMMAKE} make DESTDIR="${INSTALL_DIR}/${NAME}" install >> "${ICU_ARCH_LOG}" 2>&1
+			${EMMAKE} make clean && \
+			    ${EMMAKE} make ${MAKEFLAGS} && \
+			    ${EMMAKE} make DESTDIR="${INSTALL_DIR}/${NAME}" install
 			RESULT=$?
 			cd ..
 			

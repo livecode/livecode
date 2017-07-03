@@ -44,7 +44,6 @@ fi
 for ARCH in ${ARCHS}
 do
 	CURL_ARCH_SRC="${CURL_SRC}-${PLATFORM}-${ARCH}"
-	CURL_ARCH_LOG="${CURL_ARCH_SRC}.log"
 	
 	CURL_ARCH_CONFIG="${CURL_CONFIG} --prefix=${INSTALL_DIR}/${PLATFORM}/${ARCH} --with-ssl=${INSTALL_DIR}/${PLATFORM}/${ARCH}"
 	
@@ -77,7 +76,7 @@ do
 			export LDFLAGS="-Wl,-rpath,.,-rpath-link,${INSTALL_DIR}/${PLATFORM}/${ARCH}/lib"
 		fi
 		
-		./configure ${CURL_ARCH_CONFIG} > ${CURL_ARCH_LOG} 2>&1 && make clean >> ${CURL_ARCH_LOG} 2>&1 && make ${MAKEFLAGS} >> ${CURL_ARCH_LOG} 2>&1 && make install >> ${CURL_ARCH_LOG} 2>&1
+		./configure ${CURL_ARCH_CONFIG} && make clean && make ${MAKEFLAGS} && make install
 		RESULT=$?
 		cd ..
 		

@@ -78,7 +78,6 @@ function buildOpenSSL {
 
 		OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
 		OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC}"
-		OPENSSL_ARCH_LOG="${OPENSSL_ARCH_SRC}.log"
 	
 		# Copy the source to a target-specific directory
 		if [ ! -d "${OPENSSL_ARCH_SRC}" ] ; then
@@ -110,7 +109,7 @@ EOF
 			echo "Configuring OpenSSL for ${NAME}"
 			
 			setCCForArch "${ARCH}" "${SUBPLATFORM_INDEX}"
-			./Configure ${OPENSSL_ARCH_CONFIG} > "${OPENSSL_ARCH_LOG}" 2>&1
+			./Configure ${OPENSSL_ARCH_CONFIG}
 			
 			# iOS requires some tweaks to the source when building for devices
 			if [ "${PLATFORM}" == "ios" -a "${ARCH}" != "i386 " ] ; then
@@ -123,7 +122,7 @@ EOF
 			fi
 
 			echo "Building OpenSSL for ${NAME}"
-			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make depend >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
+			make clean && make depend && make ${MAKEFLAGS} && make install_sw
 			RESULT=$?
 			cd ..
 			
