@@ -1351,6 +1351,13 @@
     'rule' GenerateInvoke_EvaluateArguments(_, _, nil, _):
         -- do nothing.
 
+'action' GenerateInvoke_EvaluateVariadicArgument(INT, INT, EXPRESSIONLIST, INT)
+
+    'rule' GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index):
+        GetExpressionAtIndex(Args, Index -> Expr)
+        GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index + 1)
+
 -- In arguments are simple, just evaluate the expr into a register attached to the
 -- node.
 'action' GenerateInvoke_EvaluateArgumentForIn(INT, INT, EXPRESSION)
@@ -1667,7 +1674,11 @@
         Info'Kind -> Kind
         Info'Type -> Type
         FullyResolveType(Type -> handler(_, _, signature(HandlerSig, _)))
-        GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
+
+        -- Pass the actual argument count to invoke sig computation to take into
+        -- account variadic parameters.
+        QueryExpressionListLength(Arguments -> ArgCount)
+        GenerateCall_GetInvokeSignature(HandlerSig, 0, ArgCount -> InvokeSig)
 
         (|
             -- If the Id is not a handler it must be a variable
@@ -1697,12 +1708,22 @@
             EmitDestroyRegister(HandlerReg)
         |]
 
-'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
+'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT, INT -> INVOKESIGNATURE)
 
-    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index -> invokesignature(Mode, Index, InvokeRest)):
-        GenerateCall_GetInvokeSignature(ParamRest, Index + 1 -> InvokeRest)
+    -- When we encounter a variadic parameter, we generate in parameters for the
+    -- rest of the arg list.
+    'rule' GenerateCall_GetInvokeSignature(ParamRest:parameterlist(parameter(_, variadic, _, _), _), Index, ArgCount -> invokesignature(in, Index, InvokeRest)):
+        (|
+            lt(Index, ArgCount)
+            GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
+        ||
+            where(INVOKESIGNATURE'nil -> InvokeRest)
+        |)
+
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index, ArgCount -> invokesignature(Mode, Index, InvokeRest)):
+        GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
     
-    'rule' GenerateCall_GetInvokeSignature(nil, _ -> nil):
+    'rule' GenerateCall_GetInvokeSignature(nil, _, ArgCount -> nil):
         -- do nothing
 
 ----
@@ -2176,9 +2197,12 @@
         ||
             where(Mode -> inout)
             EmitHandlerTypeInOutParameter(Name, TypeIndex)
+        ||
+            where(Mode -> variadic)
+            EmitHandlerTypeVariadicParameter(Name)
         |)
         GenerateHandlerTypeParameters(Rest)
-        
+
     'rule' GenerateHandlerTypeParameters(nil):
         -- nothing
 

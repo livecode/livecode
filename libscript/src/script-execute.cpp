@@ -117,7 +117,8 @@ public:
 	
 	// Append a non-reference argument - this takes contents_ptr
 	bool Argument(void *p_slot_ptr,
-				  __MCScriptValueDrop p_slot_drop)
+				  __MCScriptValueDrop p_slot_drop,
+                  ffi_type* p_type)
 	{
 		if (m_argument_count >= kMaxArguments)
 		{
@@ -130,6 +131,9 @@ public:
 		// Store the slot ptr and its drop.
 		m_argument_slots[m_argument_count] = p_slot_ptr;
 		m_argument_drops[m_argument_count] = p_slot_drop;
+        
+        // Store the ffi_type.
+        m_argument_types[m_argument_count] = p_type;
 		
 		// Bump the number of arguments
 		m_argument_count++;
@@ -155,6 +159,9 @@ public:
 		// Store the slot ptr and its drop.
 		m_argument_slots[m_argument_count] = p_slot_ptr;
 		m_argument_drops[m_argument_count] = p_slot_drop;
+        
+        // Reference arguments always have type ffi_pointer.
+        m_argument_types[m_argument_count] = &ffi_type_pointer;
 		
 		// Bump the number of arguments
 		m_argument_count++;
@@ -202,10 +209,32 @@ public:
             break;
         
         case kMCScriptForeignHandlerLanguageC:
-			ffi_call((ffi_cif *)p_handler ->c.function_cif,
-					 (void(*)())p_handler ->c.function,
-					 p_result_slot_ptr,
-					 m_argument_values);
+            if (!MCHandlerTypeInfoIsVariadic(p_handler_signature))
+            {
+                ffi_call((ffi_cif *)p_handler ->c.function_cif,
+                         (void(*)())p_handler ->c.function,
+                         p_result_slot_ptr,
+                         m_argument_values);
+            }
+            else
+            {
+                ffi_cif *t_fixed_cif = (ffi_cif *)p_handler->c.function_cif;
+                ffi_cif t_cif;
+                if (ffi_prep_cif_var(&t_cif,
+                                     t_fixed_cif->abi,
+                                     t_fixed_cif->nargs,
+                                     m_argument_count,
+                                     t_fixed_cif->rtype,
+                                     m_argument_types) != FFI_OK)
+                {
+                    return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
+                }
+                
+                ffi_call(&t_cif,
+                         (void(*)())p_handler ->c.function,
+                         p_result_slot_ptr,
+                         m_argument_values);
+            }
             break;
             
         case kMCScriptForeignHandlerLanguageBuiltinC:
@@ -250,22 +279,24 @@ private:
 	__MCScriptValueDrop m_argument_drops[kMaxArguments];
 	// The actual values in the slots (not indirected for references).
 	void *m_argument_slots[kMaxArguments];
+    // The ffi_types of the arguments (used for var-args)
+    ffi_type *m_argument_types[kMaxArguments];
 	
 	size_t m_storage_frontier;
 	char m_stack_storage[kMaxStorage];
 };
 
 inline void
-__MCScriptComputeSlotAttributes(const MCResolvedTypeInfo& p_slot_type,
+__MCScriptComputeSlotAttributes(MCTypeInfoRef p_slot_type,
 								size_t& r_slot_size,
 								size_t& r_slot_align,
 								__MCScriptValueDrop& r_slot_drop)
 {
 	// If the slot is foreign then we interrogate the foreign descriptor.
-	if (MCTypeInfoIsForeign(p_slot_type.type))
+	if (MCTypeInfoIsForeign(p_slot_type))
 	{
 		const MCForeignTypeDescriptor *t_desc =
-				MCForeignTypeInfoGetDescriptor(p_slot_type.type);
+				MCForeignTypeInfoGetDescriptor(p_slot_type);
 		
 		r_slot_size = t_desc->size;
 		r_slot_align = t_desc->size;
@@ -275,8 +306,8 @@ __MCScriptComputeSlotAttributes(const MCResolvedTypeInfo& p_slot_type,
 	}
 	
 	// If the slot is a foreign handler then it is pointer sized.
-	if (MCTypeInfoIsHandler(p_slot_type.type) &&
-		MCHandlerTypeInfoIsForeign(p_slot_type.type))
+	if (MCTypeInfoIsHandler(p_slot_type) &&
+		MCHandlerTypeInfoIsForeign(p_slot_type))
 	{
 		r_slot_size = sizeof(void*);
 		r_slot_align = alignof(void*);
@@ -287,6 +318,219 @@ __MCScriptComputeSlotAttributes(const MCResolvedTypeInfo& p_slot_type,
 	r_slot_size = sizeof(void*);
 	r_slot_align = alignof(void*);
 	r_slot_drop = __MCScriptDropValueRef;
+}
+
+bool
+MCScriptExecuteContext::InvokeForeignVarArgument(MCScriptForeignInvocation& p_invocation,
+                                                 MCScriptInstanceRef p_instance,
+                                                 MCScriptForeignHandlerDefinition *p_handler_def,
+                                                 uindex_t p_arg_index,
+                                                 uindex_t p_arg_reg)
+{
+    // Get the value in the register, this determines the type.
+    MCValueRef t_arg_value = nil;
+    t_arg_value = CheckedFetchRegister(p_arg_reg);
+    if (t_arg_value == nil)
+    {
+        return false;
+    }
+
+    // Resolve the type of the value.
+	MCResolvedTypeInfo t_resolved_type;
+	if (!ResolveTypeInfo(MCValueGetTypeInfo(t_arg_value),
+						 t_resolved_type))
+	{
+		return false;
+	}
+    
+    // Store the actual type of the value.
+    MCTypeInfoRef t_actual_type = t_resolved_type.type;
+    
+    // Fetch the promoted type of arg type (sub ints promote to int, and float
+    // promotes to double).
+    const MCForeignTypeDescriptor *t_desc = nullptr;
+    if (MCTypeInfoIsForeign(t_actual_type))
+    {
+        t_desc = MCForeignTypeInfoGetDescriptor(t_actual_type);
+    }
+    
+    MCTypeInfoRef t_arg_type = t_actual_type;
+    if (t_desc->promote != nullptr)
+    {
+        MCResolvedTypeInfo t_resolved_arg_type;
+        if (!ResolveTypeInfo(t_desc->promotedtype,
+                             t_resolved_arg_type))
+        {
+            return false;
+        }
+        
+        t_arg_type = t_resolved_arg_type.type;
+    }
+    
+    // Compute the slot attributes - using the (potentially) promoted type.
+    size_t t_slot_size = 0;
+    size_t t_slot_align = 0;
+    __MCScriptValueDrop t_slot_drop = nil;
+    __MCScriptComputeSlotAttributes(t_arg_type,
+                                    t_slot_size,
+                                    t_slot_align,
+                                    t_slot_drop);
+    
+    // Allocate room for the slot in the invocation.
+    void *t_slot_ptr = nil;
+    if (!p_invocation.Allocate(t_slot_size,
+                               t_slot_align,
+                               t_slot_ptr))
+    {
+        Rethrow();
+        return false;
+    }
+    
+    // Convert the value to an unboxed one - we use the actual type of the argument
+    // here.
+    // TODO: Split UnboxingConvert so that we don't resolve types twice.
+    if (!UnboxingConvert(t_arg_value,
+                         t_resolved_type,
+                         t_slot_ptr))
+    {
+        return false;
+    }
+    
+    // If we don't get a slot out, then it failed.
+    if (t_slot_ptr == nil)
+    {
+        ThrowInvalidValueForArgument(p_instance,
+                                     p_handler_def,
+                                     p_arg_index,
+                                     t_arg_value);
+        return false;
+    }
+
+    // If we must promote the type, do it next. Note that the slot ptr is big
+    // enough to hold the promoted value, and we do this 'in place.
+    if (t_arg_type != t_actual_type)
+    {
+        t_desc->promote(t_slot_ptr);
+    }
+
+    // Fetch the ffi_type to use - notice that we must use the *promoted* type
+    // here.
+    ffi_type *t_type = nullptr;
+    if (t_desc != nullptr)
+    {
+        t_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_arg_type);
+    }
+    else
+    {
+        t_type = &ffi_type_pointer;
+    }
+    
+    if (!p_invocation.Argument(t_slot_ptr,
+                               t_slot_drop,
+                               t_type))
+    {
+        Rethrow();
+        return false;
+    }
+    
+    return true;
+}
+
+bool
+MCScriptExecuteContext::InvokeForeignArgument(MCScriptForeignInvocation& p_invocation,
+                                              MCScriptInstanceRef p_instance,
+                                              MCScriptForeignHandlerDefinition *p_handler_def,
+                                              uindex_t p_arg_index,
+                                              MCHandlerTypeFieldMode p_mode,
+                                              MCTypeInfoRef p_param_type,
+                                              uindex_t p_arg_reg)
+{
+    // Compute the parameter's slot size and allocate storage for it
+    MCResolvedTypeInfo t_resolved_param_type;
+    if (!ResolveTypeInfo(p_param_type,
+                         t_resolved_param_type))
+    {
+        return false;
+    }
+    
+    size_t t_slot_size = 0;
+    size_t t_slot_align = 0;
+    __MCScriptValueDrop t_slot_drop = nil;
+    __MCScriptComputeSlotAttributes(t_resolved_param_type.type,
+                                    t_slot_size,
+                                    t_slot_align,
+                                    t_slot_drop);
+    
+    void *t_slot_ptr = nil;
+    if (!p_invocation.Allocate(t_slot_size,
+                               t_slot_align,
+                               t_slot_ptr))
+    {
+        Rethrow();
+        return false;
+    }
+    
+    // If the mode is not out, then we have an initial value to initialize
+    // it with; otherwise we must initialize it directly.
+    MCValueRef t_arg_value = nil;
+    if (p_mode != kMCHandlerTypeFieldModeOut)
+    {
+        t_arg_value = CheckedFetchRegister(p_arg_reg);
+        
+        if (t_arg_value == nil)
+        {
+            return false;
+        }
+    }
+
+    // Convert the value to an unboxed one.
+    if (!UnboxingConvert(t_arg_value,
+                         t_resolved_param_type,
+                         t_slot_ptr))
+    {
+        return false;
+    }
+    
+    if (t_slot_ptr == nil)
+    {
+        ThrowInvalidValueForArgument(p_instance,
+                                     p_handler_def,
+                                     p_arg_index,
+                                     t_arg_value);
+        return false;
+    }
+    
+    if (p_mode == kMCHandlerTypeFieldModeIn)
+    {
+        ffi_type *t_type = nullptr;
+        if (MCTypeInfoIsForeign(t_resolved_param_type.type))
+        {
+            t_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_param_type.type);
+        }
+        else
+        {
+            t_type = &ffi_type_pointer;
+        }
+        
+        if (!p_invocation.Argument(t_slot_ptr,
+                                   t_slot_drop,
+                                   t_type))
+        {
+            Rethrow();
+            return false;
+        }
+    }
+    else
+    {
+        if (!p_invocation.ReferenceArgument(t_slot_ptr,
+                                            t_slot_drop))
+        {
+            Rethrow();
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 void
@@ -318,21 +562,31 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	MCTypeInfoRef t_signature =
 			GetSignatureOfHandler(p_instance,
 								  p_handler_def);
+    
+    // Determine whether the handler is variadic
+    bool t_is_variadic =
+            MCHandlerTypeInfoIsVariadic(t_signature);
 	
+    // Fetch the minimum parameter count (the fixed arg count for variadiac
+    // handlers).
+    uindex_t t_fixed_arg_count =
+            MCHandlerTypeInfoGetParameterCount(t_signature);
+    
 	// Check the parameter count.
-	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_regs.size())
-	{
-		ThrowWrongNumberOfArguments(p_instance,
-									p_handler_def,
-		                            p_argument_regs.size());
-		return;
-	}
+    if ((!t_is_variadic && t_fixed_arg_count != p_argument_regs.size()) ||
+        (t_is_variadic && t_fixed_arg_count > p_argument_regs.size()))
+    {
+        ThrowWrongNumberOfArguments(p_instance,
+                                    p_handler_def,
+                                    p_argument_regs.size());
+        return;
+    }
 	
+    // Process the fixed arguments
 	MCScriptForeignInvocation t_invocation;
-	for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); ++i)
+	for(uindex_t i = 0; i < t_fixed_arg_count; ++i)
 	{
 		// Fetch the parameter mode and type
-		
 		MCHandlerTypeFieldMode t_param_mode =
 				MCHandlerTypeInfoGetParameterMode(t_signature,
 												  i);
@@ -341,85 +595,37 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 				MCHandlerTypeInfoGetParameterType(t_signature,
 												  i);
 		
-		// Compute the parameter's slot size and allocate storage for it
-		
-		MCResolvedTypeInfo t_resolved_param_type;
-		if (!ResolveTypeInfo(t_param_type,
-							 t_resolved_param_type))
-		{
-			return;
-		}
-		
-		size_t t_slot_size = 0;
-		size_t t_slot_align = 0;
-		__MCScriptValueDrop t_slot_drop = nil;
-		__MCScriptComputeSlotAttributes(t_resolved_param_type,
-										t_slot_size,
-										t_slot_align,
-										t_slot_drop);
-		
-		void *t_slot_ptr = nil;
-		if (!t_invocation.Allocate(t_slot_size,
-								   t_slot_align,
-								   t_slot_ptr))
-		{
-			Rethrow();
-			return;
-		}
-		
-		// If the mode is not out, then we have an initial value to initialize
-		// it with; otherwise we must initialize it directly.
-		MCValueRef t_arg_value = nil;
-		if (t_param_mode != kMCHandlerTypeFieldModeOut)
-		{
-			t_arg_value = CheckedFetchRegister(p_argument_regs[i]);
-			
-			if (t_arg_value == nil)
-			{
-				return;
-			}
-		}
-
-		// Convert the value to an unboxed one.
-		if (!UnboxingConvert(t_arg_value,
-							 t_resolved_param_type,
-							 t_slot_ptr))
-		{
-			return;
-		}
-		
-		if (t_slot_ptr == nil)
-		{
-			ThrowInvalidValueForArgument(p_instance,
-										 p_handler_def,
-										 i,
-										 t_arg_value);
-			return;
-		}
-		
-		if (t_param_mode == kMCHandlerTypeFieldModeIn)
-		{
-			if (!t_invocation.Argument(t_slot_ptr,
-									   t_slot_drop))
-			{
-				Rethrow();
-				return;
-			}
-		}
-		else
-		{
-			if (!t_invocation.ReferenceArgument(t_slot_ptr,
-												t_slot_drop))
-			{
-				Rethrow();
-				return;
-			}
-		}
+        // Process the argument
+        if (!InvokeForeignArgument(t_invocation,
+                                   p_instance,
+                                   p_handler_def,
+                                   i,
+                                   t_param_mode,
+                                   t_param_type,
+                                   p_argument_regs[i]))
+        {
+            return;
+        }
 	}
 	
+    // If variadic, process the non-fixed arguments.
+    if (t_is_variadic)
+    {
+        for(uindex_t i = t_fixed_arg_count; i < p_argument_regs.size(); i++)
+        {
+            if (!InvokeForeignVarArgument(t_invocation,
+                                          p_instance,
+                                          p_handler_def,
+                                          i,
+                                          p_argument_regs[i]))
+            {
+                return;
+            }
+        }
+    }
+    
 	// Fetch the return value type.
 	MCResolvedTypeInfo t_return_value_type;
-	
 	if (!ResolveTypeInfo(MCHandlerTypeInfoGetReturnType(t_signature),
 						 t_return_value_type))
 	{
@@ -434,7 +640,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	void *t_return_value_slot_ptr = nil;
 	if (t_return_value_type.named_type != kMCNullTypeInfo)
 	{
-		__MCScriptComputeSlotAttributes(t_return_value_type,
+		__MCScriptComputeSlotAttributes(t_return_value_type.type,
 										t_return_value_slot_size,
 										t_return_value_slot_align,
 										t_return_value_slot_drop);

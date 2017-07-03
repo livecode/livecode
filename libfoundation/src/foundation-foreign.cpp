@@ -131,6 +131,9 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static_assert(sizeof(int) == 4,
+              "Assumption that int is 4 bytes in size not valid");
+
 template <typename CType, typename Enable = void>
 struct compute_primitive_type
 {
@@ -210,39 +213,54 @@ struct bool_type_desc_t {
     using bridge_type = MCBooleanRef;
     static constexpr MCTypeInfoRef& bridge_type_info() { return kMCBooleanTypeInfo; }
     static constexpr auto& hash_func = MCHashBool;
+    
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 
 struct uint8_type_desc_t: public integral_type_desc_t<uint8_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt8TypeInfo; }
     static constexpr auto describe_format = "<foreign 8-bit unsigned integer %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct sint8_type_desc_t: public integral_type_desc_t<int8_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt8TypeInfo; }
     static constexpr auto describe_format = "<foreign 8-bit signed integer %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct uint16_type_desc_t: public integral_type_desc_t<uint16_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt16TypeInfo; }
     static constexpr auto describe_format = "<foreign 16-bit unsigned integer %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct sint16_type_desc_t: public integral_type_desc_t<int16_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt16TypeInfo; }
     static constexpr auto describe_format = "<foreign 16-bit signed integer %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct uint32_type_desc_t: public integral_type_desc_t<uint32_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt32TypeInfo; }
     static constexpr auto describe_format = "<foreign 32-bit unsigned integer %u>";
+    static constexpr auto is_promotable = false;
 };
 struct sint32_type_desc_t: public integral_type_desc_t<int32_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt32TypeInfo; }
     static constexpr auto describe_format = "<foreign 32-bit signed integer %d>";
+    static constexpr auto is_promotable = false;
 };
 struct uint64_type_desc_t: public integral_type_desc_t<uint64_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt64TypeInfo; }
     static constexpr auto describe_format = "<foreign 64-bit unsigned integer %llu>";
+    static constexpr auto is_promotable = false;
 };
 struct sint64_type_desc_t: public integral_type_desc_t<int64_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt64TypeInfo; }
     static constexpr auto describe_format = "<foreign 64-bit signed integer %lld>";
+    static constexpr auto is_promotable = false;
 };
 
 struct float_type_desc_t: public numeric_type_desc_t<float> {
@@ -251,6 +269,8 @@ struct float_type_desc_t: public numeric_type_desc_t<float> {
     static constexpr MCTypeInfoRef& type_info() { return kMCFloatTypeInfo; }
     static constexpr auto describe_format = "<foreign float %lg>";
     static constexpr auto& hash_func = MCHashDouble;
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCDoubleTypeInfo; }
 };
 struct double_type_desc_t: public numeric_type_desc_t<double> {
     using c_type = double;
@@ -258,6 +278,7 @@ struct double_type_desc_t: public numeric_type_desc_t<double> {
     static constexpr MCTypeInfoRef& type_info() { return kMCDoubleTypeInfo; }
     static constexpr auto describe_format = "<foreign double %lg>";
     static constexpr auto& hash_func = MCHashDouble;
+    static constexpr auto is_promotable = false;
 };
 
 struct pointer_type_desc_t {
@@ -269,24 +290,29 @@ struct pointer_type_desc_t {
     static constexpr auto describe_format = "<foreign pointer %p>";
     static constexpr MCTypeInfoRef& base_type_info() { return kMCNullTypeInfo; }
     static constexpr auto& hash_func = MCHashPointer;
+    static constexpr auto is_promotable = false;
 };
 
 struct uintsize_type_desc_t: public integral_type_desc_t<size_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntSizeTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned size %zu>";
+    static constexpr auto is_promotable = false;
 };
 struct sintsize_type_desc_t: public integral_type_desc_t<ssize_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntSizeTypeInfo; }
     static constexpr auto describe_format = "<foreign signed size %zd>";
+    static constexpr auto is_promotable = false;
 };
 
 struct uintptr_type_desc_t: public integral_type_desc_t<uintptr_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntPtrTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned intptr %zu>";
+    static constexpr auto is_promotable = false;
 };
 struct sintptr_type_desc_t: public integral_type_desc_t<intptr_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntPtrTypeInfo; }
     static constexpr auto describe_format = "<foreign signed intptr %zd>";
+    static constexpr auto is_promotable = false;
 };
 
 /**/
@@ -298,46 +324,62 @@ struct cbool_type_desc_t: public bool_type_desc_t
 struct cchar_type_desc_t: public integral_type_desc_t<char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c char '%c'>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cuchar_type_desc_t: public integral_type_desc_t<unsigned char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned char %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct cschar_type_desc_t: public integral_type_desc_t<signed char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed char %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cushort_type_desc_t: public integral_type_desc_t<unsigned short> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUShortTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned short %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct csshort_type_desc_t: public integral_type_desc_t<signed short> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSShortTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed short %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cuint_type_desc_t: public integral_type_desc_t<unsigned int> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUIntTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned int %u>";
+    static constexpr auto is_promotable = false;
 };
 struct csint_type_desc_t: public integral_type_desc_t<signed int> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSIntTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed int %d>";
+    static constexpr auto is_promotable = false;
 };
 struct culong_type_desc_t: public integral_type_desc_t<unsigned long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCULongTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned long %lu>";
+    static constexpr auto is_promotable = false;
 };
 struct cslong_type_desc_t: public integral_type_desc_t<long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed long %ld>";
+    static constexpr auto is_promotable = false;
 };
 struct culonglong_type_desc_t: public integral_type_desc_t<unsigned long long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCULongLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned long long %llu>";
+    static constexpr auto is_promotable = false;
 };
 struct cslonglong_type_desc_t: public integral_type_desc_t<long long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSLongLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed long long %lld>";
+    static constexpr auto is_promotable = false;
 };
 
 struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
@@ -346,6 +388,7 @@ struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt32;
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned integer %u>";
+    static constexpr auto is_promotable = false;
 };
 struct sint_type_desc_t: public integral_type_desc_t<integer_t> {
     static_assert(INTEGER_MAX == INT32_MAX,
@@ -354,6 +397,7 @@ struct sint_type_desc_t: public integral_type_desc_t<integer_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntTypeInfo; }
     static constexpr auto describe_format = "<foreign signed integer %d>";
     static constexpr auto& hash_func = MCHashInteger;
+    static constexpr auto is_promotable = false;
 };
 
 
@@ -558,6 +602,16 @@ struct DoImport
     }
 };
 
+template<typename TypeDesc, typename Enable = void>
+struct DoPromote
+{
+    static_assert(sizeof(typename TypeDesc::c_type) == 0, "Missing promote specialization");
+    static bool promote(void *contents)
+    {
+        return false;
+    }
+};
+
 template <typename TypeDesc>
 bool initialize(void *contents)
 {
@@ -636,6 +690,13 @@ bool doimport(void *contents, bool p_release, MCValueRef& r_value)
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
     return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
                                         reinterpret_cast<typename TypeDesc::bridge_type&>(r_value));
+}
+
+template <typename TypeDesc>
+void promote(void *contents)
+{
+    static_assert(TypeDesc::is_promotable, "This type is not promotable");
+    return DoPromote<TypeDesc>::promote(contents);
 }
 
 /* ---------- bool specializations */
@@ -728,6 +789,16 @@ struct DoImport<
     }
 };
 
+template <typename RealType>
+struct DoPromote<
+    RealType, typename std::enable_if<std::is_floating_point<typename RealType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(double *)contents = *(typename RealType::c_type *)contents;
+    }
+};
+
 /* ---------- integer numeric specializations */
 
 template <typename IntType>
@@ -801,6 +872,28 @@ struct DoImport<
     }
 };
 
+template <typename IntType>
+struct DoPromote<
+    IntType, typename std::enable_if<std::is_integral<typename IntType::c_type>::value &&
+                                     std::is_signed<typename IntType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(int *)contents = *(typename IntType::c_type *)contents;
+    }
+};
+
+template <typename UIntType>
+struct DoPromote<
+    UIntType, typename std::enable_if<std::is_integral<typename UIntType::c_type>::value &&
+                                      std::is_unsigned<typename UIntType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(unsigned int *)contents = *(typename UIntType::c_type *)contents;
+    }
+};
+
 template <typename TypeDesc>
 class DescriptorBuilder {
 public:
@@ -830,11 +923,14 @@ public:
             hash<TypeDesc>,
             nullptr, /* doimport */
             nullptr, /* doexport */
-            describe<TypeDesc>
+            describe<TypeDesc>,
+            nullptr, /* promotedtype */
+            nullptr, /* promote */
         };
 
         setup_optional<TypeDesc>(d);
         setup_bridge<TypeDesc>(d);
+        setup_promote<TypeDesc>(d);
 
         MCAutoStringRef t_name_string;
         if (!MCStringCreateWithCString(p_name, &t_name_string))
@@ -879,7 +975,7 @@ private:
     }
 
     /* Setup the doimport() and doexport() methods depending on
-     * whether the ValueType is optional or not. */
+     * whether the ValueType is bridgeable or not. */
     template <typename BridgableType,
               typename std::enable_if<
                   BridgableType::is_bridgable, int>::type = 0>
@@ -899,6 +995,26 @@ private:
         d.doimport = nullptr;
         d.doexport = nullptr;
     }
+    
+    /* Setup the promote() methods depending on whether the ValueType is
+     * promoteable or not. */
+    template <typename PromotableType,
+              typename std::enable_if<
+                  PromotableType::is_promotable, int>::type = 0>
+    static void setup_promote(MCForeignTypeDescriptor& d)
+    {
+        d.promotedtype = PromotableType::promoted_type_info();
+        d.promote = promote<PromotableType>;
+    }
+
+    template <typename UnpromotableType,
+              typename std::enable_if<
+                  !UnpromotableType::is_promotable, int>::type = 0>
+    static void setup_promote(MCForeignTypeDescriptor& d)
+    {
+        d.promotedtype = kMCNullTypeInfo;
+        d.promote = nullptr;
+    }
 };
 
 } /* anonymous namespace */
@@ -907,15 +1023,17 @@ private:
 
 bool __MCForeignValueInitialize(void)
 {
-    if (!(DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
-          DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
+    /* We must initialized uint32, sint32 and double first as they are used as
+     * promotions. */
+    if (!(DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
+          DescriptorBuilder<sint32_type_desc_t>::create("__builtin__.sint32") &&
           DescriptorBuilder<double_type_desc_t>::create("__builtin__.double") &&
+          DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
+          DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
           DescriptorBuilder<uint8_type_desc_t>::create("__builtin__.uint8") &&
           DescriptorBuilder<sint8_type_desc_t>::create("__builtin__.sint8") &&
           DescriptorBuilder<uint16_type_desc_t>::create("__builtin__.uint16") &&
           DescriptorBuilder<sint16_type_desc_t>::create("__builtin__.sint16") &&
-          DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
-          DescriptorBuilder<sint32_type_desc_t>::create("__builtin__.sint32") &&
           DescriptorBuilder<uint64_type_desc_t>::create("__builtin__.uint64") &&
           DescriptorBuilder<sint64_type_desc_t>::create("__builtin__.sint64") &&
           DescriptorBuilder<uintsize_type_desc_t>::create("__builtin__.uintsize") &&

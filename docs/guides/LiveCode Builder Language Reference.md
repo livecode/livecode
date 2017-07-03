@@ -436,6 +436,14 @@ statement blocks.
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
+
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
+
 There are a number of types defined in the foreign module which map to
 the appropriate foreign type when used in foreign handler signatures.
 
