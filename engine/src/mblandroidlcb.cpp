@@ -58,10 +58,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeList
     extern bool MCAndroidIsOnEngineThread(void);
     if (!MCAndroidIsOnEngineThread())
     {
+        // Take globalrefs of java objects we need to persist after
+        // jumping threads
+        p_args = env -> NewGlobalRef(p_args);
+        p_method_name = env -> NewGlobalRef(p_method_name);
         typedef void (*co_yield_callback_t)(void *);
         extern void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context);
         remote_call_t t_context = {p_handler, p_method_name, p_args};
         co_yield_to_engine_and_call(remote_call_func, &t_context);
+        env -> DeleteGlobalRef(p_args);
+        env -> DeleteGlobalRef(p_method_name);
     }
     else
     {
