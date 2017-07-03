@@ -34,7 +34,7 @@ import uuid
 
 # LiveCode build configuration script
 import config
-import fetch
+#import fetch
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
@@ -119,36 +119,49 @@ def exec_buildbot_make(target):
 # Fetch prebuilts
 ################################################################
 
-def exec_fetch(args):
-    print('fetch.py ' + ' '.join(args))
-    sys.exit(fetch.fetch(args))
+#def exec_fetch(args):
+#	print('fetch.py ' + ' '.join(args))
+#	sys.exit(fetch.fetch(args))
 
 def do_fetch():
-    check_target_triple()
-    exec_fetch(['--target', get_target_triple()])
+	print('skip fetch step')
+	#check_target_triple()
+	#exec_fetch(['--target', get_target_triple()])
 
 ################################################################
 # Configure with gyp
 ################################################################
 
-def exec_configure(args):
-    print('config.py ' + ' '.join(args))
-    sys.exit(config.configure(args))
-
+def build(target):
+	args = ["python", "prebuilt/build.py", "--target", target]
+	print(' '.join(args))
+	return subprocess.call(args)
+	
+def package(target):
+	args = ["python", "prebuilt/package.py", "--target", target]
+	print(' '.join(args))
+	return subprocess.call(args)
+	
+def upload(target):
+	args = ["python", "prebuilt/upload.py", "--target", target]
+	print(' '.join(args))
+	return subprocess.call(args)
+	
 def do_configure():
-    check_target_triple()
-    platform, subplatform = get_build_platform()
-
-    if platform == 'ios':
-        if subplatform is None:
-            error('You must set $BUILD_SUBPLATFORM for iOS builds')
-        exec_configure(['--platform', 'ios',
-                        '--generator-output',
-                        'build-{}-{}/livecode'.format(platform, subplatform),
-                        '-Dtarget_sdk=' + subplatform])
-    else:
-        exec_configure(['--platform', platform])
-    return 0
+	check_target_triple()
+	target = get_target_triple()
+	# reorder triple to platform-arch-subplatform order
+	target_arch, target_platform, target_subplatform = target.split('-')
+	target = '-'.join([target_platform, target_arch, target_subplatform])
+	# perform build + package + upload in configure step
+	
+	exit_status = build(target)
+	if exit_status is 0:
+		exit_status = package(target)
+	if exit_status is 0:
+		exit_status = upload(target)
+	
+	return exit_status
 
 ################################################################
 # Compile
@@ -235,29 +248,31 @@ def exec_msbuild(platform):
         sys.exit(exit_status)
 
 def do_compile():
-    check_target_triple()
+	print('skip compile')
+    #check_target_triple()
 
-    platform, subplatform = get_build_platform()
-    if platform.startswith('win-'):
-        return exec_msbuild(platform)
-    else:
-        # Just defer to the top level Makefile
-        if platform == 'ios':
-            if subplatform is None:
-                error('You must set $BUILD_SUBPLATFORM for iOS builds')
-            target = 'compile-{}-{}'.format(platform, subplatform)
-        else:
-            target = 'compile-' + platform
-        return exec_make(target)
+    #platform, subplatform = get_build_platform()
+    #if platform.startswith('win-'):
+        #return exec_msbuild(platform)
+    #else:
+        ## Just defer to the top level Makefile
+        #if platform == 'ios':
+            #if subplatform is None:
+                #error('You must set $BUILD_SUBPLATFORM for iOS builds')
+            #target = 'compile-{}-{}'.format(platform, subplatform)
+        #else:
+            #target = 'compile-' + platform
+        #return exec_make(target)
 
 ################################################################
 # Archive / extract built binaries
 ################################################################
 
 def do_bin_archive():
-    platform, subplatform = get_build_platform()
-    bindir = platform + '-bin'
-    shutil.make_archive(bindir, 'bztar', '.', bindir)
+	print('skip bin-archive')
+#    platform, subplatform = get_build_platform()
+#    bindir = platform + '-bin'
+#    shutil.make_archive(bindir, 'bztar', '.', bindir)
 
 ################################################################
 # Main entry point
