@@ -83,12 +83,15 @@ function setCCForArch {
 			# relocations are added that older binutils don't understand.
 			# To suppress this, pass '-Wa,-mrelax-relocations=no' to the
 			# compiler.
+			echo "*DEBUG* binutils version test"
 			BINUTILS_VERSION=`ld --version | head -n 1 | egrep -o "[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+"`
+			echo "*DEBUG* binutils version: ${BINUTILS_VERSION}"
 			if printf '%s\n%s\n' 2.26.1 "${BINUTILS_VERSION}" | sort -cV; then
 				CC_FLAGS_X86_NORELAX="-Wa,-mrelax-relocations=no"
 			else
 				CC_FLAGS_X86_NORELAX=
 			fi
+			echo "*DEBUG* CC_FLAGS: ${CC_FLAGS_X86_NORELAX}"
 			
 			if [ "$1" == "x86_64" ] ; then
 				export CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
