@@ -802,8 +802,6 @@ component Databases.Linux
 	declare dbdriver "ODBC" using dbodbc.so
 	declare dbdriver "PostgreSQL" using dbpostgresql.so
 	declare dbdriver "SqLite" using dbsqlite.so
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.so
 
 //////////
 
@@ -815,15 +813,11 @@ component Databases.Windows
 		executable windows:dbodbc.dll
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
 	declare dbdriver "PostgreSQL" using dbpostgresql.dll
 	declare dbdriver "SqLite" using dbsqlite.dll
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.dll
 	
 //////////
 
@@ -835,15 +829,11 @@ component Databases.MacOSX
 		executable macosx:dbodbc.bundle
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
 	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
 	declare dbdriver "SqLite" using dbsqlite.bundle
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.bundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
