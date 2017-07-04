@@ -357,6 +357,11 @@ enum MCScriptForeignHandlerLanguage
     kMCScriptForeignHandlerLanguageJava,
 };
 
+enum MCJavaThread {
+    kMCJavaThreadDefault,
+    kMCJavaThreadUI
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
     MCStringRef binding;
@@ -379,7 +384,7 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
             MCNameRef class_name;
             void *method_id;
             int call_type : 8;
-            bool is_ui_bound : 1;
+            int thread : 8;
         } java;
     };
 };
@@ -651,6 +656,9 @@ MCScriptThrowJavaBindingNotImplemented(void);
 
 bool
 MCScriptThrowJavaBindingNotSupported(void);
+
+bool
+MCScriptThrowUnknownJavaThreadError(void);
 
 bool
 MCScriptCreateErrorExpectedError(MCErrorRef& r_error);

@@ -172,7 +172,7 @@ public:
         case kMCScriptForeignHandlerLanguageJava:
 #ifdef TARGET_SUBPLATFORM_ANDROID
             extern bool MCAndroidIsOnSystemThread();
-            if (!p_handler->java.is_ui_bound || MCAndroidIsOnSystemThread())
+            if (p_handler->java.thread != kMCJavaThreadUI || MCAndroidIsOnSystemThread())
 #endif
             {
                 MCJavaCallJNIMethod(p_handler->java.class_name,

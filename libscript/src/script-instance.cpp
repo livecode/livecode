@@ -694,6 +694,24 @@ static MCJavaCallType __MCScriptGetJavaCallType(MCStringRef p_class, MCStringRef
     return MCJavaCallTypeUnknown;
 }
 
+// Resolve the call type
+static bool __MCScriptGetJavaThread(MCStringRef p_thread, MCJavaThread &r_thread)
+{
+    if (MCStringIsEmpty(p_thread))
+    {
+        r_thread = kMCJavaThreadDefault;
+        return true;
+    }
+    
+    if (MCStringIsEqualToCString(p_thread, "ui", kMCStringOptionCompareCaseless))
+    {
+        r_thread = kMCJavaThreadUI;
+        return true;
+    }
+    
+    return MCScriptThrowUnknownJavaThreadError();
+}
+
 static bool
 __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
                                             MCScriptForeignHandlerDefinition *p_handler,
@@ -832,35 +850,60 @@ static bool
 __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
                                                MCScriptForeignHandlerDefinition *p_handler,
                                                /* takes */ MCStringRef d_binding,
-                                               bool p_is_ui,
                                                bool* r_bound)
 {
 	MCAutoStringRef t_library;
 	MCAutoStringRef t_class;
 	MCAutoStringRef t_function_string;
 	MCAutoStringRef t_calling;
-	if (!__MCScriptSplitForeignBindingString(d_binding,
-											 '>',
-											 &t_library) ||
-		!__MCScriptSplitForeignBindingString(d_binding,
-											 '.',
-											 &t_class) ||
-		!MCStringDivideAtChar(d_binding,
-							  '!',
-							  kMCStringOptionCompareExact,
-							  &t_function_string,
-							  &t_calling))
-	{
-		MCValueRelease(d_binding);
-		return false;
-	}
+    MCAutoStringRef t_thread;
+    
+    bool t_success =
+        __MCScriptSplitForeignBindingString(d_binding,
+                                            '>',
+                                            &t_library) &&
+		__MCScriptSplitForeignBindingString(d_binding,
+                                            '.',
+                                            &t_class) &&
+        __MCScriptSplitForeignBindingString(d_binding,
+                                            '!',
+                                            &t_function_string);
+    
+    MCAutoStringRef t_to_divide;
+    if (t_success && !MCStringIsEmpty(*t_function_string))
+    {
+        // Calling convention is not empty
+        t_success = MCStringDivideAtChar(d_binding,
+                                         '?',
+                                         kMCStringOptionCompareExact,
+                                         &t_calling,
+                                         &t_thread);
+    }
+    else if (t_success)
+    {
+        MCAutoStringRef t_real_function;
+        // Calling convention is empty
+        t_success = MCStringDivideAtChar(d_binding,
+                                         '?',
+                                         kMCStringOptionCompareExact,
+                                         &t_real_function,
+                                         &t_thread);
+        t_function_string.Reset(*t_real_function);
+        t_calling = kMCEmptyString;
+    }
+    
     MCValueRelease(d_binding);
-
+    if (!t_success)
+        return false;
+    
 	MCAutoStringRef t_arguments, t_return, t_function;
 	if (!__split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return))
 		return false;
     
-    p_handler -> java . is_ui_bound = p_is_ui;
+    MCJavaThread t_java_thread;
+    if (!__MCScriptGetJavaThread(*t_thread, t_java_thread))
+        return false;
+    p_handler->java.thread = t_java_thread;
     
     p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
                                                               *t_function,
@@ -972,17 +1015,11 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
                                                            t_rest,
                                                            r_bound);
 	}
-	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact) ||
-             MCStringIsEqualToCString(*t_language, "javaui", kMCStringOptionCompareExact))
+	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
-        bool t_is_ui_bound;
-        t_is_ui_bound = MCStringIsEqualToCString(*t_language,
-                                                 "javaui",
-                                                 kMCStringOptionCompareExact);
         return __MCScriptResolveForeignFunctionBindingForJava(p_instance,
                                                               p_handler,
                                                               t_rest,
-                                                              t_is_ui_bound,
                                                               r_bound);
 	}
     

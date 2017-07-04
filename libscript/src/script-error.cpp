@@ -352,6 +352,15 @@ MCScriptThrowUnableToLoadForiegnLibraryError(void)
 }
 
 bool
+MCScriptThrowUnknownJavaThreadError(void)
+{
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                 "reason",
+                                 MCSTR("unknown thread for java binding"),
+                                 nil);
+}
+
+bool
 MCScriptThrowJavaBindingNotImplemented(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,

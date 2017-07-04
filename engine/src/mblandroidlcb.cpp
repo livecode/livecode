@@ -55,13 +55,19 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_d
 JNIEXPORT void JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback(JNIEnv *env, jobject object, jlong p_handler, jstring p_method_name, jobjectArray p_args)
 {
 #ifdef TARGET_SUBPLATFORM_ANDROID
-    extern bool MCAndroidIsOnSystemThread(void);
-    if (!MCAndroidIsOnSystemThread())
+    extern bool MCAndroidIsOnEngineThread(void);
+    if (!MCAndroidIsOnEngineThread())
     {
+        // Take globalrefs of java objects we need to persist after
+        // jumping threads
+        p_args = static_cast<jobjectArray>(env->NewGlobalRef(p_args));
+        p_method_name = static_cast<jstring>(env->NewGlobalRef(p_method_name));
         typedef void (*co_yield_callback_t)(void *);
-        extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+        extern void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context);
         remote_call_t t_context = {p_handler, p_method_name, p_args};
-        co_yield_to_android_and_call(remote_call_func, &t_context);
+        co_yield_to_engine_and_call(remote_call_func, &t_context);
+        env->DeleteGlobalRef(p_args);
+        env->DeleteGlobalRef(p_method_name);
     }
     else
     {
