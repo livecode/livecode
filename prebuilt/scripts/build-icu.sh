@@ -121,8 +121,10 @@ function buildICU {
 			cd "${ICU_ARCH_SRC}"
 			echo "Configuring ICU for ${NAME}"
 			
+			echo "*DEBUG* calling setCCForArch"
 			setCCForArch "${ARCH}" "${SUBPLATFORM_INDEX}"
 			
+			echo "*DEBUG* calling ICU configure script"
 			# Method for configuration depends on the platform
 			if [ -z "${CONFIG_TYPE}" ] ; then
 				${EMCONFIGURE} "../${ICU_SRC}/source/configure" ${ICU_CONFIG} ${CONFIG_FLAGS}
@@ -130,6 +132,7 @@ function buildICU {
 				"../${ICU_SRC}/source/runConfigureICU" ${CONFIG_TYPE} ${ICU_CONFIG} ${CONFIG_FLAGS}
 			fi
 			
+			echo "*DEBUG* disabling c++11 support on incompatible platforms"
 			# Disable C++11 support on platforms where we can't guarantee a compatible runtime
 			case "${PLATFORM}" in
 				android|linux)
