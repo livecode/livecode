@@ -31,6 +31,10 @@ on connectionMade pIPAddress
    put "Connection made:" && pIPAddress
 end connectionMade
 
+Example:
+accept connections on port 0 with message "connectionMade"
+put it into tPort
+
 Parameters:
 callbackMessage:
 The name of a message to be sent when a connection is made or a datagram
@@ -38,6 +42,14 @@ is received.
 
 portNumber:
 The TCP port number on which to accept connections.
+
+The result:
+An error message if the socket could not be opened.
+
+It:
+The actual port that was bound. In the case of accepting connections
+on port 0 the operating system will assign a free port in its ephemeral
+port range.
 
 Description:
 Use the <accept> <command> when running a <server>, to accept <TCP>

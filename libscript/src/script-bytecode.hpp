@@ -121,7 +121,7 @@ struct MCScriptBytecodeOp_JumpIf
 		ctxt.CheckArity(2);
 		ctxt.CheckRegister(ctxt.GetArgument(0));
 		ctxt.CheckAddress(ctxt.GetAddress() +
-						  ctxt.GetSignedArgument(0));
+						  ctxt.GetSignedArgument(1));
 	}
 	
 	static void Execute(MCScriptExecuteContext& ctxt)

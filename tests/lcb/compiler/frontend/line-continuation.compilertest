@@ -25,6 +25,15 @@ end module
 %SUCCESS
 %ENDTEST
 
+%% Continuation characters may be followed by any number of spaces and tabs
+%TEST ContinuationWhiteSpace
+module \ 	 	
+		compiler_test
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
 %% Line continuation characters can't occur within a line, because
 %% they consume a following newline.
 %TEST ContinuationNoNewline

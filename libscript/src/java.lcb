@@ -36,6 +36,7 @@ use com.livecode.foreign
 
 public type JBoolean is Bool
 public type JByte is Int8
+public type JChar is UInt16
 public type JShort is Int16
 public type JInt is Int32
 public type JLong is Int64

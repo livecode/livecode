@@ -79,7 +79,10 @@ A LiveCode builder statement or declaration can be continued onto
 multiple lines of code by placing the line continuation character `\`
 at the end each line.
 
-- **Line continuation**: \\(\n|\r\n|\r)
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
 
 > **Note:** A line continuation cannot occur within a comment.
 

@@ -2753,10 +2753,10 @@ enum Exec_errors
     // {EE-0901} messageDigest: error in digest type parameter
     EE_MESSAGEDIGEST_BADTYPE,
 
-    // {EE-0901} messageDigest: error in message data parameter
+    // {EE-0902} messageDigest: error in message data parameter
     EE_MESSAGEDIGEST_BADDATA,
 
-    // {EE-0902} snapshot: no screen
+    // {EE-0903} snapshot: no screen
     EE_SNAPSHOT_FAILED,
 };
 

@@ -94,7 +94,7 @@ private command runAllScripts pInfo, pFolder
       runTestScript pInfo, tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
-   TestRunnerRunPrintSummary tAnalysis
+   TesterRunPrintSummary tAnalysis
 
    return tAnalysis
 end runAllScripts
@@ -116,7 +116,7 @@ private command runTestCommand pInfo, pScriptFile, pCommand
    local tArg, tCommandLine
 
    repeat for each element tArg in pInfo["self-command"]
-      put tArg & " " after tCommandLine
+      put quote & tArg & quote & " " after tCommandLine
    end repeat
 
    put "invoke" && pScriptFile && pCommand after tCommandLine

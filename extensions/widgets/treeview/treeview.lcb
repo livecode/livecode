@@ -1522,7 +1522,7 @@ end handler
 // Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
 	// Unselect the existing selection if applicable
-	if mSelectedElement begins with pPath then
+	if mSelectedElement is not nothing and mSelectedElement begins with pPath then
 		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
 	end if
 

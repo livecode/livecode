@@ -194,7 +194,7 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       try
          dispatch pCommand to tStackName
       catch tError      
-         TestAssert "execute test", false
+         TestAssert "execute test:" && line 1 of tError, false
          TestDiagnostic tError   
          -- don't exit here as test cleanup may still be useful
       end try
@@ -241,40 +241,3 @@ command TestRunnerProcessOutput pScriptfile, pCommand, pOutput
 
    return tTapResults
 end TestRunnerProcessOutput
-
--- Print out a table of statistics
-command TestRunnerRunPrintSummary pAnalysis
-   local tSummaryString, tTotal, tDecoration
-
-   put TesterTapGetTestCount(pAnalysis) into tTotal
-
-   -- Format basic summary information
-   if pAnalysis["xfail"] is 0 and pAnalysis["fail"] is 0 then
-      put "All" && tTotal && "tests passed" into tSummaryString
-
-   else if pAnalysis["fail"] is 0 then
-      put "All" && tTotal && "tests behaved as expected" into tSummaryString
-
-   else
-      put pAnalysis["fail"] && "OF" && tTotal && "TESTS FAILED" into tSummaryString
-   end if
-
-   put return after tSummaryString
-   
-   -- Add extra summary info from expected failure & skip directives
-   if pAnalysis["xpass"] > 0 then
-      put tab & pAnalysis["xpass"] && "unexpected passes" & return after tSummaryString
-   end if
-   if pAnalysis["xfail"] > 0 then
-      put tab & pAnalysis["xfail"] && "expected failures" & return after tSummaryString
-   end if
-   if pAnalysis["skip"] > 0 then
-      put tab & pAnalysis["skip"] && "skipped" & return after tSummaryString
-   end if
-
-   put "================================================================" into tDecoration
-   put tDecoration & return before tSummaryString
-   put tDecoration & return after tSummaryString
-
-   write tSummaryString to stdout
-end TestRunnerRunPrintSummary

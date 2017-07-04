@@ -425,7 +425,11 @@ struct __MCCustomValue: public __MCValue
 
 struct __MCForeignValue: public __MCValue
 {
-    MCTypeInfoRef typeinfo;
+    union
+    {
+        MCTypeInfoRef typeinfo;
+        uint64_t _dummy;
+    };
 };
 
 ////////

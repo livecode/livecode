@@ -66,18 +66,21 @@ can contain multiple <characters>, multiple <words>, and multiple
     Line 1
     Line 2
     Line 3
-
     &lt;empty Line&gt;
 
 
-References: choose (command), property (glossary), LiveCode (glossary),
-chunk expression (glossary), container (glossary), chunk (glossary),
-keyword (glossary), double quote (glossary), delimit (glossary),
-paint tool (glossary), characters (keyword), string (keyword),
-character (keyword), lines (keyword), line (keyword), word (keyword),
-graphic (keyword), words (keyword), items (keyword), graphic (object),
-style (property), points (property), lineDelimiter (property),
-penColor (property)
+>*Note:* The <line> chunk is identical to the <paragraph> chunk, except
+> that the <paragraph> chunk is also delimited by the Unicode paragraph
+> separator character.
+
+References: character (keyword), characters (keyword), choose (command), 
+chunk (glossary), chunk expression (glossary), container (glossary), 
+delimit (glossary), double quote (glossary), graphic (keyword), 
+graphic (object), items (keyword), keyword (glossary), line (keyword), 
+lineDelimiter (property), lineOffset (function), lines (keyword), 
+LiveCode (glossary), paint tool (glossary), paragraph (keyword), 
+penColor (property), points (property), property (glossary), 
+string (keyword), style (property), trueWord (keyword), word (keyword), 
+words (keyword), Unicode (glossary)
 
 Tags: text processing
-
