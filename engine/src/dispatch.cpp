@@ -363,6 +363,12 @@ void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
     {
+        MCStack *t_substacks = sptr -> getsubstacks();
+        while (t_substacks)
+        {
+            t_substacks -> dodel();
+            t_substacks = sptr -> getsubstacks();
+        }
         sptr -> dodel();
     }
 	if (sptr == MCstaticdefaultstackptr)
