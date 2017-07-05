@@ -9,6 +9,8 @@ Sent to a <control> when it becomes <active (focused)(glossary)>.
 
 Introduced: 1.0
 
+Associations: button,field
+
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile

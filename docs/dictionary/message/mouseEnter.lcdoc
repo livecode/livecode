@@ -7,6 +7,9 @@ Syntax: mouseEnter
 Summary:
 Sent when the <mouse pointer> moves into an <object(glossary)>.
 
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android

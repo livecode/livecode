@@ -8,6 +8,8 @@ Summary:
 Sent when a Command <key combination> (Control-key on <Unix> or
 <Windows>) is pressed.
 
+Associations: card,field
+
 Introduced: 1.0
 
 OS: mac, windows, linux
