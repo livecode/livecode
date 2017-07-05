@@ -77,6 +77,7 @@
 				'../extensions/script-libraries/diff/diff.livecodescript',
 				'../extensions/script-libraries/messageauthentication/messageauthentication.livecodescript',
 				'../extensions/script-libraries/httpd/httpd.livecodescript',
+				'../extensions/script-libraries/qr/qr.livecodescript',
 			],
             
             'rules':
