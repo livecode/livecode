@@ -20,7 +20,6 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "globals.h"
 
 #include "graphics.h"
 #include "stack.h"
@@ -32,7 +31,6 @@
 #include "osxprefix.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "variable.h"
 

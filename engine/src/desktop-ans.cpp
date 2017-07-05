@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "platform.h"
+#include "platform-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -52,6 +53,33 @@ static MCPlatformWindowRef compute_sheet_owner(unsigned int p_options)
     return nil;
 }
 
+static bool folder_path_from_initial_path(MCStringRef p_path, MCStringRef &r_folderpath)
+{
+    MCAutoStringRef t_path;
+    uindex_t t_offset;
+    bool t_success;
+    
+    t_success = false;
+    
+    if (MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_offset))
+    {
+        if (t_offset != 0)
+            t_success = MCS_resolvepath(p_path, &t_path);
+        else
+            t_success = MCStringCopy(p_path, &t_path);
+    }
+	
+    if (t_success)
+	{
+        if (MCS_exists(*t_path, False))
+            t_success = MCStringCopy(*t_path, r_folderpath);
+        else if (MCStringLastIndexOfChar(*t_path, '/', UINT32_MAX, kMCStringOptionCompareExact, t_offset))
+            t_success = MCStringCopySubstring(*t_path, MCRangeMake(0, t_offset), r_folderpath);
+	}
+	
+    return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-02-13: Updated to use Cocoa APIs.  Code mostly cribbed from plugin dialog stuff
@@ -60,7 +88,11 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFolderDialog(t_owner, p_title, p_prompt, p_initial);
+    MCAutoStringRef t_initial_folder;
+    if (p_initial != nil)
+    /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
+    
+	MCPlatformBeginFolderDialog(t_owner, p_title, p_prompt, *t_initial_folder);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_folder;
@@ -142,6 +174,21 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	return t_success;
 }
 
+static void split_initial(MCPlatformFileDialogKind p_kind, MCStringRef p_initial, MCStringRef& r_folder, MCStringRef& r_file)
+{
+	if (p_initial != nil)
+		/* UNCHECKED */ folder_path_from_initial_path(p_initial, r_folder);
+    
+	if ((p_kind == kMCPlatformFileDialogKindSave) && p_initial != nil && !MCS_exists(p_initial, false))
+	{
+		uindex_t t_last_slash;
+        if (MCStringLastIndexOfChar(p_initial, '/', UINT32_MAX, kMCStringOptionCompareExact, t_last_slash))
+            // SN-2014-08-11: [[ Bug 13143 ]] Take the right part: after the last slash, not before
+            MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - t_last_slash - 1), r_file);
+        else
+            r_file = MCValueRetain(p_initial);
+	}
+}
 
 int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
@@ -158,7 +205,11 @@ int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MC
 	else
 		t_kind = kMCPlatformFileDialogKindOpen;
 	
-	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
+	MCAutoStringRef t_initial_folder;
+	MCAutoStringRef t_initial_file;
+    split_initial(t_kind, p_initial, &t_initial_folder, &t_initial_file);
+    
+	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, *t_types, t_types . Count(), *t_initial_folder, *t_initial_file);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -191,7 +242,11 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 	else
 		t_kind = kMCPlatformFileDialogKindOpen;
 	
-	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
+	MCAutoStringRef t_initial_folder;
+	MCAutoStringRef t_initial_file;
+    split_initial(t_kind, p_initial, &t_initial_folder, &t_initial_file);
+    
+	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, p_types, p_type_count, *t_initial_folder, *t_initial_file);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -227,7 +282,11 @@ int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
+	MCAutoStringRef t_initial_folder;
+	MCAutoStringRef t_initial_file;
+    split_initial(kMCPlatformFileDialogKindSave, p_initial, &t_initial_folder, &t_initial_file);
+    
+	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, *t_types, t_types . Count(), *t_initial_folder, *t_initial_file);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -254,7 +313,11 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
+	MCAutoStringRef t_initial_folder;
+	MCAutoStringRef t_initial_file;
+    split_initial(kMCPlatformFileDialogKindSave, p_initial, &t_initial_folder, &t_initial_file);
+    
+	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_types, p_type_count, *t_initial_folder, *t_initial_file);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;

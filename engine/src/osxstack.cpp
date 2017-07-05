@@ -46,6 +46,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "resolution.h"
 
+#include "platform-legacy.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack *MCStack::findstackd(Window w)
@@ -76,9 +79,6 @@ void MCStack::setsizehints()
 void MCStack::sethints(void)
 {
 }
-
-extern void MCMacDisableScreenUpdates();
-extern void MCMacEnableScreenUpdates();
 
 void MCStack::setgeom()
 {
@@ -112,7 +112,7 @@ void MCStack::setgeom()
 	//   just disabling screen updates and enabling them between setting the frame and resizing
 	//   should be enough...
 	
-	MCMacDisableScreenUpdates();
+	MCPlatformDisableScreenUpdates();
 	
 	rect = view_setstackviewport(rect);
 	
@@ -123,7 +123,7 @@ void MCStack::setgeom()
 	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
 		resize(t_old_rect.width, t_old_rect.height);
 	
-	MCMacEnableScreenUpdates();
+	MCPlatformEnableScreenUpdates();
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to apply the Mac menu scroll. It

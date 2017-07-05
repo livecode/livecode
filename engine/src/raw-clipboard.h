@@ -190,14 +190,6 @@ public:
 
     // Destructor
     virtual ~MCRawClipboard() = 0;
-    
-    
-    // Creates a new clipboard associated with the main system clipboard. Note
-    // that these are not kept synchronised - clipboards are only updated when
-    // the "synchronizeUpdates" method is called.
-    static MCRawClipboard* CreateSystemClipboard();
-    static MCRawClipboard* CreateSystemSelectionClipboard();
-    static MCRawClipboard* CreateSystemDragboard();
 };
 
 
@@ -240,7 +232,7 @@ public:
     
     // Fetches the representation (if any) identified by the representation's
     // type string. No ownership of the representation is transferred.
-    const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
+    virtual const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
     
     // Adds a representation for this clipboard item. On systems that use atoms
     // to store clipboard format strings, an atom will be automatically
@@ -262,7 +254,7 @@ public:
     
     // Indicates whether the named type is available as a representation for
     // this item.
-    bool HasRepresentation(MCStringRef p_type) const;
+    virtual bool HasRepresentation(MCStringRef p_type) const;
     
 protected:
     

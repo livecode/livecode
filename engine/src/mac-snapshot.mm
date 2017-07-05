@@ -19,26 +19,17 @@
 
 #include "globdefs.h"
 #include "parsedef.h"
-#include "globals.h"
 #include "desktop-dc.h"
 
 #include "imagebitmap.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
-
-////////////////////////////////////////////////////////////////////////////////
-
-static CGPoint s_snapshot_start_point, s_snapshot_end_point;
-static bool s_snapshot_done = false;
 
 static float menu_screen_height(void)
 {
@@ -113,9 +104,11 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 @interface MCSnapshotWindow : NSWindow
 {
 	NSBox *m_region;
+    MCMacPlatformCore *m_platform;
+    CGPoint m_snapshot_start_point, m_snapshot_end_point;
 }
 
-- (id)init;
+- (id)initWithPlatform:(MCMacPlatformCore*)platform;
 - (void)dealloc;
 
 - (void)mouseDown: (NSEvent *)event;
@@ -125,7 +118,7 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 
 @implementation MCSnapshotWindow
 
-- (id)init
+- (id)initWithPlatform:(MCMacPlatformCore*)platform
 {
 	// Compute the desktop bounds.
 	NSRect t_bounds;
@@ -140,25 +133,28 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 	}
 	
 	// Initialize the window.
-	self = [super initWithContentRect: t_bounds styleMask: NSBorderlessWindowMask backing: NSBackingStoreBuffered defer: NO];
-	
-	// Make sure the window is not opaque to events, and renders everything
-	// at 50% transparency.
-	[self setOpaque: NO];
-	[self setAlphaValue: 0.5];
-	[self setBackgroundColor: [NSColor clearColor]];
-	[self setLevel: NSScreenSaverWindowLevel];
-	[self setIgnoresMouseEvents: NO];
-	
-	// Setup the region used to display the selected area.
-	m_region = [[NSBox alloc] initWithFrame: NSZeroRect];
-	[m_region setTitlePosition: NSNoTitle];
-	[m_region setBorderType: NSLineBorder];
-	[m_region setBoxType: NSBoxCustom];
-	[m_region setBorderWidth: 1];
-	[m_region setBorderColor: [NSColor whiteColor]];
-	[m_region setFillColor: [NSColor grayColor]];
-	[[self contentView] addSubview: m_region];
+	if (self = [super initWithContentRect: t_bounds styleMask: NSBorderlessWindowMask backing: NSBackingStoreBuffered defer: NO])
+    {
+        // Make sure the window is not opaque to events, and renders everything
+        // at 50% transparency.
+        [self setOpaque: NO];
+        [self setAlphaValue: 0.5];
+        [self setBackgroundColor: [NSColor clearColor]];
+        [self setLevel: NSScreenSaverWindowLevel];
+        [self setIgnoresMouseEvents: NO];
+        
+        // Setup the region used to display the selected area.
+        m_region = [[NSBox alloc] initWithFrame: NSZeroRect];
+        [m_region setTitlePosition: NSNoTitle];
+        [m_region setBorderType: NSLineBorder];
+        [m_region setBoxType: NSBoxCustom];
+        [m_region setBorderWidth: 1];
+        [m_region setBorderColor: [NSColor whiteColor]];
+        [m_region setFillColor: [NSColor grayColor]];
+        [[self contentView] addSubview: m_region];
+        
+        m_platform = platform;
+    }
 	
 	// Remember to return the window.
 	return self;
@@ -173,15 +169,14 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 - (void)mouseDown: (NSEvent *)event
 {
 	// Start the snapshot region.
-	s_snapshot_start_point = carbon_point_from_cocoa([event locationInWindow]); //CGEventGetLocation([event CGEvent]);
-	s_snapshot_end_point = s_snapshot_start_point;
+    m_snapshot_start_point = carbon_point_from_cocoa([event locationInWindow]);
 }
 
 - (void)mouseUp: (NSEvent *)event
 {
 	// Finish the snapshot region.
-	s_snapshot_end_point = carbon_point_from_cocoa([event locationInWindow]); //CGEventGetLocation([event CGEvent]);
-	s_snapshot_done = true;
+    m_snapshot_end_point = carbon_point_from_cocoa([event locationInWindow]);
+    m_platform -> SetSnapshotPoints(m_snapshot_start_point, m_snapshot_end_point);
 	
 	// Remove the region from display and force an update to ensure in QD mode, we don't get
 	// partial grayness over the selected area.
@@ -190,18 +185,18 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 	[self displayIfNeeded];
     
 	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
-	MCPlatformBreakWait();
+	m_platform -> BreakWait();
 }
 
 - (void)mouseDragged: (NSEvent *)event
 {
 	// Update the snapshot end point
-	s_snapshot_end_point = carbon_point_from_cocoa([event locationInWindow]); //CGEventGetLocation([event CGEvent]);
-	
+    m_snapshot_end_point = carbon_point_from_cocoa([event locationInWindow]);
+    
 	// Get the old and new frames.
 	NSRect t_old_frame, t_new_frame;
 	t_old_frame = [m_region frame];
-	t_new_frame = cocoa_rect_from_carbon(cgrect_from_points(s_snapshot_start_point, s_snapshot_end_point));
+	t_new_frame = cocoa_rect_from_carbon(cgrect_from_points(m_snapshot_start_point, m_snapshot_end_point));
 	
 	// Update the frames
 	[m_region setFrame: t_new_frame];
@@ -216,7 +211,7 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformCore::CGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
 {
 	if (p_image != nil)
 	{
@@ -237,7 +232,7 @@ static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_si
 		MCImageBitmapClear(t_bitmap);
 		
 		CGContextRef t_context;
-		/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
+		/* UNCHECKED */ CreateCGContextForBitmap(t_bitmap, t_context);
 		
 		// Draw the image scaled down onto the bitmap
 		CGContextScaleCTM(t_context, t_hscale, t_vscale);
@@ -255,22 +250,26 @@ static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_si
 
 // MW-2014-06-11: [[ Bug 12436 ]] This code uses a displaylink to wait for screen update.
 
-static bool s_display_link_fired;
-
 static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
 {
-    s_display_link_fired = true;
-    MCPlatformBreakWait();
+    MCMacPlatformCore * t_platform = (MCMacPlatformCore *) displayLinkContext;
+    t_platform -> SetDisplayLinkFired(true);
+    t_platform -> BreakWait();
     return kCVReturnSuccess;
 }
 
-static void wait_for_refresh(void)
+void MCMacPlatformCore::SetDisplayLinkFired(bool p_fired)
+{
+    m_display_link_fired = p_fired;
+}
+
+void MCMacPlatformCore::WaitForDisplayRefresh(void)
 {
     CVDisplayLinkRef t_link;
     // Create a display link capable of being used with all active displays
     CVDisplayLinkCreateWithActiveCGDisplays(&t_link);
     // Set the renderer output callback function
-    CVDisplayLinkSetOutputCallback(t_link, &MyDisplayLinkCallback, nil);
+    CVDisplayLinkSetOutputCallback(t_link, &MyDisplayLinkCallback, this);
     
     CVDisplayLinkStart(t_link);
     
@@ -278,15 +277,15 @@ static void wait_for_refresh(void)
     // screen is updated, and the second will be after. i.e. The screen buffer is
     // up to date at some point between the two firings.
     
-    s_display_link_fired = false;
+    m_display_link_fired = false;
     
-    while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, true);
+    while(!m_display_link_fired)
+		WaitForEvent(60.0, true);
     
-    s_display_link_fired = false;
+    m_display_link_fired = false;
     
-    while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, true);
+    while(!m_display_link_fired)
+		WaitForEvent(60.0, true);
     
     CVDisplayLinkStop(t_link);
     
@@ -295,25 +294,25 @@ static void wait_for_refresh(void)
 
 //////////
 
-void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformCore::ScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
 
 	// Create a window that covers the whole screen.
 	MCSnapshotWindow *t_window;
-	t_window = [[MCSnapshotWindow alloc] init];
+	t_window = [[MCSnapshotWindow alloc] initWithPlatform:this];
 	[t_window orderFront: nil];
 	
-    MCMacPlatformLockCursor();
+    LockCursor();
     
 	// Set the cursor to cross.
 	[[NSCursor crosshairCursor] push];
 	
 	// Wait until the mouse has been released.
-	s_snapshot_done = false;
-	while(!s_snapshot_done)
-		MCPlatformWaitForEvent(60.0, false);
+	m_snapshot_done = false;
+	while(!m_snapshot_done)
+		WaitForEvent(60.0, false);
 
 	// Remove the window from display.
 	[t_window orderOut: nil];
@@ -322,28 +321,32 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 	// Return the cursor to arrow.
 	[NSCursor pop];
     
-    MCMacPlatformUnlockCursor();
+    UnlockCursor();
     
 	// Compute the selected rectangle.
-	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
+	t_screen_rect = mcrect_from_points(m_snapshot_start_point, m_snapshot_end_point);
 	
 	// AL-2014-05-23: [[ Bug 12443 ]] Import snapshot crashes when no rect is selected.
 	//  6.1 behaviour was to default to snapshot of the whole screen.
 	if (t_screen_rect . width == 0 || t_screen_rect . height == 0)
 	{
-		const MCDisplay *t_displays;
-		MCscreen -> getdisplays(t_displays, false);
-		
-		t_screen_rect = t_displays[0] . viewport;
+        GetScreenViewport(0, t_screen_rect);
 	}
     
-	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
+	ScreenSnapshot(t_screen_rect, p_size, r_bitmap);
 }
 
-void MCMacPlatformScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap)
+void MCMacPlatformCore::SetSnapshotPoints(CGPoint p_start_point, CGPoint p_end_point)
+{
+    m_snapshot_start_point = p_start_point;
+    m_snapshot_end_point = p_end_point;
+    m_snapshot_done = true;
+}
+
+void MCMacPlatformCore::ScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap)
 {
     // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
-    wait_for_refresh();
+    WaitForDisplayRefresh();
     
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(carbon_rect_from_mcrect(p_bounds), kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
@@ -354,11 +357,11 @@ void MCMacPlatformScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRec
 	else
 		t_size = *p_size;
 	
-	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 
-void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformCore::ScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	// IM-2014-04-03: [[ Bug 12085 ]] Update to use Cocoa API to get window bounds
 	NSWindow *t_window;
@@ -372,11 +375,11 @@ void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCI
 	
 	NSRect t_rect = NSOffsetRect(t_content_rect, t_frame_rect.origin.x, t_frame_rect.origin.y);
 	
-	MCMacPlatformScreenSnapshotOfWindowWithinBounds(p_window_id, mcrect_from_cocoa(t_rect), p_size, r_bitmap);
+	ScreenSnapshotOfWindowWithinBounds(p_window_id, mcrect_from_cocoa(t_rect), p_size, r_bitmap);
 }
 
 // IM-2014-04-03: [[ Bug 12115 ]] Implement snapshot of rect of window
-void MCPlatformScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformCore::ScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	NSWindow *t_window;
 	t_window = [NSApp windowWithWindowNumber: p_window_id];
@@ -394,13 +397,13 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_ar
 	MCRectangle t_rect;
 	t_rect = MCRectangleMake(p_area.x + t_content_left, p_area.y + t_content_top, p_area.width, p_area.height);
 	
-	MCMacPlatformScreenSnapshotOfWindowWithinBounds(p_window_id, t_rect, p_size, r_bitmap);
+	ScreenSnapshotOfWindowWithinBounds(p_window_id, t_rect, p_size, r_bitmap);
 }
 
-void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformCore::ScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
     // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
-    wait_for_refresh();
+    WaitForDisplayRefresh();
     
 	// IM-2017-04-21: [[ Bug 19529 ]] CGWindowListCreateImage assumes coords with origin at top-left of primary screen,
 	//    so our capture area needs to be offset onto that coordinate system
@@ -419,7 +422,7 @@ void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImag
 	else
 		t_size = *p_size;
 	
-	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 

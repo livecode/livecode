@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
+#include "platform-legacy.h"
 
 #include "stack.h"
 #include "tooltip.h"

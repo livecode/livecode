@@ -19,28 +19,20 @@
 
 #include "typedefs.h"
 #include "platform.h"
-#include "platform-internal.h"
-
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include "graphics_util.h"
 
-#include "libscript/script.h"
+#include <inttypes.h>
 
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool s_have_desktop_height = false;
-static CGFloat s_desktop_height = 0.0f;
+#define keyReplyErr 'errn'
+#define keyMCScript 'mcsc'  //reply from apple event
 
-static NSLock *s_callback_lock = nil;
-
-// MW-2014-08-14: [[ Bug 13016 ]] This holds the window that is currently being
-//   moved by the windowserver.
-static MCPlatformWindowRef s_moving_window = nil;
-
-static NSWindow *s_pseudo_modal_for = nil;
+#define AETIMEOUT                60.0
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +48,8 @@ enum
 
 - (void)sendEvent:(NSEvent *)p_event
 {
-	if (!MCMacPlatformApplicationSendEvent(p_event))
+    MCApplicationDelegate * t_delegate = [self delegate];
+    if (!static_cast<MCMacPlatformCore *>(t_delegate.platform) -> ApplicationSendEvent(p_event))
 	{
         [super sendEvent: p_event];
     }
@@ -64,12 +57,12 @@ enum
 
 @end
 
-bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
+bool MCMacPlatformCore::ApplicationSendEvent(NSEvent *p_event)
 {
     if ([p_event type] == NSApplicationDefined &&
         [p_event subtype] == kMCMacPlatformMouseSyncEvent)
 	{
-        MCMacPlatformHandleMouseSync();
+        HandleMouseSync();
 		return true;
 	}
 
@@ -77,61 +70,64 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
 	//   we intercept mouseDragged events so we can keep script informed.
 	NSWindow *t_window;
 	t_window = [p_event window];
-	if (s_moving_window != nil &&
-		t_window == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+    
+    MCMacPlatformWindow * t_platform_window = static_cast<MCMacPlatformWindow *>(m_moving_window);
+    
+	if (m_moving_window != nil &&
+		t_window == t_platform_window -> GetHandle())
 	{
 		if ([p_event type] == NSLeftMouseDragged)
-			MCMacPlatformWindowWindowMoved(t_window, s_moving_window);
+			t_platform_window -> WindowMoved(t_window);
 		else if ([p_event type] == NSLeftMouseUp)
-			MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
+			ApplicationWindowStoppedMoving(m_moving_window);
 	}
 	
 	return false;
 }
 
-bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window)
+bool MCMacPlatformCore::ApplicationWindowIsMoving(MCPlatformWindowRef p_window)
 {
-    return p_window == s_moving_window;
+    return p_window == m_moving_window;
 }
 
-void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::ApplicationWindowStartedMoving(MCPlatformWindowRef p_window)
 {
-    if (s_moving_window != nil)
-        MCMacPlatformApplicationWindowStoppedMoving(s_moving_window);
+    if (m_moving_window != nil)
+        ApplicationWindowStoppedMoving(m_moving_window);
     
-    MCPlatformRetainWindow(p_window);
-    s_moving_window = p_window;
+    p_window -> Retain();
+    m_moving_window = p_window;
 }
 
-void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::ApplicationWindowStoppedMoving(MCPlatformWindowRef p_window)
 {
-    if (s_moving_window == nil)
+    if (m_moving_window == nil)
         return;
     
 	// IM-2014-10-29: [[ Bug 13814 ]] Call windowMoveFinished to signal end of dragging,
 	//   which is not reported to the delegate when the window doesn't actually move.
-	[[((MCMacPlatformWindow*)s_moving_window)->GetHandle() delegate] windowMoveFinished];
+	[[((MCMacPlatformWindow*)m_moving_window)->GetHandle() delegate] windowMoveFinished];
 
-    MCPlatformReleaseWindow(s_moving_window);
-    s_moving_window = nil;
+    m_moving_window -> Release();
+    m_moving_window = nil;
 }
 
-void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window)
+void MCMacPlatformCore::ApplicationBecomePseudoModalFor(NSWindow *p_window)
 {
     // MERG-2016-03-04: ensure pseudo modals open above any calling modals
     [p_window setLevel: kCGPopUpMenuWindowLevel];
-    s_pseudo_modal_for = p_window;
+    m_pseudo_modal_for = p_window;
 }
 
-NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
+NSWindow *MCMacPlatformCore::ApplicationPseudoModalFor(void)
 {
     // MERG-2016-03-04: ensure pseudo modals remain above any calling modals
     // If we need to check whether we're pseudo-modal, it means we're in a
     // situation where that window needs to be forced to the front
-    if (s_pseudo_modal_for != nil)
-        [s_pseudo_modal_for orderFrontRegardless];
+    if (m_pseudo_modal_for != nil)
+        [m_pseudo_modal_for orderFrontRegardless];
     
-    return s_pseudo_modal_for;
+    return m_pseudo_modal_for;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,6 +174,8 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 
 @implementation com_runrev_livecode_MCApplicationDelegate
 
+@synthesize platform=m_platform;
+
 //////////
 
 - (id)initWithArgc:(int)argc argv:(MCStringRef *)argv envp:(MCStringRef*)envp
@@ -196,6 +194,8 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
     
     m_pending_apple_events = [[NSMutableArray alloc] initWithCapacity: 0];
     
+    m_platform = nil;
+    
 	return self;
 }
 
@@ -203,16 +203,16 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 
 - (void)initializeModules
 {
-	MCPlatformInitializeColorTransform();
-	MCPlatformInitializeAbortKey();
-    MCPlatformInitializeMenu();
+	m_platform->InitializeColorTransform();
+	m_platform->InitializeAbortKey();
+    m_platform->InitializeMenu();
 }
 
 - (void)finalizeModules
 {
-    MCPlatformFinalizeMenu();
-	MCPlatformFinalizeAbortKey();
-	MCPlatformFinalizeColorTransform();
+    m_platform->FinalizeMenu();
+	m_platform->FinalizeAbortKey();
+	m_platform->FinalizeColorTransform();
 }
 
 //////////
@@ -238,10 +238,6 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
 {
-    extern OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *event, AppleEvent *reply, long refcon);
-    extern OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *event, AppleEvent *reply, long refcon);
-    extern OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *event, AppleEvent *reply, long refcon);
-    
     if (!m_running)
     {
         MCPendingAppleEvent *t_event;
@@ -269,19 +265,19 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     }
     
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
-        return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
+        return m_platform -> AnswerAppleEvent(p_event, p_reply);
     
     // SN-2014-10-13: [[ Bug 13644 ]] Break the wait loop after we handled the Apple Event
     OSErr t_err;
-    t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    t_err =  m_platform -> SpecialAppleEvent(p_event, p_reply);
     if (t_err == errAEEventNotHandled)
     {
         if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
-            t_err = MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+            t_err =  m_platform -> OpenDocAppleEvent(p_event, p_reply);
     }
     
     if (t_err != errAEEventNotHandled)
-        MCPlatformBreakWait();
+        m_platform -> BreakWait();
     
     return t_err;
 }
@@ -308,8 +304,8 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     
 	// Dispatch the startup callback.
 	int t_error_code;
-	MCAutoStringRef t_error_message;
-	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
+	MCPlatformAutoStringRef t_error_message(m_platform -> GetCallback());
+	m_platform -> SendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
 	
 	[t_pool release];
 	
@@ -319,7 +315,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 		// If the error message is non-nil, report it in a suitable way.
 		if (*t_error_message != nil)
         {
-            MCAutoStringRefAsUTF8String t_utf8_message;
+            MCPlatformAutoStringRefAsUTF8String t_utf8_message(m_platform -> GetCallback());
             t_utf8_message . Lock(*t_error_message);
 			fprintf(stderr, "Startup error - %s\n", *t_utf8_message);
         }
@@ -362,7 +358,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
         NSAutoreleasePool *t_pool;
         t_pool = [[NSAutoreleasePool alloc] init];
     
-        MCPlatformCallbackSendApplicationRun(t_continue);
+        m_platform -> SendApplicationRun(t_continue);
         
         [t_pool release];
         
@@ -393,7 +389,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (m_platform -> ApplicationPseudoModalFor() != nil)
         return NSTerminateCancel;
     
     // There is an NSApplicationTerminateReplyLater result code which will place
@@ -401,7 +397,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	// option for now of just sending the callback and seeing what AppKit does
 	// with the (eventual) event loop that will result...
 	bool t_terminate;
-	MCPlatformCallbackSendApplicationShutdownRequest(t_terminate);
+	m_platform -> SendApplicationShutdownRequest(t_terminate);
 	
 	if (t_terminate)
 		return NSTerminateNow;
@@ -413,7 +409,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 {
 	// Dispatch the shutdown callback.
 	int t_exit_code;
-	MCPlatformCallbackSendApplicationShutdown(t_exit_code);
+	m_platform -> SendApplicationShutdown(t_exit_code);
 	
 	// Finalize everything
 	[self finalizeModules];
@@ -425,7 +421,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 // Dock menu handling.
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
-	return MCMacPlatformGetIconMenu();
+	return static_cast<MCMacPlatformCore *>(m_platform) -> GetIconMenu();
 }
 
 //////////
@@ -468,7 +464,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationResume();
+	m_platform -> SendApplicationResume();
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
@@ -494,7 +490,7 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)applicationDidResignActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationSuspend();
+	m_platform -> SendApplicationSuspend();
 }
 
 //////////
@@ -512,10 +508,9 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 - (void)applicationDidChangeScreenParameters:(NSNotification *)notification
 {
 	// Make sure we refetch the primary screen height.
-	s_have_desktop_height = false;
-	
+    m_platform -> SetHasDesktopHeight(false);
 	// Dispatch the notification.
-	MCPlatformCallbackSendScreenParametersChanged();
+	m_platform -> SendScreenParametersChanged();
 }
 
 //////////
@@ -563,7 +558,1071 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
+bool MCMacPlatformCore::FsrefToPath(FSRef& p_ref, MCStringRef& r_path)
+{
+    MCPlatformAutoArray<byte_t> t_buffer(m_callback);
+    if (!t_buffer.New(PATH_MAX))
+        return false;
+    FSRefMakePath(&p_ref, (UInt8*)t_buffer.Ptr(), PATH_MAX);
+    
+    t_buffer.Shrink(strlen((const char*)t_buffer.Ptr()));
+    
+    return MCStringCreateWithBytes(t_buffer.Ptr(), t_buffer.Size(), kMCStringEncodingUTF8, false, r_path);
+}
+
+inline char *FourCharCodeToString(FourCharCode p_code)
+{
+    char *t_result;
+    t_result = new (nothrow) char[5];
+    *(FourCharCode *)t_result = MCSwapInt32NetworkToHost(p_code);
+    t_result[4] = '\0';
+    return t_result;
+}
+
+bool MCMacPlatformCore::FourCharCodeToStringRef(FourCharCode p_code, MCStringRef& r_string)
+{
+    return MCStringCreateWithCString(FourCharCodeToString(p_code), r_string);
+}
+
+bool MCMacPlatformCore::FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode& r_four_char_code)
+{
+    char *temp;
+    uint32_t t_four_char_code;
+    if (!MCStringConvertToCString(p_string, temp))
+        return false;
+    
+    memcpy(&t_four_char_code, temp + p_start, 4);
+    r_four_char_code = MCSwapInt32HostToNetwork(t_four_char_code);
+    delete temp;
+    return true;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+OSStatus MCMacPlatformCore::GetDesc(short locKind, MCStringRef zone, MCStringRef machine,
+                        MCStringRef app, AEDesc *retDesc)
+{
+    
+    /* Carbon doesn't support the seding apple events between different
+     * machines, plus CARBON does not support PPC Toolbox routines,
+     * Therefore no need to do the complicated location/zone
+     * searching. Use Process Manager's routine to get target program's
+     * process id for the address descriptor */
+    ProcessSerialNumber psn;
+    psn.highLongOfPSN = 0;
+    psn.lowLongOfPSN = kNoProcess; //start at the beginning to do the search
+    ProcessInfoRec pInfoRec;
+    Str255 pname;
+    /* need to specify values for the processInfoLength,processName, and
+     * processAppSpec fields of the process information record to get
+     * info returned in those fields. Since we only want the application
+     * name info returned, we allocate a string of 255 length as buffer
+     * to store the process name */
+    pInfoRec.processInfoLength = sizeof(ProcessInfoRec);
+    pInfoRec.processName = pname;
+#ifdef __64_BIT__
+    pInfoRec.processAppRef = NULL;
+#else
+    pInfoRec.processAppSpec = NULL;
+#endif
+    Boolean processFound = False;
+    
+    while (GetNextProcess(&psn) == noErr)
+    {
+        if (GetProcessInformation(&psn, &pInfoRec) == noErr)
+        {
+            // Convert the process name (as a Pascal string) into a StringRef
+            MCPlatformAutoStringRef t_process_name(m_callback);
+            if (!MCStringCreateWithPascalString(pInfoRec.processName, &t_process_name))
+                return ioErr;
+            if (MCStringIsEqualTo(*t_process_name, app, kMCStringOptionCompareCaseless))
+            {
+                processFound = True;
+                break;
+            }
+        }
+    }
+    if (processFound)
+        return AECreateDesc(typeProcessSerialNumber, (Ptr)&pInfoRec.processNumber,
+                            sizeof(ProcessSerialNumber), retDesc);
+    else
+        return procNotFound; //can't find the program/process to create a descriptor
+}
+
+OSStatus MCMacPlatformCore::GetDescFromAddress(MCStringRef address, AEDesc *retDesc)
+{
+    /* return an address descriptor based on the target address passed in
+     * * There are 3 possible forms of target string: *
+     * 1. ZONE:MACHINE:APP NAME
+     * 2. MACHINE:APP NAME(sender & receiver are in the same zone but on different machine)
+     * 3. APP NAME
+     */
+    errno = noErr;
+    retDesc->dataHandle = NULL;  /* So caller can dispose always. */
+    
+    uindex_t t_index;
+    /* UNCHECKED */ MCStringFirstIndexOfChar(address, ':', 0, kMCStringOptionCompareExact, t_index);
+    
+    if (t_index == 0)
+    { //address contains application name only. Form # 3
+        errno = GetDesc(0, NULL, NULL, address, retDesc);
+    }
+    
+    /* CARBON doesn't support the seding apple events between systmes. Therefore no
+     need to do the complicated location/zone searching                       */
+    
+    return errno;
+}
+
+bool MCMacPlatformCore::FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
+{
+#ifndef __64_BIT__
+    MCPlatformAutoNativeCharArray t_path(m_callback), t_name(m_callback);
+    MCPlatformAutoStringRef t_filename(m_callback);
+    MCPlatformAutoStringRef t_filename_std(m_callback);
+    char *t_char_ptr;
+    
+    t_path.New(PATH_MAX + 1);
+    t_name.New(PATH_MAX + 1);
+    
+    t_char_ptr = (char*)t_path.Chars();
+    
+    CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
+    
+    /* UNCHECKED */ t_name . Shrink(MCCStringLength((const char *)t_name . Chars()));
+    /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
+    /* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
+    
+    char oldchar = fSpec->name[0];
+    Boolean dontappendname = False;
+    fSpec->name[0] = '\0';
+    
+    FSRef ref;
+    
+    // MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+    
+    /* fSpec->name[0] = oldchar;
+     dontappendname = True;*/
+    
+    if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+    {
+        if (errno == nsvErr)
+        {
+            fSpec->name[0] = oldchar;
+            if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+            {
+                errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+                dontappendname = True;
+            }
+            else
+                t_char_ptr[0] = '\0';
+        }
+        else
+            t_char_ptr[0] = '\0';
+    }
+    else
+        errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+    
+    MCPlatformAutoStringRef t_path_str(m_callback);
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)t_char_ptr, strlen(t_char_ptr), kMCStringEncodingUTF8, false, &t_path_str);
+    
+    if (!dontappendname)
+    {
+        /* UNCHECKED */ MCStringFormat(r_path, "%@/%@", *t_path_str, *t_filename);
+    }
+    else
+    {
+        r_path = MCValueRetain(*t_path_str);
+    }
+    return true;
+#endif
+    
+    return false;
+}
+
+
+// MW-2006-08-05: Vetted for Endian issues
+OSStatus MCMacPlatformCore::GetAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+{
+    DescType rType;
+    Size rSize;
+    DescType dt;
+    Size s;
+    bool t_success = false;
+    if ((errno = AESizeOfAttribute(ae, key, &dt, &s)) == noErr)
+    {
+        switch (dt)
+        {
+            case typeBoolean:
+            {
+                Boolean b;
+                AEGetAttributePtr(ae, key, dt, &rType, &b, s, &rSize);
+                t_success = MCStringCreateWithCString(b ? "true" : "false", r_result);
+                break;
+            }
+            case typeUTF8Text:
+            {
+                byte_t *result = new (nothrow) byte_t[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                delete[] result;
+                break;
+            }
+            case typeChar:
+            {
+                char_t *result = new (nothrow) char_t[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
+                break;
+            }
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                t_success = MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
+            }
+                break;
+            case typeSInt16:
+            {
+                int16_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId16, i);
+                break;
+            }
+            case typeSInt32:
+            {
+                int32_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId32, i);
+                break;
+            }
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId64, i);
+                break;
+            }
+            case typeIEEE32BitFloatingPoint:
+            {
+                float32_t f;
+                AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeIEEE64BitFloatingPoint:
+            {
+                float64_t f;
+                AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
+            case typeUInt32:
+            {
+                uint32_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu32, i);
+                break;
+            }
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
+            case typeNull:
+                t_success = MCStringCreateWithCString("", r_result);
+                break;
+#ifndef __64_BIT__
+                // FSSpecs don't exist in the 64-bit world
+            case typeFSS:
+            {
+                FSSpec fs;
+                errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
+                t_success = FSSpec2path(&fs, r_result);
+            }
+                break;
+#endif
+            case typeFSRef:
+            {
+                FSRef t_fs_ref;
+                errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+                t_success = FsrefToPath(t_fs_ref, r_result);
+            }
+                break;
+            default:
+                t_success = MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
+                break;
+        }
+    }
+    
+    if (!t_success && errno == 0)
+        errno = ioErr;
+    
+    return errno;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+OSStatus MCMacPlatformCore::GetAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+{
+    DescType rType;
+    Size rSize;
+    DescType dt;
+    Size s;
+    bool t_success = true;
+    if ((errno = AESizeOfParam(ae, key, &dt, &s)) == noErr)
+    {
+        switch (dt)
+        {
+            case typeBoolean:
+            {
+                Boolean b;
+                AEGetParamPtr(ae, key, dt, &rType, &b, s, &rSize);
+                t_success = MCStringCreateWithCString(b ? "true" : "false", r_result);
+                break;
+            }
+            case typeUTF8Text:
+            {
+                byte_t *result = new (nothrow) byte_t[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
+                break;
+            }
+            case typeChar:
+            {
+                char_t *result = new (nothrow) char_t[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                t_success = MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
+                break;
+            }
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                t_success = MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
+            }
+                break;
+            case typeSInt16:
+            {
+                int16_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId16, i);
+                break;
+            }
+            case typeSInt32:
+            {
+                int32_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId32, i);
+                break;
+            }
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRId64, i);
+                break;
+            }
+            case typeIEEE32BitFloatingPoint:
+            {
+                float32_t f;
+                AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeIEEE64BitFloatingPoint:
+            {
+                float64_t f;
+                AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
+                break;
+            }
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
+            case typeUInt32:
+            {
+                uint32_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu32, i);
+                break;
+            }
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                t_success = MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
+            case typeNull:
+                t_success = MCStringCreateWithCString("", r_result);
+                break;
+#ifndef __64_BIT__
+            case typeFSS:
+            {
+                FSSpec fs;
+                errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
+                t_success = FSSpec2path(&fs, r_result);
+            }
+                break;
+#endif
+            case typeFSRef:
+            {
+                FSRef t_fs_ref;
+                errno = AEGetParamPtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+                t_success = FsrefToPath(t_fs_ref, r_result);
+            }
+                break;
+            default:
+                t_success = MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
+                break;
+        }
+    }
+    
+    if (!t_success && errno == 0)
+        errno = ioErr;
+    
+    return errno;
+}
+
+OSStatus MCMacPlatformCore::GetAddressFromDesc(AEAddressDesc targetDesc, char *address)
+{/* This function returns the zone, machine, and application name for the
+  indicated target descriptor.  */
+    
+    
+    address[0] = '\0';
+    return noErr;
+    
+}
+
+// SN-2014-10-07: [[ Bug 13587 ]] Using a MCList allows us to preserve unicode chars
+bool MCMacPlatformCore::FetchAEAsFsrefList(const AppleEvent *p_aePtr, MCListRef &r_list)
+{
+    AEDescList docList; //get a list of alias records for the documents
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCPlatformAutoListRef t_list(m_callback);
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
+    if (AEGetParamDesc(p_aePtr, keyDirectObject,
+                       typeAEList, &docList) == noErr
+        && AECountItems(&docList, &count) == noErr && count > 0)
+    {
+        AEKeyword rKeyword; //returned keyword
+        DescType rType;    //returned type
+        
+        FSRef t_doc_fsref;
+        
+        Size rSize;      //returned size, atual size of the docName
+        long item;
+        // get a FSSpec record, starts from count==1
+        
+        for (item = 1; item <= count; item++)
+        {
+            if (AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType,
+                            &t_doc_fsref, sizeof(FSRef), &rSize) != noErr)
+            {
+                AEDisposeDesc(&docList);
+                return false;
+            }
+            
+            // SN-2014-10-07: [[ Bug 13587 ]] Append directly the string, instead of converting to a CString
+            MCPlatformAutoStringRef t_fullpathname(m_callback);
+            if (FsrefToPath(t_doc_fsref, &t_fullpathname))
+                MCListAppend(*t_list, *t_fullpathname);
+        }
+        AEDisposeDesc(&docList);
+    }
+    return MCListCopy(*t_list, r_list);
+}
+
+OSErr MCMacPlatformCore::SpecialAppleEvent(const AppleEvent *ae, AppleEvent *reply)
+{
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    OSErr err = errAEEventNotHandled;  //class, id, sender
+    DescType rType;
+    Size rSize;
+    AEEventClass aeclass;
+    AEGetAttributePtr(ae, keyEventClassAttr, typeType, &rType, &aeclass, sizeof(AEEventClass), &rSize);
+    
+    AEEventID aeid;
+    AEGetAttributePtr(ae, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+    if (aeclass == kTextServiceClass)
+    {
+        err = errAEEventNotHandled;
+        return err;
+    }
+    //trap for the AEAnswer event, let DoAEAnswer() to handle this event
+    if (aeclass == kCoreEventClass)
+    {
+        if (aeid == kAEAnswer)
+            return errAEEventNotHandled;
+    }
+    AEAddressDesc senderDesc;
+    //
+    char *p3val = new (nothrow) char[128];
+    //char *p3val = new (nothrow) char[kNBPEntityBufferSize + 1]; //sender's address 105 + 1
+    if (AEGetAttributeDesc(ae, keyOriginalAddressAttr,
+                           typeWildCard, &senderDesc) == noErr)
+    {
+        GetAddressFromDesc(senderDesc, p3val);
+        AEDisposeDesc(&senderDesc);
+    }
+    else
+        p3val[0] = '\0';
+    
+    m_aePtr = ae; //saving the current AE pointer for use in mcs_request_ae()
+    MCPlatformAutoStringRef s1(m_callback);
+    MCPlatformAutoStringRef s2(m_callback);
+    MCPlatformAutoStringRef s3(m_callback);
+    
+    /* UNCHECKED */ FourCharCodeToStringRef(aeclass, &s1);
+    /* UNCHECKED */ MCStringCreateWithCString(p3val, &s3);
+    /* UNCHECKED */ FourCharCodeToStringRef(aeid, &s2);
+    
+    /*for "appleEvent class, id, sender" message to inform script that
+     there is an AE arrived */
+    
+    Exec_stat stat = SendMessage(MCNAME("appleEvent"), *s1, *s2, *s3);
+    if (stat != ES_PASS && stat != ES_NOT_HANDLED)
+    { //if AE is handled by MC
+        if (stat == ES_ERROR)
+        { //error in handling AE in MC
+            err = errAECorruptData;
+            if (reply->dataHandle != NULL)
+            {
+                int16_t e = err;
+                AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
+            }
+        }
+        else
+        { //ES_NORMAL
+            if (m_AEReplyMessage == NULL) //no reply, will return no error code
+                err = noErr;
+            else
+            {
+                if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
+                {
+                    MCPlatformAutoStringRefAsUTF8String t_reply(m_callback);
+                    /* UNCHECKED */ t_reply.Lock(m_AEReplyMessage);
+                    err = AEPutParamPtr(reply, m_replykeyword, typeUTF8Text, *t_reply, t_reply.Size());
+                    if (err != noErr)
+                    {
+                        int16_t e = err;
+                        AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
+                    }
+                }
+            }
+            
+            MCValueRelease(m_AEReplyMessage);
+            m_AEReplyMessage = NULL;
+        }
+    }
+    else
+        if (aeclass == kAEMiscStandards
+            && (aeid == kAEDoScript || aeid == 'eval'))
+        {
+            if ((err = AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
+            {
+                byte_t *sptr = new (nothrow) byte_t[rSize + 1];
+                AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, sptr, rSize, &rSize);
+                
+                MCPlatformAutoStringRef t_string(m_callback);
+                MCPlatformAutoStringRefAsUTF8String t_utf8_string(m_callback);
+                MCPlatformAutoStringRef t_sptr(m_callback);
+                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(sptr, rSize, kMCStringEncodingUTF8, false, &t_sptr);
+                if (aeid == kAEDoScript)
+                    DoScript(*t_sptr, &t_string);
+                else
+                    Eval(*t_sptr, &t_string);
+                
+                /* UNCHECKED */ t_utf8_string.Lock(*t_string);
+                AEPutParamPtr(reply, '----', typeUTF8Text, *t_utf8_string, t_utf8_string.Size());
+                
+            }
+        }
+        else
+            err = errAEEventNotHandled;
+    // do nothing if the AE is not handled,
+    // let the standard AE dispacher to dispatch this AE
+    delete[] p3val;
+    return err;
+}
+
+OSErr MCMacPlatformCore::OpenDocAppleEvent(const AppleEvent *theAppleEvent, AppleEvent *reply)
+{ //Apple Event for opening documnets, in our use is to open stacks when user
+    //double clicked on a MC stack icon
+    
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    AEDescList docList; //get a list of alias records for the documents
+    errno = AEGetParamDesc(theAppleEvent, keyDirectObject, typeAEList, &docList);
+    if (errno != noErr)
+        return errno;
+    long count;
+    //get the number of docs descriptors in the list
+    AECountItems(&docList, &count);
+    if (count < 1)     //if there is no doc to be opened
+        return errno;
+    AEKeyword rKeyword; //returned keyword
+    DescType rType;    //returned type
+    
+    FSRef t_doc_fsref;
+    
+    Size rSize;        //returned size, atual size of the docName
+    long item;
+    // get a FSSpec record, starts from count==1
+    for (item = 1; item <= count; item++)
+    {
+        errno = AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType, &t_doc_fsref, sizeof(FSRef), &rSize);
+        if (errno != noErr)
+            return errno;
+        // extract FSSpec record's info & form a file name for MC to use
+        MCPlatformAutoStringRef t_full_path_name(m_callback);
+        FsrefToPath(t_doc_fsref, &t_full_path_name);
+        
+        SendOpenDoc(*t_full_path_name);
+        
+    }
+    AEDisposeDesc(&docList);
+    return noErr;
+}
+
+OSErr MCMacPlatformCore::AnswerAppleEvent(const AppleEvent *ae, AppleEvent *reply)
+{
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+    //   don't handle the event.
+    if (!MCSecureModeCanAccessAppleScript())
+        return errAEEventNotHandled;
+    
+    //process the repy(answer) returned from a server app. When MCS_send() with
+    // a reply, the reply is handled in this routine.
+    // This is different from MCS_reply()
+    //check if there is an error code
+    DescType rType; //returned type
+    Size rSize;
+    
+    /*If the handler returns a result code other than noErr, and if the
+     client is waiting for a reply, it is returned in the keyErrorNumber
+     parameter of the reply Apple event. */
+    if (AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, NULL, 0, &rSize) == noErr)
+    {
+        byte_t* t_utf8 = new (nothrow) byte_t[rSize + 1];
+        AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+        /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, m_AEAnswerErr);
+    }
+    else
+    {
+        int16_t e;
+        if (AEGetParamPtr(ae, keyErrorNumber, typeSInt16, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
+            && e != noErr)
+        {
+            /* UNCHECKED */ MCStringFormat(m_AEAnswerErr, "Got error %d when sending Apple event", e);
+        }
+        else
+        {
+            if (m_AEAnswerData != NULL)
+            {
+                MCValueRelease(m_AEAnswerData);
+                m_AEAnswerData = NULL;
+            }
+            if ((errno = AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) != noErr)
+            {
+                if (errno == errAEDescNotFound)
+                {
+                    /* UNCHECKED */ MCStringCreateWithCString("", m_AEAnswerData);
+                    return noErr;
+                }
+                /* UNCHECKED */ MCStringFormat(m_AEAnswerErr, "Got error %d when receiving Apple event", errno);
+                return errno;
+            }
+            byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
+            AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+            /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, m_AEAnswerData);
+        }
+    }
+    return noErr;
+}
+
+void MCMacPlatformCore::Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply, MCStringRef &r_result)
+{
+    
+    AEAddressDesc receiver;
+    errno = GetDescFromAddress(p_program, &receiver);
+    if (errno != noErr)
+    {
+        AEDisposeDesc(&receiver);
+        /* UNCHECKED */ MCStringCreateWithCString("no such program", r_result);
+        return;
+    }
+    AppleEvent ae;
+    if (p_eventtype == NULL)
+        /* UNCHECKED */ MCStringCreateWithCString("miscdosc", p_eventtype);
+    
+    AEEventClass ac;
+    AEEventID aid;
+    
+    /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, ac);
+    /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, aid);
+    
+    AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+                       kAnyTransactionID, &ae);
+    AEDisposeDesc(&receiver); //dispose of the receiver description record
+    // if the ae message we are sending is 'odoc', 'pdoc' then
+    // create a document descriptor of type fypeFSS for the document
+    
+    Boolean docmessage = False; //Is this message contains a document descriptor?
+    AEDescList files_list, file_desc;
+    AliasHandle the_alias;
+    
+    if (aid == 'odoc' || aid == 'pdoc')
+    {
+        FSRef t_fsref;
+        
+        MCPlatformAutoStringRef t_auto_path(m_callback);
+        MCPlatformAutoStringRefAsUTF8String t_path(m_callback);
+        
+        OSStatus t_stat = noErr;
+        
+        if (!MCS_resolvepath(p_message, &t_auto_path))
+            // TODO assign relevant error code
+            t_stat = memFullErr;
+        
+        if (noErr == t_stat && !t_path.Lock(*t_auto_path))
+            t_stat = memFullErr;
+        
+        if (noErr == t_stat)
+            t_stat = FSPathMakeRef((const UInt8 *)(*t_path), &t_fsref, NULL);
+    
+        if (t_stat == noErr)
+        {
+            AECreateList(NULL, 0, false, &files_list);
+            FSNewAlias(NULL, &t_fsref, &the_alias);
+            HLock((Handle)the_alias);
+            AECreateDesc(typeAlias, (Ptr)(*the_alias),
+                         GetHandleSize((Handle)the_alias), &file_desc);
+            HUnlock((Handle) the_alias);
+            AEPutDesc(&files_list, 0, &file_desc);
+            AEPutParamDesc(&ae, keyDirectObject, &files_list);
+            docmessage = True;
+        }
+    }
+    //non document related massge, assume it's typeChar message
+    if (!docmessage && MCStringGetLength(p_message))
+    {
+        MCPlatformAutoStringRefAsUTF8String t_utf8(m_callback);
+        /* UNCHECKED */ t_utf8.Lock(p_message);
+        AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_utf8, t_utf8.Size());
+    }
+    
+    //Send the Apple event
+    AppleEvent answer;
+    if (p_reply == True)
+        errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                       kAEDefaultTimeout, NULL, NULL); //no reply
+    else
+        errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+                       kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+    if (docmessage)
+    {
+        DisposeHandle((Handle)the_alias);
+        AEDisposeDesc(&file_desc);
+        AEDisposeDesc(&files_list);
+        AEDisposeDesc(&file_desc);
+    }
+    AEDisposeDesc(&ae);
+    if (errno != noErr)
+    {
+        char *buffer = new (nothrow) char[6 + I2L];
+        sprintf(buffer, "error %d", errno);
+        MCStringCreateWithCString(buffer, r_result);
+        delete[] buffer;
+        return;
+    }
+    if (p_reply == True)
+    { /* wait for a reply in a loop.  The reply comes in
+       from regular event handling loop
+       and is handled by an Apple event handler*/
+        real8 endtime = MCS_time() + AETIMEOUT;
+        while (True)
+        {
+            if (WaitForEvent(READ_INTERVAL, true))
+            {
+                /* UNCHECKED */ MCStringCreateWithCString("user interrupt", r_result);
+                return;
+            }
+            if (MCS_time() > endtime)
+            {
+                /* UNCHECKED */ MCStringCreateWithCString("timeout", r_result);
+                return;
+            }
+            if (m_AEAnswerErr != NULL || m_AEAnswerData != NULL)
+                break;
+        }
+        if (m_AEAnswerErr != NULL)
+        {
+            MCValueAssign(r_result, m_AEAnswerErr);
+            MCValueRelease(m_AEAnswerErr);
+            m_AEAnswerErr = NULL;
+        }
+        else
+        {
+            MCValueAssign(r_result, m_AEAnswerData);
+            MCValueRelease(m_AEAnswerData);
+            m_AEAnswerData = NULL;
+        }
+        AEDisposeDesc(&answer);
+    }
+    else
+        /* UNCHECKED */ MCStringCreateWithCString("", r_result);
+}
+
+void MCMacPlatformCore::Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
+{
+    MCValueAssign(m_AEReplyMessage, p_message);
+    
+    //at any one time only either keyword or error is set
+    if (p_keyword != NULL)
+    {
+        /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, m_replykeyword);
+    }
+    else
+    {
+        if (p_error)
+            m_replykeyword = 'errs';
+        else
+            m_replykeyword = '----';
+    }
+}
+
+void MCMacPlatformCore::RequestAE(MCStringRef p_message, uint16_t p_ae, MCStringRef& r_value)
+{
+    if (m_aePtr == NULL)
+    {
+        /* UNCHECKED */ MCStringCreateWithCString("No current Apple event", r_value); //as specified in HyperTalk
+        return;
+    }
+    errno = noErr;
+    
+    switch (Apple_event(p_ae))
+    {
+        case AE_CLASS:
+        {
+            if ((errno = GetAEAttributes(m_aePtr, keyEventClassAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_DATA:
+        {
+            if (MCStringIsEmpty(p_message))
+            { //no keyword, get event parameter(data)
+                DescType rType;
+                Size rSize;  //actual size returned
+                /*first let's find out the size of incoming event data */
+                
+                // On Snow Leopard check for a coercion to a file list first as otherwise
+                // we get a bad URL!
+                uint32_t t_version;
+                GetGlobalProperty(kMCPlatformGlobalPropertyMajorOSVersion, kMCPlatformPropertyTypeUInt32, &t_version);
+                
+                if (t_version >= 0x1060)
+                {
+                    // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
+                    MCPlatformAutoListRef t_list(m_callback);
+                    
+                    if (FetchAEAsFsrefList(m_aePtr, &t_list))
+                    {
+                        /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
+                        return;
+                    }
+                }
+                
+                if ((errno = AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
+                {
+                    byte_t *t_utf8 = new (nothrow) byte_t[rSize + 1];
+                    AEGetParamPtr(m_aePtr, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+                    /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, r_value);
+                }
+                else
+                {
+                    // SN-2014-10-07: [[ Bug 13587 ]] fetch_ae_as_frsef_list updated to return an MCList
+                    MCPlatformAutoListRef t_list(m_callback);
+                    if (FetchAEAsFsrefList(m_aePtr, &t_list))
+                    /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
+                    else
+                    /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
+                }
+                return;
+            }
+            else
+            {
+                AEKeyword key;
+                /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), key);
+                
+                if (key == keyAddressAttr || key == keyEventClassAttr
+                    || key == keyEventIDAttr || key == keyEventSourceAttr
+                    || key == keyInteractLevelAttr || key == keyMissedKeywordAttr
+                    || key == keyOptionalKeywordAttr || key == keyOriginalAddressAttr
+                    || key == keyReturnIDAttr || key == keyTimeoutAttr
+                    || key == keyTransactionIDAttr)
+                {
+                    if ((errno = GetAEAttributes(m_aePtr, key, r_value)) == noErr)
+                        return;
+                }
+                else
+                {
+                    if ((errno = GetAEParams(m_aePtr, key, r_value)) == noErr)
+                        return;
+                }
+            }
+        }
+            break;
+        case AE_ID:
+        {
+            if ((errno = GetAEAttributes(m_aePtr, keyEventIDAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_RETURN_ID:
+        {
+            if ((errno = GetAEAttributes(m_aePtr, keyReturnIDAttr, r_value)) == noErr)
+                return;
+            break;
+        }
+        case AE_SENDER:
+        {
+            AEAddressDesc senderDesc;
+            char *sender = new (nothrow) char[128];
+            
+            if ((errno = AEGetAttributeDesc(m_aePtr, keyOriginalAddressAttr,
+                                            typeWildCard, &senderDesc)) == noErr)
+            {
+                errno = GetAddressFromDesc(senderDesc, sender);
+                AEDisposeDesc(&senderDesc);
+                /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
+                return;
+            }
+            delete[] sender;
+            break;
+        }
+        case AE_RETURN:
+        case AE_UNDEFINED:
+        case AE_AE:
+            break;
+    }  /* end switch */
+    
+    if (errno == errAECoercionFail) //data could not display as text
+    {
+        /* UNCHECKED */ MCStringCreateWithCString("unknown type", r_value);
+        return;
+    }
+    
+    /* UNCHECKED */ MCStringCreateWithCString("not found", r_value);
+}
+
+bool MCMacPlatformCore::RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value, MCStringRef& r_result)
+{
+    AEAddressDesc receiver;
+    errno = GetDescFromAddress(p_program, &receiver);
+    if (errno != noErr)
+    {
+        AEDisposeDesc(&receiver);
+        /* UNCHECKED */ MCStringCreateWithCString("no such program", r_result);
+        /* UNCHECKED */ MCStringCreateWithCString("", r_value);
+        return false;
+    }
+    AppleEvent ae;
+    errno = AECreateAppleEvent('misc', 'eval', &receiver,
+                               kAutoGenerateReturnID, kAnyTransactionID, &ae);
+    AEDisposeDesc(&receiver); //dispose of the receiver description record
+    //add parameters to the Apple event
+    MCPlatformAutoStringRefAsUTF8String t_message(m_callback);
+    /* UNCHECKED */ t_message.Lock(p_message);
+    AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_message, t_message.Size());
+    //Send the Apple event
+    AppleEvent answer;
+    errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                   kAEDefaultTimeout, NULL, NULL); //no reply
+    AEDisposeDesc(&ae);
+    AEDisposeDesc(&answer);
+    if (errno != noErr)
+    {
+        char *buffer = new (nothrow) char[6 + I2L];
+        sprintf(buffer, "error %d", errno);
+        /* UNCHECKED */ MCStringCreateWithCString(buffer, r_result);
+        delete[] buffer;
+        
+        /* UNCHECKED */ MCStringCreateWithCString("", r_value);
+        return false;
+    }
+    real8 endtime = MCS_time() + AETIMEOUT;
+    while (True)
+    {
+        if (WaitForEvent(READ_INTERVAL, true))
+        {
+            /* UNCHECKED */ MCStringCreateWithCString("user interrupt", r_result);
+            /* UNCHECKED */ MCStringCreateWithCString("", r_value);
+            return false;
+        }
+        if (MCS_time() > endtime)
+        {
+            /* UNCHECKED */ MCStringCreateWithCString("timeout", r_result);
+            /* UNCHECKED */ MCStringCreateWithCString("", r_value);
+            return false;
+        }
+        if (m_AEAnswerErr != NULL || m_AEAnswerData != NULL)
+            break;
+    }
+    
+    if (m_AEAnswerErr != NULL)
+    {
+        MCValueAssign(r_result, m_AEAnswerErr);
+        MCValueRelease(m_AEAnswerErr);
+        m_AEAnswerErr = NULL;
+        /* UNCHECKED */ MCStringCreateWithCString("", r_value);
+    }
+    else
+    {
+        MCValueAssign(r_result, m_AEAnswerData);
+        MCValueRelease(m_AEAnswerData);
+        m_AEAnswerData = NULL;
+    }
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformCore::GetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
 	switch(p_property)
 	{
@@ -611,7 +1670,7 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			break;
 			
         case kMCPlatformSystemPropertyVolume:
-            MCMacPlatformGetGlobalVolume(*(double *)r_value);
+            GetGlobalVolume(*(double *)r_value);
             break;
             
 		default:
@@ -620,12 +1679,12 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	}
 }
 
-void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+void MCMacPlatformCore::SetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
     switch(p_property)
     {
         case kMCPlatformSystemPropertyVolume:
-            MCMacPlatformSetGlobalVolume(*(double *)p_value);
+            SetGlobalVolume(*(double *)p_value);
             break;
         
         default:
@@ -636,50 +1695,22 @@ void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSEvent *s_last_mouse_event = nil;
-
-static CFRunLoopObserverRef s_observer = nil;
-static bool s_in_blocking_wait = false;
-static bool s_wait_broken = false;
-
-struct MCModalSession
+void MCMacPlatformCore::SetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
 {
-	NSModalSession session;
-	MCMacPlatformWindow *window;
-	bool is_done;
-};
-
-static MCModalSession *s_modal_sessions = nil;
-static uindex_t s_modal_session_count = 0;
-
-struct MCCallback
-{
-	void (*method)(void *);
-	void *context;
-};
-
-static MCCallback *s_callbacks = nil;
-static uindex_t s_callback_count;
-
-static MCPlatformPreWaitForEventCallback s_pre_waitforevent_callback = nullptr;
-static MCPlatformPostWaitForEventCallback s_post_waitforevent_callback = nullptr;
-
-void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post)
-{
-    s_pre_waitforevent_callback = p_pre;
-    s_post_waitforevent_callback = p_post;
+    m_pre_waitforevent_callback = p_pre;
+    m_post_waitforevent_callback = p_post;
 }
 
-void MCPlatformBreakWait(void)
+void MCMacPlatformCore::BreakWait(void)
 {
-    [s_callback_lock lock];
-	if (s_wait_broken)
-    {
-        [s_callback_lock unlock];
+    [m_callback_lock lock];
+	if (m_wait_broken)
+   {
+        [m_callback_lock unlock];
         return;
     }
-    s_wait_broken = true;
-	[s_callback_lock unlock];
+    m_wait_broken = true;
+	[m_callback_lock unlock];
     
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -703,61 +1734,69 @@ void MCPlatformBreakWait(void)
 
 void MCMacPlatformWaitEventObserverCallback(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
- 	if (s_in_blocking_wait)
-		MCPlatformBreakWait();
+    MCMacPlatformCore * t_platform = (MCMacPlatformCore *) info;
+    if (t_platform -> InBlockingWait())
+    {
+        t_platform -> BreakWait();
+    }
 }
 
-static uindex_t s_event_checking_disabled = 0;
-
-void MCMacPlatformEnableEventChecking(void)
+bool MCMacPlatformCore::InBlockingWait(void)
 {
-	s_event_checking_disabled -= 1;
+    return m_in_blocking_wait;
 }
 
-void MCMacPlatformDisableEventChecking(void)
+void MCMacPlatformCore::EnableEventChecking(void)
 {
-	s_event_checking_disabled += 1;
+    MCAssert(0 < m_event_checking_disabled);
+	m_event_checking_disabled -= 1;
 }
 
-bool MCMacPlatformIsEventCheckingEnabled(void)
-{
-	return s_event_checking_disabled == 0;
+void MCMacPlatformCore::DisableEventChecking(void)
+{ 
+	m_event_checking_disabled += 1;
 }
 
-bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
+bool MCMacPlatformCore::IsEventCheckingEnabled(void)
 {
-	if (!MCMacPlatformIsEventCheckingEnabled())
+	return m_event_checking_disabled == 0;
+}
+
+bool MCMacPlatformCore::WaitForEvent(double p_duration, bool p_blocking)
+{
+	if (!IsEventCheckingEnabled())
 		return false;
 	
-    if (s_pre_waitforevent_callback != nullptr)
+    if (m_pre_waitforevent_callback != nullptr)
     {
-        if (!s_pre_waitforevent_callback(p_duration, p_blocking))
+        if (!m_pre_waitforevent_callback(p_duration, p_blocking))
         {
             return false;
         }
     }
     else
     {
-        // Make sure we have our observer and install it. This is used when we are
-        // blocking and should break the event loop whenever a new event is added
-        // to the queue.
-        if (s_observer == nil)
-        {
-            s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, MCMacPlatformWaitEventObserverCallback, NULL);
-            CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
-        }
+		 // Make sure we have our observer and install it. This is used when we are
+	    // blocking and should break the event loop whenever a new event is added
+	    // to the queue.
+	    if (m_observer == nil)
+	    {
+			   CFRunLoopObserverContext t_context = {0, this, nil, nil, nil};
+			   m_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, MCMacPlatformWaitEventObserverCallback, &t_context);
+			   CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], m_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+	    }
     }
     
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
-    [s_callback_lock lock];
-	s_wait_broken = false;
-    t_callbacks = s_callbacks;
-    t_callback_count = s_callback_count;
-    s_callbacks = nil;
-    s_callback_count = 0;
-    [s_callback_lock unlock];
+    [m_callback_lock lock];
+	m_wait_broken = false;
+    t_callbacks = m_callbacks;
+    t_callback_count = m_callback_count;
+    m_callbacks = nil;
+    m_callback_count = 0;
+    [m_callback_lock unlock];
     
 	for(uindex_t i = 0; i < t_callback_count; i++)
 		t_callbacks[i] . method(t_callbacks[i] . context);
@@ -765,10 +1804,10 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	t_callbacks = nil;
 	t_callback_count = 0;
 	
-	s_in_blocking_wait = true;
+	m_in_blocking_wait = true;
 	
 	bool t_modal;
-	t_modal = s_modal_session_count > 0;
+	t_modal = m_modal_session_count > 0;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -789,16 +1828,16 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     // Run the modal session, if it has been created yet (it might not if this
     // wait was triggered by reacting to an event caused as part of creating
     // the modal session, e.g. when losing window focus).
-	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
-		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+	if (t_modal && m_modal_sessions[m_modal_session_count - 1].session != nil)
+		[NSApp runModalSession: m_modal_sessions[m_modal_session_count - 1] . session];
     
-	s_in_blocking_wait = false;
+	m_in_blocking_wait = false;
 
 	if (t_event != nil)
 	{
 		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
 		{
-			s_last_mouse_event = t_event;
+			m_last_mouse_event = t_event;
 			[t_event retain];
 			[NSApp sendEvent: t_event];
 		}
@@ -806,8 +1845,8 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 		{
 			if ([t_event type] == NSLeftMouseUp)
 			{
-				[s_last_mouse_event release];
-				s_last_mouse_event = nil;
+				[m_last_mouse_event release];
+				m_last_mouse_event = nil;
 			}
 			
 			[NSApp sendEvent: t_event];
@@ -815,111 +1854,109 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	}
 	
 	[t_pool release];
+    
+    m_animation_current_time = CFAbsoluteTimeGetCurrent();
 	
-    if (s_post_waitforevent_callback != nullptr)
+    if (m_post_waitforevent_callback != nullptr)
     {
-        return s_post_waitforevent_callback(t_event != nullptr);
+        return m_post_waitforevent_callback(t_event != nullptr);
     }
     
 	return t_event != nil;
 }
 
-void MCMacPlatformClearLastMouseEvent(void)
+void MCMacPlatformCore::ClearLastMouseEvent(void)
 {
-    if (s_last_mouse_event == nil)
+    if (m_last_mouse_event == nil)
     {
         return;
     }
     
-    [s_last_mouse_event release];
-    s_last_mouse_event = nil;
+    [m_last_mouse_event release];
+    m_last_mouse_event = nil;
 }
 
-void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
+void MCMacPlatformCore::BeginModalSession(MCMacPlatformWindow *p_window)
 {
     // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
     //   mouse state - i.e. send a mouse release if in mouseDown and send a mouseLeave for the
     //   current mouse window.
-	MCMacPlatformSyncMouseBeforeDragging();
+	SyncMouseBeforeDragging();
     
-	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
+	/* UNCHECKED */ MCMemoryResizeArray(m_modal_session_count + 1, m_modal_sessions, m_modal_session_count);
 	
-	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
-	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
+	m_modal_sessions[m_modal_session_count - 1] . is_done = false;
+	m_modal_sessions[m_modal_session_count - 1] . window = p_window;
 	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
-	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	m_modal_sessions[m_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
 	p_window->SetFrameLocked(false);
 }
 
-void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
+void MCMacPlatformCore::EndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
-	for(t_index = 0; t_index < s_modal_session_count; t_index++)
-		if (s_modal_sessions[t_index] . window == p_window)
+	for(t_index = 0; t_index < m_modal_session_count; t_index++)
+		if (m_modal_sessions[t_index] . window == p_window)
 			break;
 	
-	if (t_index == s_modal_session_count)
+	if (t_index == m_modal_session_count)
 		return;
 	
-	s_modal_sessions[t_index] . is_done = true;
+	m_modal_sessions[t_index] . is_done = true;
 	
-	for(uindex_t t_final_index = s_modal_session_count; t_final_index > 0; t_final_index--)
+	for(uindex_t t_final_index = m_modal_session_count; t_final_index > 0; t_final_index--)
 	{
-		if (!s_modal_sessions[t_final_index - 1] . is_done)
+		if (!m_modal_sessions[t_final_index - 1] . is_done)
 			return;
 		
-		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
-		s_modal_sessions[t_final_index - 1] . window -> Release();
-		s_modal_session_count -= 1;
+		[NSApp endModalSession: m_modal_sessions[t_final_index - 1] . session];
+		[m_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
+		m_modal_sessions[t_final_index - 1] . window -> Release();
+		m_modal_session_count -= 1;
 	}
 }
 
-void MCMacPlatformScheduleCallback(void (*p_callback)(void *), void *p_context)
+void MCMacPlatformCore::ScheduleCallback(void (*p_callback)(void *), void *p_context)
 {
-    [s_callback_lock lock];
-	/* UNCHECKED */ MCMemoryResizeArray(s_callback_count + 1, s_callbacks, s_callback_count);
-	s_callbacks[s_callback_count - 1] . method = p_callback;
-	s_callbacks[s_callback_count - 1] . context = p_context;
-    [s_callback_lock unlock];
+    [m_callback_lock lock];
+	/* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
+	m_callbacks[m_callback_count - 1] . method = p_callback;
+	m_callbacks[m_callback_count - 1] . context = p_context;
+    [m_callback_lock unlock];
     
-    MCPlatformBreakWait();
+    BreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef void (*MCPlatformDeathGripFreeCallback)(void *);
-
-@interface com_runrev_livecode_MCPlatformDeathGrip: NSObject
+@interface com_runrev_livecode_MCPlatformBaseDeathGrip: NSObject
 {
-	void *m_pointer;
-	MCPlatformDeathGripFreeCallback m_free;
+	MCPlatform::Base *m_pointer;
 }
 
-- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free;
+- (id)initWithPointer: (MCPlatform::Base *)pointer;
 - (void)dealloc;
 
 @end
 
-@implementation com_runrev_livecode_MCPlatformDeathGrip
+@implementation com_runrev_livecode_MCPlatformBaseDeathGrip
 
-- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free
+- (id)initWithPointer: (MCPlatform::Base *)pointer
 {
 	self = [super init];
 	if (self == nil)
 		return nil;
 	
 	m_pointer = pointer;
-	m_free = free;
 
 	return self;
 }
 
 - (void)dealloc
 {
-	m_free(m_pointer);
+	m_pointer -> Release();
 	[super dealloc];
 }
 
@@ -930,19 +1967,19 @@ typedef void (*MCPlatformDeathGripFreeCallback)(void *);
 // handling chain. A deathgrip lasts for the scope of the current autorelease
 // pool - so means such objects won't get completely destroyed until after event
 // handling has completed.
-void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::DeathGrip(MCPlatform::Base * p_pointer)
 {
-	// Retain the window.
-	MCPlatformRetainWindow(p_window);
+	// Retain the pointer.
+	p_pointer -> Retain();
 	
 	// Now push an autorelease object onto the stack that will release the object
 	// after event dispatch.
-	[[[com_runrev_livecode_MCPlatformDeathGrip alloc] initWithPointer: p_window freeWith: (MCPlatformDeathGripFreeCallback)MCPlatformReleaseWindow] autorelease];
+	[[[com_runrev_livecode_MCPlatformBaseDeathGrip alloc] initWithPointer: p_pointer] autorelease];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPlatformGetMouseButtonState(uindex_t p_button)
+bool MCMacPlatformCore::GetMouseButtonState(uindex_t p_button)
 {
 	NSUInteger t_buttons;
 	t_buttons = [NSEvent pressedMouseButtons];
@@ -957,12 +1994,12 @@ bool MCPlatformGetMouseButtonState(uindex_t p_button)
 	return (t_buttons & (1 << (p_button - 1))) != 0;
 }
 
-MCPlatformModifiers MCPlatformGetModifiersState(void)
+MCPlatformModifiers MCMacPlatformCore::GetModifiersState(void)
 {
 	return MCMacPlatformMapNSModifiersToModifiers([NSEvent modifierFlags]);
 }
 
-bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
+bool MCMacPlatformCore::GetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
 {
 	MCPlatformKeyCode *t_codes;
 	if (!MCMemoryNewArray(128, t_codes))
@@ -989,7 +2026,7 @@ bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
 	return true;
 }
 
-bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
+bool MCMacPlatformCore::GetMouseClick(uindex_t p_button, MCPoint& r_location)
 {
 	// We want to try and remove a whole click from the queue. Which button
 	// is determined by p_button and if zero means any button. So, first
@@ -1072,19 +2109,19 @@ bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 	else
 		t_screen_loc = [t_up_event locationInWindow];
 	
-	MCMacPlatformMapScreenNSPointToMCPoint(t_screen_loc, r_location);
+	MapScreenNSPointToMCPoint(t_screen_loc, r_location);
 	
 	[t_pool release];
 	
 	return true;
 }
 
-void MCPlatformGetMousePosition(MCPoint& r_location)
+void MCMacPlatformCore::GetMousePosition(MCPoint& r_location)
 {
-	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], r_location);
+	MapScreenNSPointToMCPoint([NSEvent mouseLocation], r_location);
 }
 
-void MCPlatformSetMousePosition(MCPoint p_location)
+void MCMacPlatformCore::SetMousePosition(MCPoint p_location)
 {
 	CGPoint t_point;
 	t_point . x = p_location . x;
@@ -1092,10 +2129,10 @@ void MCPlatformSetMousePosition(MCPoint p_location)
 	CGWarpMouseCursorPosition(t_point);
 }
 
-void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
+void MCMacPlatformCore::GetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 {
 	NSPoint t_loc_cocoa;
-	MCMacPlatformMapScreenMCPointToNSPoint(p_loc, t_loc_cocoa);
+	MapScreenMCPointToNSPoint(p_loc, t_loc_cocoa);
 	
 	NSInteger t_number;
 	t_number = [NSWindow windowNumberAtPoint: t_loc_cocoa belowWindowWithWindowNumber: 0];
@@ -1125,7 +2162,7 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 }
 
 // MW-2014-07-15: [[ Bug 12800 ]] Map a window number to a platform window - if there is one.
-bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
+bool MCMacPlatformCore::GetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
 {
     NSWindow *t_ns_window;
     t_ns_window = [NSApp windowWithWindowNumber: p_id];
@@ -1145,17 +2182,17 @@ bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
     return true;
 }
 
-uint32_t MCPlatformGetEventTime(void)
+uint32_t MCMacPlatformCore::GetEventTime(void)
 {
 	return [[NSApp currentEvent] timestamp] * 1000.0;
 }
 
-NSEvent *MCMacPlatformGetLastMouseEvent(void)
+NSEvent *MCMacPlatformCore::GetLastMouseEvent(void)
 {
-	return s_last_mouse_event;
+	return m_last_mouse_event;
 }
 
-void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
+void MCMacPlatformCore::FlushEvents(MCPlatformEventMask p_mask)
 {
 	NSUInteger t_ns_mask;
 	t_ns_mask = 0;
@@ -1181,31 +2218,31 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 	}
 }
 
-void MCPlatformBeep(void)
+void MCMacPlatformCore::Beep(void)
 {
     NSBeep();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetScreenCount(uindex_t& r_count)
+void MCMacPlatformCore::GetScreenCount(uindex_t& r_count)
 {
 	r_count = [[NSScreen screens] count];
 }
 
-void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
+void MCMacPlatformCore::GetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
 {
 	NSRect t_viewport;
 	t_viewport = [[[NSScreen screens] objectAtIndex: p_index] frame];
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_viewport, r_viewport);
+	MapScreenNSRectToMCRectangle(t_viewport, r_viewport);
 }
 
-void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
+void MCMacPlatformCore::GetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
 {
-	MCMacPlatformMapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
+	MapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
 }
 
-void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
+void MCMacPlatformCore::GetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 {
 	NSScreen *t_screen;
 	t_screen = [[NSScreen screens] objectAtIndex: p_index];
@@ -1217,15 +2254,13 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCPlatformWindowRef s_backdrop_window = nil;
-
-void MCMacPlatformSyncBackdrop(void)
+void MCMacPlatformCore::SyncBackdrop(void)
 {
-    if (s_backdrop_window == nil)
+    if (m_backdrop_window == nil)
         return;
     
     NSWindow *t_backdrop;
-    t_backdrop = ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle();
+    t_backdrop = ((MCMacPlatformWindow *)m_backdrop_window) -> GetHandle();
     
     NSDisableScreenUpdates();
     [t_backdrop orderOut: nil];
@@ -1253,20 +2288,20 @@ void MCMacPlatformSyncBackdrop(void)
     NSEnableScreenUpdates();
 }
 
-void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
+void MCMacPlatformCore::ConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 {
-	if (s_backdrop_window != nil)
+	if (m_backdrop_window != nil)
 	{
-		MCPlatformReleaseWindow(s_backdrop_window);
-		s_backdrop_window = nil;
+		m_backdrop_window -> Release();
+		m_backdrop_window = nil;
 	}
 	
-	s_backdrop_window = p_backdrop_window;
+	m_backdrop_window = p_backdrop_window;
 	
-	if (s_backdrop_window != nil)
-		MCPlatformRetainWindow(s_backdrop_window);
+	if (m_backdrop_window != nil)
+		m_backdrop_window -> Retain();
 	
-	MCMacPlatformSyncBackdrop();
+	SyncBackdrop();
 }
 
 
@@ -1481,86 +2516,35 @@ bool MCMacPlatformMapKeyCode(uint32_t p_mac_keycode, uint32_t p_modifier_flags, 
 //   - mouse move messages when the mouse moves over our windows *and* when
 //     the mouse is down and the mouse is outside our windows.
 
-// If this is true, then the mouse is currently grabbed so we should defer
-// switching active window until ungrabbed.
-static bool s_mouse_grabbed = false;
-
-// If this is true there was an explicit request for grabbing.
-static bool s_mouse_grabbed_explicit = false;
-
-// This is the currently active window (the one receiving mouse events).
-static MCPlatformWindowRef s_mouse_window = nil;
-
-// This is the current mask of buttons that are pressed.
-static uint32_t s_mouse_buttons = 0;
-
-// This is the button that is being dragged (if not 0xffffffff).
-static uint32_t s_mouse_drag_button = 0xffffffff;
-
-// This is the number of successive clicks detected on the primary button.
-static uint32_t s_mouse_click_count = 0;
-
-// This is the button of the last click (mouseDown then mouseUp) that was
-// detected.
-static uint32_t s_mouse_last_click_button = 0;
-
-// This is the time of the last mouseUp, used to detect multiple clicks.
-static uint32_t s_mouse_last_click_time = 0;
-
-// This is the screen position of the last click, used to detect multiple
-// clicks.
-static MCPoint s_mouse_last_click_screen_position = { 0, 0 };
-
-// This is the window location in the mouse window that we last posted
-// a position event for.
-static MCPoint s_mouse_position = { INT16_MIN, INT16_MAX };
-
-// This is the last screen location we received a mouse move message for.
-static MCPoint s_mouse_screen_position;
-
-// This is the current modifier state, and whether the control key was down
-// for a button 0 press.
-static MCPlatformModifiers s_mouse_modifiers = 0;
-static bool s_mouse_was_control_click = false;
-
-// COCOA-TODO: Clean up this external dependency.
-extern uint2 MCdoubledelta;
-extern uint2 MCdoubletime;
-extern uint2 MCdragdelta;
-
-// MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
-//   when doing an user-import snapshot.
-static bool s_mouse_cursor_locked = false;
-
-void MCMacPlatformLockCursor(void)
+void MCMacPlatformCore::LockCursor(void)
 {
-    s_mouse_cursor_locked = true;
+    m_mouse_cursor_locked = true;
 }
 
-void MCMacPlatformUnlockCursor(void)
+void MCMacPlatformCore::UnlockCursor(void)
 {
-    s_mouse_cursor_locked = false;
+    m_mouse_cursor_locked = false;
     
-    if (s_mouse_window == nil)
-        MCMacPlatformResetCursor();
+    if (m_mouse_window == nil)
+        ResetCursor();
     else
-        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+        HandleMouseCursorChange(m_mouse_window);
 }
 
-void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::GrabPointer(MCPlatformWindowRef p_window)
 {
 	// If we are grabbing for the given window already, do nothing.
-	if (s_mouse_grabbed && p_window == s_mouse_window)
+	if (m_mouse_grabbed && p_window == m_mouse_window)
 	{
-		s_mouse_grabbed_explicit = true;
+		m_mouse_grabbed_explicit = true;
 		return;
 	}
 	
 	// If the mouse window is already w, then just grab.
-	if (p_window == s_mouse_window)
+	if (p_window == m_mouse_window)
 	{
-		s_mouse_grabbed = true;
-		s_mouse_grabbed_explicit = true;
+		m_mouse_grabbed = true;
+		m_mouse_grabbed_explicit = true;
 		return;
 	}
 	
@@ -1569,65 +2553,65 @@ void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 	//  mouse presses in different windows!).
 }
 
-void MCPlatformUngrabPointer(void)
+void MCMacPlatformCore::UngrabPointer(void)
 {
 	// If buttons are down, then ungrab will happen when they are released.
-	if (s_mouse_buttons != 0)
+	if (m_mouse_buttons != 0)
 		return;
 	
 	// Otherwise just turn off the grabbed flag.
-	s_mouse_grabbed = false;
-	s_mouse_grabbed_explicit = false;
+	m_mouse_grabbed = false;
+	m_mouse_grabbed_explicit = false;
 }
 
-void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
+void MCMacPlatformCore::HandleMousePress(uint32_t p_button, bool p_new_state)
 {
 	bool t_state;
-	t_state = (s_mouse_buttons & (1 << p_button)) != 0;
+	t_state = (m_mouse_buttons & (1 << p_button)) != 0;
 	
 	// If the state is not different from the new state, do nothing.
 	if (p_new_state == t_state)
 		return;
 	
 	// If we are mouse downing with no window, then do nothing.
-	if (p_new_state && s_mouse_window == nil)
+	if (p_new_state && m_mouse_window == nil)
 		return;
 	
 	// Update the state.
 	if (p_new_state)
-		s_mouse_buttons |= (1 << p_button);
+		m_mouse_buttons |= (1 << p_button);
 	else
-		s_mouse_buttons &= ~(1 << p_button);
+		m_mouse_buttons &= ~(1 << p_button);
 	
 	// Record whether it was an explicit grab.
 	bool t_grabbed_explicit;
-	t_grabbed_explicit = s_mouse_grabbed_explicit;
+	t_grabbed_explicit = m_mouse_grabbed_explicit;
 	
 	// If we are grabbed, and mouse buttons are zero, then ungrab.
 	// If mouse buttons are zero, then reset the drag button.
-	if (s_mouse_buttons == 0)
+	if (m_mouse_buttons == 0)
 	{
-		s_mouse_grabbed = false;
-		s_mouse_grabbed_explicit = false;
-		s_mouse_drag_button = 0xffffffff;
+		m_mouse_grabbed = false;
+		m_mouse_grabbed_explicit = false;
+		m_mouse_drag_button = 0xffffffff;
 	}
 		
 	// If mouse buttons are non-zero, then grab.
-	if (s_mouse_buttons != 0)
-		s_mouse_grabbed = true;
+	if (m_mouse_buttons != 0)
+		m_mouse_grabbed = true;
 	
 	// If the control key is down (which we will see as the command key) and if
 	// the button is 0, then we actually want to dispatch a button 2.
 	if (p_button == 0 &&
-		(s_mouse_modifiers & kMCPlatformModifierCommand) != 0 &&
+		(m_mouse_modifiers & kMCPlatformModifierCommand) != 0 &&
 		p_new_state)
 	{
 		p_button = 2;
-		s_mouse_was_control_click = true;
+		m_mouse_was_control_click = true;
 	}
 	
 	if (!p_new_state &&
-		s_mouse_was_control_click && p_button == 0)
+		m_mouse_was_control_click && p_button == 0)
 		p_button = 2;
 		
 	// Determine the press state - this can be down, up or release. If
@@ -1637,289 +2621,292 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	{
 		// Get the time of the mouse press event.
 		uint32_t t_event_time;
-		t_event_time = MCPlatformGetEventTime();
+		t_event_time = GetEventTime();
 		
 		// If the click occured within the double click time and double click
 		// radius *and* if the button is the same as the last clicked button
 		// then increment the click count.
-		if (t_event_time - s_mouse_last_click_time < MCdoubletime &&
-			MCU_abs(s_mouse_last_click_screen_position . x - s_mouse_screen_position . x) < MCdoubledelta &&
-			MCU_abs(s_mouse_last_click_screen_position . y - s_mouse_screen_position . y) < MCdoubledelta &&
-			s_mouse_last_click_button == p_button)
-			s_mouse_click_count += 1;
+        
+        uint16_t t_doubletime;
+        GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_doubletime);
+        uint16_t t_doubledelta;
+        GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_doubledelta);
+        
+		if (t_event_time - m_mouse_last_click_time < t_doubletime &&
+			MCU_abs(m_mouse_last_click_screen_position . x - m_mouse_screen_position . x) < t_doubledelta &&
+			MCU_abs(m_mouse_last_click_screen_position . y - m_mouse_screen_position . y) < t_doubledelta &&
+			m_mouse_last_click_button == p_button)
+			m_mouse_click_count += 1;
 		else
-			s_mouse_click_count = 0;
+			m_mouse_click_count = 0;
 		
 		// Update the last click position / button.
-		s_mouse_last_click_button = p_button;
-		s_mouse_last_click_screen_position = s_mouse_screen_position;
+		m_mouse_last_click_button = p_button;
+		m_mouse_last_click_screen_position = m_mouse_screen_position;
 		
-		MCPlatformCallbackSendMouseDown(s_mouse_window, p_button, s_mouse_click_count);
+		SendMouseDown(m_mouse_window, p_button, m_mouse_click_count);
 	}
 	else
 	{
 		MCPoint t_global_pos;
-		MCPlatformMapPointFromWindowToScreen(s_mouse_window, s_mouse_position, t_global_pos);
+		m_mouse_window -> MapPointFromWindowToScreen(m_mouse_position, t_global_pos);
 		
 		Window t_new_mouse_window;
-		MCPlatformGetWindowAtPoint(t_global_pos, t_new_mouse_window);
+		GetWindowAtPoint(t_global_pos, t_new_mouse_window);
 		
-		s_mouse_was_control_click = false;
+		m_mouse_was_control_click = false;
 		
 		// If the mouse was grabbed explicitly, we send mouseUp not mouseRelease.
-		if (t_new_mouse_window == s_mouse_window || t_grabbed_explicit)
+		if (t_new_mouse_window == m_mouse_window || t_grabbed_explicit)
 		{
 			// If this is the same button as the last mouseDown, then
 			// update the click time.
-			if (p_button == s_mouse_last_click_button)
-				s_mouse_last_click_time = MCPlatformGetEventTime();
+			if (p_button == m_mouse_last_click_button)
+				m_mouse_last_click_time = GetEventTime();
 			
-			MCPlatformCallbackSendMouseUp(s_mouse_window, p_button, s_mouse_click_count);
+			SendMouseUp(m_mouse_window, p_button, m_mouse_click_count);
 		}
 		else
 		{
 			// Any release causes us to cancel multi-click tracking.
-			s_mouse_click_count = 0;
-			s_mouse_last_click_time = 0;
+			m_mouse_click_count = 0;
+			m_mouse_last_click_time = 0;
 			
             // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button, false);
+			SendMouseRelease(m_mouse_window, p_button, false);
 		}
 	}
 }
 
-void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
+void MCMacPlatformCore::HandleMouseCursorChange(MCPlatformWindowRef p_window)
 {
     // If the mouse is not currently over the window whose cursor has
     // changed - do nothing.
-    if (s_mouse_window != p_window)
+    if (m_mouse_window != p_window)
         return;
     
     // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
-    if (s_mouse_cursor_locked)
+    if (m_mouse_cursor_locked)
         return;
     
     MCMacPlatformWindow *t_window;
     t_window = (MCMacPlatformWindow *)p_window;
     
-    // If we are on Lion+ then check to see if the mouse location is outside
-    // of any of the system tracking rects (used for resizing etc.)
-    extern uint4 MCmajorosversion;
-    if (MCmajorosversion >= 0x1070)
+    // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
+    //   a resizable frame.
+    bool t_is_resizable;
+    p_window -> GetProperty(kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
+    
+    if (t_is_resizable)
     {
-        // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
-        //   a resizable frame.
-        bool t_is_resizable;
-        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
         
-        if (t_is_resizable)
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: m_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
         {
-            NSArray *t_tracking_areas;
-            t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
-            
-            NSPoint t_mouse_loc;
-            t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
-            for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
-            {
-                if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
-                    return;
-            }
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
         }
     }
-    
+   
     // MW-2014-06-25: [[ Bug 12634 ]] Make sure we only change the cursor if we are not
     //   within a native view.
-    if ([t_window -> GetContainerView() hitTest: [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position]] == t_window -> GetView())
+    if ([t_window -> GetContainerView() hitTest: [t_window -> GetView() mapMCPointToNSPoint: m_mouse_position]] == t_window -> GetView())
     {
         // Show the cursor attached to the window.
         MCPlatformCursorRef t_cursor;
-        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+        p_window -> GetProperty(kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
         
         // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
         if (t_cursor != nil)
-            MCPlatformSetCursor(t_cursor);
+            t_cursor -> Set();
         // SN-2014-10-01: [[ Bug 13516 ]] Hiding a cursor here is not what we want to happen if a cursor hasn't been found
         else
-            MCMacPlatformResetCursor();
+            ResetCursor();
     }
 }
 
-void MCMacPlatformHandleMouseAfterWindowHidden(void)
+void MCMacPlatformCore::HandleMouseAfterWindowHidden(void)
 {
-	MCMacPlatformHandleMouseMove(s_mouse_screen_position);
+	HandleMouseMove(m_mouse_screen_position);
 }
 
 // MW-2014-06-27: [[ Bug 13284 ]] When live resizing starts, leave the window, and enter it again when it finishes.
-void MCMacPlatformHandleMouseForResizeStart(void)
+void MCMacPlatformCore::HandleMouseForResizeStart(void)
 {
-    if (s_mouse_window != nil)
-        MCPlatformCallbackSendMouseLeave(s_mouse_window);
+    if (m_mouse_window != nil)
+        SendMouseLeave(m_mouse_window);
 }
 
-void MCMacPlatformHandleMouseForResizeEnd(void)
+void MCMacPlatformCore::HandleMouseForResizeEnd(void)
 {
-    if (s_mouse_window != nil)
-        MCPlatformCallbackSendMouseEnter(s_mouse_window);
+    if (m_mouse_window != nil)
+        SendMouseEnter(m_mouse_window);
 }
 
-void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
+void MCMacPlatformCore::HandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
 	MCPlatformWindowRef t_new_mouse_window;
-	if (s_mouse_grabbed)
+	if (m_mouse_grabbed)
 	{
 		// If the mouse is grabbed, the mouse window does not change.
-		t_new_mouse_window = s_mouse_window;
+		t_new_mouse_window = m_mouse_window;
 	}
 	else
 	{
 		// If the mouse is not grabbed, then we must determine which of our
 		// window views we are now over.
-		MCPlatformGetWindowAtPoint(p_screen_loc, t_new_mouse_window);
+		GetWindowAtPoint(p_screen_loc, t_new_mouse_window);
 	}
 	
 	// If the mouse window has changed, then we must exit/enter.
 	bool t_window_changed;
 	t_window_changed = false;
-	if (t_new_mouse_window != s_mouse_window)
+	if (t_new_mouse_window != m_mouse_window)
 	{
-		if (s_mouse_window != nil)
-			MCPlatformCallbackSendMouseLeave(s_mouse_window);
+		if (m_mouse_window != nil)
+			SendMouseLeave(m_mouse_window);
 		
 		if (t_new_mouse_window != nil)
-			MCPlatformCallbackSendMouseEnter(t_new_mouse_window);
+			SendMouseEnter(t_new_mouse_window);
 		
 		// If there is no mouse window, reset the cursor to default.
 		if (t_new_mouse_window == nil)
         {
             // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
-            if (!s_mouse_cursor_locked)
-                MCMacPlatformResetCursor();
+            if (!m_mouse_cursor_locked)
+                ResetCursor();
         }
 			
-		if (s_mouse_window != nil)
-			MCPlatformReleaseWindow(s_mouse_window);
+		if (m_mouse_window != nil)
+			m_mouse_window -> Release();
 		
-		s_mouse_window = t_new_mouse_window;
+		m_mouse_window = t_new_mouse_window;
 		
-		if (s_mouse_window != nil)
-			MCPlatformRetainWindow(s_mouse_window);
+		if (m_mouse_window != nil)
+			m_mouse_window -> Retain();
 			
 		t_window_changed = true;
 	}
 	
 	// Regardless of whether we post a mouse move, update the screen mouse position.
-	s_mouse_screen_position = p_screen_loc;
+	m_mouse_screen_position = p_screen_loc;
 	
 	// If we have a new mouse window, then translate screen loc and update.
-	if (s_mouse_window != nil)
+	if (m_mouse_window != nil)
 	{
 		MCPoint t_window_loc;
-		MCPlatformMapPointFromScreenToWindow(s_mouse_window, p_screen_loc, t_window_loc);
+		m_mouse_window -> MapPointFromScreenToWindow(p_screen_loc, t_window_loc);
 		
 		if (t_window_changed ||
-			t_window_loc . x != s_mouse_position . x ||
-			t_window_loc . y != s_mouse_position . y)
+			t_window_loc . x != m_mouse_position . x ||
+			t_window_loc . y != m_mouse_position . y)
 		{
-			s_mouse_position = t_window_loc;
+			m_mouse_position = t_window_loc;
 			
 			// Send the mouse move.
-			MCPlatformCallbackSendMouseMove(s_mouse_window, t_window_loc);
+			SendMouseMove(m_mouse_window, t_window_loc);
 			
+            uint16_t t_dragdelta;
+            GetGlobalProperty(kMCPlatformGlobalPropertyDoubleTime, kMCPlatformPropertyTypeUInt16, &t_dragdelta);
+            
 			// If this is the start of a drag, then send a mouse drag.
-			if (s_mouse_buttons != 0 && s_mouse_drag_button == 0xffffffff &&
-				(MCU_abs(p_screen_loc . x - s_mouse_last_click_screen_position . x) >= MCdragdelta ||
-				 MCU_abs(p_screen_loc . y - s_mouse_last_click_screen_position . y) >= MCdragdelta))
+			if (m_mouse_buttons != 0 && m_mouse_drag_button == 0xffffffff &&
+				(MCU_abs(p_screen_loc . x - m_mouse_last_click_screen_position . x) >= t_dragdelta ||
+				 MCU_abs(p_screen_loc . y - m_mouse_last_click_screen_position . y) >= t_dragdelta))
 			{
-				s_mouse_drag_button = s_mouse_last_click_button;
-				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
+				m_mouse_drag_button = m_mouse_last_click_button;
+				SendMouseDrag(m_mouse_window, m_mouse_drag_button);
 			}
 		}
         
         // MW-2014-04-22: [[ Bug 12253 ]] Ending a drag-drop can cause the mouse window to go.
         // Update the mouse cursor for the mouse window.
-        if (s_mouse_window != nil)
-            MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+        if (m_mouse_window != nil)
+            HandleMouseCursorChange(m_mouse_window);
 	}
 }
 
-void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy)
+void MCMacPlatformCore::HandleMouseScroll(CGFloat dx, CGFloat dy)
 {
-	if (s_mouse_window == nil)
+	if (m_mouse_window == nil)
 		return;
 	
 	if (dx != 0.0 || dy != 0.0)
-		MCPlatformCallbackSendMouseScroll(s_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
+		SendMouseScroll(m_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
 }
 
-void MCMacPlatformHandleMouseSync(void)
+void MCMacPlatformCore::HandleMouseSync(void)
 {
-	if (s_mouse_window != nil)
+	if (m_mouse_window != nil)
 	{
 		for(uindex_t i = 0; i < 3; i++)
-			if ((s_mouse_buttons & (1 << i)) != 0)
+			if ((m_mouse_buttons & (1 << i)) != 0)
 			{
-				s_mouse_buttons &= ~(1 << i);
+				m_mouse_buttons &= ~(1 << i);
 				
                 // MW-2014-06-11: [[ Bug 12339 ]] Don't send a mouseRelease message in this case.
-				if (s_mouse_was_control_click &&
+				if (m_mouse_was_control_click &&
 					i == 0)
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2, true);
+					SendMouseRelease(m_mouse_window, 2, true);
 				else
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, i, true);
+					SendMouseRelease(m_mouse_window, i, true);
 			}
 	}
 	
-	s_mouse_grabbed = false;
-	s_mouse_drag_button = 0xffffffff;
-	s_mouse_click_count = 0;
-	s_mouse_last_click_time = 0;
-	s_mouse_was_control_click = false;
+	m_mouse_grabbed = false;
+	m_mouse_drag_button = 0xffffffff;
+	m_mouse_click_count = 0;
+	m_mouse_last_click_time = 0;
+	m_mouse_was_control_click = false;
 
 	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
+	MapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
 	
-	MCMacPlatformHandleMouseMove(t_location);
+	HandleMouseMove(t_location);
 }
 
-void MCMacPlatformSyncMouseBeforeDragging(void)
+void MCMacPlatformCore::SyncMouseBeforeDragging(void)
 {
 	// Release the mouse.
 	uindex_t t_button_to_release;
-	if (s_mouse_buttons != 0)
+	if (m_mouse_buttons != 0)
 	{
-		t_button_to_release = s_mouse_drag_button;
+		t_button_to_release = m_mouse_drag_button;
 		if (t_button_to_release == 0xffffffffU)
-			t_button_to_release = s_mouse_last_click_button;
+			t_button_to_release = m_mouse_last_click_button;
 		
-		s_mouse_buttons = 0;
-		s_mouse_grabbed = false;
-		s_mouse_click_count = 0;
-		s_mouse_last_click_time = 0;
-		s_mouse_drag_button = 0xffffffff;
-		s_mouse_was_control_click = false;
+		m_mouse_buttons = 0;
+		m_mouse_grabbed = false;
+		m_mouse_click_count = 0;
+		m_mouse_last_click_time = 0;
+		m_mouse_drag_button = 0xffffffff;
+		m_mouse_was_control_click = false;
 	}
 	else
 		t_button_to_release = 0xffffffff;
 	
-	if (s_mouse_window != nil)
+	if (m_mouse_window != nil)
 	{
         // MW-2014-06-11: [[ Bug 12339 ]] Ensure mouseRelease is sent if drag is starting.
 		if (t_button_to_release != 0xffffffff)
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
-		MCPlatformCallbackSendMouseLeave(s_mouse_window);
+			SendMouseRelease(m_mouse_window, t_button_to_release, false);
+		SendMouseLeave(m_mouse_window);
 		
         // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
         //  a mouseLeave handler
-        if (s_mouse_window != nil)
+        if (m_mouse_window != nil)
         {
-            MCPlatformReleaseWindow(s_mouse_window);
-            s_mouse_window = nil;
+            m_mouse_window -> Release();
+            m_mouse_window = nil;
         }
 	}
 }
 
-void MCMacPlatformSyncMouseAfterTracking(void)
+void MCMacPlatformCore::SyncMouseAfterTracking(void)
 {
 	NSEvent *t_event;
 	t_event = [NSEvent otherEventWithType:NSApplicationDefined
@@ -1936,12 +2923,12 @@ void MCMacPlatformSyncMouseAfterTracking(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
+void MCMacPlatformCore::HandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
-	if (s_mouse_modifiers != p_modifiers)
+	if (m_mouse_modifiers != p_modifiers)
 	{
-		s_mouse_modifiers = p_modifiers;
-		MCPlatformCallbackSendModifiersChanged(p_modifiers);
+		m_mouse_modifiers = p_modifiers;
+		SendModifiersChanged(p_modifiers);
 	}
 }
 	
@@ -1971,55 +2958,76 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CGFloat get_desktop_height()
+CGFloat MCMacPlatformCore::GetDesktopHeight()
 {
-	if (!s_have_desktop_height)
+	if (!m_have_desktop_height)
 	{
-		s_desktop_height = 0.0f;
+		m_desktop_height = 0.0f;
 		
 		for (NSScreen * t_screen in [NSScreen screens])
 		{
 			NSRect t_rect = [t_screen frame];
-			if (t_rect.origin.y + t_rect.size.height > s_desktop_height)
-				s_desktop_height = t_rect.origin.y + t_rect.size.height;
+			if (t_rect.origin.y + t_rect.size.height > m_desktop_height)
+				m_desktop_height = t_rect.origin.y + t_rect.size.height;
 		}
 		
-		s_have_desktop_height = true;
+		m_have_desktop_height = true;
 	}
 	
-	return s_desktop_height;
+	return m_desktop_height;
 }
 
-void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+void MCMacPlatformCore::SetHasDesktopHeight(bool p_have_desktop_height)
 {
-	r_point = NSMakePoint(p . x, get_desktop_height() - p . y);
+    m_have_desktop_height = p_have_desktop_height;
 }
 
-void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
+void MCMacPlatformCore::MapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+{
+	r_point = NSMakePoint(p . x, GetDesktopHeight() - p . y);
+}
+
+void MCMacPlatformCore::MapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
 	r_point . x = int16_t(p . x);
-	r_point . y = int16_t(get_desktop_height() - p . y);
+	r_point . y = int16_t(GetDesktopHeight() - p . y);
 }
 
-void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
+void MCMacPlatformCore::MapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	r_rect = NSMakeRect(CGFloat(r . x), get_desktop_height() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
+	r_rect = NSMakeRect(CGFloat(r . x), GetDesktopHeight() - CGFloat(r . y + r . height), CGFloat(r . width), CGFloat(r . height));
 }
 
-void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
+void MCMacPlatformCore::MapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(get_desktop_height() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
+	r_rect = MCRectangleMake(int16_t(r . origin . x), int16_t(GetDesktopHeight() - (r . origin . y + r . size . height)), int16_t(r . size . width), int16_t(r . size . height));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformShowMessageDialog(MCStringRef p_title,
+void MCMacPlatformCore::ShowMessageDialog(MCStringRef p_title,
                                     MCStringRef p_message)
 {
+    CFStringRef t_title;
+    if (!MCStringConvertToCFStringRef(p_title, t_title))
+        return;
+    
+    CFStringRef t_message;
+    if (!MCStringConvertToCFStringRef(p_message, t_message))
+    {
+        CFRelease(t_title);
+        return;
+    }
+    
     NSAlert *t_alert = [[NSAlert alloc] init];
     [t_alert addButtonWithTitle:@"OK"];
-    [t_alert setMessageText: MCStringConvertToAutoreleasedNSString(p_title)];
-    [t_alert setInformativeText: MCStringConvertToAutoreleasedNSString(p_message)];
+    
+    [t_alert setMessageText: (NSString *)t_title];
+    [t_alert setInformativeText: (NSString *)t_message];
+    
+    CFRelease(t_title);
+    CFRelease(t_message);
+    
     [t_alert setAlertStyle:NSInformationalAlertStyle];
     [t_alert runModal];
 }
@@ -2030,103 +3038,134 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 {
 	// COCOA-TODO: Make this is a little more discerning (only need to reset if
 	//   primary geometry changes).
-	s_have_desktop_height = false;
+    MCMacPlatformCore * t_platform = (MCMacPlatformCore *) userInfo;
+    t_platform -> SetHasDesktopHeight(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int platform_main(int argc, char *argv[], char *envp[])
+MCMacPlatformCore::MCMacPlatformCore(MCPlatformCallbackRef p_callback)
 {
-	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
-	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
-		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
-			return -1;
-	
-	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
-	
-    s_callback_lock = [[NSLock alloc] init];
-    
-	// Create the normal NSApplication object.
-	NSApplication *t_application;
-	t_application = [com_runrev_livecode_MCApplication sharedApplication];
-	
-	// Register for reconfigurations.
-	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
-    
-	if (!MCInitialize() ||
-        !MCSInitialize() ||
-	    !MCScriptInitialize())
-		exit(-1);
-    
-	// On OSX, argv and envp are encoded as UTF8
-	MCStringRef *t_new_argv;
-	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
-	
-	for (int i = 0; i < argc; i++)
-	{
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
-	}
-	
-	MCStringRef *t_new_envp;
-	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
-	
-	int i = 0;
-	uindex_t t_envp_count = 0;
-	
-	while (envp[i] != NULL)
-	{
-		t_envp_count++;
-		uindex_t t_count = i;
-		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
-		i++;
-	}
-	
-	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
-	t_new_envp[i] = nil;
-	
-	// Setup our delegate
-	com_runrev_livecode_MCApplicationDelegate *t_delegate;
-	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
-	
-	// Assign our delegate
-	[t_application setDelegate: t_delegate];
-	
-	// Run the application - this never returns!
-	[t_application run];    
-	
-	for (i = 0; i < argc; i++)
-		MCValueRelease(t_new_argv[i]);
-	for (i = 0; i < t_envp_count; i++)
-		MCValueRelease(t_new_envp[i]);    
-	
-	MCMemoryDeleteArray(t_new_argv);
-	MCMemoryDeleteArray(t_new_envp);
-	
-	// Drain the autorelease pool.
-	[t_pool release];
-	
-    MCScriptFinalize();
-	MCFinalize();
-	
-	return 0;
+    m_callback = p_callback;
+    m_animation_start_time = CFAbsoluteTimeGetCurrent();
 }
 
-////////////////////////////////////////////////////////////////////////////////
+MCMacPlatformCore::~MCMacPlatformCore()
+{
+    if (m_abort_key_thread != nil)
+        [m_abort_key_thread release];
+}
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Helper functions used to create an auto-release pool for each new thread.
-void *MCMacPlatfromCreateAutoReleasePool()
+int MCMacPlatformCore::Run(int argc, char *argv[], char *envp[])
 {
     NSAutoreleasePool *t_pool;
     t_pool = [[NSAutoreleasePool alloc] init];
-    return (void *) t_pool;
+    
+    m_callback_lock = [[NSLock alloc] init];
+    
+    // Create the normal NSApplication object.
+    NSApplication *t_application;
+    t_application = [com_runrev_livecode_MCApplication sharedApplication];
+    
+    // Register for reconfigurations.
+    CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, this);
+    
+    // On OSX, argv and envp are encoded as UTF8
+    MCStringRef *t_new_argv;
+    /* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
+    
+    for (int i = 0; i < argc; i++)
+    {
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+    }
+    
+    MCStringRef *t_new_envp;
+    /* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
+    
+    int i = 0;
+    uindex_t t_envp_count = 0;
+    
+    while (envp[i] != NULL)
+    {
+        t_envp_count++;
+        uindex_t t_count = i;
+        /* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
+        i++;
+    }
+    
+    /* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
+    t_new_envp[i] = nil;
+    
+    // Setup our delegate
+    com_runrev_livecode_MCApplicationDelegate *t_delegate;
+    t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
+    
+    [t_delegate setPlatform:this];
+    
+    // Assign our delegate
+    [t_application setDelegate: t_delegate];
+    
+    // Run the application - this never returns!
+    [t_application run];
+    
+    for (i = 0; i < argc; i++)
+        MCValueRelease(t_new_argv[i]);
+    for (i = 0; i < t_envp_count; i++)
+        MCValueRelease(t_new_envp[i]);
+    
+    MCMemoryDeleteArray(t_new_argv);
+    MCMemoryDeleteArray(t_new_envp);
+    
+    // Drain the autorelease pool.
+    [t_pool release];
+    
+    return 0;
 }
 
-void MCMacPlatformReleaseAutoReleasePool(void *p_pool)
+
+void MCMacPlatformCore::DisableScreenUpdates(void)
 {
-    NSAutoreleasePool *t_pool;
-    t_pool = (NSAutoreleasePool *) p_pool;
-    [t_pool release];
+    NSDisableScreenUpdates();
 }
-////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformCore::EnableScreenUpdates(void)
+{
+    NSEnableScreenUpdates();
+}
+
+bool MCMacPlatformCore::QueryInterface(const char * p_interface_id, MCPlatform::Base *&r_interface)
+{
+    return MCPlatform::Base::QueryInterface(p_interface_id, r_interface);
+}
+
+bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image)
+{
+    bool t_success = true;
+    
+    CGColorSpaceRef t_colorspace = nil;
+    if (t_success)
+        t_success = MCImageGetCGColorSpace(t_colorspace);
+    
+    if (t_success)
+        t_success = MCImageBitmapToCGImage(p_bitmap, t_colorspace, p_copy, p_invert, r_image);
+    
+    CGColorSpaceRelease(t_colorspace);
+    
+    return t_success;
+}
+
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+bool MCMacPlatformCore::MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
+{
+    if (p_bitmap == nil)
+        return false;
+    bool t_mask;
+    t_mask = MCImageBitmapHasTransparency(p_bitmap);
+    
+    MCGRaster t_raster;
+    t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
+    
+    return MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
+}

@@ -20,23 +20,12 @@
 #include "uidc.h"
 
 #include "platform.h"
-#include "platform-internal.h"
+
+#include "mac-platform.h"
 
 #include "color.h"
 
 // IM-2014-09-24: [[ Bug 13208 ]] Update color transform to use CoreGraphics API
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct MCPlatformColorTransform
-{
-	uint32_t references;
-	CGColorSpaceRef colorspace;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +44,8 @@ inline void MCColorMatrix3x3GetElements(const MCColorMatrix3x3 &p_matrix, CGFloa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformCreateColorTransform(const MCColorSpaceInfo& p_info, MCPlatformColorTransformRef& r_transform)
+bool
+MCMacPlatformColorTransform::CreateWithColorSpace(const MCColorSpaceInfo& p_info)
 {
 	bool t_success;
 	t_success = true;
@@ -116,54 +106,26 @@ void MCPlatformCreateColorTransform(const MCColorSpaceInfo& p_info, MCPlatformCo
 	else
 		t_success = false;
 	
-	MCPlatformColorTransform *t_colorxform;
-	t_colorxform = nil;
-	if (t_success)
-		t_success = MCMemoryNew(t_colorxform);
-	
 	if (t_success)
 	{
-		t_colorxform->references = 1;
-		t_colorxform->colorspace = t_colorspace;
+		m_colorspace = t_colorspace;
 	}
 	else
 	{
 		if (t_colorspace != nil)
 			CFRelease(t_colorspace);
-		t_colorxform = nil;
 	}
-	
-	r_transform = t_colorxform;
+    return t_success;
 }
 
-void MCPlatformRetainColorTransform(MCPlatformColorTransformRef p_transform)
+MCMacPlatformColorTransform::~MCMacPlatformColorTransform(void)
 {
-	if (p_transform == nil)
-		return;
-		
-	p_transform -> references += 1;
+    if (m_colorspace != nil)
+        CFRelease(m_colorspace);
 }
 
-void MCPlatformReleaseColorTransform(MCPlatformColorTransformRef p_transform)
+bool MCMacPlatformColorTransform::Apply( MCImageBitmap *p_image)
 {
-	if (p_transform == nil)
-		return;
-		
-	p_transform -> references -= 1;
-	if (p_transform -> references == 0)
-	{
-		if (p_transform -> colorspace != nil)
-			CFRelease(p_transform->colorspace);
-		
-		MCMemoryDelete(p_transform);
-	}
-}
-
-bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCImageBitmap *p_image)
-{
-	if (p_transform == nil)
-		return false;
-	
 	bool t_success;
 	t_success = true;
 	
@@ -196,12 +158,12 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	if (t_success)
 	{
 		CGBitmapInfo t_bm_info;
-		if (CGColorSpaceGetModel(p_transform->colorspace) == kCGColorSpaceModelCMYK)
+		if (CGColorSpaceGetModel(m_colorspace) == kCGColorSpaceModelCMYK)
 			t_bm_info = kCGBitmapByteOrder32Big;
 		else
 			t_bm_info = t_dst_bm_info;
 			
-		t_success = nil != (t_image = CGImageCreate(p_image->width, p_image->height, 8, 32, p_image->stride, p_transform->colorspace, t_bm_info, t_provider, nil, false, kCGRenderingIntentDefault));
+		t_success = nil != (t_image = CGImageCreate(p_image->width, p_image->height, 8, 32, p_image->stride, m_colorspace, t_bm_info, t_provider, nil, false, kCGRenderingIntentDefault));
 	}
 	
 	CGColorSpaceRef t_dst_colorspace;
@@ -272,12 +234,22 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPlatformInitializeColorTransform(void)
+MCPlatformColorTransformRef MCMacPlatformCore::CreateColorTransform(void)
 {
-	return true;
+    MCPlatform::Ref<MCPlatformColorTransform> t_ref = MCPlatform::makeRef<MCMacPlatformColorTransform>(this);
+    
+    return t_ref.unsafeTake();
 }
 
-void MCPlatformFinalizeColorTransform(void)
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCMacPlatformCore::InitializeColorTransform(void)
+{
+    return true;
+}
+
+void MCMacPlatformCore::FinalizeColorTransform(void)
 {
 }
 

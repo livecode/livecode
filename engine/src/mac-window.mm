@@ -24,22 +24,15 @@
 #include "unicode.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
 #include "mac-clipboard.h"
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include <objc/objc-runtime.h>
 
 #include "graphics_util.h"
 
 #include "osspec.h"
-
-///////////////////////////////////////////////////////////////////////////
-
-static bool s_inside_focus_event = false;
-
-//static MCMacPlatformWindow *s_focused_window = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,8 +42,6 @@ static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
 
@@ -66,7 +57,8 @@ static bool s_lock_responder_change = false;
 
 - (NSRect)movingFrame
 {
-    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationWindowIsMoving(t_window))
         return m_moving_frame;
     else
         return [self frame];
@@ -85,7 +77,8 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -93,7 +86,10 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCMacPlatformWindow * t_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window->GetPlatform());
+    
+    if (t_platform -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -102,7 +98,7 @@ static bool s_lock_responder_change = false;
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
-	if (s_lock_responder_change)
+	if (t_platform->GetResponderChangeLock())
 		return YES;
 	
 	if ([p_responder isKindOfClass: [NSView class]])
@@ -172,7 +168,8 @@ static bool s_lock_responder_change = false;
 
 - (NSRect)movingFrame
 {
-    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationWindowIsMoving(t_window))
         return m_moving_frame;
     else
         return [self frame];
@@ -198,7 +195,8 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCPlatformWindowRef t_window = [(MCWindowDelegate *)[self delegate] platformWindow];
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -206,7 +204,9 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCMacPlatformWindow * t_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window->GetPlatform());
+    if (static_cast<MCMacPlatformCore *>(t_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -215,7 +215,7 @@ static bool s_lock_responder_change = false;
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
-	if (s_lock_responder_change)
+    if (t_platform -> GetResponderChangeLock())
 		return YES;
 	
 	if ([p_responder isKindOfClass: [NSView class]])
@@ -268,7 +268,9 @@ static bool s_lock_responder_change = false;
 - (void)popupWindowShouldClose: (NSNotification *)notification
 {
     [self close];
-    MCPlatformCallbackSendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCPlatformCoreRef t_platform = [(MCWindowDelegate *)[self delegate] platformWindow]->GetPlatform();
+    
+    t_platform -> SendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
 }
 
 - (void)popupAndMonitor
@@ -280,8 +282,10 @@ static bool s_lock_responder_change = false;
     
     // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
     //   as it seems to confuse Cocoa.
-    if (s_inside_focus_event)
-        [self orderFront: nil];
+    MCMacPlatformWindow * t_platform_window = static_cast<MCMacPlatformWindow *>([(MCWindowDelegate *)[self delegate] platformWindow]);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_platform_window->GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
+       [self orderFront: nil];
     else
         [self makeKeyAndOrderFront: nil];
     
@@ -313,7 +317,7 @@ static bool s_lock_responder_change = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window)
+void MCMacPlatformWindow::WindowMoved(NSWindow *self)
 {
     // The NSWindow's frame isn't updated whilst a window is being moved. However,
     // the window server's bounds *are*. Thus we ask for the updated bounds from
@@ -342,7 +346,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
         
         [(NSWindow <com_runrev_livecode_MCMovingFrame> *)self setMovingFrame:NSRectFromCGRect(t_rect)];
         
-        ((MCMacPlatformWindow *)p_window) -> ProcessDidMove();
+        ProcessDidMove();
     }
     
     [t_info_array release];
@@ -403,7 +407,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     t_size . y = t_content . height;
 	
 	MCPoint t_new_size;
-	MCPlatformCallbackSendWindowConstrain(m_window, t_size, t_new_size);
+	m_window -> GetPlatform() -> SendWindowConstrain(m_window, t_size, t_new_size);
     
     t_content . width = t_new_size . x;
     t_content . height = t_new_size . y;
@@ -428,7 +432,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
         
         // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
         //   messages.
-		MCMacPlatformApplicationWindowStartedMoving(m_window);
+		static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> ApplicationWindowStartedMoving(m_window);
     }
 }
 
@@ -450,13 +454,13 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     m_user_reshape = true;
     
     // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse temporarily leaves the window.
-    MCMacPlatformHandleMouseForResizeStart();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleMouseForResizeStart();
 }
 
 - (void)windowDidEndLiveResize:(NSNotification *)notification
 {
     // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse returns to the window.
-    MCMacPlatformHandleMouseForResizeEnd();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleMouseForResizeEnd();
     
     // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped sizing the window
     //   so unset us as reshape by user.
@@ -481,26 +485,28 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
         m_window -> ProcessDidBecomeKey();
     else
     {
-        s_inside_focus_event = true;
+        t_platform -> SetInsideFocusEvent(true);
         m_window -> ProcessDidBecomeKey();
-        s_inside_focus_event = false;
+        t_platform -> SetInsideFocusEvent(false);
     }
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform());
+    if (t_platform -> GetInsideFocusEvent())
         m_window -> ProcessDidResignKey();
     else
     {
-        s_inside_focus_event = true;
+        t_platform -> SetInsideFocusEvent(true);
         m_window -> ProcessDidResignKey();
-        s_inside_focus_event = false;
+        t_platform -> SetInsideFocusEvent(false);
     }
 }
 
@@ -517,7 +523,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)viewFocusSwitched:(uint32_t)p_id
 {
-	MCPlatformCallbackSendViewFocusSwitched(m_window, p_id);
+	m_window -> GetPlatform() -> SendViewFocusSwitched(m_window, p_id);
 }
 
 @end
@@ -595,7 +601,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)canBecomeKeyView
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -603,18 +609,19 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_window->GetPlatform());
+    if (t_platform -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
     //   been re-ordered but before anything else - an ideal time to sync the backdrop.
-    MCMacPlatformSyncBackdrop();
+    t_platform -> SyncBackdrop();
 	return YES;
 }
 
 - (BOOL)acceptsFirstResponder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -622,7 +629,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (BOOL)becomeFirstResponder
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return NO;
     
     //MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
@@ -651,7 +658,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -663,7 +670,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -675,7 +682,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -683,7 +690,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -695,7 +702,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseDown: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -707,8 +714,8 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
-    return;
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
+        return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
@@ -719,7 +726,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -727,7 +734,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)rightMouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -735,7 +742,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseDown: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -747,7 +754,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseUp: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -759,7 +766,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseMoved: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -767,7 +774,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -783,7 +790,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseExited: (NSEvent *)event
 {
-    if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (static_cast<MCMacPlatformCore *>(m_window->GetPlatform()) -> ApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -791,7 +798,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)flagsChanged: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 }
 
 // MW-2014-06-25: [[ Bug 12370 ]] Factor out key mapping code so it can be used by both
@@ -861,7 +868,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)keyDown: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
     // Make the event key code to a platform keycode and codepoints.
     MCPlatformKeyCode t_key_code;
@@ -871,7 +878,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     // Notify the host that a keyDown event has been received - this is to work around the
     // issue with IME not playing nice with rawKey messages. Eventually this should work
     // by completely separating rawKey messages from text input messages.
-    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+    m_window -> GetPlatform() -> SendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
 	if ([self useTextInput])
 	{
@@ -890,7 +897,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)keyUp: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
     // SN-2014-10-31: [[ Bug 13832 ]] We want the rawKeyUp and keyUp messages to be sent in their due course when
     //  useTextInput is true, since the key messages have been enqueued appropriately
@@ -921,7 +928,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (replacementRange . location == NSNotFound)
 	{
 		MCRange t_marked_range, t_selected_range;
-		MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+		m_window -> GetPlatform() -> SendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
 		if (t_marked_range . offset != UINDEX_MAX)
 			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
 		else
@@ -944,7 +951,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	// Insert the text replacing the given range and setting the selection after
 	// it... (It isn't clear what should - if anything - be selected after insert!).
-	MCPlatformCallbackSendTextInputInsertText(t_window,
+	m_window -> GetPlatform() -> SendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + t_length, 0),
@@ -983,7 +990,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		MCPlatformTextInputAction t_action;
 		if (MCMacMapSelectorToTextInputAction(aSelector, t_action))
 		{
-			MCPlatformCallbackSendTextInputAction([self platformWindow], t_action);
+			m_window -> GetPlatform() -> SendTextInputAction([self platformWindow], t_action);
 			return;
 		}
 		
@@ -1003,7 +1010,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (replacementRange . location == NSNotFound)
 	{
 		MCRange t_marked_range, t_selected_range;
-		MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+		m_window -> GetPlatform() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 		if (t_marked_range . offset != UINDEX_MAX)
 			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
 		else
@@ -1024,7 +1031,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
 
-	MCPlatformCallbackSendTextInputInsertText(t_window,
+	m_window -> GetPlatform() -> SendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + newSelection . location, newSelection . length),
@@ -1054,9 +1061,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	// We do this by inserting an empty string, leaving the current selection untouched.
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	
-	MCPlatformCallbackSendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
+	t_window -> GetPlatform() -> SendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
 	
 	[[self inputContext] discardMarkedText];
 }
@@ -1069,7 +1076,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NSMakeRange(NSNotFound, 0);
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
 }
@@ -1082,7 +1089,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NSMakeRange(NSNotFound, 0);
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
 	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
 }
@@ -1095,7 +1102,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return NO;
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
+	t_window -> GetPlatform() -> SendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
     //MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
 	return t_marked_range . offset != UINDEX_MAX;
 }
@@ -1110,7 +1117,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	unichar_t *t_chars;
 	uindex_t t_char_count;
 	MCRange t_actual_range;
-	MCPlatformCallbackSendTextInputQueryText(t_window,
+	t_window -> GetPlatform() -> SendTextInputQueryText(t_window,
 											 MCRangeMake(aRange . location, aRange . length),
 											 t_chars, t_char_count,
 											 t_actual_range);
@@ -1142,7 +1149,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_actual_range;
 	MCRectangle t_rect;
-	MCPlatformCallbackSendTextInputQueryTextRect(t_window,
+	t_window -> GetPlatform() -> SendTextInputQueryTextRect(t_window,
 												 MCRangeMake(aRange . location, aRange . length),
 												 t_rect,
 												 t_actual_range);
@@ -1173,7 +1180,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		return 0;
 	
 	uindex_t t_index;
-	MCPlatformCallbackSendTextInputQueryTextIndex(t_window, t_location, t_index);
+	t_window -> GetPlatform() -> SendTextInputQueryTextIndex(t_window, t_location, t_index);
 	
     //MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
 	
@@ -1293,7 +1300,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)scrollWheel: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1335,7 +1342,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 - (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard
 {
 	NSEvent *t_mouse_event;
-	t_mouse_event = MCMacPlatformGetLastMouseEvent();
+	t_mouse_event = static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> GetLastMouseEvent();
 	if (t_mouse_event == nil)
 		return NSDragOperationNone;
 		
@@ -1379,16 +1386,16 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
 {
+    MCMacPlatformWindow *t_window;
+    t_window = [self platformWindow];
     // Create a wrapper around the drag board for this operation if the drag
     // source is outside this instance of LiveCode.
     MCAutoRefcounted<MCMacRawClipboard> t_dragboard;
     if ([sender draggingSource] == nil)
-        t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
+        t_dragboard = new MCMacRawClipboard(t_window -> GetCallback(), [sender draggingPasteboard]);
     
 	NSDragOperation t_ns_operation;
 	
-	MCMacPlatformWindow *t_window;
-	t_window = [self platformWindow];
 	if (t_window != nil)
 	{
 		MCPlatformDragOperation t_operation;
@@ -1412,18 +1419,20 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender
 {
-	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
 		return NSDragOperationNone;
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(t_window -> GetPlatform());
 	
-	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
+    MCPoint t_location;
+    t_platform -> MapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
+    
+    t_window -> MapPointFromScreenToWindow(t_location, t_location);
 	
 	// Update the modifier key state.
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
+	t_platform -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
 	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragMove(t_location, t_operation);
@@ -1458,14 +1467,14 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
 {
     // MW-2014-07-15: [[ Bug 12773 ]] Make sure mouseMove is sent after end of drag operation.
-    MCMacPlatformSyncMouseAfterTracking();
+    static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> SyncMouseAfterTracking();
 }
 
 //////////
 
 - (void)handleMouseMove: (NSEvent *)event
 {
-	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	static_cast<MCMacPlatformCore *>(m_window -> GetPlatform()) -> HandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1556,9 +1565,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCGRegionRef t_update_region;
 	t_update_region = nil;
 	
-	/* UNCHECKED */ MCGRegionCreate(t_update_region);
+	/* UNCHECKED */ t_window -> MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
-		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
+		/* UNCHECKED */ t_window -> MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
 
 	//////////
     
@@ -1567,10 +1576,10 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 	{
 		// IM-2014-09-30: [[ Bug 13501 ]] Prevent system event checking which can cause re-entrant calls to drawRect
-		MCMacPlatformDisableEventChecking();
+		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> DisableEventChecking();
         MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
         t_window -> HandleRedraw(&t_surface, t_update_region);
-		MCMacPlatformEnableEventChecking();
+		static_cast<MCMacPlatformCore *>(t_window -> GetPlatform()) -> EnableEventChecking();
     }
     
     // Restore the context state
@@ -1578,7 +1587,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 	//////////
 	
-	MCGRegionDestroy(t_update_region);
+	t_window -> MCGRegionDestroy(t_update_region);
 }
 
 //////////
@@ -1653,9 +1662,10 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformWindow::MCMacPlatformWindow(void)
+MCMacPlatformWindow::MCMacPlatformWindow(MCPlatformCoreRef p_platform)
+: MCPlatformWindow(p_platform)
 {
-	m_delegate = nil;
+    m_delegate = nil;
 	m_view = nil;
     m_container_view = nil;
 	m_handle = nil;
@@ -1745,17 +1755,20 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	
 	// Map from cocoa coords.
 	MCRectangle t_content;
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, t_content);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenNSRectToMCRectangle(t_new_cocoa_content, t_content);
 	
 	// Make sure we don't tickle the event queue whilst resizing, otherwise
 	// redraws can be done by the OS during the process resulting in tearing
 	// as the window resizes.
-	MCMacPlatformDisableEventChecking();
+	t_platform -> DisableEventChecking();
 	
 	// And get the super class to deal with it.
 	HandleReshape(t_content);
 	
-	MCMacPlatformEnableEventChecking();
+	t_platform -> EnableEventChecking();
 }
 
 void MCMacPlatformWindow::ProcessDidResize(void)
@@ -1793,18 +1806,21 @@ void MCMacPlatformWindow::ProcessDidResignKey(void)
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
 {
 	MCPoint t_location;
-	MCMacPlatformMapScreenNSPointToMCPoint(p_location_cocoa, t_location);
-	MCMacPlatformHandleMouseMove(t_location);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenNSPointToMCPoint(p_location_cocoa, t_location);
+	t_platform -> HandleMouseMove(t_location);
 }
 
 void MCMacPlatformWindow::ProcessMousePress(NSInteger p_button, bool p_is_down)
 {
-	MCMacPlatformHandleMousePress(p_button, p_is_down);
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMousePress(p_button, p_is_down);
 }
 
 void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
 {
-	MCMacPlatformHandleMouseScroll(dx, dy);
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseScroll(dx, dy);
 }
 
 // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
@@ -1868,7 +1884,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	
 	// Compute the cocoa-oriented content rect.
 	NSRect t_cocoa_content;
-	MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
+	static_cast<MCMacPlatformCore *>(m_platform) -> MapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
 	
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
@@ -1963,7 +1979,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . content_changed && ![m_delegate inUserReshape])
 	{
 		NSRect t_cocoa_content;
-		MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
+		static_cast<MCMacPlatformCore *>(m_platform) -> MapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
 		
 		NSRect t_cocoa_frame;
 		t_cocoa_frame = [m_window_handle frameRectForContentRect: t_cocoa_content];
@@ -1974,7 +1990,13 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? MCStringConvertToAutoreleasedNSString(m_title) : @""];
+    {
+        CFStringRef t_title = nil;
+        /* UNCHECKED */ MCStringConvertToCFStringRef(m_title, t_title);
+        
+		[m_window_handle setTitle: m_title != nil ? (NSString *) t_title : @""];
+        CFRelease(t_title);
+    }
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];
@@ -1985,7 +2007,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
     // MW-2014-04-08: [[ Bug 12073 ]] If the cursor has changed, make sure we try to
     //   update it - should this window be the mouse window.
     if (m_changes . cursor_changed)
-        MCMacPlatformHandleMouseCursorChange(this);
+        static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseCursorChange(this);
     
     // MW-2014-04-23: [[ Bug 12080 ]] Sync hidesOnSuspend.
     if (m_changes . hides_on_suspend_changed)
@@ -2035,8 +2057,9 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 
 void MCMacPlatformWindow::DoShow(void)
 {
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
 	if (m_style == kMCPlatformWindowStyleDialog)
-		MCMacPlatformBeginModalSession(this);
+		t_platform -> BeginModalSession(this);
 	else if (m_style == kMCPlatformWindowStylePopUp)
     {
         [m_window_handle popupAndMonitor];
@@ -2046,7 +2069,7 @@ void MCMacPlatformWindow::DoShow(void)
 		[m_view setNeedsDisplay: YES];
         // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
         //   as it seems to confuse Cocoa.
-        if (s_inside_focus_event)
+        if (t_platform -> GetInsideFocusEvent())
             [m_window_handle orderFront: nil];
         else
             [m_window_handle makeKeyAndOrderFront: nil];
@@ -2064,7 +2087,7 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 	if (t_parent -> m_has_sheet)
 	{
 		m_is_visible = false;
-		MCPlatformCallbackSendWindowClose(this);
+		m_platform -> SendWindowClose(this);
 		return;
 	}
 
@@ -2087,7 +2110,7 @@ void MCMacPlatformWindow::DoHide(void)
 	}
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
-		MCMacPlatformEndModalSession(this);
+		static_cast<MCMacPlatformCore *>(m_platform) -> EndModalSession(this);
 	}
     else if (m_style == kMCPlatformWindowStylePopUp)
     {
@@ -2105,14 +2128,15 @@ void MCMacPlatformWindow::DoHide(void)
 		[m_window_handle close];
 	}
 	
-	MCMacPlatformHandleMouseAfterWindowHidden();
+	static_cast<MCMacPlatformCore *>(m_platform) -> HandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)
 {
     // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
     //   as it seems to confuse Cocoa.
-    if (!s_inside_focus_event)
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    if (!t_platform -> GetInsideFocusEvent())
         [m_window_handle makeKeyWindow];
 }
 
@@ -2121,11 +2145,10 @@ void MCMacPlatformWindow::DoRaise(void)
 	[m_window_handle orderFront: nil];
 }
 
-static uint32_t s_rect_count = 0;
-bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
+bool MCMacDoUpdateRegionCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 {
 	MCWindowView *t_view = static_cast<MCWindowView*>(p_context);
-	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: p_rect]];
+	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: MCRectangleFromMCGIntegerRectangle(p_rect)]];
 	
 	return true;
 }
@@ -2142,8 +2165,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
-	s_rect_count = 0;
-	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
+    MCGRegionIterate(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.
@@ -2190,14 +2212,17 @@ void MCMacPlatformWindow::DoMapContentRectToFrameRect(MCRectangle p_content, MCR
 	
 	// Map the content rect to cocoa coord system.
 	NSRect t_cocoa_content;
-	MCMacPlatformMapScreenMCRectangleToNSRect(p_content, t_cocoa_content);
+    
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+	t_platform -> MapScreenMCRectangleToNSRect(p_content, t_cocoa_content);
 	
 	// Consult the window class to transform the rect.
 	NSRect t_cocoa_frame;
 	t_cocoa_frame = [NSWindow frameRectForContentRect: t_cocoa_content styleMask: t_window_style];
 	
 	// Map the rect from the cocoa coord system.
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_cocoa_frame, r_frame);
+	t_platform -> MapScreenNSRectToMCRectangle(t_cocoa_frame, r_frame);
 }
 
 void MCMacPlatformWindow::DoMapFrameRectToContentRect(MCRectangle p_frame, MCRectangle& r_content)
@@ -2210,12 +2235,14 @@ void MCMacPlatformWindow::DoMapFrameRectToContentRect(MCRectangle p_frame, MCRec
 	ComputeCocoaStyle(t_window_style);
 	
 	NSRect t_cocoa_frame;
-	MCMacPlatformMapScreenMCRectangleToNSRect(p_frame, t_cocoa_frame);
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+    t_platform -> MapScreenMCRectangleToNSRect(p_frame, t_cocoa_frame);
 	
 	NSRect t_cocoa_content;
 	t_cocoa_content = [NSWindow contentRectForFrameRect: t_cocoa_frame styleMask: t_window_style];
 	
-	MCMacPlatformMapScreenNSRectToMCRectangle(t_cocoa_content, r_content);
+	t_platform -> MapScreenNSRectToMCRectangle(t_cocoa_content, r_content);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2242,113 +2269,20 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
 {
     MCStringRef t_native_filename;
     
-    NSString * t_represented_filename;
+    CFStringRef t_represented_filename;
     t_represented_filename = nil;
     
-    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
+    if (m_document_filename != nil && !MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
     {
-        t_represented_filename = MCStringConvertToAutoreleasedNSString(t_native_filename);
+        /* UNCHECKED */ MCStringConvertToCFStringRef(t_native_filename, t_represented_filename);
     }
     else
-        t_represented_filename = @"";
+        t_represented_filename = CFSTR("");
     
     // It appears setRepresentedFilename can't be set to nil
-    [m_window_handle setRepresentedFilename: t_represented_filename];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
-{
-	bool t_success = true;
-	
-	CGImageRef t_image = nil;
-	CGColorSpaceRef t_colorspace = nil;
-	CFDataRef t_data = nil;
-	CGDataProviderRef t_dp = nil;
-	
-	if (t_success)
-		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_alpha.pixels, p_alpha.stride *  p_alpha.height, kCFAllocatorNull));
-	
-	if (t_success)
-		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
-	
-	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
-	
-	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_alpha.width, p_alpha.height, 8, 8, p_alpha.stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
-	
-	CGColorSpaceRelease(t_colorspace);
-	CGDataProviderRelease(t_dp);
-	CFRelease(t_data);
-	
-	if (t_success)
-		r_image = t_image;
-	
-	return t_success;
-}
-
-void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
-{
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = nil;
-	
-	bool t_success;
-	t_success = MCMemoryNew(t_mask);
-	
-	if (t_success)
-	{
-		t_mask->references = 1;
-		
-		t_mask->mask.pixels = p_bits;
-		t_mask->mask.stride = p_stride;
-		t_mask->mask.width = p_width;
-		t_mask->mask.height = p_height;
-		t_mask->mask.format = kMCGRasterFormat_A;
-		
-		t_success = MCAlphaToCGImageNoCopy(t_mask->mask, t_mask->cg_mask);
-	}
-	
-	if (t_success)
-		r_mask = (MCPlatformWindowMaskRef)t_mask;
-	else
-	{
-		MCPlatformWindowMaskRelease((MCPlatformWindowMaskRef)t_mask);
-		r_mask = nil;
-	}
-}
-
-void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
-{
-	if (p_mask == nil)
-		return;
-	
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = (MCMacPlatformWindowMask*)p_mask;
-	
-	t_mask->references++;
-}
-
-void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
-{
-	if (p_mask == nil)
-		return;
-
-	MCMacPlatformWindowMask *t_mask;
-	t_mask = (MCMacPlatformWindowMask*)p_mask;
-	
-	if (t_mask->references > 1)
-	{
-        // PM-2015-02-13: [[ Bug 14588 ]] Decrease ref count
-		t_mask->references--;
-		return;
-	}
-	
-	CGImageRelease(t_mask->cg_mask);
-	MCMemoryDeallocate(t_mask->mask.pixels);
-	
-	MCMemoryDelete(t_mask);
+    [m_window_handle setRepresentedFilename: (NSString *)t_represented_filename];
+    
+    CFRelease(t_represented_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2378,16 +2312,15 @@ static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id
 	return t_parent_view;
 }
 
-void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
+void MCMacPlatformWindow::SwitchFocusToView(uint32_t p_id)
 {
 	NSView *t_view;
-	t_view = MCMacPlatformFindView(p_window, p_id);
+	t_view = MCMacPlatformFindView(this, p_id);
 	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)p_window;
-	
-	s_lock_responder_change = true;
-	if ([t_view nextValidKeyView] != nil &&
+    MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
+    
+    t_platform -> SetResponderChangeLock(true);
+    if ([t_view nextValidKeyView] != nil &&
 		[[t_view nextValidKeyView] previousValidKeyView] != t_view)
 		t_view = [t_view nextValidKeyView];
 	
@@ -2398,8 +2331,8 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
 		if (t_next_view != nil)
 			t_view = t_next_view;
 	}*/
-	[(com_runrev_livecode_MCWindow *)(t_window -> GetHandle()) makeFirstResponder: t_view];
-	s_lock_responder_change = false;
+	[m_handle makeFirstResponder: t_view];
+    t_platform -> SetResponderChangeLock(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2554,9 +2487,85 @@ bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMacPlatformCreateWindow(MCPlatformWindowRef& r_window)
+static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
 {
-	r_window = new MCMacPlatformWindow;
+	bool t_success = true;
+	
+	CGImageRef t_image = nil;
+	CGColorSpaceRef t_colorspace = nil;
+	CFDataRef t_data = nil;
+	CGDataProviderRef t_dp = nil;
+	
+	if (t_success)
+		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_alpha.pixels, p_alpha.stride *  p_alpha.height, kCFAllocatorNull));
+	
+	if (t_success)
+		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
+	
+	if (t_success)
+		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
+	
+	if (t_success)
+		t_success = nil != (t_image = CGImageCreate(p_alpha.width, p_alpha.height, 8, 8, p_alpha.stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
+	
+	CGColorSpaceRelease(t_colorspace);
+	CGDataProviderRelease(t_dp);
+	CFRelease(t_data);
+	
+	if (t_success)
+		r_image = t_image;
+	
+	return t_success;
+}
+
+MCMacPlatformWindowMask::MCMacPlatformWindowMask(MCPlatformCoreRef p_platform)
+    : m_cg_mask(nullptr)
+{
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
+    MCMemoryClear(m_mask);
+}
+
+MCMacPlatformWindowMask::~MCMacPlatformWindowMask(void)
+{
+    if (m_cg_mask != nullptr)
+    {
+        CGImageRelease(m_cg_mask);
+    }
+	MCMemoryDeallocate(m_mask.pixels);
+}
+
+bool MCMacPlatformWindowMask::IsValid(void) const
+{
+    return m_cg_mask != nullptr;
+}
+
+bool MCMacPlatformWindowMask::CreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits)
+{
+    m_mask.pixels = p_bits;
+	m_mask.stride = p_stride;
+	m_mask.width = p_width;
+	m_mask.height = p_height;
+	m_mask.format = kMCGRasterFormat_A;
+    
+    return MCAlphaToCGImageNoCopy(m_mask,
+                                  m_cg_mask);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformWindowRef MCMacPlatformCore::CreateWindow()
+{
+    MCPlatform::Ref<MCPlatformWindow> t_ref = MCPlatform::makeRef<MCMacPlatformWindow>(this);
+    
+    return t_ref.unsafeTake();
+}
+
+MCPlatformWindowMaskRef MCMacPlatformCore::CreateWindowMask()
+{
+    MCPlatform::Ref<MCPlatformWindowMask> t_ref = MCPlatform::makeRef<MCMacPlatformWindowMask>(this);
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

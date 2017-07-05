@@ -20,15 +20,12 @@
 #include "imagebitmap.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-
-void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)
+void MCMacPlatformCore::DoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)
 {
 	CGImageRef t_cg_image;
 	t_cg_image = nil;
@@ -79,7 +76,7 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 	if ((p_allowed_operations & kMCPlatformDragOperationLink) != 0)
 		t_allowed_operations |= NSDragOperationLink;
 	
-	MCMacPlatformSyncMouseBeforeDragging();
+	SyncMouseBeforeDragging();
 	
 	// We create a private pasteboard here if the main one contains no items.
     // This is required as the OSX drag-and-drop loop requires a pasteboard to
@@ -106,7 +103,7 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 	r_operation = MCMacPlatformMapNSDragOperationToDragOperation(t_op);
 }
 
-bool MCMacPasteboardConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data)
+bool MCMacPlatformCore::ConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data)
 {
 	// Check the data is actually TIFF, it is actually a PNG then do nothing
 	// (some versions of SnagIt! put PNG data masquerading as TIFF).

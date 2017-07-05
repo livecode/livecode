@@ -70,6 +70,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define LICENSED_TIME 3.0
 #endif
 
+#include "platform-legacy.h"
+
 MCImage *MCDispatch::imagecache;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,7 @@
 #include "foundation-auto.h"
 #include "util.h"
 
+#include "mac-platform.h"
 
 // Table mapping MCRawClipboardKnownType constants to UTIs
 const char* const MCMacRawClipboard::s_clipboard_types[] =
@@ -52,24 +53,24 @@ const char* const MCMacRawClipboard::s_clipboard_types[] =
 };
 
 
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
+MCRawClipboard* MCMacPlatformCore::CreateSystemClipboard()
 {
-    return new MCMacRawClipboard([NSPasteboard generalPasteboard]);
+    return new MCMacRawClipboard(m_callback, [NSPasteboard generalPasteboard]);
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+MCRawClipboard* MCMacPlatformCore::CreateSystemSelectionClipboard()
 {
     // Create a pasteboard internal to LiveCode
-    return new MCMacRawClipboard([NSPasteboard pasteboardWithUniqueName]);
+    return new MCMacRawClipboard(m_callback, [NSPasteboard pasteboardWithUniqueName]);
 }
 
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+MCRawClipboard* MCMacPlatformCore::CreateSystemDragboard()
 {
-    return new MCMacRawClipboard([NSPasteboard pasteboardWithName:NSDragPboard]);
+    return new MCMacRawClipboard(m_callback, [NSPasteboard pasteboardWithName:NSDragPboard]);
 }
 
 
-MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
+MCMacRawClipboard::MCMacRawClipboard(MCPlatformCallbackRef p_callback, NSPasteboard* p_pasteboard) :
   MCRawClipboard(),
   m_pasteboard(p_pasteboard),
   m_last_changecount(0),
@@ -77,6 +78,7 @@ MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
   m_dirty(false),
   m_external_data(false)
 {
+    m_callback = p_callback;
     [m_pasteboard retain];
 }
 
@@ -108,8 +110,7 @@ const MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index)
     if (t_item == nil)
         return NULL;
     
-    return new MCMacRawClipboardItem(t_item);
-}
+    return new MCMacRawClipboardItem(m_callback, t_item);}
 
 MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index)
 {
@@ -141,7 +142,7 @@ bool MCMacRawClipboard::IsExternalData() const
 
 MCMacRawClipboardItem* MCMacRawClipboard::CreateNewItem()
 {
-    return new MCMacRawClipboardItem;
+    return new MCMacRawClipboardItem(m_callback);
 }
 
 bool MCMacRawClipboard::AddItem(MCRawClipboardItem* p_item)
@@ -227,11 +228,11 @@ MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type
 MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) const
 {
     // Encode as UTF-8 and then as a URL
-    MCAutoStringRef t_encoded;
+    MCPlatformAutoStringRef t_encoded(m_callback);
     MCU_urlencode(p_file_path, true, &t_encoded);
     
     // Undo the transformation of slashes to '%2F'
-    MCAutoStringRef t_modified;
+    MCPlatformAutoStringRef t_modified(m_callback);
     if (!MCStringMutableCopy(*t_encoded, &t_modified))
         return NULL;
     if (!MCStringFindAndReplace(*t_modified, MCSTR("%2F"), MCSTR("/"), kMCStringOptionCompareExact))
@@ -251,12 +252,12 @@ MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) 
 MCStringRef MCMacRawClipboard::DecodeTransferredFileList(MCDataRef p_encoded_path) const
 {
     // Convert the bytes into its string equivalent
-    MCAutoStringRef t_bytes;
+    MCPlatformAutoStringRef t_bytes(m_callback);
     if (!MCStringDecode(p_encoded_path, kMCStringEncodingNative, false, &t_bytes))
         return NULL;
     
     // URL-decode and then decode the resulting UTF-8 bytes
-    MCAutoStringRef t_decoded;
+    MCPlatformAutoStringRef t_decoded(m_callback);
     MCU_urldecode(*t_bytes, true, &t_decoded);
     
     // Remove the file prefix, if it exists
@@ -284,7 +285,7 @@ MCDataRef MCMacRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
 	return MCValueRetain(p_html);
 }
 
-MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
+MCStringRef MCMacRawClipboardUTI::CopyAsUTI(MCStringRef p_key) const
 {
     // If the key is already in UTI form, just pass it out
     uindex_t t_index;
@@ -292,7 +293,7 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
         return MCValueRetain(p_key);
     
     // Split the string into a prefix and a suffix
-    MCAutoStringRef t_prefix, t_suffix;
+    MCPlatformAutoStringRef t_prefix(m_callback), t_suffix(m_callback);
     if (!MCStringCopySubstring(p_key, MCRangeMake(0, t_index), &t_prefix))
         return NULL;
     if (!MCStringCopySubstring(p_key, MCRangeMake(t_index + 1, MCStringGetLength(p_key) - t_index - 1), &t_suffix))
@@ -321,20 +322,21 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
 }
 
 
-MCMacRawClipboardItem::MCMacRawClipboardItem() :
+MCMacRawClipboardItem::MCMacRawClipboardItem(MCPlatformCallbackRef p_callback) :
   MCRawClipboardItem(),
   m_item([[NSPasteboardItem alloc] init]),
-  m_rep_cache()
+  m_rep_cache(p_callback)
 {
-    ;
+    m_callback = p_callback;
 }
 
 
-MCMacRawClipboardItem::MCMacRawClipboardItem(id p_item) :
+MCMacRawClipboardItem::MCMacRawClipboardItem(MCPlatformCallbackRef p_callback, id p_item) :
   MCRawClipboardItem(),
   m_item(p_item),
-  m_rep_cache()
+  m_rep_cache(p_callback)
 {
+    m_callback = p_callback;
     [m_item retain];
     
     // Count the number of representations
@@ -390,7 +392,8 @@ const MCMacRawClipboardItemRep* MCMacRawClipboardItem::FetchRepresentationAtInde
     // If there isn't a representation object for this index yet, create it now
     if (m_rep_cache[p_index] == NULL)
     {
-        m_rep_cache[p_index] = new MCMacRawClipboardItemRep(m_item, p_index);
+        m_rep_cache[p_index] = new MCMacRawClipboardItemRep(m_callback, m_item, p_index);
+        m_rep_cache[p_index] -> SetCallback(m_callback);
     }
     
     return m_rep_cache[p_index];
@@ -406,7 +409,7 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_by
         if (!FetchRepresentationAtIndex(i))
             return false;
         
-        MCAutoStringRef t_type(m_rep_cache[i]->CopyTypeString());
+        MCPlatformAutoStringRef t_type(m_rep_cache[i]->CopyTypeString(), m_callback);
         if (MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
         {
             // This is the rep we're looking for
@@ -431,11 +434,11 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_by
         // If this fails to allocate a new item, we ignore the failure. This is safe
         // as the cache can be re-generated on demand from the data stored in the
         // NSPasteboardItem itself.
-        m_rep_cache[t_index] = t_rep = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
+        m_rep_cache[t_index] = t_rep = new MCMacRawClipboardItemRep(m_callback, m_item, t_index, p_type, p_bytes);
     }
     
     // Convert the RawClipboardData-style key into a UTI
-    MCAutoStringRef t_uti(MCMacRawClipboard::CopyAsUTI(p_type));
+    MCPlatformAutoStringRef t_uti(CopyAsUTI(p_type), m_callback);
     
     // Turn the type string and data into their NS equivalents.
     // Note that the NSData is auto-released when we get it.
@@ -462,23 +465,24 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, render_callbac
 }
 
 
-MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(id p_item, NSUInteger p_index) :
+MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(MCPlatformCallbackRef p_callback, id p_item, NSUInteger p_index) :
   MCRawClipboardItemRep(),
   m_item(p_item),
   m_index(p_index),
-  m_type(),
-  m_data()
+  m_type(p_callback),
+  m_data(p_callback)
 {
     // m_item is not retained as the parent MCMacRawClipboardItem holds the
     // reference for us.
+    m_callback = p_callback;
 }
 
-MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data) :
+MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(MCPlatformCallbackRef p_callback, id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data) :
   MCRawClipboardItemRep(),
   m_item(p_item),
   m_index(p_index),
-  m_type(),
-  m_data()
+  m_type(p_callback),
+  m_data(p_callback)
 {
     // Retain references to the type string and data
     m_type = p_type;
@@ -486,6 +490,7 @@ MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(id p_item, NSUInteger p_index
     
     // m_item is not retained as the parent MCMacRawClipboardItem holds the
     // reference for us.
+    m_callback = p_callback;
 }
 
 MCMacRawClipboardItemRep::~MCMacRawClipboardItemRep()
@@ -611,7 +616,7 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
             return NULL;
         
         // Turn this path into a LiveCode string
-        MCAutoStringRef t_path_string;
+        MCPlatformAutoStringRef t_path_string(m_callback);
         if (!MCStringCreateWithCFString((CFStringRef)t_path, &t_path_string))
             return NULL;
         
@@ -626,13 +631,13 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
     else if ([m_item isKindOfClass:[NSPasteboardItem class]])
     {
         // Get the type string for this representation (as lookup is by type)
-        MCAutoStringRef t_type_string(CopyTypeString());
+        MCPlatformAutoStringRef t_type_string(CopyTypeString(), m_callback);
         if (*t_type_string == NULL)
             return NULL;
         
         // Convert the type string to a UTI
-        MCAutoStringRef t_uti;
-        t_uti.Give(MCMacRawClipboard::CopyAsUTI(*t_type_string));
+        MCPlatformAutoStringRef t_uti(m_callback);
+        t_uti.Give(CopyAsUTI(*t_type_string));
         
         // Convert from a StringRef to a CFString
         CFStringRef t_type;
@@ -655,7 +660,58 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
     {
         // The item is an arbitrary Objective-C object so we can't really do
         // anything with it. Return an empty data ref.
-        m_data = kMCEmptyData;
-        return kMCEmptyData;
+        MCDataRef t_data;
+        if (!MCDataCreateWithBytes((const byte_t*)"", 0, t_data))
+            return NULL;
+        
+        m_data = t_data;
+        return t_data;
     }
+
+}
+
+bool MCMacRawClipboardItem::HasRepresentation(MCStringRef p_type) const
+{
+    // Check that the representation string is valid
+    if (p_type == NULL)
+        return false;
+    
+    // Loop over the representations of this item and test each one
+    for (uindex_t i = 0; i < GetRepresentationCount(); i++)
+    {
+        MCPlatformAutoStringRef t_type(FetchRepresentationAtIndex(i)->CopyTypeString(), m_callback);
+        if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
+            return true;
+    }
+    
+    return false;
+}
+
+const MCRawClipboardItemRep* MCMacRawClipboardItem::FetchRepresentationByType(MCStringRef p_type) const
+{
+    // Check that the representation string is valid
+    if (p_type == NULL)
+        return NULL;
+    
+    // Loop over the representations of this item and test each one
+    for (uindex_t i = 0; i < GetRepresentationCount(); i++)
+    {
+        MCPlatformAutoStringRef t_type(FetchRepresentationAtIndex(i)->CopyTypeString(), m_callback);
+        if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
+            return FetchRepresentationAtIndex(i);
+    }
+    
+    return NULL;
+}
+
+MCDataRef MCMacRawClipboard::EncodeBMPForTransfer(MCDataRef p_bmp) const
+{
+    // Most platforms transfer BMP files without any further transformations
+    return MCValueRetain(p_bmp);
+}
+
+MCDataRef MCMacRawClipboard::DecodeTransferredBMP(MCDataRef p_bmp) const
+{
+    // Most platforms transfer BMP files without any further transformations
+    return MCValueRetain(p_bmp);
 }

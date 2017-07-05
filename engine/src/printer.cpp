@@ -37,6 +37,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mode.h"
 
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#include "platform-legacy.h"
+#endif
+
 extern char *strndup(const char *p_string, unsigned int p_length);
 
 MCPrinter::MCPrinter(void)

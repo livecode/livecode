@@ -8,7 +8,6 @@
 			'include/customprinter.h',
 			'src/bitmapeffect.h',
 			'src/bitmapeffectblur.h',
-			'src/color.h',
 			'src/context.h',
 			'src/font.h',
 			'src/gradient.h',
@@ -27,7 +26,6 @@
 			'src/tilecache.h',
 			'src/bitmapeffect.cpp',
 			'src/bitmapeffectblur.cpp',
-			'src/color.cpp',
 			'src/combiners.cpp',
 			'src/customprinter.cpp',
 			'src/font.cpp',
@@ -519,7 +517,6 @@
 			'src/syscfdate.cpp',
 			'src/syslnxfs.cpp',
 			'src/syslnxregion.cpp',
-			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
 			'src/sysspec-url.cpp',
 			'src/sysunxdate.cpp',
@@ -568,6 +565,7 @@
 			# Group "Desktop - Mac"
 			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
+			'src/cgimageutil.cpp',
 			
 			# Group "Desktop - Linux"
 			'src/lnxelevate.cpp',
@@ -579,11 +577,8 @@
             'src/w32flst.cpp',
 							
 			# Group "Theming"
-			'src/linux-theme.cpp',
-			'src/mac-theme.mm',
-			'src/mblandroid-theme.cpp',
-			'src/mbliphone-theme.mm',
-			'src/windows-theme.cpp',
+			'src/osxtheme.h',
+			'src/osxtheme.cpp',
 				
 			# Group "Syntax"
 			'src/syntax.h',
@@ -593,27 +588,93 @@
 			'src/socket_resolve.cpp',
 
 			'src/clipboard.h',
-			'src/em-clipboard.h',
-			'src/lnx-clipboard.h',
-			'src/mac-clipboard.h',
-			'src/mblandroid-clipboard.h',
-			'src/mbliphone-clipboard.h',
-			'src/raw-clipboard.h',
-			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
-			'src/em-clipboard.cpp',
-			'src/lnx-clipboard.cpp',
-			'src/mac-clipboard.mm',
-			'src/mblandroid-clipboard.cpp',
-			'src/mbliphone-clipboard.mm',
+			'src/raw-clipboard.h',
 			'src/raw-clipboard.cpp',
+			'src/mbliphone-clipboard.mm',
+			'src/mbliphone-clipboard.h',
+			'src/mblandroid-clipboard.cpp',
+			'src/mblandroid-clipboard.h',
+			'src/em-clipboard.h',
+			'src/em-clipboard.cpp',
+			'src/lnx-clipboard.h',
+			'src/lnx-clipboard.cpp',
+			'src/w32-clipboard.h',
 			'src/w32-clipboard.cpp',
-
+			
 			'src/mixin-refcounted.h',
 			
 			# Native layers
 			'src/native-layer.h',
 			'src/native-layer.cpp',
+			
+			# Group "Platform"
+			'src/platform.cpp',
+			'src/platform-legacy.h',
+		],
+		
+		'engine_platform_source_files':
+		[
+			# Group "Common Platform"
+			'src/platform.h',
+			'src/platform-base.h',
+			'src/platform-extern.h',
+			'src/platform-window.cpp',
+			'src/color.h',
+			'src/color.cpp',
+			
+			# Group "Mac Platform"
+			'src/mac-platform.h',
+			'src/mac-community-core.mm',
+			'src/mac-abort.mm',
+			'src/mac-av-player.mm',
+			'src/mac-color.mm',
+			'src/mac-core.mm',
+			'src/mac-cursor.mm',
+			'src/mac-dialog.mm',
+			'src/mac-font.mm',
+			'src/mac-menu.mm',
+			'src/mac-pasteboard.mm',
+			'src/mac-printer.mm',
+			'src/mac-scripting.mm',
+			'src/mac-snapshot.mm',
+			'src/mac-sound.mm',
+			'src/mac-surface.mm',
+			'src/mac-window.mm',
+			'src/mac-layer.mm',
+			'src/mac-theme.mm',
+			'src/mac-clipboard.h',
+			'src/mac-clipboard.mm',
+			'src/mac-coreimage.mm',
+			
+			# Group "iOS Platform"
+			'src/mbliphone-platform.h',
+			'src/mbliphone-core.mm',
+			'src/mbliphone-theme.mm',
+			'src/mbliphone-community-core.mm',
+			
+			# Group "Android Platform"
+			'src/mblandroid-platform.h',
+			'src/mblandroid-core.cpp',
+			'src/mblandroid-theme.cpp',
+			
+			# Group "Linux Platform"
+			'src/linux-platform.h',
+			'src/linux-core.cpp',
+			'src/linux-theme.cpp',
+			
+			# Group "Windows Platform"
+			'src/windows-platform.h',
+			'src/windows-core.cpp',
+			'src/windows-community-core.cpp',
+			'src/windows-theme.cpp',
+			'src/w32-ds-player.cpp',
+			
+			# Group "Emscripten Platform"
+			'src/em-platform.h',
+			'src/em-core.cpp',
+			'src/em-theme.cpp',
+				
 		],
 		
 		# Sources that are only for desktop mode
@@ -633,15 +694,6 @@
 			'src/desktop-ans.cpp',
 			'src/legacy_spec.cpp',
 			
-			# Group "Platform"
-			'src/platform.h',
-			'src/platform.cpp',
-			'src/platform-internal.h',
-			'src/platform-player.cpp',
-			'src/platform-recorder.cpp',
-			'src/platform-surface.cpp',
-			'src/platform-window.cpp',
-			
 			# Group "Native Layer"
 			'src/native-layer.cpp',
 			'src/native-layer.h',
@@ -650,7 +702,7 @@
 			'src/native-layer-ios.h',
 			'src/native-layer-ios.mm',
 			'src/native-layer-mac.h',
-			'src/native-layer-mac.mm',
+			'src/native-layer-mac.cpp',
 			'src/native-layer-win32.cpp',
 			'src/native-layer-win32.h',
 			'src/native-layer-x11.cpp',
@@ -690,39 +742,18 @@
 			'src/lnxtextlayout.cpp',
 			
 			# Group "Desktop - Mac"
-			'src/mac-internal.h',
+			'src/mac-main.cpp',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',
-			'src/osxtheme.h',
-			'src/cgimageutil.cpp',
 			'src/coretextlayout.mm',
-			'src/mac-abort.mm',
-			'src/mac-av-player.mm',
-			'src/mac-color.mm',
-			'src/mac-core.mm',
-			'src/mac-cursor.mm',
-			'src/mac-dialog.mm',
-			'src/mac-font.mm',
-			'src/mac-menu.mm',
-			'src/mac-pasteboard.mm',
-			'src/mac-printer.mm',
-			'src/mac-qt-player.mm',
-			'src/mac-qt-recorder.mm',
-			'src/mac-scripting.mm',
-			'src/mac-snapshot.mm',
-			'src/mac-sound.mm',
-			'src/mac-surface.mm',
-			'src/mac-window.mm',
-			'src/osxcisupport.mm',
-			'src/osxcoreimage.cpp',
 			'src/osxfield.cpp',
-			'src/osximage.cpp',
+			'src/osximage.mm',
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
-			'src/osxtheme.mm',
 			'src/visualeffect.h',
+			'src/osxcoreimage.mm',
 			
 			# Group "Desktop - Windows"
 			'src/w32compat.h',
@@ -747,7 +778,6 @@
 			'src/w32icon.cpp',
 			'src/w32image.cpp',
 			'src/w32misc.cpp',
-			'src/w32-ds-player.cpp',
 			'src/w32prefix.cpp',
 			'src/w32printer.cpp',
 			'src/w32relaunch.cpp',
@@ -757,8 +787,7 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
-			'src/w32-core-compat.cpp',
-
+			
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
@@ -1043,7 +1072,7 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/native-layer-mac.mm',
+						'src/native-layer-mac.cpp',
 					],
 				},
 			],
@@ -1138,8 +1167,6 @@
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
 						'src/desktop-stack.cpp',
-						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
 					],
 				},
@@ -1192,9 +1219,7 @@
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
 						'src/desktop-stack.cpp',
-						'src/platform.cpp',
 						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
 					],
 				},
@@ -1213,9 +1238,7 @@
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
 						'src/desktop-stack.cpp',
-						'src/platform.cpp',
 						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
 					],
 				},
@@ -1239,9 +1262,7 @@
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
 						'src/desktop-stack.cpp',
-						'src/platform.cpp',
 						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
 					],
 				},
@@ -1270,9 +1291,7 @@
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
 						'src/desktop-stack.cpp',
-						'src/platform.cpp',
 						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
 					],
 				},

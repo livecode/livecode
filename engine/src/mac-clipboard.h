@@ -26,9 +26,19 @@
 
 #include "foundation-auto.h"
 
+#include "platform.h"
+
+class MCMacRawClipboardUTI :
+public MCPlatform::Stubs
+{
+public:
+    // Converts a LiveCode-style RawClipboardData key into an OSX UTI
+    MCStringRef CopyAsUTI(MCStringRef p_key) const;
+};
 
 class MCMacRawClipboardItemRep :
-public MCRawClipboardItemRep
+    public MCRawClipboardItemRep,
+    public MCMacRawClipboardUTI
 {
 public:
     
@@ -45,20 +55,21 @@ private:
     // Cache of the StringRef identifying the data type and the DataRef holding
     // the data itself for this representation. These are only initialised when
     // the information is requested.
-    mutable MCAutoStringRef m_type;
-    mutable MCAutoDataRef m_data;
+    mutable MCPlatformAutoStringRef m_type;
+    mutable MCPlatformAutoDataRef m_data;
     
     
     // Lifetime is managed by the parent MCMacRawClipboardItem
     friend class MCMacRawClipboardItem;
-    MCMacRawClipboardItemRep(id p_item, NSUInteger p_index);
-    MCMacRawClipboardItemRep(id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data);
+    MCMacRawClipboardItemRep(MCPlatformCallbackRef p_callback, id p_item, NSUInteger p_index);
+    MCMacRawClipboardItemRep(MCPlatformCallbackRef p_callback, id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data);
     virtual ~MCMacRawClipboardItemRep();
 };
 
 
 class MCMacRawClipboardItem :
-  public MCRawClipboardItem
+    public MCRawClipboardItem,
+    public MCMacRawClipboardUTI
 {
 public:
     
@@ -68,6 +79,8 @@ public:
     virtual bool AddRepresentation(MCStringRef p_type, MCDataRef p_bytes);
     virtual bool AddRepresentation(MCStringRef p_type, render_callback_t, void* p_context);
     
+    virtual const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
+    virtual bool HasRepresentation(MCStringRef p_type) const;
     
 private:
     
@@ -78,12 +91,12 @@ private:
     
     // Cache of the representation objects. Marked as mutable as the various
     // representation objects are only allocated when they are requested.
-    mutable MCAutoArray<MCMacRawClipboardItemRep*> m_rep_cache;
+    mutable MCPlatformAutoArray<MCMacRawClipboardItemRep*> m_rep_cache;
     
     // Constructors. If no item is supplied, a new NSPasteboardItem will be
     // automatically created.
-    MCMacRawClipboardItem();
-    MCMacRawClipboardItem(id p_item);
+    MCMacRawClipboardItem(MCPlatformCallbackRef p_callback);
+    MCMacRawClipboardItem(MCPlatformCallbackRef p_callback, id p_item);
     
     // Destructor
     virtual ~MCMacRawClipboardItem();
@@ -91,7 +104,8 @@ private:
 
 
 class MCMacRawClipboard :
-  public MCRawClipboard
+  public MCRawClipboard,
+  public MCPlatform::Stubs
 {
 public:
     
@@ -115,11 +129,10 @@ public:
 	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
     
     // Constructor. The NSPasteboard being wrapped is required.
-    MCMacRawClipboard(NSPasteboard* p_pasteboard);
+    MCMacRawClipboard(MCPlatformCallbackRef p_callback, NSPasteboard* p_pasteboard);
     
-    // Converts a LiveCode-style RawClipboardData key into an OSX UTI
-    static MCStringRef CopyAsUTI(MCStringRef p_key);
-    
+    virtual MCDataRef EncodeBMPForTransfer(MCDataRef p_bmp) const;
+    virtual MCDataRef DecodeTransferredBMP(MCDataRef p_bmp) const;
 private:
     
     // The NSPasteboard being wrapped

@@ -341,7 +341,7 @@ bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_container
 		return false;
 
 	HWND t_container;
-	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)p_object->getstack()->getrealwindow(), nil, MChInst, nil);
+	t_container = CreateWindowA((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)p_object->getstack()->getrealwindow(), nil, MChInst, nil);
 
 	DWORD t_err;
 	t_err = GetLastError();

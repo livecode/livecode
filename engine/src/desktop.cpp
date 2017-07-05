@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "platform.h"
+#include "platform-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -576,7 +577,7 @@ void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
     // On some platforms (Mac and iOS), the drag board used for drag-and-drop
     // operations may not be the main drag board. Reset the drag board back to
     // the main one after the drag has left.
-    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCplatform -> CreateSystemDragboard());
     MCdragboard->Rebind(t_dragboard);
     
     MCdispatcher -> wmdragleave(p_window);
@@ -589,7 +590,7 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
     // On some platforms (Mac and iOS), the drag board used for drag-and-drop
     // operations may not be the main drag board. Reset the drag board back to
     // the main one after the drag has left.
-    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCplatform -> CreateSystemDragboard());
     MCdragboard->Rebind(t_dragboard);
     
 	// PLATFORM-TODO: Should we do more than this? i.e. Should the dragDrop

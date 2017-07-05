@@ -16,6 +16,7 @@
 
 
 #include "platform.h"
+#include "mblandroid-platform.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -34,12 +35,12 @@
 // Android design cheatsheet: http://petrnohejl.github.io/Android-Cheatsheet-For-Graphic-Designers/
 // Android theming values: https://github.com/android/platform_frameworks_base/tree/master/core/res/res/values
 
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+bool MCAndroidPlatformCore::GetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
 {
     return false;
 }
 
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
+bool MCAndroidPlatformCore::GetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
     // The only integer property currently implemented for Android is text size
     if (p_prop != kMCPlatformThemePropertyTextSize)
@@ -85,12 +86,12 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     return false;
 }
 
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+bool MCAndroidPlatformCore::GetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
 {
     return false;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
+bool MCAndroidPlatformCore::GetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     // The only supported font property is the text font
     if (p_prop != kMCPlatformThemePropertyTextFont)
@@ -102,9 +103,15 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     
     // Get the text size for this control type
     int t_text_size;
-    if (!MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_text_size))
+    if (!GetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_text_size))
         return false;
     
     // The default font is Roboto of the appropriate size
     return MCFontCreate(MCNAME("Roboto"), 0, t_text_size, r_font);
 }
+
+bool MCAndroidPlatformCore::GetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCStringRef& r_string)
+{
+    return false;
+}
+

@@ -192,14 +192,14 @@ public:
             starttime = stime;
         
         if (hasfilename())
-			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &starttime);
+			m_platform_player -> SetProperty(kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
     
 	virtual void setendtime(MCPlayerDuration etime)
     {
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &endtime);
+            m_platform_player -> SetProperty(kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	
@@ -377,7 +377,7 @@ public:
     bool hasinvalidfilename(void) const
     {
         bool t_has_invalid_filename;
-        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyInvalidFilename, kMCPlatformPropertyTypeBool, &t_has_invalid_filename);
+        m_platform_player -> GetProperty(kMCPlatformPlayerPropertyInvalidFilename, kMCPlatformPropertyTypeBool, &t_has_invalid_filename);
         return t_has_invalid_filename;
     }
     

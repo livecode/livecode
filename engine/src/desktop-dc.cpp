@@ -14,8 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "platform.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -50,16 +48,11 @@
 
 #include "desktop-dc.h"
 
-#include "platform.h"
-
 #include <Carbon/Carbon.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean tripleclick = False;
-
-static CFAbsoluteTime s_animation_start_time = 0;
-static CFAbsoluteTime s_animation_current_time = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,8 +120,6 @@ Boolean MCScreenDC::open()
 	MCPlatformCreateMenu(icon_menu);
 	MCPlatformSetIconMenu(icon_menu);
 
-	s_animation_start_time = CFAbsoluteTimeGetCurrent();
-	
 	return True;
 }
 
@@ -872,8 +863,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
                 done = True;
         }
 		
-		s_animation_current_time = CFAbsoluteTimeGetCurrent();
-		
 		// If 'quit' has been set then we must have got a finalization request
 		if (MCquit)
 		{
@@ -964,7 +953,7 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
 
 bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *p_loaded_font_handle)
 {
-	return MCPlatformUnloadFont(p_path, p_globally, (MCPlatformLoadedFontRef)p_loaded_font_handle);
+	return MCPlatformUnloadFont((MCPlatformLoadedFontRef)p_loaded_font_handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1139,23 +1128,6 @@ void MCStacklist::hidepaletteschanged(void)
 		}
 		while (tptr != stacks);
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-double MCMacGetAnimationStartTime(void)
-{
-	return s_animation_start_time;
-}
-
-double MCMacGetAnimationCurrentTime(void)
-{
-	return s_animation_current_time;
-}
-
-void MCMacBreakWait(void)
-{
-	MCPlatformBreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

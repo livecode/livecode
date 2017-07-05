@@ -24,10 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "image.h"
 
+#include "platform.h"
+#include "mac-platform.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +77,7 @@ CGImageRef MCImage::makeicon(uint4 p_width, uint4 p_height)
 		MCImageBitmap *t_scaled = nil;
 		if (p_width != t_bitmap->width || p_height != t_bitmap->height)
 			/* UNCHECKED */ MCImageScaleBitmap(t_bitmap, p_width, p_height, resizequality, t_scaled);
-		/* UNCHECKED */ MCImageBitmapToCGImage(t_scaled != nil ? t_scaled : t_bitmap, true, false, t_icon);
+		/* UNCHECKED */ static_cast<MCMacPlatformCore *>(MCplatform) -> MCImageBitmapToCGImage(t_scaled != nil ? t_scaled : t_bitmap, true, false, t_icon);
 		MCImageFreeBitmap(t_scaled);
 		unlockbitmap(t_bitmap);
 	}

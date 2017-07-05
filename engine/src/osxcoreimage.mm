@@ -41,25 +41,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "visualeffect.h"
 
-static bool s_coreimage_initialized = false;
+#include "platform.h"
+#include "mac-platform.h"
 
-extern rei_boolean_t coreimage_visualeffect_initialise(void);
-extern void coreimage_visualeffect_finalise(void);
-extern rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
-extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
-extern rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time);
-extern rei_boolean_t coreimage_visualeffect_end(void);
+static bool s_coreimage_initialized = false;
 
 void MCCoreImageRegister(void)
 {
-	s_coreimage_initialized = coreimage_visualeffect_initialise();
+	s_coreimage_initialized = static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectInitialize();
 }
 
 void MCCoreImageUnregister(void)
 {
 	if (s_coreimage_initialized)
 	{
-		coreimage_visualeffect_finalise();
+		static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectFinalize();
 		s_coreimage_initialized = false;
 	}
 }
@@ -71,7 +67,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 		return false;
 	
 	rei_visualeffect_info_ref_t t_info;
-	if (!coreimage_visualeffect_lookup(p_name, &t_info))
+	if (!static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectLookup(p_name, &t_info))
 		return false;
 
 	rei_rectangle_t t_rect;
@@ -243,7 +239,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 	}
 	else
 	{
-	  if (!coreimage_visualeffect_begin(t_info -> handle, p_source_a, p_source_b, &t_rect, p_surface_height, t_parameters))
+	  if (!static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectBegin(t_info -> handle, p_source_a, p_source_b, &t_rect, p_surface_height, t_parameters))
 			return false;
 	}
 	
@@ -252,10 +248,10 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 
 bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time)
 {
-	return coreimage_visualeffect_step(p_target, p_time);
+	return static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectStep(p_target, p_time);
 }
 
 void MCCoreImageEffectEnd(void)
 {
-	coreimage_visualeffect_end();
+	static_cast<MCMacPlatformCore *>(MCplatform) -> CoreImageVisualEffectEnd();
 }

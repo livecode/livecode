@@ -198,12 +198,39 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+/* Pre-declare "new-style" MCPlatform classes */
+namespace MCPlatform {
+    class ColorTransform;
+    class Cursor;
+    class LoadedFont;
+    class Menu;
+    class Sound;
+    class WindowMask;
+    class PrintDialogSession;
+    class MinimalCore;
+    class Core;
+    class ScriptEnvironment;
+    class Callback;
+    class NativeLayer;
+    class Stubs;
+    class CoreReference;
+} /* namespace MCPlatform */
+
 typedef class MCPlatformWindow *MCPlatformWindowRef;
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
-typedef class MCPlatformCursor *MCPlatformCursorRef;
-typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
-typedef class MCPlatformMenu *MCPlatformMenuRef;
 typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+typedef class MCPlatform::Cursor *MCPlatformCursorRef;
+typedef class MCPlatform::Menu *MCPlatformMenuRef;
+typedef class MCPlatform::PrintDialogSession *MCPlatformPrintDialogSessionRef;
+typedef class MCPlatform::ScriptEnvironment *MCPlatformScriptEnvironmentRef;
+typedef class MCPlatform::Callback *MCPlatformCallbackRef;
+typedef class MCPlatform::NativeLayer *MCPlatformNativeLayerRef;
+
+#ifdef PLATFORM_IS_MINIMAL
+typedef class MCPlatform::MinimalCore *MCPlatformCoreRef;
+#else
+typedef class MCPlatform::Core *MCPlatformCoreRef;
+#endif
 
 typedef void *MCColorTransformRef;
 
@@ -1239,7 +1266,8 @@ class MCExternalHandlerList;
 
 class MCObjptr;
 
-typedef struct __MCRegion *MCRegionRef;
+typedef struct __MCGRegion *MCRegionRef;
+
 typedef struct MCTileCache *MCTileCacheRef;
 class MCStackSurface;
 

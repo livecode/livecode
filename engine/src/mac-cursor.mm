@@ -23,25 +23,9 @@
 #include "imagebitmap.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-
-class MCPlatformCursor
-{
-public:
-	uint32_t references;
-	bool is_standard : 1;
-	union
-	{
-		MCPlatformStandardCursor standard;
-		NSCursor *custom;
-	};
-};
-
-static bool s_cursor_is_hidden = false;
 static NSCursor *s_watch_cursor = nil;
 
 static unsigned char s_watch_cursor_bits[] =
@@ -119,25 +103,24 @@ static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
     return t_new_image;
 }
 
-void MCPlatformCreateStandardCursor(MCPlatformStandardCursor p_standard_cursor, MCPlatformCursorRef& r_cursor)
+MCMacPlatformCursor::~MCMacPlatformCursor(void)
 {
-	MCPlatformCursorRef t_cursor;
-	/* UNCHECKED */ MCMemoryNew(t_cursor);
-	t_cursor -> references = 1;
-	t_cursor -> is_standard = true;
-	t_cursor -> standard = p_standard_cursor;
-	r_cursor = t_cursor;
+    if (!is_standard)
+        [custom release];
 }
 
-void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCPlatformCursorRef& r_cursor)
+void MCMacPlatformCursor::CreateStandard(MCPlatformStandardCursor p_standard_cursor)
 {
-	MCPlatformCursorRef t_cursor;
-	/* UNCHECKED */ MCMemoryNew(t_cursor);
-	t_cursor -> references = 1;
-	t_cursor -> is_standard = false;
+    is_standard = true;
+    standard = p_standard_cursor;
+}
+
+void MCMacPlatformCursor::CreateCustom(MCImageBitmap *p_image, MCPoint p_hotspot)
+{
+	is_standard = false;
 	
 	CGImageRef t_cg_image;
-	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
+	/* UNCHECKED */ static_cast<MCMacPlatformCore *>(m_platform) -> MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
 	
 	// Convert the CGImage into an NSIMage
 	NSImage *t_cursor_image;
@@ -158,44 +141,26 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCP
 	
 	[t_cursor_image release];
 	
-	t_cursor -> custom = t_nscursor;
-	
-	r_cursor = t_cursor;
+	custom = t_nscursor;
 }
 
-void MCPlatformRetainCursor(MCPlatformCursorRef p_cursor)
+void MCMacPlatformCursor::Set(void)
 {
-	p_cursor -> references += 1;
-}
-
-void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
-{
-	p_cursor -> references -= 1;
-	if (p_cursor -> references > 0)
-		return;
-		
-	if (!p_cursor -> is_standard)
-		[p_cursor -> custom release ];
-		
-	MCMemoryDelete(p_cursor);
-}
-
-void MCPlatformSetCursor(MCPlatformCursorRef p_cursor)
-{
-	if (p_cursor -> is_standard)
+	if (is_standard)
     {
+        MCMacPlatformCore * t_platform = static_cast<MCMacPlatformCore *>(m_platform);
         // By default, we want the cursor to be visible.
-        if (s_cursor_is_hidden)
+        if (t_platform -> GetCursorIsHidden())
         {
             [NSCursor unhide];
-            s_cursor_is_hidden = false;
+            t_platform -> SetCursorIsHidden(false);
         }
-		switch(p_cursor -> standard)
+		switch(standard)
 		{
         // SN-2015-06-16: [[ Bug 14056 ]] Hidden cursor is part of the cursors
         case kMCPlatformStandardCursorNone:
             [NSCursor hide];
-            s_cursor_is_hidden = true;
+            t_platform -> SetCursorIsHidden(true);
             break;
 		case kMCPlatformStandardCursorArrow:
             [[NSCursor arrowCursor] set];
@@ -222,15 +187,22 @@ void MCPlatformSetCursor(MCPlatformCursorRef p_cursor)
 		}
 	}
 	else
-		[p_cursor -> custom set];
+		[custom set];
 }
 
-void MCPlatformHideCursorUntilMouseMoves(void)
+void MCMacPlatformCore::HideCursorUntilMouseMoves(void)
 {
     [NSCursor setHiddenUntilMouseMoves: YES];
 }
 
-void MCMacPlatformResetCursor(void)
+void MCMacPlatformCore::ResetCursor(void)
 {
     [[NSCursor arrowCursor] set];
+}
+
+MCPlatformCursorRef MCMacPlatformCore::CreateCursor()
+{
+    MCPlatform::Ref<MCPlatformCursor> t_ref = MCPlatform::makeRef<MCMacPlatformCursor>(this);
+    
+    return t_ref.unsafeTake();
 }

@@ -675,7 +675,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_PENDING_MESSAGES:
 		return new MCPendingMessages;
 	case F_PLATFORM:
-		return new MCPlatform;
+		return new MCPlatformString;
 	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationStdDev'
 	case F_POP_STD_DEV:
 			return new MCPopulationStdDev;

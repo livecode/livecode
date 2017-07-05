@@ -7,6 +7,7 @@
 			'kernel-server',
 			'../libfoundation/libfoundation.gyp:libFoundation',
 			'../libgraphics/libgraphics.gyp:libGraphics',
+			'libplatform.gyp:libplatform',
 		],
 		'module_test_sources':
 		[
@@ -104,6 +105,18 @@
 						'type': 'none',
 					},
 				],
+				[
+					'OS == "mac"',
+					{
+						'defines':
+						[
+							# We want to use the new prototypes for the Objective-C
+							# dispatch methods as it helps catch certain errors at
+							# compile time rather than run time.
+							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
+						],
+					},
+				],
 			],
 			
 			'link_settings':
@@ -115,14 +128,20 @@
 						{
 							'libraries':
 							[
-								'$(SDKROOT)/usr/lib/libcups.dylib',
-								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
 								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
+								'$(SDKROOT)/usr/lib/libcups.dylib',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
 								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
+								'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreGraphics.framework',
 							],
 						},
 					],

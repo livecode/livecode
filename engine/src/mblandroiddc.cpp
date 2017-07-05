@@ -56,6 +56,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
+#include "platform.h"
+#include "platform-legacy.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -1995,6 +1998,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
+    MCPlatformInitialize();
     MCInitialize();
     
 	MCLog("doCreate called");

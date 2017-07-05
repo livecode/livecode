@@ -62,23 +62,6 @@ const char * const MCLinuxRawClipboard::s_formats[kMCRawClipboardKnownTypeLast+1
     NULL,                           // URL list
 };
 
-
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
-{
-    return new MCLinuxRawClipboard(GDK_SELECTION_CLIPBOARD);
-}
-
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
-{
-    return new MCLinuxRawClipboard(GDK_SELECTION_PRIMARY);
-}
-
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
-{
-    return new MCLinuxRawClipboard("XdndSelection");
-}
-
-
 MCLinuxRawClipboard::MCLinuxRawClipboard(const char* p_selection_atom_name) :
   MCRawClipboard(),
   m_selection(0),

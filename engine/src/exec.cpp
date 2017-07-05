@@ -1104,10 +1104,10 @@ bool MCExecContext::EvalExprAsMutableStringRef(MCExpression *p_expr, Exec_errors
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<bool (&check)(uint2, uint2)>
+template<bool (&securemode_check)(uint2, uint2)>
 static bool EnsureIsAllowed(MCExecContext* self)
 {
-	if (check(0, 0))
+	if (securemode_check(0, 0))
 		return true;
 		
 	self -> Throw();

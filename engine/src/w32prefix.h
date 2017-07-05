@@ -13,13 +13,17 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+#ifndef WIN32_PREFIX_H
+#define WIN32_PREFIX_H
 
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 
 // w32dcw32
+#ifndef _WINSOCKAPI_ 
 #include <winsock2.h>
+#endif
 
 // w32clipboard
 #include <objidl.h>
@@ -47,3 +51,7 @@ extern HINSTANCE MChInst;
 #undef GetCurrentTime
 // Undef GetObject because GetObjectW was called instead of MCExecContext::GetObject()
 #undef GetObject
+
+#undef CreateWindow
+
+#endif /* WIN32_PREFIX_H */

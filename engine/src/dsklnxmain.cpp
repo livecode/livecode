@@ -31,6 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 #include "libscript/script.h"
 
+#include "platform.h"
+#include "platform-legacy.h"
+
 #include <locale.h>
 #include <langinfo.h>
 
@@ -58,7 +61,7 @@ int platform_main(int argc, char *argv[], char *envp[])
 		exit(-1);
 	}
 	
-	if (!MCSInitialize())
+	if (!MCSInitialize() || !MCPlatformInitialize())
 	{
 		fprintf(stderr, "Fatal: platform initialization failed\n");
 		exit(-1);

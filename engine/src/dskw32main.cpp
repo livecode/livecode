@@ -30,6 +30,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "libscript/script.h"
 
+#include "platform.h"
+#include "platform-legacy.h"
+
 #include <msctf.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,6 +220,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 
     if (!MCInitialize() ||
+        !MCPlatformInitialize() ||
         !MCSInitialize() ||
         !MCScriptInitialize())
 		exit(-1);

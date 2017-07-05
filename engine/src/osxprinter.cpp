@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <cups/ppd.h>
 #include <pwd.h>
 
+#include "platform-legacy.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool serialize_cfdata(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFDataRef p_data);
@@ -76,7 +78,6 @@ extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_
 
 // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 
@@ -1014,18 +1015,23 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         PDEBUG(stderr, "DoDialog: Showing dialog\n");
         
         MCPlatformPrintDialogResult t_result;
+        MCPlatformPrintDialogSessionRef t_dialog_session;
         if (p_is_settings)
-            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format, t_dialog_session);
         else
-            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format, t_dialog_session);
         
         PDEBUG(stderr, "DoDialog: Dialog shown\n");
         
         for(;;)
         {
-            t_result = MCPlatformEndPrintDialog();
+            t_result = MCPlatformPrintDialogSessionResult(t_dialog_session);
             if (t_result != kMCPlatformPrintDialogResultContinue)
+            {
+                MCPlatformPrintDialogSessionCopyInfo(t_dialog_session, (void *&)m_session, (void *&)m_settings, (void *&)m_page_format);
+                MCPlatformPrintDialogSessionRelease(t_dialog_session);
                 break;
+            }
             
             MCscreen -> wait(REFRESH_INTERVAL, True, True);
         }

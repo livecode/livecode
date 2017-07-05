@@ -20,9 +20,8 @@
 #include "uidc.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,189 +35,160 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCMacPlatformPrintDialogNest
-{
-	MCMacPlatformPrintDialogNest *next;
-	MCPlatformPrintDialogResult result;
-	MCPlatformWindowRef owner;
-    
-    // MW-2014-07-29: [[ Bug 12961 ]] Make sure we store the objects we need to
-    //   apply settings as sheets end after the end of BeginDialog.
-    NSPrintInfo *info;
-    void *session;
-    void *settings;
-    void *page_format;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 @implementation com_runrev_livecode_MCPrintDialogDelegate
 
 - (void)printDialogDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
 {
-	MCMacPlatformPrintDialogNest *t_nest;
-	t_nest = (MCMacPlatformPrintDialogNest *)contextInfo;
-	
-	if (returnCode == NSOKButton)
-		t_nest -> result = kMCPlatformPrintDialogResultSuccess;
-	else
-		t_nest -> result = kMCPlatformPrintDialogResultCancel;
+    MCMacPlatformPrintDialogSession *t_session;
+    t_session = (MCMacPlatformPrintDialogSession *)contextInfo;
+    
+    if (returnCode == NSOKButton)
+        t_session -> SetResult(kMCPlatformPrintDialogResultSuccess);
+    else
+        t_session -> SetResult(kMCPlatformPrintDialogResultCancel);
 }
 
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCMacPlatformPrintDialogNest *s_print_dialog_nesting = nil;
-static MCPrintDialogDelegate *s_print_dialog_delegate = nil;
-
-static void MCPlatformStartPrintInfo(void *p_session, void *p_settings, void *p_page_format, NSPrintInfo*& r_info)
+MCMacPlatformPrintDialogSession::~MCMacPlatformPrintDialogSession(void)
 {
-	PMPrintSession t_session;
-	PMPrintSettings t_settings;
-	PMPageFormat t_page_format;
-	t_session = (PMPrintSession)p_session;
-	t_settings = (PMPrintSettings)p_settings;
-	t_page_format = (PMPageFormat)p_page_format;
-	
-	PMPrinter t_printer;
-	PMSessionGetCurrentPrinter(t_session, &t_printer);
-	
-	NSPrintInfo *t_info;
-	t_info = [[NSPrintInfo alloc] initWithDictionary: [NSDictionary dictionary]];
-	[t_info setPrinter: [NSPrinter printerWithName: (NSString *)PMPrinterGetName(t_printer)]];
-	
-	PMCopyPrintSettings(t_settings, (PMPrintSettings)[t_info PMPrintSettings]);
-	PMCopyPageFormat(t_page_format, (PMPageFormat)[t_info PMPageFormat]);
-	
-	[t_info updateFromPMPrintSettings];
-	[t_info updateFromPMPageFormat];
-	
-	r_info = t_info;
-}
-
-static void MCPlatformEndPrintInfo(NSPrintInfo *p_info, void *p_session, void *p_settings, void *p_page_format)
-{
-	PMPrintSession t_session;
-	PMPrintSettings t_settings;
-	PMPageFormat t_page_format;
-	t_session = (PMPrintSession)p_session;
-	t_settings = (PMPrintSettings)p_settings;
-	t_page_format = (PMPageFormat)p_page_format;
-	
-	PMCopyPrintSettings((PMPrintSettings)[p_info PMPrintSettings], t_settings);
-	PMCopyPageFormat((PMPageFormat)[p_info PMPageFormat], t_page_format);
-	
-	PMDestinationType t_type;
-	
-	CFURLRef t_output_location_url;
-	CFStringRef t_output_format;
-	t_output_location_url = NULL;
-	t_output_format = NULL;
-	if (PMSessionGetDestinationType((PMPrintSession)[p_info PMPrintSession], (PMPrintSettings)[p_info PMPrintSettings], &t_type) == noErr &&
-		PMSessionCopyDestinationLocation((PMPrintSession)[p_info PMPrintSession], (PMPrintSettings)[p_info PMPrintSettings], &t_output_location_url) == noErr &&
-		PMSessionCopyDestinationFormat((PMPrintSession)[p_info PMPrintSession], (PMPrintSettings)[p_info PMPrintSettings], &t_output_format) == noErr)
-		PMSessionSetDestination(t_session, t_settings, t_type, t_output_format, t_output_location_url);
-	if (t_output_format != NULL)
-		CFRelease(t_output_format);
-	if (t_output_location_url != NULL)
-		CFRelease(t_output_location_url);
-		
-	PMPrinter t_printer;
-	PMSessionGetCurrentPrinter((PMPrintSession)[p_info PMPrintSession], &t_printer);
-	PMSessionSetCurrentPMPrinter(t_session, t_printer);
-	
-	[p_info release];
-}
-
-static void MCPlatformBeginPrintDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, id p_dialog)
-{
-	NSPrintInfo *t_info;
-	MCPlatformStartPrintInfo(p_session, p_settings, p_page_format, t_info);
-	
-	if (s_print_dialog_delegate == nil)
-		s_print_dialog_delegate = [[MCPrintDialogDelegate alloc] init];
-	
-	MCMacPlatformPrintDialogNest *t_nest;
-	/* UNCHECKED */ MCMemoryNew(t_nest);
+    if (m_owner != nil)
+        m_owner -> Release();
     
-    t_nest -> info = t_info;
-    t_nest -> session = p_session;
-    t_nest -> settings = p_settings;
-    t_nest -> page_format = p_page_format;
+    if (m_info != nil)
+        [m_info release];
     
-	t_nest -> next = s_print_dialog_nesting;
-	t_nest -> result = kMCPlatformPrintDialogResultContinue;
-	s_print_dialog_nesting = t_nest;
-	
-	if (p_owner == nil)
-	{
-		t_nest -> owner = nil;
-		
-		if ([p_dialog runModalWithPrintInfo: t_info] == NSOKButton)
-			t_nest -> result = kMCPlatformPrintDialogResultSuccess;
-		else
-			t_nest -> result = kMCPlatformPrintDialogResultCancel;
-	}
-	else
-	{
-		// If we've already tried to sheet a dialog against the given window, then
-		// we can't do so again, so we implicitly 'cancel' it.
-		
-		bool t_exists;
-		t_exists = false;
-		for(MCMacPlatformPrintDialogNest *t_other_nest = t_nest; t_other_nest != nil; t_other_nest = t_other_nest -> next)
-			if (t_other_nest -> owner == p_owner)
-				t_exists = true;
-		
-		if (!t_exists)
-		{
-			t_nest -> owner = p_owner;
-			MCPlatformRetainWindow(p_owner);
-		
-			[p_dialog beginSheetWithPrintInfo:t_info
-							   modalForWindow:((MCMacPlatformWindow *)p_owner) -> GetHandle()
-									 delegate:s_print_dialog_delegate
-							   didEndSelector:@selector(printDialogDidEnd:returnCode:contextInfo:)
-								  contextInfo:t_nest];
-		}
-		else
-			t_nest -> result = kMCPlatformPrintDialogResultCancel;
-	}
-}
-
-void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
-{
-	MCPlatformBeginPrintDialog(p_owner, p_session, p_settings, p_page_format, [NSPageLayout pageLayout]);
-}
-
-void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
-{
-	MCPlatformBeginPrintDialog(p_owner, p_session, p_settings, p_page_format, [NSPrintPanel printPanel]);
-}
-
-MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void)
-{
-	MCMacPlatformPrintDialogNest *t_nest;
-	t_nest = s_print_dialog_nesting;
-
-	if (t_nest -> result == kMCPlatformPrintDialogResultContinue)
-		return kMCPlatformPrintDialogResultContinue;
-
-	s_print_dialog_nesting = s_print_dialog_nesting -> next;
-	
-	MCPlatformPrintDialogResult t_result;
-	t_result = t_nest -> result;
-	
-	if (t_nest -> owner != nil)
-		MCPlatformReleaseWindow(t_nest -> owner);
-	
-    // MW-2014-07-29: [[ Bug 12961 ]] Write back the print settings.
-	MCPlatformEndPrintInfo(t_nest -> info, t_nest -> session, t_nest -> settings, t_nest -> page_format);
+    if (m_session != nil)
+        PMRelease(m_session);
     
-	MCMemoryDelete(t_nest);
-	
-	return t_result;
+    if (m_settings != nil)
+        PMRelease(m_settings);
+    
+    if (m_page_format != nil)
+        PMRelease(m_page_format);
+}
+
+void MCMacPlatformPrintDialogSession::CopyInfo(void *&x_session, void *&x_settings, void *&x_page_format)
+{
+    PMCopyPrintSettings((PMPrintSettings)[m_info PMPrintSettings], m_settings);
+    PMCopyPageFormat((PMPageFormat)[m_info PMPageFormat], m_page_format);
+    
+    PMDestinationType t_type;
+    
+    CFURLRef t_output_location_url;
+    CFStringRef t_output_format;
+    t_output_location_url = NULL;
+    t_output_format = NULL;
+    if (PMSessionGetDestinationType((PMPrintSession)[m_info PMPrintSession], (PMPrintSettings)[m_info PMPrintSettings], &t_type) == noErr &&
+        PMSessionCopyDestinationLocation((PMPrintSession)[m_info PMPrintSession], (PMPrintSettings)[m_info PMPrintSettings], &t_output_location_url) == noErr &&
+        PMSessionCopyDestinationFormat((PMPrintSession)[m_info PMPrintSession], (PMPrintSettings)[m_info PMPrintSettings], &t_output_format) == noErr)
+        PMSessionSetDestination(m_session, m_settings, t_type, t_output_format, t_output_location_url);
+    if (t_output_format != NULL)
+        CFRelease(t_output_format);
+    if (t_output_location_url != NULL)
+        CFRelease(t_output_location_url);
+    
+    PMPrinter t_printer;
+    PMSessionGetCurrentPrinter((PMPrintSession)[m_info PMPrintSession], &t_printer);
+    PMSessionSetCurrentPMPrinter(m_session, t_printer);
+    
+    PMRelease(x_session);
+    x_session = m_session;
+    PMRetain(x_session);
+    
+    PMRelease(x_settings);
+    x_settings = m_settings;
+    PMRetain(x_settings);
+    
+    PMRelease(x_page_format);
+    x_page_format = m_page_format;
+    PMRetain(x_page_format);
+    
+}
+
+void MCMacPlatformPrintDialogSession::BeginSettings(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format)
+{
+    Begin(p_window, p_session, p_settings, p_page_format, [NSPrintPanel printPanel]);
+}
+
+void MCMacPlatformPrintDialogSession::BeginPageSetup(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format)
+{
+    Begin(p_window, p_session, p_settings, p_page_format, [NSPageLayout pageLayout]);
+}
+
+
+void MCMacPlatformPrintDialogSession::Begin(MCPlatformWindowRef p_window, void *p_session, void *p_settings, void * p_page_format, id p_panel)
+{
+    m_session = (PMPrintSession) p_session;
+    PMRetain(m_session);
+    
+    m_settings = (PMPrintSettings) p_settings;
+    PMRetain(m_settings);
+    
+    m_page_format = (PMPageFormat) p_page_format;
+    PMRetain(m_page_format);
+    
+    NSPrintInfo *t_info;
+    
+    PMPrinter t_printer;
+    PMSessionGetCurrentPrinter(m_session, &t_printer);
+    
+    t_info = [[NSPrintInfo alloc] initWithDictionary: [NSDictionary dictionary]];
+    [t_info setPrinter: [NSPrinter printerWithName: (NSString *)PMPrinterGetName(t_printer)]];
+    
+    PMCopyPrintSettings(m_settings, (PMPrintSettings)[t_info PMPrintSettings]);
+    PMCopyPageFormat(m_page_format, (PMPageFormat)[t_info PMPageFormat]);
+    
+    [t_info updateFromPMPrintSettings];
+    [t_info updateFromPMPageFormat];
+    
+    
+    MCPrintDialogDelegate * t_delegate = [[[MCPrintDialogDelegate alloc] init] autorelease];
+    
+    m_info = t_info;
+    
+    bool t_should_sheet;
+    t_should_sheet = p_window != nil && [((MCMacPlatformWindow *)p_window) -> GetHandle() attachedSheet] == nil;
+    
+    if (!t_should_sheet)
+    {
+        if ([p_panel runModalWithPrintInfo: t_info] == NSOKButton)
+            m_result = kMCPlatformPrintDialogResultSuccess;
+        else
+            m_result = kMCPlatformPrintDialogResultCancel;
+    }
+    else
+    {
+        m_owner = p_window;
+        m_owner -> Retain();
+        
+        [p_panel beginSheetWithPrintInfo:t_info
+                           modalForWindow:((MCMacPlatformWindow *)m_owner) -> GetHandle()
+                                 delegate:t_delegate
+                           didEndSelector:@selector(printDialogDidEnd:returnCode:contextInfo:)
+                              contextInfo:this];
+    }
+}
+
+void MCMacPlatformPrintDialogSession::SetResult(MCPlatformPrintDialogResult p_result)
+{
+    m_result = p_result;
+}
+
+MCPlatformPrintDialogResult MCMacPlatformPrintDialogSession::GetResult(void)
+{
+    return m_result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformPrintDialogSessionRef MCMacPlatformCore::CreatePrintDialogSession()
+{
+    MCPlatform::Ref<MCPlatformPrintDialogSession> t_ref = MCPlatform::makeRef<MCMacPlatformPrintDialogSession>(this);
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

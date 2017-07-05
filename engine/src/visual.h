@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	VISUAL_H
 #define	VISUAL_H
 
+#include "parsedef.h"
 #include "statemnt.h"
 
 class MCVisualEffect : public MCStatement

@@ -20,195 +20,16 @@
 #include "uidc.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include <mach-o/dyld.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef const struct OpaqueJSContext* JSContextRef;
-typedef struct OpaqueJSContext* JSGlobalContextRef;
-typedef struct OpaqueJSString* JSStringRef;
-typedef struct OpaqueJSClass* JSClassRef;
-typedef struct OpaqueJSPropertyNameArray* JSPropertyNameArrayRef;
-typedef struct OpaqueJSPropertyNameAccumulator* JSPropertyNameAccumulatorRef;
-typedef const struct OpaqueJSValue* JSValueRef;
-typedef struct OpaqueJSValue* JSObjectRef;
-
-typedef enum {
-    kJSTypeUndefined,
-    kJSTypeNull,
-    kJSTypeBoolean,
-    kJSTypeNumber,
-    kJSTypeString,
-    kJSTypeObject
-} JSType;
-
-enum { 
-    kJSPropertyAttributeNone         = 0,
-    kJSPropertyAttributeReadOnly     = 1 << 1,
-    kJSPropertyAttributeDontEnum     = 1 << 2,
-    kJSPropertyAttributeDontDelete   = 1 << 3
-};
-typedef unsigned JSPropertyAttributes;
-
-enum { 
-    kJSClassAttributeNone = 0,
-    kJSClassAttributeNoAutomaticPrototype = 1 << 1
-};
-typedef unsigned JSClassAttributes;
-
-typedef void
-(*JSObjectInitializeCallback) (JSContextRef ctx, JSObjectRef object);
-typedef void            
-(*JSObjectFinalizeCallback) (JSObjectRef object);
-typedef bool
-(*JSObjectHasPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName);
-typedef JSValueRef
-(*JSObjectGetPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
-typedef bool
-(*JSObjectSetPropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception);
-typedef bool
-(*JSObjectDeletePropertyCallback) (JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
-typedef void
-(*JSObjectGetPropertyNamesCallback) (JSContextRef ctx, JSObjectRef object, JSPropertyNameAccumulatorRef propertyNames);
-typedef JSValueRef 
-(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef JSObjectRef 
-(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef bool 
-(*JSObjectHasInstanceCallback)  (JSContextRef ctx, JSObjectRef constructor, JSValueRef possibleInstance, JSValueRef* exception);
-typedef JSValueRef
-(*JSObjectConvertToTypeCallback) (JSContextRef ctx, JSObjectRef object, JSType type, JSValueRef* exception);
-typedef struct {
-    const char* const name;
-    JSObjectCallAsFunctionCallback callAsFunction;
-    JSPropertyAttributes attributes;
-} JSStaticFunction;
-
-typedef struct {
-    const char* const name;
-    JSObjectGetPropertyCallback getProperty;
-    JSObjectSetPropertyCallback setProperty;
-    JSPropertyAttributes attributes;
-} JSStaticValue;
-
-typedef struct {
-    int                                 version; // current (and only) version is 0
-    JSClassAttributes                   attributes;
-	
-    const char*                         className;
-    JSClassRef                          parentClass;
-	
-    const JSStaticValue*                staticValues;
-    const JSStaticFunction*             staticFunctions;
-    
-    JSObjectInitializeCallback          initialize;
-    JSObjectFinalizeCallback            finalize;
-    JSObjectHasPropertyCallback         hasProperty;
-    JSObjectGetPropertyCallback         getProperty;
-    JSObjectSetPropertyCallback         setProperty;
-    JSObjectDeletePropertyCallback      deleteProperty;
-    JSObjectGetPropertyNamesCallback    getPropertyNames;
-    JSObjectCallAsFunctionCallback      callAsFunction;
-    JSObjectCallAsConstructorCallback   callAsConstructor;
-    JSObjectHasInstanceCallback         hasInstance;
-    JSObjectConvertToTypeCallback       convertToType;
-} JSClassDefinition;
-
-typedef JSGlobalContextRef (*JSGlobalContextCreatePtr)(JSClassRef globalObjectClass);
-typedef void (*JSGlobalContextReleasePtr)(JSGlobalContextRef ctx);
-typedef JSObjectRef (*JSContextGetGlobalObjectPtr)(JSContextRef ctx);
-typedef JSValueRef (*JSEvaluateScriptPtr)(JSContextRef ctx, JSStringRef script, JSObjectRef thisObject, JSStringRef sourceURL, int startingLineNumber, JSValueRef* exception);
-typedef bool (*JSCheckScriptSyntaxPtr)(JSContextRef ctx, JSStringRef script, JSStringRef sourceURL, int startingLineNumber, JSValueRef* exception);
-typedef JSStringRef (*JSStringCreateWithCFStringPtr)(CFStringRef string);
-typedef CFStringRef (*JSStringCopyCFStringPtr)(CFAllocatorRef alloc, JSStringRef string);
-typedef JSValueRef (*JSValueMakeStringPtr)(JSContextRef ctx, JSStringRef string);
-typedef JSStringRef (*JSValueToStringCopyPtr)(JSContextRef ctx, JSValueRef value, JSValueRef* exception);
-typedef JSObjectRef (*JSValueToObjectPtr)(JSContextRef ctx, JSValueRef value, JSValueRef* exception);
-typedef void (*JSValueProtectPtr)(JSContextRef ctx, JSValueRef value);
-typedef void (*JSValueUnprotectPtr)(JSContextRef ctx, JSValueRef value);
-typedef void (*JSStringReleasePtr)(JSStringRef string);
-typedef JSClassRef (*JSClassCreatePtr)(const JSClassDefinition* definition);
-typedef void (*JSClassReleasePtr)(JSClassRef jsClass);
-typedef JSObjectRef (*JSObjectMakePtr)(JSContextRef ctx, JSClassRef jsClass, void* data);
-typedef void* (*JSObjectGetPrivatePtr)(JSObjectRef object);
-typedef JSValueRef (*JSObjectGetPropertyPtr)(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception);
-typedef void (*JSObjectSetPropertyPtr)(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSPropertyAttributes attributes, JSValueRef* exception);
-typedef JSValueRef (*JSObjectCallAsFunctionPtr)(JSContextRef ctx, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-
-static const char kJavaScriptCoreLibraryPath[] = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore";
-
-static const void *JavaScriptCoreLibrary = NULL;
-
-static JSGlobalContextCreatePtr JSGlobalContextCreate;
-static JSGlobalContextReleasePtr JSGlobalContextRelease;
-static JSContextGetGlobalObjectPtr JSContextGetGlobalObject;
-static JSEvaluateScriptPtr JSEvaluateScript;
-static JSCheckScriptSyntaxPtr JSCheckScriptSyntax;
-static JSStringCreateWithCFStringPtr JSStringCreateWithCFString;
-static JSStringCopyCFStringPtr JSStringCopyCFString;
-static JSValueMakeStringPtr JSValueMakeString;
-static JSValueToStringCopyPtr JSValueToStringCopy;
-static JSValueToObjectPtr JSValueToObject;
-static JSValueProtectPtr JSValueProtect;
-static JSValueUnprotectPtr JSValueUnprotect;
-static JSStringReleasePtr JSStringRelease;
-static JSClassCreatePtr JSClassCreate;
-static JSClassReleasePtr JSClassRelease;
-static JSObjectMakePtr JSObjectMake;
-static JSObjectGetPrivatePtr JSObjectGetPrivate;
-static JSObjectGetPropertyPtr JSObjectGetProperty;
-static JSObjectSetPropertyPtr JSObjectSetProperty;
-static JSObjectCallAsFunctionPtr JSObjectCallAsFunction;
-
-///////////////////////////////////////////////////////////////////////////////
-
-class MCPlatformScriptEnvironment
+bool MCMacPlatformScriptEnvironment::ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
 {
-public:
-	MCPlatformScriptEnvironment(void);
-	~MCPlatformScriptEnvironment(void);
-	
-	void Retain(void);
-	void Release(void);
-	
-	bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
-	
-	void Run(MCStringRef p_script, MCStringRef &r_result);
-	
-	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
-	
-private:
-	struct Function
-	{
-		char *name;
-		MCPlatformScriptEnvironmentCallback callback;
-	};
-	
-	unsigned int m_references;
-	
-	JSGlobalContextRef m_runtime;
-	
-	Function *m_functions;
-	uint4 m_function_count;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
-#define GET_JSC_SYMBOL(sym) \
-sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
-
-///////////////////////////////////////////////////////////////////////////////
-
-// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8 = false);
-
-static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
-{
-    MCAutoStringRefAsCFString t_cf_string;
+    MCPlatformAutoStringRefAsCFString t_cf_string(m_callback);
     
     if (!t_cf_string . Lock(p_string))
         return false;
@@ -241,6 +62,61 @@ static bool ConvertCStringToJSString(const char *p_cstring, JSStringRef& r_js_st
 	return true;
 }
 
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+char *ConvertCFStringToCString(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false)
+{
+    bool t_success;
+    t_success = true;
+    
+    if (p_string == NULL)
+        t_success = false;
+    
+    char *t_cstring;
+    t_cstring = NULL;
+    if (t_success)
+    {
+        CFIndex t_string_length;
+        t_string_length = CFStringGetLength(p_string);
+        
+        // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+        CFStringEncoding t_encoding;
+        if (p_utf8_string)
+            t_encoding = kCFStringEncodingUTF8;
+        else
+            t_encoding = kCFStringEncodingMacRoman;
+        
+        CFIndex t_buffer_size;
+        t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, t_encoding) + 1;
+        t_cstring = (char *)malloc(t_buffer_size);
+        
+        if (t_cstring != NULL)
+        {
+            // MW-2012-03-15: [[ Bug 9935 ]] Use CFStringGetBytes() so that '?' is substituted for any non-
+            //   mappable chars.
+            CFIndex t_used;
+            CFStringGetBytes(p_string, CFRangeMake(0, CFStringGetLength(p_string)), t_encoding, '?', False, (UInt8*)t_cstring, t_buffer_size, &t_used);
+            t_cstring[t_used] = '\0';
+        }
+        else
+            t_success = false;
+        
+        if (t_success)
+            t_cstring = (char *)realloc(t_cstring, strlen(t_cstring) + 1);
+    }
+    
+    if (!t_success)
+    {
+        if (t_cstring != NULL)
+            free(t_cstring);
+        t_cstring = NULL;
+    }
+    
+    if (p_string != NULL && p_release)
+        CFRelease(p_string);
+    
+    return t_cstring;
+}
+
 static bool ConvertJSStringToCString(JSStringRef p_js_string, char*& r_cstring)
 {
 	CFStringRef t_cf_string;
@@ -249,7 +125,7 @@ static bool ConvertJSStringToCString(JSStringRef p_js_string, char*& r_cstring)
 		return false;
 	
 	char *t_cstring;
-	t_cstring = osx_cfstring_to_cstring(t_cf_string, true);
+	t_cstring = ConvertCFStringToCString(t_cf_string, true);
 	
 	if (t_cstring == NULL)
 		return false;
@@ -357,15 +233,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCPlatformScriptEnvironment::MCPlatformScriptEnvironment(void)
-{
-	m_references = 1;
-	m_runtime = NULL;
-	m_functions = NULL;
-	m_function_count = 0;
-}
-
-MCPlatformScriptEnvironment::~MCPlatformScriptEnvironment(void)
+MCMacPlatformScriptEnvironment::~MCMacPlatformScriptEnvironment(void)
 {
 	for(uint4 i = 0; i < m_function_count; ++i)
 		delete m_functions[i] . name;
@@ -376,19 +244,7 @@ MCPlatformScriptEnvironment::~MCPlatformScriptEnvironment(void)
 		JSGlobalContextRelease(m_runtime);
 }
 
-void MCPlatformScriptEnvironment::Retain(void)
-{
-	m_references += 1;
-}
-
-void MCPlatformScriptEnvironment::Release(void)
-{
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
-}
-
-bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnvironmentCallback p_callback)
+bool MCMacPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnvironmentCallback p_callback)
 {
 	Function *t_new_functions;
 	t_new_functions = (Function *)realloc(m_functions, sizeof(Function) * (m_function_count + 1));
@@ -404,7 +260,7 @@ bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnv
 	return true;
 }
 
-void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_result)
+void MCMacPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_result)
 {
 	bool t_success;
 	t_success = true;
@@ -490,8 +346,8 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_resul
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		r_result = MCValueRetain(kMCEmptyString);
-	}
+        /* UNCHECKED */ MCStringCreateWithCString("", r_result);
+    }
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
@@ -499,7 +355,7 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_resul
 	}
 }
 
-char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
+char *MCMacPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
 {
 	if (m_runtime == NULL)
 		return NULL;
@@ -569,61 +425,36 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// SN-2014-07-23: [[ Bug 12907 ]]
-//  Update as well MCSreenDC::createscriptenvironment (and callees)
-void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env)
+MCPlatformScriptEnvironmentRef MCMacPlatformCore::CreateScriptEnvironment()
 {
-	if (JavaScriptCoreLibrary == NULL)
-	{
-		JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-		GET_JSC_SYMBOL(JSGlobalContextCreate);
-		GET_JSC_SYMBOL(JSGlobalContextRelease);
-		GET_JSC_SYMBOL(JSContextGetGlobalObject);
-		GET_JSC_SYMBOL(JSEvaluateScript);
-		GET_JSC_SYMBOL(JSCheckScriptSyntax);
-		GET_JSC_SYMBOL(JSStringCreateWithCFString);
-		GET_JSC_SYMBOL(JSStringCopyCFString);
-		GET_JSC_SYMBOL(JSValueMakeString);
-		GET_JSC_SYMBOL(JSValueToStringCopy);
-		GET_JSC_SYMBOL(JSValueToObject);
-		GET_JSC_SYMBOL(JSValueProtect);
-		GET_JSC_SYMBOL(JSValueUnprotect);
-		GET_JSC_SYMBOL(JSStringRelease);
-		GET_JSC_SYMBOL(JSClassCreate);
-		GET_JSC_SYMBOL(JSClassRelease);
-		GET_JSC_SYMBOL(JSObjectMake);
-		GET_JSC_SYMBOL(JSObjectGetPrivate);
-		GET_JSC_SYMBOL(JSObjectGetProperty);
-		GET_JSC_SYMBOL(JSObjectSetProperty);
-		GET_JSC_SYMBOL(JSObjectCallAsFunction);
-	}
-	
-	r_env = new MCPlatformScriptEnvironment();
+    if (JavaScriptCoreLibrary == NULL)
+    {
+        JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+        GET_JSC_SYMBOL(JSGlobalContextCreate);
+        GET_JSC_SYMBOL(JSGlobalContextRelease);
+        GET_JSC_SYMBOL(JSContextGetGlobalObject);
+        GET_JSC_SYMBOL(JSEvaluateScript);
+        GET_JSC_SYMBOL(JSCheckScriptSyntax);
+        GET_JSC_SYMBOL(JSStringCreateWithCFString);
+        GET_JSC_SYMBOL(JSStringCopyCFString);
+        GET_JSC_SYMBOL(JSValueMakeString);
+        GET_JSC_SYMBOL(JSValueToStringCopy);
+        GET_JSC_SYMBOL(JSValueToObject);
+        GET_JSC_SYMBOL(JSValueProtect);
+        GET_JSC_SYMBOL(JSValueUnprotect);
+        GET_JSC_SYMBOL(JSStringRelease);
+        GET_JSC_SYMBOL(JSClassCreate);
+        GET_JSC_SYMBOL(JSClassRelease);
+        GET_JSC_SYMBOL(JSObjectMake);
+        GET_JSC_SYMBOL(JSObjectGetPrivate);
+        GET_JSC_SYMBOL(JSObjectGetProperty);
+        GET_JSC_SYMBOL(JSObjectSetProperty);
+        GET_JSC_SYMBOL(JSObjectCallAsFunction);
+    }
+
+    MCPlatform::Ref<MCPlatformScriptEnvironment> t_ref = MCPlatform::makeRef<MCMacPlatformScriptEnvironment>(this);
+    
+    return t_ref.unsafeTake();
 }
 
-void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env)
-{
-	env -> Retain();
-}
-
-void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env)
-{
-	env -> Release();
-}
-
-bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback)
-{
-	return env -> Define(function, callback);
-}
-
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result)
-{
-    env -> Run(script, r_result);
-}
-
-void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result)
-{
-	r_result = env -> Call(method, arguments, argument_count);
-}
-
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////

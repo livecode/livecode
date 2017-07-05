@@ -18,23 +18,6 @@
 
 #include "mbliphone-clipboard.h"
 
-
-MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
-{
-    return new MCIPhoneRawClipboard;
-}
-
-MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
-{
-    return new MCIPhoneRawClipboard;
-}
-
-MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
-{
-    return new MCIPhoneRawClipboard;
-}
-
-
 uindex_t MCIPhoneRawClipboard::GetItemCount() const
 {
     return 0;

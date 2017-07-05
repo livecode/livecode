@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined FEATURE_PLATFORM_AUDIO
 #include "platform.h"
+#include "platform-legacy.h"
 static MCPlatformSoundRef s_current_sound = nil;
 #elif defined _WINDOWS_DESKTOP
 // SN-2014-06-26 [[ PlatformPlayer ]]

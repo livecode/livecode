@@ -19,10 +19,10 @@
 #include "graphics.h"
 #include "imagebitmap.h"
 
-#if defined(TARGET_PLATFORM_MACOS_X)
-#include <Carbon/Carbon.h>
-#elif defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(TARGET_SUBPLATFORM_IPHONE)
 #include <CoreGraphics/CoreGraphics.h>
+#else
+#include <Carbon/Carbon.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@
 // IM-2014-09-29: [[ Bug 13451 ]] return the sRGB colorspace (as a CGColorSpaceRef).
 bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace)
 {
-	CGColorSpaceRef t_colorspace;
+	CGColorSpaceRef t_colorspace = nullptr;
 	
 #if defined(TARGET_PLATFORM_MACOS_X)
 	// on OSX request sRGB by name.
@@ -304,35 +304,6 @@ bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect,
 	
 	if (t_success)
 		t_success = MCGImageToCGImage(p_src, p_src_rect, t_colorspace, p_invert, r_image);
-	
-	CGColorSpaceRelease(t_colorspace);
-	
-	return t_success;
-}
-
-bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
-{
-    if (p_bitmap == nil)
-        return false;
-	bool t_mask;
-	t_mask = MCImageBitmapHasTransparency(p_bitmap);
-	
-	MCGRaster t_raster;
-	t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
-	
-	return MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
-}
-
-bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image)
-{
-	bool t_success = true;
-	
-	CGColorSpaceRef t_colorspace = nil;
-	if (t_success)
-		t_success = MCImageGetCGColorSpace(t_colorspace);
-	
-	if (t_success)
-		t_success = MCImageBitmapToCGImage(p_bitmap, t_colorspace, p_copy, p_invert, r_image);
 	
 	CGColorSpaceRelease(t_colorspace);
 	

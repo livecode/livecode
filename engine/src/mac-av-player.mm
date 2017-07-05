@@ -23,11 +23,12 @@
 #include "notify.h"
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include "graphics_util.h"
+
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +62,7 @@ class MCAVFoundationPlayer;
 class MCAVFoundationPlayer: public MCPlatformPlayer
 {
 public:
-	MCAVFoundationPlayer(void);
+	MCAVFoundationPlayer(MCPlatformCoreRef p_platform);
 	virtual ~MCAVFoundationPlayer(void);
     
 	virtual bool GetNativeView(void *&r_view);
@@ -99,6 +100,7 @@ private:
 	void Load(MCStringRef filename, bool is_url);
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
+    bool SnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap);
     
     CMTime CMTimeFromLCTime(uint32_t lc_time);
     uint32_t CMTimeToLCTime(CMTime cm_time);
@@ -194,7 +196,7 @@ private:
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if ([keyPath isEqualToString: @"status"])
-        MCPlatformBreakWait();
+        m_av_player -> GetPlatform() -> BreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
     {
         // PM-2014-10-14: [[ Bug 13650 ]] Do this check to prevent a crash
@@ -249,8 +251,10 @@ private:
 ////////////////////////////////////////////////////////
 
 
-MCAVFoundationPlayer::MCAVFoundationPlayer(void)
+MCAVFoundationPlayer::MCAVFoundationPlayer(MCPlatformCoreRef p_platform)
 {
+    m_platform = p_platform;
+    m_callback = p_platform -> GetCallback();
     // COMMENT: We can follow the same pattern as QTKitPlayer here - however we won't have
     //   an AVPlayer until we load, so that starts off as nil and we create a PlayerView
     //   with zero frame.
@@ -363,7 +367,7 @@ void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
     uint32_t t_buffered_time;
     t_buffered_time = CMTimeToLCTime(p_timerange.duration);
     m_buffered_time = t_buffered_time;
-    MCPlatformCallbackSendPlayerBufferUpdated(this);
+    m_platform -> SendPlayerBufferUpdated(this);
     /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);
@@ -384,7 +388,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     if (!m_looping)
     {
         m_playing = false;
-        MCPlatformCallbackSendPlayerFinished(this);
+        m_platform -> SendPlayerFinished(this);
     }
     else
     {
@@ -467,7 +471,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
             if (m_markers[t_index - 1] != m_last_marker)
             {
                 m_last_marker = m_markers[t_index - 1];
-                MCPlatformCallbackSendPlayerMarkerChanged(this, m_last_marker);
+                m_platform -> SendPlayerMarkerChanged(this, m_last_marker);
                 m_synchronizing = true;
             }
         }
@@ -475,7 +479,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     
     // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
     if (!m_synchronizing && IsPlaying())
-        MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+        m_platform -> SendPlayerCurrentTimeChanged(this);
     
     m_synchronizing = false;
     
@@ -511,7 +515,7 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 		return;
     
 	Retain();
-	MCMacPlatformScheduleCallback(DoSwitch, this);
+	m_platform -> ScheduleCallback(DoSwitch, this);
     
 	m_switch_scheduled = true;
 }
@@ -525,10 +529,10 @@ void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
     __block bool t_is_finished = false;
     [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
         t_is_finished = true;
-        MCPlatformBreakWait();
+        m_platform -> BreakWait();
     }];
     while(!t_is_finished)
-        MCPlatformWaitForEvent(60.0, true);
+        m_platform -> WaitForEvent(60.0, true);
 }
 
 CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
@@ -604,7 +608,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
         t_player -> m_current_frame = t_image;
     }
 
-	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+	t_player -> GetPlatform() -> SendPlayerFrameChanged(t_player);
     
     if (t_player -> IsPlaying())
         t_player -> HandleCurrentTimeChanged();
@@ -686,12 +690,18 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         return;
     }
 
+    CFStringRef t_filename_or_url;
+    if (!MCStringConvertToCFStringRef(p_filename_or_url, t_filename_or_url))
+        return;
+    
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
+        t_url = [NSURL fileURLWithPath: (NSString *)t_filename_or_url];
     else
-        t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
+        t_url = [NSURL URLWithString: (NSString *)t_filename_or_url];
 
+    CFRelease(t_filename_or_url);
+    
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
 
@@ -702,7 +712,7 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // Block-wait until the status becomes something.
     [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
     while([t_player status] == AVPlayerStatusUnknown)
-        MCPlatformWaitForEvent(60.0, true);
+        m_platform -> WaitForEvent(60.0, true);
 
     [t_player removeObserver: m_observer forKeyPath: @"status"];
 
@@ -903,7 +913,7 @@ void MCAVFoundationPlayer::Start(double rate)
                                                                            [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                                                                            // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true
                                                                            MovieFinished();
-                                                                           MCPlatformBreakWait();
+                                                                           m_platform -> BreakWait();
                                                                 
                                                                        }];
     }
@@ -951,7 +961,7 @@ void MCAVFoundationPlayer::Step(int amount)
     [[m_player currentItem] stepByCount:amount];
 }
 
-bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
+bool MCAVFoundationPlayer::SnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 	
@@ -967,13 +977,11 @@ bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p
 	if (t_success)
 		MCImageBitmapClear(t_bitmap);
 	
-	extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-	
 	CGColorSpaceRef t_colorspace;
 	t_colorspace = nil;
 	
 	if (t_success)
-		t_success = MCMacPlatformGetImageColorSpace(t_colorspace);
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	CGContextRef t_cg_context;
 	t_cg_context = nil;
@@ -1044,7 +1052,7 @@ bool MCAVFoundationPlayer::LockBitmap(const MCGIntegerSize &p_size, MCImageBitma
 	if (m_player_item_video_output == nil || m_current_frame == nil)
 		return false;
 	
-	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
+	return SnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
 }
 
 void MCAVFoundationPlayer::UnlockBitmap(MCImageBitmap *bitmap)
@@ -1369,9 +1377,11 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 
 ////////////////////////////////////////////////////////
 
-MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void)
+MCPlatformPlayerRef MCMacPlatformCore::CreatePlayer()
 {
-    return new MCAVFoundationPlayer;
+    MCPlatform::Ref<MCPlatformPlayer> t_ref = MCPlatform::makeRef<MCAVFoundationPlayer>(this);
+    
+    return t_ref.unsafeTake();
 }
 
 ////////////////////////////////////////////////////////

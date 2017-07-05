@@ -439,6 +439,9 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
+// Platform API
+extern MCPlatformCoreRef MCplatform;
+
 // A callback to invoke to fetch the current mainwindow to use for modal dialog
 // parenting.
 typedef void *(*MCMainWindowCallback)(void);

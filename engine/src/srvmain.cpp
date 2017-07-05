@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "libscript/script.h"
 
+#include "platform-legacy.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _IREVIAM
@@ -281,10 +284,12 @@ end scriptExecutionError\
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _MAC_SERVER
 MCTheme *MCThemeCreateNative(void)
 {
 	return nil;
 }
+#endif
 
 MCUIDC *MCCreateScreenDC(void)
 {
@@ -641,9 +646,10 @@ void X_main_loop(void)
 
 int platform_main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() ||
+	if (!MCPlatformInitialize() ||
+        !MCInitialize() ||
         !MCSInitialize() ||
-	    !MCScriptInitialize())
+        !MCScriptInitialize())
 		exit(-1);
     
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX

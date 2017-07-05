@@ -65,8 +65,8 @@ typedef int             vm_prot_t;
 
 #define VM_PROT_ALL     (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
 
-typedef uint32_t       cpu_type_t;
-typedef uint32_t       cpu_subtype_t;
+typedef integer_t	cpu_type_t;
+typedef integer_t	cpu_subtype_t;
 
 /*
  * Capability bits used in the definition of cpu_type.

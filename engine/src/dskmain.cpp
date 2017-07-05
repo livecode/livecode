@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "system.h"
 
+#include "libscript/script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static uint2 nvars;

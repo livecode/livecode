@@ -24,9 +24,8 @@
 #endif
 
 #include "platform.h"
-#include "platform-internal.h"
 
-#include "mac-internal.h"
+#include "mac-platform.h"
 
 #include "graphics_util.h"
 #include <objc/objc-runtime.h>

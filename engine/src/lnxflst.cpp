@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxflst.h"
 #include "packed.h"
 #include "platform.h"
+#include "platform-legacy.h"
 
 #include <pango/pangoft2.h>
 #include <glib.h>
