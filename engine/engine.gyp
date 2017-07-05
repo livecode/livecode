@@ -77,23 +77,17 @@
 				'../extensions/script-libraries/diff/diff.livecodescript',
 				'../extensions/script-libraries/messageauthentication/messageauthentication.livecodescript',
 			],
-			
-			'actions':
+            
+            'rules':
 			[
 				{
-					'action_name': 'extract_docs_from_stacks',
-					'message': 'Extracting docs from stacks',
-					
-					'inputs':
-					[
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
-						'<@(_sources)',
-					],
+					'rule_name': 'extract-docs-from-stack',
+					'extension': 'livecodescript',
+					'message': 'Extracting docs from script-only stack <(RULE_INPUT_NAME)',
 					
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/extracted_docs',
+						'<(PRODUCT_DIR)/extracted_docs/com.livecode.script-library.<(RULE_INPUT_ROOT).lcdoc',
 					],
 					
 					'action':
@@ -102,7 +96,7 @@
 						'../util/extract-docs.livecodescript',
 						'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/extracted_docs',
-						'<@(_sources)',
+						'<(RULE_INPUT_PATH)',
 					],
 				},
 			],
