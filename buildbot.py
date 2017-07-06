@@ -106,6 +106,20 @@ def check_target_triple():
         print('Buildbot build for "{}" platform is not supported'.format(triple))
         sys.exit(SKIP_EXIT_STATUS)
 
+def split_target_triple():
+	# Fetch target triple as 3-tuple of (platform, arch, subplatform)
+	check_target_triple()
+	target_components = get_target_triple().split('-')
+	# add empty values for missing components
+	while len(target_components) < 3:
+		target_components.append(None)
+
+	target_arch = target_components[0]
+	target_platform = target_components[1]
+	target_subplatform = target_components[2]
+	
+	return (target_platform, target_arch, target_subplatform)
+	
 ################################################################
 # Defer to buildbot.mk
 ################################################################
@@ -132,27 +146,33 @@ def do_fetch():
 # Configure with gyp
 ################################################################
 
+def format_target_params(platform, arch, subplatform):
+	args = []
+	if platform is not None:
+		args.extend(['--target-platform', platform])
+	if arch is not None:
+		args.extend(['--target-arch', arch])
+	if subplatform is not None:
+		args.extend(['--target-subplatform', subplatform])
+	return args
+
 def build(target):
-	args = ["python", "prebuilt/build.py", "--target", target]
+	args = ["python", "prebuilt/build.py"] + format_target_params(*target)
 	print(' '.join(args))
 	return subprocess.call(args)
 	
 def package(target):
-	args = ["python", "prebuilt/package.py", "--target", target]
+	args = ["python", "prebuilt/package.py"] + format_target_params(*target)
 	print(' '.join(args))
 	return subprocess.call(args)
 	
 def upload(target):
-	args = ["python", "prebuilt/upload.py", "--target", target]
+	args = ["python", "prebuilt/upload.py"] + format_target_params(*target)
 	print(' '.join(args))
 	return subprocess.call(args)
 	
 def do_configure():
-	check_target_triple()
-	target = get_target_triple()
-	# reorder triple to platform-arch-subplatform order
-	target_arch, target_platform, target_subplatform = target.split('-')
-	target = '-'.join([target_platform, target_arch, target_subplatform])
+	target = split_target_triple()
 	# perform build + package + upload in configure step
 	
 	exit_status = build(target)

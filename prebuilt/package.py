@@ -26,11 +26,15 @@ def usage(exit_status):
 """Package prebuilts needed to build LiveCode.
 
 Usage:
-  package.py [--target TARGET]
+  package.py [--target-platform PLATFORM] [--target-arch ARCH] [--target-subplatform SUBPLATFORM]
 
 Options:
-  -p, --target TARGET
-                    Choose which target triple to build for
+  -p, --target-platform TARGET
+                    Choose which target platform to build for
+  -a, --target-arch ARCH
+                    Choose which target arch to build for
+  -s, --target-subplatform SUBPLATFORM
+                    Choose which target subplatform to build for
   -h, --help        Print this message
 """)
     for p in KNOWN_PLATFORMS:
@@ -45,26 +49,37 @@ def guess_target():
     system = platform.system()
     arch = platform.machine()
     if system == 'Darwin':
-        return 'mac'
+        return ('mac', 'x86_64')
     if system == 'Linux':
         if re.match('^(x|i.?)86$', arch) is not None:
-            return 'linux-x86'
+            return ('linux', 'x86')
         else:
-            return 'linux-' + arch
+            return ('linux', arch)
     if system == 'Windows':
         if arch == 'AMD64':
-            return 'win32-x86_64'
+            return ('win32', 'x86_64')
         else:
-            return 'win32-x86'
+            return ('win32', 'x86')
+
+	# could not identify host platform + arch
+	return (None, None)
 
 ################################################################
 # Parse command-line options
 ################################################################
 
+def process_default_options(opts):
+	target = guess_target()
+	opts['TARGET_PLATFORM'] = target[0]
+	opts['TARGET_ARCH'] = target[1]
+	opts['TARGET_SUBPLATFORM'] = None
+
 def process_env_options(opts):
-    vars = ('TARGET',)
+    vars = ('TARGET_PLATFORM','TARGET_ARCH','TARGET_SUBPLATFORM')
     for v in vars:
-        opts[v] = os.getenv(v)
+		value = os.getenv(v)
+		if value is not None:
+			opts[v] = value
 
 def process_arg_options(opts, args):
     offset = 0
@@ -77,8 +92,16 @@ def process_arg_options(opts, args):
 
         if key in ('-h', '--help'):
             usage(0)
-        if key in ('-p', '--target'):
-            opts['TARGET'] = value
+        if key in ('-p', '--target-platform'):
+            opts['TARGET_PLATFORM'] = value
+            offset += 2
+            continue
+        if key in ('-a', '--target-arch'):
+            opts['TARGET_ARCH'] = value
+            offset += 2
+            continue
+        if key in ('-s', '--target-subplatform'):
+            opts['TARGET_SUBPLATFORM'] = value
             offset += 2
             continue
 
@@ -90,13 +113,15 @@ def process_arg_options(opts, args):
 ################################################################
 
 def validate_target(opts):
-    target = opts['TARGET']
-    if target is None:
-        target = guess_target()
-    if target is None:
-        error("Cannot guess target; specify '--target <name>-'")
+	if opts['TARGET_PLATFORM'] is None:
+		error("Cannot guess target platform; specify '--target-platform <name>'")
 
-    opts['TARGET'] = target
+	if opts['TARGET_ARCH'] is None:
+		error("Cannot guess target arch; specify '--target-arch <name>'")
+
+	# Subplatform may be unspecified
+	if opts['TARGET_SUBPLATFORM'] is None:
+		opts['TARGET_SUBPLATFORM'] = ''
 
 ################################################################
 # Action
@@ -116,16 +141,14 @@ def exec_package_libraries(build_platform, build_arch, build_subplatform):
 
 def package(args):
     opts = {}
+    process_default_options(opts)
     process_env_options(opts)
     process_arg_options(opts, args)
 
     validate_target(opts)
-    
-    # Get the target platform to pass to package-libs
-    target_platform, target_arch, target_subplatform = opts['TARGET'].split('-')
 
-    print('Packaging target platform prebuilts (' + target_platform + ',' + target_arch + ',' + target_subplatform + ')')
-    exec_package_libraries(target_platform, target_arch, target_subplatform)
+    print('Packaging target platform prebuilts (' + opts['TARGET_PLATFORM'] + ',' + opts['TARGET_ARCH'] + ',' + opts['TARGET_SUBPLATFORM'] + ')')
+    exec_package_libraries(opts['TARGET_PLATFORM'], opts['TARGET_ARCH'], opts['TARGET_SUBPLATFORM'])
 
 if __name__ == '__main__':
     package(sys.argv[1:])
