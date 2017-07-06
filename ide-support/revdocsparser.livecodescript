@@ -279,9 +279,6 @@ function revDocsParseDictionaryToLibraryArray pRootDir
                   put tSynonymName into tLibraryA[tCount]["display name"]
                   if tParsedA["doc"][1]["Type"] is not "glossary" then
                      put " (Synonym of " & tDisplayName & ")" after tLibraryA[tCount]["display name"]
-                     -- dictionary searches 'display syntax' for matches, need to add synonym there for visibility
-                     -- only first entry is displayed, so add to second
-                     put tSynonymName after tLibraryA[tCount]["display syntax"][2]
                   end if
                   add 1 to tCount
                end repeat
