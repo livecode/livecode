@@ -285,6 +285,7 @@ command BuildRowForLanguage pContent, pLanguage
       set the bottom of tText to the bottom of tTitle
       hide tText
    else
+      set the height of tText to the formattedHeight of tText
       set the top of tText to the bottom of tTitle + kTitlePadding
    end if
    
@@ -295,7 +296,7 @@ command BuildRowForLanguage pContent, pLanguage
    set the textSize of tFromCode to kCodeTextSize
    set the left of tFromCode to kMargin
    set the height of tFromCode to the formattedHeight of tFromCode
-   set the top of tFromCode to the bottom of tText + kTitlePadding
+   set the top of tFromCode to the bottom of tText + kPadding
    
    create field "to" in tGroup
    put it into tToCode
@@ -319,9 +320,16 @@ function RowHeight pGroupName
             the height of field "to" of group pGroupName) into tCodeHeight
    end if
    
+   local tTextHeight
+   if there is a field "text" of group pGroupName then
+      if the visible of field "text" of group pGroupName then
+         put the height of field "text" of group pGroupName + \
+               kPadding into tTextHeight
+      end if
+   end if
+   
    return the height of field "title" of group pGroupName + \
-         the height of field "text" of group pGroupName + \
-         tCodeHeight + kPadding + kTitlePadding
+         tTextHeight + tCodeHeight + kPadding + kTitlePadding
 end RowHeight
 
 command PositionRowsForLanguage pTitleBottom, @xContentBottom, pContent, @xToFit, pLanguage, @xCurCard
@@ -425,6 +433,7 @@ command BuildGroupForLiveCode pContent, pWidth
       set the bottom of tText to the bottom of tTitle
       hide tText
    else
+      set the height of tText to the formattedHeight of tText
       set the top of tText to the bottom of tTitle + kTitlePadding
    end if
    
@@ -438,7 +447,7 @@ command BuildGroupForLiveCode pContent, pWidth
          of chars in pContent[LanguageToKey("livecode")] of tCode
    set the height of tCode to the formattedHeight of tCode
    set the loc of tCode to the loc of tTitle
-   set the top of tCode to the bottom of tText + kTitlePadding
+   set the top of tCode to the bottom of tText + kPadding
 end BuildGroupForLiveCode
 
 command PositionRowsInColumn @xCol, pColWidth, pTitleBottom, @xContentBottom, pContent, @xToFit
