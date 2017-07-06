@@ -152,7 +152,7 @@ EOF
 
 if [ "${ARCH}" == "universal" ] ; then
 	# perform build for universal architectures
-	for UARCH in "${UNIVERSAL_ARCHS}" ; do
+	for UARCH in ${UNIVERSAL_ARCHS} ; do
 		buildOpenSSL "${PLATFORM}" "${UARCH}" "${SUBPLATFORM}"
 	done
 
@@ -161,6 +161,8 @@ if [ "${ARCH}" == "universal" ] ; then
 	mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}"
 	lipo -create ${CRYPTO_LIBS} -output "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}/libcustomcrypto.a"
 	lipo -create ${SSL_LIBS} -output "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}/libcustomssl.a"
+	CRYPTO_LIBS=
+	SSL_LIBS=
 else
 	buildOpenSSL "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 fi

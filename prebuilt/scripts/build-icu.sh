@@ -205,11 +205,16 @@ function buildICU {
 # Need to build ICU tools for the host platform
 if [ "${HOST_PLATFORM}-${HOST_ARCH}" != "${PLATFORM}-${ARCH}" ] ; then
 	buildICU "${HOST_PLATFORM}" "${HOST_ARCH}"
+	# clear universal libs lists
+	for L in data i18n io le lx tu uc ; do
+		VAR="ICU${L}_LIBS"
+		eval "$VAR="
+	done
 fi
 
 if [ "${ARCH}" == "universal" ] ; then
 	# perform build for universal architectures
-	for UARCH in "${UNIVERSAL_ARCHS}" ; do
+	for UARCH in ${UNIVERSAL_ARCHS} ; do
 		buildICU "${PLATFORM}" "${UARCH}" "${SUBPLATFORM}"
 	done
 

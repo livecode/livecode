@@ -103,7 +103,7 @@ function buildCurl {
 
 if [ "${ARCH}" == "universal" ] ; then
 	# perform build for universal architectures
-	for UARCH in "${UNIVERSAL_ARCHS}" ; do
+	for UARCH in ${UNIVERSAL_ARCHS} ; do
 		buildCurl "${PLATFORM}" "${UARCH}" "${SUBPLATFORM}"
 	done
 
@@ -111,6 +111,7 @@ if [ "${ARCH}" == "universal" ] ; then
 	echo "Creating Curl universal libraries"
 	mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}"
 	lipo -create ${CURL_LIBS} -output "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}/libcurl.a"
+	CURL_LIBS=
 else
 	buildCurl "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 fi
