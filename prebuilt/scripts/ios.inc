@@ -37,7 +37,8 @@ function queryiOS {
 		fi
 	done
 	
-	return 1
+	echo "Unknown iOS subplatform: ${SUBPLATFORM}"
+	exit 1
 }
 
 function checkiOS {
