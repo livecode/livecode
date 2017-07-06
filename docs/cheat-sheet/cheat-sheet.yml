@@ -12,6 +12,7 @@
 content:
   - title: "Comments"
     text: |
+      Comments allow you to add explanations and annotations to your code.
     lc: |
       -- these
       # are
@@ -27,6 +28,7 @@ content:
          out */
   - title: "Variables"
     text: |
+      Variables are used to to store information, the stored value can be changed or accessed when you need it.
     lc: |
       local tVar
       put "str" into tVar
@@ -48,12 +50,14 @@ content:
       arr["key"] = "val";
   - title: "Constants"
     text: |
+      Constants store a value that is defined at the point of declaration and never changes.
     lc: |
       constant kFoo = 15
     js: |
       const FOO = 15;
   - title: "Control Structures"
     text: |
+      Control structures are used to control what code is executed and how many times.
     lc: |
       repeat for each char tChar in tVar
       end repeat
@@ -119,6 +123,7 @@ content:
       }
   - title: "Operators"
     text: |
+      Operators are ways of combining values such as boolean values, numbers or strings, to produce other values.
     lc: |
       // Logical
       true and false is false
@@ -198,6 +203,7 @@ content:
       items[1].charAt(0) == "a"
   - title: "String Processing"
     text: |
+      These examples show how string values can be manipulated.
     lc: |
       // General
       put "a" before tVar
@@ -238,6 +244,7 @@ content:
       });
   - title: "Array Processing"
     text: |
+      These examples show how array values can be manipulated.
     lc: |
       // Split / combine
       put "a,b,c" into tVar
@@ -284,6 +291,7 @@ content:
       array.length();
   - title: "Sorting"
     text: |
+      These examples show how to sort items and lists.
     lc: |
       local tList
       put "5,2,3,1,4" into tList
@@ -318,6 +326,7 @@ content:
         -> data == [[6, 1], [2, 2], [8, 3]]
   - title: "Files & Processes"
     text: |
+      These examples show how to read from and write to files and processes.
     lc: |
       get url("file:/" & tPath)
       put "" into url("file:/" & tPath)
@@ -337,6 +346,7 @@ content:
           break
   - title: "User Input / Notification"
     text: |
+      These examples show how to pop up information dialogs, or prompts for user input.
     lc: |
       ask "What is your name?"
       put it into tName
@@ -357,6 +367,7 @@ content:
       alert("Something");
   - title: "Custom Handlers"
     text: |
+      A custom handler is a function or command that you define yourself.
     lc: |
       function foo pParam
       end foo
@@ -375,6 +386,7 @@ content:
       // foo(value)
   - title: "Event Handlers"
     text: |
+      An event handler is a hander that is triggered when an event occurs, such as the use of the mouse or keyboard.
     lc: |
       // Mouse
       on mouseUp pButton
