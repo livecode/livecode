@@ -42,7 +42,8 @@ case "${PLATFORM}" in
 	ios)
 		source "${BASEDIR}/scripts/ios.inc"
 		if [ "${ARCH}" == "universal" ] ; then
-			export UNIVERSAL_ARCHS="${IOS_ARCH[$SUBPLATFORM]}"
+			queryiOS "${SUBPLATFORM}"
+			export UNIVERSAL_ARCHS="${ARCHS}"
 		fi
 		;;
 esac
@@ -112,9 +113,7 @@ function setCCForTarget {
 			export LD="${LINK}"
 			;;
 		ios)
-			XCODE=${IOS_XCODE[$SUBPLATFORM]}
-			SUBPLATFORM_NAME=${IOS_SUBPLATFORM_NAME[$SUBPLATFORM]}
-			VERSION=${IOS_VERSION[$SUBPLATFORM]}
+			queryiOS "${SUBPLATFORM}"
 			
 			export CROSS_TOP="${XCODE}/Platforms/${SUBPLATFORM_NAME}.platform/Developer"
 			export CROSS_SDK="${SUBPLATFORM_NAME}${VERSION}.sdk"

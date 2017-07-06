@@ -79,8 +79,7 @@ function buildICU {
 	esac
 
 	# Utility for displaying platform name
-	if [ ! -z "${SUBPLATFORM_INDEX}" ] ; then
-		local SUBPLATFORM="${IOS_SUBPLATFORM[$SUBPLATFORM_INDEX]}${IOS_VERSION[$SUBPLATFORM_INDEX]}"
+	if [ ! -z "${SUBPLATFORM}" ] ; then
 		local NAME="${PLATFORM}/${SUBPLATFORM}/${ARCH}"
 		local PLATFORM_NAME=${SUBPLATFORM}
 	else
