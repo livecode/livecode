@@ -488,6 +488,10 @@
 							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 							'-Werror=return-type',
 						],
+						'libraries':
+						[
+							'-lm',
+						],
 					},
 				],
 				[
