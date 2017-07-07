@@ -397,17 +397,23 @@ Boolean MCScreenDC::open()
             vis = gdk_screen_get_rgba_visual(t_screen);
             cmap = gdk_screen_get_rgba_colormap(t_screen);
         }
-        else
+        
+        // If getting the RGBA visual fails, or we are not composited, then
+        // use the default visual.
+        if (vis == nullptr)
         {
             // Get the default visual and colormap
             vis = gdk_screen_get_system_visual(t_screen);
             cmap = gdk_screen_get_system_colormap(t_screen);
         }
         
-        // Create a 32-bit visual for internal use
-        //vis32 = gdk_visual_get_best_with_depth(32);
-        //cmap32 = gdk_colormap_new(vis32, FALSE);
-        
+        // If getting the system visual fails then use the rgb visual.
+        if (vis == nullptr)
+        {
+            vis = gdk_screen_get_rgb_visual(t_screen);
+            cmap = gdk_screen_get_rgb_colormap(t_screen);
+        }
+
 		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
             gint t_redshift, t_greenshift, t_blueshift;

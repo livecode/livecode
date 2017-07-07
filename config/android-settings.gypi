@@ -23,6 +23,11 @@
 		'-fno-rtti',
 	],
 	
+	'ldflags':
+	[
+		'-fuse-ld=bfd',
+	],
+	
 	'target_conditions':
 	[
 		[
