@@ -1774,6 +1774,9 @@ enum Parse_errors
 
 	// {PE-0576} folders: bad folder expression
 	PE_FOLDERS_BADPARAM,
+
+    // {PE-0575} send: can't send script in time
+    PE_SEND_SCRIPTINTIME,
 };
 
 extern const char *MCparsingerrors;

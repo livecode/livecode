@@ -1091,25 +1091,28 @@ public:
 
 class MCMessage : public MCStatement
 {
-	MCExpression *message;
-	MCExpression *eventtype;
-	MCChunk *target;
-	MCExpression *in;
+	MCAutoPointer<MCExpression> message;
+	MCAutoPointer<MCExpression> eventtype;
+	MCAutoPointer<MCChunk> target;
+	MCAutoPointer<MCExpression> in;
 	Functions units;
 	Boolean program;
 	Boolean reply;
-protected:
 	Boolean send;
+    Boolean script;
 public:
-	MCMessage()
+    MCMessage(Boolean p_send) :
+        message(nullptr),
+        eventtype(nullptr),
+        target(nullptr),
+        in(nullptr),
+        units(F_TICKS),
+        program(False),
+        reply(True),
+        script(False)
 	{
-		message = eventtype = NULL;
-		target = NULL;
-		in = NULL;
-		program = False;
-		reply = True;
-	}
-	virtual ~MCMessage();
+        send = p_send;
+    }
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
@@ -1118,18 +1121,16 @@ public:
 class MCCall : public MCMessage
 {
 public:
-	MCCall()
+    MCCall() : MCMessage(False)
 	{
-		send = False;
-	}
+    }
 };
 
 class MCSend : public MCMessage
 {
 public:
-	MCSend()
+    MCSend(): MCMessage(True)
 	{
-		send = True;
 	}
 };
 
