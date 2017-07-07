@@ -1495,7 +1495,7 @@ void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
         added = True;
     }
     
-    if (optr->domess(p_script, false) == ES_ERROR)
+    if (optr->domess(p_script, nil, false) == ES_ERROR)
         ctxt . Throw();
     
 	if (added)
