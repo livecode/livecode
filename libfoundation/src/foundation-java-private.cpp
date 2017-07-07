@@ -151,6 +151,9 @@ static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
 
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
+    if (MCHandlerTypeInfoIsVariadic(p_signature))
+        return false;
+
     MCJavaCallType t_call_type = static_cast<MCJavaCallType>(p_call_type);
     if (t_call_type == MCJavaCallTypeInterfaceProxy)
         return true;
@@ -216,7 +219,7 @@ bool MCJavaPrivateErrorsInitialize()
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodCallError"), MCNAME("java"), MCSTR("JNI exception thrown when calling native method"), kMCJavaNativeMethodCallErrorTypeInfo))
         return false;
     
-    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature"), kMCJavaBindingStringSignatureErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature or signature not supported"), kMCJavaBindingStringSignatureErrorTypeInfo))
         return false;
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.CouldNotInitialiseJREError"), MCNAME("java"), MCSTR("Could not initialise Java Runtime Environment"), kMCJavaCouldNotInitialiseJREErrorTypeInfo))
