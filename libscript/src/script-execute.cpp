@@ -328,8 +328,8 @@ MCScriptExecuteContext::InvokeForeignVarArgument(MCScriptForeignInvocation& p_in
                                                  uindex_t p_arg_reg)
 {
     // Get the value in the register, this determines the type.
-    MCValueRef t_arg_value = nil;
-    t_arg_value = CheckedFetchRegister(p_arg_reg);
+    MCValueRef t_arg_value =
+            CheckedFetchRegister(p_arg_reg);
     if (t_arg_value == nil)
     {
         return false;
