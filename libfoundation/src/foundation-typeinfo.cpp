@@ -808,6 +808,12 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
         
         if (p_fields[i].mode == kMCHandlerTypeFieldModeVariadic)
         {
+            if (i == 0 || p_field_count != i + 1)
+            {
+                MCValueRelease(self);
+                return MCErrorThrowGeneric(MCSTR("Variadic parameter cannot be first, and must be last"));
+            }
+            
             p_field_count = i;
             self->flags |= kMCTypeInfoFlagHandlerIsVariadic;
             break;
