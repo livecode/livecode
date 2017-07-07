@@ -184,6 +184,8 @@ struct MCScriptHandlerTypeParameter
 			return kMCHandlerTypeFieldModeOut;
 		case kMCScriptHandlerTypeParameterModeInOut:
 			return kMCHandlerTypeFieldModeInOut;
+		case kMCScriptHandlerTypeParameterModeVariadic:
+			return kMCHandlerTypeFieldModeVariadic;
 		default:
 			MCUnreachableReturn(kMCHandlerTypeFieldModeIn);
 		}

@@ -112,6 +112,7 @@ extern "C" void EmitBeginForeignHandlerType(intptr_t return_type_index);
 extern "C" void EmitHandlerTypeInParameter(NameRef name, intptr_t type_index);
 extern "C" void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index);
 extern "C" void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index);
+extern "C" void EmitHandlerTypeVariadicParameter(NameRef name);
 extern "C" void EmitEndHandlerType(intptr_t& r_index);
 extern "C" void EmitHandlerParameter(NameRef name, intptr_t type_index, intptr_t& r_index);
 extern "C" void EmitHandlerVariable(NameRef name, intptr_t type_index, intptr_t& r_index);
@@ -1537,6 +1538,13 @@ void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index)
 void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index)
 {
     EmitHandlerTypeParameter(kMCHandlerTypeFieldModeInOut, name, type_index);
+}
+
+void EmitHandlerTypeVariadicParameter(NameRef name)
+{
+    intptr_t type_index;
+    EmitListType(type_index);
+    EmitHandlerTypeParameter(kMCHandlerTypeFieldModeVariadic, name, type_index);
 }
 
 void EmitEndHandlerType(intptr_t& r_type_index)

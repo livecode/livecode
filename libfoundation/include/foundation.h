@@ -1776,6 +1776,14 @@ struct MCForeignTypeDescriptor
     bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
     bool (*doexport)(MCValueRef value, bool release, void *contents);
 	bool (*describe)(void *contents, MCStringRef & r_desc);
+    
+    /* The promotedtype typeinfo is the type to which this type must be promoted
+     * when passed through variadic parameters. The 'promote' method does the
+     * promotion. */
+    MCTypeInfoRef promotedtype;
+    /* Promote the value in contents as necessary. The slot ptr must be big enough
+     * to hold the promotedtype. */
+    void (*promote)(void *contents);
 };
 
 MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
@@ -1866,6 +1874,7 @@ enum MCHandlerTypeFieldMode
 	kMCHandlerTypeFieldModeIn,
 	kMCHandlerTypeFieldModeOut,
 	kMCHandlerTypeFieldModeInOut,
+    kMCHandlerTypeFieldModeVariadic,
 };
 
 struct MCHandlerTypeFieldInfo
@@ -1890,12 +1899,16 @@ MC_DLLEXPORT bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *f
 
 // Returns true if the handler is of foreign type.
 MC_DLLEXPORT bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+
+// Returns true if the handler is variadic.
+MC_DLLEXPORT bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef typeinfo);
     
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
-// Get the number of parameters the handler takes.
+// Get the number of parameters the handler takes. If the handler is variadic,
+// this returns the number of fixed parameters.
 MC_DLLEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
 
 // Return the mode of the index'th parameter.

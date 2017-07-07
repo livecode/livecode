@@ -18,6 +18,8 @@
 
 #include "script-private.h"
 
+class MCScriptForeignInvocation;
+
 class MCScriptExecuteContext
 {
 public:
@@ -140,6 +142,22 @@ public:
 	// no return value.
 	void PopFrame(uindex_t result_reg);
 	
+    // Accumulate a non-fixed var-arg arg into the invocation.
+    bool InvokeForeignVarArgument(MCScriptForeignInvocation& invocation,
+                                  MCScriptInstanceRef instance,
+                                  MCScriptForeignHandlerDefinition *handler_def,
+                                  uindex_t arg_index,
+                                  uindex_t arg_reg);
+    
+    // Accumulate a fixed arg into the invocation.
+    bool InvokeForeignArgument(MCScriptForeignInvocation& p_invocation,
+                               MCScriptInstanceRef p_instance,
+                               MCScriptForeignHandlerDefinition *p_handler_def,
+                               uindex_t arg_index,
+                               MCHandlerTypeFieldMode mode,
+                               MCTypeInfoRef type,
+                               uindex_t arg_reg);
+    
 	// Invoke a foreign function with the given arguments, taken from registers
 	// returning the value into the result register.
 	void InvokeForeign(MCScriptInstanceRef instance,
