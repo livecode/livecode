@@ -1611,6 +1611,9 @@ static GdkPixbuf* drawtheme_calc_alpha (MCThemeDrawInfo &p_info)
 	
 	// We need to attach a colourmap to the Drawables in GDK
 	best_vis = gdk_visual_get_best_with_depth(t_screen_depth);
+    if (best_vis == NULL)
+        return NULL;
+    
 	cm = gdk_colormap_new(best_vis, FALSE) ;
 	gdk_drawable_set_colormap(t_black, cm);
 	gdk_drawable_set_colormap(t_white, cm);
@@ -1632,9 +1635,20 @@ static GdkPixbuf* drawtheme_calc_alpha (MCThemeDrawInfo &p_info)
     // Convert the server-side pixmaps into client-side pixbufs. The black
     // pixbuf will need to have an alpha channel so that we can fill it in.
     t_pb_black = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    if (t_pb_black == NULL)
+        return NULL;
+        
     t_pb_white = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    if (t_pb_white == NULL)
+        return NULL;
+    
     t_pb_black = gdk_pixbuf_get_from_drawable(t_pb_black, t_black, NULL, 0, 0, 0, 0, t_w, t_h);
+    if (t_pb_black == NULL)
+        return NULL;
+    
     t_pb_white = gdk_pixbuf_get_from_drawable(t_pb_white, t_white, NULL, 0, 0, 0, 0, t_w, t_h);
+    if (t_pb_white == NULL)
+        return NULL;
     
 	// Calculate the alpha from these two bitmaps --- the t_bm_black image now has full ARGB
     // Note that this also frees the t_pb_white pixbuf
@@ -1661,15 +1675,17 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	{
 		t_argb_image = MCimagecache -> get_from_cache( cache_node ) ;
 		t_cached = true ;
-	}
+    }
 	else
 	{
 		// Calculate the alpha for the rendered widget, by rendering against white & black.
 		t_argb_image = drawtheme_calc_alpha (*p_info) ;
-		t_cached = MCimagecache -> add_to_cache (t_argb_image, *p_info) ;
-	}
+        if (t_argb_image == NULL)
+            return false;
+        t_cached = MCimagecache -> add_to_cache (t_argb_image, *p_info) ;
+    }
 
-	MCGRaster t_raster;
+    MCGRaster t_raster;
 	t_raster.width = gdk_pixbuf_get_width(t_argb_image);
 	t_raster.height = gdk_pixbuf_get_height(t_argb_image);
 	t_raster.stride = gdk_pixbuf_get_rowstride(t_argb_image);

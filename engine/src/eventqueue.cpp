@@ -319,8 +319,11 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeWindowReshape:
     {
 		MCStackHandle t_stack = t_event->window.stack;
-		t_stack->view_setbackingscale(t_event->window.scale);
-		t_stack->view_configure(true);
+        if (t_stack.IsValid())
+        {
+            t_stack->view_setbackingscale(t_event->window.scale);
+            t_stack->view_configure(true);
+        }
 		break;
     }
 			
@@ -945,10 +948,14 @@ bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 	t_event = nil;
 	for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
     {
-		if (t_new_event -> type == kMCEventTypeWindowReshape
-			&& MCStackHandle(t_new_event->window.stack) == p_stack)
+        MCStackHandle t_stack = t_new_event->window.stack;
+        if (t_stack.IsValid())
         {
-			t_event = t_new_event;
+            if (t_new_event -> type == kMCEventTypeWindowReshape
+                && t_stack == p_stack)
+            {
+                t_event = t_new_event;
+            }
         }
     }
 
