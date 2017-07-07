@@ -735,8 +735,6 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:Externals/CEF/libcef.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libffmpegsumo.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libpdf.so
 		rfolder linux-[[TargetArchitecture]]:Externals/CEF/locales
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
