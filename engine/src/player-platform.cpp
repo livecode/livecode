@@ -3479,9 +3479,7 @@ void MCPlayer::handle_mstilldown(int p_which)
     {
         case kMCPlayerControllerPartScrubForward:
         {
-			MCPlayerDuration t_current_time = MCMin(getmoviecurtime(), getduration());
-
-			double t_rate;
+	    double t_rate;
             if (m_inside)
             {
                 t_rate = 2.0;
@@ -3496,9 +3494,7 @@ void MCPlayer::handle_mstilldown(int p_which)
             
         case kMCPlayerControllerPartScrubBack:
         {
-			MCPlayerDuration t_current_time = MCMax(getmoviecurtime(), 0.0);
-
-			double t_rate;
+	    double t_rate;
             if (m_inside)
             {
                 t_rate = -2.0;
