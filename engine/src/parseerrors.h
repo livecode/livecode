@@ -1789,6 +1789,9 @@ enum Parse_errors
     
     // {PE-0581} setop: destination is not a container (did you mean to use 'into'?)
     PE_ARRAYOP_DSTNOTCONTAINER,
+	
+    // {PE-0582} send: can't send script in time
+    PE_SEND_SCRIPTINTIME,
 };
 
 extern const char *MCparsingerrors;
