@@ -2,6 +2,7 @@
 
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
+source "${BASEDIR}/scripts/util.inc"
 
 # Grab the source for the library
 OPENSSL_TGZ="openssl-${OpenSSL_VERSION}.tar.gz"
@@ -11,7 +12,7 @@ cd "${BUILDDIR}"
 if [ ! -d "$OPENSSL_SRC" ] ; then
 	if [ ! -e "$OPENSSL_TGZ" ] ; then
 		echo "Fetching OpenSSL source"
-		curl https://www.openssl.org/source/openssl-${OpenSSL_VERSION}.tar.gz -o "${OPENSSL_TGZ}"
+		fetchUrl "https://www.openssl.org/source/openssl-${OpenSSL_VERSION}.tar.gz" "${OPENSSL_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${OPENSSL_TGZ}" ] ; then 

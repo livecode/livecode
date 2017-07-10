@@ -3,6 +3,7 @@ set -e
 
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
+source "${BASEDIR}/scripts/util.inc"
 
 # Configuration flags
 ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=static --disable-samples --disable-tests --disable-extras"
@@ -20,7 +21,7 @@ HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-${HOST_PLATFORM}-${HOST_ARCH}"
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
 		echo "Fetching ICU source"
-		curl --fail -L http://download.icu-project.org/files/icu4c/${ICU_VERSION}/icu4c-${ICU_VERSION_ALT}-src.tgz -o "${ICU_TGZ}"
+		fetchUrl "http://download.icu-project.org/files/icu4c/${ICU_VERSION}/icu4c-${ICU_VERSION_ALT}-src.tgz" "${ICU_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${ICU_TGZ}" ] ; then 

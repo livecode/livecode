@@ -2,6 +2,7 @@
 
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
+source "${BASEDIR}/scripts/util.inc"
 
 # Only for desktop platforms
 if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
@@ -26,7 +27,7 @@ cd "${BUILDDIR}"
 if [ ! -d "$CURL_SRC" ] ; then
 	if [ ! -e "$CURL_TGZ" ] ; then
 		echo "Fetching Curl source"
-		curl https://curl.haxx.se/download/curl-${Curl_VERSION}.tar.gz -o ${CURL_TGZ}
+		fetchUrl "https://curl.haxx.se/download/curl-${Curl_VERSION}.tar.gz" "${CURL_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${CURL_TGZ}" ] ; then 
