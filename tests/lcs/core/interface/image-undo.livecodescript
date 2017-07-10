@@ -113,7 +113,7 @@ on TestClickImageGetDataWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
 
     local tScript
     put "on undoChanged" into tScript
@@ -133,7 +133,7 @@ on TestRotateImageGetDataWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
@@ -175,7 +175,7 @@ on TestClickImageGetTransparencyWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
 
     local tScript
     put "on undoChanged" into tScript
@@ -199,7 +199,7 @@ on TestRotateImageGetTransparencyWorks
     set the defaultStack to the short name of it
 
     create image
-    set the imageData of it to randomBytes(10000)
+    RandomFillImage it
     
     local tScript
     put "on undoChanged" into tScript
