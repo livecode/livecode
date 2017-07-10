@@ -8,6 +8,8 @@ Summary:
 Sent to the active <object(glossary)> when there is no text <selection>
 and the user presses the Return key.
 
+Assocations: card, field
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android

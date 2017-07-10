@@ -8,9 +8,9 @@ Summary:
 the <active (focused) control(glossary)>, or to the <current card> if no
 <control> is <focus|focused>, when the user presses an arrow key.
 
-Associations: button
-
 Introduced: 1.0
+
+Associations: card,field
 
 OS: mac, windows, linux
 
