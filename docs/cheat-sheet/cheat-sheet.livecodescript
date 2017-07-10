@@ -308,7 +308,7 @@ command BuildRowForLanguage pContent, pLanguage
    _internal script colorize char 1 to the number \ 
          of chars in tToCodeText of tToCode
    set the height of tToCode to the formattedHeight of tToCode
-   set the top of tToCode to the bottom of tText + kTitlePadding
+   set the top of tToCode to the bottom of tText + kPadding
 end BuildRowForLanguage
 
 function RowHeight pGroupName
