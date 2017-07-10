@@ -12,6 +12,8 @@ function addiOS {
 	local VERSION=$4
 	local ARCHS=$5
 	
+	echo "Add iOS subplatform ${SUBPLATFORM}"
+	
 	ELEMENTS=${#IOS_SUBPLATFORM[@]}
 	IOS_SUBPLATFORM[$ELEMENTS]=${SUBPLATFORM}
 	IOS_XCODE[$ELEMENTS]=${XCODE}
@@ -59,7 +61,11 @@ function checkiOS {
 # Where to find Xcode installations
 XCODES_DIR="${HOME}/Builds/Platforms"
 
-ALT_XCODE_DIR=$(xcode-select -print-path)
+if [ -z "${XCODE_DEVELOPER}" ] ; then
+	ALT_XCODE_DIR=$(xcode-select -print-path)
+else
+	ALT_XCODE_DIR="${XCODE_DEVELOPER}"
+fi
 
 # Detect iOS variants
 checkiOS iphonesimulator8.2 6_2_0 iPhoneSimulator 8.2 "i386 x86_64"

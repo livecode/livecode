@@ -1,10 +1,3 @@
-# OSX options
-DEVELOPER="/Applications/Xcode.app/Contents/Developer"
-PLATFORM_DEVELOPER="${DEVELOPER}/Platforms/MacOSX.platform/Developer"
-SDK="MacOSX10.9.sdk"
-OSXGCCVERSION=4.2
-OSXMIN="10.6"
-
 # Generic options
 export MAKEFLAGS="-j1"
 
@@ -29,6 +22,13 @@ case $(uname -m) in
 		HOST_ARCH=i386
 		;;
 esac
+
+if [ -z "${XCODEBUILD}" ] ; then
+	XCODE_DEVELOPER="/Applications/Xcode.app/Contents/Developer"
+else
+	# XCODEBUILD points to $XCODE_APP/Contents/Developer/usr/bin/xcodebuild
+	XCODE_DEVELOPER="${XCODEBUILD%/*/*/*}"
+fi
 
 # Which platform are we actually targeting?
 case "${PLATFORM}" in
@@ -70,8 +70,14 @@ function setCCForTarget {
 			export CXXFLAGS="/MT"
 			;;
 		mac)
-			export CC_BASE="${DEVELOPER}/usr/bin/gcc --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
-			export CXX_BASE="${DEVELOPER}/usr/bin/g++ --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+			# OSX options
+			PLATFORM_DEVELOPER="${XCODE_DEVELOPER}/Platforms/MacOSX.platform/Developer"
+			SDK="MacOSX10.9.sdk"
+			OSXGCCVERSION=4.2
+			OSXMIN="10.6"
+
+			export CC_BASE="${XCODE_DEVELOPER}/usr/bin/gcc --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+			export CXX_BASE="${XCODE_DEVELOPER}/usr/bin/g++ --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
 			export CC="${CC_BASE} -arch ${ARCH}"
 			export CXX="${CXX_BASE} -arch ${ARCH}"
 			;;
