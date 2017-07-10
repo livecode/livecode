@@ -598,9 +598,12 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
       end if
       
       # If we are in an entry, add the line to the current data
-      if tInEntry then         
+      if tInEntry then
+	     # handle line continuations
+		 if char -2 of tData is "\" then
+		    delete char -2 to -1 of tData
          # ignore empty lines
-         if tFirstWord is empty then 
+         else if tFirstWord is empty then
             next repeat
          else if tFirstWord is "end" then
             put true into tEntryEnded
