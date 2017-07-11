@@ -64,10 +64,23 @@ function setCCForTarget {
 		return
 	fi
 	
+	# Unset environment variables that may interfere cross-platform
+	CFLAGS=
+	CXXFLAGS=
+	CC=
+	CXX=
+	LINK=
+	LD=
+	LDFLAGS=
+	AR=
+	OBJCOPY=
+	RANLIB=
+	STRIP=
+	
 	case "${PLATFORM}" in
 		win32)
-			export CFLAGS="/MT"
-			export CXXFLAGS="/MT"
+			CFLAGS="/MT"
+			CXXFLAGS="/MT"
 			;;
 		mac)
 			# OSX options
@@ -76,14 +89,14 @@ function setCCForTarget {
 			OSXGCCVERSION=4.2
 			OSXMIN="10.6"
 
-			export CC_BASE="${XCODE_DEVELOPER}/usr/bin/gcc --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
-			export CXX_BASE="${XCODE_DEVELOPER}/usr/bin/g++ --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
-			export CC="${CC_BASE} -arch ${ARCH}"
-			export CXX="${CXX_BASE} -arch ${ARCH}"
+			CC_BASE="${XCODE_DEVELOPER}/usr/bin/gcc --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+			CXX_BASE="${XCODE_DEVELOPER}/usr/bin/g++ --sysroot=${PLATFORM_DEVELOPER}/SDKs/${SDK} -isysroot ${PLATFORM_DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
+			CC="${CC_BASE} -arch ${ARCH}"
+			CXX="${CXX_BASE} -arch ${ARCH}"
 			;;
 		linux)
-			export CC_BASE="gcc"
-			export CXX_BASE="g++"
+			CC_BASE="gcc"
+			CXX_BASE="g++"
 			# When building with newer binutils (>= 2.26), new types of
 			# relocations are added that older binutils don't understand.
 			# To suppress this, pass '-Wa,-mrelax-relocations=no' to the
@@ -99,30 +112,35 @@ function setCCForTarget {
 			echo "*DEBUG* CC_FLAGS: ${CC_FLAGS_X86_NORELAX}"
 			
 			if [ "${ARCH}" == "x86_64" ] ; then
-				export CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
-				export CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
+				CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
 			else
-				export CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
-				export CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
+				CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
 			fi
 			;;
 		android)
 			if [ "${ARCH}" == "armv6" ] ; then
-				export CC="${ANDROID_CC} ${ANDROID_CFLAGS}"
-				export CXX="${ANDROID_CXX} ${ANDROID_CXXFLAGS}"
+				CC="${ANDROID_CC} ${ANDROID_CFLAGS}"
+				CXX="${ANDROID_CXX} ${ANDROID_CXXFLAGS}"
+				EXTRA_LDFLAGS=
 			else
-				export CC="${ANDROID_CC} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
-				export CXX="${ANDROID_CXX} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CXXFLAGS}"
+				CC="${ANDROID_CC} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
+				CXX="${ANDROID_CXX} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CXXFLAGS}"
 				EXTRA_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
 			fi
-			export LINK="${ANDROID_LINK} ${EXTRA_LDFLAGS} ${ANDROID_LDFLAGS}"
-			export LD="${LINK}"
+			LINK="${ANDROID_LINK} ${EXTRA_LDFLAGS} ${ANDROID_LDFLAGS}"
+			LD="${LINK}"
+			AR="${ANDROID_AR}"
+			OBJCOPY="${ANDROID_OBJCOPY}"
+			RANLIB="${ANDROID_RANLIB}"
+			STRIP="${ANDROID_STRIP}"
 			;;
 		ios)
 			queryiOS "${SUBPLATFORM}"
 			
-			export CROSS_TOP="${XCODE}/Platforms/${SUBPLATFORM_NAME}.platform/Developer"
-			export CROSS_SDK="${SUBPLATFORM_NAME}${VERSION}.sdk"
+			CROSS_TOP="${XCODE}/Platforms/${SUBPLATFORM_NAME}.platform/Developer"
+			CROSS_SDK="${SUBPLATFORM_NAME}${VERSION}.sdk"
 			
 			if [ "${ARCH}" == "armv7" -o "${ARCH}" == "armv7s" ] ; then
 				ARCH_FLAGS="-mthumb"
@@ -136,9 +154,22 @@ function setCCForTarget {
 				CCPATH="${XCODE}/usr/bin"
 			fi
 			
-			export CC="${CCPATH}/gcc -arch ${ARCH} ${ARCH_FLAGS} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=6.1"
-			export CXX="${CCPATH}/g++ -arch ${ARCH} ${ARCH_FLAGS} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=6.1"
-			export LDFLAGS="-L${CROSS_TOP}/SDKs/${CROSS_SDK}/usr/lib -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -Wl,-dead_strip"
+			CC="${CCPATH}/gcc -arch ${ARCH} ${ARCH_FLAGS} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=6.1"
+			CXX="${CCPATH}/g++ -arch ${ARCH} ${ARCH_FLAGS} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=6.1"
+			LDFLAGS="-L${CROSS_TOP}/SDKs/${CROSS_SDK}/usr/lib -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -Wl,-dead_strip"
 			;;
 	esac
+
+	# Export compilation vars
+	export CFLAGS
+	export CXXFLAGS
+	export CC
+	export CXX
+	export LINK
+	export LD
+	export LDFLAGS
+	export AR
+	export OBJCOPY
+	export RANLIB
+	export STRIP
 }
