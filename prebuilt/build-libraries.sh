@@ -15,7 +15,13 @@ mkdir -p "${OUTPUT_DIR}"
 # Target platform and architecture
 export PLATFORM=$1
 export ARCH=$2
-export SUBPLATFORM=$3
+
+#only mac, ios subplatforms are used
+if [ "${PLATFORM}" = "mac" -o "${PLATFORM}" = "ios" ] ; then
+	SUBPLATFORM=$3
+else
+	SUBPLATFORM=
+fi
 
 # Capture the existing CC and CXX variables, if any
 export CUSTOM_CC="${CC}"
