@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "dbdrivercommon.h"
+#include "large_buffer.h"
 
 #include <mysql.h>
 #include <mysql_com.h>
@@ -66,6 +67,7 @@ public:
 	void getTables(char *buffer, int *bufsize);
 	int getConnectionType(void) { return -1; }
 	int getVersion(void) { return 2; }
+    large_buffer_t *m_internal_buffer;
 protected:
 	bool BindVariables(MYSQL_STMT *p_statement, DBString *p_arguments, int p_argument_count, int *p_placeholders, int p_placeholder_count, MYSQL_BIND **p_bind);
 	bool ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count);

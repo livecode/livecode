@@ -244,6 +244,11 @@ MCPropertyInfo MCObject::kProperties[] =
     DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
 
     DEFINE_RO_OBJ_ENUM_PROPERTY(P_SCRIPT_STATUS, InterfaceScriptStatus, MCObject, ScriptStatus)
+    
+	DEFINE_RO_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+	DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+    DEFINE_RO_OBJ_ARRAY_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariables)
+    DEFINE_RO_OBJ_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariablesNonArray)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -351,7 +356,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
             MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
             if (MCtargetptr)
             {
-                MCObjectExecutionLock t_self_lock(this);
+                // MAY-DELETE: Handle the message - this/MCtargetptr might be unbound after
+                // this call if it is deleted.
                 t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
             }
             else
@@ -455,7 +461,8 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
             MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
             if (MCtargetptr)
             {
-                MCObjectExecutionLock t_self_lock(this);
+                // MAY-DELETE: Handle the message - this/MCtargetptr might be unbound after
+                // this call if it is deleted.
                 t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
             }
             else

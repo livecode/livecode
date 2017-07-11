@@ -83,8 +83,18 @@ command TestRunnerMain
          doUsage 1
          break
    end switch
-   quit 0
+  
+   send "DoQuit" to me
 end TestRunnerMain
+
+on DoQuit
+   -- Allow errorDialog message to be sent
+   if "errorDialog" is in the pendingMessages then
+ 	  send "DoQuit" to me in 0 millisecs
+   else
+      quit 0
+   end if
+end DoQuit
 
 private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
@@ -126,6 +136,9 @@ private command doRun pInfo
    put tLogForWriting into url ("binfile:" & kLogFilename)
    
    if TesterTapGetWorstResult(tAnalysis) is "FAIL" then
+      if $V is not empty then
+         write tLogForWriting to stdout
+   	  end if
       quit 1
    end if
 end doRun
@@ -172,6 +185,14 @@ private command invokeTest pInfo
 
    -- Do common cleanup tasks
    dispatch "TestTearDown" to tStackName
+   
+   -- Check for uncaught errors
+   local tError
+   put TestGetUncaughtErrorDialog() into tError
+   if tError is not empty then
+      TestAssert "uncaught error dialog", line 1 of tError
+      TestDiagnostic tError
+   end if
 end invokeTest
 
 -- Add the unit test library stack and the input library to the backscripts

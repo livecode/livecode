@@ -1265,7 +1265,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     ei = bi + bl;
                 
                 // Get the X coordinates for the selection
-                int2 bix, bex;
+                coord_t bix, bex;
                 // SN-2014-08-14: [[ Bug 13106 ]] GetCursorX includes the cell padding, which we don't want
                 bix = bptr->GetCursorX(si) - sgptr -> GetPadding();
                 bex = bptr->GetCursorX(ei) - sgptr -> GetPadding();
@@ -1274,22 +1274,29 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    int2 t_temp;
+                    coord_t t_temp;
                     t_temp = bix;
                     bix  = bex;
                     bex = t_temp;
                 }
+                
+                coord_t temp_x,temp_width;
 
                 if (t_segment_front)
-                    srect.x = x + sgptr -> GetLeft();
+                    temp_x = x + sgptr -> GetLeft();
                 else
-                    srect.x = x + sgptr -> GetLeftEdge() + bix;
+                    temp_x = x + sgptr -> GetLeftEdge() + bix;
                 
                 // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                
+                srect.x = MCClamp(temp_x, INT16_MIN, INT16_MAX);
+                
                 if (t_segment_back)
-                    srect.width = x + sgptr -> GetRight() - srect . x;
+                    temp_width = x + sgptr -> GetRight() - srect . x;
                 else
-                    srect.width = x + sgptr -> GetLeftEdge() + bex - srect . x;
+                    temp_width = x + sgptr -> GetLeftEdge() + bex - srect . x;
+                
+                srect.width = MCClamp(temp_width, INT16_MIN, INT16_MAX);
                 
                 // Draw this block
                 dc->fillrect(srect);

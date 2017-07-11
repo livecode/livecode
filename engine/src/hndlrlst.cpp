@@ -647,7 +647,7 @@ static const char *s_handler_types[] =
     "A",
 };
 
-static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
+static bool enumerate_handlers(MCExecContext& ctxt, bool p_include_private, const char *p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
 {
     MCAutoArray<MCStringRef> t_handlers;
     MCAutoStringRef t_long_id;
@@ -655,6 +655,11 @@ static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandle
 	{
 		MCHandler *t_handler;
 		t_handler = p_handlers . get()[j];
+        
+        if (t_handler->isprivate() && !p_include_private)
+        {
+            continue;
+        }
         
 		MCStringRef t_string;
         const char *t_format;
@@ -686,7 +691,7 @@ static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandle
 	return p_first;
 }
 
-bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers)
+bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_include_private, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers)
 {
 	// OK-2008-07-23 : Added parent object reference for script editor.
 	MCObject *t_object;
@@ -700,7 +705,7 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_cou
         t_handler_array = nil;
         uindex_t t_count;
         
-        p_first = enumerate_handlers(ctxt, s_handler_types[i], handlers[i], t_count, t_handler_array, p_first, t_object);
+        p_first = enumerate_handlers(ctxt, p_include_private, s_handler_types[i], handlers[i], t_count, t_handler_array, p_first, t_object);
         for (uindex_t j = 0; j < t_count; j++)
             t_handlers . Push(t_handler_array[j]);
         

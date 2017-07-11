@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
    TestLoadAuxillaryExtension "_widget"
    TestLoadAuxillaryExtension "_widget_support"
+   TestLoadAuxillaryExtension "_widgetthrow"
 end TestSetup
 
 //////////
@@ -48,17 +49,13 @@ end TestWidgetBindErrorsDontEscape
 
 //////////
 
-global gLastSentWidgetError
-
 private command _DoTestWidgetScriptObjectAccess pMode
    set the testMode of widget "Test" to pMode
 
    export widget "Test" to array tVar
 
-   put empty into gLastSentWidgetError
-   wait for messages
-
-   TestAssert "no script access allowed for" && pMode, gLastSentWidgetError contains "script access not allowed"
+   TestAssertErrorDialog "no script access allowed for" && pMode, \ 
+       "EE_EXTENSION_ERROR_DOMAIN"
 end _DoTestWidgetScriptObjectAccess
 
 on TestWidgetScriptObjectAccess
@@ -75,8 +72,14 @@ on TestWidgetScriptObjectAccess
    delete stack "WidgetScriptAccessTest"
 end TestWidgetScriptObjectAccess
 
-//////////
+on TestWidgetThrowInOnCreate
+   create stack "WidgetThrowOnSaveTest"
+   set the defaultStack to "WidgetThrowOnSaveTest"
+   
+   create widget "Test" as "com.livecode.lcs_tests.core.widgetthrow"
 
-on errorDialog pError
-   put pError into gLastSentWidgetError
-end errorDialog
+   TestAssertErrorDialog "error dialog when widget throws in OnCreate", \
+      "EE_EXTENSION_ERROR_DOMAIN"
+
+   delete stack "WidgetThrowOnSaveTest"
+end TestWidgetThrowInOnCreate

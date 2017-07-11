@@ -1457,9 +1457,9 @@ LT factor_table[] =
         {"result", TT_FUNCTION, F_RESULT},
         {"retainimage", TT_PROPERTY, P_RETAIN_IMAGE},
         {"retainpostscript", TT_PROPERTY, P_RETAIN_POSTSCRIPT},
-#ifdef MODE_DEVELOPMENT
 		{"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
+#ifdef MODE_DEVELOPMENT
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif
 #ifdef MODE_DEVELOPMENT

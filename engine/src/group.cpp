@@ -215,16 +215,6 @@ MCGroup::~MCGroup()
 		                  (controls);
 		delete cptr;
 	}
-	if (this == MCmenubar)
-	{
-		MCmenubar = nil;
-		MCscreen->updatemenubar(True);
-	}
-	if (this == MCdefaultmenubar)
-	{
-		MCdefaultmenubar = nil;
-		MCscreen->updatemenubar(True);
-	}
 	delete vscrollbar;
 	delete hscrollbar;
 }
@@ -348,6 +338,8 @@ void MCGroup::geometrychanged(const MCRectangle &p_rect)
 
 void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
 {
+    MCControl::viewportgeometrychanged(p_rect);
+
 	MCRectangle t_viewport;
 	t_viewport = MCU_intersect_rect(p_rect, getrect());
 
@@ -1029,6 +1021,16 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 
 void MCGroup::removereferences()
 {
+    if (MCmenubar.IsBoundTo(this))
+    {
+        MCmenubar = nil;
+        MCscreen->updatemenubar(True);
+    }
+    if (MCdefaultmenubar.IsBoundTo(this))
+    {
+        MCdefaultmenubar = nil;
+        MCscreen->updatemenubar(True);
+    }
     if (controls != NULL)
     {
         MCControl *t_control;

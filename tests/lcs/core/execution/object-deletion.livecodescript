@@ -64,7 +64,9 @@ on TestDeleteObjectInNestedGroup
          "on DeleteGroup" & return & \
          "delete group "& quote & "test1" & quote & return & \
          "end DeleteGroup"
-   TestAssertThrow "Delete object executing script in nested group", "DeleteIt", the long id of button "test" of stack "test", 347
+   TestAssertThrow "Delete object executing script in nested group", \ 
+      "DeleteIt", the long id of button "test" of stack "test", \
+      "EE_OBJECT_CANTREMOVE"
 end TestDeleteObjectInNestedGroup
 
 on TestDeleteThisCard
@@ -75,7 +77,8 @@ on TestDeleteThisCard
          "on DeleteIt" & return & \
          "delete this card" & return & \
          "end DeleteIt"
-   TestAssertThrow "Delete card from button on card", "DeleteIt", the long id of button "test" of stack "test", 347
+   TestAssertThrow "Delete card from button on card", "DeleteIt", \ 
+      the long id of button "test" of stack "test", "EE_OBJECT_CANTREMOVE"
    
    set the sharedBehavior of group "test" to true
    dispatch "DeleteIt" to button "test"
@@ -84,7 +87,8 @@ end TestDeleteThisCard
 
 on TestDeleteStackWithCantDelete
    set the cantDelete of stack "test" to true
-   TestAssertThrow "Delete stack with cantDelete", "__TestDeleteStack", the long id me, 347
+   TestAssertThrow "Delete stack with cantDelete", "__TestDeleteStack", \ 
+      the long id me, "EE_OBJECT_CANTREMOVE"
    set the cantDelete of stack "test" to false
 end TestDeleteStackWithCantDelete
 
@@ -105,7 +109,8 @@ on TestDeleteObjectInBehaviorOfNonTarget
    create stack "lib"
    set the behavior of stack "lib" to the long id of button "behavior"
    start using stack "lib"
-   TestAssertThrow "Delete object from its behavior when not target", "DeleteIt", the long id of stack "test", 347
+   TestAssertThrow "Delete object from its behavior when not target", \ 
+      "DeleteIt", the long id of stack "test", "EE_OBJECT_CANTREMOVE"
 end TestDeleteObjectInBehaviorOfNonTarget
 
 

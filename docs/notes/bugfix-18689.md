@@ -1,0 +1,1 @@
+# Fixed bug causing erronous cursor movement when using arrow keys

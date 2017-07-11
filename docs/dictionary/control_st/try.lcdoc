@@ -5,8 +5,8 @@ Type: control structure
 Syntax:
 try
    <statementList>
-catch <errorVariable>
-   <errorStatementsList>
+[ catch <errorVariable>
+   <errorStatementsList> ]
 [ finally
    <cleanupStatementsList> ]
 end try

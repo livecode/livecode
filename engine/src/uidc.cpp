@@ -373,11 +373,15 @@ void MCUIDC::setmouseloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCmousestackptr;
-	r_loc = MCPointMake(MCmousex, MCmousey);
-
-	if (MCmousestackptr)
-		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCmousex, MCmousey);
+    
+    if (MCmousestackptr)
+    {
+        r_target = MCmousestackptr;
+        r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
@@ -395,11 +399,15 @@ void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCclickstackptr;
-	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
-
-	if (MCclickstackptr)
-		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCclicklocx, MCclicklocy);
+    
+    if (MCclickstackptr)
+    {
+        r_target = MCclickstackptr;
+        r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -854,7 +862,9 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		DoRunloopActions();
 
 		real8 eventtime = exittime;
-		donepending = handlepending(curtime, eventtime, dispatch);
+        donepending = handlepending(curtime, eventtime, dispatch) ||
+            (dispatch && MCEventQueueDispatch());
+        
 		siguser();
         
 		MCModeQueueEvents();
@@ -1079,7 +1089,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
     // Move all messages in the range [t_index, nmessages) up one.
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
     
-	messages[t_index].object = optr;
+	messages[t_index].objecthandle = new MCObjectHandle(optr);
 	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
 	messages[t_index].time = time;
 	messages[t_index].id = id;
@@ -1179,6 +1189,7 @@ void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
 			delete tmp;
 		}
 		MCNameDelete(messages[i] . message);
+        delete messages[i].objecthandle;
 	}
     
     // MW-2014-05-14: [[ Bug 12294 ]] Use a memmove here (more efficient as the MCMessageList struct can be moved).
@@ -1201,7 +1212,7 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subo
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
 	for (uindex_t i = nmessages ; i > 0 ; i--)
-		if (messages[i - 1].object == optr
+		if (messages[i - 1].objecthandle->IsBoundTo(optr)
 		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless))
                 && (subobject == NULL || (messages[i - 1] . params != nil &&
                                           messages[i - 1] . params -> getvalueref_argument() == subobject)))
@@ -1222,6 +1233,9 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			MCAutoValueRef t_id_string;
 			MCAutoStringRef t_time_string;
 
+            if (!messages[i].objecthandle->IsValid())
+                continue;
+
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;
 
@@ -1235,7 +1249,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListAppend(*t_msg_info, messages[i].message))
 				return false;
 
-			if (!messages[i].object->names(P_LONG_ID, &t_id_string) ||
+			if (!messages[i].objecthandle->Get()->names(P_LONG_ID, &t_id_string) ||
 				!MCListAppend(*t_msg_info, *t_id_string))
 				return false;
 
@@ -1288,13 +1302,16 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         {
             MCParameter *p = messages[i].params;
             MCNameRef m = messages[i].message;
-            MCObject *o = messages[i].object;
+            MCObjectHandle *o = messages[i].objecthandle;
             cancelmessageindex(i, False);
-            MCSaveprops sp;
-            MCU_saveprops(sp);
-            MCU_resetprops(False);
-            o->timer(m, p);
-            MCU_restoreprops(sp);
+            if (o->IsValid())
+            {
+                MCSaveprops sp;
+                MCU_saveprops(sp);
+                MCU_resetprops(False);
+                o->Get()->timer(m, p);
+                MCU_restoreprops(sp);
+            }
             while (p != NULL)
             {
                 MCParameter *tmp = p;
@@ -1302,6 +1319,7 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
                 delete tmp;
             }
             MCNameDelete(m);
+            delete o;
             curtime = MCS_time();
             
             t_handled = True;

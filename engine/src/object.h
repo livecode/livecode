@@ -1069,7 +1069,7 @@ public:
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
 
-	Exec_stat domess(MCStringRef sptr);
+	Exec_stat domess(MCStringRef sptr, bool p_ignore_errors = true);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
     void editscript(MCStringRef p_at = nil);
@@ -1533,14 +1533,12 @@ public:
     void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
     void SetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
     
-    ////////// MODE SPECIFIC PROPS
+    ////////// REFLECTIVE PROPS
     
-#ifdef MODE_DEVELOPMENT    
     void GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
     void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
     void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
     void GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables);
-#endif
     
 //////////
 			

@@ -137,7 +137,7 @@ private function getBuildFolder pStack, pFolder, pSettings
    return tFolder
 end getBuildFolder
 
-on revSaveAsStandalone pStack, pFolder, pPreview
+on revSaveAsStandalone pStack, pFolder, pPreview, pSuppressSuccessMsg
    global gREVStackStatus
    
    if pStack = empty then
@@ -237,7 +237,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    if revStandaloneGetWarnings() is not empty and tError is empty then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    else
-      if not revSBSuppressDialogs() and tError is empty then
+      if not revSBSuppressDialogs() and pSuppressSuccessMsg is not true and tError is empty then
          answer information "Standalone application saved successfully."
       end if
       
@@ -1524,12 +1524,6 @@ private command revCopyFiles pDirectory, pStackPath
    end repeat
 end revCopyFiles
 
-private command revDeleteFile pWhich
-   close file pWhich
-   if the platform is "MacOS" then put empty into URL ("resfile:"&pWhich)
-   put empty into URL ("binfile:"&pWhich)
-   delete file pWHich
-end revDeleteFile
 
 #####################################################################
 #

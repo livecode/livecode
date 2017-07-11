@@ -626,6 +626,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 		pgptr->setparent(this);
 	}
 	setparagraphs(pgptr, parid);
+    signallisteners(P_TEXT);
 	return ES_NORMAL;
 }
 
@@ -843,7 +844,8 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
         //  unwanted scrolling
 //        replacecursor(True, True);
 	}
-
+    
+    signallisteners(P_TEXT);
 	return ES_NORMAL;
 }
 
@@ -946,7 +948,7 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 		sethilitedlines(NULL, 0);
 		drect = rect;
 	}
-	uint2 l;
+	findex_t l;
 	do
 	{
 		l = pgptr->gettextlengthcr();

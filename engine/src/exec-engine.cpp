@@ -105,6 +105,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendScript, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
@@ -1226,24 +1227,13 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MCdynamicpath = MCdynamiccard.IsValid();
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
     {
-        /* If the target object was deleted in the frontscript, prevent
-         * normal message dispatch as if the frontscript did not pass the
-         * message. */
-        if (t_object)
+        switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
         {
-            MCObjectExecutionLock t_object_lock(t_object);
-            switch(t_stat = t_object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object.Get()))
-            {
-            case ES_ERROR:
-                ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
-                break;
-            default:
-                break;
-            }
-        }
-        else
-        {
-            t_stat = ES_NORMAL;
+        case ES_ERROR:
+            ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
+            break;
+        default:
+            break;
         }
     }
 	
@@ -1448,8 +1438,8 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
         else
             tptr = MCNameGetString(*t_message);
         
-        if ((stat = optr->domess(*tptr)) == ES_ERROR)
-            ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
+        if (optr->domess(*tptr, false) == ES_ERROR)
+            ctxt . Throw();
 	}
 	else if (stat == ES_PASS)
 		stat = ES_NORMAL;
@@ -1477,6 +1467,32 @@ void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
 {
 	MCEngineSendOrCall(ctxt, p_script, p_target, false);
+}
+
+void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+{
+    MCObject *optr;
+    if (p_target == nil)
+        optr = ctxt . GetObject();
+    else
+        optr = p_target -> object;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = False;
+
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (optr->domess(p_script, false) == ES_ERROR)
+        ctxt . Throw();
+    
+	if (added)
+		MCnexecutioncontexts--;
+	MClockmessages = oldlock;
 }
 
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units)

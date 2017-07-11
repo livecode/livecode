@@ -295,7 +295,7 @@ MCObject::~MCObject()
 	// MW-2009-11-03: Clear all current breakpoints for this object
 	MCB_clearbreaks(this);
 
-	if (MCerrorptr == this)
+	if (!MCerrorptr.IsValid() || MCerrorptr == this)
 		MCerrorptr = nil;
 	if (state & CS_SELECTED)
 		MCselected->remove(this);
@@ -1077,6 +1077,10 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
 
+    // TODO[19681]: This can be removed when all engine messages are sent with
+    // target.
+    bool t_target_was_valid = MCtargetptr.IsValid();
+    
 	MCObjectExecutionLock self_lock(this);
 
 	// Make sure this object has its script compiled.
@@ -1137,6 +1141,14 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 		if (t_stat == ES_ERROR || t_stat == ES_EXIT_ALL)
 			return t_stat;
 	}
+    
+    if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
+    {
+        if (t_target_was_valid && !MCtargetptr.IsValid())
+        {
+            t_main_stat = ES_NORMAL;
+        }
+    }
 
 	// Return the result of executing the main handler in the object
 	return t_main_stat;
@@ -2081,7 +2093,8 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
         MCAssert(!MCtargetptr || MCtargetptr.IsBoundTo(this));
         if (MCtargetptr)
         {
-            MCObjectExecutionLock t_target_lock(this);
+            // MAY-DELETE: Handle the message - this (MCtargetptr) might be unbound
+            // after this call if it is deleted.
             t_stat = handle(p_type, p_message, p_params, this);
         }
         else
@@ -2163,8 +2176,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
                  * frontscript did not pass the message. */
                 if (t_self_handle)
                 {
-                    MCObjectExecutionLock t_self_lock(this);
-                    // PASS STATE FIX
+                    // MAY-DELETE: Handle the message - this might be unbound after
+                    // this call if it is deleted.
                     Exec_stat oldstat = stat;
                     stat = handle(HT_MESSAGE, mess, paramptr, this);
                     if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
@@ -2901,7 +2914,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr)
+Exec_stat MCObject::domess(MCStringRef sptr, bool p_ignore_errors)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
@@ -2924,18 +2937,18 @@ Exec_stat MCObject::domess(MCStringRef sptr)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-    MCObjectExecutionLock t_self_lock(this);
 	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
     swap(MCtargetptr, oldtargetptr);
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
-	else
-	{
-		MCeerror->clear(); // clear out bogus error messages
-		return ES_ERROR;
-	}
+    else
+    {
+        if (p_ignore_errors)
+            MCeerror->clear(); // clear out bogus error messages
+        return ES_ERROR;
+    }
 }
 
 void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)

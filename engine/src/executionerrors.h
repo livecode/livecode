@@ -2731,6 +2731,12 @@ enum Exec_errors
 
 	// {EE-0894} no target object
     EE_NOTARGET,
+    
+    // {EE-0895} image: cannot change image while being edited
+    EE_IMAGE_MUTABLELOCK,
+    
+    // {EE-0896} graphic : too many points
+    EE_GRAPHIC_TOOMANYPOINTS,
 };
 
 extern const char *MCexecutionerrors;

@@ -687,23 +687,36 @@ end handler
 constant kDefaultSegmentIcon is "circle"
 constant kDefaultSegmentLabel is "Label"
 constant kDefaultSegmentMinWidth is 50
-private handler updateProperties() returns nothing
-	variable tX as Integer
-	
-	if (the number of elements in mSegmentLabels) < mNumSegments then
-		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentLabels))
-			push (kDefaultSegmentLabel && tX formatted as string) onto back of mSegmentLabels
-		end repeat
-	else if (the number of elements in mSegmentLabels) > mNumSegments then
-		repeat with tX from 1 up to (the number of elements in mSegmentLabels)-mNumSegments
-			delete element (tX + mNumSegments) of mSegmentLabels
-		end repeat
+
+private handler adjustList(inout xList as List, in pNewCount as Integer, in pDefault as any)
+	variable tOldCount as Integer
+	put the number of elements in xList into tOldCount
+	if pNewCount < tOldCount then
+		deleteElementsFromList(xList, tOldCount - pNewCount)
+	else
+		addElementsToList(xList, pNewCount - tOldCount, pDefault)
 	end if
-	
-	if (the number of elements in mSegmentNames) < mNumSegments then
-		variable tNumber as Number
-		put the number of elements in mSegmentNames into tNumber 
-		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentNames))
+end handler
+
+private handler deleteElementsFromList(inout xList as List, in pCount as Integer)
+	delete element -pCount to -1 of xList
+end handler
+
+private handler addElementsToList(inout xList as List, in pCount as Integer, in pDefault as any)
+	repeat pCount times
+		push pDefault onto back of xList
+	end repeat
+end handler
+
+private handler updateProperties() returns nothing
+	variable tNumNames as Integer
+	put the number of elements in mSegmentNames into tNumNames	
+	if mNumSegments < tNumNames then
+		deleteElementsFromList(mSegmentNames,tNumNames - mNumSegments)
+	else
+		variable tNumber as Integer
+		put tNumNames into tNumber
+		repeat (mNumSegments - tNumNames) times
 			variable tName as String
 			add 1 to tNumber
 			put "segment" & tNumber formatted as string into tName
@@ -713,42 +726,12 @@ private handler updateProperties() returns nothing
 			end repeat
 			push tName onto back of mSegmentNames
 		end repeat
-	else if (the number of elements in mSegmentNames) > mNumSegments then
-		repeat with tX from 1 up to (the number of elements in mSegmentNames)-mNumSegments
-			delete element (tX + mNumSegments) of mSegmentNames
-		end repeat
 	end if
 		
-	if (the number of elements in mSegmentIcons) < mNumSegments then
-		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentIcons))
-			push kDefaultSegmentIcon onto back of mSegmentIcons
-		end repeat
-	else if (the number of elements in mSegmentIcons) > mNumSegments then
-		repeat with tX from 1 up to (the number of elements in mSegmentIcons)-mNumSegments
-			delete element (tX + mNumSegments) of mSegmentIcons
-		end repeat
-	end if
-	
-	if (the number of elements in mSelectedIcons) < mNumSegments then
-		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSelectedIcons))
-			push kDefaultSegmentIcon onto back of mSelectedIcons
-		end repeat
-	else if (the number of elements in mSelectedIcons) > mNumSegments then
-		repeat with tX from 1 up to (the number of elements in mSelectedIcons)-mNumSegments
-			delete element (tX + mNumSegments) of mSelectedIcons
-		end repeat
-	end if
-	
-	if (the number of elements in mSegmentMinWidth) < mNumSegments then
-		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentMinWidth))
-			push kDefaultSegmentMinWidth onto back of mSegmentMinWidth
-		end repeat
-	else if (the number of elements in mSegmentMinWidth) > mNumSegments then
-		repeat with tX from 1 up to (the number of elements in mSegmentMinWidth)-mNumSegments
-			delete element (tX + mNumSegments) of mSegmentMinWidth
-		end repeat
-	end if
-	
+	adjustList(mSegmentLabels, mNumSegments, kDefaultSegmentLabel)
+	adjustList(mSegmentIcons, mNumSegments, kDefaultSegmentIcon)
+	adjustList(mSelectedIcons, mNumSegments, kDefaultSegmentIcon)
+	adjustList(mSegmentMinWidth, mNumSegments, kDefaultSegmentMinWidth)
 end handler
 
 private handler fetchWidth(in pSegment as Integer) returns Real

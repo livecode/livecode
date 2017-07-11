@@ -1751,29 +1751,32 @@ enum Parse_errors
 	// {PE-0568} launch: error in widget expression
 	PE_LAUNCH_BADWIDGETEXP,
 
-	// {PE-0568} save: error in format expression
+	// {PE-0569} save: error in format expression
 	PE_SAVE_BADFORMATEXP,
 	
-	// {PE-0569} replace: missing 'styles'
+	// {PE-0570} replace: missing 'styles'
 	PE_REPLACE_NOSTYLES,
     
-    // {PE-0570} revert: bad stack expression
+    // {PE-0571} revert: bad stack expression
     PE_REVERT_BADSTACK,
 	
-    // {PE-0571} vectordot: bad parameter
+    // {PE-0572} vectordot: bad parameter
     PE_VECTORDOT_BADPARAM,
     
-    // {PE-0572} return: form not allowed in handler type
+    // {PE-0573} return: form not allowed in handler type
     PE_RETURN_BADFORMINCONTEXT,
     
-    // {PE-0573} return: form not allowed in handler type
+    // {PE-0574} return: form not allowed in handler type
     PE_RETURN_BADFOR,
 
-	// {PE-0574} files: bad folder expression
+	// {PE-0575} files: bad folder expression
 	PE_FILES_BADPARAM,
 
-	// {PE-0574} folders: bad folder expression
+	// {PE-0576} folders: bad folder expression
 	PE_FOLDERS_BADPARAM,
+
+    // {PE-0575} send: can't send script in time
+    PE_SEND_SCRIPTINTIME,
 };
 
 extern const char *MCparsingerrors;

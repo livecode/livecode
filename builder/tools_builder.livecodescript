@@ -336,7 +336,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    builderEnsureFolderForFile tOutputFileStub
    
    local tInstaller
-   put the short name of stack (builderSystemFolder() & "/installer.rev") into tInstaller
+   put the short name of stack (builderSystemFolder() & "/installer.livecode") into tInstaller
    
    -- Choose the apporpriate skin to use for the installer
    local tResources
@@ -369,6 +369,20 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
    end if
    
+   -- move behaviors to substacks
+   local tInstallerBehaviors, tInstallerBehavior
+   put files(builderSystemFolder() & "/installer") into tInstallerBehaviors
+   filter tInstallerBehaviors without ".*"
+   
+   repeat for each line tInstallerBehavior in tInstallerBehaviors
+      local tInstallerBehaviorPath
+      put builderSystemFolder() & "/installer/" & tInstallerBehavior into tInstallerBehaviorPath
+      if there is a stack tInstallerBehaviorPath then
+         set the scriptOnly of stack tInstallerBehaviorPath to false
+         set the mainstack of stack tInstallerBehaviorPath to tInstaller
+      end if
+   end repeat
+   set the stackFiles of stack tInstaller to empty
    
    -- Save the restructured installer stack out to a temp file and delete from memory
    local tInstallerStackfile

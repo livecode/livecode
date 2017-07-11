@@ -109,7 +109,7 @@ KeySym MCKeySymToLower(KeySym p_key);
 
 typedef struct
 {
-	MCObject *object;
+	MCObjectHandle *objecthandle;
 	MCNameRef message;
 	real8 time;
 	MCParameter *params;

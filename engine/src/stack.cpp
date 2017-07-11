@@ -906,14 +906,14 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 				return True;
 			}
 			else
-				return MCselected->cut();
+				return MCselected->usercut();
         }
 		if (MCactiveimage)
 		{
 			MCactiveimage->delimage();
 			return True;
 		}
-		return MCselected->del();
+		return MCselected->userdel();
 	case XK_BackSpace:
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
@@ -922,7 +922,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			MCactiveimage->delimage();
 			return True;
 		}
-		return MCselected->del();
+		return MCselected->userdel();
 	case XK_osfUndo:
 		return MCundos->undo();
 	case XK_osfCut:
@@ -932,7 +932,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			return True;
 		}
 		else
-			return MCselected->cut();
+			return MCselected->usercut();
 	case XK_osfCopy:
 		if (MCactiveimage)
 		{
@@ -940,7 +940,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			return True;
 		}
 		else
-			return MCselected->copy();
+			return MCselected->usercopy();
 	case XK_osfPaste:
 		MCdefaultstackptr = MCtopstackptr;
 		return MCdispatcher -> dopaste(optr);
@@ -956,7 +956,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 				MCactiveimage->copyimage();
 				return True;
 			}
-		return MCselected->copy();
+		return MCselected->usercopy();
 	case XK_Left:
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
 			return False;
@@ -1015,7 +1015,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 				MCactiveimage->copyimage();
 				return True;
 			}
-			return MCselected->copy();
+			return MCselected->usercopy();
 		case XK_V:
 		case XK_v:
 			MCdefaultstackptr = MCtopstackptr;
@@ -1029,7 +1029,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 				MCactiveimage->cutimage();
 				return True;
 			}
-			return MCselected->cut();
+			return MCselected->usercut();
 		case XK_Z:
 		case XK_z:
 			return MCundos->undo();
@@ -1506,6 +1506,11 @@ void MCStack::removereferences()
         else
             i++;
     
+    // COCOA-TODO: Remove dependence on ifdef
+#if !defined(_MAC_DESKTOP)
+    MCEventQueueFlush(this);
+#endif
+    
     MCObject::removereferences();
 }
 
@@ -1592,10 +1597,21 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 
 	if (((passing_object != nil && stat == ES_PASS) || stat == ES_NOT_HANDLED) && m_externals != nil)
 	{
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+        
 		Exec_stat oldstat = stat;
 		stat = m_externals -> Handle(this, htype, message, params);
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+            }
+        }
 	}
 
 	// MW-2011-06-30: Cleanup of message path - this clause handles the transition

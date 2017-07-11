@@ -60,7 +60,8 @@ Before running each test command, the test framework inserts a test library stac
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
-* `TestAssertThrow pDescription, pHandlerName, pTarget, pExpectedError, pParam`: Assert that a given handler triggers the expected error message. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure. *pExpectedError* is the expected script execution error code.
+* `TestAssertThrow pDescription, pHandlerName, pTarget, pExpectedError, pParam`: Assert that a given handler triggers the expected error message. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure. *pExpectedError* is the expected script execution error name in the enumeration in engine/src/executionerrors.h - e.g. `"EE_PROPERTY_CANTSET"`.
+* `TestAssertDoesNotThrow pDescription, pHandlerName, pTarget, pParam`: Assert that a given handler does not trigger any exceptions. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure.
 * `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
 * `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
 * `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension.
@@ -70,7 +71,7 @@ Before running each test command, the test framework inserts a test library stac
 	- `pTarget` is the object to which `pHandlerName` should be dispatched.
 	- `pTimeOut` is the amount of milliseconds to continue testing the result of the handler.
 	- `pParamsArray` is an array of parameters, keyed by the 1-based index of the required parameter to be passed to the handler.
-
+* `TestAssertErrorDialog pDescription, pErrorCode`: Assert that this test triggers an errorDialog message with the given error.
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````
 on TestSetup

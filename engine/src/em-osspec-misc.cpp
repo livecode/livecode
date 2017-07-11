@@ -54,9 +54,12 @@ MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
 	bool t_success;
 	switch (p_kind)
 	{
-	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
-	case kMCSPutIntoMessage:
+        // SN-2014-04-11 [[ FasterVariable ]] parameter updated to use the new 'set' operation on variables
+        t_success = MCmb -> set(ctxt, p_string, kMCVariableSetBefore);
+        break;
+    case kMCSPutOutput:
+    case kMCSPutIntoMessage:
 		t_success = MCmb -> set(ctxt, p_string);
 		break;
 	case kMCSPutAfterMessage:

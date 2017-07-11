@@ -1,0 +1,1 @@
+# Fixed error causing blue rectangle to be drawn incorrectly when doing CMD-A on text

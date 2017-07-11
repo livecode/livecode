@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "chunk.h"
+#include "mcerror.h"
 
 #include "raw-clipboard.h"
 
@@ -1055,13 +1056,18 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				if (p_targets[i] . object -> del(true))
+                if (p_targets[i] . object -> del(true))
                 {
                     if (p_targets[i] . object -> gettype() == CT_STACK)
                         MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));
                     p_targets[i] . object -> scheduledelete();
                 }
-			}
+                else if (!MCeerror -> isempty())
+                {
+                    ctxt . Throw();
+                    return;
+                }
+            }
 		}
 	}
 	else
@@ -1090,8 +1096,8 @@ void MCPasteboardExecCopy(MCExecContext& ctxt)
 		MCactivefield -> copytext();
 	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
-	else
-		MCselected -> copy();
+	else if (!MCselected -> copy() && !MCeerror->isempty())
+        ctxt . Throw();
 }
 
 void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
@@ -1110,8 +1116,8 @@ void MCPasteboardExecCut(MCExecContext& ctxt)
 		MCactivefield -> cuttext();
 	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
-	else
-		MCselected -> cut();
+    else if (!MCselected -> cut() && !MCeerror->isempty())
+        ctxt . Throw();
 }
 
 void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
@@ -1261,7 +1267,7 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
     // clipboard under the appropriate type.
     //
     // If either of these is missing, do nothing but don't throw an error.
-	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
+	if (t_type != TRANSFER_TYPE_NULL && p_data != nil && !MCValueIsEmpty(p_data))
 	{
 		switch (t_type)
 		{

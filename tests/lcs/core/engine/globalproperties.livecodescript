@@ -20,10 +20,10 @@ on _TestSetReadOnlyProperty
 	set the screenPixelScale to 2
 end _TestSetReadOnlyProperty
 
-constant kCantSetPropertyCode = 448
 on TestSetReadOnlyProperty
 	TestAssertThrow "setting read-only global property throws", \
-		 "_TestSetReadOnlyProperty", the long id of me, kCantSetPropertyCode
+		 "_TestSetReadOnlyProperty", the long id of me, \
+		 "EE_PROPERTY_CANTSET"
 end TestSetReadOnlyProperty
 
 on TestGetSetSecurityPermissions
@@ -33,3 +33,11 @@ on TestGetSetSecurityPermissions
    set the securityPermissions to tNewPermissions
    TestAssert "Getting new securityPermissions correctly", the securityPermissions is tNewPermissions
 end TestGetSetSecurityPermissions
+
+on TestDeletingMenubarGroupDereferencesProperly
+    create group
+    set the menubar to it
+    set the defaultmenubar to it
+    delete it
+    TestAssert "did not crash", true
+end TestDeletingMenubarGroupDereferencesProperly

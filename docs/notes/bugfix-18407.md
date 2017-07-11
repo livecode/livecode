@@ -1,0 +1,1 @@
+# Fixed bug preventing the use of "set the visible of line <> of field <>"
