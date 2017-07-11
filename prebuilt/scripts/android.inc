@@ -17,7 +17,7 @@ else
 	else
 		# if not defined, derive CROSS_ROOT from ANDROID_TOOLCHAIN
 		if [ -z "${CROSS_SYSROOT}" ] ; then
-			export CROSS_ROOT="${ANDROID_TOOLCHAIN%/*/*}/sysroot"
+			export CROSS_SYSROOT="${ANDROID_TOOLCHAIN%/*/*}/sysroot"
 		fi
 	fi
 
