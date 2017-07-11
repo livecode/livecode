@@ -12,9 +12,13 @@ else
 	# Attempt to set up the toolchain automatically
 	if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
 		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi-"
-
-        # OpenSSL requires this to be set when cross-compiling for Android
-        export CROSS_SYSROOT="${HOME}/android/toolchain/standalone/sysroot"
+		# OpenSSL requires this to be set when cross-compiling for Android
+		export CROSS_SYSROOT="${HOME}/android/toolchain/standalone/sysroot"
+	else
+		# if not defined, derive CROSS_ROOT from ANDROID_TOOLCHAIN
+		if [ -z "${CROSS_SYSROOT}" ] ; then
+			export CROSS_ROOT="${ANDROID_TOOLCHAIN%/*/*}/sysroot"
+		fi
 	fi
 
 	ANDROID_CC_NAME=${ANDROID_CC_NAME:-gcc}
