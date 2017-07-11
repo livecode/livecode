@@ -205,7 +205,18 @@ function buildICU {
 
 # Need to build ICU tools for the host platform
 if [ "${HOST_PLATFORM}-${HOST_ARCH}" != "${PLATFORM}-${ARCH}" ] ; then
+	# prevent custom c/c++ vars from being used to build for host
+	TMP_CUSTOM_CC="${CUSTOM_CC}"
+	TMP_CUSTOM_CXX="${CUSTOM_CXX}"
+	CUSTOM_CC=
+	CUSTOM_CXX=
+	
 	buildICU "${HOST_PLATFORM}" "${HOST_ARCH}"
+	
+	# Restore custom c/c++ vars
+	CUSTOM_CC="${TMP_CUSTOM_CC}"
+	CUSTOM_CXX="${TMP_CUSTOM_CXX}"
+	
 	# clear universal libs lists
 	for L in data i18n io le lx tu uc ; do
 		VAR="ICU${L}_LIBS"
