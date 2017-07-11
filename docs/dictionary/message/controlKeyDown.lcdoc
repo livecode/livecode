@@ -7,6 +7,8 @@ Syntax: controlKeyDown <keyName>
 Summary:
 Sent when a Control <key combination> is pressed.
 
+Associations: card,field
+
 Introduced: 1.0
 
 OS: mac, linux

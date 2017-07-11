@@ -6072,7 +6072,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_ca
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
-    r_height = MCGContextGetWidth(t_canvas -> context);
+    r_height = MCGContextGetHeight(t_canvas -> context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
