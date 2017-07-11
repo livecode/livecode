@@ -818,7 +818,7 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 		MCMemoryDeallocate(t_row_buffer);
 
     // SN-2015-07-07: [[ Bug 15569 ]] Ensure that we do not touch the image if
-    //  an error occured on decompression.
+    //  an error occurred on decompression.
     if (t_success && m_orientation != 0)
 		apply_exif_orientation(m_orientation, t_frame->image);
 

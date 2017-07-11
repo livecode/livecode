@@ -215,7 +215,7 @@ enum MCShadowedItemTags
         s_menu_item_selected = true;
     }
     
-    // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occured was not used.
+    // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occurred was not used.
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -414,10 +414,10 @@ void MCMacPlatformPopQuittingState()
 // has been selected.
 bool MCMacPlatformIsInQuittingState(void)
 {
-	bool t_occured;
-	t_occured = s_quit_selected;
+	bool t_occurred;
+	t_occurred = s_quit_selected;
 	s_quit_selected = false;
-	return t_occured;
+	return t_occurred;
 }
 
 void MCMacPlatformLockMenuSelect(void)

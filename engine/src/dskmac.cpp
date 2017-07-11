@@ -5621,7 +5621,7 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 	// And finally exec to the new process (this does not return if successful).
 	execvp(t_args[0], t_args);
 	
-	// If we get this far then an error has occured :o(
+	// If we get this far then an error has occurred :o(
 	return false;
 }
 
