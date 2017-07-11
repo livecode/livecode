@@ -436,7 +436,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    put false into tInComment
    put false into tInEntry
    
-   local tFirstWord, tEntryData
+   local tFirstWord, tEntryData, tTrimLine
    local tComment, tData
    local tHandlerData, tPhraseData
    
@@ -608,7 +608,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          else if tFirstWord is "end" then
             put true into tEntryEnded
          end if
-         put tLine & return after tData
+         # continuation character can have spaces afterwards [[Bug 19927]]
+         # trim trailing spaces before adding
+         if matchText(tLine, "^(.*\\)\s*$", tTrimLine) then
+            put tTrimLine & return after tData
+         else
+            put tLine & return after tData
+         end if
       end if
       
       # If the entry is ended, convert all the collected data to a structured array
