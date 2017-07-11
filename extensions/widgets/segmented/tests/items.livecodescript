@@ -116,5 +116,5 @@ on TestHilitedItemIcons
 end TestHilitedItemIcons
 
 on TestItemMinWidths
-   TestStringListProperty "itemMinWidths", "250,100", 0
+   TestStringListProperty "itemMinExtents", "250,100", 0
 end TestItemMinWidths
