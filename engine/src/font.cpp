@@ -236,6 +236,11 @@ int32_t MCFontGetSize(MCFontRef self)
 	return self->size;
 }
 
+void *MCFontGetHandle(MCFontRef self)
+{
+    return self->fontstruct->fid;
+}
+
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
