@@ -545,75 +545,41 @@ MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef p_base)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
+static int __map_primitive_type(MCForeignPrimitiveType p_type)
 {
     switch(p_type)
     {
         case kMCForeignPrimitiveTypeVoid:
-            return &ffi_type_void;
-        case kMCForeignPrimitiveTypeBool:
-            if (sizeof(bool) == 1)
-                return &ffi_type_uint8;
-            if (sizeof(bool) == 2)
-                return &ffi_type_uint16;
-            if (sizeof(bool) == 4)
-                return &ffi_type_uint32;
-            return &ffi_type_uint64;
+            return FFI_TYPE_VOID;
         case kMCForeignPrimitiveTypeUInt8:
-            return &ffi_type_uint8;
+            return FFI_TYPE_UINT8;
         case kMCForeignPrimitiveTypeSInt8:
-            return &ffi_type_sint8;
+            return FFI_TYPE_SINT8;
         case kMCForeignPrimitiveTypeUInt16:
-            return &ffi_type_uint16;
+            return FFI_TYPE_UINT16;
         case kMCForeignPrimitiveTypeSInt16:
-            return &ffi_type_sint16;
+            return FFI_TYPE_SINT16;
         case kMCForeignPrimitiveTypeUInt32:
-            return &ffi_type_uint32;
+            return FFI_TYPE_UINT32;
         case kMCForeignPrimitiveTypeSInt32:
-            return &ffi_type_sint32;
+            return FFI_TYPE_SINT32;
         case kMCForeignPrimitiveTypeUInt64:
-            return &ffi_type_uint64;
+            return FFI_TYPE_UINT64;
         case kMCForeignPrimitiveTypeSInt64:
-            return &ffi_type_sint64;
+            return FFI_TYPE_SINT64;
         case kMCForeignPrimitiveTypeFloat32:
-            return &ffi_type_float;
+            return FFI_TYPE_FLOAT;
         case kMCForeignPrimitiveTypeFloat64:
-            return &ffi_type_double;
+            return FFI_TYPE_DOUBLE;
         case kMCForeignPrimitiveTypePointer:
-            return &ffi_type_pointer;
+            return FFI_TYPE_POINTER;
+        case kMCForeignPrimitiveTypeAggregate:
+            return FFI_TYPE_STRUCT;
     }
     
     MCUnreachable();
     
-    return nil;
-}
-
-static bool __MCForeignTypeInfoComputeLayoutType(MCTypeInfoRef self)
-{
-    // If the typeinfo has a layout size of size 1, then it is just a value.
-    if (self -> foreign . descriptor . layout_size == 1)
-        self -> foreign . ffi_layout_type = __map_primitive_type(self -> foreign . descriptor . layout[0]);
-    else
-    {
-        ffi_type *t_type;
-        if (!MCMemoryNew(t_type))
-            return false;
-        if (!MCMemoryNewArray(self -> foreign . descriptor . layout_size + 1, t_type -> elements))
-        {
-            MCMemoryDelete(t_type);
-            return false;
-        }
-        
-        t_type -> alignment = 0;
-        t_type -> type = FFI_TYPE_STRUCT;
-        for(uindex_t i = 0; i < self -> foreign . descriptor . layout_size; i++)
-            t_type -> elements[i] = __map_primitive_type(self -> foreign . descriptor . layout[i]);
-        t_type -> elements[self -> foreign . descriptor . layout_size] = NULL;
-        
-        self -> foreign . ffi_layout_type = t_type;
-    }
-    
-    return true;
+    return 0;
 }
 
 MC_DLLEXPORT_DEF
@@ -625,18 +591,12 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
-    if (!MCMemoryNewArray(p_descriptor -> layout_size, self -> foreign . descriptor . layout, self -> foreign . descriptor . layout_size))
-	{
-		MCValueRelease (self);
-        return false;
-	}
-    
     self -> flags |= kMCTypeInfoTypeIsForeign;
     
     self -> foreign . descriptor . size = p_descriptor -> size;
     self -> foreign . descriptor . basetype = MCValueRetain(p_descriptor -> basetype);
     self -> foreign . descriptor . bridgetype = MCValueRetain(p_descriptor -> bridgetype);
-    MCMemoryCopy(self -> foreign . descriptor . layout, p_descriptor -> layout, p_descriptor -> layout_size * sizeof(self -> foreign . descriptor . layout[0]));
+    self -> foreign . descriptor . primitive = p_descriptor->primitive;
     self -> foreign . descriptor . initialize = p_descriptor -> initialize;
     self -> foreign . descriptor . finalize = p_descriptor -> finalize;
     self -> foreign . descriptor . defined = p_descriptor -> defined;
@@ -650,11 +610,10 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . promotedtype = MCValueRetain(p_descriptor->promotedtype);
     self -> foreign . descriptor . promote = p_descriptor -> promote;
     
-    if (!__MCForeignTypeInfoComputeLayoutType(self))
-    {
-        MCValueRelease(self);
-        return false;
-    }
+    self->foreign.layout.size = self->foreign.descriptor.size;
+    self->foreign.layout.alignment = self->foreign.descriptor.alignment;
+    self->foreign.layout.type = __map_primitive_type(self->foreign.descriptor.primitive);
+    self->foreign.layout.unused = nullptr;
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -683,7 +642,7 @@ void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self)
 
 	MCAssert(MCTypeInfoIsForeign(self));
 
-    return self -> foreign . ffi_layout_type;
+    return &self -> foreign . layout;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1194,7 +1153,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
     {
         MCValueRelease(self -> foreign . descriptor . basetype);
         MCValueRelease(self -> foreign . descriptor . bridgetype);
-        MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+        MCValueRelease(self->foreign.descriptor.promotedtype);
     }
     else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {

@@ -747,43 +747,75 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptForeignType *t_type;
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
-                bool t_is_builtin = false;
-                void *t_symbol = nullptr;
-                integer_t t_ordinal = 0;
-                if (self->builtins != nullptr &&
-                    MCTypeConvertStringToLongInteger(t_type->binding, t_ordinal))
+                uindex_t t_offset = 0;
+                if (!MCStringFirstIndexOfChar(t_type->binding, ':', 0, kMCStringOptionCompareExact, t_offset))
                 {
-                    t_symbol = self->builtins[t_ordinal];
-                    t_is_builtin = true;
-                }
-                else
-                {
-                    t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
-                                                      t_type->binding);
-                    t_is_builtin = false;
-                }
-                
-                if (t_symbol == nullptr)
-                {
-                    MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type '%{type}'"),
-												   "name", self -> name,
-                                                   "type", t_type -> binding,
-                                                   nil);
-					goto error_cleanup;
-                }
+                    bool t_is_builtin = false;
+                    void *t_symbol = nullptr;
+                    integer_t t_ordinal = 0;
+                    if (self->builtins != nullptr &&
+                        MCTypeConvertStringToLongInteger(t_type->binding, t_ordinal))
+                    {
+                        t_symbol = self->builtins[t_ordinal];
+                        t_is_builtin = true;
+                    }
+                    else
+                    {
+                        t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
+                                                          t_type->binding);
+                        t_is_builtin = false;
+                    }
+                    
+                    if (t_symbol == nullptr)
+                    {
+                        MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type '%{type}'"),
+                                                       "name", self -> name,
+                                                       "type", t_type -> binding,
+                                                       nil);
+                        goto error_cleanup;
+                    }
 
-                /* The symbol is a function that returns a type info reference. */
-                if (t_is_builtin)
-                {
-                    MCTypeInfoRef t_typeinfo_bare;
-                    void (*t_type_func_builtin)(void*rv, void**av) = (void(*)(void*, void**))t_symbol;
-                    t_type_func_builtin(&t_typeinfo_bare, nullptr);
-                    t_typeinfo = t_typeinfo_bare;
+                    /* The symbol is a function that returns a type info reference. */
+                    if (t_is_builtin)
+                    {
+                        MCTypeInfoRef t_typeinfo_bare;
+                        void (*t_type_func_builtin)(void*rv, void**av) = (void(*)(void*, void**))t_symbol;
+                        t_type_func_builtin(&t_typeinfo_bare, nullptr);
+                        t_typeinfo = t_typeinfo_bare;
+                    }
+                    else
+                    {
+                        MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
+                        t_typeinfo = t_type_func();
+                    }
                 }
                 else
                 {
-                    MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
-                    t_typeinfo = t_type_func();
+                    MCAutoStringRef t_type_func, t_args;
+                    if (!MCStringDivideAtChar(t_type->binding, ':', kMCStringOptionCompareExact, &t_type_func, &t_args))
+                    {
+                        goto error_cleanup;
+                    }
+                    
+                    void *t_symbol = nullptr;
+                    t_symbol = MCSLibraryLookupSymbol(MCScriptGetLibrary(),
+                                                      *t_type_func);
+                    if (t_symbol == nullptr)
+                    {
+                        MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type constructor '%{type}'"),
+                                                       "name", self -> name,
+                                                       "type", *t_type_func,
+                                                       nil);
+                        goto error_cleanup;
+                    }
+                    
+                    bool (*t_type_constructor)(MCStringRef p_binding, MCTypeInfoRef& r_typeinfo) =
+                            (bool(*)(MCStringRef, MCTypeInfoRef&))t_symbol;
+                    
+                    if (!t_type_constructor(*t_args, &t_typeinfo))
+                    {
+                        goto error_cleanup;
+                    }
                 }
             }
             break;

@@ -116,7 +116,13 @@ struct __MCTypeInfo: public __MCValue
         struct
         {
             MCForeignTypeDescriptor descriptor;
-            void *ffi_layout_type;
+            struct
+            {
+                size_t size;
+                unsigned short alignment;
+                unsigned short type;
+                void *unused;
+            } layout;
         } foreign;
     };
 };

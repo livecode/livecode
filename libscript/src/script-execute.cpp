@@ -949,7 +949,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
             // If the two foreign types are the same, copy the contents
             if (t_slot_desc == t_from_desc)
             {
-                if (!t_slot_desc->copy(MCForeignValueGetContentsPtr(p_value),
+                if (!t_slot_desc->copy(t_slot_desc,
+                                       MCForeignValueGetContentsPtr(p_value),
                                        x_slot_ptr))
                 {
                     Rethrow();
