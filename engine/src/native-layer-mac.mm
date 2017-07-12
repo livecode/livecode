@@ -125,8 +125,7 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 		return false;
     
     // Draw the image
-    // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
-    MCGRectangle rect = {{0, 1}, {MCGFloat(t_raster.width), MCGFloat(t_raster.height)}};
+    MCGRectangle rect = {{0, 0}, {MCGFloat(t_raster.width), MCGFloat(t_raster.height)}};
     MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
     
