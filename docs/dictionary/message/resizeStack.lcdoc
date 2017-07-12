@@ -2,7 +2,7 @@ Name: resizeStack
 
 Type: message
 
-Syntax: resizeStack <newWidth>, <newHeight>, <oldWidth>, <oldHeight>
+Syntax: resizeStack <pNewWidth>, <pNewHeight>, <pOldWidth>, <pOldHeight>
 
 Summary:
 Sent to the <current card> when the <stack window> is resized.
@@ -23,16 +23,16 @@ on resizeStack newWidth,newHeight -- put an object in the middle
 end resizeStack
 
 Parameters:
-newWidth:
+pNewWidth:
 The stack's new width in pixels.
 
-newHeight:
+pNewHeight:
 The stack's new height in pixels.
 
-oldWidth:
+pOldWidth:
 The stack's original width in pixels.
 
-oldHeight:
+pOldHeight:
 The stack's original height in pixels.
 
 Description:
@@ -49,8 +49,8 @@ The <resizeStack> <message> is sent after the resizing is finished.
 This means that you cannot prevent a <stack|stack's> size from being
 changed by <trap|trapping> this <message>.
 
-The <oldWidth> and <oldHeight> for each <resizeStack> <message> is the 
-same as the <newWidth> and <newHeight> for the previous <resizeStack>. 
+The <pOldWidth> and <pOldHeight> for each <resizeStack> <message> is the 
+same as the <pNewWidth> and <pNewHeight> for the previous <resizeStack>. 
 The <stack|stack's> original <width> and <height> are passed only with 
 the first <resizeStack> <message> sent during a resize operation. 
 
@@ -60,7 +60,7 @@ from being seen. (However, the <lockScreen> <property> is not set to
 true.)
 
 >*Note:* If the stack's <vScroll> property is nonzero, the amount of 
-> scroll is not included in the <newHeight> and <oldHeight>. This means 
+> scroll is not included in the <pNewHeight> and <pOldHeight>. This means 
 > that the <parameter|parameters> of the <resizeStack> 
 > <message(keyword)> are always equal to the stack's <height> before
 > and 

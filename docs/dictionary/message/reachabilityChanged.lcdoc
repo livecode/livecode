@@ -2,7 +2,7 @@ Name: reachabilityChanged
 
 Type: message
 
-Syntax: reachabilityChanged <hostNameOrAddress>, <reachabilityInfo>
+Syntax: reachabilityChanged <pHostNameOrAddress>, <pReachabilityInfo>
 
 Summary:
 Sent when the network connectivity to a monitored server changes.
@@ -21,34 +21,18 @@ on reachabilityChanged pHost, pInfo
 end reachabilityChanged
 
 Parameters:
-hostNameOrAddress:
+pHostNameOrAddress:
 The server being monitored
 
-reachabilityInfo (enum):
-Comma delimited list of zero or more of the following
-
--   "transient": the specified server can be reached via a transient
-    connection 
--   "reachable": the specified server can be reached via the current
-    network configuration
--   "connection required": the specified server can be reached via the
-    current network configuration, but a connection needs to be
-    established before it can
--   "connection on traffic": the specified server can be reached via the
-    current network configuration, but a connection needs to be
-    established before it can. Any traffic directed to the server will
-    initiate the connection
--   "intervention required": the specified server can be reached via the
-    current network configuration, but some form of user intervention
-    will be required to establish this connection
--   "is local": the specified server is associated with a network
-    interface on the current system
--   "is direct": network traffic to the given server will not go through
-    a gateway, but is routed directly to one of the interfaces in the
-    system 
--   "is cell": the specified server can be reached via an EDGE, GPRS or
-    other 'cell' connection
-
+pReachabilityInfo (set):
+-   "transient": the specified server can be reached via a transient connection 
+-   "reachable": the specified server can be reached via the current network configuration
+-   "connection required": the specified server can be reached via the current network configuration, but a connection needs to be established before it can
+-   "connection on traffic": the specified server can be reached via the current network configuration, but a connection needs to be established before it can. Any traffic directed to the server will initiate the connection
+-   "intervention required": the specified server can be reached via the current network configuration, but some form of user intervention will be required to establish this connection
+-   "is local": the specified server is associated with a network interface on the current system
+-   "is direct": network traffic to the given server will not go through a gateway, but is routed directly to one of the interfaces in the system 
+-   "is cell": the specified server can be reached via an EDGE, GPRS or other 'cell' connection
 
 Description:
 Handle the reachabilityChanged message if you want to perform an action

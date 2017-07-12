@@ -56,8 +56,8 @@ The result:
 > by the <result> <function> is error, followed (where appropriate) by
 > the text of the error message returned by the <FTP> <server>,
 > including the <server> response code. *Important:* If a <blocking>
-> operation involving a <URL> (using the <put command> to <upload> a
-> <URL>, the <post command>, the <delete URL command>, or a <statement>
+> operation involving a <URL> (using the <put> <command> to <upload> a
+> <URL>, the <post> <command>, the <delete URL> <command>, or a <statement>
 > that gets an <FTP> or <httpURL>) is going on, no other <blocking URL>
 > operation can start until the previous one is finished. If you attempt
 > to use a <URL> in an <expression>, or put data into a <URL>, while
@@ -138,7 +138,7 @@ create the <resource fork>.
 > finished <upload|Uploading> the <value>. Since contacting a <server>
 > may take some time due to network lag, <URL> operations may take long
 > enough to be noticeable to the user. To <upload> without <blocking>,
-> use the <libURLftpUploadcommand> instead.
+> use the <libURLftpUpload> <command> instead.
 
 >*Note:* On windows, it is imperative not to name a file with one of the
 > reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4,
@@ -153,9 +153,9 @@ create the <resource fork>.
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
-References: delete URL command (command),
-libURLftpUploadcommand (command), put (command), local (command),
-put command (command), post command (command), libURLftpUpload (command),
+References: delete URL (command),
+put (command), local (command),
+post (command), libURLftpUpload (command),
 libURLDownloadToFile (command), function (control structure),
 result (function), value (function), URLEncode (function),
 handler (glossary), variable (glossary), property (glossary),

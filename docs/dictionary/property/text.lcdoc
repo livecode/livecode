@@ -78,7 +78,7 @@ original data unchanged.
 #### Import Only Formats
 There are also some formats that are not fully supported but can be
 imported. The image is converted to one of the supported formats,
-depending on the global <paintCompression property>.
+depending on the global <paintCompression> <property>.
 
 - BMP (Windows bitmap)
 - XWD (X Windows Dump format)
@@ -110,7 +110,7 @@ binary file (glossary), stack menu (glossary), button menu (glossary),
 button (keyword), image (keyword), field (keyword),
 menu keyword (keyword), string (keyword), menu (keyword), stack (object),
 button (object), menuName (property), style (property),
-unicodeText (property), paintCompression property (property)
+unicodeText (property), paintCompression (property)
 
 Tags: text processing
 

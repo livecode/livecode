@@ -27,28 +27,22 @@ Description:
 Handle the <preOpenControl> message to update a group's appearance
 before it appears on screen.
 
-&nbsp;
-
-For groups with their <backgroundBehavior property> set to true, the
+For groups with their <backgroundBehavior> <property> set to true, the
 <preOpenControl> message is sent immediately after the
-<preOpenBackground message> is sent to the <card(object)> being opened.
-For non-background groups, it is sent after the <preOpenCard message>.
-
-&nbsp;
+<preOpenBackground> <message> is sent to the <card(object)> being opened.
+For non-background groups, it is sent after the <preOpenCard> <message>.
 
 For nested groups, the <preOpenControl> message is sent to the parent
 group first, if it is passed or not handled by the parent group, then it
 passes through each child group in reverse layer order (i.e from highest
 to lowest).
 
-&nbsp;
-
 The actual navigation is not triggered by the <preOpenControl>
 <message>, so blocking the <message> and not allowing it to pass does
 not prevent the <card(keyword)> with the <group> from opening.
 
 References: dispatch (command), group (command), message (glossary),
-card (keyword), preOpenBackground message (message),
-openControl (message), preOpenCard message (message), card (object),
-background group (property), backgroundBehavior property (property)
+card (keyword), preOpenBackground (message),
+openControl (message), preOpenCard (message), card (object),
+background group (property), backgroundBehavior (property), property (glossary)
 

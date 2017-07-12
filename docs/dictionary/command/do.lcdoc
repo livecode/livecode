@@ -83,7 +83,7 @@ do "result = 1 + 1" as "vbscript"
 > this can be done by replacing slash with backslash in the path.
 
 To see how to create a numbered set of variables see the dictionary
-entry for the <local command>.
+entry for the <local> <command>.
 
 The ability to specify an <alternateLanguageName> on Windows systems was
 added in LiveCode 2.9.
@@ -95,7 +95,7 @@ previous versions, it was not possible to include AppleScript or other
 <handler>. 
 
 References: debugDo (command), breakpoint (command), local (command),
-call (command), local command (command), result (function),
+call (command), result (function),
 alternateLanguages (function), system (glossary), LiveCode (glossary),
 handler (glossary), execute (glossary), statement (glossary),
 Unix (glossary), compile (glossary), command (glossary),

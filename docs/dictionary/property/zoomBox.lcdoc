@@ -39,11 +39,11 @@ button|maximize box> (Unix and <Windows|Windows systems>) appears in a
 >*Note:* On <OS X|OS X systems>, if the <zoomBox> <property> is false,
 > the <zoom box> is disabled rather than hidden.
 
-The setting of this property affects the <decorations property>, and
+The setting of this property affects the <decorations> <property>, and
 vice versa. Setting a stack's <zoomBox> property determines whether its
-<decorations property> includes "maximize" (or is "default", for window
+<decorations> <property> includes "maximize" (or is "default", for window
 styles that normally include a zoom box). Conversely, setting a stack's
-<decorations property> sets its <zoomBox> to true or false depending on
+<decorations> <property> sets its <zoomBox> to true or false depending on
 whether the <decorations> includes "maximize" (or is "default" ).
 
 Setting the <zoomBox> <property> causes the <stack window> to flash
@@ -55,7 +55,7 @@ The synonym "maximizeBox" was added in version 2.1.
 References: property (glossary), stack window (glossary), OS X (glossary),
 zoom box (glossary), Windows (glossary), maximize button (glossary),
 title bar (glossary), default (keyword), stack (object),
-draggable (property), decorations property (property),
+draggable (property),
 minimizeBox (property), decorations (property)
 
 Tags: windowing

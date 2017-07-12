@@ -50,7 +50,7 @@ The popup menu appears with its top left corner at the <location>. If no
 handler pauses.
 
 Choosing a menu item from the popup menu sends a <menuPick(message)>
-message to the button (for a button menu) or a <mouseUp message> to the
+message to the button (for a button menu) or a <mouseUp> <message> to the
 clicked control in the stack (for a stack menu). The button or stack
 menu handles the menu choice.
 
@@ -82,7 +82,7 @@ parameter of the <mouseDown(message)> message, as described above.
 References: pulldown (command), clickLoc (function), mouseLoc (function),
 menu item (glossary), popup menu (glossary), button (keyword),
 menuItem (keyword), popup (keyword), menuPick (message),
-mouseDown (message), mouseDown (message), mouseUp message (message),
+mouseDown (message), mouseDown (message), mouseUp (message), message (glossary),
 stack (object), button (object), style property (property),
 toolTip (property), menuMode (property), visible (property),
 menuMouseButton (property)

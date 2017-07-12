@@ -38,9 +38,9 @@ error then the result will be set to an error code beginning with
 Description:
 Use the <revZipReplaceItemWithFile> command put the contents of a file
 on disk into one of the items of an open zip archive. The archive must
-have first been opened with the <revZipOpenArchive command>.
+have first been opened with the <revZipOpenArchive> <command>.
 
-References: revZipOpenArchive command (command),
+References: revZipOpenArchive (command), command (glossary),
 revZipReplaceItemWithData (command)
 
 Tags: text processing

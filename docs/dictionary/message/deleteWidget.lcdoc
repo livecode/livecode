@@ -5,7 +5,7 @@ Type: message
 Syntax: deleteWidget
 
 Summary:
-sent to <widget> just before it is removed from the <stack>.
+Sent to a <widget> just before it is removed from the <stack>.
 
 Associations: widget
 

@@ -102,7 +102,7 @@ the <instanceId>.
 > empty or to a string not present in the current document will reset
 > the selected text, ie subsequently setting the selected to any string
 > will select the first occurrence again. This behavior is similar to
-> that of the <find command>.
+> that of the <find> <command>.
 
 To resolve this problem a new property was added in version 4.5.1 to
 browser instances windowId. The windowId property allows the stack to
@@ -159,7 +159,7 @@ on browserToggleScrollbars
 
 
 >*Note:*  For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 Changes:
 There is a long standing issue with revBrowser that causes browser
@@ -167,8 +167,8 @@ instances to be lost whenever the stack it is attached to has its window
 re-created. Previously, cases where this would occur had to be avoided
 when a browser was present on a stack.
 
-References: revBrowserSnapshot (command), find command (command),
-revBrowserOpen function (function), revBrowserInstances (function),
+References: revBrowserSnapshot (command), find (command), command (glossary),
+function (glossary), revBrowserInstances (function),
 revBrowserOpen (function), revBrowserGet (function),
 browserOver (message), browserClick (message),
 browserNewInstance (message), queryRecordChanged (message),

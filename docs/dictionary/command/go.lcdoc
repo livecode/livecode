@@ -87,7 +87,7 @@ the <go> command displays the first card of the stack. If the stack is
 already open, the current card of the stack appears and the stack window
 is brought to the front.
 
-If the <lockScreen property> is set to true, the <go> command does not
+If the <lockScreen> <property> is set to true, the <go> command does not
 bring an already-open stack to the front until the <lockScreen> is set
 to false. (Remember that the <lockScreen> is automatically set to false
 when all pending handlers finish executing.)
@@ -126,7 +126,7 @@ stack. The form go any card goes to a random card in the current stack.
 If you include the marked parameter, the go command is restricted to
 cards whose mark property is set to true.
 
-Each card the user visits while the <lockRecent property> is false is
+Each card the user visits while the <lockRecent> <property> is false is
 placed in the recent cards list. You can use the <go> command to move
 among the previously-visited cards:
 
@@ -144,9 +144,9 @@ among the previously-visited cards:
 
 If you use the <go> invisible form, the window or card change does not
 show on the screen. (When going to a stack, this form sets the stack's
-<visible property> to false.) Use this form of the <go> command to open
+<visible> <property> to false.) Use this form of the <go> command to open
 a stack without displaying it on screen. To display the stack later, use
-the <show command> or set its <visible property (property)>to true.
+the <show> <command> or set its <visible (property)>to true.
 
 Any visual effects that have been queued with the visual effect command
 are displayed when the <go> command is executed (unless the screen is
@@ -155,19 +155,19 @@ locked).
 >*Tip:*   To test whether a stack or card exists before trying to go to
 > it, use the there is a operator:
 
-if there is a card "Index" then go card "Index"
-if there is a stack myPath then go card 2 of stack myPath
+    if there is a card "Index" then go card "Index"
+    if there is a stack myPath then go card 2 of stack myPath
 
 The go... as sheet form was introduced in version 2.0. Previous versions
 did not support sheet dialogs.
 
-References: unlock recent (command), show command (command),
+References: unlock recent (command), show (command), command (glossary),
 show cards (command), drawer (command), modeless (command),
 push (command), previous (keyword), recent (keyword), as (keyword),
-card (keyword), stack (object), lockRecent property (property),
-lockScreen (property), lockScreen property (property),
-HCImportStat (property), visible property (property),
-defaultStack (property)
+card (keyword), stack (object), lockRecent (property),
+lockScreen (property), property (glossary),
+HCImportStat (property), visible (property),
+defaultStack (property), defaultFolder (property)
 
 Tags: navigation
 

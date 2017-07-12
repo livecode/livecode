@@ -2,7 +2,7 @@ Name: pushNotificationRegistered
 
 Type: message
 
-Syntax: pushNotificationRegistered <signature>
+Syntax: pushNotificationRegistered <pSignature>
 
 Summary:
 Sent when the application registers to receive Push Notifications form a
@@ -23,7 +23,7 @@ on pushNotificationRegistered tSignature
 end pushNotificationRegistered
 
 Parameters:
-signature:
+pSignature:
 The Signature of the Device. This is the unique devices signature that
 the Push Notification Server uses in order to send a notification to the
 device. 

@@ -2,7 +2,7 @@ Name: remoteControlReceived
 
 Type: message
 
-Syntax: remoteControlReceived <eventType>
+Syntax: remoteControlReceived <pEventType>
 
 Summary:
 Sent when the remote control is enabled and a remote control operation
@@ -20,9 +20,7 @@ on remoteControlReceived pEventType
 end remoteControlReceived
 
 Parameters:
-eventType (enum):
-A string describing the event type which occurred. One of
-
+pEventType (enum): A string describing the event type which occurred.
 - "pause"
 - "stop"
 - "toggle play pause"

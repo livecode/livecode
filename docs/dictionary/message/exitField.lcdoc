@@ -18,46 +18,36 @@ Platforms: desktop, server, mobile
 
 Example:
 on exitField -- remove visual signs that the field is being edited
-set the showBorder of the target to false
+   set the showBorder of the target to false
 end exitField
 
 Description:
 Handle the <exitField> message if you want to do something when the user
 leaves a field that hasn't been changed.
 
-&nbsp;
-
 The selection is removed from a field (and the field loses focus) when
 another window is brought to the front, when the user clicks in another
 field, or when the user tabs out of the field. The field also loses
-focus when the <select command> is used to select text in another field.
+focus when the <select> command is used to select text in another field.
 However, the <exitField> message is not sent when the user clicks
 another point in the same field.
-
-&nbsp;
 
 The <exitField> message is sent to buttons whose <menuMode> is
 "comboBox", since the type-in box in a combo box behaves like a field.
 
-&nbsp;
-
 The <exitField> message is sent only if the field's contents have not
-changed since the last time it received the <openField message>. If a
-field is closing and its contents have changed, the <closeField message>
+changed since the last time it received the <openField> message. If a
+field is closing and its contents have changed, the <closeField> message
 is sent instead of <exitField>. This means that if you want to take an
 action when the selection is removed from a field--whether the field has
 changed or not--you must handle both <closeField> and <exitField>.
 
-&nbsp;
+>*Note:* If the field's contents were changed by script using the 
+> <put> command, then <exitField> will still be sent. <closeField> is 
+> only sent when the contents are changed by the user.
 
->*Note:* If the field's contents were changed by script using the <put
-> command>, then exitField will still be sent. <closeField> is only sent
-> when the contents are changed by the user.
-
-References: put command (command), select command (command),
-openField (message), closeField message (message),
-openField message (message), closeField (message), focusOut (message),
-menuMode (property)
+References: put (command), select (command), openField (message), 
+closeField (message), focusOut (message), menuMode (property)
 
 Tags: ui
 

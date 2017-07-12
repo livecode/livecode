@@ -2,7 +2,7 @@ Name: mouseRelease
 
 Type: message
 
-Syntax: mouseRelease <mouseButtonNumber>
+Syntax: mouseRelease <pButtonNumber>
 
 Summary:
 Sent when the user releases the mouse outside the <control> that was
@@ -24,15 +24,10 @@ on mouseRelease theButton
 end mouseRelease
 
 Parameters:
-mouseButtonNumber (enum):
-The mouseButtonNumber specifies which mouse button was pressed:
-
--  1 is the mouse button on Mac OS systems and the left button on
-   Windows and Unix systems.
--  2 is the middle button on Unix systems.
--  3 is the right button on Windows and Unix systems and Control-click
-   on Mac OS systems.
-
+pButtonNumber (enum): Specifies which mouse button was pressed:
+- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+- "2": the middle button on Unix systems.
+- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
 
 Description:
 Handle the <mouseRelease> <message> to perform an action when the user

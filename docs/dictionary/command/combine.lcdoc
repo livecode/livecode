@@ -83,7 +83,7 @@ separated by the <rowDelimiter>. Each row in the resulting string is
 the contents of the corresponding <key> in the <array>.
 
 Combining an <array> by column converts the <array> into a table
-with columns separated by the <columnDelimiter property>. Each column of
+with columns separated by the <columnDelimiter> <property>. Each column of
 the resulting string is the contents of the corresponding <key> in the
 <array>.
 
