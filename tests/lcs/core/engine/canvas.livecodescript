@@ -21,7 +21,8 @@ on TestSetup
     local tFolder
     put item 1 to -2 of the effective filename of me into tFolder
 
-    load extension from file tFolder & "/_canvas.lcm" with resource path tFolder
+    load extension from file "../_tests/_build/lcs/core/engine/_canvas.lcm" \
+       with resource path tFolder
     if the result is not empty then
        throw "Failed to load test support extension:" && the result
     end if
