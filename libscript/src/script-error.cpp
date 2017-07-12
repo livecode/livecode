@@ -361,20 +361,20 @@ MCScriptThrowUnknownJavaThreadError(void)
 }
 
 bool
-MCScriptThrowJavaBindingNotImplemented(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("java binding not implemented yet"),
-								 nil);
-}
-
-bool
 MCScriptThrowJavaBindingNotSupported(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
 								 "reason",
 								 MCSTR("java binding not supported on this platform"),
+								 nil);
+}
+
+bool
+MCScriptThrowObjCBindingNotSupported(void)
+{
+	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+								 "reason",
+								 MCSTR("objc binding not supported on this platform"),
 								 nil);
 }
 

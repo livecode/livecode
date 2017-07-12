@@ -121,8 +121,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCUIntTypeInfo() { return kMCCUIntTypeInf
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSIntTypeInfo() { return kMCCSIntTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongTypeInfo() { return kMCCULongTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongTypeInfo() { return kMCCSLongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongLongTypeInfo; }
 
 /**/
 
@@ -133,6 +133,9 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo;
 
 static_assert(sizeof(int) == 4,
               "Assumption that int is 4 bytes in size not valid");
+
+static_assert(sizeof(bool) == 1,
+              "Assumption that bool is 1 byte in size not valid");
 
 template <typename CType, typename Enable = void>
 struct compute_primitive_type
@@ -205,7 +208,7 @@ struct integral_type_desc_t: public numeric_type_desc_t<CType> {
 
 struct bool_type_desc_t {
     using c_type = bool;
-    static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt8;
     static constexpr MCTypeInfoRef& base_type_info() { return kMCNullTypeInfo; }
     static constexpr MCTypeInfoRef& type_info() { return kMCBoolTypeInfo; }
     static constexpr auto is_optional = false;

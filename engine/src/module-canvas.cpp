@@ -4798,6 +4798,12 @@ void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, t_name, t_style, p_size);
 }
 
+MC_DLLEXPORT_DEF
+void MCCanvasFontGetHandle(MCCanvasFontRef p_font, void*& r_handle)
+{
+    r_handle = MCFontGetHandle(MCCanvasFontGetMCFont(p_font));
+}
+
 // Operations
 
 MCCanvasRectangleRef MCCanvasFontMeasureTextTypographicBoundsWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)

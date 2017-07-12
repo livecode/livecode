@@ -355,6 +355,9 @@ enum MCScriptForeignHandlerLanguage
     /* The handler has a lc-compile generated shim, so can be called directly */
     kMCScriptForeignHandlerLanguageBuiltinC,
     
+    /* The handler should be called using objc_msgSend */
+    kMCScriptForeignHandlerLanguageObjC,
+    
     /* The handler should be called using the JNI */
     kMCScriptForeignHandlerLanguageJava,
 };
@@ -362,6 +365,17 @@ enum MCScriptForeignHandlerLanguage
 enum MCJavaThread {
     kMCJavaThreadDefault,
     kMCJavaThreadUI
+};
+
+/* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
+ * method. */
+enum MCScriptForeignHandlerObjcCallType
+{
+    /* Call the method using method_invoke on the instance */
+    kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
+    
+    /* Call the method using method_invoke on the class instance */
+    kMCScriptForeignHandlerObjcCallTypeClassMethod,
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
@@ -381,6 +395,13 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
         {
             void *function;
         } builtin_c;
+        struct
+        {
+            MCScriptForeignHandlerObjcCallType call_type;
+            void *objc_class;
+            void *objc_selector;
+            void *function_cif;
+        } objc;
         struct
         {
             MCNameRef class_name;
@@ -656,7 +677,7 @@ bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void);
 
 bool
-MCScriptThrowJavaBindingNotImplemented(void);
+MCScriptThrowObjCBindingNotSupported(void);
 
 bool
 MCScriptThrowJavaBindingNotSupported(void);

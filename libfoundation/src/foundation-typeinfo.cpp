@@ -551,14 +551,6 @@ static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
     {
         case kMCForeignPrimitiveTypeVoid:
             return &ffi_type_void;
-        case kMCForeignPrimitiveTypeBool:
-            if (sizeof(bool) == 1)
-                return &ffi_type_uint8;
-            if (sizeof(bool) == 2)
-                return &ffi_type_uint16;
-            if (sizeof(bool) == 4)
-                return &ffi_type_uint32;
-            return &ffi_type_uint64;
         case kMCForeignPrimitiveTypeUInt8:
             return &ffi_type_uint8;
         case kMCForeignPrimitiveTypeSInt8:

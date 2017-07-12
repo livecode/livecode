@@ -1932,10 +1932,10 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             { "SInt64", kMCScriptForeignPrimitiveTypeSInt64 },
             { "UInt64", kMCScriptForeignPrimitiveTypeUInt64 },
             
-            { "CSIntSize", kMCScriptForeignPrimitiveTypeSIntSize },
-            { "CUIntSize", kMCScriptForeignPrimitiveTypeUIntSize },
-            { "CSIntPtr", kMCScriptForeignPrimitiveTypeSIntPtr },
-            { "CUIntPtr", kMCScriptForeignPrimitiveTypeUIntPtr },
+            { "SIntSize", kMCScriptForeignPrimitiveTypeSIntSize },
+            { "UIntSize", kMCScriptForeignPrimitiveTypeUIntSize },
+            { "SIntPtr", kMCScriptForeignPrimitiveTypeSIntPtr },
+            { "UIntPtr", kMCScriptForeignPrimitiveTypeUIntPtr },
             
             { "CBool", kMCScriptForeignPrimitiveTypeCBool },
             { "CChar", kMCScriptForeignPrimitiveTypeCChar },
@@ -1963,6 +1963,12 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             
             /* Java FFI Types */
             { "JObject", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* ObjC FFI Types */
+            { "ObjcObject", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcRetainedId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcAutoreleasedId", kMCScriptForeignPrimitiveTypePointer },
             
             /* Extra Foundation Types */
             { "Stream", kMCScriptForeignPrimitiveTypePointer },
