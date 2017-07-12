@@ -27,6 +27,7 @@
 				'libraries/json/json.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
+				'widgets/macbutton/macbutton.lcb',
 				'widgets/browser/browser.lcb',
 				#’widgets/chart/chart.lcb',
 				#'widgets/checkbox/checkbox.lcb',
