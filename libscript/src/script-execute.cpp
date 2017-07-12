@@ -27,6 +27,10 @@
 #include <dlfcn.h>
 #endif
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+#include <objc/message.h>
+#endif
+
 #include "script-execute.hpp"
 
 typedef void (*__MCScriptValueDrop)(void *);
@@ -241,7 +245,96 @@ public:
             ((void(*)(void*, void**))p_handler->builtin_c.function)(p_result_slot_ptr,
                     m_argument_values);
             break;
-
+        
+        case kMCScriptForeignHandlerLanguageObjC:
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+        {
+            /* At this point we have a argument values array which will match
+             * the LCB signature - depending on the call type we need to modify
+             * it. */
+            void *t_objc_values[kMaxArguments];
+            if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeInstanceMethod)
+            {
+                /* In the case of an instance method call, we need to insert
+                 * the method pointer as the second argument. */
+                if (m_argument_count + 1 >= kMaxArguments)
+                {
+                    return MCErrorThrowOutOfMemory();
+                }
+                t_objc_values[0] = m_argument_values[0];
+                t_objc_values[1] = &p_handler->objc.objc_selector;
+                for(uindex_t i = 1; i < m_argument_count; i++)
+                    t_objc_values[i + 1] = m_argument_values[i];
+            }
+            else if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeClassMethod)
+            {
+                /* In the case of a class method call, we need to insert both
+                 * the class, and method pointer as the first two arguments. */
+                if (m_argument_count + 2 >= kMaxArguments)
+                {
+                    return MCErrorThrowOutOfMemory();
+                }
+                
+                t_objc_values[0] = &p_handler->objc.objc_class;
+                t_objc_values[1] = &p_handler->objc.objc_selector;
+                for(uindex_t i = 0; i < m_argument_count; i++)
+                    t_objc_values[i + 2] = m_argument_values[i];
+            }
+            
+            /* There are different variants of objc_msgSend we need to use
+             * depending on architecture and return type:
+             *   struct return
+             *     all: _stret
+             *   float return
+             *     arm: no difference
+             *     i386: _fpret
+             *     x86-64: no difference
+             *   double return
+             *     arm: no difference
+             *     i386: _fpret
+             *     x86-64: no difference
+             *   long double
+             *     arm: no difference
+             *     i386: _fpret
+             *     x86-64: _fpret
+             *   _Complex long double (TODO)
+             *     arm: no difference
+             *     i386: no difference
+             *     x86-64: _fp2ret
+             */
+             
+            ffi_cif *t_cif = (ffi_cif *)p_handler->objc.function_cif;
+            void (*t_objc_msgSend)() = nullptr;
+#if defined(__ARM__)
+            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+                t_objc_msgSend = (void(*)())objc_msgSend_stret;
+            else
+                t_objc_msgSend = (void(*)())objc_msgSend;
+#elif defined(__X86_64__)
+            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+                t_objc_msgSend = (void(*)())objc_msgSend_stret;
+            else if (t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
+                t_objc_msgSend = (void(*)())objc_msgSend_fpret;
+            else
+                t_objc_msgSend = (void(*)())objc_msgSend;
+#elif defined(__I386__)
+            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+                t_objc_msgSend = (void(*)())objc_msgSend_stret;
+            else if (t_cif->rtype->type == FFI_TYPE_FLOAT ||
+                     t_cif->rtype->type == FFI_TYPE_DOUBLE ||
+                     t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
+                t_objc_msgSend = (void(*)())objc_msgSend_fpret;
+            else
+                t_objc_msgSend = (void(*)())objc_msgSend;
+#endif
+            ffi_call(t_cif,
+                     (void(*)())objc_msgSend,
+                     p_result_slot_ptr,
+                     t_objc_values);
+        }
+#endif
+        break;
+            
         case kMCScriptForeignHandlerLanguageUnknown:
             MCUnreachableReturn(false);
             break;
@@ -272,7 +365,7 @@ private:
 	uindex_t m_argument_count;
 	// The array of pointers which will be passed to libffi - this will
 	// be the pointers in m_argument_slots for normal parameters and
-	// a pointer to the points in m_argument_slots for reference
+	// a pointer to the pointers in m_argument_slots for reference
 	// parameters.
 	void *m_argument_values[kMaxArguments];
 	// The drops for the slot values in m_argument_slots.

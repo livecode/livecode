@@ -677,6 +677,7 @@ typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
 typedef struct __MCJavaObject *MCJavaObjectRef;
+typedef struct __MCObjcObject *MCObjcObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -3415,6 +3416,58 @@ MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef
 MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
 MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
+////////////////////////////////////////////////////////////////////////////////
+//
+//  OBJC DEFINITIONS
+//
+
+/* The ObjcObject type manages the lifetime of the obj-c object it contains.
+ * Specifcally, it sends 'release' to the object when the ObjcObject is dropped */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcObjectTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcObjectTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcId type describes an id which is passed into, or out of an obj-c
+ * method with no implicit action on its reference count. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcRetainedId type describes an id which is passed into, or out of an
+ * obj-c method and is expected to already have been retained. (i.e. the
+ * caller or callee expects to receive it with +1 ref count). */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcRetainedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcRetainedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcAutoreleasedId type describes an id which has been placed in the
+ * innermost autorelease pool before being returned to the caller. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcAutoreleasedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcAutoreleasedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, retaining it to make sure it owns a reference to it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, taking a +1 reference count from it (i.e. it assumes the value has
+ * already been retained before being called). */
+MC_DLLEXPORT bool MCObjcObjectCreateWithRetainedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithAutoreleasedId function creates an ObjcObject out of
+ * a raw id value which is in the innermost autorelease pool. Currently this
+ * means that it retains it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithAutoreleasedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectGetId function returns the raw id value contained within
+ * an ObjcObject. The retain count of the id remains unchanged. */
+MC_DLLEXPORT void *MCObjcObjectGetId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetRetainedId function returns the raw id value contained within
+ * an ObjcObject. The id is retained before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetAutoreleasedId function returns the raw id value contained within
+ * an ObjcObject. The id is autoreleased before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

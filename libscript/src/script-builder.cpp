@@ -1964,6 +1964,12 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             /* Java FFI Types */
             { "JObject", kMCScriptForeignPrimitiveTypePointer },
             
+            /* ObjC FFI Types */
+            { "ObjcObject", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcRetainedId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcAutoreleasedId", kMCScriptForeignPrimitiveTypePointer },
+            
             /* Extra Foundation Types */
             { "Stream", kMCScriptForeignPrimitiveTypePointer },
             

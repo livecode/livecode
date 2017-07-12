@@ -24,6 +24,10 @@
 #include "script-private.h"
 #include "script-bytecode.hpp"
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+#include <objc/runtime.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This is the module of the most recent LCB stack frame on the current thread's
@@ -846,6 +850,306 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     return true;
 }
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+/* objc:library>class.method */
+static bool
+__MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
+                                               MCScriptForeignHandlerDefinition *p_handler,
+                                               /* takes */ MCStringRef d_binding,
+                                               bool* r_bound)
+{	MCAutoStringRef t_library;
+	MCAutoStringRef t_class;
+	MCAutoStringRef t_method;
+	if (!__MCScriptSplitForeignBindingString(d_binding,
+											 '>',
+											 &t_library) ||
+		!__MCScriptSplitForeignBindingString(d_binding,
+											 '.',
+											 &t_class) ||
+        !MCStringCopy(d_binding,
+                      &t_method))
+	{
+		MCValueRelease(d_binding);
+		return false;
+	}
+    MCValueRelease(d_binding);
+
+    /* Make sure the method name is non-empty */
+    if (*t_method == nullptr ||
+        MCStringIsEmpty(*t_method))
+    {
+        return MCScriptThrowMissingFunctionInForeignBindingError();
+    }
+
+    uindex_t t_selector_start = 0;
+    bool t_is_class = false;
+    if (MCStringGetCharAtIndex(*t_method,
+                               0) == '+')
+    {
+        t_is_class = true;
+        t_selector_start = 1;
+    }
+    else if (MCStringGetCharAtIndex(*t_method,
+                                    0) == '-')
+    {
+        t_is_class = false;
+        t_selector_start = 1;
+    }
+    
+    MCAutoStringRef t_selector_name;
+    if (!MCStringCopySubstring(*t_method,
+                               MCRangeMake(t_selector_start, UINDEX_MAX),
+                               &t_selector_name))
+    {
+        return false;
+    }
+    
+    /* TODO: This leaks a module handle if library is not empty (builtin) */
+    MCSLibraryRef t_module;
+    if (MCStringIsEmpty(*t_library))
+    {
+        t_module = MCScriptGetLibrary();
+    }
+    else
+    {
+        if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                 *t_library,
+                                 t_module))
+        {
+            if (r_bound == nil)
+            {
+                return MCScriptThrowUnableToLoadForiegnLibraryError();
+            }
+        
+            *r_bound = false;
+        
+            return true;
+        }
+    }
+    
+    MCAutoStringRefAsUTF8String t_selector_name_cstring;
+    if (!t_selector_name_cstring.Lock(*t_selector_name))
+    {
+        return false;
+    }
+    
+    MCAutoStringRefAsUTF8String t_class_cstring;
+    if (!t_class_cstring.Lock(*t_class))
+    {
+        return false;
+    }
+
+    bool t_valid = true;
+    
+    /* Lookup the class, to make sure it exists. */
+    Class t_objc_class = nullptr;
+    if (t_valid)
+    {
+        t_objc_class = objc_getClass(*t_class_cstring);
+        if (t_objc_class == nullptr)
+        {
+            /* ERROR: should be class not found */
+            t_valid = false;
+        }
+    }
+    
+    /* Lookup the selector, if this doesn't work then we're not going to get
+     * very far! (OOM, probably). */
+    SEL t_objc_sel = sel_registerName(*t_selector_name_cstring);
+    if (t_valid &&
+        t_objc_sel == nullptr)
+    {
+        /* ERROR: objc runtime failure */
+        t_valid = false;
+    }
+    
+    /* Get the Method - either class or instance - from the class */
+    Method t_objc_method = nullptr;
+    if (t_valid)
+    {
+        if (!t_is_class)
+        {
+            t_objc_method = class_getInstanceMethod(t_objc_class,
+                                               t_objc_sel);
+        }
+        else
+        {
+            t_objc_method = class_getClassMethod(t_objc_class,
+                                            t_objc_sel);
+        }
+        if (t_objc_method == nullptr)
+        {
+            /* ERROR: objc method not found */
+            t_valid = false;
+        }
+    }
+    
+    /* Next we must compute the cif. */
+    MCAutoPointer<void> t_layout_cif;
+    ffi_cif *t_cif = nullptr;
+    ffi_type *t_cif_return_type = nullptr;
+    ffi_type **t_cif_arg_types = nullptr;
+    unsigned int t_arg_count = 0;
+    if (t_valid)
+    {
+        MCTypeInfoRef t_signature = p_instance->module->types[p_handler->type]->typeinfo;
+        
+        /* The number of arguments used to call the bound handler */
+        uindex_t t_user_arg_count =
+                MCHandlerTypeInfoGetParameterCount(t_signature);
+        
+        /* The number of arguments used to pass to objc_msgSend. This is 1 more
+         * if an instance method (the selector); but is 2 more if a class method
+         * (the class object and the selector). */
+        t_arg_count = t_user_arg_count + (t_is_class ? 2 : 1);
+        
+        MCTypeInfoRef t_return_type =
+                MCHandlerTypeInfoGetReturnType(t_signature);
+        
+        MCResolvedTypeInfo t_resolved_return_type;
+        if (!MCTypeInfoResolve(t_return_type,
+                               t_resolved_return_type))
+        {
+            t_valid = false;
+        }
+        else
+        {
+            if (t_resolved_return_type.named_type == kMCNullTypeInfo)
+            {
+                t_cif_return_type = &ffi_type_void;
+            }
+            else if (MCTypeInfoIsForeign(t_resolved_return_type.type))
+            {
+                t_cif_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type.type);
+            }
+            else
+            {
+                t_cif_return_type = &ffi_type_pointer;
+            }
+        }
+        
+        /* Allocate memory for the handler layout (array of ffi_type*) and
+         * ffi_cif. This is a single block which will contain the cif followed
+         * by the type array. */
+        if (t_valid)
+        {
+            if (!MCMemoryAllocate(sizeof(ffi_type*) * t_arg_count + sizeof(ffi_cif),
+                                  &t_layout_cif))
+            {
+                /* ERROR: OOM */
+                t_valid = false;
+            }
+            t_cif = static_cast<ffi_cif *>(*t_layout_cif);
+            t_cif_arg_types = reinterpret_cast<ffi_type **>(t_cif + 1);
+        }
+        
+        unsigned int t_user_arg_index = 0;
+        unsigned int t_arg_index = 0;
+        
+        /* The first argument is always of pointer type - the object ptr. This
+         * is only present in the user signature if it is an instance method.*/
+        t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+        t_arg_index += 1;
+        if (!t_is_class)
+        {
+            t_user_arg_index += 1;
+        }
+        
+        /* The second argument is always of pointer type - the SEL ptr. This is
+         * never present in the user signature. */
+        t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+        t_arg_index += 1;
+        
+        while(t_user_arg_index < t_user_arg_count && t_valid)
+        {
+            MCHandlerTypeFieldMode t_mode =
+                    MCHandlerTypeInfoGetParameterMode(t_signature,
+                                                      t_user_arg_index);
+
+            if (t_mode != kMCHandlerTypeFieldModeIn)
+            {
+                /* 'out' and 'inout' parameters are always pointers */
+                t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+            }
+            else
+            {
+                MCTypeInfoRef t_type =
+                        MCHandlerTypeInfoGetParameterType(t_signature,
+                                                          t_user_arg_index);
+            
+                MCResolvedTypeInfo t_resolved_type;
+                if (!MCTypeInfoResolve(t_type,
+                                       t_resolved_type))
+                {
+                    t_valid = false;
+                    break;
+                }
+                
+                if (MCTypeInfoIsForeign(t_resolved_type.type))
+                {
+                    t_cif_arg_types[t_arg_index] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_type.type);
+                }
+                else
+                {
+                    t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+                }
+            }
+            
+            t_user_arg_index += 1;
+            t_arg_index += 1;
+        }
+    }
+    
+    /* Now can prep the cif for the var-args method_invoke* calls we need to
+     * make. */
+    if (t_valid)
+    {
+        if (ffi_prep_cif_var(t_cif,
+                             FFI_DEFAULT_ABI,
+                             2,
+                             t_arg_count,
+                             t_cif_return_type,
+                             t_cif_arg_types) != FFI_OK)
+        {
+            /* ERROR: libffi failure */
+            t_valid = false;
+        }
+    }
+    
+    if (!t_valid)
+    {
+        if (r_bound != nullptr)
+        {
+            *r_bound = false;
+            return true;
+        }
+        
+        return MCScriptThrowUnableToResolveForeignHandlerError(p_instance, p_handler);
+    }
+
+    if (t_is_class)
+    {
+        p_handler->objc.call_type = kMCScriptForeignHandlerObjcCallTypeClassMethod;
+    }
+    else
+    {
+        p_handler->objc.call_type = kMCScriptForeignHandlerObjcCallTypeInstanceMethod;
+    }
+    p_handler->objc.objc_class = t_objc_class;
+    p_handler->objc.objc_selector = t_objc_sel;
+    p_handler->objc.function_cif = static_cast<ffi_cif*>(t_layout_cif.Release());
+    
+    p_handler->language = kMCScriptForeignHandlerLanguageObjC;
+
+    if (r_bound != nullptr)
+    {
+        *r_bound = true;
+    }
+    
+    return true;
+}
+#endif
+
 static bool
 __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
                                                MCScriptForeignHandlerDefinition *p_handler,
@@ -1014,6 +1318,28 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
                                                            p_handler,
                                                            t_rest,
                                                            r_bound);
+	}
+	else if (MCStringIsEqualToCString(*t_language,
+									  "objc",
+									  kMCStringOptionCompareExact))
+	{
+#if !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE)
+        MCValueRelease(t_rest);
+		
+        if (r_bound == nil)
+		{
+			return MCScriptThrowObjCBindingNotSupported();
+		}
+		
+		*r_bound = false;
+		
+		return true;
+#else
+		return __MCScriptResolveForeignFunctionBindingForObjC(p_instance,
+                                                              p_handler,
+                                                              t_rest,
+                                                              r_bound);
+#endif
 	}
 	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {

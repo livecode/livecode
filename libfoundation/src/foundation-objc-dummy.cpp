@@ -34,7 +34,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCObjcAutoreleasedIdTypeInfo() { return kMCObjcAu
 
 struct __MCObjcObjectImpl
 {
-    id object;
+    void *object;
 };
 
 static __MCObjcObjectImpl *__MCObjcObjectGet(MCValueRef p_obj)
@@ -44,8 +44,6 @@ static __MCObjcObjectImpl *__MCObjcObjectGet(MCValueRef p_obj)
 
 static void __MCObjcObjectDestroy(MCValueRef p_value)
 {
-    __MCObjcObjectImpl *t_impl = __MCObjcObjectGet(p_value);
-    [t_impl->object release];
 }
 
 static bool __MCObjcObjectCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
@@ -208,7 +206,7 @@ MC_DLLEXPORT_DEF bool MCObjcObjectCreateWithId(void *p_object, MCObjcObjectRef &
     }
     
     __MCObjcObjectImpl *t_impl = __MCObjcObjectGet(t_obj);
-    t_impl->object = [(id)p_object retain];
+    t_impl->object = nullptr;
     
     r_object = t_obj;
 
@@ -226,7 +224,7 @@ MC_DLLEXPORT_DEF bool MCObjcObjectCreateWithRetainedId(void *p_object, MCObjcObj
     }
     
     __MCObjcObjectImpl *t_impl = __MCObjcObjectGet(t_obj);
-    t_impl->object = (id)p_object;
+    t_impl->object = nullptr;
 
     r_object = t_obj;
     
@@ -248,102 +246,22 @@ MC_DLLEXPORT_DEF void *MCObjcObjectGetId(const MCObjcObjectRef p_obj)
 
 MC_DLLEXPORT_DEF void *MCObjcObjectGetRetainedId(const MCObjcObjectRef p_obj)
 {
-    __MCObjcObjectImpl *t_impl = __MCObjcObjectGet(p_obj);
-    return [(id)t_impl->object retain];
+    return nullptr;
 }
 
 MC_DLLEXPORT_DEF void *MCObjcObjectGetAutoreleasedId(const MCObjcObjectRef p_obj)
 {
-    __MCObjcObjectImpl *t_impl = __MCObjcObjectGet(p_obj);
-    return [[(id)t_impl->object retain] autorelease];
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface com_runrev_livecode_MCObjcObjectActionProxy: NSObject
-{
-    MCHandlerRef m_handler;
-    MCValueRef m_context;
-}
-- (id)initWithHandlerRef:(MCHandlerRef)aHandler context:(MCValueRef)aContext;
-- (void)action:(id)sender;
-@end
-
-@implementation com_runrev_livecode_MCObjcObjectActionProxy
-- (id)initWithHandlerRef:(MCHandlerRef)aHandler context:(MCValueRef)aContext
-{
-    self = [super init];
-    if (self == nil)
-        return nil;
-    
-    m_handler = MCValueRetain(aHandler);
-    m_context = aContext != nullptr ? MCValueRetain(aContext) : nullptr;
-    
-    return self;
-}
-
-- (void)action:(id)sender
-{
-    MCAutoValueRef t_sender_arg;
-    if (!MCObjcObjectCreateWithId(sender, (MCObjcObjectRef&)&t_sender_arg))
-    {
-        return;
-    }
-    
-    MCValueRef t_args[2];
-    t_args[0] = *t_sender_arg;
-    if (m_context != nullptr)
-    {
-        t_args[1] = m_context;
-    }
-    
-    MCAutoValueRef t_result;
-    if (!MCHandlerInvoke(m_handler, t_args, m_context != nullptr ? 2 : 1, &t_result))
-    {
-        return;
-    }
-}
-@end
-
 extern "C"
 MC_DLLEXPORT_DEF MCObjcObjectRef MCObjcObjectCreateActionProxy(MCHandlerRef p_handler, MCValueRef p_context)
 {
-    MCTypeInfoRef t_signature =
-            MCValueGetTypeInfo(p_handler);
-
-    uindex_t t_param_count =
-            MCHandlerTypeInfoGetParameterCount(t_signature);
-    
-    if (p_context == nullptr)
-    {
-        p_context = kMCNull;
-    }
-    
-    if ((t_param_count == 1 && p_context != kMCNull) ||
-        t_param_count > 2)
-    {
-        MCErrorThrowGeneric(MCSTR("invalid signature for action proxy handler"));
-        return nullptr;
-    }
-    
-    if (t_param_count == 1)
-    {
-        p_context = nullptr;
-    }
-
-    if (MCHandlerTypeInfoGetParameterType(t_signature, 0) != kMCObjcObjectTypeInfo)
-    {
-        MCErrorThrowGeneric(MCSTR("first parameter for action proxy handler must be ObjcObject"));
-        return nullptr;
-    }
-
-    com_runrev_livecode_MCObjcObjectActionProxy *t_proxy =
-            [[com_runrev_livecode_MCObjcObjectActionProxy alloc] initWithHandlerRef:p_handler context:p_context];
-    
     MCObjcObjectRef t_proxy_object = nullptr;
-    if (!MCObjcObjectCreateWithRetainedId(t_proxy, t_proxy_object))
+    if (!MCObjcObjectCreateWithRetainedId(nullptr, t_proxy_object))
     {
-        [t_proxy release];
         return nullptr;
     }
     
@@ -353,7 +271,7 @@ MC_DLLEXPORT_DEF MCObjcObjectRef MCObjcObjectCreateActionProxy(MCHandlerRef p_ha
 extern "C"
 MC_DLLEXPORT_DEF uintptr_t MCObjcObjectGetActionProxySelector(void)
 {
-    return (uintptr_t)sel_registerName("action:");
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,7 +290,7 @@ bool __MCObjcInitialize(void)
     
     MCForeignTypeDescriptor d =
     {
-        sizeof(id),
+        sizeof(void*),
         kMCNullTypeInfo,
         kMCObjcObjectTypeInfo,
         &p,
@@ -439,38 +357,3 @@ extern "C" void com_livecode_objc_Finalize(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-NSString *MCStringConvertToAutoreleasedNSString(MCStringRef p_string_ref)
-{
-	CFStringRef t_string;
-	/* UNCHECKED */ MCStringConvertToCFStringRef(p_string_ref, t_string);
-	return [((NSString *)t_string) autorelease];
-}
-
-NSString *MCNameConvertToAutoreleasedNSString(MCNameRef p_name_ref)
-{
-	CFStringRef t_string;
-	/* UNCHECKED */ MCStringConvertToCFStringRef(MCNameGetString(p_name_ref), t_string);
-	return [((NSString *)t_string) autorelease];
-}
-
-NSData *MCDataConvertToAutoreleasedNSData(MCDataRef p_data_ref)
-{
-	CFDataRef t_data;
-	/* UNCHECKED */ MCDataConvertToCFDataRef(p_data_ref, t_data);
-	return [((NSData *)t_data) autorelease];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCCFAutorelease(const void *p_object)
-{
-    // CFAutorelease isn't exposed until MacOSX 10.9
-    id t_object = (id)p_object;
-    [t_object autorelease];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-
