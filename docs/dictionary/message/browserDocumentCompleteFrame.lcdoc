@@ -4,14 +4,12 @@ Synonyms: xbrowser_documentcompleteframe
 
 Type: message
 
-Syntax: browserDocumentCompleteFrame <instanceId>, <url>
+Syntax: browserDocumentCompleteFrame <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_DocumentCompleteFrame <url>, <instanceId>
+Syntax: XBrowser_DocumentCompleteFrame <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser object finishes loading a url in a frame
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,12 +25,10 @@ on browserDocumentCompleteFrame
 end browserDocumentCompleteFrame
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that finished loading in a frame
 
 Description:

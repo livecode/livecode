@@ -2,7 +2,7 @@ Name: browserLoadRequest
 
 Type: message
 
-Syntax: browserLoadRequest <url>, <type>
+Syntax: browserLoadRequest <pUrl>, <pType>
 
 Summary:
 Sent when a URL has been requested.
@@ -24,12 +24,10 @@ on browserLoadRequest pURL, pType
 end browserLoadRequest
 
 Parameters:
-url:
+pUrl:
 The URL that has started to load.
 
-type (enum):
-The reason for the request. One of:
-
+pType (enum): The reason for the request.
 - "click"
 - "submit"
 - "navigate"

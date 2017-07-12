@@ -2,7 +2,7 @@ Name: scrollbarDrag
 
 Type: message
 
-Syntax: scrollbarDrag <newPosition>
+Syntax: scrollbarDrag <pNewPosition>
 
 Summary:
 Sent to a <field>, <scrollbar>, or <group> when the user drags the
@@ -22,7 +22,7 @@ on scrollbarDrag newValue -- display current line number
 end scrollbarDrag
 
 Parameters:
-newPosition:
+pNewPosition:
 The new position of the scrollbar thumb. This parameter is passed only
 if the object is a scrollbar.
 

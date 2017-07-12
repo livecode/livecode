@@ -2,7 +2,7 @@ Name: rotationRateChanged
 
 Type: message
 
-Syntax: rotationRateChanged <x>, <y>, <z>
+Syntax: rotationRateChanged <pXRate>, <pYRate>, <pZRate>
 
 Summary:
 Sent to the current card of the default stack when the rotation of the
@@ -21,13 +21,13 @@ on rotationRateChanged pXRate, pYRate, pZRate
 end rotationRateChanged
 
 Parameters:
-x:
+pXRate:
 the rate of acceleration around the x axis, in radians/second
 
-y:
+pYRate:
 the rate of acceleration around the y axis, in radians/second
 
-z:
+pZRate:
 the rate of acceleration around the x axis, in radians/second
 
 Description:

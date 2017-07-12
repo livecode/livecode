@@ -2,7 +2,7 @@ Name: appleEvent
 
 Type: message
 
-Syntax: appleEvent <class>, <ID>, <sender>
+Syntax: appleEvent <pClass>, <pID>, <pSender>
 
 Summary:
 the <current card> whenever the <application> receives an <Apple event>.
@@ -26,17 +26,17 @@ on appleEvent theClass,theID
 end appleEvent
 
 Parameters:
-class:
+pClass:
 The class and ID together identify the exact Apple event that was
 received.The class parameter is the event class: possible classes
 include aevt (for required Apple Events such as "open document" and
 "print" ), misc (for miscellaneous events such as "do script" ), and
 others. 
 
-ID:
+pID:
 The ID parameter is the name of the specific Apple event.
 
-sender:
+pSender:
 The sender parameter is the address of the process that sent the Apple
 event. 
 

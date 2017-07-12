@@ -2,14 +2,13 @@ Name: errorDialog
 
 Type: message
 
-Syntax: errorDialog <executionError>, <parseError>
+Syntax: errorDialog <pExecutionError>, <pParseError>
 
 Summary:
 Sent to an <object(glossary)> when one of its <handler|handlers> cannot
 be run due to an <execution error>.
 
-Associations: stack, card, field, button, graphic, scrollbar, player,
-image
+Associations: stack
 
 Introduced: 1.0
 
@@ -24,16 +23,11 @@ on errorDialog pExecutionError, pParseError
 end errorDialog
 
 Parameters:
-executionError:
-The errorDialog message is sent with two parameters.
+pExecutionError: Describes the error that occurred in the form of a 
+standard LiveCode error backtrace: error-code,line-number,column-number[,
+hint] 
 
-    The executionError describes the error that occurred.
-
-
-parseError:
-Deprecated.The executionError parameter is a standard LiveCode error
-backtrace in the form: <error-code>,<line-number>,<column-number>[,
-<hint>] 
+pParseError: Deprecated
 
 Description:
 Handle the <errorDialog> <message> to prevent the standard error window
@@ -46,13 +40,12 @@ number in this custom property which contains the error description.
 
 You can look up the description of an error using this line of code:
 
-answer line (item 1 of line 1 of pExecutionError) of the cErrorsList of
-card 1 of stack "revErrorDisplay"
+    answer line (item 1 of line 1 of pExecutionError) of the scriptExecutionErrors
 
 >*Note:* The exact <format> of the <executionError> may change from
 > release to release.
 
-If the lockErrorDialogs <property> is true, the <errorDialog> <message>
+If the <lockErrorDialogs> <property> is true, the <errorDialog> <message>
 is sent to the <object(glossary)> that set the <lockErrorDialogs>.,
 rather than to the <object(glossary)> whose <script> contained the
 error. (The <lockErrorDialogs> can be set to true either by setting the
@@ -63,7 +56,7 @@ error. (The <lockErrorDialogs> can be set to true either by setting the
 > menu of LiveCode's menubar.
 
 Changes:
-The executionError parameter was introduced in version 1.1. In previous
+The <pExecutionError> parameter was introduced in version 1.1. In previous
 versions, this information was stored in the executionError property.
 
 References: lock error dialogs (command), unlock error dialogs (command),

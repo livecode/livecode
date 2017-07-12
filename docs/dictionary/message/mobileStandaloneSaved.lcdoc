@@ -2,7 +2,7 @@ Name: mobileStandaloneSaved
 
 Type: message
 
-Syntax: mobileStandaloneSaved <targetType>, <appBundle>
+Syntax: mobileStandaloneSaved <pTargetType>, <pAppBundle>
 
 Summary:
 Sent to the mainstack after it has been saved as a mobile standalone
@@ -29,13 +29,13 @@ on mobileStandaloneSaved pTarget, pFolder
 end mobileStandaloneSaved
 
 Parameters:
-targetType:
-targetType is either "simulator" or "device", depending on the type of
-build. 
+pTargetType (enum):
+- "simulator":
+- "device":
 
-appBundle:
-appBundle is a string variable containing the folder that the mobile
-standalone application was saved in. This is empty if the build failed.
+pAppBundle:
+A string variable containing the folder that the mobile standalone 
+application was saved in. This is empty if the build failed.
 
 Description:
 After a mobile stack has been saved as a standalone application it is

@@ -2,7 +2,7 @@ Name: newTool
 
 Type: message
 
-Syntax: newTool <toolName>
+Syntax: newTool <pToolName>
 
 Summary:
 Sent to the caller of <choose> when a different <tool> is chosen.
@@ -16,13 +16,13 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-on newTool newTool
-  if newTool is "Browse" then show stack "Editing Tools"
+on newTool pToolName
+  if pToolName is "Browse" then show stack "Editing Tools"
   else hide stack "Editing Tools"
 end newTool
 
 Parameters:
-toolName:
+pToolName:
 The name of the tool that has just been chosen.
 
 Description:

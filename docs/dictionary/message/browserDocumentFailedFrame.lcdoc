@@ -2,13 +2,11 @@ Name: browserDocumentFailedFrame
 
 Type: message
 
-Syntax: browserDocumentFailedFrame <instanceId>, <url>, <errorMessage>
+Syntax: browserDocumentFailedFrame <pInstanceId>, <pUrl>, <pErrorMessage>
 
 Summary:
 Sent when a browser object has encountered an error when loading a url
 in a frame
-
-Associations: card
 
 Introduced: 6.7.3
 
@@ -25,16 +23,14 @@ on browserDocumentFailedFrame pInstanceId, pUrl, pErrorMessage
 end browserDocumentFailedFrame
 
 Parameters:
-instanceId:
-The integer identifer of the browser object
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that has failed to load in a frame
 
-errorMessage:
-A message explaining why the url failed to load in the frame >*Note:*
-For general information on using the browser library, see the notes in
-the revBrowserOpen function reference.
+pErrorMessage:
+A message explaining why the url failed to load in the frame
 
 Description:
 The <browserDocumentFailedFrame> message is sent to the current card of

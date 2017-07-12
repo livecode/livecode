@@ -2,13 +2,15 @@ Name: optionKeyDown
 
 Type: message
 
-Syntax: optionKeyDown <keyName>
+Syntax: optionKeyDown <pKeyName>
 
 Summary:
 Sent when the user presses an <Option key>, <Meta key>, or <Alt key|Alt>
 <key combination>.
 
 Introduced: 1.0
+
+Associations: card, field
 
 OS: mac, windows, linux
 
@@ -20,7 +22,7 @@ on optionKeyDown theKey -- strip high bit
 end optionKeyDown
 
 Parameters:
-keyName:
+pKeyName:
 The actual character typed.
 
 Description:

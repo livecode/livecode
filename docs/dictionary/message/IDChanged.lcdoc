@@ -2,7 +2,7 @@ Name: IDChanged
 
 Type: message
 
-Syntax: IDChanged <oldID>, <newID>
+Syntax: IDChanged <pOldID>, <pNewID>
 
 Summary:
 Sent to an <image> when its <ID> <property> is changed.
@@ -22,10 +22,10 @@ on IDChanged prevID,currentID -- update ID stored in another object
 end IDChanged
 
 Parameters:
-oldID:
+pOldID:
 The image's original ID number.
 
-newID:
+pNewID:
 The image's new ID number.
 
 Description:

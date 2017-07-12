@@ -2,7 +2,7 @@ Name: standaloneSaved
 
 Type: message
 
-Syntax: standaloneSaved <folderSavedIn>
+Syntax: standaloneSaved <pFolderSavedIn>
 
 Summary:
 Sent to the mainstack after it has been saved as a standalone
@@ -29,8 +29,8 @@ on standaloneSaved pFolder
 end standaloneSaved
 
 Parameters:
-folderSavedIn:
-folderSavedIn is a string variable containing the folder that the
+pFolderSavedIn:
+A string variable containing the folder that the
 standalone application was saved in.
 
 Description:
