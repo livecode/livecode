@@ -8,4 +8,11 @@ public handler CanvasTestPixelHeight()
 	return the pixel height of tCanvas is 100
 end handler
 
+public handler CanvasTestImageFromResourceFile()
+	variable tImage as Image
+	put image from resource file "tiny.png" into tImage
+	
+	return not (the pixels of tImage is empty)
+end handler
+
 end library

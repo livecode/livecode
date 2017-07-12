@@ -17,7 +17,11 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-    load extension from file "../_tests/_build/lcs/core/engine/_canvas.lcm"
+    set the itemdelimiter to slash
+    local tFolder
+    put item 1 to -2 of the effective filename of me into tFolder
+
+    load extension from file tFolder & "/_canvas.lcm" with resource path tFolder
     if the result is not empty then
        throw "Failed to load test support extension:" && the result
     end if
@@ -27,3 +31,8 @@ on TestCanvasGetPixelHeight
 	TestAssert "canvas pixel height returned correctly", \
 		CanvasTestPixelHeight()
 end TestCanvasGetPixelHeight
+
+on TestCanvasImageFromResourceFile
+	TestAssert "canvas image from resource file not empty", \
+		CanvasTestImageFromResourceFile()
+end TestCanvasImageFromResourceFile
