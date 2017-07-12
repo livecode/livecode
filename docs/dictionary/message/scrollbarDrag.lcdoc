@@ -2,7 +2,7 @@ Name: scrollbarDrag
 
 Type: message
 
-Syntax: scrollbarDrag <>
+Syntax: scrollbarDrag <pNewPosition>
 
 Summary:
 Sent to a <field>, <scrollbar>, or <group> when the user drags the
