@@ -35,7 +35,7 @@ Returns:
 The <keys> <function> returns a list of <keys>, one per <line>.
 >*Note:*  The order of the <keys> is not alphabetical or chronological;
 > it is based on the internal order. To obtain an alphabetical list of
-> <keys>, use the <sort command>:
+> <keys>, use the <sort> <command>:
 
     put the keys of myArray into myVariable
     sort lines of myVariable
@@ -52,7 +52,7 @@ Description:
 Use the <keys> function to manage the elements of an <array>, or to
 perform some action on each <element> in an <array>.
 
-References: combine (command), split (command), sort command (command),
+References: combine (command), split (command), sort (command), command (glossary),
 function (control structure), arrayEncode (function),
 transpose (function), extents (function), keys (function),
 array variable (glossary), array (glossary), line (keyword),

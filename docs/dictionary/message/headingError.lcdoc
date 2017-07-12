@@ -5,7 +5,7 @@ Type: message
 Syntax: headingError
 
 Summary:
-Deprecated, use the trackingError message instead.
+Deprecated, use the <trackingError> message instead.
 
 Introduced: 4.6.1
 

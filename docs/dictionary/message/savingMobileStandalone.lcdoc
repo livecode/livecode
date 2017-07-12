@@ -2,7 +2,7 @@ Name: savingMobileStandalone
 
 Type: message
 
-Syntax: savingMobileStandalone <targetType>, <appBundle>
+Syntax: savingMobileStandalone <pTargetType>, <pAppBundle>
 
 Summary:
 Sent to the mainstack when a mobile standalone application is being
@@ -28,19 +28,13 @@ on savingMobileStandalone pTarget, pFolder
 end savingMobileStandalone
 
 Parameters:
-targetType:
-targetType is either "simulator" or "device", depending on the type of
-build. 
+pTargetType (enum):
+- "simulator":
+- "device":
 
-appBundle:
-appBundle is a string variable containing the folder that the mobile
-standalone application was saved in. >*Note:* Modifications made when
-you handle this message are not saved in the original stack file. They
-are only seen in the standalone application. If you make changes to the
-stack in savingMobileStandalone that you want to appear in the built
-application, you must save the stack before returning from the handler.
-The mobile standalone builder uses the stack file as it is on disk after
-return from the message to build the app.
+pAppBundle:
+A string variable containing the folder that the mobile standalone 
+application was saved in.
 
 Description:
 When a mobile stack is saved as a standalone application it is removed

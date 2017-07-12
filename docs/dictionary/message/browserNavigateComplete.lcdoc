@@ -4,14 +4,12 @@ Synonyms: xbrowser_navigatecomplete
 
 Type: message
 
-Syntax: browserNavigateComplete <instanceId>, <url>
+Syntax: browserNavigateComplete <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_NavigateComplete <url>, <instanceId>
+Syntax: XBrowser_NavigateComplete <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser has finished navigating to a url.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,12 +25,10 @@ on browserNavigateComplete pInstanceId, pUrl
 end browserNavigateComplete
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that the browser finished navigating to
 
 Description:
@@ -42,13 +38,13 @@ navigating to a new url and has starting loading the url.
 
 If the target is the main frame of the browser (e.g. the html page
 containing the "FRAMESET" declaration), then the browserNavigateComplete
-message is sent. Otherwise the <browserNavigateCompleteFrame message> is
+message is sent. Otherwise the <browserNavigateCompleteFrame> <message> is
 sent instead.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserNavigate (command),
-revBrowserOpen function (function),
-browserNavigateCompleteFrame message (message)
+revBrowserOpen (function), function (glossary),
+browserNavigateCompleteFrame (message), message (glossary)
 

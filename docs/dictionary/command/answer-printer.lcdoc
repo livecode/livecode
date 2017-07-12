@@ -34,9 +34,9 @@ printing options for later printing.
 The <answer printer> <command> displays a <dialog box> where the user
 can set certain print-related <properties>.
 
-If the <systemPrintSelector property> is false or the system does not
+If the <systemPrintSelector> <property> is false or the system does not
 support native print dialogs a stack named "Printer Dialog" will be
-used. If the <systemPrintSelector property> is true then a dialog will
+used. If the <systemPrintSelector> <property> is true then a dialog will
 be displayed by the operating system, in this case the exact options are
 determined by the printer driver and the operating system.
 
@@ -49,7 +49,7 @@ open printing (command), answer (command), revShowPrintDialog (command),
 command (glossary), dialog box (glossary), printerFeatures (property),
 printCopies (property), printPaperOrientation (property),
 printerSettings (property), properties (property),
-printPaperSize (property), systemPrintSelector property (property),
+printPaperSize (property), property (glossary),
 availablePrinters (property), printerOutput (property),
 printPaperScale (property), systemPrintSelector (property),
 printRotated (property), printPaperRectangle (property),

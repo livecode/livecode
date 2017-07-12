@@ -53,7 +53,7 @@ However, you can set the <hilitedLine> of the field even if the
 <field(object)|field's> <autoHilite> is false.
 
 >*Note:* Setting the <listBehavior> of a field to true will
-> automatically set the field's <dontWrap property> to true, as a list
+> automatically set the field's <dontWrap> <property> to true, as a list
 > field cannot have text wrapping. Setting the <dontWrap> of a list
 > field to false has no effect.
 

@@ -7,7 +7,7 @@ Syntax: focusOut
 Summary:
 Sent to a <button> or <field> when it becomes inactive (loses <focus>).
 
-Associations: button,field
+Associations: button, field
 
 Introduced: 1.0
 

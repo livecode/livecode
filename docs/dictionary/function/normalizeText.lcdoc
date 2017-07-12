@@ -52,11 +52,11 @@ contains a number of characters that will (in the majority of fonts) be
 indistinguishable but are nonetheless completely different characters (a
 prime example of this is M and U+2164 ROMAN NUMERAL ONE THOUSAND).
 
-Unless the <formSensitive property> is set to true, LiveCode ignores
+Unless the <formSensitive> <property> is set to true, LiveCode ignores
 text normalization when performing comparisons.
 
 References: textDecode (function), textEncode (function),
-formSensitive property (property), formSensitive (property)
+property (glossary), formSensitive (property)
 
 Tags: text processing
 

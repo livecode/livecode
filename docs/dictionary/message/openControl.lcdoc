@@ -27,10 +27,10 @@ Description:
 Handle the <openControl> message to change a group's objects or perform
 other updates, when a card with the group on is visited.
 
-For groups with their <backgroundBehavior property> set to true, the
+For groups with their <backgroundBehavior> <property> set to true, the
 <openControl> message is sent immediately after the <openBackground
 message> is sent to the card being opened. For non-background groups, it
-is sent after the <openCard message>.
+is sent after the <openCard> <message>.
 
 For nested groups, the <openControl> message is sent to the parent group
 first, if it is passed or not handled by the parent group, then it
@@ -39,6 +39,6 @@ to lowest).
 
 References: preOpenBackground (message), openCard (message),
 openBackground message (message), preOpenControl (message),
-closeControl (message), openCard message (message), group (object),
-background group (property), backgroundBehavior property (property)
+closeControl (message), message (glossary), group (object),
+background group (property), backgroundBehavior (property), property (glossary)
 

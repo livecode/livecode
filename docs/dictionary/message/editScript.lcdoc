@@ -2,7 +2,7 @@ Name: editScript
 
 Type: message
 
-Syntax: editScript <objectID>, <atItems>
+Syntax: editScript <pObjectID>, <pAtItems>
 
 Summary:
 Sent to the <current card> when the <object|object's> <script> is opened
@@ -23,12 +23,12 @@ on editScript theObject -- save current script before editing
 end editScript
 
 Parameters:
-objectID:
+pObjectID:
 The long ID property of the object whose script is about to be opened.
 
-atItems:
-The atItems parameter may be sent if the optional edit script of object
-at syntax is used. By convention the atItems are used to provide a line
+pAtItems:
+The pAtItems parameter may be sent if the optional edit script of object
+at syntax is used. By convention the pAtItems are used to provide a line
 and column that a script editor should be opened at.
 
 Description:

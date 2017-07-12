@@ -29,7 +29,7 @@ speechProvider:
 The result:
 This command will not return anything in the result. If
 the specified speech provider cannot be loaded then the 
-<revUnloadSpeech command> will return "sperr, unable to load speech 
+<revUnloadSpeech> <command> will return "sperr, unable to load speech 
 provider" in the <result>.
 
 Description:

@@ -2,10 +2,10 @@ Name: playerPropertyAvailable
 
 Type: message
 
-Syntax: playerPropertyAvailable <propertyName>
+Syntax: playerPropertyAvailable <pPropertyName>
 
 Summary:
-Sent when sufficient information about a given <propertyName> has become
+Sent when sufficient information about a given property has become
 available. 
 
 Introduced: 4.6
@@ -22,17 +22,13 @@ on playerPropertyAvailable theProperty
 end playerPropertyAvailable
 
 Parameters:
-propertyName (enum):
-The name of the property that has become available. These properties can
-be: 
-
--   "duration": The duration of the movie, measured in milliseconds.
--   "naturalSize": The raw size of a video frame in pixels.
-
+pPropertyName (enum): The name of the property that has become available.
+- "duration": The duration of the movie, measured in milliseconds.
+- "naturalSize": The raw size of a video frame in pixels.
 
 Description:
 Handle the <playerPropertyAvailable> message when sufficient information
-about a given player <propertyName> has become available so that
+about a given player property has become available so that
 information about that property can be accessed.
 
 References: playerFinished (message), playerError (message),

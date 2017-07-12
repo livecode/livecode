@@ -2,7 +2,7 @@ Name: socketError
 
 Type: message
 
-Syntax: socketError <socketID>, <errorString>
+Syntax: socketError <pSocketID>, <pErrorString>
 
 Summary:
 Sent when an <error> occurs on a <socket> that causes the <socket> to
@@ -26,7 +26,7 @@ on socketError theID, theError
 end socketError
 
 Parameters:
-socketID:
+pSocketID:
 The identifier (set when you opened the socket) of the socket which had
 an error. The socket identifier starts with the IP address of the host
 the socket is connected to, and may optionally include a port number
@@ -35,7 +35,7 @@ socket connected to that host and port, you can specify which socket by
 appending the connection name or number that was assigned when the
 socket was opened, separated from the port number by a vertical bar (|).
 
-errorString (string):
+pErrorString (string):
 A description of the socket error.
 
 Description:

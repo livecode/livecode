@@ -4,14 +4,12 @@ Synonyms: xbrowser_documentcomplete
 
 Type: message
 
-Syntax: browserDocumentComplete <instanceId>, <url>
+Syntax: browserDocumentComplete <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_DocumentComplete <url>, <instanceId>
+Syntax: XBrowser_DocumentComplete <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser object has finished loading a url
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,12 +25,10 @@ on browserDocumentComplete pInstanceId, pUrl
 end browserDocumentComplete
 
 Parameters:
-instanceId:
-The integer identifer of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that has finished loading
 
 Description:
@@ -42,13 +38,13 @@ loading a url and all its dependent resources.
 
 If the target is the main frame of the browser (e.g. the html page with
 the "FRAMESET" declaration), then the <browserDocumentComplete> message
-is sent. Otherwise the <browserDocumentCompleteFrame message> is sent
+is sent. Otherwise the <browserDocumentCompleteFrame> <message> is sent
 instead. 
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function),
+References: revBrowserOpen (function), function (glossary),
 browserDownloadRequest (message),
-browserDocumentCompleteFrame message (message)
+browserDocumentCompleteFrame (message), message (glossary)
 

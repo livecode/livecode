@@ -39,10 +39,10 @@ complete.
 > complete. 
 
 As a result, the <mobileGetDeviceToken> function should be called when
-you handle the <pushNotificationRegistered message>.
+you handle the <pushNotificationRegistered> <message>.
 
 References: pushNotificationRegistrationError (message),
 pushNotificationRegistered (message),
-pushNotificationRegistered message (message),
+message (glossary),
 pushNotificationReceived (message)
 

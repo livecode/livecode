@@ -2,7 +2,7 @@ Name: mouseUp
 
 Type: message
 
-Syntax: mouseUp <mouseButtonNumber>
+Syntax: mouseUp <pButtonNumber>
 
 Summary:
 Sent when the user releases the <mouse button>.
@@ -22,15 +22,10 @@ on mouseUp
 end mouseUp
 
 Parameters:
-mouseButtonNumber (enum):
-The mouseButtonNumber specifies which mouse button was pressed:
-
--  1 is the mouse button on Mac OS systems and the left button on
-   Windows and Unix systems.
--  2 is the middle button on Unix systems.
--  3 is the right button on Windows and Unix systems and Control-click
-   on Mac OS systems.
-
+pButtonNumber (enum): Specifies which mouse button was pressed:
+- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+- "2": the middle button on Unix systems.
+- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
 
 Description:
 Handle the <mouseUp> <message> to perform an action when the user
@@ -57,13 +52,11 @@ click, the <mouseDoubleUp> message is sent instead of <mouseUp>.
 > further in the <message path>, to re-send double clicks:
 
     on mouseDoubleUp
-    if "on mouseUp" is in the script of the target \
-
-    and "on mouseDoubleUp" is not in the script of the target
-    then send "mouseUp: to the target
-
+       if "on mouseUp" is in the script of the target \
+          and "on mouseDoubleUp" is not in the script of the target then 
+          send "mouseUp" to the target
+       end if
     end mouseDoubleUp
-
 
 If the user double-clicks an object whose script contains a <mouseUp>
 <handler> but no <mouseDoubleUp>, the above <handler> will automatically

@@ -2,7 +2,7 @@ Name: scrollbarLineInc
 
 Type: message
 
-Syntax: scrollbarLineInc <newPosition>
+Syntax: scrollbarLineInc <pNewPosition>
 
 Summary:
 Sent to a <scrollbar> when the user clicks the increase arrow, scrolling
@@ -22,7 +22,7 @@ on scrollbarLineInc theCard -- use a scrollbar to navigate through cards
 end scrollbarLineInc
 
 Parameters:
-newPosition:
+pNewPosition:
 The new position of the scrollbar thumb.
 
 Description:

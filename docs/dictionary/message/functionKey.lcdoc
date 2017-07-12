@@ -2,10 +2,12 @@ Name: functionKey
 
 Type: message
 
-Syntax: functionKey <keyNumber>
+Syntax: functionKey <pKeyNumber>
 
 Summary:
 Sent when the user presses a function key.
+
+Associations: card, field
 
 Introduced: 1.0
 
@@ -20,7 +22,7 @@ on functionKey theKey
 end functionKey
 
 Parameters:
-keyNumber:
+pKeyNumber:
 The number of the function key.
 
 Description:
