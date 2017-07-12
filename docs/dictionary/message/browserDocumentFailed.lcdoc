@@ -23,7 +23,7 @@ end browserDocumentFailed
 
 Parameters:
 pInstanceId:
-The integer identifer of the browser object
+The integer identifier of the browser object
 
 pUrl:
 The url that has failed to load

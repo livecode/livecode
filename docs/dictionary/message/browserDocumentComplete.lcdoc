@@ -26,7 +26,7 @@ end browserDocumentComplete
 
 Parameters:
 pInstanceId:
-The integer identifer of the browser object
+The integer identifier of the browser object
 
 pUrl:
 The url that has finished loading
