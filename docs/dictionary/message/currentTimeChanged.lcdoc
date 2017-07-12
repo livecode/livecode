@@ -2,7 +2,7 @@ Name: currentTimeChanged
 
 Type: message
 
-Syntax: currentTimeChanged <newTime>
+Syntax: currentTimeChanged <pNewTime>
 
 Summary:
 Sent to a <player> when the user switches to another <frame>.
@@ -21,7 +21,7 @@ on currentTimeChanged theInterval -- display the time in a field
 end currentTimeChanged
 
 Parameters:
-newTime:
+pNewTime:
 The number of the interval where the player is after the change.
 
 Description:
@@ -42,8 +42,8 @@ triggered by the <currentTimeChanged> <message>, so <trap|trapping> the
 changing the <player(object)|player's> current time manually.
 
 Changes:
-The newTime parameter was introduced in version 2.0. In previous
-versions, the currentTimeChanged message did not have a parameter.
+The <pNewTime> parameter was introduced in version 2.0. In previous
+versions, the <currentTimeChanged> message did not have a parameter.
 
 References: pass (control structure), property (glossary),
 player (glossary), message (glossary), frame (glossary), trap (glossary),

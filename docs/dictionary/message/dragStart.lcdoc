@@ -8,8 +8,7 @@ Summary:
 Sent to a control when the user clicked on it and then started to drag
 the mouse pointer.
 
-Associations: stack, card, field, button, graphic, scrollbar, player,
-image
+Associations: field, button, graphic, scrollbar, player, image
 
 Introduced: 2.0
 

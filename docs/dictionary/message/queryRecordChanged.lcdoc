@@ -2,7 +2,7 @@ Name: queryRecordChanged
 
 Type: message
 
-Syntax: queryRecordChanged <objectName>
+Syntax: queryRecordChanged <pObjectName>
 
 Summary:
 Sent to the current card of a stack containing a query object when that
@@ -24,24 +24,25 @@ on queryRecordChanged pObjectName
 end queryRecordChanged
 
 Parameters:
-objectName:
-The name of the query object that was updated e.g. "Query 1". The
-queryRecordChanged message is sent after the query has finished
-updating, but before any changes are displayed on screen. It can be sent
-when any of following events occur: - The current record number changes
-
-- The query is connected (typically on preOpenCard) - The query is
-  disconnected (typically on closeCard) - The query is modified in the
-  Query Builder - The user clicks a button that has been set to refresh
-  the query. The queryRecordChanged message is only sent to stacks that
-  contain query objects. For more information about query objects and
-  how to create and use them see section 8.5 of the LiveCode User's
-  Guide. 
-
+pObjectName:
+The name of the query object that was updated e.g. "Query 1".
 
 Description:
 Use the <queryRecordChanged> message to update controls on a card in
 response to a query object being updated.
+
+The <queryRecordChanged> message is sent after the query has finished
+updating, but before any changes are displayed on screen. It can be sent
+when any of following events occur: 
+- The current record number changes
+- The query is connected (typically on preOpenCard) 
+- The query is disconnected (typically on closeCard) 
+- The query is modified in the Query Builder 
+- The user clicks a button that has been set to refresh 
+  the query. The queryRecordChanged message is only sent to stacks that
+  contain query objects. For more information about query objects and
+  how to create and use them see section 8.5 of the LiveCode User's
+  Guide. 
 
 References: revBrowserSet (command), revBrowserNavigate (command),
 browserDownloadRequest (message)

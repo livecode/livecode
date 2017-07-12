@@ -2,7 +2,7 @@ Name: rawKeyDown
 
 Type: message
 
-Syntax: rawKeyDown <keyCode>
+Syntax: rawKeyDown <pKeyCode>
 
 Summary:
 Sent when the user presses any key.
@@ -23,7 +23,7 @@ on rawKeyDown theKeyNumber
 end rawKeyDown
 
 Parameters:
-keyCode:
+pKeyCode:
 The raw keycode of the pressed key.
 
 The result:

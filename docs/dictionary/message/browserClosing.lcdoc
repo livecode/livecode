@@ -4,14 +4,12 @@ Synonyms: xbrowser_closing
 
 Type: message
 
-Syntax: browserClosing <instanceId>
+Syntax: browserClosing <pInstanceId>
 
-Syntax: XBrowser_Closing <instanceId>
+Syntax: XBrowser_Closing <pInstanceId>
 
 Summary:
 Sent when a browser instance is closing
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,10 +25,8 @@ on browserClosing pInstanceId
 end browserClosing
 
 Parameters:
-instanceId:
-The integer identifier of the browser object about to close >*Note:* For
-general information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object about to close 
 
 Description:
 The <browserClosing> message is sent to the current card of a stack

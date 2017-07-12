@@ -2,7 +2,7 @@ Name: scrollbarBeginning
 
 Type: message
 
-Syntax: scrollbarBeginning <start>
+Syntax: scrollbarBeginning <pStart>
 
 Summary:
 Sent to a <scrollbar> when the user Shift-clicks its decrease arrow.
@@ -22,9 +22,9 @@ on scrollbarBeginning theStartValue
 end scrollbarBeginning
 
 Parameters:
-start:
+pStart:
 The new position of the scrollbar thumb. This is the same as the
-scrollbar's startValue property.
+scrollbar's <startValue> property.
 
 Description:
 Handle the <scrollbarBeginning> <message> if you want to respond to the

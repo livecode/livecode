@@ -2,7 +2,7 @@ Name: purchaseStateUpdate
 
 Type: message
 
-Syntax: purchaseStateUpdate <purchaseID>, <productID>, <state>
+Syntax: purchaseStateUpdate <pPurchaseID>, <pProductID>, <pState>
 
 Summary:
 Sent by the store to notify the app of any changes in state to the
@@ -50,32 +50,22 @@ on purchaseStateUpdate pPurchaseID, pProductID, pState
 end purchaseStateUpdate
 
 Parameters:
-purchaseID:
+pPurchaseID:
 The identifier of the purchase request
 
-productID:
+pProductID:
 The product identifier for which the purchase request was made
 
-state (enum):
-The state of the purchase request :
-
+pState (enum): The state of the purchase request
 -   "initialized": the purchase request has been created but not sent
 -   "sendingRequest": the purchase request is being sent to the store
--   "paymentReceived": the requested item has been paid for. The item
-    should now be delivered to the user and confirmed via the
-    mobileStoreConfirmPurchase command
--   "alreadyEntitled": the requested product is already owned and cannot
-    be purchased again
+-   "paymentReceived": the requested item has been paid for. The item should now be delivered to the user and confirmed via the <mobileStoreConfirmPurchase> command
+-   "alreadyEntitled": the requested product is already owned and cannot be purchased again
 -   "invalidSKU": the requested item does not exist in the store listing
 -   "complete": the purchase has now been paid for and delivered
--   "restored": the purchase has been restored after a call to
-    mobileStoreRestorePurchases. The purchase should now be delivered to
-    the user and confirmed via the mobileStoreConfirmPurchase command
--   "cancelled": the purchase was cancelled by the user before payment
-    was received
--   "error": an error occurred during the payment request. More detailed
-    information is available from the mobileStorePurchaseError function
-
+-   "restored": the purchase has been restored after a call to <mobileStoreRestorePurchases>. The purchase should now be delivered to the user and confirmed via the <mobileStoreConfirmPurchase> command
+-   "cancelled": the purchase was cancelled by the user before payment was received
+-   "error": an error occurred during the payment request. More detailed information is available from the <mobileStorePurchaseError> function
 
 Description:
 Use the <purchaseStateUpdate> message to notify the app of any changes

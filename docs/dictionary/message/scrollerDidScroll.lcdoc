@@ -2,7 +2,7 @@ Name: scrollerDidScroll
 
 Type: message
 
-Syntax: scrollerDidScroll <hScroll>, <vScroll>
+Syntax: scrollerDidScroll <pHScroll>, <pVScroll>
 
 Summary:
 Sent when the properties of a scroller have changed.
@@ -20,10 +20,10 @@ on scrollerDidScroll pHScroll, pVScroll
 end scrollerDidScroll
 
 Parameters:
-hScroll:
+pHScroll:
 The horizontal scroll of an iOS scroller control.
 
-vScroll:
+pVScroll:
 The vertical scroll of an iOS scroller control.
 
 Description:

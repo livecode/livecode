@@ -9,6 +9,8 @@ Sent when the user presses the Tab key.
 
 Introduced: 1.0
 
+Associations: card, field
+
 OS: mac, windows, linux
 
 Platforms: desktop

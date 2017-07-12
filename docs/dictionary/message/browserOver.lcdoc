@@ -4,14 +4,12 @@ Synonyms: xbrowser_over
 
 Type: message
 
-Syntax: browserOver <instanceId>, <elementId>
+Syntax: browserOver <pInstanceId>, <pElementId>
 
-Syntax: XBrowser_Over <elementId>, <instanceId>
+Syntax: XBrowser_Over <pElementId>, <pInstanceId>
 
 Summary:
 Sent when the mouse moves over a named html element in a browser
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,23 +25,11 @@ on browserOver pInstanceId, pElementId
 end browserOver
 
 Parameters:
-instanceId:
+pInstanceId:
 The integer identifier of a brower object
 
-elementId:
-The id of the html element that the mouse is moving over >*Note:* The
-browserOver message is only sent if advanced browser messages are turned
-on. To turn on advanced browser messages use the following command:
-revBrowserSet <instanceId>, "messages", "true" >*Note:* The browserOver
-message is supported on Windows and OS X systems later than 10.4. On
-older OS X systems the message is not sent due to lack of system support
-from the underlying browser object.The id of an html element is the
-element's "id" attribute. For example <div id="navbar">. As this
-attribute is optional in most cases, not all html elements will have an
-id. If the html element that the mouse is over does not have an id, then
-the elementId parameter will be empty. >*Note:* For general information
-on using the browser library, see the notes in the revBrowserOpen
-function reference.
+pElementId:
+The id of the html element that the mouse is moving over
 
 Description:
 The <browserOver> message is sent to the current card of a stack
@@ -54,7 +40,7 @@ with an "id" attribute in the browser.
 > messages are turned on. To turn on advanced browser messages use the
 > following command:
 
-<revBrowserSet> &lt;instanceId&gt;, "messages", "true"
+    revBrowserSet tInstanceId, "messages", "true"
 
 >*Note:* The <browserOver> message is supported on Windows and OS X
 > systems later than 10.4. On older OS X systems the message is not sent

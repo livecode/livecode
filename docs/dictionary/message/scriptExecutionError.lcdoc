@@ -2,7 +2,7 @@ Name: scriptExecutionError
 
 Type: message
 
-Syntax: scriptExecutionError <pErrorStack>, <pFIlesList>
+Syntax: scriptExecutionError <pErrorStack>, <pFilesList>
 
 Summary:
 The <scriptExecutionError> message is sent to the global script (home
@@ -24,7 +24,7 @@ pErrorStack:
 The standard engine error stack listing, detailing the errors that
 occurred at each stage of the stack being unwound.
 
-pFIlesList:
+pFilesList:
 The list of all files that have been 'included' / 'required' which the
 error stack references if an error occurred in the context of a file
 script rather then an object script.

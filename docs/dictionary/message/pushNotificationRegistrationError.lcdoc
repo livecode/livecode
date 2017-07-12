@@ -2,7 +2,7 @@ Name: pushNotificationRegistrationError
 
 Type: message
 
-Syntax: pushNotificationRegistrationError <errorMessage>
+Syntax: pushNotificationRegistrationError <pErrorMessage>
 
 Summary:
 Sent when the application fails to register to receive Push
@@ -23,7 +23,7 @@ on pushNotificationRegistrationError tMessage
 end pushNotificationRegistrationError
 
 Parameters:
-errorMessage:
+pErrorMessage:
 The description of the Error Message.
 
 Description:

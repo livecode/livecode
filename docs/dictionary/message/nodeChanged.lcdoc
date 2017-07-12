@@ -2,7 +2,7 @@ Name: nodeChanged
 
 Type: message
 
-Syntax: nodeChanged <newNodeID>
+Syntax: nodeChanged <pNewNodeID>
 
 Summary:
 Sent to a <player> containing a <QuickTime VR> movie when the current
@@ -22,7 +22,7 @@ on nodeChanged theNode -- show some text from a custom property
 end nodeChanged
 
 Parameters:
-newNodeID:
+pNewNodeID:
 The ID of the QuickTime VR node being moved to.
 
 Description:

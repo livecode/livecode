@@ -4,14 +4,12 @@ Synonyms: xbrowser_navigatecompleteframe
 
 Type: message
 
-Syntax: browserNavigateCompleteFrame <instanceId>, <url>
+Syntax: browserNavigateCompleteFrame <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_NavigateCompleteFrame <url>, <instanceId>
+Syntax: XBrowser_NavigateCompleteFrame <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser object has finished navigating to a url in a frame.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,16 +25,14 @@ on browserNavigateCompleteFrame pInstanceId, pUrl
 end browserNavigateCompleteFrame
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that the browser has finished navigating to in a frame
 
 Description:
-The browserNavigateCompleteFrame message is sent to the current card of
+The <browserNavigateCompleteFrame> message is sent to the current card of
 stack containing a browser object when the browser object has finished
 navigating to a new url in a frame and starting loading the url.
 

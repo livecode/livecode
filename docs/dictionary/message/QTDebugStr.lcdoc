@@ -2,7 +2,7 @@ Name: qtDebugStr
 
 Type: message
 
-Syntax: qtDebugStr <string>
+Syntax: qtDebugStr <pString>
 
 Summary:
 Sent to a <player> containing a <QuickTime> movie when the movie
@@ -22,7 +22,7 @@ on qtDebugStr myMessage
 end qtDebugStr
 
 Parameters:
-string (string):
+pString (string):
 The QuickTime parameter the movie passed to LiveCode when it performed
 the "DebugStr" action.
 

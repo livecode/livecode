@@ -2,7 +2,7 @@ Name: productDetailsReceived
 
 Type: message
 
-Syntax: productDetailsReceived <productID>, <details>
+Syntax: productDetailsReceived <pProductID>, <pDetails>
 
 Summary:
 Sent by the store when the request for specific product details is
@@ -26,14 +26,13 @@ on productDetailsReceived pProdID, pDetails
 end productDetailsReceived
 
 Parameters:
-productID:
+pProductID:
 The identifier of the product for which the request for details was
 made. 
 
-details (array):
+pDetails (array):
 An array that contains information about the specified product. The keys
 of this array may differ, depending on the store.
-
 
 Description:
 Use the <productDetailsReceived> message to get details for a specific
@@ -41,12 +40,12 @@ product.
 
 The message <productDetailsReceived> is sent in response to
 <mobileStoreRequestProductDetails> command, when the request is
-successful. The details are returned in the second parameter, <details>,
+successful. The details are returned in the second parameter, <pDetails>,
 which is an array with the following keys:
 
 For android stores (Google/Amazon/Samsung), the keys are : 
 
-- <productID> : identifier of the requested product
+- <pProductID> : identifier of the requested product
 - price : price of the requested product
 - description : description of the requested product
 - title : title of the requested product

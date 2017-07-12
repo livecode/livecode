@@ -9,6 +9,8 @@ Sent to a <control(glossary)> right after the user resizes it.
 
 Introduced: 1.0
 
+Associations: field, button, graphic, scrollbar, player, image
+
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile
