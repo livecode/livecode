@@ -7,6 +7,9 @@ Syntax: mouseStillDown <mouseButtonNumber>
 Summary:
 Sent periodically while the <mouse button> is being held down.
 
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android, html5

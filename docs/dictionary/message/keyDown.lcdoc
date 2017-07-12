@@ -7,6 +7,8 @@ Syntax: keyDown <keyName>
 Summary:
 Sent when the user presses a key.
 
+Associations: card,field
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android

@@ -8,6 +8,8 @@ Summary:
 Sent to the <active (focused) control(glossary)>, or to the <current
 card> if there is no <active control>.
 
+Associations: card,field
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android
