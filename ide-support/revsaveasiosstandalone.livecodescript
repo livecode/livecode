@@ -618,14 +618,19 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       put revGetMobileProfileInfo(pSettings["ios,profile"]) into tProfileInfo
       
       -- Get the list of valid identities that are available
-      local tValidIdentities
+      local tValidIdentities,tValidIdentitiesHEX
       get shell("/usr/bin/security -q find-identity -v")
       if the last line of it contains "valid identities found" then
          delete the last line of it
+         -- "it" now is of the form:
+         -- 1) Certificate1IdHEX "Certificate1NameString"
+         -- 2) Certificate2IdHEX "Certificate2NameString"
          repeat for each line tIdentity in it
             put char 2 to -2 of the last word of tIdentity & return after tValidIdentities
+            put char 1 to -1 of the second word of tIdentity & return after tValidIdentitiesHEX
          end repeat
          delete the last char of tValidIdentities
+         delete the last char of tValidIdentitiesHEX
       else
          put empty into tValidIdentities
       end if
@@ -634,7 +639,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       put empty into tCertificate
       repeat for each line tIdentity in tProfileInfo["identities"]
          if tIdentity is among the lines of tValidIdentities then
-            put tIdentity into tCertificate
+            local tFound
+            put lineoffset(tIdentity,tValidIdentities) into tFound
+            put line tFound of tValidIdentitiesHEX into tCertificate
             exit repeat
          end if
       end repeat
