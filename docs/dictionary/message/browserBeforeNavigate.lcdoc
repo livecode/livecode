@@ -4,14 +4,12 @@ Synonyms: xbrowser_beforenavigate
 
 Type: message
 
-Syntax: browserBeforeNavigate <instanceId>, <url>
+Syntax: browserBeforeNavigate <pInstanceID>, <pUrl>
 
-Syntax: XBrowser_BeforeNavigate <url>, <instanceId>
+Syntax: XBrowser_BeforeNavigate <pUrl>, <pInstanceId>
 
 Summary:
 Sent before a browser navigates to a new url.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -28,13 +26,11 @@ on browserBeforeNavigate pInstanceId, pUrl
 end browserBeforeNavigate
 
 Parameters:
-instanceId:
-instanceId : the integer identifier of a browser object >*Note:* For
-general information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceID:
+The integer identifier of a browser object
 
-url:
-url : The new url that the browser is about to navigate to
+pUrl:
+The new url that the browser is about to navigate to
 
 Description:
 The <browserBeforeNavigate> message is sent to a the current card of the
@@ -44,18 +40,18 @@ requested but not yet actioned.
 
 If the target is the main frame of the browser (e.g. the html page
 containing the "FRAMESET" declaration), then the <browserBeforeNavigate>
-message is sent, otherwise the <browserBeforeNavigateFrame message> is
+message is sent, otherwise the <browserBeforeNavigateFrame> <message> is
 sent instead
 
 To prevent the navigatation from occurring, set the global variable
 <browserCancel> to true.
 
 >*Note:* For general information on using the browser library, see the
-> notes in the <revBrowserOpen function> reference.
+> notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserNavigate (command),
-revBrowserOpen function (function), browserCancel (glossary),
+revBrowserOpen (function), function (glossary), browserCancel (glossary),
 browserNewUrlWindow (message), browserDownloadRequest (message),
 browserBeforeNavigateFrame (message),
-browserBeforeNavigateFrame message (message)
+message (glossary)
 

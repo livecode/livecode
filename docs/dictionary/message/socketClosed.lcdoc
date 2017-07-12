@@ -2,7 +2,7 @@ Name: socketClosed
 
 Type: message
 
-Syntax: socketClosed <socketID>
+Syntax: socketClosed <pSocketID>
 
 Summary:
 Sent when the remote system closes a <socket>.
@@ -24,7 +24,7 @@ on socketClosed theID -- close a progress window for the socket
 end socketClosed
 
 Parameters:
-socketID:
+pSocketID:
 The identifier (set when you opened the socket) of the socket that's
 just been closed. The socket identifier starts with the IP address of
 the host the socket is connected to, and may optionally include a port

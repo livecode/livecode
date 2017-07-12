@@ -47,7 +47,7 @@ evaluates to true or false. Similarly, the <wordOffset> and <itemOffset>
 <function|functions> operate similarly to the <is among> <operator> if
 the <wholeMatches> <property> is true.
 
-Since the <wholeMatches> is a <local property>, its <value> is <reset>
+Since the <wholeMatches> is a <local> <property>, its <value> is <reset>
 to false when the current <handler> finishes <execute|executing>. It
 retains its <value> only for the current <handler>, and setting it in
 one <handler> does not affect its value in other <handler|handlers> it

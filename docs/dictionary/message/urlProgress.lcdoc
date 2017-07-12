@@ -2,7 +2,7 @@ Name: urlProgress
 
 Type: message
 
-Syntax: urlProgress <url>, <status>, [<message>, [<bytesTotal>]]
+Syntax: urlProgress <pUrl>, <pStatus>, [<pMessage>, [<pBytesTotal>]]
 
 Summary:
 Sent when updates on ongoing url requests are communicated.
@@ -28,12 +28,10 @@ on urlProgress pUrl, pStatus, pMessage
 end urlProgress
 
 Parameters:
-url:
+pUrl:
 The name of the url for which a message is being sent.
 
-status (enum):
-The type of update message being sent. One of:
-
+pStatus (enum): The type of update message being sent
 -   "contacted": The server has been contacted.
 -   "requested": A request was made to the URL.
 -   "loading": Data is being downloaded.
@@ -42,16 +40,11 @@ The type of update message being sent. One of:
 -   "uploaded": Data has finished uploading.
 -   "error": An error occurred.
 
-
-message (enum):
-A message sent with some of the status parameters. One of:
-
--   "bytesReceived": Sent when the status parameter is either 'loading'
-    or 'uploading'.
+pMessage (enum):A message sent with some of the status parameters
+-   "bytesReceived": Sent when the status parameter is either 'loading' or 'uploading'.
 -   "erroMessage": Sent when the status parameter is 'error'.
 
-
-bytesTotal:
+pBytesTotal:
 Empty if the web server does not send the total data size.
 
 Description:

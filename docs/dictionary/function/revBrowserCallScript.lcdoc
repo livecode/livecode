@@ -50,18 +50,18 @@ function is not found or calling it is not successful, then an
 >*Note:* that the arguments passed to the function are internally
 > treated as NULL-terminated strings. This means that binary data cannot
 > be passed, it must first be encoded somehow. This is typically done
-> using the <base64Encode function>.
+> using the <base64Encode> <function>.
 
 If you want to execute some arbitrary JavaScript, rather than call an
-existing function, use the <revBrowserExecuteScript function> instead.
+existing function, use the <revBrowserExecuteScript> <function> instead.
 
 The <revBrowserCallScript> function will return whatever the function
 called returned.
 
 >*Note:* For general information on using the browser library, please
-> see the notes in the <revBrowserOpen function> reference.
+> see the notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserExecuteScript (function),
-base64Encode function (function), revBrowserOpen function (function),
-revBrowserExecuteScript function (function)
+base64Encode (function), function (glossary), revBrowserOpen (function),
+
 

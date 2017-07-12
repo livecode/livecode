@@ -24,14 +24,14 @@ Description:
 Use the <whole> <keyword> to find a <string>.
 
 A word is a set of characters enclosed by spaces, tabs, or returns. When
-using the <find command>, punctuation next to a word is considered part
+using the <find> <command>, punctuation next to a word is considered part
 of the word.
 
-When used with the <find command>, the <whole> <keyword> finds
+When used with the <find> <command>, the <whole> <keyword> finds
 <card|cards> that contain the specified <string> only if the found
 <string> consists of entire <words>.
 
-References: find (command), find command (command), command (glossary),
+References: find (command), command (glossary),
 keyword (glossary), string (keyword), characters (keyword),
 words (keyword), card (object), wholeMatches (property)
 

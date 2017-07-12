@@ -2,7 +2,7 @@ Name: localNotificationReceived
 
 Type: message
 
-Syntax: localNotificationReceived <message>
+Syntax: localNotificationReceived <pMessage>
 
 Summary:
 Sent when the application receives a local notification from the
@@ -22,7 +22,7 @@ on localNotificationReceived tMessage
 end localNotificationReceived
 
 Parameters:
-message:
+pMessage:
 The Notification Message received. This is text that was submitted when
 the message was scheduled with the operating system.
 

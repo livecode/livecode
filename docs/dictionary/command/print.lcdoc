@@ -118,7 +118,7 @@ set the <lockScreen> <property> to true before you print.
 >*Cross-platform note:* On <Mac OS> and <Windows|Windows systems>, the
 > <print> <command> uses the current printer. On <Unix|Unix systems>,
 > the <print> <command> creates a <PostScript|PostScript file> and runs
-> the program specified in the <printCommand property>, with the <file>
+> the program specified in the <printCommand> <property>, with the <file>
 > as input.
 
 References: revPrintReport (command), answer page setup (command),
@@ -132,7 +132,7 @@ marked (keyword), rectangle (keyword), card (keyword), openCard (message),
 card (object), stack (object), printRectangle (property),
 printGutters (property), printFontTable (property),
 printPageNumber (property), printCommand (property),
-printCommand property (property), printRowsFirst (property),
+printRowsFirst (property),
 printDuplex (property), lockScreen (property), printTitle (property),
 printCollate (property)
 

@@ -50,7 +50,7 @@ change the data being dragged during the drag.
 
 If LiveCode is acting as the target of a drag-drop operation (i.e.
 during the context of a <dragEnter>, <dragMove>, <dragDrop> or
-<dragLeave message>), the dataData property can be queried for the data
+<dragLeave> <message>), the dataData property can be queried for the data
 the source application is offering.
 
 Setting a type of data during a <mouseDown> or <dragStart> handler will
@@ -89,7 +89,7 @@ sets the dragData["text"].
 References: property (glossary), handler (glossary), array (glossary),
 list field (glossary), element (glossary), element (keyword),
 dragDrop (message), dragEnter (message), dragMove (message),
-mouseDown (message), dragLeave message (message), dragStart (message),
+mouseDown (message), dragLeave (message), message (glossary), dragStart (message),
 clipboardData (property), RTFText (property), unicodeText (property),
 HTMLText (property)
 

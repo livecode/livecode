@@ -2,7 +2,7 @@ Name: browserStartedLoading
 
 Type: message
 
-Syntax: browserStartedLoading <url>
+Syntax: browserStartedLoading <pUrl>
 
 Summary:
 Sent when the given url has started to load.
@@ -19,7 +19,7 @@ on browserStartedLoading pURL
 end browserStartedLoading
 
 Parameters:
-url:
+pUrl:
 The URL that has started to load.
 
 Description:

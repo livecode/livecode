@@ -7,7 +7,7 @@ Syntax: selectionChanged
 Summary:
 Sent to a <field> or <player> when the <selection> is changed.
 
-Associations: field
+Associations: field, player
 
 Introduced: 1.0
 
@@ -35,13 +35,13 @@ the user <select|selects> a portion of the sound or movie, or when a
 <property>. 
 
 >*Note:* If an already-selected-item in a list is reselected a
-> <selectionChanged message> will still be sent.
+> <selectionChanged> <message> will still be sent.
 
 References: select (command), handler (glossary),
 insertion point (glossary), message (glossary), field (glossary),
 property (glossary), select (glossary), selection (keyword),
 field (keyword), player (keyword), currentTimeChanged (message),
-selectionChanged message (message), selectedObjectChanged (message),
+selectionChanged (message), selectedObjectChanged (message),
 arrowKey (message), player (object), selected (property),
 startTime (property), endTime (property)
 

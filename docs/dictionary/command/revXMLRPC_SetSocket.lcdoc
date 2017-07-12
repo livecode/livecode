@@ -31,7 +31,7 @@ XML-RPC request.
 Description:
 Use the <revXMLRPC_SetSocket> <function> to set the network socket used
 in the execution of an <XML-RPC request>. By default, XML-RPC uses the
-<post command> to execute an <XML-RPC request>, but this has the
+<post> <command> to execute an <XML-RPC request>, but this has the
 overhead of opening and closing a new socket every time. You can avoid
 this by re-using an already opened <socket>.
 
@@ -46,7 +46,7 @@ If the <revXMLRPC_SetSocket> <command> encounters an error, it
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: post command (command), revXMLRPC_GetSocket (function),
+References: post (command), revXMLRPC_GetSocket (function),
 revXMLRPC_CreateRequest (function), return (glossary),
 XML-RPC request (glossary), Standalone Application Settings (glossary),
 socket (glossary), standalone application (glossary), function (glossary),

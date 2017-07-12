@@ -2,7 +2,7 @@ Name: trackingError
 
 Type: message
 
-Syntax: trackingError <sensor>, <errorMessage>
+Syntax: trackingError <pSensor>, <pErrorMessage>
 
 Summary:
 Sent when sensor tracking could not be started or is terminated.
@@ -19,16 +19,13 @@ on trackingError pSensor, pError
 end trackingError
 
 Parameters:
-sensor (enum):
-the name of the sensor that is the source of the error
-
+pSensor (enum): the name of the sensor that is the source of the error
 - "acceleration"
 - "heading"
 - "location"
 - "rotation rate"
 
-
-errorMessage:
+pErrorMessage:
 The error message, giving the reason for the error
 
 Description:
