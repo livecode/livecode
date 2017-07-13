@@ -93,8 +93,8 @@ script: |
   if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
-    make all-${BUILD_PLATFORM} &&
-    ${CHECK_COMMAND} make check-${BUILD_PLATFORM} V=1
+    make all-${BUILD_PLATFORM} MODE=release &&
+    ${CHECK_COMMAND} make check-${BUILD_PLATFORM} V=1 MODE=release
   fi
 
 addons:
