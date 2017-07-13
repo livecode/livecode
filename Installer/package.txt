@@ -838,5 +838,6 @@ component Toolset
 		file repo:extensions/script-libraries/diff/diff.livecodescript
 		file repo:extensions/script-libraries/messageauthentication/messageauthentication.livecodescript
 		file repo:extensions/script-libraries/httpd/httpd.livecodescript
+		file repo:extensions/script-libraries/qr/qr.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
