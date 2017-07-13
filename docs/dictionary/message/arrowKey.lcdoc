@@ -2,7 +2,7 @@ Name: arrowKey
 
 Type: message
 
-Syntax: arrowKey pKey
+Syntax: arrowKey <pKey>
 
 Summary:
 Sent to the <active control(glossary)>, or to the <current card> if no
