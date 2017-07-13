@@ -1,0 +1,358 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+
+The drawing widget can be used to draw... 
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.widget.drawing
+--
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.iconsvg
+use com.livecode.library.widgetutils
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Drawing"
+metadata preferredSize is "200,200"
+metadata svgicon is "M888 1056L1004 940 852 788 736 904 736 960 832 960 832 1056 888 1056ZM1328 336Q1312 320 1295 337L945 687Q928 704 944 720 960 736 977 719L1327 369Q1344 352 1328 336ZM1408 930L1408 1120Q1408 1239 1323.5 1323.5 1239 1408 1120 1408L288 1408Q169 1408 84.5 1323.5 0 1239 0 1120L0 288Q0 169 84.5 84.5 169 0 288 0L1120 0Q1183 0 1237 25 1252 32 1255 48 1258 65 1246 77L1197 126Q1183 140 1165 134 1142 128 1120 128L288 128Q222 128 175 175 128 222 128 288L128 1120Q128 1186 175 1233 222 1280 288 1280L1120 1280Q1186 1280 1233 1233 1280 1186 1280 1120L1280 994Q1280 981 1289 972L1353 908Q1368 893 1388 901 1408 909 1408 930ZM1312 192L1600 480 928 1152 640 1152 640 864ZM1756 324L1664 416 1376 128 1468 36Q1496 8 1536 8 1576 8 1604 36L1756 188Q1784 216 1784 256 1784 296 1756 324Z"
+
+constant kVelocityFilterWeight is 0.2
+constant kMinLineWidth is 1
+constant kMaxLineWidth is 2.5
+
+----------------------------------------------------------------
+
+-- Metadata for re-used engine-level control properties
+
+/**
+
+Name: foregroundColor
+Type: property
+Syntax: set the foregroundColor of <widget> to <color>
+Syntax: get the foregroundColor of <widget>
+
+Summary: The color of the current pen
+
+Description:
+When a new path is added to the drawing it is drawn in the foregroundColor.
+
+Related: opaque(property)
+
+*/
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.label is "Selected pen color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.default is "0,0,0"
+
+
+/**
+
+Name: backColor
+Type: property
+Syntax: set the backColor of <widget> to <color>
+Syntax: get the backColor of <widget>
+
+Summary: The color of the background
+
+Description:
+When the drawing has an <opaque> background, it is filled with
+the <backColor>.
+
+Related: opaque(property)
+
+*/
+
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.default is "255,255,255"
+
+/**
+Name: opaque
+
+Syntax: set the opaque of <widget> to {true | false}
+Syntax: get the opaque of <widget>
+
+Summary: Whether the background of the widget is filled
+
+Description:
+If the <opaque> property is `true`, the background of the navigation
+bar is filled with the <backColor>.  If it is `false` the background
+is transparent.
+
+References: backColor(property)
+*/
+private variable mOpaque as Boolean
+property "opaque" get mOpaque set SetOpaque
+metadata opaque.default is "false"
+metadata opaque.label is "Opaque background"
+
+/**
+Name: pathData
+
+Syntax: set the pathData of <widget> to <array>
+Syntax: get the pathData of <widget>
+
+Summary: The path data used to draw the widget
+
+Description:
+The pathData is a numerically indexed array of path info elements. Each
+path info element contains three keys:
+
+- path - SVG path instructions
+- color - the color to paint the path with
+- width - the line width of the path
+
+*/
+private variable mPaths as List
+property "pathData" get GetPathData set SetPathData
+metadata pathData.user_visible is "false"
+
+-- private instance variables
+private variable mData as List
+private variable mMouseDown as Boolean
+--
+
+public handler OnSave(out rProperties as Array)
+	put mOpaque into rProperties["opaque"]
+   put GetPathData() into rProperties["path data"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["opaque"] into mOpaque
+   __DoSetPathData(pProperties["path data"])
+end handler
+
+public handler OnPaint() returns nothing
+   if mOpaque then
+      set the paint of this canvas to my background paint
+      fill rectangle path of my bounds on this canvas
+   end if
+   
+   variable tPathInfo as Array
+   repeat for each element tPathInfo in mPaths
+      set the paint of this canvas to tPathInfo["paint"]
+      set the stroke width of this canvas to tPathInfo["width"]
+      stroke tPathInfo["path"] on this canvas
+   end repeat
+end handler
+
+
+public handler OnMouseUp() returns nothing
+   if mMouseDown then
+      __FlushPoints()
+   end if
+   put false into mMouseDown
+end handler
+
+public handler OnMouseRelease() returns nothing
+   put false into mMouseDown
+end handler
+
+public handler OnMouseDown() returns nothing
+   put true into mMouseDown
+   put [] into mData
+end handler
+
+public handler OnMouseMove() returns nothing
+   if mMouseDown then
+      __AddPoint()
+   end if
+end handler
+
+private handler __FlushPoints() returns nothing
+   if the number of elements in mData is 2 then
+      __AddPoint()
+   else
+      __AddDot()
+   end if
+end handler
+
+private handler __AddDot() returns nothing
+   variable tPoint as Point
+   put the current mouse position into tPoint
+   subtract the left of my bounds from the x of tPoint
+   subtract the top of my bounds from the y of tPoint
+   
+   variable tPointOff as Point
+   put tPoint into tPointOff
+   add 1 to the x of tPointOff
+   add 1 to the y of tPointOff
+
+   variable tPath as Path
+   put line path from tPoint to tPointOff into tPath
+   
+   push { "path" : tPath, \
+         "width" : kMinLineWidth + kMaxLineWidth / 2, \
+         "paint" : my foreground paint } onto back of mPaths
+     
+   redraw all
+end handler
+
+private handler __AddPoint() returns nothing
+    variable tPoint as Point
+    put the current mouse position into tPoint
+    subtract the left of my bounds from the x of tPoint
+    subtract the top of my bounds from the y of tPoint
+    
+    push { "point" : tPoint, \
+         "timestamp" : the universal time, \
+         "velocity" : 1 } onto back of mData
+         
+    if the number of elements in mData > 2 then
+         if the number of elements in mData is 3 then
+            push mData[1] onto front of mData
+         end if
+      
+         variable tCurvePoint1 as Point
+         variable tCurvePoint2 as Point
+         __CalculateCurveControlPoints(mData[1]["point"], mData[2]["point"], mData[3]["point"], tCurvePoint1, tCurvePoint2)
+         
+         variable tCurvePoint3 as Point
+         variable tCurvePoint4 as Point
+         __CalculateCurveControlPoints(mData[2]["point"], mData[3]["point"], mData[4]["point"], tCurvePoint3, tCurvePoint4)
+         
+         variable tPath as Path
+         put the empty path into tPath
+         move to mData[2]["point"] on tPath
+         curve through tCurvePoint2 then tCurvePoint3 to mData[3]["point"] on tPath
+         
+         variable tVelocity as Real
+         put kVelocityFilterWeight * __VelocityFrom(mData[1]["point"], mData[1]["timestamp"], mData[4]["point"], mData[4]["timestamp"]) + (1 - kVelocityFilterWeight) * mData[1]["velocity"] into mData[2]["velocity"]
+         
+         variable tWidth as Real
+         put kMinLineWidth + the maximum of 100 - mData[2]["velocity"] and 0/100 * kMaxLineWidth into tWidth
+         
+         // Remove the first element from the list,
+         // so that we always have no more than 4 points in points array.
+         pop front of mData
+         pop front of mData
+         
+         push { "path" : tPath, \
+               "width" : tWidth, \
+               "paint" : my foreground paint } onto back of mPaths
+               
+         redraw all
+    end if
+end handler
+
+private handler __CalculateCurveControlPoints(in pPoint1 as Point, in pPoint2 as Point, in pPoint3 as Point, out rCurvePoint1 as Point, out rCurvePoint2 as Point) returns nothing
+    variable tXDistance1 as Real
+    put the x of pPoint1 - the x of pPoint2 into tXDistance1
+    
+    variable tYDistance1 as Real
+    put the y of pPoint1 - the y of pPoint2 into tYDistance1
+    
+    variable tXDistance2 as Real
+    put the x of pPoint2 - the x of pPoint3 into tXDistance2
+    
+    variable tYDistance2 as Real
+    put the y of pPoint2 - the y of pPoint3 into tYDistance2
+   
+    variable tMid1 as Point
+    put point [(the x of pPoint1 + the x of pPoint2) / 2.0, (the y of pPoint1 + the y of pPoint2) / 2.0] into tMid1
+    
+    variable tMid2 as Point
+    put point [(the x of pPoint2 + the x of pPoint3) / 2.0, (the y of pPoint2 + the y of pPoint3) / 2.0] into tMid2
+    
+    variable tLength1 as Real
+    put the square root of (tXDistance1^2 + tYDistance1^2) into tLength1
+    
+    variable tLength2 as Real
+    put the square root of (tXDistance2^2 + tYDistance2^2) into tLength2
+    
+    variable tXMidDistance as Real
+    put the x of tMid1 - the x of tMid2 into tXMidDistance
+    
+    variable tYMidDistance as Real
+    put the y of tMid1 - the y of tMid2 into tYMidDistance
+    
+    variable tRatio as Real
+    put tLength2 / (tLength1 + tLength2) into tRatio
+    
+    variable tControlMid as Point
+    put point [the x of tMid2 + tXMidDistance * tRatio, the y of tMid2 + tYMidDistance * tRatio] into tControlMid
+    
+    variable tX as Real
+    put the x of pPoint2 - the x of tControlMid into tX
+    
+    variable tY as Real
+    put the y of pPoint2 - the y of tControlMid into tY
+   
+    put point [the x of tMid1 + tX, the y of tMid1 + tY] into rCurvePoint1
+    put point [the x of tMid2 + tX, the y of tMid2 + tY] into rCurvePoint2
+
+end handler
+
+private handler __DistanceTo(in pPoint1 as Point, in pPoint2 as Point) returns Real
+   return the square root of ((the x of pPoint1 - the x of pPoint2)^2 + (the y of pPoint1 - the y of pPoint2)^2)
+end handler
+
+private handler __VelocityFrom(in pPoint1 as Point, in pTime1 as Real, in pPoint2 as Point, in pTime2 as Real) returns Real
+   if pTime1 is not pTime2 then
+      return __DistanceTo(pPoint2, pPoint1) / (pTime2 - pTime1)
+   else
+      return 100
+   end if
+end handler
+    
+private handler SetOpaque(in pOpaque as Boolean) returns nothing
+	if pOpaque is mOpaque then
+		return
+	end if
+
+	put pOpaque into mOpaque
+	redraw all
+end handler
+
+private handler GetPathData() returns List
+   variable tPaths as List
+   variable tPathInfo as Array
+   repeat for each element tPathInfo in mPaths
+      push { "path" : the instructions of tPathInfo["path"], \
+             "color" : colorToString(the color of tPathInfo["paint"], true), \
+             "width" : tPathInfo["width"]} onto tPaths
+   end repeat
+   return tPaths
+end handler
+
+private handler SetPathData(in pPathData as List) returns nothing
+   __DoSetPathData(pPathData)
+   redraw all
+end handler
+
+private handler __DoSetPathData(in pPathData as List) returns nothing
+   variable tPaths as List
+   variable tPathInfo as Array
+   repeat for each element tPathInfo in pPathData
+      push { "path" : path tPathInfo["path"], \
+             "paint" : solid paint with stringToColor(tPathInfo["color"]), \
+             "width" : tPathInfo["width"]} onto tPaths
+   end repeat
+   put tPaths into mPaths
+end handler
+
+end widget
