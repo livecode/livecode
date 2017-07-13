@@ -47,8 +47,7 @@ session command>. The maximum age of a session is configured using the
 >*Warning:* Session properties cannot be changed once a session has been
 > created. 
 
-References: stop session (command), delete session command (command),
-delete session (command), $_SESSION (keyword), sessionSavePath (property),
+References: stop session (command), delete session (command), 
+$_SESSION (keyword), sessionSavePath (property),
 sessionLifetime (property), sessionName (property),
-sessionId (property),
-property (glossary)
+sessionId (property), property (glossary)

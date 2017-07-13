@@ -2,7 +2,7 @@ Name: moveStack
 
 Type: message
 
-Syntax: moveStack <newStackH>, <newStackV>
+Syntax: moveStack <pNewStackH>, <pNewStackV>
 
 Summary:
 Sent to the <current card> when the user moves the <stack window>.
@@ -22,11 +22,11 @@ on moveStack finalLeft, finalTop
 end moveStack
 
 Parameters:
-newStackH:
+pNewStackH:
 The horizontal distance in pixels from the left of the screen to the
 left edge of the stack.
 
-newStackV:
+pNewStackV:
 The vertical distance in pixels from the top of the screen to the top
 edge of the stack.
 

@@ -2,7 +2,7 @@ Name: socketTimeout
 
 Type: message
 
-Syntax: socketTimeout <socketID>
+Syntax: socketTimeout <pSocketID>
 
 Summary:
 Sent when an <open socket>, <read from socket> or <write to socket>
@@ -26,7 +26,7 @@ on socketTimeout theID
 end socketTimeout
 
 Parameters:
-socketID:
+pSocketID:
 The identifier (set when you opened the socket) of the socket which had
 an error. : The identifier (set when you opened the socket) of the
 socket which had an error.

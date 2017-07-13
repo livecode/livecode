@@ -2,7 +2,7 @@ Name: signal
 
 Type: message
 
-Syntax: signal <sigNumber>
+Syntax: signal <pSigNumber>
 
 Summary:
 Sent to the <current card> when another <process> sends a kill signal to
@@ -24,7 +24,7 @@ on signal -- let the user know:
 end signal
 
 Parameters:
-sigNumber:
+pSigNumber:
 The number of the Unix kill signal (1 for SIGUSR1, 2 for SIGUSR2) that
 was sent to the application.
 

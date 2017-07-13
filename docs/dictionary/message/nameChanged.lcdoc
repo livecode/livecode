@@ -2,7 +2,7 @@ Name: nameChanged
 
 Type: message
 
-Syntax: nameChanged <oldName>, <newName>
+Syntax: nameChanged <pOldName>, <pNewName>
 
 Summary:
 Sent to an <object(glossary)> when its <name> is changed.
@@ -23,10 +23,10 @@ on nameChanged myOldName,myNewName -- replace name in a menu button
 end nameChanged
 
 Parameters:
-oldName:
+pOldName:
 The object's original name.
 
-newName:
+pNewName:
 The object's new name.
 
 Description:

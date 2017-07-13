@@ -2,7 +2,7 @@ Name: scrollbarLineDec
 
 Type: message
 
-Syntax: scrollbarLineDec <newPosition>
+Syntax: scrollbarLineDec <pNewPosition>
 
 Summary:
 Sent to a <scrollbar> when the user clicks the decrease arrow, scrolling
@@ -23,7 +23,7 @@ on scrollbarLineDec newCharNumber
 end scrollbarLineDec
 
 Parameters:
-newPosition:
+pNewPosition:
 The new position of the scrollbar thumb.
 
 Description:

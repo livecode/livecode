@@ -29,7 +29,7 @@ Most operating system requests have to do with actions on files. For
 example, when you open a file or copy a resource, LiveCode requests the
 operating system to complete the action. If the action fails, the
 <result> is set to an error message, and the <sysError> <function>
-contains the <error message> the operating system reported to LiveCode.
+contains the <error> <message> the operating system reported to LiveCode.
 >*Note:* When using the <sysError> <function> to check whether a
 > <command> succeeded, be sure to check the <result> first. The
 > <sysError> reports the operating system's error report, and some

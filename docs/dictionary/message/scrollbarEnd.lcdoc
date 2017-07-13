@@ -2,7 +2,7 @@ Name: scrollbarEnd
 
 Type: message
 
-Syntax: scrollbarEnd <end>
+Syntax: scrollbarEnd <pEnd>
 
 Summary:
 Sent to a <scrollbar> when the user Shift-clicks its increase arrow.
@@ -22,9 +22,9 @@ on scrollbarEnd -- use a scroll bar to navigate among cards
 end scrollbarEnd
 
 Parameters:
-end:
+pEnd:
 The new position of the scrollbar thumb. This is the same as the
-scrollbar's endValue property.
+scrollbar's <endValue> property.
 
 Description:
 Handle the <scrollbarEnd> <message> if you want to respond to the use of

@@ -21,7 +21,6 @@ stop using font file "C:/myFontFolder/myCustomFont.ttf"
 Parameters:
 fontFile:
 
-
 The result:
 The <stop using font> command puts empty into the result if successful.
 Otherwise an error string is put into the result.

@@ -2,7 +2,7 @@ Name: touchMove
 
 Type: message
 
-Syntax: touchMove <touchID>, <touchX>, <touchY>
+Syntax: touchMove <pTouchID>, <pTouchX>, <pTouchY>
 
 Summary:
 Sent when the point at which the user is touching the screen changes.
@@ -11,7 +11,7 @@ Introduced: 4.5.2
 
 OS: ios, android
 
-Platforms: desktop
+Platforms: mobile
 
 Example:
 on touchMove pTouchID, pX, pY
@@ -21,15 +21,15 @@ on touchMove pTouchID, pX, pY
 end touchMove
 
 Parameters:
-touchID:
+pTouchID:
 A number which uniquely identifies a sequence of touch messages
 corresponding to an individual, physical touch action. This is the same
 id as the touchStart message which started the sequence.
 
-touchX:
+pTouchX:
 The horizontal coordinate of the touchPosition
 
-touchY:
+pTouchY:
 The vertical coordinate of the touchPostition
 
 Description:
@@ -40,9 +40,9 @@ want to keep continuous track of the touch position.
 The <touchMove> message is sent to the control which recived the
 <touchStart> message to begin the touch sequence.
 
-The <touchID> parameter is a number which uniquely identifies a sequence
+The <pTouchID> parameter is a number which uniquely identifies a sequence
 of touch messages corresponding to an individual, physical touch action.
-All such sequences start with a <touchStart (message)>message, have one
+All such sequences start with a <touchStart(message)> message, have one
 or more <touchMove> messages and finish with either a <touchEnd> or a
 <touchRelease> message.
 

@@ -2,7 +2,7 @@ Name: hotspotClicked
 
 Type: message
 
-Syntax: hotspotClicked <hotspotID>
+Syntax: hotspotClicked <pHotspotID>
 
 Summary:
 Sent to a player containing a <QuickTime VR> movie when the user clicks
@@ -24,7 +24,7 @@ on hotSpotClicked theNode -- show a text description
 end hotspotClicked
 
 Parameters:
-hotspotID:
+pHotspotID:
 The ID of the QuickTime VR hot spot that was clicked.
 
 Description:

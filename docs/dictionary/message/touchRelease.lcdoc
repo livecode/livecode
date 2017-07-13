@@ -2,7 +2,7 @@ Name: touchRelease
 
 Type: message
 
-Syntax: touchRelease  <touchID>
+Syntax: touchRelease <pTouchID>
 
 Summary:
 Sent when a touch sequence is cancelled due to an incoming even such as
@@ -12,7 +12,7 @@ Introduced: 4.5.2
 
 OS: ios, android
 
-Platforms: desktop
+Platforms: mobile
 
 Example:
 on touchRelease tID
@@ -20,7 +20,7 @@ on touchRelease tID
 end touchRelease
 
 Parameters:
-touchID:
+pTouchID:
 A number which uniquely identifies a sequence of touch messages
 corresponding to an individual, physical touch action
 
@@ -34,7 +34,7 @@ The <touchRelease> message is sent to the control which received the
 A <touchRelease> message is sent instead of a <touchEnd> message if the
 touch is cancelled due to an incoming event such as a phone-call.
 
-The id parameter is a number which uniquely identifies a sequence of
+The <pTouchID> parameter is a number which uniquely identifies a sequence of
 touch messages corresponding to an individual, physical touch action.
 All such sequences start with a <touchStart> message, have one or more
 <touchMove> messages and finish with either a <touchEnd> or a
