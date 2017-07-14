@@ -59,7 +59,7 @@ on mouseUp
 end mouseUp
 
 on NewRequest pSocketID, pRequest
-   httpResponse pSocketID, 200
+   httpdResponse pSocketID, 200
 end NewRequest
 
 Description:
@@ -179,10 +179,10 @@ on NewRequest pSocketID, pRequest
    if there is a file tPath then
       local tData
       put url ("binfile:" & tPath) into tData
-      httpResponse pSocketID, 200, tData
+      httpdResponse pSocketID, 200, tData
    else
       -- not found
-      httpResponse pSocketID, 404
+      httpdResponse pSocketID, 404
    end if
 end NewRequest
    
