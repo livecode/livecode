@@ -34,16 +34,16 @@ REM This script checks for bash in the path. If it is not present it assumes it
 REM is installed as part of 64-bit cygwin at C:\Cygwin\bin
 
 REM This script checks for nasm in the path. If it is not present it assumes it
-REM is installed at C:\Program Files (x86)\NASM
-
-SET _ROOT_DIR=C:\LiveCode\Prebuilt\libraries
-
-echo Will build into %_ROOT_DIR%
-IF NOT EXIST %_ROOT_DIR% MKDIR %_ROOT_DIR%
+REM is installed at %ProgramFiles(x86)%\NASM
 
 REM # get the drive & path of the folder this script lives in
 REM # (note: ends with \ path delimiter)
 FOR /F "delims=" %%A IN ("%0") DO SET _TOOLS_DIR=%%~dpA
+
+SET _ROOT_DIR=%_TOOLS_DIR%build
+
+echo Will build into %_ROOT_DIR%
+IF NOT EXIST %_ROOT_DIR% MKDIR %_ROOT_DIR%
 
 REM Get the libraries version variables set from scripts/lib_versions.bat
 CALL "scripts\lib_versions.bat"
@@ -109,7 +109,7 @@ IF %ARCH%==x86 (
 	SET ARCH_STRING=amd64
 )
 
-SET VSCONFIGTOOL="C:\Program Files (x86)\Microsoft Visual Studio %TOOL%.0\VC\vcvarsall.bat"
+SET VSCONFIGTOOL="%ProgramFiles(x86)%\Microsoft Visual Studio %TOOL%.0\VC\vcvarsall.bat"
 
 REM Ensure the desired vsvarsall.bat file exists for the chosen options
 IF NOT EXIST %VSCONFIGTOOL% (
@@ -126,9 +126,26 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 REM Ensure Cygwin and NASM are in the path
+
+REM Is Cygwin already in the path?
+REM If not, look in a couple of likely locations for it
+WHERE /Q cygpath.exe 1>NUL 2>NUL
+IF %ERRORLEVEL% EQU 0 (
+  SET cygwin_path=
+) ELSE IF DEFINED CYGPATH (
+  SET cygwin_path=%CYGPATH%\bin\
+) ELSE IF EXIST C:\Cygwin64\bin (
+  SET cygwin_path=C:\Cygwin64\bin\
+) ELSE IF EXIST C:\Cygwin\bin (
+  SET cygwin_path=C:\Cygwin\bin\
+) ELSE (
+  @ECHO >&2 Cannot locate a Cygwin installation
+  EXIT /B 1
+)
+
 WHERE /Q bash 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
-  SET "PATH=%PATH%;C:\Cygwin64\bin"
+  SET "PATH=%PATH%;%cygwin_path%"
 )
 WHERE /Q bash 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
@@ -138,11 +155,11 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE /Q nasm 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
-   SET "PATH=%PATH%;C:\Program Files (x86)\NASM"
+   SET "PATH=%PATH%;%ProgramFiles(x86)%\NASM"
 )
 WHERE /Q nasm 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO Cannot find 'nasm'. Make sure nasm is installed with root "C:\Program Files (x86)\NASM".
+	ECHO Cannot find 'nasm'. Make sure nasm is installed with root "%ProgramFiles(x86)%\NASM".
 	EXIT /B 1
 )
 
