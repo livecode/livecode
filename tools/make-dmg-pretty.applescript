@@ -43,9 +43,9 @@ on run argv
 			repeat with i in fileList
 				-- We're slightly fuzzy here as the app bundle name varies with edition and version
 				if the name of i is "Applications" then
-					set the position of i to {240, 393}
+					set the position of i to {360, 197}
 				else if the name of i ends with ".app" then
-					set the position of i to {240, 120}
+					set the position of i to {187, 197}
 				end if
 			end repeat
 			
@@ -57,7 +57,7 @@ on run argv
 			set the current view of container window to icon view
 			set toolbar visible of container window to false
 			set statusbar visible of container window to false
-			set the bounds of container window to {100, 100, 580, 645}
+			set the bounds of container window to {100, 100, 646, 493}
 			set viewOptions to the icon view options of container window
 			set arrangement of viewOptions to not arranged
 			set icon size of viewOptions to 128
