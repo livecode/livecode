@@ -43,9 +43,9 @@ on run argv
 			repeat with i in fileList
 				-- We're slightly fuzzy here as the app bundle name varies with edition and version
 				if the name of i is "Applications" then
-					set the position of i to {240, 393}
+					set the position of i to {410, 177}
 				else if the name of i ends with ".app" then
-					set the position of i to {240, 120}
+					set the position of i to {137, 191}
 				end if
 			end repeat
 			
@@ -57,11 +57,11 @@ on run argv
 			set the current view of container window to icon view
 			set toolbar visible of container window to false
 			set statusbar visible of container window to false
-			set the bounds of container window to {100, 100, 580, 645}
+			set the bounds of container window to {100, 100, 646, 493}
 			set viewOptions to the icon view options of container window
 			set arrangement of viewOptions to not arranged
 			set icon size of viewOptions to 128
-			set text size of viewOptions to 16
+			set text size of viewOptions to 14
 			set background picture of viewOptions to file "bg.tiff" of item ".background"
 			
 			-- According to http://joemaller.com/659/setting-icon-position-and-window-size-on-disk-images/, Finder sometimes does not save the size and position of a window until it detects user interaction on either the window's resizing handle or its zoom button. Simulate two clicks on the zoom button to trigger the save.
