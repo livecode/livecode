@@ -76,6 +76,8 @@ function setCCForTarget {
 	OBJCOPY=
 	RANLIB=
 	STRIP=
+	CROSS_TOP=
+	CROSS_SDK=
 	
 	case "${PLATFORM}" in
 		win32)
@@ -172,4 +174,6 @@ function setCCForTarget {
 	export OBJCOPY
 	export RANLIB
 	export STRIP
+	export CROSS_TOP
+	export CROSS_SDK
 }
