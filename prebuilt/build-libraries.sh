@@ -18,9 +18,9 @@ export ARCH=$2
 
 #only mac, ios subplatforms are used
 if [ "${PLATFORM}" = "mac" -o "${PLATFORM}" = "ios" ] ; then
-	SUBPLATFORM=$3
+	export SUBPLATFORM=$3
 else
-	SUBPLATFORM=
+	export SUBPLATFORM=
 fi
 
 # Capture the existing CC and CXX variables, if any
