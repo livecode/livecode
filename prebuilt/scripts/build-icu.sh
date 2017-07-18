@@ -16,8 +16,6 @@ ICU_TGZ="icu-${ICU_VERSION}.tar.gz"
 ICU_SRC="icu-${ICU_VERSION}"
 cd "${BUILDDIR}"
 
-HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-${HOST_PLATFORM}-${HOST_ARCH}"
-
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
 		echo "Fetching ICU source"
@@ -148,6 +146,12 @@ function buildICU {
 		echo "Found existing ICU build for ${NAME}"
 	fi
 
+	if [ -z "${HOST_ICU_DIR}" ] ; then
+		HOST_ICU_BINDIR="${BUILDDIR}/${ICU_ARCH_SRC}/bin"
+	else
+		HOST_ICU_BINDIR="${HOST_ICU_DIR}/bin"
+	fi
+	
 	# Generate the minimal data library
 	ORIGINAL_DIR=`pwd`
 	if [ ! -e "${ICU_ARCH_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
@@ -161,13 +165,13 @@ function buildICU {
 	fi
 	if [ ! -d "extracted" ] ; then
 		mkdir -p "extracted"
-		"${HOST_ICU_DIR}/bin/icupkg" --list --outlist "icudt${ICU_VERSION_MAJOR}.lst" "icudt${ICU_VERSION_MAJOR}l.dat"
-		"${HOST_ICU_DIR}/bin/icupkg" --extract "icudt${ICU_VERSION_MAJOR}.lst" --destdir "./extracted" "icudt${ICU_VERSION_MAJOR}l.dat"
+		"${HOST_ICU_BINDIR}/icupkg" --list --outlist "icudt${ICU_VERSION_MAJOR}.lst" "icudt${ICU_VERSION_MAJOR}l.dat"
+		"${HOST_ICU_BINDIR}/icupkg" --extract "icudt${ICU_VERSION_MAJOR}.lst" --destdir "./extracted" "icudt${ICU_VERSION_MAJOR}l.dat"
 	fi
 	if [ ! -d "out-${PLATFORM}-${ARCH}" ] ; then
 		mkdir -p "temp"
 		mkdir -p "out-${PLATFORM}-${ARCH}"
-		"${HOST_ICU_DIR}/bin/pkgdata" --without-assembly --bldopt "../../${ICU_ARCH_SRC}/data/icupkg.inc" --quiet --copyright --sourcedir "./extracted" --destdir "./out-${PLATFORM}-${ARCH}" --entrypoint icudt${ICU_VERSION_MAJOR} --tempdir "./temp" --name "icudt${ICU_VERSION_MAJOR}l" --mode static --revision "${ICU_VERSION}" --libname icudata "icudt${ICU_VERSION_MAJOR}.lst"
+		"${HOST_ICU_BINDIR}/pkgdata" --without-assembly --bldopt "../../${ICU_ARCH_SRC}/data/icupkg.inc" --quiet --copyright --sourcedir "./extracted" --destdir "./out-${PLATFORM}-${ARCH}" --entrypoint icudt${ICU_VERSION_MAJOR} --tempdir "./temp" --name "icudt${ICU_VERSION_MAJOR}l" --mode static --revision "${ICU_VERSION}" --libname icudata "icudt${ICU_VERSION_MAJOR}.lst"
 
 		# Copy the data
 		rm -r "${INSTALL_DIR}/${NAME}/lib/libicudata.a"
@@ -222,6 +226,8 @@ if [ "${HOST_PLATFORM}" != "${PLATFORM}" ] ; then
 		VAR="ICU${L}_LIBS"
 		eval "$VAR="
 	done
+
+	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-${HOST_PLATFORM}-${HOST_ARCH}"
 fi
 
 if [ "${ARCH}" == "universal" ] ; then
