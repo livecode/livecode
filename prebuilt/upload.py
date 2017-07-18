@@ -131,7 +131,7 @@ def exec_upload_prebuilts(build_platform, build_arch, build_subplatform):
 	# set curdir to prebuilt folder
 	os.chdir(os.path.dirname(__file__))
 	if platform.system() == 'Windows':
-		args = [".\util\invoke-unix.bat", "upload-libs.sh", build_platform, build_subplatform]
+		args = ["..\util\invoke-unix.bat", "./upload-libs.sh", build_platform, build_subplatform]
 	else:
 		args = ["./upload-libs.sh", build_platform, build_arch, build_subplatform]
 	print(' '.join(args))

@@ -45,6 +45,11 @@ SET _ROOT_DIR=%_TOOLS_DIR%build
 echo Will build into %_ROOT_DIR%
 IF NOT EXIST %_ROOT_DIR% MKDIR %_ROOT_DIR%
 
+SET _PACKAGE_DIR=%_TOOLS_DIR%packaged
+
+echo Will create packages in %_PACKAGE_DIR%
+IF NOT EXIST %_PACKAGE_DIR% MKDIR %_PACKAGE_DIR%
+
 REM Get the libraries version variables set from scripts/lib_versions.bat
 CALL "scripts\lib_versions.bat"
 
