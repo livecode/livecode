@@ -128,16 +128,17 @@ def validate_target(opts):
 ################################################################
 
 def exec_package_libraries(build_platform, build_arch, build_subplatform):
-	# set curdir to prebuilt folder
-	os.chdir(os.path.dirname(__file__))
-	if platform.system() == 'Windows':
-		args = [".\util\invoke-unix.bat", "package-libs.sh", build_platform, build_subplatform]
-	else:
-		args = ["./package-libs.sh", build_platform, build_arch, build_subplatform]
-	print(' '.join(args))
-	status = subprocess.call(args)
-	if status != 0:
-		sys.exit(status)
+    # set curdir to prebuilt folder
+    os.chdir(os.path.dirname(__file__))
+    if platform.system() == 'Windows':
+        # Don't perform package step on Windows
+        return
+    else:
+    	args = ["./package-libs.sh", build_platform, build_arch, build_subplatform]
+    print(' '.join(args))
+    status = subprocess.call(args)
+    if status != 0:
+    	sys.exit(status)
 
 def package(args):
     opts = {}
