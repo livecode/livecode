@@ -204,7 +204,7 @@ function buildICU {
 
 
 # Need to build ICU tools for the host platform
-if [ "${HOST_PLATFORM}-${HOST_ARCH}" != "${PLATFORM}-${ARCH}" ] ; then
+if [ "${HOST_PLATFORM}" != "${PLATFORM}" ] ; then
 	# prevent custom c/c++ vars from being used to build for host
 	TMP_CUSTOM_CC="${CUSTOM_CC}"
 	TMP_CUSTOM_CXX="${CUSTOM_CXX}"
