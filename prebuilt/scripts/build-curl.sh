@@ -4,12 +4,6 @@ source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
 source "${BASEDIR}/scripts/util.inc"
 
-# Only for desktop platforms
-if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
-	echo "Curl not required for platform ${PLATFORM}"
-	exit 0
-fi
-
 # Configuration flags
 CURL_CONFIG="--disable-debug \
             --enable-http --enable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet \

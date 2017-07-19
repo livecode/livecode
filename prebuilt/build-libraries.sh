@@ -27,7 +27,29 @@ fi
 export CUSTOM_CC="${CC}"
 export CUSTOM_CXX="${CXX}"
 
-# Build all of the libraries that we depend on (OpenSSL, CURL and ICU) if not specified
-$BASEDIR/scripts/build-openssl.sh 
-$BASEDIR/scripts/build-curl.sh
-$BASEDIR/scripts/build-icu.sh
+# Set which libs to build for the target platform
+case "${PLATFORM}" in
+	android)
+		PREBUILT_LIBS="openssl icu"
+		;;
+	mac)
+		PREBUILT_LIBS="openssl icu"
+		;;
+	ios)
+		PREBUILT_LIBS="openssl icu"
+		;;
+	win32)
+		PREBUILT_LIBS="openssl curl icu"
+		;;
+	linux)
+		PREBUILT_LIBS="openssl curl icu"
+		;;
+	emscripten)
+		PREBUILT_LIBS="icu"
+		;;
+esac
+
+# Build all of the libraries that the target platform depends on
+for t_lib in ${PREBUILT_LIBS} ; do
+	${BASEDIR}/scripts/build-${t_lib}.sh
+done
