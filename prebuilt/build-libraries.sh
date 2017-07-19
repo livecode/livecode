@@ -23,9 +23,11 @@ else
 	export SUBPLATFORM=
 fi
 
-# Capture the existing CC and CXX variables, if any
+# Capture the existing build variables, if any
 export CUSTOM_CC="${CC}"
 export CUSTOM_CXX="${CXX}"
+export CUSTOM_EMMAKE="${EMMAKE}"
+export CUSTOM_EMCONFIGURE="${EMCONFIGURE}"
 
 # Set which libs to build for the target platform
 case "${PLATFORM}" in

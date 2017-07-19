@@ -159,8 +159,23 @@ function setCCForTarget {
 			LDFLAGS="-L${CROSS_TOP}/SDKs/${CROSS_SDK}/usr/lib -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -Wl,-dead_strip"
 			;;
 		emscripten)
-			EMMAKE="emmake"
-			EMCONFIGURE="emconfigure"
+			echo "CUSTOM_EMMAKE: ${CUSTOM_EMMAKE}"
+			echo "CUSTOM_EMCONFIGURE: ${CUSTOM_EMCONFIGURE}"
+			if [ ! -z "${CUSTOM_EMMAKE}" ] ; then
+				EMMAKE="${CUSTOM_EMMAKE}"
+				if [ ! -z "${CUSTOM_EMCONFIGURE}" ] ; then
+					EMCONFIGURE="${CUSTOM_EMCONFIGURE}"
+				else
+					# if EMMAKE is set but EMCONFIGURE is not then use folder of EMMAKE to find EMCONFIGURE
+					EMCONFIGURE="${CUSTOM_EMMAKE%/*}/emconfigure"
+				fi
+			else
+				EMMAKE="emmake"
+				EMCONFIGURE="emconfigure"
+			fi
+			
+			echo "EMMAKE: ${EMMAKE}"
+			echo "EMCONFIGURE: ${EMCONFIGURE}"
 			;;
 	esac
 
