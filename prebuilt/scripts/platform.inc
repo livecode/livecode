@@ -35,10 +35,6 @@ case "${PLATFORM}" in
 	mac)
 		export UNIVERSAL_ARCHS="i386 x86_64"
 		;;
-	emscripten)
-		export EMMAKE="emmake"
-		export EMCONFIGURE="emconfigure"
-		;;
 	ios)
 		source "${BASEDIR}/scripts/ios.inc"
 		if [ "${ARCH}" == "universal" ] ; then
@@ -78,6 +74,8 @@ function setCCForTarget {
 	STRIP=
 	CROSS_TOP=
 	CROSS_SDK=
+	EMMAKE=
+	EMCONFIGURE=
 	
 	case "${PLATFORM}" in
 		win32)
@@ -160,6 +158,10 @@ function setCCForTarget {
 			CXX="${CCPATH}/g++ -arch ${ARCH} ${ARCH_FLAGS} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=6.1"
 			LDFLAGS="-L${CROSS_TOP}/SDKs/${CROSS_SDK}/usr/lib -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -Wl,-dead_strip"
 			;;
+		emscripten)
+			EMMAKE="emmake"
+			EMCONFIGURE="emconfigure"
+			;;
 	esac
 
 	# Export compilation vars
@@ -176,4 +178,6 @@ function setCCForTarget {
 	export STRIP
 	export CROSS_TOP
 	export CROSS_SDK
+	export EMMAKE
+	export EMCONFIGURE
 }

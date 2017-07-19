@@ -66,6 +66,7 @@ function buildICU {
 			export ANDROID_CXXFLAGS="${ANDROID_CFLAGS}"
 			;;
 		emscripten)
+			CONFIG_TYPE=
 			CONFIG_FLAGS="--with-cross-build=${HOST_ICU_DIR}"
 			;;
 		ios)
