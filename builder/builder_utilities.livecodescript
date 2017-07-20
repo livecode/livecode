@@ -106,6 +106,15 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          put builderGetBuildNumber() into tBuildNumber
          dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
+      case "FMPackage"
+         local tGitRevision, tOutputFolder, tPrivateRepo, tTargetArch
+         put builderOutputFolder() into tOutputFolder
+         put builderGetGitFullHash() into tGitRevision
+         put builderPrivateRepoFolder() into tPrivateRepo
+         put builderTargetArch() into tTargetArch
+         repeat for each line tPlatform in pPlatforms
+            dispatch "fmPackageBuilderRun" to stack builderFMPackageBuilderStack() with tPlatform, tPrivateRepo, tOutputFolder, tGitRevision, tTargetArch
+         end repeat
    end switch
    	
    builderFinalize	
@@ -400,6 +409,10 @@ end builderNotesBuilderStack
 function builderArchiveBuilderStack
    return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
+
+function builderFMPackageBuilderStack
+   return builderSystemPrivateFolder() & slash & "package_solution.livecodescript"
+end builderFMPackageBuilderStack
 
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
