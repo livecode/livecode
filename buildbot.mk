@@ -253,8 +253,24 @@ dist-upload: dist-upload-files.txt dist-upload-mkdir
 # resulting archive gets transferred to a Mac for signing and
 # conversion to a DMG.
 distmac-archive:
+	set -e; \
 	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.app' -print0 \
-	    | xargs -0 tar -Jcvf mac-installer.tar.xz
+	    | xargs -0 tar -cvf mac-installer.tar; \
+	cd mac-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	find . -maxdepth 1 -name 'LiveCodeforFM.fmp12' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	cd win-x86-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	cd win-x86_64-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	bzip2 -c mac-installer.tar > mac-installer.tar.xz
 
 distmac-extract:
 	tar -xvf mac-installer.tar.xz
