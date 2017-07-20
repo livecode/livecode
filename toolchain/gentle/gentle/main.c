@@ -18,7 +18,7 @@
 #  define sep '\\'
 #endif
 
-int ErrorOccured = 0;
+int ErrorOccurred = 0;
 
 static scanargs();
 

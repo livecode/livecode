@@ -39,7 +39,7 @@ SetOption_ALERT()
 
 /*----------------------------------------------------------------------------*/
 
-/* --PATCH-- */ extern int ErrorOccured;
+/* --PATCH-- */ extern int ErrorOccurred;
 
 MESSAGE(msg, pos)
    char *msg;
