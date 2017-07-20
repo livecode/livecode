@@ -214,7 +214,9 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	                -o -name '*-bin.tar.bz2' \
-	                -o -name 'LiveCodeforFM-*.fmp12' \
+	                -o -name 'LiveCodeForFM-Mac.tar.xz' \
+	                -o -name 'LiveCodeForFM-Win-x86.tar.xz' \
+	                -o -name 'LiveCodeForFM-Win-x86_64.tar.xz' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
@@ -277,9 +279,15 @@ distmac-extract:
 	set -e; \
 	tar -xvf mac-installer.tar.xz; \
 	$(buildtool_command) --platform mac --stage fmpackage --debug; \
+	find . -maxdepth 1 -name 'LiveCodeforFM-Mac-*.fmp12' -print0 \
+	    | xargs -0 tar -cvf LiveCodeForFM-Mac.tar.xz; \
 	$(buildtool_command) --platform win-x86 --stage fmpackage --debug; \
-	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug
-	
+	find . -maxdepth 1 -name 'LiveCodeforFM-Win-x86-*.fmp12' -print0 \
+	    | xargs -0 tar -cvf LiveCodeForFM-Win-x86.tar.xz; \
+	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug; \
+	find . -maxdepth 1 -name 'LiveCodeforFM-Win-x86_64-*.fmp12' -print0 \
+	    | xargs -0 tar -cvf LiveCodeForFM-Win-x86_64.tar.xz
+
 # Final installer creation for Mac
 distmac-disk-%: distmac-bundle-%
 	$(buildtool_command) --platform mac --stage disk --edition $*
