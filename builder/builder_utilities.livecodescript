@@ -509,11 +509,11 @@ end builderGetBuildNumber
 ////////////////////////////////////////////////////////////////////////////////
 
 function builderGetGitShortHash
-	return shell("git --git-dir=../.git rev-parse --short HEAD")
+	return word 1 of shell("git --git-dir=../.git rev-parse --short HEAD")
 end builderGetGitShortHash
 
 function builderGetGitFullHash
-	return shell("git --git-dir=../.git rev-parse HEAD")
+	return word 1 of shell("git --git-dir=../.git rev-parse HEAD")
 end builderGetGitFullHash
 
 ////////////////////////////////////////////////////////////////////////////////
