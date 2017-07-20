@@ -619,13 +619,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       -- Get the list of valid identities that are available
       local tValidIdentities
-      get shell("/usr/bin/security -q find-identity -v")
+      get shell("/usr/bin/security -q find-identity -v -p codesigning")
       if the last line of it contains "valid identities found" then
          delete the last line of it
+         -- "it" now is of the form:
+         -- 1) Certificate1IdHEX "Certificate1NameString"
+         -- 2) Certificate2IdHEX "Certificate2NameString"
          repeat for each line tIdentity in it
-            put char 2 to -2 of the last word of tIdentity & return after tValidIdentities
+            put the second word of tIdentity into tValidIdentities[char 2 to -2 of the last word of tIdentity]
          end repeat
-         delete the last char of tValidIdentities
       else
          put empty into tValidIdentities
       end if
@@ -633,8 +635,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       -- Use the first one we can that is in the profile
       put empty into tCertificate
       repeat for each line tIdentity in tProfileInfo["identities"]
-         if tIdentity is among the lines of tValidIdentities then
-            put tIdentity into tCertificate
+         if tValidIdentities[tIdentity] is not empty then
+            put tValidIdentities[tIdentity] into tCertificate
             exit repeat
          end if
       end repeat
@@ -1270,7 +1272,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    -- MM-2011-09-28: The orientations settings have now been adjusted.  The standalone builder should wipe out
    -- any old oreintation settings.  If the user has not visited the new standalone builder then the new settings will not
-   -- be presesnt and the old settings will still be there.  If this is the case, port old settings.
+   -- be present and the old settings will still be there.  If this is the case, port old settings.
    --
    local tIPhoneOrientation, tIPadOrientations
    if pSettings["ios,initial orientation"] is not empty  then
