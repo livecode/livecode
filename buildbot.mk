@@ -273,8 +273,12 @@ distmac-archive:
 	bzip2 -c mac-installer.tar > mac-installer.tar.xz
 
 distmac-extract:
-	tar -xvf mac-installer.tar.xz
-
+	set -e; \
+	tar -xvf mac-installer.tar.xz; \
+	$(buildtool_command) --platform mac --stage fmpackage --debug; \
+	$(buildtool_command) --platform win-x86 --stage fmpackage --debug; \
+	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug
+	
 # Final installer creation for Mac
 distmac-disk-%: distmac-bundle-%
 	$(buildtool_command) --platform mac --stage disk --edition $*
