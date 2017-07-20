@@ -9,6 +9,7 @@ local sOutputDir
 local sPrivateDir
 local sDocsDir
 local sBuiltDocsDir
+local sTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,10 @@ end builderSetBuiltDocsDir
 command builderSetOutputDir pDir
    put pDir into sOutputDir
 end builderSetOutputDir
+
+command builderSetTargetArch pArch
+   put pArch into sTargetArch
+end builderSetTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,6 +231,10 @@ private command copyFolder @xManifest, pPrefix, pSrcFolder, pDstFolder
 end copyFolder
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function builderTargetArch
+   return sTargetArch
+end builderTargetArch
 
 -- Returns the folder of the repository
 function builderRepoFolder
