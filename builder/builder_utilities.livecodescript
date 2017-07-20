@@ -9,6 +9,7 @@ local sOutputDir
 local sPrivateDir
 local sDocsDir
 local sBuiltDocsDir
+local sTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,10 @@ end builderSetBuiltDocsDir
 command builderSetOutputDir pDir
    put pDir into sOutputDir
 end builderSetOutputDir
+
+command builderSetTargetArch pArch
+   put pArch into sTargetArch
+end builderSetTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +106,15 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          put builderGetBuildNumber() into tBuildNumber
          dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
+      case "FMPackage"
+         local tGitRevision, tOutputFolder, tPrivateRepo, tTargetArch
+         put builderOutputFolder() into tOutputFolder
+         put builderGetGitFullHash() into tGitRevision
+         put builderPrivateRepoFolder() into tPrivateRepo
+         put builderTargetArch() into tTargetArch
+         repeat for each line tPlatform in pPlatforms
+            dispatch "fmPackageBuilderRun" to stack builderFMPackageBuilderStack() with tPlatform, tPrivateRepo, tOutputFolder, tGitRevision, tTargetArch
+         end repeat
    end switch
    	
    builderFinalize	
@@ -226,6 +240,10 @@ private command copyFolder @xManifest, pPrefix, pSrcFolder, pDstFolder
 end copyFolder
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function builderTargetArch
+   return sTargetArch
+end builderTargetArch
 
 -- Returns the folder of the repository
 function builderRepoFolder
@@ -392,6 +410,10 @@ function builderArchiveBuilderStack
    return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
 
+function builderFMPackageBuilderStack
+   return builderSystemPrivateFolder() & slash & "package_solution.livecodescript"
+end builderFMPackageBuilderStack
+
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
    return the result & slash & "modules" & slash & "lci"
@@ -483,6 +505,16 @@ function builderGetBuildNumber
    put tVersionFile["BUILD_REVISION"] into tVersion   
    return tVersion
 end builderGetBuildNumber
+
+////////////////////////////////////////////////////////////////////////////////
+
+function builderGetGitShortHash
+	return shell("git --git-dir=../.git rev-parse --short HEAD")
+end builderGetGitShortHash
+
+function builderGetGitFullHash
+	return shell("git --git-dir=../.git rev-parse HEAD")
+end builderGetGitFullHash
 
 ////////////////////////////////////////////////////////////////////////////////
 
