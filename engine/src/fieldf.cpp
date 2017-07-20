@@ -646,7 +646,11 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
 			//   of background color (apart from 128,128,128!).
 			p_context->setforeground(p_context->getwhite());
-			p_context->setfunction(GXxor);
+            
+            /* The XOR blend is no longer supported, fortunately exlusion
+             * (and difference) are the same as XOR when the source is white or
+             * black. */
+			p_context->setfunction(GXblendExclusion);
 			
 			// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
 			//   ink works correctly.
