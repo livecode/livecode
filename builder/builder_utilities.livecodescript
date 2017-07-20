@@ -495,6 +495,16 @@ end builderGetBuildNumber
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function builderGetGitShortHash
+	return shell("git --git-dir=../.git rev-parse --short HEAD")
+end builderGetGitShortHash
+
+function builderGetGitFullHash
+	return shell("git --git-dir=../.git rev-parse HEAD")
+end builderGetGitFullHash
+
+////////////////////////////////////////////////////////////////////////////////
+
 function getExecutableArchs pInput
    get shell("lipo -info" && quote & pInput & quote)
    set the itemDelimiter to ":"
