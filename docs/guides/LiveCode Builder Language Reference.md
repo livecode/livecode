@@ -79,7 +79,10 @@ A LiveCode builder statement or declaration can be continued onto
 multiple lines of code by placing the line continuation character `\`
 at the end each line.
 
-- **Line continuation**: \\(\n|\r\n|\r)
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
 
 > **Note:** A line continuation cannot occur within a comment.
 
@@ -433,6 +436,14 @@ statement blocks.
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
+
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
+
 There are a number of types defined in the foreign module which map to
 the appropriate foreign type when used in foreign handler signatures.
 
@@ -554,8 +565,8 @@ non-Windows platform then it is taken to be `default`.
 
 The Java binding string has the following form:
 
-    "java:[className>][functionType.]function[!calling]"
-    
+    "java:[className>][functionType.]function[!calling][?thread]"
+
 Here *className* is the qualified name of the Java class to bind to.
 
 Here *functionType* is either empty, or `get` or `set`, which are 
@@ -633,7 +644,12 @@ or
 			_JNI_SetMouseListener(pJButton, tListener)
 		end unsafe
 	end handler
-	
+
+>*Important:* On Android, interface callbacks are *always* run on the
+> engine thread. This means JNI local references from other threads
+> (in particular the UI thread) are unavailable. Therefore it is not 
+> advised to do anything using the JNI in interface callbacks. 
+
 Here *calling* specifies the calling convention which can be one of:
 
  - `instance`
@@ -643,6 +659,9 @@ Here *calling* specifies the calling convention which can be one of:
 Instance and nonvirtual calling conventions require instances of the given
 Java class, so the foreign handler declaration will always require a Java
 object parameter.
+
+Here, *thread* is either empty or `ui`. The `ui` form is used on 
+Android when binding to methods that must be run on the UI thread. 
 
 > **Warning:** At the moment it is not advised to use callbacks that may be
 > executed on arbitrary threads, as this is likely to cause your application

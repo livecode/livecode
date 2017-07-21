@@ -55,6 +55,7 @@ enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
     kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
+    kMCTypeInfoFlagHandlerIsVariadic = 1 << 9,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real
@@ -594,6 +595,9 @@ void __MCStreamFinalize(void);
 
 bool __MCJavaInitialize(void);
 void __MCJavaFinalize(void);
+
+bool __MCObjcInitialize(void);
+void __MCObjcFinalize(void);
 
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */

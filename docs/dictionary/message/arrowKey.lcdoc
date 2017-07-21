@@ -2,15 +2,15 @@ Name: arrowKey
 
 Type: message
 
-Syntax: arrowKey {up | down | left | right}
+Syntax: arrowKey <pKey>
 
 Summary:
-the <active (focused) control(glossary)>, or to the <current card> if no
+Sent to the <active control(glossary)>, or to the <current card> if no
 <control> is <focus|focused>, when the user presses an arrow key.
 
-Associations: button
-
 Introduced: 1.0
+
+Associations: card, field
 
 OS: mac, windows, linux
 
@@ -21,6 +21,13 @@ on arrowKey theKey -- make Up arrow go to the first card
   if theKey is "up" then go to card 1
   else pass arrowKey
 end arrowKey
+
+Parameters:
+pKey (enum):
+- "up": The up arrow key
+- "down": The down arrow key
+- "left": The left arrow key
+- "right": The right arrow key
 
 Description:
 The parameter indicates which arrow key was pressed.

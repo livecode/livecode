@@ -2,7 +2,7 @@ Name: motionRelease
 
 Type: message
 
-Syntax: motionRelease <motion>
+Syntax: motionRelease <pMotion>
 
 Summary:
 Sent when a motion is ended due to an incoming even such as a
@@ -20,7 +20,7 @@ on motionRelease theMotion
 end motionRelease
 
 Parameters:
-motion:
+pMotion:
 The type of motion detected by the device
 
 Description:

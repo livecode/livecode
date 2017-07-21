@@ -1,0 +1,18 @@
+library com.livecode.lcs_tests.core.canvas
+
+use com.livecode.canvas
+
+public handler CanvasTestPixelHeight()
+	variable tCanvas as Canvas
+	put a new canvas with size [300,100] into tCanvas
+	return the pixel height of tCanvas is 100
+end handler
+
+public handler CanvasTestImageFromResourceFile()
+	variable tImage as Image
+	put image from resource file "tiny.png" into tImage
+	
+	return not (the pixels of tImage is empty)
+end handler
+
+end library

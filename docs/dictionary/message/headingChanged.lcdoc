@@ -2,7 +2,7 @@ Name: headingChanged
 
 Type: message
 
-Syntax: headingChanged <heading>
+Syntax: headingChanged <pHeading>
 
 Summary:
 Sent to the current card of the defaultStack when the heading of the
@@ -21,8 +21,8 @@ on headingChanged theHeading
 end headingChanged
 
 Parameters:
-heading:
-the heading of the device, in degrees relative to true north if
+pHeading:
+The heading of the device, in degrees relative to true north if
 available, otherwise relative to magnetic north
 
 Description:
@@ -33,7 +33,7 @@ The <headingChanged> message is sent to the current card of the
 defaultStack when the heading of the device changes.
 
 If heading tracking cannot be started (typically due to a lack of
-calibration) then a trackingError message is sent instead.
+calibration) then a <trackingError> message is sent instead.
 
 References: iphoneSetHeadingCalibrationTimeout (command),
 mobileCanTrackHeading (function), mobileCanTrackLocation (function),

@@ -4,14 +4,12 @@ Synonyms: xbrowser_downloadrequest
 
 Type: message
 
-Syntax: browserDownloadRequest <instanceId>, <url>
+Syntax: browserDownloadRequest <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_DownloadRequest <url>, <instanceId>
+Syntax: XBrowser_DownloadRequest <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a download has been requested in a browser object.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -30,12 +28,10 @@ on browserDownloadRequest pInstanceId, pUrl
 end browserDownloadRequest
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url of the resource about to be downloaded
 
 Description:

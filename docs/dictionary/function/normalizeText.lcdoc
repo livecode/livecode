@@ -14,26 +14,17 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local tExample
 set the formSensitive to true
-put "e" & numToCodepoint("0x301") into tExample        -- Acute accent
-put tExample is "é" -- Returns false
-put normalizeText(tExample, "NFC") is "é"            -- Returns true
+put "e" & numToCodepoint("0x301") into tExample    -- Acute accent
+put tExample is "é"                          -- Returns false
+put normalizeText(tExample, "NFC") is "é"    -- Returns true
 
 Parameters:
 text (string):
 
 
 normalForm (enum):
-In Unicode text, the same visual string can be represented by different
-character sequences. A prime example of this is precomposed characters
-and decomposed characters: an "e" followed by a combining acute
-character is visually indistinguishable from a precombined "é"
-character. Because of the confusion that can result, Unicode defined a
-number of "normal forms" that ensure that character representations are
-consistent. The "compatibility" normal forms are designed by the Unicode
-Consortium for dealing with certain legacy encodings and are not
-generally useful otherwise.
-
 -   "NFC": precomposed
 -   "NFD": decomposed
 -   "NFKC": compatibility precomposed
@@ -44,19 +35,31 @@ Description:
 Use the <normalizeText> function when you require a specific normal form
 of text.
 
-Normalization is a process defined by the Unicode standard for removing
-minor encoding differences for a small set of characters and is more
-fully described in the normalizeText function. >*Note:* Normalization
-does not avoid all problems with visually-identical characters; Unicode
-contains a number of characters that will (in the majority of fonts) be
-indistinguishable but are nonetheless completely different characters (a
-prime example of this is M and U+2164 ROMAN NUMERAL ONE THOUSAND).
+Normalization is a process defined by the <Unicode> standard for removing
+minor encoding differences for a small set of characters. 
+In <Unicode> text, the same visual string can be represented by different
+character sequences. A prime example of this is precomposed characters
+and decomposed characters: an "e" followed by a combining acute
+character is visually indistinguishable from a precombined "é"
+character. Because of the confusion that can result, <Unicode> defined a
+number of "normal forms" that ensure that character representations are
+consistent. The "compatibility" normal forms are designed by the <Unicode>
+Consortium for dealing with certain legacy encodings and are not
+generally useful otherwise.
+
+
+
+> *Note:* Normalization does not avoid all problems with
+> visually-identical characters; <Unicode> contains a number of characters
+> that will (in the majority of fonts) be indistinguishable but are
+> nonetheless completely different characters (a prime example of this is
+> M and U+2164 ROMAN NUMERAL ONE THOUSAND).
 
 Unless the <formSensitive> <property> is set to true, LiveCode ignores
 text normalization when performing comparisons.
 
 References: textDecode (function), textEncode (function),
-property (glossary), formSensitive (property)
+property (glossary), formSensitive (property), Unicode (glossary)
 
 Tags: text processing
 

@@ -845,7 +845,7 @@ void MCAVFoundationPlayer::Start(double rate)
     // PM-2014-07-15 Various tweaks to handle all cases of playback
     if (!m_play_selection_only)
     {
-        if (m_finished && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+        if (m_finished && CMTimeCompare(m_player . currentTime, m_player . currentItem . asset . duration) >= 0 && rate > 0)
         {
             //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
             SeekToTimeAndWait(0);
@@ -856,11 +856,14 @@ void MCAVFoundationPlayer::Start(double rate)
         if (m_selection_duration > 0 && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
         {
             //[m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-            SeekToTimeAndWait(m_selection_start);
+            if (rate > 0)
+                SeekToTimeAndWait(m_selection_start);
+            else
+                SeekToTimeAndWait(m_selection_finish);
         }
         
         // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
-        if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+        if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . asset . duration) >= 0 && rate > 0)
         {
             //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
             SeekToTimeAndWait(0);
@@ -932,6 +935,22 @@ void MCAVFoundationPlayer::Start(double rate)
         else if ([m_player rate] == 0.0)
             DoUpdateCurrentFrame(this);
         
+        // PM-2017-07-19: [[ Bug 19893 ]]
+        /* The docs for "addBoundaryTimeObserverForTimes" say "Requests invocation of a block when specified times are traversed during normal playback."
+         
+         This probably explains why the block of "addBoundaryTimeObserverForTimes" is not invoked for *reverse* playback.
+         
+         So use "addPeriodicTimeObserverForInterval" to tackle this case:
+         */
+        
+        if (m_play_selection_only && m_selection_duration != 0 && rate < 0 && CMTimeCompare(time, CMTimeFromLCTime(m_selection_start)) <= 0)
+        {
+            [m_player pause];
+            [m_player seekToTime: CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            
+            MovieFinished();
+            MCPlatformBreakWait();
+        }
     }];
     
     m_playing = true;

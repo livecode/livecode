@@ -9,6 +9,8 @@ Sent when the user moves the mouse during a <drag and drop>.
 
 Introduced: 2.0
 
+Associations: card, field, button, graphic, scrollbar, player, image
+
 OS: mac, windows, linux
 
 Platforms: desktop, server

@@ -2,13 +2,11 @@ Name: u3eject
 
 Type: message
 
-Syntax: u3eject <type>
+Syntax: u3eject <pType>
 
 Summary:
 Sent to the first stack after the engine receives a U3 stop message from
 the U3 LaunchPad.
-
-Associations: stack
 
 Introduced: 2.7.3
 
@@ -22,13 +20,9 @@ on u3eject
 end u3eject
 
 Parameters:
-type:
-One of 'safe' or 'physical' depending on whether the U3 drive was
-ejected safely or physically.If type is 'safe' then the application has
-as much time as it needs to shutdown, however it must quit else it
-violates the U3 specification. If type is 'physical' then the
-application will be forcefully terminated not more than 4 seconds after
-it is sent the u3eject message.
+pType (enum): How the U3 drive was ejected.
+- "safe": the application has as much time as it needs to shutdown, however it must quit else it violates the U3 specification. 
+- "physical": the application will be forcefully terminated not more than 4 seconds after it is sent the u3eject message.
 
 Description:
 When the U3 LaunchPad requests an application stops, it sends a stop

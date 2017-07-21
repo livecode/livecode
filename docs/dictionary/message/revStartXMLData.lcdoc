@@ -2,7 +2,7 @@ Name: revStartXMLData
 
 Type: message
 
-Syntax: revStartXMLData <elementData>
+Syntax: revStartXMLData <pElementData>
 
 Summary:
 Sent to the <current card> when the <revXMLCreateTree> or
@@ -25,7 +25,7 @@ on revStartXMLData theData -- store data for this node
 end revStartXMLData
 
 Parameters:
-elementData:
+pElementData:
 The text of the XML element currently being parsed.
 
 Description:

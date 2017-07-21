@@ -2055,25 +2055,37 @@ end docsFileGetUTF8Contents
 -- Find all lcdoc files in pFolder and add them to the list of docs 
 -- data in xLibraryA
 private command addToDictionaryFromFolder pFolder, @xLibraryA
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
    docsBuilderProgressUpdate "", "Building dictionary from folder" && pFolder
-   set the defaultfolder to pFolder
-   get the files
+   get files(pFolder)
    filter it with "*.lcdoc"
    repeat for each line tFile in it
-      local tText, tParsedA
+      local tText, tParsedA, tDisplayName, tSynonymA
       wait 0 with messages
       put docsFileGetUTF8Contents(pFolder & slash & tFile, true) into tText
       put revDocsParseDocText(tText) into tParsedA
       repeat for each element tDoc in tParsedA["doc"]
+         put tDoc["display name"] into tDisplayName
          -- TODO: Work out why something empty is returned
-         if tDoc["display name"] is empty then next repeat
+         if tDisplayName is empty then next repeat
          addToList tDoc, xLibraryA
+		 -- BWM fix for Bug 18305
+		 -- add an additional entry to dictionary for each synonym to allow keyword search
+		 if tDoc["Synonyms"] is not empty then
+		    put tDoc["Synonyms"] into tSynonymA
+		    repeat for each element tSynonymName in tSynonymA
+		   	   local tSynonymDoc
+			   if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
+			   put tDoc into tSynonymDoc
+			   put tSynonymName into tSynonymDoc["display name"]
+			   if tDoc["Type"] is not "glossary" then
+			      put " (Synonym of " & tDisplayName & ")" after tSynonymDoc["display name"]
+			   end if
+			   addToList tSynonymDoc, xLibraryA
+		    end repeat
+		 end if
+		 -- end fix for Bug 18305
       end repeat
    end repeat
-   set the defaultFolder to tDefaultFolder
 end addToDictionaryFromFolder
 
 /*

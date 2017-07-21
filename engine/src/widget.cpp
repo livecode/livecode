@@ -970,6 +970,18 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	return drect.width != 0 && drect.height != 0;
 }
 
+void MCWidget::SetName(MCExecContext& ctxt, MCStringRef p_name)
+{
+    MCNewAutoNameRef t_old_name = getname();
+
+    MCControl::SetName(ctxt, p_name);
+    
+    if (!MCNameIsEqualTo(*t_old_name, getname(), kMCStringOptionCompareExact))
+    {
+        recompute();
+    }
+}
+
 void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
 {
     bool t_is_disabled;

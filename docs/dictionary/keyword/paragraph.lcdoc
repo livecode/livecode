@@ -15,9 +15,11 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local tText
 put paragraph 1 of tText
 
 Example:
+local tText
 get the last paragraph of tText
 
 Description:
@@ -25,14 +27,14 @@ Use the <paragraph> keyword to refer to one or more paragraphs in a
 container. 
 
 A <paragraph> is a chunk delimited by either a return character or the
-> Unicode paragraph separator (0x2029).
->*Note:*  The paragraph chunk is identical to the line chunk, except
+Unicode paragraph separator (0x2029).
+
+>*Note:*  The <paragraph> chunk is identical to the line chunk, except
 > that it is also delimited by the paragraph separator character. This
 > reflects the paragraph breaking exhibited by LiveCode fields.
 
-References: item (keyword), character (keyword), segment (keyword),
-sentence (keyword), line (keyword), word (keyword), trueWord (keyword),
-token (keyword)
+References: character (keyword), item (keyword), line (keyword),
+paragraphOffset (function), paragraphs (keyword), segment (keyword),
+sentence (keyword), token (keyword), trueWord (keyword), word (keyword)
 
 Tags: text processing
-

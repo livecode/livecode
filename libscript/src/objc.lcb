@@ -1,0 +1,156 @@
+/* Copyright (C) 2017 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This module provides utility handlers for converting to and from Obj-C types.
+
+*/
+module com.livecode.objc
+
+use com.livecode.foreign
+
+/****/
+
+public foreign type ObjcObject binds to "MCObjcObjectTypeInfo"
+public foreign type ObjcId binds to "MCObjcIdTypeInfo"
+public foreign type ObjcRetainedId binds to "MCObjcRetainedIdTypeInfo"
+public foreign type ObjcAutoreleasedId binds to "MCObjcAutoreleasedIdTypeInfo"
+
+/****/
+
+private foreign handler MCStringCreateWithCFString(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFString"
+private foreign handler MCStringConvertToCFStringRef(in pString as String, out rNSString as ObjcRetainedId) returns CBool binds to "MCStringConvertToCFStringRef"
+
+/**/
+
+/**
+Summary:    Convert a String into an Objective-C string
+
+Parameters:
+pString: The String to convert
+
+Returns:
+A Objective-C object of type NSString
+
+Description
+Use <StringToNSString> to convert a variable of type String to an Objective-C
+string object (NSString).
+
+*/
+public handler StringToNSString(in pString as String) returns ObjcObject
+	variable tNSString as ObjcRetainedId
+	unsafe
+		MCStringConvertToCFStringRef(pString, tNSString)
+	end unsafe
+	return tNSString
+end handler
+
+/**
+Summary:    Convert a Objective-C string into a String
+
+Parameters:
+pObjcString: The NSString to convert
+
+Returns:
+A String value
+
+Description
+Use <StringFromNSString> to convert an Objective-C string object (NSString) to
+a variable of type String.
+
+*/
+public handler StringFromNSString(in pObjcString as ObjcObject) returns String
+	variable tString as String
+	unsafe
+		MCStringCreateWithCFString(pObjcString, tString)
+	end unsafe
+	return tString
+end handler
+
+/****/
+
+public handler type ObjcActionProxyHandler(in pSender as ObjcObject, in pContext as optional any) returns nothing
+
+private foreign handler MCObjcObjectCreateActionProxy(in pHandler as optional any, in pValue as optional any) returns ObjcObject binds to "MCObjcObjectCreateActionProxy"
+private foreign handler MCObjcObjectGetActionProxySelector() returns UIntPtr binds to "MCObjcObjectGetActionProxySelector"
+
+public handler ObjcProxyGetTarget(in pHandler as ObjcActionProxyHandler, in pContext as optional any) returns ObjcObject
+	unsafe
+		return MCObjcObjectCreateActionProxy(pHandler, pContext)
+	end unsafe
+end handler
+
+public handler ObjcProxyGetAction() returns UIntPtr
+	unsafe
+		return MCObjcObjectGetActionProxySelector()
+	end unsafe
+end handler
+
+/**/
+
+/****/
+
+private foreign handler _MCObjcObjectCreateWithId_AsPointer(in pPointer as optional Pointer) returns ObjcObject binds to "MCObjcObjectCreateWithId"
+private foreign handler _MCObjcObjectGetId_AsPointer(in pObject as ObjcObject) returns optional Pointer binds to "MCObjcObjectGetId"
+
+/**/
+
+/**
+Summary:    Convert a Pointer into an ObjcObject
+
+Parameters:
+pPointer: The Pointer to convert
+
+Returns:
+An ObjcObject wrapping the Pointer
+	 
+Description:
+Use <PointerToObjcObject> to convert a variable of type Pointer to one of type
+ObjcObject.
+*/
+public handler PointerToObjcObject(in pPointer as optional Pointer) returns ObjcObject
+	variable tObject as ObjcObject
+	unsafe
+		put _MCObjcObjectCreateWithId_AsPointer(pPointer) into tObject
+	end unsafe
+	return tObject
+end handler
+
+/**
+Summary:    Convert an ObjcObject into a Pointer
+
+Parameters:
+pObjcObject: The ObjcObject to convert
+
+Returns:
+The Pointer wrapped by the ObjcObject
+	 
+Description:
+Use <PointerFromObjcObject> to convert a variable of type ObjcObject to one of
+type Pointer.
+*/
+public handler PointerFromObjcObject(in pObjcObject as ObjcObject) returns optional Pointer
+	variable tPointer as Pointer
+	unsafe
+		put _MCObjcObjectGetId_AsPointer(pObjcObject) into tPointer
+	end unsafe
+	return tPointer
+end handler
+
+/****/
+
+end module
+

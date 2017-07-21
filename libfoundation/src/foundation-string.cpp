@@ -1204,7 +1204,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			t_value = va_arg(p_args, MCValueRef);
 			
 			MCAutoStringRef t_string;
-			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+			if (t_value == nullptr)
+                t_string = MCSTR("(null)");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
 				t_string = (MCStringRef)t_value;
             else
 				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);

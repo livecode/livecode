@@ -18,7 +18,7 @@ Platforms: desktop, server, mobile
 
 Example:
 on exitField -- remove visual signs that the field is being edited
-set the showBorder of the target to false
+   set the showBorder of the target to false
 end exitField
 
 Description:
@@ -29,6 +29,7 @@ The selection is removed from a field (and the field loses focus) when
 another window is brought to the front, when the user clicks in another
 field, or when the user tabs out of the field. The field also loses
 focus when the <select> <command> is used to select text in another field.
+
 However, the <exitField> message is not sent when the user clicks
 another point in the same field.
 
