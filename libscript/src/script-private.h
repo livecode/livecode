@@ -362,19 +362,25 @@ enum MCScriptForeignHandlerLanguage
     kMCScriptForeignHandlerLanguageJava,
 };
 
-enum MCJavaThread {
-    kMCJavaThreadDefault,
-    kMCJavaThreadUI
+/* MCScriptThreadAffinity describes which thread a foreign handler should be
+ * executed on. This applies to Android and iOS, where a handler can either be
+ * run on the default (engine) thread, or the UI (main) thread. */
+enum MCScriptThreadAffinity
+{
+    kMCScriptThreadAffinityDefault,
+    kMCScriptThreadAffinityUI,
 };
 
 /* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
  * method. */
 enum MCScriptForeignHandlerObjcCallType
 {
-    /* Call the method using method_invoke on the instance */
+    /* Call the method using method_invoke on the instance (on the default
+     * thread) */
     kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
     
-    /* Call the method using method_invoke on the class instance */
+    /* Call the method using method_invoke on the class instance (on the default
+     * thread) */
     kMCScriptForeignHandlerObjcCallTypeClassMethod,
 };
 
@@ -383,7 +389,8 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
     MCStringRef binding;
     
     // Bound function information - not pickled.
-    MCScriptForeignHandlerLanguage language;
+    MCScriptForeignHandlerLanguage language : 8;
+    MCScriptThreadAffinity thread_affinity : 8;
     union
     {
         struct
@@ -397,7 +404,7 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
         } builtin_c;
         struct
         {
-            MCScriptForeignHandlerObjcCallType call_type;
+            MCScriptForeignHandlerObjcCallType call_type : 8;
             void *objc_class;
             void *objc_selector;
             void *function_cif;
@@ -407,7 +414,6 @@ struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
             MCNameRef class_name;
             void *method_id;
             int call_type : 8;
-            int thread : 8;
         } java;
     };
 };
@@ -683,7 +689,7 @@ bool
 MCScriptThrowJavaBindingNotSupported(void);
 
 bool
-MCScriptThrowUnknownJavaThreadError(void);
+MCScriptThrowUnknownThreadAffinityError(void);
 
 bool
 MCScriptCreateErrorExpectedError(MCErrorRef& r_error);

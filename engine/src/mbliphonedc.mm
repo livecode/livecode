@@ -214,6 +214,11 @@ void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)
 	MCFiberCall(s_main_fiber, handler, context);
 }
 
+bool MCIPhoneIsOnMainFiber(void)
+{
+    return MCFiberIsCurrentThread(s_main_fiber);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean MCScreenDC::open(void)

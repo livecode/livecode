@@ -352,11 +352,11 @@ MCScriptThrowUnableToLoadForiegnLibraryError(void)
 }
 
 bool
-MCScriptThrowUnknownJavaThreadError(void)
+MCScriptThrowUnknownThreadAffinityError(void)
 {
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
                                  "reason",
-                                 MCSTR("unknown thread for java binding"),
+                                 MCSTR("unknown thread affinity specified in binding string"),
                                  nil);
 }
 
