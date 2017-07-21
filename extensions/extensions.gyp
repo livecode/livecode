@@ -80,7 +80,8 @@
 
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions',
+						# hack because gyp wants an output
+                        'notarealfile.txt',
 					],
 
 					'message': 'Building extensions',
@@ -110,6 +111,7 @@
 						'<(PRODUCT_DIR)/packaged_extensions',
 						'<(PRODUCT_DIR)/modules/lci',
 						'>(lc-compile_host)',
+                        "false",
 						'<@(_sources)',
 					],
 				},
