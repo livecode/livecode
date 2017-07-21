@@ -85,7 +85,8 @@ begin
 	MCDateExecGetUniversalDate(output)
 end syntax
 
-/*Summary:	The seconds
+/**
+Summary:	The seconds
 
 Example:
 	variable tTime as real
