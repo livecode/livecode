@@ -172,34 +172,247 @@ STDMETHODIMP MCGDWRenderer<Callback>::DrawUnderline(void* context, FLOAT baselin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCGDWFontCollectionLoader :
+	public IDWriteFontCollectionLoader
+{
+public:
+	// IUnknown
+	STDMETHOD_(ULONG, AddRef)();
+	STDMETHOD_(ULONG, Release)();
+	STDMETHOD(QueryInterface)(REFIID, void**);
+
+	// IDWriteFontCollectionLoader
+	STDMETHOD(CreateEnumeratorFromKey)(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator);
+
+private:
+	std::atomic<ULONG> m_refcount = 1;
+};
+
+class MCGDWFontFileEnumerator :
+	public IDWriteFontFileEnumerator
+{
+public:
+	MCGDWFontFileEnumerator(IDWriteFactory *factory, MCProperListRef files);
+	~MCGDWFontFileEnumerator();
+
+	// IUnknown
+	STDMETHOD_(ULONG, AddRef)();
+	STDMETHOD_(ULONG, Release)();
+	STDMETHOD(QueryInterface)(REFIID, void**);
+
+	// IDWriteFontFileEnumerator
+	STDMETHOD(MoveNext)(BOOL* hasCurrentFile);
+	STDMETHOD(GetCurrentFontFile)(IDWriteFontFile** fontFile);
+
+private:
+	MCProperListRef m_files;
+	uindex_t m_file_index;
+
+	IDWriteFontFile *m_current_file;
+	IDWriteFactory *m_factory;
+	std::atomic<ULONG> m_refcount = 1;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IUnknown
+STDMETHODIMP_(ULONG) MCGDWFontCollectionLoader::AddRef()
+{
+	return ++m_refcount;
+}
+
+STDMETHODIMP_(ULONG) MCGDWFontCollectionLoader::Release()
+{
+	ULONG t_remaining = --m_refcount;
+	if (t_remaining == 0)
+		delete this;
+
+	return t_remaining;
+}
+
+STDMETHODIMP MCGDWFontCollectionLoader::QueryInterface(REFIID riid, void **ppvObject)
+{
+	if (riid == __uuidof(IUnknown) || riid == __uuidof(IDWriteFontCollectionLoader))
+	{
+		*ppvObject = this;
+		return S_OK;
+	}
+
+	return E_NOINTERFACE;
+}
+
+// IDWriteFontCollectionLoader
+STDMETHODIMP MCGDWFontCollectionLoader::CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator)
+{
+	MCProperListRef t_font_files = *static_cast<MCProperListRef const*>(collectionKey);
+	MCAssert(collectionKeySize == sizeof(MCProperListRef));
+	MCAssert(MCValueGetTypeCode(t_font_files) == kMCValueTypeCodeProperList);
+
+	MCGDWFontFileEnumerator *t_enum = new(std::nothrow) MCGDWFontFileEnumerator(factory, t_font_files);
+	if (t_enum == nil)
+		return E_OUTOFMEMORY;
+
+	*fontFileEnumerator = t_enum;
+	return S_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGDWFontFileEnumerator::MCGDWFontFileEnumerator(IDWriteFactory *p_factory, MCProperListRef p_files)
+{
+	m_current_file = nil;
+
+	m_factory = p_factory;
+	p_factory->AddRef();
+
+	m_files = MCValueRetain(p_files);
+	m_file_index = 0;
+}
+
+MCGDWFontFileEnumerator::~MCGDWFontFileEnumerator()
+{
+	m_factory->Release();
+	MCValueRelease(m_files);
+
+	if (m_current_file != nil)
+		m_current_file->Release();
+}
+
+// IUnknown
+STDMETHODIMP_(ULONG) MCGDWFontFileEnumerator::AddRef()
+{
+	return ++m_refcount;
+}
+
+STDMETHODIMP_(ULONG) MCGDWFontFileEnumerator::Release()
+{
+	ULONG t_remaining = --m_refcount;
+	if (t_remaining == 0)
+		delete this;
+
+	return t_remaining;
+}
+
+STDMETHODIMP MCGDWFontFileEnumerator::QueryInterface(REFIID riid, void **ppvObject)
+{
+	if (riid == __uuidof(IUnknown) || riid == __uuidof(IDWriteFontFileEnumerator))
+	{
+		*ppvObject = this;
+		return S_OK;
+	}
+
+	return E_NOINTERFACE;
+}
+
+// IDWriteFontFileEnumerator
+STDMETHODIMP MCGDWFontFileEnumerator::MoveNext(BOOL *r_has_current_file)
+{
+	if (m_file_index >= MCProperListGetLength(m_files))
+	{
+		*r_has_current_file = FALSE;
+		return S_OK;
+	}
+
+	MCStringRef t_fname;
+	t_fname = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(m_files, m_file_index));
+
+	MCAssert(MCValueGetTypeCode(t_fname) == kMCValueTypeCodeString);
+
+	MCAutoStringRefAsUTF16String t_utf16_fname;
+	if (!t_utf16_fname.Lock(t_fname))
+		return E_OUTOFMEMORY;
+
+	IDWriteFontFile *t_font_file = nil;
+
+	HRESULT t_result;
+	t_result = m_factory->CreateFontFileReference(t_utf16_fname.Ptr(), NULL, &t_font_file);
+
+	if (!SUCCEEDED(t_result))
+		return t_result;
+
+	m_file_index++;
+
+	if (m_current_file != nil)
+		m_current_file->Release();
+
+	m_current_file = t_font_file;
+	*r_has_current_file = TRUE;
+
+	return t_result;
+}
+
+STDMETHODIMP MCGDWFontFileEnumerator::GetCurrentFontFile(IDWriteFontFile **r_current_file)
+{
+	if (m_current_file == nil)
+		return E_FAIL;
+
+	*r_current_file = m_current_file;
+	m_current_file->AddRef();
+
+	return S_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Factory object for creating DirectWrite objects
-static IDWriteFactory* s_DWFactory;
+static IDWriteFactory* s_DWFactory = nil;
+
+// Custom loader for non-system fonts
+static IDWriteFontCollectionLoader* s_DWFontCollectionLoader = nil;
+// Custom font collection
+static IDWriteFontCollection* s_DWFontCollection = nil;
+// Set of custom fonts used by loader
+static MCProperListRef s_FontFiles = nil;
 
 // GDI interoperation object
-static IDWriteGdiInterop* s_GdiInterop;
+static IDWriteGdiInterop* s_GdiInterop = nil;
 
 // DirectWrite text analyser object
-static IDWriteTextAnalyzer* s_DWTextAnalyzer;
+static IDWriteTextAnalyzer* s_DWTextAnalyzer = nil;
 
 void MCGPlatformInitialize(void)
 {
-	HRESULT hr = 0;
+	bool t_success = true;
 
 	// Create the DirectWrite factory object
-	if (SUCCEEDED(hr))
-		hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&s_DWFactory));
+	if (t_success)
+		t_success = SUCCEEDED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&s_DWFactory)));
 
 	// Create the GDI interoperation object
-	if (SUCCEEDED(hr))
-		hr = s_DWFactory->GetGdiInterop(&s_GdiInterop);
+	if (t_success)
+		t_success = SUCCEEDED(s_DWFactory->GetGdiInterop(&s_GdiInterop));
 
 	// Create the DirectWrite text analyser
-	if (SUCCEEDED(hr))
-		hr = s_DWFactory->CreateTextAnalyzer(&s_DWTextAnalyzer);
+	if (t_success)
+		t_success = SUCCEEDED(s_DWFactory->CreateTextAnalyzer(&s_DWTextAnalyzer));
+
+	if (t_success)
+		t_success = nil != (s_DWFontCollectionLoader = new(std::nothrow) MCGDWFontCollectionLoader());
+
+	if (t_success)
+		t_success = SUCCEEDED(s_DWFactory->RegisterFontCollectionLoader(s_DWFontCollectionLoader));
+
+	if (t_success)
+		s_FontFiles = MCValueRetain(kMCEmptyProperList);
 }
 
 void MCGPlatformFinalize(void)
 {
+	// Release the custom font list
+	if (s_FontFiles)
+		MCValueRelease(s_FontFiles);
+
+	// Release the custom font collection
+	if (s_DWFontCollection)
+		s_DWFontCollection->Release();
+
+	// Release the custom font loader
+	if (s_DWFontCollectionLoader)
+	{
+		s_DWFactory->UnregisterFontCollectionLoader(s_DWFontCollectionLoader);
+		s_DWFontCollectionLoader->Release();
+	}
+
 	// Release the text analyser
 	if (s_DWTextAnalyzer)
 		s_DWTextAnalyzer->Release();
@@ -211,6 +424,58 @@ void MCGPlatformFinalize(void)
 	// Release the DirectWrite factory object
 	if (s_DWFactory)
 		s_DWFactory->Release();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGDWSetFontFiles(MCProperListRef p_files)
+{
+	IDWriteFontCollection *t_new_collection = nil;
+	if (!SUCCEEDED(s_DWFactory->CreateCustomFontCollection(s_DWFontCollectionLoader, &p_files, sizeof(MCProperListRef), &t_new_collection)))
+		return false;
+
+	MCValueAssign(s_FontFiles, p_files);
+
+	if (s_DWFontCollection)
+		s_DWFontCollection->Release();
+
+	s_DWFontCollection = t_new_collection;
+
+	return true;
+}
+
+bool MCGFontAddPlatformFileResource(MCStringRef p_file)
+{
+	uindex_t t_offset;
+	if (MCProperListFirstIndexOfElement(s_FontFiles, p_file, 0, t_offset))
+		/* Font file already in collection */
+		return true;
+
+	MCAutoProperListRef t_files;
+	if (!MCProperListMutableCopy(s_FontFiles, &t_files))
+		return false;
+
+	if (!MCProperListPushElementOntoBack(*t_files, p_file))
+		return false;
+
+	return MCGDWSetFontFiles(*t_files);
+}
+
+bool MCGFontRemovePlatformFileResource(MCStringRef p_file)
+{
+	uindex_t t_offset;
+	if (!MCProperListFirstIndexOfElement(s_FontFiles, p_file, 0, t_offset))
+		/* Font file not in collection */
+		return true;
+
+	MCAutoProperListRef t_files;
+	if (!MCProperListMutableCopy(s_FontFiles, &t_files))
+		return false;
+
+	if (!MCProperListRemoveElement(*t_files, t_offset))
+		return false;
+
+	return MCGDWSetFontFiles(*t_files);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +500,18 @@ static IDWriteTextFormat* MCGDWTextFormatFromHFONT(HFONT p_hfont, MCGFloat p_siz
 		t_font_style = DWRITE_FONT_STYLE_OBLIQUE;
 
 	// Create the text format object
-	IDWriteTextFormat* t_format;
+	IDWriteTextFormat* t_format = nil;
+	// First try custom font collection, then fall back to system collection
+	if (s_DWFontCollection != nil)
+	{
+		UINT32 t_index = 0;
+		BOOL t_found = FALSE;
+
+		s_DWFontCollection->FindFamilyName(t_logfont.lfFaceName, &t_index, &t_found);
+		if (t_found && SUCCEEDED(s_DWFactory->CreateTextFormat(t_logfont.lfFaceName, s_DWFontCollection, t_font_weight, t_font_style, t_font_stretch, t_font_size, L"en-us", &t_format)))
+			return t_format;
+	}
+
 	if (!SUCCEEDED(s_DWFactory->CreateTextFormat(t_logfont.lfFaceName, nil, t_font_weight, t_font_style, t_font_stretch, t_font_size, L"en-us", &t_format)))
 		return nil;
 
@@ -243,15 +519,12 @@ static IDWriteTextFormat* MCGDWTextFormatFromHFONT(HFONT p_hfont, MCGFloat p_siz
 }
 
 // Creates an SkPaint from a DirectWrite font face
-static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform)
+static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontCollection* p_collection, IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform)
 {
-	// Get the system font collection (required for mapping from font face to font)
-	IDWriteFontCollection* t_collection;
-	s_DWFactory->GetSystemFontCollection(&t_collection);
-
-	// Using the collection, map the font face to a font
-	IDWriteFont* t_font;
-	t_collection->GetFontFromFontFace(p_face, &t_font);
+	// Map from font face to font (requires the font collection containing the font)
+	// Search the custom collection for the font
+	IDWriteFont* t_font = nil;
+	p_collection->GetFontFromFontFace(p_face, &t_font);
 
 	// Get the family from the font
 	IDWriteFontFamily* t_family;
@@ -263,7 +536,6 @@ static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_
 	// Clean up the DirectWrite resources
 	t_family->Release();
 	t_font->Release();
-	t_collection->Release();
 
 	// Configurethe paint for text rendering.
 	// Both LCD font smoothing and embedded bitmap rendering are enable
@@ -360,6 +632,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	if (t_format == nil)
 		return;
 
+	// Get the collection the text format uses
+	IDWriteFontCollection *t_collection = nil;
+	t_format->GetFontCollection(&t_collection);
+
 	// Create a text layout for the string and this font
 	bool t_success = false;
 	IDWriteTextLayout* t_layout = nil;
@@ -381,7 +657,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		auto t_callback = [=, &t_advance](FLOAT p_x, FLOAT p_y, DWRITE_MEASURING_MODE p_mode, const DWRITE_GLYPH_RUN* p_run, const DWRITE_GLYPH_RUN_DESCRIPTION* p_description)
 		{
 			// Create a Skia paint object wrapping the font
-			SkPaint t_paint = MCGSkPaintFromDWFontFace(p_run->fontFace, p_run->fontEmSize, t_transform);
+			SkPaint t_paint = MCGSkPaintFromDWFontFace(t_collection, p_run->fontFace, p_run->fontEmSize, t_transform);
 
 			// Customise the paint based on the current settings
 			t_paint.setStyle(SkPaint::kFill_Style);
@@ -443,4 +719,6 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_layout->Release();
 	if (t_format != nil)
 		t_format->Release();
+	if (t_collection != nil)
+		t_collection->Release();
 }

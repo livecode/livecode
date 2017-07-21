@@ -544,6 +544,8 @@ struct MCGFont
     bool		ideal = false;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCGFloat ascent, MCGFloat descent, MCGFloat leading, bool ideal)
 {
     MCGFont t_font;
@@ -557,6 +559,10 @@ inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCG
     
     return t_font;
 }
+
+// Make the font resources contained in the specified file available for use.
+bool MCGFontAddPlatformFileResource(MCStringRef p_file_resource_path);
+bool MCGFontRemovePlatformFileResource(MCStringRef p_file_resource_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
