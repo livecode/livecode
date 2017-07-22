@@ -34,7 +34,7 @@ main (argc, argv)
    
    ROOT ();
    
-   /* --PATCH-- */ exit(ErrorOccured);
+   /* --PATCH-- */ exit(ErrorOccurred);
 }
 
 /*----------------------------------------------------------------------------*/
