@@ -80,7 +80,7 @@ MESSAGE(msg, pos)
    printpos(pos);
    printf("%s\n", msg);
     /* --PATCH-- */ // exit(1);
-    /* --PATCH-- */ ErrorOccured = 1;
+    /* --PATCH-- */ ErrorOccurred = 1;
     
 #endif
 
