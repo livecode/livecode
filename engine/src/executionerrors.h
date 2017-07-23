@@ -2738,7 +2738,7 @@ enum Exec_errors
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
 
-	// {EE-0897} extension: error occured with column
+	// {EE-0897} extension: error occurred with column
 	EE_EXTENSION_ERROR_COLUMN,
 	
 	// {EE-0898} parentScript: can't change parent while parent script is executing
