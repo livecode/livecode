@@ -103,7 +103,7 @@ end deployListTargets
 
 -- Invoked when the Deploy/Simulate button is clicked on the menubar
 command deployDo pTargetStack, pSimulator, pAppBundle
-   -- The error that occured (if any)
+   -- The error that occurred (if any)
    local tError, tRunningTest
    put empty into tError
    
