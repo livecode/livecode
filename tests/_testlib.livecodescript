@@ -321,12 +321,26 @@ on TestLoadExtension pName
 
 end TestLoadExtension
 
+private function __GetCaller
+   get item 1 to -3 of line -3 of the executionContexts
+   if there is not an it then
+      delete item -1 of it
+   end if
+   return it
+end __GetCaller
+
+private function __StackOfObject pLongID
+   local tOffset
+   put wordOffset("stack",pLongID) into tOffset
+   return word tOffset to -1 of pLongID
+end __StackOfObject
+
 -- This loads an extension whose lcb source sits in the same folder as the
 -- current test.
 on TestLoadAuxillaryExtension pName
 	local tBasePath, tExtraPath
 	set the itemDelimiter to slash
-	put item 1 to -2 of the filename of this stack into tBasePath
+	put item 1 to -2 of the effective filename of __StackOfObject(__GetCaller()) into tBasePath
 	repeat while the last item of tBasePath is not "tests"
 		put item -1 of tBasePath & slash before tExtraPath
 		delete the last item of tBasePath

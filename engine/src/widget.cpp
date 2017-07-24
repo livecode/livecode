@@ -807,6 +807,8 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
     MCAutoValueRef t_rep;
     if (m_widget != nil)
         MCWidgetOnSave(m_widget, &t_rep);
+    else
+        t_rep = m_rep;
     
     // If the rep is nil, then an error must have been thrown, so we still
     // save, but without any state for this widget.
@@ -1006,11 +1008,22 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    if (!MCWidgetOnSave(m_widget,
-                        &t_value))
+    if (!m_widget && m_rep)
     {
-        r_state = MCValueRetain(kMCEmptyArray);
-        return;
+        if (!MCValueCopy(m_rep, &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
+    }
+    else
+    {
+        if (!MCWidgetOnSave(m_widget,
+                            &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
     }
     
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
