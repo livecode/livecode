@@ -18,7 +18,7 @@
 #  define sep '\\'
 #endif
 
-int ErrorOccured = 0;
+int ErrorOccurred = 0;
 
 static scanargs();
 
@@ -34,7 +34,7 @@ main (argc, argv)
    
    ROOT ();
    
-   /* --PATCH-- */ exit(ErrorOccured);
+   /* --PATCH-- */ exit(ErrorOccurred);
 }
 
 /*----------------------------------------------------------------------------*/

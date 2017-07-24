@@ -1447,7 +1447,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 						selectedmark(False, si, ei, False);
 						if (ti >= si && ti < ei && si != ei)
 						{
-							// Here we mark the fact a mouse-down has occured in
+							// Here we mark the fact a mouse-down has occurred in
 							// the selection. This is used in mdrag to work out
 							// whether to initiate a drag-drop operation.
 							state |= CS_SOURCE_TEXT;

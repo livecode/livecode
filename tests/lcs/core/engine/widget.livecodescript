@@ -83,3 +83,33 @@ on TestWidgetThrowInOnCreate
 
    delete stack "WidgetThrowOnSaveTest"
 end TestWidgetThrowInOnCreate
+
+on TestWidgetRetainRep
+   create stack "WidgetRetainRepTest"
+   set the defaultStack to "WidgetRetainRepTest"
+
+   local tWidget
+   put "com.livecode.lcs_tests.core.widget_save" into tWidget["$kind"]
+   put uuid() into tWidget["$state"]["info"]
+   import widget from array tWidget
+
+   local tOut
+   export widget 1 to array tOut
+   TestAssert "Rep retained in export on failed bind", tOut["$state"]["info"] is tWidget["$state"]["info"]
+   
+   local tPath
+   put the tempName into tPath
+   save stack "WidgetRetainRepTest" as tPath
+   delete stack "WidgetRetainRepTest"
+   
+   TestLoadAuxillaryExtension "_widget_save"
+   
+   go stack tPath
+   
+   local tInfo
+   put the savedInfo of widget 1 of stack "WidgetRetainRepTest" into tInfo
+   TestAssert "Rep retained in save on failed bind", tInfo is tWidget["$state"]["info"]
+   
+   delete stack "WidgetRetainRepTest"
+   delete file tPath
+end TestWidgetRetainRep

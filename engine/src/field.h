@@ -140,7 +140,7 @@ enum MCInterfaceFieldCursorMovement
     kMCFieldCursorMovementLogical,
 };
 
-// MW-2012-02-20: [[ FieldExport ]] The event that occured to cause the callback.
+// MW-2012-02-20: [[ FieldExport ]] The event that occurred to cause the callback.
 enum MCFieldExportEventType
 {
 	kMCFieldExportEventBeginParagraph,

@@ -166,7 +166,7 @@ on startup pTest
                end if
                return sHomePath
             default
-               -- Some other error occured, so fall through to activation.
+               -- Some other error occurred, so fall through to activation.
                put "The license for this version has become corrupted, please activate to continue." into sActivateReason
                break
          end switch
@@ -464,7 +464,7 @@ command performFacelessActivation
          break
          
       default
-         write "An unknown error occured." & return to stdout
+         write "An unknown error occurred." & return to stdout
          quit 12
    end switch
    
@@ -640,7 +640,7 @@ private command automaticActivationList
    
    -- Act on the response for 'nolicenses'
    if tPostResult["result"] is "nolicenses" then
-      put "An error occured while processing the request. Please try again." into sActivateError
+      put "An error occurred while processing the request. Please try again." into sActivateError
       return "error"
    end if
    
@@ -666,7 +666,7 @@ private command automaticActivationList
          end if
          exit to top   
       default
-         -- Some other error occured, so fall through to activation.
+         -- Some other error occurred, so fall through to activation.
          automaticActivationSetProtocolError "invalid"
          return "error"
          break
@@ -686,7 +686,7 @@ private command leaveRemoteOperation
 end leaveRemoteOperation
 
 private command automaticActivationSetPostError pPostError
-   put "An error occured while attempting to contact the server. Please try again later." into sActivateError
+   put "An error occurred while attempting to contact the server. Please try again later." into sActivateError
 end automaticActivationSetPosterror
 
 private command automaticActivationSetProtocolError pError
@@ -717,7 +717,7 @@ private command automaticActivationSetProtocolError pError
          break
       case "nolicense"
          -- some sort of backend mismatch problem
-         put "An error occured generating the license key. Please try again." into sActivateError
+         put "An error occurred generating the license key. Please try again." into sActivateError
          break
       case "disabled"
          -- account disabled
@@ -730,7 +730,7 @@ private command automaticActivationSetProtocolError pError
       case "invalid"
       default
          -- bad request
-         put "An error has occured while contacting the server. Please try again." into sActivateError
+         put "An error has occurred while contacting the server. Please try again." into sActivateError
          break
    end switch
 end automaticActivationSetProtocolError

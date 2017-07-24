@@ -343,7 +343,7 @@ public:
 
 	// Return the error string describing the reason for 'false' being returned
 	// from one of the action methods. 'nil' should be returned if no error
-	// has occured.
+	// has occurred.
 	virtual const char *GetError(void) = 0;
 
 	// Start a new document with the given details as present in the
@@ -351,7 +351,7 @@ public:
 	virtual bool BeginDocument(const MCCustomPrinterDocument& document) = 0;
 
 	// Cancel the current document - this should have the same effect as if
-	// an error occured, but obviously no error should be set.
+	// an error occurred, but obviously no error should be set.
 	virtual void AbortDocument(void) = 0;
 
 	// Mark the end of a document.

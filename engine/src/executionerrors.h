@@ -2639,13 +2639,13 @@ enum Exec_errors
     // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
     //  incremented whenever new codes are merged up from below.
     // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
-    // {EE-0863} extension: error occured with domain
+    // {EE-0863} extension: error occurred with domain
     EE_EXTENSION_ERROR_DOMAIN,
-    // {EE-0864} extension: error occured with description
+    // {EE-0864} extension: error occurred with description
     EE_EXTENSION_ERROR_DESCRIPTION,
-    // {EE-0865} extension: error occured with file
+    // {EE-0865} extension: error occurred with file
     EE_EXTENSION_ERROR_FILE,
-    // {EE-0866} extension: error occured with line
+    // {EE-0866} extension: error occurred with line
     EE_EXTENSION_ERROR_LINE,
     
     // {EE-0867} load: error in extension expression

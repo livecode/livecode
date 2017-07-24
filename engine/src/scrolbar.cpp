@@ -342,7 +342,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 			{
 				getwidgetthemeinfo(winfo);
 				Widget_Part wpart = MCcurtheme->hittest(winfo,mx,my,rect);
-				// scrollbar needs to check first if mouse-down occured in arrows
+				// scrollbar needs to check first if mouse-down occurred in arrows
 				switch (wpart)
 				{
 				case WTHEME_PART_ARROW_DEC:
