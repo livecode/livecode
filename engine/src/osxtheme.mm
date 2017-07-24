@@ -574,7 +574,7 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
 	fillTrackDrawInfo(winfo,ttdi,drect);
 	Boolean inScrollbarArrow = False;
 	ControlPartCode partCode;
-	// scrollbar needs to check first if mouse-down occured in arrows
+	// scrollbar needs to check first if mouse-down occurred in arrows
 	if (ttdi.kind == kThemeScrollBar || ttdi.kind == kThemeSmallScrollBar)
 	{
 		// MW-2008-11-02: [[ Bug ]] If this scrollbar is rendered as a little arrows control, then

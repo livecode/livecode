@@ -437,7 +437,7 @@ void MCButton::open()
     MCControl::open();
 
 	// MW-2011-02-08: [[ Bug 9382 ]] Make sure we reset icons when opening and the state
-	//   has changed (i.e. background transition has occured).
+	//   has changed (i.e. background transition has occurred).
 	uint32_t t_old_state;
 	t_old_state = state;
 	switch(gethilite(0).value)

@@ -1639,7 +1639,7 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 		uint32_t t_event_time;
 		t_event_time = MCPlatformGetEventTime();
 		
-		// If the click occured within the double click time and double click
+		// If the click occurred within the double click time and double click
 		// radius *and* if the button is the same as the last clicked button
 		// then increment the click count.
 		if (t_event_time - s_mouse_last_click_time < MCdoubletime &&
