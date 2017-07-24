@@ -157,7 +157,7 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
-	if (t_success)
+	if (t_success && !p_globally)
 		t_success = MCGFontAddPlatformFileResource(p_path);
 
 	return t_success;
@@ -182,7 +182,7 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
-	if (t_success)
+	if (t_success && !p_globally)
 		t_success = MCGFontRemovePlatformFileResource(p_path);
 
 	return t_success;
