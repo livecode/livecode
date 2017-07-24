@@ -82,6 +82,57 @@ end handler
 
 /****/
 
+private foreign handler MCDataCreateWithCFData(in pNSData as ObjcId, out rString as Data) returns CBool binds to "MCDataCreateWithCFData"
+private foreign handler MCDataConvertToCFDataRef(in pNSData as Data, out rNSData as ObjcRetainedId) returns CBool binds to "MCDataConvertToCFDataRef"
+
+/**/
+
+/**
+Summary:    Convert a Data into an Objective-C data
+
+Parameters:
+pData: The Data to convert
+
+Returns:
+A Objective-C object of type NSData
+
+Description
+Use <DataToNSData> to convert a variable of type Data to an Objective-C
+string object (NSData).
+
+*/
+public handler DataToNSData(in pData as Data) returns ObjcObject
+	variable tNSData as ObjcRetainedId
+	unsafe
+		MCDataConvertToCFDataRef(pData, tNSData)
+	end unsafe
+	return tNSData
+end handler
+
+/**
+Summary:    Convert a Objective-C data into a Data
+
+Parameters:
+pObjcData: The NSData to convert
+
+Returns:
+A String value
+
+Description
+Use <DataFromNSData> to convert an Objective-C data object (NSData) to
+a variable of type Data.
+
+*/
+public handler DataFromNSData(in pObjcData as ObjcObject) returns String
+	variable tData as Data
+	unsafe
+		MCDataCreateWithCFData(pObjcData, tData)
+	end unsafe
+	return tData
+end handler
+
+/****/
+
 public handler type ObjcActionProxyHandler(in pSender as ObjcObject, in pContext as optional any) returns nothing
 
 private foreign handler MCObjcObjectCreateActionProxy(in pHandler as optional any, in pValue as optional any) returns ObjcObject binds to "MCObjcObjectCreateActionProxy"
