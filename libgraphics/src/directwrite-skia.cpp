@@ -519,13 +519,22 @@ static IDWriteTextFormat* MCGDWTextFormatFromHFONT(HFONT p_hfont, MCGFloat p_siz
 }
 
 // Creates an SkPaint from a DirectWrite font face
-static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontCollection* p_collection, IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform)
+static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform)
 {
 	// Map from font face to font (requires the font collection containing the font)
 	// Search the custom collection for the font
 	IDWriteFont* t_font = nil;
-	p_collection->GetFontFromFontFace(p_face, &t_font);
+	if (s_DWFontCollection != nil)
+		s_DWFontCollection->GetFontFromFontFace(p_face, &t_font);
 
+	if (t_font == nil)
+	{
+		// Fallback to checking system font collection
+		IDWriteFontCollection *t_sys_collection = nil;
+		s_DWFactory->GetSystemFontCollection(&t_sys_collection);
+		t_sys_collection->GetFontFromFontFace(p_face, &t_font);
+		t_sys_collection->Release();
+	}
 	// Get the family from the font
 	IDWriteFontFamily* t_family;
 	t_font->GetFontFamily(&t_family);
@@ -632,10 +641,6 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	if (t_format == nil)
 		return;
 
-	// Get the collection the text format uses
-	IDWriteFontCollection *t_collection = nil;
-	t_format->GetFontCollection(&t_collection);
-
 	// Create a text layout for the string and this font
 	bool t_success = false;
 	IDWriteTextLayout* t_layout = nil;
@@ -657,7 +662,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		auto t_callback = [=, &t_advance](FLOAT p_x, FLOAT p_y, DWRITE_MEASURING_MODE p_mode, const DWRITE_GLYPH_RUN* p_run, const DWRITE_GLYPH_RUN_DESCRIPTION* p_description)
 		{
 			// Create a Skia paint object wrapping the font
-			SkPaint t_paint = MCGSkPaintFromDWFontFace(t_collection, p_run->fontFace, p_run->fontEmSize, t_transform);
+			SkPaint t_paint = MCGSkPaintFromDWFontFace(p_run->fontFace, p_run->fontEmSize, t_transform);
 
 			// Customise the paint based on the current settings
 			t_paint.setStyle(SkPaint::kFill_Style);
@@ -719,6 +724,4 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_layout->Release();
 	if (t_format != nil)
 		t_format->Release();
-	if (t_collection != nil)
-		t_collection->Release();
 }
