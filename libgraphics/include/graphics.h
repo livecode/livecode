@@ -564,6 +564,9 @@ inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCG
 bool MCGFontAddPlatformFileResource(MCStringRef p_file_resource_path);
 bool MCGFontRemovePlatformFileResource(MCStringRef p_file_resource_path);
 
+// Get list of available font families
+bool MCGFontGetPlatformFontList(MCProperListRef &r_fonts);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
