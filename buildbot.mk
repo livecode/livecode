@@ -214,9 +214,15 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	                -o -name '*-bin.tar.bz2' \
-	                -o -name 'LiveCodeForFM-Mac.tar.xz' \
-	                -o -name 'LiveCodeForFM-Win-x86.tar.xz' \
-	                -o -name 'LiveCodeForFM-Win-x86_64.tar.xz' \
+	                -o -name 'LiveCodeForFM-Mac-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Mac-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86_64-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86_64-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-All-Solutions.zip' \
+	                -o -name 'LiveCodeForFM-All-Plugins.zip' \
+	                -o -name 'LiveCodeForFM-Solution.zip' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
@@ -262,8 +268,6 @@ distmac-archive:
 	cd mac-bin; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
 	    | xargs -0 tar --append --file=../mac-installer.tar; \
-	find . -maxdepth 1 -name 'LiveCodeforFM.fmp12' -print0 \
-	    | xargs -0 tar --append --file=../mac-installer.tar; \
 	cd ..; \
 	cd win-x86-bin; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
@@ -278,15 +282,29 @@ distmac-archive:
 distmac-extract:
 	set -e; \
 	tar -xvf mac-installer.tar.xz; \
+	cp -r ${private_dir}/filemaker/solutions/LiveCodeForFM.fmp12 . ; \
 	$(buildtool_command) --platform mac --stage fmpackage --debug; \
-	find . -maxdepth 1 -name 'LiveCodeforFM-Mac-*.fmp12' -print0 \
-	    | xargs -0 tar -cvf LiveCodeForFM-Mac.tar.xz; \
 	$(buildtool_command) --platform win-x86 --stage fmpackage --debug; \
-	find . -maxdepth 1 -name 'LiveCodeforFM-Win-x86-*.fmp12' -print0 \
-	    | xargs -0 tar -cvf LiveCodeForFM-Win-x86.tar.xz; \
 	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug; \
-	find . -maxdepth 1 -name 'LiveCodeforFM-Win-x86_64-*.fmp12' -print0 \
-	    | xargs -0 tar -cvf LiveCodeForFM-Win-x86_64.tar.xz
+	find . -maxdepth 1 -name 'LiveCodeForFM-Mac-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Mac-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86_64-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip
+	find . -maxdepth 1 -name 'LiveCodeForFM-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-All-Solutions.zip
+	find . -maxdepth 1 -name 'livecodeforfm-*.*' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Mac-Plugin.zip
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip
+	find . -maxdepth 1 -name 'LiveCodeForFM.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Solution.zip
+
 
 # Final installer creation for Mac
 distmac-disk-%: distmac-bundle-%
