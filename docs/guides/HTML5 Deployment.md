@@ -6,7 +6,7 @@ group: deployment
 
 ## Introduction
 
-**Note: This is an experimental release of HTML5 deployment support and is not recommended for production use.**
+**Note: This is BETA release of HTML5 deployment support. If you intend to use it in production, please test thoroughly that it supports all the functionality you are looking for.**
 
 Almost every Internet-connected device has a web browser.  If your application can run in a browser, your app can be used anywhere and by anyone, without any need to download or install it.
 
