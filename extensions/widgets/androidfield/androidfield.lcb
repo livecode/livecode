@@ -924,10 +924,16 @@ handler TextView_getSelectionEnd(in pObj as JObject) returns Number
 	return tJNIResult
 end handler
 
+__safe foreign handler _JNI_CharSequence_toString(in pObj as JObject) returns JString \
+   binds to "java:java.lang.CharSequence>toString()Ljava/lang/String;"
 handler TextView_getText(in pObj as JObject) returns String
-	variable tJNIResult as JString
+	variable tJNIResult as JObject
 	put _JNI_TextView_getText(pObj) into tJNIResult
-	return StringFromJString(tJNIResult)
+
+   variable tString as JString
+   put _JNI_CharSequence_toString(tJNIResult) into tString
+
+	return StringFromJString(tString)
 end handler
 
 handler TextView_getTextSize(in pObj as JObject) returns Number
