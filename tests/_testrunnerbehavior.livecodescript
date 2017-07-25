@@ -166,6 +166,9 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
    put the openSockets into tState["opensockets"]
    put the openProcesses into tState["openprocesses"]
    put the openFiles into tState["openfiles"]
+   put the httpProxy into tState["httpProxy"]
+   put the httpHeaders into tState["httpHeaders"]
+   put the stackFileVersion into tState["stackFileVersion"]
    
    reset the templateStack
    reset the templateCard
@@ -227,7 +230,10 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       -- Do common cleanup tasks
       try
          dispatch "TestTearDown" to tStackName
-         
+      catch tError
+         TestAssert "tear down test", false
+         TestDiagnostic tError  
+      finally
          -- cleanup
          delete tStackName
          
@@ -259,9 +265,10 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
                delete stack tLine
             end if
          end repeat
-      catch tError
-         TestAssert "tear down test", false
-         TestDiagnostic tError  
+         
+         set the httpProxy to tState["httpProxy"]
+         set the httpHeaders to tState["httpHeaders"]
+         set the stackFileVersion to tState["stackFileVersion"]
       end try
       
       -- Check for uncaught errors
