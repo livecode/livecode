@@ -23,26 +23,28 @@ put "none" into tCompositorType
 set the compositorType of this stack to tCompositorType
 
 Value (enum):
-A string containing the type of compositor to use, or <empty>.
+A <string> containing the type of compositor to use, or <empty>.
 
--   none: Do not use accelerated rendering (the default when empty).
--   software: Use the built-in rendering engine to composite.
+-   none: Do not use <acceleratedRendering|accelerated rendering> (the default when empty).
+-   software: Use the built-in rendering engine to composite (all platforms).
 -   coregraphics: Use CoreGraphics to composite (Mac / iOS only)
-    (Recommended for Mac OS).
--   opengl: Use OpenGL to composite (iOS only).
+    (Recommended).
+-   opengl: Use OpenGL to composite (iOS and Android only).
 
 
 Description:
 Use the compositorType property to specify which compositor is used when
 rendering your stack. Setting this property puts LiveCode into
-accelerated rendering mode which offers performance benefits,
+<acceleratedRendering|accelerated rendering> mode which offers performance benefits,
 particularly when animating.
 
 >*Note:* Set the compositor properties in a preOpenStack or preOpenCard
-> handler - they are not persistent (not saved into the stackfile).
+> handler - they are not persistent (not saved into the stackfile) but do
+carry through from card to card.
 
 References: empty (constant), compositorCacheLimit (property),
-compositorTileSize (property), layerMode (property)
+compositorTileSize (property), layerMode (property),
+acceleratedRendering (property), string (keyword)
 
 Tags: windowing
 
