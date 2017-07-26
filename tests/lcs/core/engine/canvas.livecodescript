@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
+   TestSkipIfNot "lcb"
+   
     set the itemdelimiter to slash
     local tFolder
     put item 1 to -2 of the effective filename of me into tFolder
