@@ -55,7 +55,7 @@ echo "Uploading packages: ${PLATFORM} ${ARCH} ${SUBPLATFORM}"
 # Upload settings
 UPLOAD_SERVER="meg.on-rev.com"
 # TESTING - using test_upload folder while testing
-UPLOAD_FOLDER="public_html/prebuilts/test_uploads/"
+UPLOAD_FOLDER="prebuilts/test_uploads/"
 # TESTING - reduced retry count while testing
 UPLOAD_MAX_RETRIES=3
 #UPLOAD_MAX_RETRIES=50
