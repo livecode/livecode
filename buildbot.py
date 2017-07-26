@@ -153,11 +153,13 @@ def package(target):
 	
 def do_configure():
 	target = split_target_triple()
-	# perform build + package in configure step
+	# perform build + package + upload in configure step
 
 	exit_status = build(target)
 	if exit_status is 0:
 		exit_status = package(target)
+	if exit_status is 0:
+		exit_status = upload(target)
 	
 	return exit_status
 
