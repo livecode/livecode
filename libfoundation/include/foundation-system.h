@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -33,6 +33,7 @@ extern "C" {
 #include <system-library.h>
 #include <system-random.h>
 #include <system-stream.h>
+#include <system-error.h>
 
 }
 
