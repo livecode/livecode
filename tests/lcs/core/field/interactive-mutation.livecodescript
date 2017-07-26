@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestReturnBeforeVTab
+   TestSkipIfNot "wait"
+   
     create stack "TestStack"
     set the defaultStack to "TestStack"
     create field "Test"

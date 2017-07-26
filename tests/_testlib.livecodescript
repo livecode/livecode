@@ -210,6 +210,10 @@ end __TestErrorMatches
 -- Unit test library functions
 ----------------------------------------------------------------
 
+on TestSetExecErrorMap pErrorMap
+   put pErrorMap into sExecErrorMap
+end TestSetExecErrorMap
+
 on TestOutputToVariable
    put true into sOutputToVariable
 end TestOutputToVariable
@@ -307,6 +311,10 @@ function TestGetExtractedDocsFolder
 end TestGetExtractedDocsFolder
 
 on TestLoadExtension pName
+   if pName is among the lines of the loadedExtensions then
+      return empty
+   end if
+   
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
@@ -479,3 +487,63 @@ on TestRunStack pOptions, pStackFilePath
 
 	return the result
 end TestRunStack
+
+function TestIsInStandalone
+   return "StandaloneTestRunnerMainstack" is among the lines of the mainstacks
+end TestIsInStandalone
+
+on TestSkipIf pRequirement, pOptions
+   if __MeetsRequirements(pRequirement, pOptions) then
+      if pOptions is not empty then
+         put " :" & pOptions after pRequirement
+      end if
+      throw "SKIP test incompatible with" && pRequirement
+   end if
+end TestSkipIf
+
+on TestSkipIfNot pRequirement, pOptions
+   if not __MeetsRequirements(pRequirement, pOptions) then
+      if pOptions is not empty then
+         put " :" & pOptions after pRequirement
+      end if
+      throw "SKIP test requires" && pRequirement
+   end if
+end TestSkipIfNot
+
+private function __MeetsRequirements pRequirement, pOptions
+   switch pRequirement
+      case "ide"
+      case "docs"
+      case "lcb"
+         return not TestIsInStandalone()
+         break
+      case "securitypermissions"
+         if "set" is among the items of pOptions then
+            return not TestIsInStandalone()
+         end if
+         break
+      case "platform"
+         return the platform is among the items of pOptions
+         break
+      case "processor"
+         return the processor is among the items of pOptions
+         break
+      case "environment"
+         return the environment is among the items of pOptions
+         break
+      case "stack"
+         repeat for each item tStack in pOptions
+            if there is not a stack tStack then
+               return false
+            end if
+         end repeat
+		case "clipboard"
+		case "wait"
+		case "security"
+				return the platform is not "HTML5"
+		case "write"
+			return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+	end switch
+   
+   return true
+end __MeetsRequirements

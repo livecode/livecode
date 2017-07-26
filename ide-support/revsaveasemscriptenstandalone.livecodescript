@@ -673,6 +673,10 @@ private command scanFolder_recurse @xCount, @xFiles, pRelPath
    set the defaultFolder to tSaveFolder
 end scanFolder_recurse
 
+function revGetEmscriptenFiles
+   return getEngineFiles()
+end revGetEmscriptenFiles
+
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
 private function getEngineFiles

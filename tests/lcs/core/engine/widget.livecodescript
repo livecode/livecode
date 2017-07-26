@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //////////
 
 on TestSetup
+   TestSkipIfNot "lcb"
+   
    TestLoadAuxillaryExtension "_widget"
    TestLoadAuxillaryExtension "_widget_support"
    TestLoadAuxillaryExtension "_widgetthrow"

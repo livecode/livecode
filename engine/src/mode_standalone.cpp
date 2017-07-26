@@ -299,7 +299,11 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		
 		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
-			MCresult -> sets("failed to load external");
+            MCAutoStringRef t_error;
+            if (!MCStringFormat(&t_error, "failed to load external: %@", *t_external_str))
+                MCresult -> sets("failed to load external");
+            else
+                MCresult -> setvalueref(*t_error);
 			return false;
 		}
 	}
