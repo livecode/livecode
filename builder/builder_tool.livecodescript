@@ -31,7 +31,7 @@ on startup
    repeat while tArgIndex is among the keys of tArgs
       if tArgs[tArgIndex] is "--platform" then
          get tArgs[tArgIndex + 1]
-         if it is not among the items of "windows,win,win-x86,win-x86_64,macosx,mac,linux,linux-x86,linux-x86_64" then
+         if it is not among the items of "windows,win,win-x86,win-x86_64,macosx,mac,linux,linux-x86,linux-x86_64,universal" then
             __builderLog "error", "Unknown platform '" & tArgs[tArgIndex + 1] & "'"
          end if
          -- Hack the arch from the platform. This should really use

@@ -223,7 +223,8 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCodeForFM-All-Solutions.zip' \
 	                -o -name 'LiveCodeForFM-All-Plugins.zip' \
 	                -o -name 'LiveCodeForFM-Solution.zip' \
-	  > dist-upload-files.txt; \
+						 -o -name 'LiveCodeForFM.zip' \
+ 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-file; \
@@ -286,22 +287,23 @@ distmac-extract:
 	$(buildtool_command) --platform mac --stage fmpackage --debug; \
 	$(buildtool_command) --platform win-x86 --stage fmpackage --debug; \
 	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug; \
+	$(buildtool_command) --platform universal --stage fmpackage --debug; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-Mac-*.fmp12' -print0 \
 	    | xargs -0 zip -r LiveCodeForFM-Mac-Solution.zip; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86-*.fmp12' -print0 \
 	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Solution.zip; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86_64-*.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip
-	find . -maxdepth 1 -name 'LiveCodeForFM-*.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-All-Solutions.zip
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-[1-9]*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM.zip; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.*' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip
+	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Mac-Plugin.zip
+	    | xargs -0 zip -r LiveCodeForFM-Mac-Plugin.zip; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip; \
 	find . -maxdepth 1 -name 'LiveCodeForFM.fmp12' -print0 \
 	    | xargs -0 zip -r LiveCodeForFM-Solution.zip
 
