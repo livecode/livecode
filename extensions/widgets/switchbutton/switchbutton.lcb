@@ -26,7 +26,7 @@ Summary: Sent when the switch is changed to either the on or off position
 Example:
 on hiliteChanged
 	set the visible of group 1 to the highlight of me
-end switchChanged
+end hiliteChanged
 
 Description:
 Handle the hiliteChanged message in the widget's object script to respond to
