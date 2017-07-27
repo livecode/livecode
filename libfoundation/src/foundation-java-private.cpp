@@ -1242,6 +1242,18 @@ static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValue
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
     
+    jmethodID t_get_return =  s_env->GetMethodID(t_method_class,
+                                                 "getReturnType",
+                                                 "()Ljava/lang/Class;");
+    
+    jclass t_void_class = s_env->FindClass("java/lang/Void");
+    jfieldID t_void_type_field = s_env->GetStaticFieldID(t_void_class,
+                                               "TYPE",
+                                               "Ljava/lang/Class;");
+    jobject t_void_type = s_env-> GetStaticObjectField(t_void_class,
+                                                       t_void_type_field);
+    
+    
     // Lambda to check if a handler is suitable for the given method
     auto t_check_handler = [&](MCHandlerRef p_handler, jobject p_method)
     {
@@ -1281,8 +1293,28 @@ static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValue
                                                     "number", *t_exp,
                                                     nullptr);
         }
+
+        jobject t_return_class = s_env->CallObjectMethod(p_method,
+                                                         t_get_return);
+        MCTypeInfoRef t_return_type = MCHandlerTypeInfoGetReturnType(t_type_info);
         
-        return true;
+        // Check the return types match
+        if (t_return_class == t_void_type)
+        {
+            if (t_return_type == kMCNullTypeInfo)
+                return true;
+        }
+        else
+        {
+            if (__MCTypeInfoConformsToJavaType(t_return_type,
+                                               kMCJavaTypeObject))
+                return true;
+        }
+        
+        return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Mismatched return parameter for callback handler %{handler}"),
+                                                "handler", p_handler,
+                                                nullptr);
     };
 
     uindex_t t_num_methods = s_env->GetArrayLength(t_methods);
@@ -1759,11 +1791,13 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
     s_env -> DeleteGlobalRef(t_obj);
 }
 
-void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
+jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
 {
+    MCJavaDoAttachCurrentThread();
+    
     MCAutoStringRef t_method_name;
     if (!__MCJavaStringFromJString(p_method_name, &t_method_name))
-        return;
+        return nullptr;
  
     MCValueRef t_handler = nullptr;
     MCValueRef t_handlers = reinterpret_cast<MCValueRef>(p_handler);
@@ -1790,28 +1824,41 @@ void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_nam
     {
         MCErrorThrowGenericWithMessage(MCSTR("callback handler not found for listener method %{method}"),
                                        "method", *t_method_name, nullptr);
-        return;
+        return nullptr;
     }
 
     // We have an LCB handler, so just invoke with the args.
-    MCValueRef t_result;
+    MCAutoValueRef t_result;
     MCAutoProperListRef t_list;
     if (!__MCJavaProperListFromJObjectArray(p_args, &t_list))
-        return;
+        return nullptr;
     
     MCProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(*t_list, t_mutable_list))
-        return;
+        return nullptr;
     
     MCErrorRef t_error =
         MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
-                                     t_mutable_list, t_result);
-    
-    MCValueRelease(t_result);
+                                     t_mutable_list, &t_result);
+    jobject t_return = nullptr;
+    if (*t_result != nil)
+    {
+        if (MCValueGetTypeCode(*t_result) != kMCValueTypeCodeNull)
+        {
+            MCTypeInfoRef t_return_type = MCValueGetTypeInfo(*t_result);
+            MCAssert(__MCTypeInfoConformsToJavaType(t_return_type,
+                                                    kMCJavaTypeObject));
+            t_return = static_cast<jobject>
+                (MCJavaObjectGetObject(static_cast<MCJavaObjectRef>
+                                       (*t_result)));
+        }
+    }
     MCValueRelease(t_mutable_list);
     
     if (t_error != nil)
         MCErrorThrow(t_error);
+    
+    return s_env->NewGlobalRef(t_return);
 }
 #else
 
