@@ -1033,7 +1033,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         
         if (t_result == kMCPlatformPrintDialogResultError)
         {
-            PDEBUG(stderr, "DoDialog: Error occured\n");
+            PDEBUG(stderr, "DoDialog: Error occurred\n");
             t_err = PRINTER_DIALOG_RESULT_ERROR;
         }
         else if (t_result == kMCPlatformPrintDialogResultSuccess)

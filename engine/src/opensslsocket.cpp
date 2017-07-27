@@ -2248,7 +2248,7 @@ static long post_connection_check(SSL *ssl, char *host)
 	int t_idx = -1;
 
 	if (!(cert = SSL_get_peer_certificate(ssl)) || !host)
-		goto err_occured;
+		goto err_occurred;
 
 	while (NULL != (t_alt_names = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, &t_idx)))
 	{
@@ -2269,13 +2269,13 @@ static long post_connection_check(SSL *ssl, char *host)
 	{
 		data[255] = 0;
 		if (!ssl_match_identity(data, host))
-			goto err_occured;
+			goto err_occurred;
 	}
 
 	X509_free(cert);
 	return SSL_get_verify_result(ssl);
 
-err_occured:
+err_occurred:
 	if (cert)
 		X509_free(cert);
 

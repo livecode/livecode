@@ -453,7 +453,7 @@ enum MCDeployError
 	/* An error occurred while creating the startup stack */
 	kMCDeployErrorEmscriptenBadStack,
 	
-	/* An error occured with the pre-deploy step */
+	/* An error occurred with the pre-deploy step */
 	kMCDeployErrorTrialBannerError,
 
 	// SIGN ERRORS
@@ -472,19 +472,19 @@ enum MCDeployError
 	// The password did not match
 	kMCDeployErrorBadPassword,
 
-	// An error occured while building the signature
+	// An error occurred while building the signature
 	kMCDeployErrorBadSignature,
 
-	// An error occured while trying to convert a string
+	// An error occurred while trying to convert a string
 	kMCDeployErrorBadString,
 
-	// An error occured while trying to compute the hash
+	// An error occurred while trying to compute the hash
 	kMCDeployErrorBadHash,
 
-	// An error occured while trying to fetch a timestamp
+	// An error occurred while trying to fetch a timestamp
 	kMCDeployErrorTimestampFailed,
 
-	// An error occured decoding the timestamp response
+	// An error occurred decoding the timestamp response
 	kMCDeployErrorBadTimestamp,
 
 
