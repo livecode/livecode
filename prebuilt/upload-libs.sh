@@ -65,7 +65,7 @@ i=0
 false
 while [ $? -ne 0 -a $i -lt $UPLOAD_MAX_RETRIES ] ; do
 	i=$(($i+1))
-	rsync -v --progress --partial ${PACKAGE_FILES} "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
+	rsync -v --progress --chmod=644 --partial ${PACKAGE_FILES} "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
 done
 rc=$?
 if [ $rc -ne 0 ]; then
