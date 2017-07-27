@@ -1742,6 +1742,8 @@ enum Properties {
     
     P_SCRIPT_STATUS,
     
+    P_REV_SCRIPT_DESCRIPTION,
+    
     __P_LAST,
 };
 
