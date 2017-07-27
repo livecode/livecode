@@ -1475,6 +1475,7 @@ LT factor_table[] =
 #endif
 #endif
 		{"revruntimebehaviour", TT_PROPERTY, P_REV_RUNTIME_BEHAVIOUR},
+        {"revscriptdescription", TT_PROPERTY, P_REV_SCRIPT_DESCRIPTION},
 #ifdef MODE_DEVELOPMENT
 		{"revunplacedgroupids", TT_PROPERTY, P_UNPLACED_GROUP_IDS},
 #endif
