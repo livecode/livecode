@@ -12,6 +12,13 @@ function doPackage {
 	local PLATFORM=$1
 	local ARCH=$2
 	local SUBPLATFORM=$3
+	
+	# Linux x86 packages use i386 in their name (but still use x86 in the library folder!)
+	if [ "${PLATFORM}" == "linux" -a "${ARCH}" == "x86" ] ; then
+		local PACKAGE_ARCH=i386
+	else
+		local PACKAGE_ARCH="${ARCH}"
+	fi
 
 	echo "Creating packages: ${PLATFORM} ${ARCH} ${SUBPLATFORM}"
 
@@ -22,9 +29,9 @@ function doPackage {
 	fi
 
 	if [ ! -z "${SUBPLATFORM}" ] ; then
-		local SUFFIX="-${PLATFORM}-${ARCH}-${SUBPLATFORM}"
+		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${SUBPLATFORM}"
 	else
-		local SUFFIX="-${PLATFORM}-${ARCH}"
+		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}"
 	fi
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"

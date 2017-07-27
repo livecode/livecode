@@ -16,10 +16,17 @@ else
 	SUBPLATFORM=
 fi
 
-if [ ! -z "${SUBPLATFORM}" ] ; then
-	SUFFIX="-${PLATFORM}-${ARCH}-${SUBPLATFORM}"
+# Linux x86 packages use i386 in their name (but still use x86 in the library folder!)
+if [ "${PLATFORM}" == "linux" -a "${ARCH}" == "x86" ] ; then
+	PACKAGE_ARCH=i386
 else
-	SUFFIX="-${PLATFORM}-${ARCH}"
+	PACKAGE_ARCH="${ARCH}"
+fi
+
+if [ ! -z "${SUBPLATFORM}" ] ; then
+	SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${SUBPLATFORM}"
+else
+	SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}"
 fi
 
 OPENSSL_PKG="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}${SUFFIX}.tar.bz2"
