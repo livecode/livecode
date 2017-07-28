@@ -34,8 +34,6 @@
 	<true/>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
-	<key>OSAScriptingDefinition</key>
-	<string>terminology.sdef</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
