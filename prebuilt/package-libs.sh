@@ -22,7 +22,7 @@ function doPackage {
 
 	echo "Creating packages: ${PLATFORM} ${ARCH} ${SUBPLATFORM}"
 
-	if [ "${ARCH}" == "Universal" ] ; then
+	if [ "${ARCH}" == "universal" ] ; then
 		local ARCHDIR=
 	else
 		local ARCHDIR="${ARCH}"
@@ -101,8 +101,8 @@ function doPackage {
 PLATFORM=$1
 ARCH=$2
 
-#only mac, ios subplatforms are used
-if [ "${PLATFORM}" = "mac" -o "${PLATFORM}" = "ios" ] ; then
+#only ios subplatforms are used
+if [ "${PLATFORM}" = "ios" ] ; then
 	SUBPLATFORM=$3
 else
 	SUBPLATFORM=

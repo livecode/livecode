@@ -9,8 +9,8 @@ PACKAGE_DIR="`pwd`/packaged"
 PLATFORM=$1
 ARCH=$2
 
-#only mac, ios subplatforms are used
-if [ "${PLATFORM}" = "mac" -o "${PLATFORM}" = "ios" ] ; then
+#only ios subplatforms are used
+if [ "${PLATFORM}" = "ios" ] ; then
 	SUBPLATFORM=$3
 else
 	SUBPLATFORM=
