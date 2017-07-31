@@ -9,7 +9,9 @@ Opens and initialises a new Chrome-based browser.
 
 Introduced: 6.7
 
-OS: mac, windows
+Deprecated: In LiveCode 8.0+, this function is no longer supported on Mac.
+
+OS: windows
 
 Platforms: desktop
 
