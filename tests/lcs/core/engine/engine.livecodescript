@@ -113,6 +113,11 @@ send "TestMe" to field "tf"
 TestAssert "Field text set as custom prop", the cMe of field "tf" is the text of field "tf"
 end TestCustomProperty
 
+-- Utility function that returns the folder containing this test
+private function _TestPath
+   set the itemDelimiter to slash
+   return item 1 to -2 of the filename of me
+end _TestPath
 
 on TestOwner
 create button
@@ -120,6 +125,13 @@ TestAssert "Card owns newly created button", (the long id of the owner of the la
 
 group the last button
 TestAssert "Now-grouped button is owned by the group", (the long id of the owner of the last button) is (the long id of the last group)
+
+local tImageFilenameFullPath, tGroupName
+put _TestPath() & "/tiny.png" into tImageFilenameFullPath
+put the name of the last group into tGroupName
+import paint from file tImageFilenameFullPath in tGroupName
+
+TestAssert "Now-grouped image is owned by the group", (the long id of the owner of the last image) is (the long id of the last group)
 end TestOwner
 
 
