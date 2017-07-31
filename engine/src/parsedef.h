@@ -1748,6 +1748,8 @@ enum Properties {
     
     P_LONG_NAME_NO_FILENAME,
     
+    P_REV_SCRIPT_DESCRIPTION,
+    
     __P_LAST,
 };
 
