@@ -266,6 +266,8 @@ MC_DLLEXPORT_DEF void *MCObjcObjectGetAutoreleasedId(const MCObjcObjectRef p_obj
     MCValueRef m_context;
 }
 - (id)initWithHandlerRef:(MCHandlerRef)aHandler context:(MCValueRef)aContext;
+- (void)dealloc;
+
 - (void)action:(id)sender;
 @end
 
@@ -280,6 +282,16 @@ MC_DLLEXPORT_DEF void *MCObjcObjectGetAutoreleasedId(const MCObjcObjectRef p_obj
     m_context = aContext != nullptr ? MCValueRetain(aContext) : nullptr;
     
     return self;
+}
+
+- (void)dealloc
+{
+    MCValueRelease(m_handler);
+    if (m_context != nullptr)
+    {
+        MCValueRelease(m_context);
+    }
+    [super dealloc];
 }
 
 - (void)action:(id)sender
