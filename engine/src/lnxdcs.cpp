@@ -1405,8 +1405,9 @@ void MCScreenDC::enablebackdrop(bool p_hard)
         gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
         gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
         gdk_window_set_skip_pager_hint(backdrop, TRUE);
-        gdk_window_fullscreen(backdrop);
-        gdk_window_show_unraised(backdrop);
+	gdk_window_move_resize(backdrop, 0, 0, device_getwidth(), device_getheight());
+        gdk_window_lower(backdrop);
+	gdk_window_show_unraised(backdrop);
 	}
 	else
 	{
