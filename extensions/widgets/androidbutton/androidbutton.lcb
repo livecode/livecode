@@ -199,6 +199,11 @@ public handler OnClose()
     end if
 end handler
 
+public handler OnParentPropertyChanged()
+	// Ensure enabled state is up to date
+	SetEnabled(my enabled)
+end handler
+
 public handler ButtonClicked(in pView as JObject)
 	post "mouseUp"
 	
