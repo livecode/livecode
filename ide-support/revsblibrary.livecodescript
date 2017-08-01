@@ -2243,15 +2243,20 @@ private command __InitialiseInclusionDependencies
    revSBAddDependencyForInclusion "scriptLibraries", "XMLRPC", "scriptLibraries", "XML"
 end __InitialiseInclusionDependencies
 
-command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny
-   put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
+command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny, pPlatforms
+   if pPlatforms is empty then
+      put revSBAllPlatforms() into pPlatforms
+   end if
+   repeat for each item tPlatform in pPlatforms
+      put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny][tPlatform]
+   end repeat
 end revSBAddDependencyForInclusion
 
 command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny, pDependenyType
    delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
 end revSBRemoveDependencyForInclusion
 
-command revSBUpdateForDependencies @xSettings
+command revSBUpdateForDependencies pPlatform, @xSettings
    local tDependencies
    repeat for each key tDependentKey in sDependencies
       repeat for each key tDependent in sDependencies[tDependentKey]
@@ -2259,7 +2264,9 @@ command revSBUpdateForDependencies @xSettings
             put sDependencies[tDependentKey][tDependent] into tDependencies
             repeat for each key tRequiredKey in tDependencies
                repeat for each key tRequired in tDependencies[tRequiredKey]
-                  revSBAddInclusion tRequired, tRequiredKey, xSettings
+                  if tDependencies[tRequiredKey][tRequired][pPlatform] then
+                     revSBAddInclusion tRequired, tRequiredKey, xSettings
+                  end if
                end repeat
             end repeat
          end if
