@@ -896,7 +896,10 @@ public:
 
 	MCObject *getparent() const
 	{
-		return parent;
+        if (parent)
+            return parent;
+        else
+            return NULL;
 	}
 	
 	uint4 getscriptdepth() const

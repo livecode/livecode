@@ -11,6 +11,8 @@ constant kStartupFolder = "/boot/standalone"
 constant kStartupStackFile = "/boot/standalone/__boot.livecode"
 -- Directory containing auxiliary stack files
 constant kAuxStackFolder = "/boot/auxiliary_stackfiles"
+-- Extension list file
+constant kAuxStackListFile = "/boot/auxiliary_stackfiles/auxiliary_stackfiles.txt"
 -- Directory containing extensions
 constant kExtensionFolder = "/boot/extensions"
 -- Extension list file
@@ -38,7 +40,7 @@ on startup
       if the version is not kEngineVersion then
          throw "Engine mismatch: found" && the version & ", expected" && kEngineVersion
       end if
-      
+
       -------------------------------------------------------------
       -- Validate boot stack hash
       open file kStartupStackFile for binary read
@@ -65,59 +67,67 @@ on startup
       end repeat
 
       if kBootHash is not tStackHashString then
-        throw  "Boot stack hash mismatch - standalone is corrupted"
+         throw  "Boot stack hash mismatch - standalone is corrupted"
       end if
-      
+
       -------------------------------------------------------------
       -- Load auxiliary stack files and run their load handlers
-      if there is a directory kAuxStackFolder then
+
+      if there is a file kAuxStackListFile then
+
+         local tAuxStacks
+         open file kAuxStackListFile for "UTF-8" text read
+         read from file kAuxStackListFile until end
+         put it into tAuxStacks
+         close file kExtensionListFile
+
          set the defaultfolder to kAuxStackFolder
-         
-         repeat for each line tFile in the files
-            
+         repeat for each line tFile in tAuxStacks
+
             -- This should autoload the file
             put the name of stack tFile into tStackName
-            
+
             -- The revLoadLibrary handler should insert the stack into
             -- the backscripts or frontscripts as necessary.
-            send "revLoadLibrary" to stack tStackName
-            
+            dispatch "revLoadLibrary" to stack tStackName
+
          end repeat
+
       end if
-      
+
       -------------------------------------------------------------
       -- Load extensions
       if there is a file kExtensionListFile then
-         
+
          -- Read list of extensions
          open file kExtensionListFile for "UTF-8" text read
          read from file kExtensionListFile until end
          put it into tModuleList
          close file kExtensionListFile
-         
+
          repeat for each line tModuleName in tModuleList
             put kExtensionFolder & slash & tModuleName into tFolder
-            
+
             load extension from file (tFolder & slash & "module.lcm") \
                   with resource path (tFolder & slash & "resources")
-            
+
             if the result is not empty then
                throw tModuleName & ":" && the result
             end if
          end repeat
       end if
-      
+
    catch tError
    end try
-   
+
    -- Set the initial working directory to the directory that contains
    -- the initial stack.
    set the defaultfolder to kStartupFolder
-   
+
    -- Try to print something vaguely helpful to the the log
    if tError is not empty then
       write "startup failed:" && tError & return to stderr
    end if
-   
+
    return tError
 end startup

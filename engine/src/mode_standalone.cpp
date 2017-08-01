@@ -720,6 +720,10 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+    
+    // the first auxiliary stack loaded during startup will currently be the home stack
+    // we want it to be the initial stack
+    MCdispatcher->changehome(t_stack);
 
 	/* Complete startup tasks and send the startup message */
 

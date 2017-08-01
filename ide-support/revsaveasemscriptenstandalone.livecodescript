@@ -27,69 +27,95 @@ end logDebug
 ----------------------------------------------------------------
 
 command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
-   
+
    logDebug "top", "----- Begin Emscripten standalone"
-   
+
    -- FIXME
    --dispatch "revIDEDeployEmscriptenInitialize" to stack "revDeployLibrary"
-   
+
    ---------- Pre-compute standalone build parameters
-   
+
    -- Initial stack file
    local tStackFile
    put the effective filename of stack pStack into tStackFile
-   
+
    -- Base directory
    local tBaseFolder
    set the itemDelimiter to slash
    put item 1 to -2 of tStackFile into tBaseFolder
    set the itemDelimiter to comma
-   
+
    -- Other parameters
-   local tName, tFiles, tAuxStackFiles, tExtensions
+   local tName, tFiles
    put pSettings["name"] into tName
    put pSettings["files"] into tFiles
-   put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
-   put pSettings["extensions"] into tExtensions
 
-   -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies "emscripten", pSettings
+
+   -- Set up the list of auxiliary stacks based on the script libraries
+   local tAuxStackFiles
+   put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
+
+   local tIncludeDataGrid
+   repeat for each line tLibrary in pSettings["scriptLibraries"]
+      if tLibrary is "DataGrid" then
+         put true into tIncludeDataGrid
+         next repeat
+      end if
+      local tLibraryStack
+      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      if there is a stack tLibraryStack then
+         if the  effective filename of stack tLibraryStack is not among the lines of tAuxStackFiles then
+            put the effective filename of stack tLibraryStack & return after tAuxStackFiles
+         end if
+      end if
+   end repeat
+
+   -- Handle the datagrid as a special case
+   if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      if the  effective filename of stack "revDataGridLibrary" is not among the lines of tAuxStackFiles then
+         put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+      end if
    end if
+
+   -- Set up the list of extensions
+   local tExtensions
+   put pSettings["extensions"] into tExtensions
 
    local tError
    try
       ---------- Check deployment entitlement
       revStandaloneProgress "Checking deployment entitlement..."
-      
+
       if not isPermittedDeployment() then
          throw "license does not permit HTML5 deployment"
       end if
-      
+
       ---------- Create a working directory
       local tBuildFolder
       put pOutputFolder into tBuildFolder
-      
+
       logDebug "top", "Output folder: " && pOutputFolder
-      
+
       ---------- Create new zip archive
       revStandaloneProgress "Creating standalone archive..."
-      
+
       local tBuildZip
       put tBuildFolder & slash & "standalone.zip" into tBuildZip
-      
+
       logDebug "top", "Archive:" && tBuildZip
-      
+
       revZipOpenArchive tBuildZip, "write"
-      
+
       if the result is not empty then
          throw "could not create standalone archive"
       end if
-      
+
       -- Store template files
       local tZipTemplateFile, tZipTemplateFolder, tZipTemplatePath
       put getStandaloneTemplateFolder() into tZipTemplateFolder
-      
+
       repeat for each element tZipTemplateFile in getStandaloneTemplateFiles()
          put tZipTemplateFolder & slash & tZipTemplateFile into tZipTemplatePath
          logDebug "template", "Storing" && tZipTemplatePath
@@ -98,7 +124,7 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
             throw "could not store template files in standalone archive"
          end if
       end repeat
-      
+
       -- Define some paths within the zip archive
       local tBootPath, tStandalonePath
       local tBootStackPath, tAuxStackPath, tStartupStackPath
@@ -109,40 +135,29 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
       put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
       put tBootPath & slash & "extensions" into tExtensionsPath
-      
+
       -- Store the initial stack
       local tBootHash
       storeBootStack tBuildZip, tBootStackPath, tBuildFolder, tStackFile, tBootHash
 
       -- Store auxiliary stacks
-      local tZipAuxPath, tAuxStackFile
-      repeat for each line tAuxStackFile in tAuxStackFiles
-         set the itemdelimiter to slash
-         put item -1 of tAuxStackFile into tZipAuxPath
-         put tAuxStackPath & slash before tZipAuxPath
-         
-         logDebug "aux", "Storing" && tAuxStackFile
-         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tAuxStackFile
-         if the result is not empty then
-            throw "could not store auxiliary stack in standalone archive"
-         end if
-      end repeat
-      
+      storeAuxStacks tBuildZip, tAuxStackFiles, tAuxStackPath
+
       -- Store extensions
       storeExtensions tBuildZip, tExtensions, tExtensionsPath
-      
+
       -- Deploy and store the startup script
       storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tBootHash
-      
+
       -- Store extra, copied files
       storeAssets tBuildZip, tFiles, tStandalonePath, tBaseFolder
-      
+
       -- Close zip file
       revZipCloseArchive tBuildZip
       if the result is not empty then
          throw "could not create standalone archive:" && the result
       end if
-      
+
       ---------- Copy the engine into the build folder
       revStandaloneProgress "Preparing engine files..."
       local tEngineFile
@@ -150,49 +165,81 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
          logDebug "engine", "Copying" && tEngineFile
          revSBCopyFileToFolder tEngineFile, tBuildFolder, \
                "revStandaloneProgressCallback", the long id of me
-         
+
          if the result is not empty then
             throw "could not copy engine file" && the result
          end if
       end repeat
-      
+
       ---------- Create HTML page
-      
+
       -- FIXME just copies the Emscripten-generated page into place
       revStandaloneProgress "Preparing HTML page..."
-      
+
       local tHtmlFile
       put tBuildFolder & slash & tName & ".html" into tHtmlFile
       logDebug "html", "Creating" && tHtmlFile
       logDebug "html", "Copying" && getHtmlTemplateFile()
       revSBCopyFileToFile mapBinPath(getHtmlTemplateFile()), tHtmlFile, \
             "revStandaloneProgressCallback", the long id of me
-      
+
    catch tError
-	if tError is empty then
-		put "an unknown error occurred" into tError
-	end if
+      if tError is empty then
+         put "an unknown error occurred" into tError
+      end if
 
       -- Cleanup on failure
       if there is a folder pOutputFolder then
          revDeleteFolder pOutputFolder
       end if
    end try
-   
+
    local tOutcome
    if tError is not empty then
       put "FAILURE" into tOutcome
    else
       put "SUCCESS" into tOutcome
    end if
-   
+
    logDebug "top", "----- (" & tOutcome & ") Emscripten Standalone"
-   
+
    if tError is not empty then
       throw tError
    end if
-   
+
 end revSaveAsEmscriptenStandalone
+
+----------------------------------------------------------------
+-- Auxiliary stack files
+----------------------------------------------------------------
+
+private command storeAuxStacks pZip, pAuxStackFiles, pAuxStackPath
+   local tZipAuxPath, tAuxManifest
+   repeat for each line tAuxStackFile in pAuxStackFiles
+      set the itemdelimiter to slash
+      put item -1 of tAuxStackFile into tZipAuxPath
+      put pAuxStackPath & slash before tZipAuxPath
+
+      logDebug "aux", "Storing" && tAuxStackFile
+      revZipAddUncompressedItemWithFile pZip, tZipAuxPath, tAuxStackFile
+      if the result is not empty then
+         logDebug "aux", the result
+         throw "could not store auxiliary stack in standalone archive"
+      end if
+
+      put item -1 of tAuxStackFile & return after tAuxManifest
+   end repeat
+
+   if tAuxManifest is not empty then
+      logDebug "aux", "Storing auxiliary stack file manifest"
+      put textEncode(tAuxManifest, "UTF-8") into tAuxManifest
+      revZipAddUncompressedItemWithData pZip, pAuxStackPath & slash & "auxiliary_stackfiles.txt", "tAuxManifest"
+      if the result is not empty then
+         logDebug "aux", the result
+         throw "could not store auxiliary stack file list in standalone archive"
+      end if
+   end if
+end storeAuxStacks
 
 ----------------------------------------------------------------
 -- LiveCode Builder extensions
@@ -202,14 +249,14 @@ private command storeExtensions pZip, pExtensions, pExtensionsPath
    if pExtensions is empty then
       exit storeExtensions
    end if
-   
+
    -- Put extensions in the correct order for loading
    local tExtensions
    put revIDEExtensionsOrderByDependency(pExtensions) into tExtensions
-   
+
    -- Store the list of extensions
    storeExtensionsList pZip, tExtensions, pExtensionsPath
-   
+
    -- Store each extension's data
    local tKind
    repeat for each line tKind in tExtensions
@@ -219,15 +266,15 @@ end storeExtensions
 
 private command storeExtensionsList pZip, pExtensions, pExtensionsPath
    local tData, tZipPath
-   
+
    put textEncode(pExtensions, "UTF-8") into tData
-   
+
    put pExtensionsPath & slash & "extensions.txt" into tZipPath
-   
+
    logDebug "lcb", "Storing" && tZipPath
-   
+
    revZipAddUncompressedItemWithData pZip, tZipPath, "tData"
-   
+
    if the result is not empty then
       LogDebug "lcb", the result
       throw "could not store extension list in standalone archive"
@@ -237,15 +284,15 @@ end storeExtensionsList
 private command storeExtensionByKind pZip, pKind, pExtensionsPath
    local tInstallFolder
    put revIDEExtensionProperty(pKind, "install_path") into tInstallFolder
-   
+
    local tFiles
    put getExtensionFilesByKind(tInstallFolder) into tFiles
-   
+
    local tZipPath, tFilePath
    repeat for each element tFilePath in tFiles
       put pExtensionsPath & slash & pKind & slash & tFilePath into tZipPath
       put tInstallFolder & slash before tFilePath
-      
+
       logDebug "lcb", "Storing" && tFilePath
       revZipAddUncompressedItemWithFile pZip, tZipPath, tFilePath
       if the result is not empty then
@@ -259,11 +306,11 @@ end storeExtensionByKind
 -- and documentation.  Otherwise, just include compiled extension + resources
 private function getExtensionFilesByKind pInstallFolder
    local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
-   
+
    if isCommercialDeployment() then
       put empty into tFiles
       put 0 into tFileCount
-      
+
       -- All resource files
       put scanFolder(pInstallFolder & slash & "resources") into tResourceFiles
       -- Make resource file paths relative to module install directory
@@ -271,17 +318,17 @@ private function getExtensionFilesByKind pInstallFolder
          add 1 to tFileCount
          put "resources" & slash & tFilePath into tFiles[tFileCount]
       end repeat
-      
+
       -- Compiled module file
       add 1 to tFileCount
       put "module.lcm" into tFiles[tFileCount]
-      
+
    else
       -- Include *every* file in the extension
       put scanFolder(pInstallFolder) into tFiles
-      
+
    end if
-   
+
    return tFiles
 end getExtensionFilesByKind
 
@@ -348,11 +395,11 @@ end storeStartupStack
 
 -- Create the startup script by processing the startup stack template.
 -- Engine-specific and standalone-specific data is substituted into the
--- template in order 
+-- template in order
 private function getStartupScript pStackHash
    local tTemplateFile, tScript
    local tStackHashString
-   
+
    -- Load template
    put getStartupTemplateFile() into tTemplateFile
    open file tTemplateFile for "UTF-8" text read
@@ -365,10 +412,10 @@ private function getStartupScript pStackHash
       throw tTemplateFile & ":" && the result
    end if
    close file tTemplateFile
-   
+
    -- Trim to the actual script
    delete line 1 of tScript
-      
+
    -- Compute a hex string representation of the boot stack hash
    put empty into tStackHashString
    local tByte, tByteString
@@ -381,11 +428,11 @@ private function getStartupScript pStackHash
             put tByteString after tStackHashString
       end switch
    end repeat
-   
+
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
    replace "@BOOT_HASH@" with tStackHashString in tScript
-   
+
    return tScript
 end getStartupScript
 
@@ -395,18 +442,18 @@ end getStartupScript
 
 private command storeBootStack pZip, pBootStackPath, pBuildFolder, pStackFile, @rStackHash
    logDebug "boot-stack", "Storing" && pStackFile
-   
+
    local tStackData
    put getPreparedStackAsData(pStackFile, pBuildFolder) into tStackData
-   
+
    -- Compute the SHA-1 hash of the first 1 kB of the boot stack
    -- This is needed when building the startup script
    put the sha1Digest of (byte 1 to 1024 of tStackData) into rStackHash
-   
+
    revZipAddUncompressedItemWithData pZip, pBootStackPath, "tStackData"
    if the result is not empty then
       throw "could not store initial stack in standalone archive"
-   end if   
+   end if
 end storeBootStack
 
 ----------------------------------------------------------------
@@ -416,20 +463,20 @@ end storeBootStack
 private command storeAssets pZip, pFiles, pStandalonePath, pBaseFolder
    -- Get a list of all the files to copy
    local tPath, tFiles, tCount
-   
+
    put empty into tFiles
    put 0 into tCount
-   
+
    repeat for each line tPath in pFiles
       getAssetFilesFromPath tPath, pBaseFolder, tFiles, tCount
    end repeat
-   
+
    -- Store all the files in the zip archive
    local tCopyInfo, tZipPath
-   
+
    repeat for each element tCopyInfo in tFiles
       logDebug "asset", "Storing" && tCopyInfo["source"]
-      
+
       put pStandalonePath & slash & tCopyInfo["dest"] into tZipPath
       revZipAddUncompressedItemWithFile pZip, tZipPath, tCopyInfo["source"]
       if the result is not empty then
@@ -440,9 +487,9 @@ end storeAssets
 
 private command getAssetFilesFromPath pPath, pBaseFolder, @xFiles, @xCount
    local tSourcePath, tAssetPath, tFile
-   
+
    mapAssetPath pPath, pBaseFolder, tSourcePath, tAssetPath
-   
+
    if there is a file tSourcePath then
       add 1 to xCount
       put tSourcePath into xFiles[xCount]["source"]
@@ -463,16 +510,16 @@ end getAssetFilesFromPath
 ----------------------------------------------------------------
 
 -- Modifies a copy of <pStackFile> to prepare it for deployment,
--- and then returns the modified stack file's contents as data. 
+-- and then returns the modified stack file's contents as data.
 -- <pStackFile> is not modified.
 private function getPreparedStackAsData pStackFile, pBuildFolder
    local tStack, tDefaultStack, tError, tResult
    local tTempFile, tCleanTempFile
    local tStandaloneSettings
    local tStackData
-   
+
    put the long id of stack pStackFile into tStack
-   
+
    try
       if revIDEStackNameIsIDEStack(the name of tStack) then
          -- Don't manipulate IDE stacks if for some reason someone
@@ -481,11 +528,11 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          put false into tCleanTempFile
 
       else
-         
+
          -- Get a temporary filename
          put getTemporaryBuildFile(pBuildFolder, ".livecode") into tTempFile
          put true into tCleanTempFile
-         
+
          -- Clear standalone settings
          if isCommercialDeployment() then
             set the customProperties["cRevStandaloneSettings"] of tStack to empty
@@ -498,27 +545,27 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
             delete variable tStandaloneSettings["password"]
             set the customProperties["cRevStandaloneSettings"] of tStack to tStandaloneSettings
          end if
-         
+
          -- Save the modified stack to the temporary file
          lock messages
          lock screen
-         
+
          save tStack as tTempFile with newest format
          put the result into tResult
          if tResult is not empty then
             throw tTempFile & ":" && tResult
          end if
          set the filename of tStack to pStackFile
-         
+
          -- Revert to unmodified state
          revert tStack
          set the defaultStack to the short name of tStack
-         
+
          unlock screen
          unlock messages
-         
+
       end if
-      
+
       -- Compute the SHA-1 hash of the first 1 kB of the boot stack
       open file tTempFile for binary read
       if the result is not empty then
@@ -533,7 +580,7 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
 
    catch tError
    end try
-   
+
    if tCleanTempFile and there is a file tTempFile then
       delete file tTempFile
    end if
@@ -555,7 +602,7 @@ private function mapBinPath pPath
    if there is a file pPath then
       return pPath
    end if
-   
+
    if revEnvironmentIsInstalled() then
       -- We're running from an installed version of LiveCode
       return getRuntimeFolder() & slash & pPath
@@ -594,12 +641,12 @@ end mapResPath
 private command mapAssetPath pPath pBaseFolder @rSourcePath @rDestPath
    local tIsAbsolute
    put pPath begins with "/" or char 2 to 3 of pPath is ":/" into tIsAbsolute
-   
+
    set the itemDelimiter to slash
    if the last item of pPath is "*" then
       delete the last item of pPath
    end if
-   
+
    if tIsAbsolute then
       put item -1 of pPath into rDestPath
       put pPath into rSourcePath
@@ -613,27 +660,27 @@ end mapAssetPath
 -- The returned paths are relative to the specified directory.
 private function scanFolder pFolder
    local tTemplateRoot, tFiles, tCount, tError
-   
+
    -- Short-circuit if pFolder is missing
    if there is no folder pFolder then
       return empty
    end if
-   
+
    put 0 into tCount
    put empty into tFiles
-   
+
    revIDEPushDefaultFolder pFolder
    try
       scanFolder_recurse tCount, tFiles, empty
    catch tError
    end try
-   
+
    revIDEPopDefaultFolder
-   
+
    if tError is not empty then
       throw tError
    end if
-   
+
    return tFiles
 end scanFolder
 
@@ -681,13 +728,13 @@ end revGetEmscriptenFiles
 -- copied into the standalone output folder.
 private function getEngineFiles
    local tFiles
-   
+
    -- Engine JavaScript
    put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".js") into tFiles[1]
-   
+
    -- Memory initialisation file
    put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html.mem") into tFiles[2]
-   
+
    return tFiles
 end getEngineFiles
 
@@ -721,11 +768,11 @@ end getStartupTemplateFile
 
 -- Get the directory containing the Emscripten runtime
 private function getRuntimeFolder
-   
+
    local tRelFolder, tOverridePath, tUserPath
-   
+
    put slash & "Emscripten" & slash & "js" into tRelFolder
-   
+
    put revOverrideRuntimePath() into tOverridePath
    if tOverridePath is not empty then
       put tRelFolder after tOverridePath
@@ -733,7 +780,7 @@ private function getRuntimeFolder
          return tOverridePath
       end if
    end if
-   
+
    put revEnvironmentUserRuntimePath() into tUserPath
    if tUserPath is not empty then
       put tRelFolder after tUserPath
@@ -741,7 +788,7 @@ private function getRuntimeFolder
          return tUserPath
       end if
    end if
-   
+
    return revEnvironmentRuntimePath() & tRelFolder
 end getRuntimeFolder
 
