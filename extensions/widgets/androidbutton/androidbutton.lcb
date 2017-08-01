@@ -128,7 +128,6 @@ private handler IsAndroid() returns Boolean
 end handler
 
 public handler OnCreate()
-    put false into mOpen
     put "" into mLabel
     put "0,0,0" into mColor
 end handler
@@ -143,7 +142,7 @@ public handler OnLoad(in pProperties as Array)
     put pProperties["color"] into mColor
 end handler
 
-private unsafe handler InitButtonView()
+private handler InitButtonView()
 	// Create an android button using the Engine Context
     variable tEngine as JObject
     put _JNI_GetAndroidEngine() into tEngine
@@ -177,7 +176,7 @@ private unsafe handler InitButtonView()
     updateProperties()
 end handler
 
-private unsafe handler FinalizeButtonView()
+private handler FinalizeButtonView()
     set my native layer to nothing
     put nothing into mButton
 end handler
@@ -189,21 +188,15 @@ private handler updateProperties()
 end handler
 
 public handler OnOpen()
-    put true into mOpen
     if IsAndroid() then
-        unsafe
-            InitButtonView()
-        end unsafe
+        InitButtonView()
     end if
 end handler
 
 public handler OnClose()
     if IsAndroid() then
-        unsafe
-            FinalizeButtonView()
-        end unsafe
+        FinalizeButtonView()
     end if
-    put false into mOpen
 end handler
 
 public handler ButtonClicked(in pView as JObject)
@@ -272,33 +265,27 @@ public handler OnPaint()
     fill text tNameString at center of tRect on this canvas
 end handler
 
-public handler SetEnabled(in pValue as Boolean)
-    if mOpen and mButton is not nothing then
-        unsafe
-            _JNI_SetTextViewEnabled(mButton, pValue)
-        end unsafe
-        redraw all
+handler SetEnabled(in pValue as Boolean)
+    if mButton is not nothing then
+        _JNI_SetTextViewEnabled(mButton, pValue)
     end if
+    redraw all
 end handler
 
 public handler SetLabel(in pLabel as String)
     put pLabel into mLabel
-    if mOpen and mButton is not nothing then
-        unsafe
-            _JNI_SetTextViewText(mButton, StringToJString(mLabel))
-        end unsafe
-        redraw all
+    if mButton is not nothing then
+        _JNI_SetTextViewText(mButton, StringToJString(mLabel))
     end if
+    redraw all
 end handler
 
 public handler SetTextColor(in pColor as String)
     put pColor into mColor
-    if mOpen and mButton is not nothing then
-        unsafe
-            SetStringAndroidColor(pColor)
-        end unsafe
-        redraw all
+    if mButton is not nothing then
+        SetStringAndroidColor(pColor)
     end if
+    redraw all
 end handler
 
 private handler ColorComponentToInt(in pComponent as Real) returns Integer
@@ -307,7 +294,7 @@ private handler ColorComponentToInt(in pComponent as Real) returns Integer
     return pComponent
 end handler
 
-private unsafe handler SetStringAndroidColor(in pString as String)
+private handler SetStringAndroidColor(in pString as String)
     variable tColor as Color
     put stringToColor(pString) into tColor
     
