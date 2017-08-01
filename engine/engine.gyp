@@ -995,6 +995,7 @@
 									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
 								],
 
 								'outputs':
@@ -1027,6 +1028,7 @@
 									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
 								],
 							},
 						],

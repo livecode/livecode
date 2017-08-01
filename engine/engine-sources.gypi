@@ -794,6 +794,9 @@
 			'src/em-util.js',
 			'src/em-view.h',
 			'src/em-view.cpp',
+			'src/em-liburl.h',
+			'src/em-liburl.cpp',
+			'src/em-liburl.js',
 		],
 		
 		# Sources that need to be compiled separately for each mode
