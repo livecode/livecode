@@ -1657,8 +1657,17 @@ command revSBAddAvailableLibrary pID, pTitle, pSettingsA
    put pTitle into tLibrary["title"]
    put pSettingsA into tLibrary["settings"]
    put "script library" into tLibrary["type"]
-   put revSBAllDesktopPlatforms() & comma & \ 
-         revSBAllMobilePlatforms() into tLibrary["platforms"]
+   
+   -- liburl and the datagrid are supported on all platforms
+   -- until we have meta data associated with each lib (that includes platforms supported)
+   -- just handle the special cases directly 
+   if pTitle is among the items of "Internet,DataGrid" then
+      put revSBAllPlatforms() into tLibrary["platforms"]
+   else
+      put revSBAllDesktopPlatforms() & comma & \
+            revSBAllMobilePlatforms() into tLibrary["platforms"]
+   end if
+   
    addToList tLibrary, sScriptLibraries
 end revSBAddAvailableLibrary
 
