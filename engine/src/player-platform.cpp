@@ -1831,7 +1831,7 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 			
             for (uindex_t i = 0; i < t_track_count; i++)
             {
-				// If the list of enabledtracks we set contains 0 (empty), just skip it until it is non-empty
+				// If the list of enabledtracks we set contains 0 (empty), just skip it
 				if (p_tracks_id[i] == 0)
 					continue;
 					
