@@ -172,7 +172,7 @@ end mouseUp
 on NewRequest pSocketID, pRequest
    local tPath
    put the effective filename of me into tPath
-   set the itemDelimiter to tPath
+   set the itemDelimiter to slash
    
    put "files/" & pRequest["resource"] into the last item of tPath
    
