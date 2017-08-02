@@ -54,7 +54,7 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'js-emscripten-sdk1.35',
 )
 # The set of build tasks that this branch supports
-BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'upload')
+BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract', 'prebuilts-upload')
 
 SKIP_EXIT_STATUS = 88
 
@@ -174,23 +174,32 @@ def do_compile():
 # Archive / extract built binaries
 ################################################################
 
+def bin_archive(target):
+	args = ["python", "prebuilt/archive.py"] + format_target_params(*target)
+	print(' '.join(args))
+	return subprocess.call(args)
+
 def do_bin_archive():
-	print('skip bin-archive')
+	target = split_target_triple()
+	return bin_archive(target)
+
+def do_bin_extract():
+    return subprocess.call(['python', 'prebuilt/extract.py'])
 
 ################################################################
 # Upload packaged binaries
 ################################################################
 
-def upload(target):
+def prebuilts_upload(target):
 	args = ["python", "prebuilt/upload.py"] + format_target_params(*target)
 	print(' '.join(args))
 	return subprocess.call(args)
 
-def do_upload():
+def do_prebuilts_upload():
 	target = split_target_triple()
 	# perform build + package + upload in configure step
-    
-	return upload(target)
+
+	return prebuilts_upload(target)
 
 ################################################################
 # Main entry point
@@ -210,8 +219,10 @@ def buildbot_task(target):
         return do_compile()
     elif target == 'bin-archive':
         return do_bin_archive()
-    elif target == 'upload':
-        return do_upload()
+    elif target == 'bin-extract':
+        return do_bin_extract()
+    elif target == 'prebuilts-upload':
+        return do_prebuilts_upload()
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

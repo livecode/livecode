@@ -24,21 +24,21 @@ import subprocess
 # Action
 ################################################################
 
-def exec_upload_prebuilts():
+def exec_extract_prebuilts():
 	# set curdir to prebuilt folder
 	os.chdir(os.path.dirname(__file__))
 	if platform.system() == 'Windows':
-		args = ["..\util\invoke-unix.bat", "./upload-libs.sh"]
+		args = ["..\util\invoke-unix.bat", "./extract-libs.sh"]
 	else:
-		args = ["./upload-libs.sh"]
+		args = ["./extract-libs.sh"]
 	print(' '.join(args))
 	status = subprocess.call(args)
 	if status != 0:
 		sys.exit(status)
 
-def upload(args):
-    print('Uploading all platform prebuilts')
-    exec_upload_prebuilts()
+def extract(args):
+    print('Extract prebuilt library archives')
+    exec_extract_prebuilts()
 
 if __name__ == '__main__':
-    upload(sys.argv[1:])
+    extract(sys.argv[1:])
