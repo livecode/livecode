@@ -158,9 +158,7 @@ def do_configure():
 	exit_status = build(target)
 	if exit_status is 0:
 		exit_status = package(target)
-	if exit_status is 0:
-		exit_status = upload(target)
-	
+
 	return exit_status
 
 ################################################################
