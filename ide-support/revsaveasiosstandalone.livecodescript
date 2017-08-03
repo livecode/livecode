@@ -425,7 +425,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
             -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
             -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
             -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
-            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && quote & "@" & tLinkOptionsFile & quote)
+            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && " -w " & quote & "@" & tLinkOptionsFile & quote)
             
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
