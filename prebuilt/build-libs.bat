@@ -159,12 +159,24 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 WHERE /Q nasm 1>NUL 2>NUL
+IF %ERRORLEVEL% EQU 0 (
+    SET nasm_path=
+) ELSE IF EXIST "%ProgramFiles%\NASM" (
+    SET "nasm_path=%ProgramFiles%\NASM"
+) ELSE IF EXIST "%ProgramFiles(x86)%\NASM" (
+    SET "nasm_path=%ProgramFiles(x86)%\NASM"
+) ELSE (
+    @ECHO >&2 Cannot locate a NASM installation
+    EXIT /B 1
+)
+
+WHERE /Q nasm 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
-   SET "PATH=%PATH%;%ProgramFiles(x86)%\NASM"
+    SET "PATH=%PATH%;%nasm_path%"
 )
 WHERE /Q nasm 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO Cannot find 'nasm'. Make sure nasm is installed with root "%ProgramFiles(x86)%\NASM".
+	ECHO Cannot find 'nasm'. Make sure nasm is installed in "%ProgramFiles%\NASM" or "%ProgramFiles(x86)%\NASM"
 	EXIT /B 1
 )
 
