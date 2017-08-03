@@ -3931,7 +3931,12 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 			t_image->setflag(True, F_I_ALWAYS_BUFFER);
 
 			if (t_image->import(p_filename, t_stream, t_mask_stream) == IO_NORMAL)
+			{
 				t_image->attach(OP_CENTER, false);
+				MCAutoValueRef t_id;
+				t_image -> names(P_LONG_ID, &t_id);
+				ctxt . SetItToValue(*t_id);
+			}
 			else
 			{
 				ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
