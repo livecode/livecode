@@ -68,6 +68,10 @@ private:
 	static int compare_handler(const void *a, const void *b);
 };
 
+typedef bool (*MCHandlerlistListConstantsCallback)(void *p_context, MCHandlerConstantInfo *info);
+typedef bool (*MCHandlerlistListVariablesCallback)(void *p_context, MCVariable *p_variable);
+typedef bool (*MCHandlerlistListHandlersCallback)(void *p_context, Handler_type p_type, MCHandler* p_handler, bool p_include_all);
+
 class MCHandlerlist
 {
 	// MW-2012-08-08: [[ BeforeAfter ]] The before/after handlers are stored
@@ -119,7 +123,8 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	bool getlocalnames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
-	void appendglobalnames(MCStringRef& r_string, bool first);
+    bool getconstantnames(MCListRef& r_list);
+    void appendglobalnames(MCStringRef& r_string, bool first);
 	void newglobal(MCNameRef name);
 	
 	Parse_stat parse(MCObject *, MCStringRef);
@@ -133,6 +138,11 @@ public:
 	MCVariable *getglobal(uint2 p_index);
     bool enumerate(MCExecContext& ctxt, bool p_include_private, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 	
+	bool listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context);
+	bool listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context, bool p_include_all);
+    bool listvariables(MCHandlerlistListVariablesCallback p_callback, void *p_context);
+    bool listglobals(MCHandlerlistListVariablesCallback p_callback, void *p_context);
+    
 	uint2 getnvars(void)
 	{
 		return nvars;

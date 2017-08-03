@@ -108,10 +108,14 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
 	bool getparamnames(MCListRef& r_list);
+	bool getparamnames_as_properlist(MCProperListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);
-	bool getglobalnames(MCListRef& r_list);
-	bool getvarnames(bool p_all, MCListRef& r_list);
-	//Exec_stat eval(MCExecPoint &);
+    bool getvariablenames_as_properlist(MCProperListRef& r_list);
+    bool getglobalnames(MCListRef& r_list);
+    bool getglobalnames_as_properlist(MCProperListRef& r_list);
+    bool getvarnames(bool p_all, MCListRef& r_list);
+    bool getconstantnames_as_properlist(MCProperListRef& r_list);
+    //Exec_stat eval(MCExecPoint &);
     uint4 linecount();
 
 	// Used by the externals API, this method returns the current incarnation of

@@ -370,6 +370,18 @@ bool MCHandlerlist::getglobalnames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+bool MCHandlerlist::getconstantnames(MCListRef& r_list)
+{
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(',', &t_list))
+        return false;
+    for (uinteger_t i = 0 ; i < nconstants ; i++)
+        if (!MCListAppend(*t_list, cinfo[i].name))
+            return false;
+    
+    return MCListCopy(*t_list, r_list);
+}
+
 void MCHandlerlist::appendglobalnames(MCStringRef& r_string, bool first)
 {
 	MCAutoListRef t_list;
@@ -714,6 +726,72 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_include_private, bool 
     
     t_handlers . Take(r_handlers, r_count);
 	return p_first;
+}
+
+bool MCHandlerlist::listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context)
+{
+	for(uint2 i = 0; i < nconstants; i++)
+	{
+		if (!p_callback(p_context,
+						&cinfo[i]))
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+bool MCHandlerlist::listvariables(MCHandlerlistListVariablesCallback p_callback, void *p_context)
+{
+    
+    for (MCVariable *t_var = vars; t_var != nil; t_var = t_var->getnext())
+    {
+        if (!p_callback(p_context,
+                        t_var))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool MCHandlerlist::listglobals(MCHandlerlistListVariablesCallback p_callback, void *p_context)
+{
+    
+    for (uinteger_t i = 0 ; i < nglobals ; i++)
+    {
+        if (!p_callback(p_context,
+                        globals[i]))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+
+bool MCHandlerlist::listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context, bool p_include_all)
+{
+	for(int t_htype = HT_MIN; t_htype < HT_MAX; t_htype++)
+	{
+        int t_htype_index = static_cast<int>(t_htype - HT_MIN);
+        
+		for(uint2 i = 0; i < handlers[t_htype_index].count(); i++)
+		{
+			if (!p_callback(p_context,
+							static_cast<Handler_type>(t_htype),
+							handlers[t_htype_index].get()[i],
+                            p_include_all))
+			{
+				return false;
+			}
+		}
+	}
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

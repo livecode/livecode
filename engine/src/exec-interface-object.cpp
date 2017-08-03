@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "module-engine.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _PropList
@@ -4515,24 +4517,18 @@ void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, M
     hlist -> enumerate(ctxt, true, true, r_count, r_handlers);
 }
 
-void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+static bool get_message_path_object_list_for_object(MCObject* p_object, MCObjectList*& r_object_list)
 {
-    bool t_first;
-    t_first = true;
-    
-    MCAutoArray<MCStringRef> t_handlers;
-    
-    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
-    MCObjectList *t_object_list;
-    t_object_list = nil;
     
     bool t_success;
     t_success = true;
     
-    // MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
+    MCObjectList *t_object_list;
+    t_object_list = nil;
+    
     t_success = MCObjectListAppendObjectList(t_object_list, MCfrontscripts);
     
-    for (MCObject *t_object = this; t_success && t_object != NULL; t_object = t_object -> parent)
+    for (MCObject *t_object = p_object; t_success && t_object != NULL; t_object = t_object -> getparent())
     {
         t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, t_object);
     }
@@ -4542,10 +4538,36 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
     
     for (uint32_t i = 0; t_success && i < MCnusing; i++)
     {
-        if (MCusing[i] == this)
+        if (MCusing[i] == p_object)
             continue;
         t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, MCusing[i]);
     }
+    
+    if (!t_success && t_object_list)
+    {
+        MCObjectListFree(t_object_list);
+        t_object_list = nil;
+    }
+    
+    r_object_list = t_object_list;
+    
+    return t_success;
+}
+
+void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    bool t_first;
+    t_first = true;
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    bool t_success;
+    t_success = true;
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
     
     // IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object
     if (t_success)
@@ -4633,6 +4655,7 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
             ctxt . Throw();
             return;
         }
+        
         MCListCopyAsString(*t_list, r_variables);
         return;
     }
@@ -4704,3 +4727,106 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
     else
         r_variables = nil;
 }
+
+void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status)
+{
+    if (!getstack() -> iskeyed())
+    {
+        ctxt . LegacyThrow(EE_STACK_NOKEY);
+        return;
+    }
+    
+    MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
+    
+    if (MCEngineScriptObjectCreate(this, 0, &t_object_ref))
+    {
+        r_status = MCEngineExecDescribeScriptOfScriptObject(*t_object_ref);
+        if (MCExtensionConvertToScriptType(ctxt, r_status))
+            return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_descriptions)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCAutoArrayRef t_descriptions;
+    t_success = MCArrayCreateMutable(&t_descriptions);
+    
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
+    
+    if (t_success)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = t_object_list;
+        
+        index_t t_index = 1;
+        do
+        {
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+            {
+                MCAutoValueRef t_description;
+                
+                MCAutoValueRefBase<MCScriptObjectRef> t_script_object_ref;
+                
+                if (t_success)
+                    t_success = MCEngineScriptObjectCreate(t_object_ref -> getobject(), 0, &t_script_object_ref);
+                
+                MCAutoArrayRef t_object_description;
+                if (t_success)
+                {
+                    t_description = MCEngineExecDescribeScriptOfScriptObject(*t_script_object_ref, t_object_ref -> getobject() == this);
+                
+                    MCAutoStringRef t_object_id;
+                    t_object_ref -> getobject() -> GetLongId(ctxt, 0, &t_object_id);
+                    
+                    MCNameRef t_keys[2];
+                    t_keys[0] = MCNAME("object");
+                    t_keys[1] = MCNAME("description");
+                    
+                    MCValueRef t_values[2];
+                    t_values[0] = *t_object_id;
+                    t_values[1] = *t_description;
+                    
+                    t_success = MCArrayCreate(false,
+                                              t_keys,
+                                              t_values,
+                                              sizeof(t_keys) / sizeof(t_keys[0]),
+                                              &t_object_description);
+                }
+                
+                if (t_success)
+                    t_success = MCArrayStoreValueAtIndex(*t_descriptions,
+                                                         t_index,
+                                                         *t_object_description);
+                
+                ++t_index;
+                
+            }
+            
+            t_object_ref = t_object_ref -> prev();
+        }
+        while(t_success && t_object_ref != t_object_list);
+    }
+    
+    MCObjectListFree(t_object_list);
+    
+    MCValueRef t_value;
+    if (t_success)
+    {
+        t_value = t_descriptions.Take();
+        t_success = MCExtensionConvertToScriptType(ctxt, t_value);
+    }
+    
+    if (!t_success)
+        ctxt . Throw();
+    else
+        r_descriptions = t_value;
+}
+
+
