@@ -60,6 +60,22 @@ Before running each test command, the test framework inserts a test library stac
 * `TestDiagnostic pMessage`: Write *pMessage* to the test log as a message.
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
+* `TestSkipIf pRequirement, pOptions`: Skip a test if the requirements 
+are met. `pOptions` varies depending on the `pRequirement` enum. The
+following requirements are implemented:
+   - `ide` - the IDE repo is available. No options.
+   - `lcb` - LCB compilation supported
+   - `docs` - the docs are available. No options.
+   - `securityPermissions` - Option `set` to skip if a test should not
+   set the `securityPermissions`
+   - `platform` - options are comma delimited platform strings
+   - `processor` - options are comma delimited processor strings
+   - `stack` - options are comma delimited stack names to test if they
+   are available
+   - `environment` - options are comma delimited environment strings
+* `TestSkipIfNot pRequirement, pOptions`: Skip a test if the 
+requirements are not met. Requirements and options are the same as for 
+`TestSkipIf`.
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
 * `TestAssertThrow pDescription, pHandlerName, pTarget, pExpectedError, pParam`: Assert that a given handler triggers the expected error message. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure. *pExpectedError* is the expected script execution error name in the enumeration in engine/src/executionerrors.h - e.g. `"EE_PROPERTY_CANTSET"`.
 * `TestAssertDoesNotThrow pDescription, pHandlerName, pTarget, pParam`: Assert that a given handler does not trigger any exceptions. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure.
@@ -73,25 +89,42 @@ Before running each test command, the test framework inserts a test library stac
 	- `pTimeOut` is the amount of milliseconds to continue testing the result of the handler.
 	- `pParamsArray` is an array of parameters, keyed by the 1-based index of the required parameter to be passed to the handler.
 * `TestAssertErrorDialog pDescription, pErrorCode`: Assert that this test triggers an errorDialog message with the given error.
+* `TestIsInStandalone()`: Checks if the test is being run by the
+standalone test runner.
+
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````
 on TestSetup
+   TestSkipIfNot "docs"
    -- All the tests in this script require access to the docs parser
    start using stack (TestGetEngineRepositoryPath() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
 end TestSetup
 ````
 
-The `TestSetup` handler can indicate that a test should be skipped *entirely* by returning a value that begins with the word "skip".  For example:
+The `TestSetup` handler can indicate that a test should be skipped
+*entirely* by returning a value that begins with the word "skip" or by
+using the `TestSkipIf` or `TestSkipIfNot` commands. For example:
 
 ````
 on TestSetup
-   if the platform is not "Windows" then
+   TestSkipIfNot "platform", "Win32"
+   -- is the same as
+   if the platform is not "Win32" then
       return "SKIP Feature is only supported on Windows"
    end if
 end TestSetup
 ````
 
+
 Tests may need to clean up temporary files or other resources after running.  If a script test contains a handler called `TestTeardown`, this will be run after running each test command -- even if the test failed.  N.b. `TestTeardown` won't be run if running the test command causes an engine crash.
+
+Any new objects created on the test stack, `mainstacks`, `sockets`,
+`open processes` and `open files` are automatically cleared after each
+test and do not need to be included in the `TestTeardown` handler or
+teardown included in the test. Other global properties and variables
+should be reset in the test teardown. The test stack is deleted from
+memory and reloaded for the next test if multiple tests are being run
+within the same process as in the standalone test runner.
 
 Crashes or uncaught errors from a test command cause the test to immediately fail.
 

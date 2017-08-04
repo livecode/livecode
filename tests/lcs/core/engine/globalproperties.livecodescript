@@ -28,6 +28,9 @@ end TestSetReadOnlyProperty
 
 on TestGetSetSecurityPermissions
    TestAssert "Getting default securityPermissions", the securityPermissions is the securityCategories
+		
+	TestSkipIfNot "securityPermissions", "set"
+	
    local tNewPermissions
    put "disk,network" into tNewPermissions
    set the securityPermissions to tNewPermissions

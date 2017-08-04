@@ -128,10 +128,11 @@ on TestFoldersInEmptyFolder
 end TestFoldersInEmptyFolder
 
 on TestFoldersOfTilde
+   TestSkipIfNot "platform", "MacOS,Linux"
 	TestAssert "folders(~) is the same as folders($HOME)", folders($HOME) is folders("~")
 end TestFoldersOfTilde
 
 on TestFilesOfTilde
+   TestSkipIfNot "platform", "MacOS,Linux"
 	TestAssert "files(~) is the same as files($HOME)", files($HOME) is files("~")
 end TestFilesOfTilde
-

@@ -135,18 +135,8 @@ on TestHighlightColors
 
 #	set the hilitecolor of button 1 to 1234
 #	TestAssert "hilitecolor set to 1234", the hilitecolor of button 1 is "1234"
+	delete button 1
 end TestHighlightColors
-
-on TestLinkHighlightColors
-	set the linkhilitecolor to "blue"
-	TestAssert "linkhilitecolor set to blue", the linkhilitecolor is "blue"
-
-	set the linkhilitecolor to "255,255,0"
-	TestAssert "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0"
-
-	set the linkhilitecolor to "#336633"
-	TestAssert "linkhilitecolor set to hex value", the linkhilitecolor is "#336633"
-end TestLinkHighlightColors
 
 on TestHighlighted
 	create button

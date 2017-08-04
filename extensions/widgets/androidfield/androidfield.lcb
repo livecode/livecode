@@ -90,21 +90,23 @@ Description:
 Handle the <exitField> message if you want to do something when the user leaves
 a field that hasn't been changed.
 
-Name: returnKey
+Name: textChanged
 
 Summary:
-Sent when the return key is pressed and focus is removed from a native field
-widget.
+Sent when the native field widget text is changed.
 
 Example:
-local sUserData
-on returnKey
-   -- save the details when the return key is pressed, then focus on the next
-   -- control
-   put the text of me into sUserName
-   set the focused of widget "user email" to true
-end returnKey
+on textChanged
+   if the text of me is not a number then
+      beep
+   end if
+end textChanged
+
+Description:
+Handle the <textChanged> message if you want to do something when the text of
+the field is changed through typing.
 */
+
 widget com.livecode.widget.native.android.field
 
 use com.livecode.foreign
@@ -924,10 +926,16 @@ handler TextView_getSelectionEnd(in pObj as JObject) returns Number
 	return tJNIResult
 end handler
 
+__safe foreign handler _JNI_CharSequence_toString(in pObj as JObject) returns JString \
+   binds to "java:java.lang.CharSequence>toString()Ljava/lang/String;"
 handler TextView_getText(in pObj as JObject) returns String
-	variable tJNIResult as JString
+	variable tJNIResult as JObject
 	put _JNI_TextView_getText(pObj) into tJNIResult
-	return StringFromJString(tJNIResult)
+
+   variable tString as JString
+   put _JNI_CharSequence_toString(tJNIResult) into tString
+
+	return StringFromJString(tString)
 end handler
 
 handler TextView_getTextSize(in pObj as JObject) returns Number
@@ -1021,7 +1029,7 @@ handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEven
    MCEngineRunloopBreakWait()
 end handler
 
-handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject) returns JObject
+handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject)
    post "textChanged"
    MCEngineRunloopBreakWait()
 end handler
@@ -1033,20 +1041,20 @@ handler SetListeners()
       into tFocusChangeListener
    _JNI_View_setOnFocusChangeListener(mNativeObj, tFocusChangeListener)
 
-   // At the moment we can't support the textChanged message as the listener
-   // returns a Boolean value - see bug 19973
-/*
    variable tTextChangedListener as JObject
    put _JNI_TextWatcher_TextChangedListener({"onTextChanged": OnTextChanged}) \
       into tTextChangedListener
    _JNI_TextView_addTextChangedListener(mNativeObj, tTextChangedListener)
-*/
 
+   // At the moment we can't support the returnKey message
+   // as the listener returns a Boolean values - see bug 19973
+/*
    // Add a listener for the returnKey action
    variable tEditorActionListener as JObject
    put _JNI_View_OnEditorActionListener(OnEditorAction) \
       into tEditorActionListener
    _JNI_TextView_setOnEditorActionListener(mNativeObj, tEditorActionListener)
+*/
 end handler
 
 // Set / get props

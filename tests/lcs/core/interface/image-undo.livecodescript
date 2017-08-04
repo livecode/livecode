@@ -42,11 +42,9 @@ private command RandomFillImage pImage
 end RandomFillImage
 
 on TestClickImageWorks
-    if the environment is "command line" then
-        TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
-        exit TestClickImageWorks        
-    end if 
-
+   TestSkipIf "environment", "command line"
+   TestSkipIfNot "wait"
+  
     create stack
     set the defaultStack to the short name of it
 
@@ -258,6 +256,7 @@ on TestSetFilenameThrows
 end TestSetFilenameThrows
 
 on TestSetImageDataThrows
+   TestSkipIfNot "security"
     create stack
     set the defaultStack to the short name of it
 
