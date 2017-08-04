@@ -16,7 +16,8 @@ UPLOAD_FOLDER="prebuilts/test_uploads/"
 UPLOAD_MAX_RETRIES=3
 #UPLOAD_MAX_RETRIES=50
 
-find "${PACKAGE_DIR}" -type f -name "*.tar.*" > prebuilts-upload-files.txt
+cd "${PACKAGE_DIR}"
+find . -type f -name "*.tar.*" > prebuilts-upload-files.txt
 
 trap "echo Interrupted; exit 1;" SIGINT SIGTERM
 i=0
