@@ -23,7 +23,7 @@ i=0
 false
 while [ $? -ne 0 -a $i -lt $UPLOAD_MAX_RETRIES ] ; do
 	i=$(($i+1))
-	rsync -v --progress --chmod=ug=rw,o=r --partial --files-from=prebuilts-upload-files.txt "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
+	rsync -v --progress --chmod=ug=rw,o=r --partial --files-from=prebuilts-upload-files.txt . "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
 done
 rc=$?
 if [ $rc -ne 0 ]; then
