@@ -219,7 +219,15 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
         [t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
     }
     else
-        [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+    {
+        extern uint4 MCmajorosversion;
+        if (MCmajorosversion >= 0x10B0)
+            [t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+        else
+            [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+        
+    }
+        //[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
     [t_panel setPrompt: @"Choose"];
     [t_panel setCanChooseFiles: NO];
     [t_panel setCanChooseDirectories: YES];
@@ -227,6 +235,12 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
     
     // MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
     [t_panel setCanCreateDirectories: YES];
+    
+    if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
+    {
+        // show accessory view when dialog opens
+        [t_panel setAccessoryViewDisclosed: YES];
+    }
 	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, nil);
 }
