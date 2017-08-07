@@ -213,6 +213,8 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
     
     NSOpenPanel *t_panel;
     t_panel = [NSOpenPanel openPanel];
+    // If we have both a title and a message, then 'title' is used on setTitle, and 'prompt' is used for message.
+    // If there is no title, then on 10.11+ we must use the message field of the dialog; on <10.11 we must use the title field
     if (p_title != nil && MCStringGetLength(p_title) != 0)
     {
         [t_panel setTitle: [NSString stringWithMCStringRef: p_title]];
