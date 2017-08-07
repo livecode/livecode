@@ -227,7 +227,6 @@ void MCPlatformBeginFolderDialog(MCPlatformWindowRef p_owner, MCStringRef p_titl
             [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
         
     }
-        //[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
     [t_panel setPrompt: @"Choose"];
     [t_panel setCanChooseFiles: NO];
     [t_panel setCanChooseDirectories: YES];
