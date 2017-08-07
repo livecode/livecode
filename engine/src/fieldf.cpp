@@ -692,15 +692,15 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 		indextoparagraph(paragraphs,compsi,compei);
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drectp = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, true);
-        drects = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, false);
+		drectp = focusedparagraph->getcursorrect(compsi, fixedheight, false, kMCParagraphCursorTypePrimary);
+        drects = focusedparagraph->getcursorrect(compsi, fixedheight, false, kMCParagraphCursorTypeSecondary);
 	}
 	else
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drectp = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, true);
-        drects = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, false);
+		drectp = focusedparagraph->getcursorrect(-1, fixedheight, false, kMCParagraphCursorTypePrimary);
+        drects = focusedparagraph->getcursorrect(-1, fixedheight, false, kMCParagraphCursorTypeSecondary);
 	}
 	positioncursor(force, goal, drects, focusedy, false);
     positioncursor(force, goal, drectp, focusedy, true);
