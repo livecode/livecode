@@ -954,7 +954,7 @@ size_t MCGLegacyGradientShader::onContextSize(const ContextRec&) const
 
 SkShader::Context* MCGLegacyGradientShader::onCreateContext(const ContextRec& p_rec, void* p_storage) const
 {
-    return new (nothrow) MCGLegacyGradientShaderContext(*this, p_rec, m_gradient_ref, m_clip);
+    return new (p_storage) MCGLegacyGradientShaderContext(*this, p_rec, m_gradient_ref, m_clip);
 }
 
 #ifndef SK_IGNORE_TO_STRING
