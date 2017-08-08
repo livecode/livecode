@@ -117,7 +117,7 @@ struct MCCombiner
 	void (*begin)(MCCombiner *self, int4 y);
 	void (*advance)(MCCombiner *self, int4 y);
 	void (*blend)(MCCombiner *self, int4 fx, int4 tx, uint1 value);
-	void (*combine)(MCCombiner *self, int4 fx, int4 tx, uint1 *mask);
+	void (*combine)(MCCombiner *self, int4 fx, int4 tx);
 	void (*end)(MCCombiner *self);
 };
 
@@ -456,7 +456,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillBlend(MCCombiner *
 	}
 }
 
-template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner *_self, int4 fx, int4 tx, uint1 *mask)
+template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner *_self, int4 fx, int4 tx)
 {
 	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
 	uint4 *d;
@@ -487,7 +487,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 			s = self->ramp[0].hw_color;
 			while (t_index <= t_min)
 			{
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -503,7 +503,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 			s = self->ramp[self->ramp_length - 1].hw_color;
 			while (t_index >= t_max)
 			{
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -530,7 +530,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 				uint1 a = 255 - b;
 				
 				s = packed_bilinear_bounded(t_current_color, a, t_next_color, b);
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -697,7 +697,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearBlend(MCCo
 	}
 }
 
-template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MCCombiner *_self, int4 fx, int4 tx, uint1* mask)
+template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MCCombiner *_self, int4 fx, int4 tx)
 {
 	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
 	uint4 *d;
@@ -743,7 +743,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MC
 		i++;
 		
 		s = u | v;
-		uint1 alpha = (s >> 24) * (*mask++) / 255;
+		uint1 alpha = (s >> 24);
 		d[fx] = packed_bilinear_bounded(d[fx], 255 - alpha, s | 0xFF000000, alpha);
 	}
 }
@@ -971,7 +971,7 @@ sk_sp<SkFlattenable> MCGLegacyGradientShader::CreateProc(SkReadBuffer& buffer)
 }
 
 MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShaderContext(const MCGLegacyGradientShader& p_shader, const ContextRec& p_rec, MCGGradientRef p_gradient_ref, MCGRectangle p_clip)
-: INHERITED(p_shader, p_rec), m_y(0), m_mask(NULL), m_gradient_combiner(NULL)
+: INHERITED(p_shader, p_rec), m_y(0), m_gradient_combiner(NULL)
 {
     MCGRectangle t_clip;
     
@@ -986,11 +986,7 @@ MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShader
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCMemoryAllocate(t_width, m_mask);
-	
-	if (t_success)
 	{	
-		memset(m_mask, 0xFF, t_width);
 		m_gradient_combiner = MCGradientFillCreateCombiner(p_gradient_ref, t_clip, t_matrix);
 		t_success = m_gradient_combiner != NULL;		
 	}
@@ -1006,7 +1002,6 @@ MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShader
 
 MCGLegacyGradientShader::MCGLegacyGradientShaderContext::~MCGLegacyGradientShaderContext()
 {
-    MCMemoryDeallocate(m_mask);
     MCGradientFillDeleteCombiner(m_gradient_combiner);
 }
 
@@ -1020,7 +1015,7 @@ void MCGLegacyGradientShader::MCGLegacyGradientShaderContext::shadeSpan(int x, i
 		m_y = y;
 		memset(dstC, 0x00, count * sizeof(SkPMColor));
 		m_gradient_combiner -> bits = dstC - x;
-		m_gradient_combiner -> combine(m_gradient_combiner, x, x + count, m_mask);
+		m_gradient_combiner -> combine(m_gradient_combiner, x, x + count);
 	}
 }
 

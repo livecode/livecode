@@ -484,7 +484,6 @@ public:
 
     private:
         int32_t					m_y;
-        uint8_t					*m_mask;
         MCGradientCombiner_t	*m_gradient_combiner;
 
         typedef SkShader::Context INHERITED;
