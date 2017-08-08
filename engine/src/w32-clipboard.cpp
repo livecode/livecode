@@ -16,6 +16,7 @@
 
 
 #include "w32-clipboard.h"
+#include "osspec.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -318,7 +319,10 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	}
 
 	// Done
-	return t_decoded;
+    MCAutoStringRef t_path;
+    MCS_pathfromnative(t_decoded, &t_path);
+    MCValueRelease(t_decoded);
+    return *t_path;
 }
 
 MCDataRef MCWin32RawClipboardCommon::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
