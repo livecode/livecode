@@ -305,6 +305,7 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 		&& (!MCStringMutableCopyAndRelease(t_decoded, t_decoded)
 		|| !MCStringFindAndReplaceChar(t_decoded, '\0', '\n', kMCStringOptionCompareExact)
 		|| !MCStringRemove(t_decoded, MCRangeMake(MCStringGetLength(t_decoded)-1, 1))
+        || !MCS_pathfromnative(t_decoded, t_decoded)
 		|| !MCStringCopyAndRelease(t_decoded, t_decoded)))
 	{
 		MCValueRelease(t_decoded);
