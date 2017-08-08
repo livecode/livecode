@@ -16,6 +16,7 @@
 
 
 #include "w32-clipboard.h"
+#include "osspec.h"
 
 #include <ObjIdl.h>
 #include <ShlObj.h>
