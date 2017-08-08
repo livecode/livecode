@@ -313,7 +313,7 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 
 	// Done
     MCAutoStringRef t_path;
-    MCS_pathfromnative(t_decoded, &t_path))
+    MCS_pathfromnative(t_decoded, &t_path);
     MCValueRelease(t_decoded);
     return *t_path;
 }
