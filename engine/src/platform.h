@@ -942,7 +942,7 @@ enum MCPlatformFileDialogKind
     kMCPlatformFileDialogKindFolder,
 };
 
-void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, bool p_is_file);
+void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
 MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
 

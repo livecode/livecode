@@ -563,7 +563,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, bool p_is_file)
+void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial)
 {
     MCAutoStringRef t_initial_folder;
     if (p_initial != nil)
@@ -599,7 +599,7 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
             [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
     }
     
-    if (p_is_file)
+    if (p_kind != kMCPlatformFileDialogKindFolder)
     {
         // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
         //   an accessory view if more than one type.
@@ -638,7 +638,7 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
         [t_panel setAccessoryViewDisclosed: YES];
     }
     
-    MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, p_is_file ? *t_initial_file : nil);
+    MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, p_kind != kMCPlatformFileDialogKindFolder ? *t_initial_file : nil);
 }
 
 MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef &r_paths, MCStringRef &r_type)
