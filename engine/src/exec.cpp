@@ -79,7 +79,17 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
     case kMCValueTypeCodeString:
         return MCStringCopy((MCStringRef)p_value, r_string);
     case kMCValueTypeCodeData:
-        return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
+        {
+            uint32_t t_bomsize;
+            byte_t * t_bytes =
+                (byte_t *)MCDataGetBytePtr((MCDataRef)p_value);
+            uindex_t t_length =
+                MCDataGetLength((MCDataRef)p_value);
+            MCStringEncoding t_encoding =
+                MCS_file_to_string_encoding(MCS_resolve_BOM_from_bytes(t_bytes, t_length, t_bomsize));
+            
+            return MCStringCreateWithBytes(t_bytes+t_bomsize, t_length-t_bomsize, t_encoding, false, r_string);
+        }
     case kMCValueTypeCodeList:
         return MCListCopyAsString((MCListRef)p_value, r_string);
     case kMCValueTypeCodeNumber:
