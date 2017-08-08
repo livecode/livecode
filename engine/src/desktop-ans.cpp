@@ -60,7 +60,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFolderOrFileDialog(kMCPlatformFileDialogKindFolder, t_owner, p_title, p_prompt, p_initial, nil);
+	MCPlatformBeginFolderOrFileDialog(kMCPlatformFileDialogKindFolder, t_owner, p_title, p_prompt, p_initial);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_folder;
