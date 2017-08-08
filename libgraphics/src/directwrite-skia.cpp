@@ -480,6 +480,87 @@ bool MCGFontRemovePlatformFileResource(MCStringRef p_file)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCGDWGetDefaultLocalizedString(IDWriteLocalizedStrings *p_strings, MCStringRef &r_string)
+{
+	UINT32 t_index = 0;
+	BOOL t_found = FALSE;
+	if (!SUCCEEDED(p_strings->FindLocaleName(L"en-us", &t_index, &t_found)))
+		return false;
+
+	// Fallback to first name in list
+	if (!t_found)
+		t_index = 0;
+
+	UINT32 t_name_length;
+	if (!SUCCEEDED(p_strings->GetStringLength(t_index, &t_name_length)))
+		return false;
+
+	MCAutoArray<WCHAR> t_buffer;
+	if (!t_buffer.New(t_name_length + 1))
+		return false;
+	if (!SUCCEEDED(p_strings->GetString(t_index, t_buffer.Ptr(), t_name_length + 1)))
+		return false;
+
+	return MCStringCreateWithWString(t_buffer.Ptr(), r_string);
+}
+
+static bool MCGDWAddCollectionFontsToList(IDWriteFontCollection *p_collection, MCProperListRef p_list)
+{
+	if (p_collection == nil)
+		return true;
+
+	bool t_success = true;
+
+	UINT32 t_count;
+	t_count = p_collection->GetFontFamilyCount();
+
+	for (uint32_t i = 0; t_success && i < t_count; i++)
+	{
+		IDWriteFontFamily *t_family = nil;
+		t_success = SUCCEEDED(p_collection->GetFontFamily(i, &t_family));
+
+		IDWriteLocalizedStrings *t_names = nil;
+		if (t_success)
+			t_success = SUCCEEDED(t_family->GetFamilyNames(&t_names));
+
+		MCAutoStringRef t_name;
+		if (t_success)
+			t_success = MCGDWGetDefaultLocalizedString(t_names, &t_name);
+
+		if (t_success)
+			t_success = MCProperListPushElementOntoBack(p_list, *t_name);
+
+		if (t_names != nil)
+			t_names->Release();
+		if (t_family != nil)
+			t_family->Release();
+	}
+}
+
+bool MCGFontGetPlatformFontList(MCProperListRef &r_fonts)
+{
+	bool t_success = true;
+
+	MCAutoProperListRef t_fonts;
+	t_success = MCProperListCreateMutable(&t_fonts);
+
+	IDWriteFontCollection *t_system_collection = nil;
+	if (t_success)
+		t_success = SUCCEEDED(s_DWFactory->GetSystemFontCollection(&t_system_collection));
+	if (t_success)
+		t_success = MCGDWAddCollectionFontsToList(t_system_collection, *t_fonts);
+
+	if (t_success && s_DWFontCollection != nil)
+		t_success = MCGDWAddCollectionFontsToList(s_DWFontCollection, *t_fonts);
+
+	if (t_success)
+		r_fonts = t_fonts.Take();
+
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Creates a DirectWrite text format object from an HFONT
 static IDWriteTextFormat* MCGDWTextFormatFromHFONT(HFONT p_hfont, MCGFloat p_size)
 {
