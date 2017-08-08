@@ -760,7 +760,7 @@ void MCGradientFillDeleteCombiner(MCGradientAffineCombiner *p_combiner)
 	MCMemoryDelete(p_combiner);
 }
 
-MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip, const MCGAffineTransform &p_transform)
+MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, const MCGRectangle &p_clip, const MCGAffineTransform &p_transform)
 {
     // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
 	MCAutoCustomPointer<MCGradientAffineCombiner, MCGradientFillDeleteCombiner> t_combiner;
@@ -849,11 +849,11 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	{
 		(*t_combiner) -> x_coef_a = STOP_INT_MAX * -wy / d;
 		(*t_combiner) -> x_coef_b = STOP_INT_MAX * wx / d;
-		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
+		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int64_t) p_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
 		
 		(*t_combiner) -> y_coef_a = STOP_INT_MAX * vy / d;
 		(*t_combiner) -> y_coef_b = STOP_INT_MAX * -vx / d;
-		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
+		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int64_t) p_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
 	}
     
     // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
@@ -895,8 +895,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 		case kMCGImageFilterMedium:
         case kMCGImageFilterHigh:
 		{
-			(*t_combiner) -> end = gradient_bilinear_affine_combiner_end;
-			(*t_combiner) -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
+			(*t_combiner) -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(p_clip . size . width);
 			
 			if (!MCMemoryNewArray(GRADIENT_AA_SCALE * (*t_combiner) -> buffer_width, (*t_combiner) -> buffer))
 				return nil;
