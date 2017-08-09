@@ -302,10 +302,7 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, t_decoded);
     
     if (t_decoded == NULL)
-    {
-        MCValueRelease(t_decoded);
         return NULL;
-    }
     
     // Create a mutable list ref.
     MCAutoListRef t_output;
