@@ -129,12 +129,15 @@ public class Engine extends View implements EngineApi
     private String m_last_certificate_verification_error;
 	
 	private boolean m_new_intent;
+	
+	private int m_activity_result_code;
+	private int m_current_activity_result_code;
 
 	private int m_photo_width, m_photo_height;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-	public Engine(Context p_context)
+	public Engine(Context p_context, FrameLayout p_layout, int p_activity_result_code)
 	{
 		super(p_context);
 
@@ -169,9 +172,9 @@ public class Engine extends View implements EngineApi
         m_busy_indicator_module = new BusyIndicator (this);
         m_text_messaging_module = new TextMessaging (this);
 		m_beep_vibrate_module = new Alert (this);
-        m_contact_module = new Contact (this, ((LiveCodeActivity)getContext()));
-        m_calendar_module = new CalendarEvents (this, ((LiveCodeActivity)getContext()));
-        m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
+        m_contact_module = new Contact (this, ((Activity)getContext()));
+        m_calendar_module = new CalendarEvents (this, ((Activity)getContext()));
+        m_native_control_module = new NativeControlModule(this, p_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
         m_view_layout = null;
@@ -221,6 +224,9 @@ public class Engine extends View implements EngineApi
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
 		System.setProperty("http.keepAlive", "false");
+		
+		m_activity_result_code = p_activity_result_code;
+		m_current_activity_result_code = -1;
 		
 		m_new_intent = false;
 
@@ -320,7 +326,7 @@ public class Engine extends View implements EngineApi
         // MM-2012-03-19: [[ Bug 10104 ]] Stop tracking any sensors on shutdown - not doing so prevents a restart for some reason.
         if (m_sensor_module != null)
             m_sensor_module.finish();
-		((LiveCodeActivity)getContext()).finish();
+		((Activity)getContext()).finish();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1652,7 +1658,7 @@ public class Engine extends View implements EngineApi
 			t_view_intent.setDataAndType(Uri.parse(p_url), t_type);
 		else
 			t_view_intent.setData(Uri.parse(p_url));
-		((LiveCodeActivity)getContext()).startActivityForResult(t_view_intent, LAUNCHURL_RESULT);
+		startActivityForResult(t_view_intent, LAUNCHURL_RESULT);
 	}
 
 	public void onLaunchUrlResult(int resultCode, Intent data)
@@ -1883,7 +1889,7 @@ public class Engine extends View implements EngineApi
 
 		boolean t_have_temp_file = false;
 		
-		Activity t_activity = (LiveCodeActivity)getContext();
+		Activity t_activity = (Activity)getContext();
 		
 		try
 		{
@@ -1925,14 +1931,14 @@ public class Engine extends View implements EngineApi
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_tmp_uri);
-		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
+		startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
 	public void showLibrary()
 	{
 		Intent t_get_content = new Intent(Intent.ACTION_GET_CONTENT);
 		t_get_content.setType("image/*");
-		((LiveCodeActivity)getContext()).startActivityForResult(t_get_content, IMAGE_RESULT);
+		startActivityForResult(t_get_content, IMAGE_RESULT);
 	}
 
 	private void onImageResult(int resultCode, Intent data)
@@ -1950,7 +1956,7 @@ public class Engine extends View implements EngineApi
 					t_photo_uri = Uri.fromFile(m_temp_image_file);
 				else
 					t_photo_uri = data.getData();
-				InputStream t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
+				InputStream t_in = ((Activity)getContext()).getContentResolver().openInputStream(t_photo_uri);
 				ByteArrayOutputStream t_out = new ByteArrayOutputStream();
 				byte[] t_buffer = new byte[4096];
 				int t_readcount;
@@ -2031,7 +2037,7 @@ public class Engine extends View implements EngineApi
 
 	public void sendEmail()
 	{
-		((LiveCodeActivity)getContext()).startActivityForResult(m_email.createIntent(), EMAIL_RESULT);
+		startActivityForResult(m_email.createIntent(), EMAIL_RESULT);
 	}
 
 	private void onEmailResult(int resultCode, Intent data)
@@ -2078,9 +2084,25 @@ public class Engine extends View implements EngineApi
 	//   launched through 'runActivity' API.
 	private static final int RUN_ACTIVITY_RESULT = 14;
 
+	public void startActivityForResult(Intent p_intent, int p_result_code)
+	{
+		m_current_activity_result_code = p_result_code;
+		((Activity)getContext()).startActivityForResult(p_intent, m_activity_result_code);
+	}
+	
 	public void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
-		switch (requestCode)
+		if (requestCode != m_activity_result_code)
+			return;
+		
+		if (m_current_activity_result_code == -1)
+			return;
+		
+		int t_actual_activity_result_code;
+		t_actual_activity_result_code = m_current_activity_result_code;
+		m_current_activity_result_code = -1;
+		
+		switch (t_actual_activity_result_code)
 		{
 			case IMAGE_RESULT:
 				onImageResult(resultCode, data);
@@ -2415,7 +2437,7 @@ public class Engine extends View implements EngineApi
     public void composeTextMessage(String p_recipients, String p_body)
 	{
         Intent t_intent = m_text_messaging_module.composeTextMessage(p_recipients, p_body);
-        ((LiveCodeActivity)getContext()).startActivityForResult(t_intent, TEXT_RESULT);
+        startActivityForResult(t_intent, TEXT_RESULT);
     }
 
     private void onTextResult(int resultCode, Intent data)
@@ -2522,7 +2544,7 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2553,7 +2575,7 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2584,7 +2606,7 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2615,7 +2637,7 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2661,7 +2683,7 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2692,7 +2714,7 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -2723,7 +2745,7 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
@@ -3164,7 +3186,7 @@ public class Engine extends View implements EngineApi
         Log.i("revandroid", "MIME type: " + p_media_types);
         t_media_pick_intent.setType (p_media_types);
         Intent t_chooser = Intent.createChooser (t_media_pick_intent, "");
-        ((LiveCodeActivity)getContext()).startActivityForResult (t_chooser,MEDIA_RESULT);
+        startActivityForResult (t_chooser,MEDIA_RESULT);
     }
 
     private void onMediaResult(int resultCode, Intent data)
@@ -3178,7 +3200,7 @@ public class Engine extends View implements EngineApi
                 Cursor t_cursor = null;
                 try
                 {
-                    t_cursor = ((LiveCodeActivity) getContext())
+                    t_cursor = ((Activity) getContext())
                         .getContentResolver()
                         .query(t_data, null, null, null, null);
                 }
@@ -3404,7 +3426,7 @@ public class Engine extends View implements EngineApi
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getActivity()' API method.
 	public Activity getActivity()
 	{
-		return (LiveCodeActivity)getContext();
+		return (Activity)getContext();
 	}
 	
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getContainer()' API method.
@@ -3432,7 +3454,7 @@ public class Engine extends View implements EngineApi
 		m_pending_activity_running = true;
 		
 		// Run the activity.
-		((LiveCodeActivity)getContext()) . startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
+		startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
 		
 		// Wait until the activity returns.
 		while(m_pending_activity_running)

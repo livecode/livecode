@@ -1504,12 +1504,18 @@ void MCAndroidBreakWait(void)
         s_android_ui_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
 }
 
+void MCPlatformBreakWait(void)
+{
+	MCAndroidBreakWait();
+}
+
 struct MCAndroidEngineCallThreadContext
 {
 	const char *method;
 	void *return_value;
 
 	const char *java_class;
+	jclass class_object;
 	
     jobject object;
     bool is_static;
@@ -1537,14 +1543,23 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
     jmethodID t_method_id;
 	t_method_id = 0;
 
+	bool t_delete_class;
     jclass t_class = nil;
-
 	if (t_success)
 	{
-		if (context->is_static)
-			t_class = t_env->FindClass(context->java_class);
+		if (context -> class_object != nil)
+		{
+			t_delete_class = false;
+			t_class = context -> class_object;
+		}
 		else
-			t_class = t_env->GetObjectClass(context->object);
+		{
+			t_delete_class = true;
+			if (context->is_static)
+				t_class = t_env->FindClass(context->java_class);
+			else
+				t_class = t_env->GetObjectClass(context->object);
+		}
 		t_success = t_class != nil;
 	}
 	
@@ -1786,7 +1801,8 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		}
 	}
 	
-	if (t_class != nil)
+	if (t_class != nil &&
+		t_delete_class)
 		t_env->DeleteLocalRef(t_class);
 
 	if (t_exception_thrown)
@@ -1800,15 +1816,16 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 }
 
 // If object is nil then call class static method
-void MCAndroidJavaMethodCall(const char *p_class, jobject p_object, const char *p_method, void *p_return_value, MCJavaMethodParams *p_params, bool p_on_engine_thread)
+void MCAndroidJavaMethodCallWithClass(jclass p_class_object, jobject p_object, const char *p_method, void *p_return_value, MCJavaMethodParams *p_params, bool p_on_engine_thread)
 {
 	MCAndroidEngineCallThreadContext t_context;
-	t_context . java_class = p_class;
+	t_context . java_class = nil;
 	t_context . is_static = p_object == nil;
     t_context . object = p_object;
 	t_context . method = p_method;
 	t_context . return_value = p_return_value;
     t_context . params = p_params;
+	t_context . class_object = p_class_object;
 
     if (p_on_engine_thread)
     {
@@ -1818,6 +1835,28 @@ void MCAndroidJavaMethodCall(const char *p_class, jobject p_object, const char *
     {
         co_yield_to_android_and_call(MCAndroidEngineCallThreadCallback, &t_context);
     }
+}
+
+// If object is nil then call class static method
+void MCAndroidJavaMethodCall(const char *p_class, jobject p_object, const char *p_method, void *p_return_value, MCJavaMethodParams *p_params, bool p_on_engine_thread)
+{
+	MCAndroidEngineCallThreadContext t_context;
+	t_context . java_class = p_class;
+	t_context . is_static = p_object == nil;
+	t_context . object = p_object;
+	t_context . method = p_method;
+	t_context . return_value = p_return_value;
+	t_context . params = p_params;
+	t_context . class_object = nil;
+	
+	if (p_on_engine_thread)
+	{
+		MCAndroidEngineCallThreadCallback(&t_context);
+	}
+	else
+	{
+		co_yield_to_android_and_call(MCAndroidEngineCallThreadCallback, &t_context);
+	}
 }
 
 void MCAndroidObjectCallWithArgs(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
@@ -1851,6 +1890,23 @@ void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, cons
         MCAndroidJavaMethodCall(p_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
 
     MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
+}
+
+void MCAndroidStaticCallWithArgsAndClass(jclass p_class, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
+{
+	bool t_success = true;
+	
+	JNIEnv *t_env = MCJavaGetThreadEnv();
+	
+	MCJavaMethodParams *t_params = nil;
+	
+	if (t_success)
+		t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params, !p_on_engine_thread);
+	
+	if (t_success)
+		MCAndroidJavaMethodCallWithClass(p_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
+	
+	MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
 }
 
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...)
@@ -1897,11 +1953,27 @@ void MCAndroidStaticCall(const char *p_class_name, const char *p_method, const c
 	va_end(args);
 }
 
+void MCAndroidStaticCallWithClass(jclass p_class, const char *p_method, const char *p_signature, void *p_return_value, ...)
+{
+	va_list args;
+	va_start(args, p_return_value);
+	MCAndroidStaticCallWithArgsAndClass(p_class, p_method, p_signature, p_return_value, true, args);
+	va_end(args);
+}
+
 void MCAndroidStaticRemoteCall(const char *p_class_name, const char *p_method, const char *p_signature, void *p_return_value, ...)
 {
 	va_list args;
 	va_start(args, p_return_value);
 	MCAndroidStaticCallWithArgs(p_class_name, p_method, p_signature, p_return_value, false, args);
+	va_end(args);
+}
+
+void MCAndroidStaticRemoteCallWithClass(jclass p_class, const char *p_method, const char *p_signature, void *p_return_value, ...)
+{
+	va_list args;
+	va_start(args, p_return_value);
+	MCAndroidStaticCallWithArgsAndClass(p_class, p_method, p_signature, p_return_value, false, args);
 	va_end(args);
 }
 
@@ -2923,6 +2995,16 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		MCEventQueuePostCustomAtFront(t_event);
 	
 	return true;
+}
+
+bool MCAndroidRunOnScriptThread(void *callback, void *context)
+{
+	return android_run_on_main_thread(callback, context, kMCExternalRunOnMainThreadJumpToEngine);
+}
+
+bool MCAndroidRunOnUIThread(void *callback, void *context)
+{
+	return android_run_on_main_thread(callback, context, kMCExternalRunOnMainThreadJumpToUI);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
