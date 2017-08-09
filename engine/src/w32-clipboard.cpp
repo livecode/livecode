@@ -301,28 +301,47 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	}
 
 	// Decode the paths into a StringRef
-	MCStringRef t_decoded = NULL;
+	MCAutoStringRef t_decoded;
 	if (t_dropfiles->fWide)
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, t_decoded);
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, &t_decoded);
 	else 
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, t_decoded);
-
-	// Replace the NULs with newlines and trim the trailing newline
-	if (t_decoded != NULL 
-		&& (!MCStringMutableCopyAndRelease(t_decoded, t_decoded)
-		|| !MCStringFindAndReplaceChar(t_decoded, '\0', '\n', kMCStringOptionCompareExact)
-		|| !MCStringRemove(t_decoded, MCRangeMake(MCStringGetLength(t_decoded)-1, 1))
-		|| !MCStringCopyAndRelease(t_decoded, t_decoded)))
-	{
-		MCValueRelease(t_decoded);
-		return NULL;
-	}
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, &t_decoded);
+    
+    if (*t_decoded == nullptr)
+        return nullptr;
+    
+    // Create a mutable list ref.
+    MCAutoListRef t_output;
+    if (!MCListCreateMutable('\n', &t_output))
+        return nullptr;
+    
+    // Split the file name list into individual paths
+    MCAutoArrayRef t_native_paths;
+    if (!MCStringSplit(*t_decoded, MCSTR("\0"), NULL, kMCStringOptionCompareExact, &t_native_paths))
+        return nullptr;
+    
+    uindex_t npaths = MCArrayGetCount(*t_native_paths);
+    
+    for (uindex_t i = 0; i < npaths; i++)
+    {
+        MCValueRef t_native_path_val = nil;
+        if (!MCArrayFetchValueAtIndex(*t_native_paths, i + 1, t_native_path_val))
+            return nullptr;
+        MCStringRef t_native_path = (MCStringRef)t_native_path_val;
+        if (!MCStringIsEmpty(t_native_path))
+        {
+            MCAutoStringRef t_path;
+            if(!MCS_pathfromnative(t_native_path, &t_path) || !MCListAppend(*t_output, *t_path))
+                return nullptr;
+        }
+    }
+    
+    MCAutoStringRef t_result;
+    if (!MCListCopyAsString(*t_output, &t_result))
+        return nullptr;
 
 	// Done
-    MCAutoStringRef t_path;
-    MCS_pathfromnative(t_decoded, &t_path);
-    MCValueRelease(t_decoded);
-    return *t_path;
+    return t_result.Take();
 }
 
 MCDataRef MCWin32RawClipboardCommon::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
