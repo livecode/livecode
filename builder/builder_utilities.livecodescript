@@ -15,6 +15,9 @@ local sBuiltDocsDir
 command builderLog  pType, pMessage, pContext
    if there is a stack "Builder" then
       dispatch "__builderLog" to stack "Builder" with  pType, pMessage, pContext
+   else
+      write pType & ":" & pMessage & return to stdout
+      write pContext & return to stdout
    end if
 end builderLog
 
@@ -133,7 +136,10 @@ function builderPlatform
    end switch
 end builderPlatform
 
-command builderFetchEngine pVersion, pPlatform
+command builderFetchEngine pVersion, pPlatform, pMode
+   if pMode is empty then
+      put "Release" into pMode
+   end if
    if pPlatform is empty then
       put builderPlatform() into pPlatform
    end if
@@ -164,7 +170,7 @@ command builderFetchEngine pVersion, pPlatform
    local tPlatform
    switch pPlatform
       case "windows"
-         get "windows/release"
+         get "windows/" & tolower(pMode)
          break
       case "linux-x86"
       case "linux-x86_64"
@@ -172,13 +178,13 @@ command builderFetchEngine pVersion, pPlatform
          get "linux"
          break
       case "macosx"
-         get "mac/Release"
+         get "mac/" & pMode
          break
       case "ios"
          get "ios"
          break
       case "android"
-         get "android/release"
+         get "android/" & tolower(pMode)
          break
    end switch
    return builderRepoFolder() & "/_build/" & it
@@ -391,6 +397,10 @@ end builderNotesBuilderStack
 function builderArchiveBuilderStack
    return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
+
+function builderEmbeddedBuilderStack
+   return builderSystemPrivateFolder() & slash & "embedded_builder_builder.livecodescript"
+end builderEmbeddedBuilderStack
 
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
