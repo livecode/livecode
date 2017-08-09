@@ -108,7 +108,7 @@ dist-docs-api:
 	mkdir -p $(docs_build_dir)
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
 	  --built-docs-dir $(docs_build_dir)
-	  
+
 dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
@@ -141,7 +141,7 @@ dist-server-indy:
 dist-server-business:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 		--stage server --edition business --warn-as-error
-		
+
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial dist-embedded
 distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
@@ -160,7 +160,7 @@ dist-tools-commercial:
 	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
   	  --built-docs-dir $(docs_build_dir)
-	  
+
 dist-embedded:
 	$(buildtool_command) --stage embedded
 
@@ -212,8 +212,8 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCodeForFM-All-Solutions.zip' \
 	                -o -name 'LiveCodeForFM-All-Plugins.zip' \
 	                -o -name 'LiveCodeForFM-Solution.zip' \
-						 -o -name 'LiveCodeForFM.zip' \
- 	  > dist-upload-files.txt; \
+					-o -name 'LiveCodeForFM.zip' \
+	                -o -name 'LiveCodeEmbeddedBuilder.zip' \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-files.txt; \
