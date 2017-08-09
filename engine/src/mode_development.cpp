@@ -425,6 +425,14 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
+MCEnvironmentType MCDispatch::getenvironmenttype()
+{
+    if (MCnoui)
+        return kMCEnvironmentTypeEditorCommandLine;
+    else
+        return kMCEnvironmentTypeEditor;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCStack::mode* hooks for DEVELOPMENT mode.
@@ -527,20 +535,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename)
 {
 	return IO_NORMAL;
-}
-
-// For development mode, the environment depends on the license edition
-MCNameRef MCModeGetEnvironment(void)
-{
-	if (MCnoui)
-        return MCN_development_cmdline;
-    else
-        return MCN_development;
-}
-
-uint32_t MCModeGetEnvironmentType(void)
-{
-	return kMCModeEnvironmentTypeEditor;
 }
 
 // SN-2015-01-16: [[ Bug 14295 ]] Development-mode is not standalone

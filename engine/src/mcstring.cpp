@@ -222,6 +222,8 @@ MCNameRef MCN_mobile;
 MCNameRef MCN_player;
 MCNameRef MCN_server;
 MCNameRef MCN_standalone_application;
+MCNameRef MCN_embedded;
+MCNameRef MCN_mobile_embedded;
 
 MCNameRef MCN_all;
 MCNameRef MCN_auto_key;
@@ -693,7 +695,9 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("player", MCN_player);
 	/* UNCHECKED */ MCNameCreateWithCString("server", MCN_server);
 	/* UNCHECKED */ MCNameCreateWithCString("standalone application", MCN_standalone_application);
-
+	/* UNCHECKED */ MCNameCreateWithCString("embedded", MCN_embedded);
+	/* UNCHECKED */ MCNameCreateWithCString("mobile embedded", MCN_mobile_embedded);
+    
 	/* UNCHECKED */ MCNameCreateWithCString("all", MCN_all);
 	/* UNCHECKED */ MCNameCreateWithCString("autokey", MCN_auto_key);
 	/* UNCHECKED */ MCNameCreateWithCString("disk", MCN_disk);
@@ -1159,7 +1163,9 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_player);
 	MCNameDelete(MCN_server);
 	MCNameDelete(MCN_standalone_application);
-
+    MCNameDelete(MCN_embedded);
+    MCNameDelete(MCN_mobile_embedded);
+    
 	MCNameDelete(MCN_all);
 	MCNameDelete(MCN_auto_key);
 	MCNameDelete(MCN_disk);
