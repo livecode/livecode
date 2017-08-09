@@ -196,7 +196,6 @@
 			
 			'sources':
 			[
-                '<@(engine_mobile_standalone_source_files)',
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
@@ -794,12 +793,13 @@
 						'dependencies':
 						[
 							'kernel-standalone.gyp:kernel-standalone',
-							'engine-common.gyp:security-community',
+                            'engine-common.gyp:security-community',
+                            '../libfoundation/libfoundation.gyp:libFoundation',
+                            '../libgraphics/libgraphics.gyp:libGraphics',
 						],
 			
 						'sources':
 						[
-                            '<@(engine_mobile_standalone_source_files)',
 							'src/dummy.cpp',
 							'src/main.cpp',
 						],

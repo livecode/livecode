@@ -1182,7 +1182,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
-	MCdispatcher = new MCDispatch;
+	/* UNCHECKED */ MCStackSecurityCreateDispatch(MCdispatcher);
     MCdispatcher -> add_transient_stack(MCtooltip);
 
 	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
