@@ -52,6 +52,50 @@ static bool init_boolean_class(JNIEnv *env)
     return true;
 }
 
+static jclass s_byte_class = nil;
+static jmethodID s_byte_constructor = nil;
+static jmethodID s_byte_byte_value = nil;
+
+static bool init_byte_class(JNIEnv *env)
+{
+	jclass t_byte_class = env->FindClass("java/lang/Byte");
+	s_byte_class = (jclass)env->NewGlobalRef(t_byte_class);
+	
+	if (s_byte_class == nil)
+		return false;
+	
+	if (s_byte_constructor == nil)
+		s_byte_constructor = env->GetMethodID(s_byte_class, "<init>", "(B)V");
+	if (s_byte_byte_value == nil)
+		s_byte_byte_value = env->GetMethodID(s_byte_class, "byteValue", "()B");
+	if (s_byte_constructor == nil || s_byte_byte_value == nil)
+		return false;
+	
+	return true;
+}
+
+static jclass s_character_class = nil;
+static jmethodID s_character_constructor = nil;
+static jmethodID s_character_char_value = nil;
+
+static bool init_character_class(JNIEnv *env)
+{
+	jclass t_character_class = env->FindClass("java/lang/Character");
+	s_character_class = (jclass)env->NewGlobalRef(t_character_class);
+	
+	if (s_character_class == nil)
+		return false;
+	
+	if (s_character_constructor == nil)
+		s_character_constructor = env->GetMethodID(s_character_class, "<init>", "(C)V");
+	if (s_character_char_value == nil)
+		s_character_char_value = env->GetMethodID(s_character_class, "charValue", "()C");
+	if (s_character_constructor == nil || s_character_char_value == nil)
+		return false;
+	
+	return true;
+}
+
 static jclass s_integer_class = nil;
 static jmethodID s_integer_constructor = nil;
 static jmethodID s_integer_integer_value = nil;
@@ -239,21 +283,54 @@ static bool init_set_class(JNIEnv *env)
 	return true;
 }
 
+static jclass s_object_class = nil;
+static jclass s_number_class = nil;
+
 static jclass s_object_array_class = nil;
 static jclass s_byte_array_class = nil;
+static jclass s_string_array_class = nil;
+static jclass s_byte_array_array_class = nil;
+static jclass s_number_array_class = nil;
 
 static bool init_array_classes(JNIEnv *env)
 {
+	jclass t_object_class;
+	t_object_class = env->FindClass("java/lang/Object");
+	s_object_class = (jclass)env->NewGlobalRef(t_object_class);
+	if (s_object_class == nil)
+		return false;
+	
+	jclass t_number_class;
+	t_number_class = env->FindClass("java/lang/Number");
+	s_number_class = (jclass)env->NewGlobalRef(t_number_class);
+	if (s_number_class == nil)
+		return false;
+	
     jclass t_object_array_class = env->FindClass("[Ljava/lang/Object;");
     s_object_array_class = (jclass)env->NewGlobalRef(t_object_array_class);
     if (s_object_array_class == nil)
         return false;
-
+	
+	jclass t_string_array_class = env->FindClass("[Ljava/lang/String;");
+	s_string_array_class = (jclass)env->NewGlobalRef(t_string_array_class);
+	if (s_string_array_class == nil)
+		return false;
+	
     jclass t_byte_array_class = env->FindClass("[B");
     s_byte_array_class = (jclass)env->NewGlobalRef(t_byte_array_class);
     if (s_byte_array_class == nil)
         return false;
-
+	
+	jclass t_byte_array_array_class = env->FindClass("[[B");
+	s_byte_array_array_class = (jclass)env->NewGlobalRef(t_byte_array_array_class);
+	if (s_byte_array_array_class == nil)
+		return false;
+	
+	jclass t_number_array_class = env->FindClass("[Ljava/lang/Number;");
+	s_number_array_class = (jclass)env->NewGlobalRef(t_number_array_class);
+	if (s_number_array_class == nil)
+		return false;
+	
     return true;
 }
 
@@ -276,6 +353,24 @@ void free_boolean_class(JNIEnv *env)
         env->DeleteGlobalRef(s_boolean_class);
         s_boolean_class = nil;
     }
+}
+
+void free_byte_class(JNIEnv *env)
+{
+	if (s_byte_class != nil)
+	{
+		env->DeleteGlobalRef(s_byte_class);
+		s_byte_class = nil;
+	}
+}
+
+void free_character_class(JNIEnv *env)
+{
+	if (s_character_class != nil)
+	{
+		env->DeleteGlobalRef(s_character_class);
+		s_character_class = nil;
+	}
 }
 
 void free_integer_class(JNIEnv *env)
@@ -343,16 +438,41 @@ void free_set_class(JNIEnv *env)
 
 void free_array_classes(JNIEnv *env)
 {
+	if (s_object_class != nil)
+	{
+		env->DeleteGlobalRef(s_object_class);
+		s_object_class = nil;
+	}
+	if (s_number_class != nil)
+	{
+		env->DeleteGlobalRef(s_number_class);
+		s_number_class = nil;
+	}
     if (s_object_array_class != nil)
     {
         env->DeleteGlobalRef(s_object_array_class);
         s_object_array_class = nil;
-    }
+	}
+	if (s_string_array_class != nil)
+	{
+		env->DeleteGlobalRef(s_string_array_class);
+		s_string_array_class = nil;
+	}
+	if (s_number_array_class != nil)
+	{
+		env->DeleteGlobalRef(s_number_array_class);
+		s_number_array_class = nil;
+	}
     if (s_byte_array_class != nil)
     {
         env->DeleteGlobalRef(s_byte_array_class);
         s_byte_array_class = nil;
-    }
+	}
+	if (s_byte_array_array_class != nil)
+	{
+		env->DeleteGlobalRef(s_byte_array_array_class);
+		s_byte_array_array_class = nil;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,7 +481,13 @@ bool MCJavaInitialize(JNIEnv *env)
 {
     if (!init_boolean_class(env))
         return false;
-    
+	
+	if (!init_byte_class(env))
+		return false;
+	
+	if (!init_character_class(env))
+		return false;
+	
     if (!init_integer_class(env))
         return false;
     
@@ -393,6 +519,8 @@ void MCJavaFinalize(JNIEnv *env)
 {
     free_arraylist_class(env);
     free_boolean_class(env);
+	free_byte_class(env);
+	free_character_class(env);
     free_integer_class(env);
     free_double_class(env);
     free_string_class(env);
@@ -626,11 +754,43 @@ bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_
     return false;
 }
 
+/////////
+
+bool MCJavaCharFromStringRef(JNIEnv *p_env, MCStringRef p_string, jobject& r_value)
+{
+	if (MCStringGetLength(p_string) != 1)
+		return false;
+	
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_string, 0);
+	
+	jobject t_java_char;
+	t_java_char = p_env -> NewObject(s_character_class, s_character_constructor, (jchar)t_char);
+	if (t_java_char == nil)
+		return false;
+	
+	r_value = t_java_char;
+	return true;
+}
+
+bool MCJavaCharToStringRef(JNIEnv *p_env, jobject p_object, MCStringRef& r_string)
+{
+	jchar t_char_value;
+	t_char_value = p_env -> CallCharMethod(p_object, s_character_char_value);
+	
+	unichar_t t_char;
+	t_char = (unichar_t)t_char_value;
+	if (!MCStringCreateWithChars(&t_char, 1, r_string))
+		return false;
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byte_array)
 {
-    if (p_data == nil || MCDataGetLength(p_data) == 0)
+    if (p_data == nil)
     {
         r_byte_array = nil;
         return true;
@@ -652,8 +812,6 @@ bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byt
     return t_success;
 }
 
-//////////
-
 bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r_data)
 {
     bool t_success = true;
@@ -672,6 +830,38 @@ bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r
     }
     
     return t_success;
+}
+
+//////////
+
+bool MCJavaByteFromDataRef(JNIEnv *p_env, MCDataRef p_data, jobject& r_value)
+{
+	if (MCDataGetLength(p_data) != 1)
+		return false;
+	
+	byte_t t_byte;
+	t_byte = MCDataGetBytePtr(p_data)[0];
+	
+	jobject t_java_byte;
+	t_java_byte = p_env -> NewObject(s_byte_class, s_byte_constructor, (jbyte)t_byte);
+	if (t_java_byte == nil)
+		return false;
+	
+	r_value = t_java_byte;
+	return true;
+}
+
+bool MCJavaByteToDataRef(JNIEnv *p_env, jobject p_object, MCDataRef& r_data)
+{
+	jbyte t_byte_value;
+	t_byte_value = p_env -> CallByteMethod(p_object, s_byte_byte_value);
+	
+	byte_t t_byte;
+	t_byte = (byte_t)t_byte_value;
+	if (!MCDataCreateWithBytes(&t_byte, 1, r_data))
+		return false;
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1034,7 +1224,7 @@ bool MCJavaNumberFromNumberRef(JNIEnv *p_env, MCNumberRef p_value, jobject& r_ob
     {
         if (MCNumberIsInteger(p_value))
             t_number = p_env -> NewObject(s_integer_class, s_integer_constructor, MCNumberFetchAsInteger(p_value));
-        else if (MCNumberIsInteger(p_value))
+        else
             t_number = p_env -> NewObject(s_double_class, s_double_constructor, MCNumberFetchAsReal(p_value));
         t_success = t_number != NULL;
     }
@@ -1096,19 +1286,11 @@ bool MCJavaArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobjectArray& r_
     bool t_success;
     t_success = true;
     
-    jclass t_object_class;
-    t_object_class = NULL;
-    if (t_success)
-    {
-        t_object_class = p_env -> FindClass("java/lang/Object");
-        t_success = t_object_class != NULL;
-    }
-    
     jobjectArray t_array;
     t_array = NULL;
     if (t_success)
     {
-        t_array = p_env -> NewObjectArray(MCArrayGetCount(p_value), t_object_class, NULL);
+        t_array = p_env -> NewObjectArray(MCArrayGetCount(p_value), s_object_class, NULL);
         t_success = t_array != NULL;
     }
     
@@ -1186,6 +1368,138 @@ bool MCJavaArrayToArrayRef(JNIEnv *p_env, jobjectArray p_object, MCArrayRef& r_v
         r_value = MCValueRetain(*t_array);
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCJavaNumberArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobject& r_object)
+{
+	bool t_success;
+	t_success = true;
+	
+	jobjectArray t_array;
+	t_array = NULL;
+	if (t_success)
+	{
+		t_array = p_env -> NewObjectArray(MCArrayGetCount(p_value), s_number_class, NULL);
+		t_success = t_array != NULL;
+	}
+	
+	if (t_success)
+	{
+		for (uint32_t i = 0; i < MCArrayGetCount(p_value) && t_success; i++)
+		{
+			MCValueRef t_value;
+			t_value = NULL;
+			if (t_success)
+				t_success = MCArrayFetchValueAtIndex(p_value, i + 1, t_value);
+			
+			if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+				t_success = false;
+			
+			jobject t_j_value;
+			t_j_value = NULL;
+			if (t_success)
+				t_success = MCJavaNumberFromNumberRef(p_env, (MCNumberRef)t_value, t_j_value);
+			
+			if (t_success)
+				p_env -> SetObjectArrayElement(t_array, i, t_j_value);
+			
+			if (t_j_value != NULL)
+				p_env -> DeleteLocalRef(t_j_value);
+		}
+	}
+	
+	if (t_success)
+		r_object = t_array;
+	
+	return t_success;
+}
+
+bool MCJavaNumberArrayToArrayRef(JNIEnv *p_env, jobject p_object, MCArrayRef& r_value)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCAutoArrayRef t_array;
+	if (t_success)
+		t_success = MCArrayCreateMutable(&t_array);
+	
+	if (t_success)
+	{
+		uint32_t t_size;
+		t_size = p_env -> GetArrayLength((jarray)p_object);
+		
+		for (uint32_t i = 0; i < t_size && t_success; i++)
+		{
+			MCAutoNumberRef t_value;
+			if (t_success)
+			{
+				jobject t_object;
+				t_object = NULL;
+				
+				t_object = p_env -> GetObjectArrayElement((jobjectArray)p_object, i);
+				t_success = MCJavaNumberToNumberRef(p_env, t_object, &t_value);
+				
+				if (t_object != NULL)
+					p_env -> DeleteLocalRef(t_object);
+			}
+			
+			if (t_success)
+				t_success = MCArrayStoreValueAtIndex(*t_array, i + 1, *t_value);
+		}
+	}
+	
+	if (t_success)
+		r_value = MCValueRetain(*t_array);
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCJavaStringArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobject& r_object)
+{
+	bool t_success;
+	t_success = true;
+	
+	jobjectArray t_array;
+	t_array = NULL;
+	if (t_success)
+	{
+		t_array = p_env -> NewObjectArray(MCArrayGetCount(p_value), s_string_class, NULL);
+		t_success = t_array != NULL;
+	}
+	
+	if (t_success)
+	{
+		for (uint32_t i = 0; i < MCArrayGetCount(p_value) && t_success; i++)
+		{
+			MCValueRef t_value;
+			t_value = NULL;
+			if (t_success)
+				t_success = MCArrayFetchValueAtIndex(p_value, i + 1, t_value);
+			
+			if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeString)
+				t_success = false;
+			
+			jstring t_j_value;
+			t_j_value = NULL;
+			if (t_success)
+				t_success = MCJavaStringFromStringRef(p_env, (MCStringRef)t_value, t_j_value);
+			
+			if (t_success)
+				p_env -> SetObjectArrayElement(t_array, i, (jobject)t_j_value);
+			
+			if (t_j_value != NULL)
+				p_env -> DeleteLocalRef((jobject)t_j_value);
+		}
+	}
+	
+	if (t_success)
+		r_object = t_array;
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
