@@ -21,37 +21,52 @@ function deployUsableIosSdk
    return "8.2,9.2,10.2,11.2,12.0"
 end deployUsableIosSdk
 
+function deployGetIphoneSDKXCodeMapping
+   local tMapping
+   put "4.6" into tMapping["6.1"]
+   put "5.1" into tMapping["7.1"]
+   put "6.2" into tMapping["8.2"]
+   put "7.2" into tMapping["9.2"]
+   put "8.2" into tMapping["10.2"]
+   put "9.2" into tMapping["11.2"]
+   put "10.0" into tMapping["12.0"]
+   return tMapping
+end deployGetIphoneSDKXCodeMapping
+
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
-   local tList, tMacVersion
+   local tSDKs, tList, tMacVersion, tMapping
+   put deployGetIphoneSDKXCodeMapping() into tMapping
    put deploySanitizeSystemVersion() into tMacVersion
    if tMacVersion < 100800 then
-      put "6.1,4.6" into tList[1]
+      put "6.1" into tSDKs[1]
    else if tMacVersion < 100900 then
-      put "7.1,5.1" into tList[1]
+      put "7.1" into tSDKs[1]
    else if tMacVersion < 101000 then
-      put "8.2,6.2" into tList[1]
+      put "8.2" into tSDKs[1]
    else if tMacVersion < 101100 then
-      put "8.2,6.2" into tList[1]
+      put "8.2" into tSDKs[1]
       // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
       if tMacVersion >= 101005 then
-         put "9.2,7.2" into tList[2]
+         put "9.2" into tSDKs[2]
       end if
    else if tMacVersion < 101200 then
-      put "10.2,8.2" into tList[1]
+      put "10.2" into tSDKs[1]
    else if tMacVersion < 101206 then
-      put empty into tList[1]
-      answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
+      answer error "To use Xcode 9.0, you need to upgrade your Mac to MacOS Sierra 10.12.6"
    else if tMacVersion < 101300 then
-      put "11.2,9.2" into tList[1]
+      put "11.2" into tSDKs[1]
    else if tMacVersion < 101302 then
-      put empty into tList[1]
       answer error "To use Xcode 10.0, you need to upgrade your Mac to MacOS High Sierra 10.13.4"
    else
       // Xcode 10.0 requires a Mac running Mac OS 10.13.4 or later
-      put "12.0,10.0" into tList[1]
+      put "12.0" into tSDKs[1]
    end if
-   
+
+   repeat with x = 1 to the number of elements in tSDKs
+      put tSDKs[x] & comma & tMapping[tSDKs[x]] into tList[x]
+   end repeat
+
    return tList
 end deployGetIphoneOSes
 
@@ -66,7 +81,7 @@ command deployInitialize
    if the platform is not "macos" then
       exit deployInitialize
    end if
-   
+
    deployAutoconfigureSDKs
    deployUpdateSDKs
 end deployInitialize
@@ -74,7 +89,7 @@ end deployInitialize
 -- Invoked to check whether the platform is available for deployment
 function deployIsAvailable
    local tEnabled
-   
+
    if the platform is not "macos" then
       put false into tEnabled
    else if sDeploySimulators is not an array then
@@ -82,18 +97,18 @@ function deployIsAvailable
    else
       put true into tEnabled
    end if
-   
+
    return tEnabled
 end deployIsAvailable
 
 -- Invoked to fetch the list of targets for this simulation platform
 function deployListTargets
    local tTargets, tAvailableSimEngines
-   
+
    -- SN-2015-03-24: [[ Bug 15037 ]] Only list the simulators / devices SDKs
    --  for which we provide engines.
    put deployUsableIosSdk() into tAvailableSimEngines
-   
+
    repeat for each key tKey in sDeploySimulators
       if tKey is among the items of tAvailableSimEngines then
          put "iPad Simulator" && tKey & return after tTargets
@@ -103,9 +118,9 @@ function deployListTargets
       end if
    end repeat
    delete the last char of tTargets
-   
+
    sort tTargets text ascending
-   
+
    return tTargets
 end deployListTargets
 
@@ -114,12 +129,12 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    -- The error that occurred (if any)
    local tError, tRunningTest
    put empty into tError
-   
+
    local tSettings
    put revSBGetSettings(pTargetStack, true) into tSettings
-   
+
    put revTestEnvironment() into tRunningTest
-   
+
    -- First attempt to rebuild the current top-stack
    local tTempFolder
    if tError is empty then
@@ -129,13 +144,13 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          put "Unable to create temporary folder" into tError
       end if
    end if
-   
+
    -- Compute what version and family to use based on the plist
    local tVersion, tFamily
    if tError is empty then
       put word 3 of pSimulator into tVersion
       put word 1 of pSimulator into tFamily
-      
+
       -- First make sure the minimum version is adhered to
       if tVersion < tSettings["ios,minimum version"] then
          put tSettings["ios,minimum version"] into tVersion
@@ -143,7 +158,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
             put line 1 of deployGetSimulatorFamilies(tVersion) into tFamily
          end if
       end if
-      
+
       -- If the app is only for iPad, then force to iPad family
       if tSettings["ios,device family"] is 2 then
          put "iPad" into tFamily
@@ -162,13 +177,13 @@ command deployDo pTargetStack, pSimulator, pAppBundle
             end if
          end if
       end if
-      
+
       -- Finally check we have a suitable minimum version
       if tVersion < tSettings["ios,minimum version"] then
          put "No simulators matching specified family or minimum version are installed." into tError
       end if
    end if
-   
+
    local tTempAppBundle
    if tError is empty then
       if pAppBundle is empty then
@@ -181,27 +196,27 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          end try
       else
          put pAppBundle into tTempAppBundle
-      end if 
+      end if
    end if
-   
+
    -- Next phase is to ensure we have the right simulator running
    if tError is empty then
       revStandaloneProgress "Configuring simulator..."
-      
+
       -- Make sure any currently running app is terminated
       if sDeploySimulatorIsRunning then
          try
             revIPhoneTerminateAppInSimulator
          end try
-         
+
          -- Make sure we wait until the app has finished terminating
          repeat while revIPhoneAppIsRunning()
             wait 100 millisecs with messages
          end repeat
-         
+
          put false into sDeploySimulatorIsRunning
       end if
-      
+
       -- If we have to change the toolset, make sure we terminate any
       -- *other* running simulators first
       get sDeploySimulators[tVersion]
@@ -223,7 +238,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          end try
          put it into sDeploySimulatorToolset
       end if
-      
+
       -- Next try to switch the sdk
       try
          revIPhoneSetSimulatorSDK tVersion
@@ -231,22 +246,22 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          put "Unable to start simulator:" && tException into tError
       end try
    end if
-   
+
    -- Finally try and launch the app
    if tError is empty then
       revStandaloneProgress "Launching app..."
-      
+
       put empty into sDeploySimulationStatus
       try
          revIPhoneLaunchAppInSimulator tTempAppBundle, tFamily, "revIDEDeployIOSLaunchCallback"
       catch tException
       end try
-      
+
       --MM-2011-09-28: The simulator appears to time out in Lion if not at front.
       --
       --get "tell application" && quote & "iPhone Simulator" & quote & "to activate"
       --do it as "applescript"
-      
+
       local tRunawayTimer
       put the millisecs + 10000 into tRunawayTimer
       repeat forever
@@ -254,9 +269,9 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          if sDeploySimulationStatus is not empty then
             exit repeat
          end if
-         
+
          -- Now see if the runaway timer has elapsed
-         
+
          -- If running in the test system do not show warning dialog
          if not tRunningTest then
             if the millisecs > tRunawayTimer then
@@ -274,27 +289,27 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          -- Otherwise wait with messages for a while
          wait for 50 millisecs with messages
       end repeat
-      
+
       if sDeploySimulationStatus is "started" then
          put true into sDeploySimulatorIsRunning
          -- Make sure we bring the simulator to front
          --do "tell application" && quote & "iPhone SImulator" & quote & return & \
                --"activate" & return & \
-               --"end tell" as "applescript" 
+               --"end tell" as "applescript"
       else if sDeploySimulationStatus begins with "error:" then
          put "Unable to start simulation:" && word 2 to -1 of sDeploySimulationStatus into tError
       end if
    end if
-   
+
    if "revStandaloneProgress" is among the lines of the openStacks then
       close stack "revStandaloneProgress"
    end if
-   
+
    if tTempFolder is not empty and \
          there is a folder tTempFolder then
       get shell("rm -r" && quote & tTempFolder & quote)
    end if
-   
+
    return tError
 end deployDo
 
@@ -331,21 +346,21 @@ command deployUpdateSDKs
    if the platform is not "macos" then
       put empty into sDeploySimulators
    end if
-   
+
    local tOldFolder
    put the folder into tOldFolder
-   
+
    -- This will be an array of simulator versions mapping to their SDK
    local tSimulators
    put empty into tSimulators
-   
+
    local tDeviceSDKs
    put empty into tDeviceSDKs
-   
+
    -- Compute the SDKs to check
    local tSDKs
    put the cMobileSupport["ios.sdks"] of stack "revPreferences" into tSDKs
-   
+
    -- Now loop through the SDKs building the list of available sims
    repeat for each line tSDK in tSDKs
       set the folder to tSDK & "/Platforms/iPhoneSimulator.platform/Developer/SDKs"
@@ -353,24 +368,24 @@ command deployUpdateSDKs
          -- SN-2015-03-24: [[ Bug 15037 ]] Only the provided sim engines are available
          local tAvailableSimulators
          put deployUsableIosSdk() into tAvailableSimulators
-         
+
          repeat for each line tSim in (the folders & return & the files)
             get char 16 to -5 of tSim
-            
+
             if it is not among the items of tAvailableSimulators then
                next repeat
             end if
-            
+
             put tSDK into tSimulators[it]
-         end repeat        
+         end repeat
       end if
-      
+
       set the folder to tSDK & "/Platforms/iPhoneOS.platform/Developer/SDKs"
       if the result is empty then
          -- SN-2015-03-24: [[ Bug 15037 ]] Only the provided device engines are available
          local tAvailableDevices
          put deployUsableIosSdk() into tAvailableDevices
-         
+
          repeat for each line tDevSDK in (the folders & return & the files)
             get char 9 to -5 of tDevSDK
             if it is not among the items of tAvailableDevices then
@@ -380,32 +395,32 @@ command deployUpdateSDKs
                next repeat
             end if
             put tSDK into tDeviceSDKs[it]
-         end repeat        
-      end if     
-      
+         end repeat
+      end if
+
    end repeat
-   
+
    put tSimulators into sDeploySimulators
    put tDeviceSDKs into sDeviceSDKS
-   
+
    set the folder to tOldFolder
-   
+
    revIDEDeployTargetsChanged
 end deployUpdateSDKs
 
 function deployGetInvalidityMessage pIosXcodePairs
    local tIosToInstall, tIosList
-   
+
    // SN-2015-05-01: [[ Refactor iOS SDK version ]] We might have several iOS / Xcode
    //  pairs to list (as for now, 2 for Yosemite)
    repeat for each element tIosXcodePair in pIosXcodePairs
       if tIosToInstall is not empty then put " or " before tIosToInstall
       if tIosList is not empty then put LF before tIosList
-      
+
       put item 1 of tIosXcodePair before tIosToInstall
       put "  - iOS" && item 1 of tIosXcodePair && "comes with Xcode" && item 2 of tIosXcodePair before tIosList
    end repeat
-   
+
    return "In order to perfom device builds, you must have the iOS SDK" && tIosToInstall && "configured." & LF & tIosList
 end deployGetInvalidityMessage
 
@@ -415,12 +430,12 @@ end deployGetInvalidityMessage
 -- MM-2013-10-08: We now only build for Arm v7, reducing the SDKs users now require.
 function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
    local tSDKStatus, tValid, tIosXcodePairs
-   put empty into tSDKStatus   
+   put empty into tSDKStatus
    put false into tValid
-   
+
    put deployGetIphoneOSes() into tIosXcodePairs
    get deployGetSDKVersions()
-   
+
    // We loop on all the possible iOS usable for this MacOS version
    local tIostoInstall, tXcodeToInstall
    repeat for each element tIosXcodePair in tIosXcodePairs
@@ -429,19 +444,19 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
          exit repeat
       end if
    end repeat
-   
+
    if not tValid then
       put deployGetInvalidityMessage(tIosXcodePairs) into tSDKStatus
    end if
-   
+
    if it is empty then
       get "(none)"
    else
       replace return with comma & space in it
    end if
-   
+
    put it into rAvailableSDKs
-   
+
    return tValid
 end deployCheckLatestSDKIsInstalled
 
@@ -471,7 +486,7 @@ end deployGetSimulatorFamilies
 -- MM-2012-09-13: We now no longer have a single device SDK. Return the appropriate
 -- SDK from the array for the given device version.
 --
-function deployGetDeviceSDK pVersion   
+function deployGetDeviceSDK pVersion
    return sDeviceSDKs[pVersion]
 end deployGetDeviceSDK
 
@@ -489,7 +504,7 @@ command deployAutoconfigureSDKs
    put the cMobileSupport["ios.sdk-4"] of stack "revPreferences" into tCurrent4
    put the cMobileSupport["ios.sdk-5"] of stack "revPreferences" into tCurrent5
    put the cMobileSupport["ios.sdks"] of stack "revPreferences" into tCurrentList
-   
+
    set the wholeMatches to true
    get tCurrentList
    repeat for each line tSDK in it
@@ -497,7 +512,7 @@ command deployAutoconfigureSDKs
          delete line lineoffset(tSDK, tCurrentList) of tCurrentList
       end if
    end repeat
-   
+
    if tCurrentList is empty then
       if deployIsValidSDK(tCurrent5) then
          put tCurrent5 after tCurrentList
@@ -515,7 +530,7 @@ command deployAutoconfigureSDKs
          put tCurrent3_2 after tCurrentList
       end if
    end if
-   
+
    if tCurrentList is empty then
       get "/Applications/Xcode.app/Contents/Developer"
       if deployIsValidSDK(it) then
@@ -529,7 +544,7 @@ command deployAutoconfigureSDKs
          put it after tCurrentList
       end if
    end if
-   
+
    set the cMobileSupport["ios.sdks"] of stack "revPreferences" to tCurrentList
 end deployAutoconfigureSDKs
 
@@ -543,15 +558,15 @@ function deployIsValidSDK pSDK
    if pSDK is empty then
       return false
    end if
-   
+
    local tOldFolder, tSDKVersion, tValidSDK, tSDKList
    put the defaultfolder into tOldFolder
    set the defaultfolder to pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs"
-   
+
    put the files & LF & the folders into tSDKList
-   
+
    put false into tValidSDK
-   
+
    // SN-2015-03-24: [[ Bug 15037 ]] We accept any SDK having a simulator for
    //  which we provide an engine.
    repeat for each line tSDK in tSDKList
@@ -561,10 +576,10 @@ function deployIsValidSDK pSDK
          exit repeat
       end if
    end repeat
-   
+
    // SN-2015-05-21: [[ Bug 15401 ]] We should restore the default path to its initial value
    set the defaultFolder to tOldFolder
-   
+
    -- Otherwise it must be invalid
    return tValidSDK
 end deployIsValidSDK
@@ -573,7 +588,7 @@ end deployIsValidSDK
 
 function deploySanitizeSystemVersion
    set the itemDel to "."
-   get the systemVersion   
+   get the systemVersion
    if the length of item 2 of it is 0 then
       put 00 before item 2 of it
    else if the length of item 2 of it is 1 then
@@ -583,7 +598,7 @@ function deploySanitizeSystemVersion
       put 00 before item 3 of it
    else if the length of item 3 of it is 1 then
       put 0 before item 3 of it
-   end if   
+   end if
    replace "." with empty in it
    return it
 end deploySanitizeSystemVersion
