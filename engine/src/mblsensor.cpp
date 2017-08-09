@@ -453,7 +453,9 @@ void MCSensorPostChangeMessage(MCSensorType p_sensor)
     MCCustomEvent *t_event = nil;
     t_event = FetchSensorEvent(p_sensor);
     if (t_event != nil)
+	{
         MCEventQueuePostCustom(t_event);
+	}
 }
 
 void MCSensorPostErrorMessage(MCSensorType p_sensor, MCStringRef p_error)
