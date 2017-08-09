@@ -467,8 +467,6 @@
 			'src/mbliphonecontrol.mm',
 			'src/mbliphonedc.mm',
 			'src/mbliphonedialog.mm',
-			#'src/mbliphoneembedded.mm',
-			#'src/mbliphoneembeddedtest.mm',
 			'src/mbliphoneextra.mm',
 			'src/mbliphonefs.mm',
 			'src/mbliphonehooks.cpp',
@@ -488,7 +486,6 @@
 			'src/mbliphonesound.mm',
 			'src/mbliphonestack.mm',
 			'src/mbliphonestore.mm',
-			#'src/mbliphonetextlayout.mm',
 			'src/mbliphonetextmessaging.mm',
 			'src/mbliphoneurl.mm',
 			'src/mbliphonevideo.mm',
@@ -783,8 +780,8 @@
         'engine_mobile_standalone_source_files':
         [
             # Group "Mobile - iOS"
-            'src/mbliphoneapp.mm',
-            'src/mbliphoneappview.mm',
+			'src/mbliphoneapp.mm',
+			'src/mbliphoneappview.mm',
 			'src/mbliphonegfx.mm',
         ],
         
@@ -792,6 +789,7 @@
 		'engine_mode_dependent_files':
 		[
 			'src/lextable.cpp',
+			'src/engine-dispatch.cpp',
 			'<(INTERMEDIATE_DIR)/src/encodederrors.cpp',
 			#'<(INTERMEDIATE_DIR)/src/hashedstrings.cpp',
 		],

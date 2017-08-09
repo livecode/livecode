@@ -33,10 +33,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
+bool MCStackSecurityCreateDispatch(MCDispatch*& r_dispatch);
+
 typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
 class MCDispatch : public MCObject
 {
+protected:
 	char *license;
 	MCStack *stacks;
 	MCFontlist *fonts;
@@ -99,7 +102,7 @@ public:
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
-	IO_stat startup(void);
+	virtual IO_stat startup(void);
 	
 	void wreshape(Window w);
 	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
@@ -299,7 +302,7 @@ public:
     // if required.
     void processstack(MCStringRef p_openpath, MCStack* &x_stack);
     
-private:
+protected:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
 	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
