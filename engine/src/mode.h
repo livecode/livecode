@@ -20,21 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCStatement;
 class MCExpression;
 
-enum
-{
-	kMCModeEnvironmentTypeUnknown,
-	kMCModeEnvironmentTypeEditor,
-	kMCModeEnvironmentTypeDesktop,
-	kMCModeEnvironmentTypeHelper,
-	kMCModeEnvironmentTypeInstaller,
-	kMCModeEnvironmentTypeShell,
-	kMCModeEnvironmentTypeBrowser,
-	kMCModeEnvironmentTypePlayer,
-	kMCModeEnvironmentTypeServer,
-	kMCModeEnvironmentTypeMobile,
-};
-
-
 // This hook is called on startup (on Windows) before anything else.
 //
 void MCModePreMain(void);
@@ -46,15 +31,6 @@ void MCModePreMain(void);
 // or IO_ERROR depending on whether the check succeeds or not.
 //
 IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename);
-
-// This hook is used to work out the appropriate 'environment' string based
-// on the mode and various globals.
-//
-// The hook is called by MCEnvironment::eval and should return the
-// appropriate string constant.
-//
-MCNameRef MCModeGetEnvironment(void);
-uint32_t MCModeGetEnvironmentType(void);
 
 
 // SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder

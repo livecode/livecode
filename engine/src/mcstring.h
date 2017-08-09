@@ -173,6 +173,8 @@ extern MCNameRef MCN_mobile;
 extern MCNameRef MCN_player;
 extern MCNameRef MCN_server;
 extern MCNameRef MCN_standalone_application;
+extern MCNameRef MCN_embedded;
+extern MCNameRef MCN_mobile_embedded;
 
 extern MCNameRef MCN_all;
 extern MCNameRef MCN_auto_key;

@@ -1424,6 +1424,11 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
+MCEnvironmentType MCDispatch::getenvironmenttype()
+{
+    return kMCEnvironmentTypeInstaller;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCStack::mode* hooks for INSTALLER mode.
@@ -1512,18 +1517,6 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	}
 
 	return IO_NORMAL;
-}
-
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
-MCNameRef MCModeGetEnvironment(void)
-{
-	return MCN_installer;
-}
-
-uint32_t MCModeGetEnvironmentType(void)
-{
-	return kMCModeEnvironmentTypeInstaller;
 }
 
 // SN-2015-01-16: [[ Bug 14295 ]] Installer-mode is standalone

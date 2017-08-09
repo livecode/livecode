@@ -942,6 +942,24 @@ IO_stat MCDispatch::startup(void)
 }
 #endif
 
+// In standalone mode, the environment depends on various command-line/runtime
+// globals.
+MCEnvironmentType MCDispatch::getenvironmenttype()
+{
+#ifdef _MOBILE
+    return kMCEnvironmentTypeMobile;
+#else
+    // MW-2011-09-19: [[ Bug 9734 ]] If in '-ui' mode, return 'command line'.
+    if (MCnoui)
+        return kMCEnvironmentTypeCommandLine;
+    
+    if (MCnofiles)
+        return kMCEnvironmentTypeHelper;
+    
+    return kMCEnvironmentTypeDesktop;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
@@ -1028,31 +1046,6 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef p_filename)
 	}
 
 	return IO_NORMAL;
-}
-
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
-MCNameRef MCModeGetEnvironment(void)
-{
-#ifdef _MOBILE
-	return MCN_mobile;
-#else
-	// MW-2011-09-19: [[ Bug 9734 ]] If in '-ui' mode, return 'command line'.
-	if (MCnoui)
-		return MCN_command_line;
-
-	if (MCnofiles)
-		return MCN_helper_application;
-
-	return MCN_standalone_application;
-#endif
-}
-
-uint32_t MCModeGetEnvironmentType(void)
-{
-	if (MCnofiles)
-		return kMCModeEnvironmentTypeHelper;
-	return kMCModeEnvironmentTypeDesktop;
 }
 
 // SN-2015-01-16: [[ Bug 14295 ]] Get the standalone, redirected resources folder.

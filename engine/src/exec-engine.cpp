@@ -264,7 +264,30 @@ void MCEngineEvalPlatform(MCExecContext& ctxt, MCNameRef& r_name)
 
 void MCEngineEvalEnvironment(MCExecContext& ctxt, MCNameRef& r_name)
 {
-	r_name = MCValueRetain(MCModeGetEnvironment());
+    static const struct { MCEnvironmentType type; MCNameRef name; } s_environment_map[] =
+    {
+        { kMCEnvironmentTypeEditor, MCN_development},
+        { kMCEnvironmentTypeEditorCommandLine, MCN_development_cmdline},
+        { kMCEnvironmentTypeDesktop, MCN_standalone_application},
+        { kMCEnvironmentTypeMobile, MCN_mobile},
+        { kMCEnvironmentTypeCommandLine, MCN_command_line},
+        { kMCEnvironmentTypeInstaller, MCN_installer},
+        { kMCEnvironmentTypeServer, MCN_server},
+        { kMCEnvironmentTypeHelper, MCN_helper_application},
+        { kMCEnvironmentTypeEmbedded, MCN_embedded},
+        { kMCEnvironmentTypeMobileEmbedded, MCN_mobile_embedded},
+    };
+    
+    MCEnvironmentType t_env = MCdispatcher->getenvironmenttype();
+    for (uindex_t i = 0; i < sizeof(s_environment_map)/sizeof(s_environment_map[0]); ++i)
+    {
+        if (s_environment_map[i].type == t_env)
+        {
+            r_name = MCValueRetain(s_environment_map[i].name);
+            return;
+        }
+    }
+    MCUnreachable();
 }
 
 void MCEngineEvalMachine(MCExecContext& ctxt, MCStringRef& r_string)

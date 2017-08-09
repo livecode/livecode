@@ -129,6 +129,11 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
+MCEnvironmentType MCDispatch::getenvironmenttype()
+{
+    return kMCEnvironmentTypeServer;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCStack::mode* hooks for SERVER mode.
@@ -208,18 +213,6 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	}
 
 	return IO_NORMAL;
-}
-
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
-MCNameRef MCModeGetEnvironment(void)
-{
-	return MCN_server;
-}
-
-uint32_t MCModeGetEnvironmentType(void)
-{
-	return kMCModeEnvironmentTypeServer;
 }
 
 // SN-2015-01-16: [[ Bug 14295 ]] Not implemented for server

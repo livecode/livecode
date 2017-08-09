@@ -290,52 +290,64 @@ void MCStack::sethints()
 	// and the LiveCode name and version for the IDE
     MCAutoStringRef t_app_name;
     MCAutoStringRefAsCString t_app_name_cstr;
-	int t_env = MCModeGetEnvironmentType();
-	if (t_env == kMCModeEnvironmentTypeEditor
-		|| t_env == kMCModeEnvironmentTypeInstaller
-		|| t_env == kMCModeEnvironmentTypeServer)
-	{
-		const char *t_edition_name;
-		switch (MClicenseparameters.license_class)
-		{
-		case kMCLicenseClassProfessionalEvaluation:
-		case kMCLicenseClassProfessional:
-			t_edition_name = "business";
-				break;
-		case kMCLicenseClassEvaluation:
-		case kMCLicenseClassCommercial:
-			t_edition_name = "indy";
-			break;
-		case kMCLicenseClassNone:
-		case kMCLicenseClassCommunity:
-		default:
-			t_edition_name = "community";
-			break;
-		}
+	MCEnvironmentType t_env = MCdispatcher->getenvironmenttype();
+    switch (t_env)
+    {
+    case kMCEnvironmentTypeEditor:
+    case kMCEnvironmentTypeEditorCommandLine:
+    case kMCEnvironmentTypeInstaller:
+    case kMCEnvironmentTypeServer:
+    {
+        const char *t_edition_name;
+        switch (MClicenseparameters.license_class)
+        {
+        case kMCLicenseClassProfessionalEvaluation:
+        case kMCLicenseClassProfessional:
+            t_edition_name = "business";
+                break;
+        case kMCLicenseClassEvaluation:
+        case kMCLicenseClassCommercial:
+            t_edition_name = "indy";
+            break;
+        case kMCLicenseClassNone:
+        case kMCLicenseClassCommunity:
+        default:
+            t_edition_name = "community";
+            break;
+        }
 
-		if (MCStringCreateMutable(0, &t_app_name))
-		{
-			bool t_success = true;
-			if (t_env == kMCModeEnvironmentTypeEditor)
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
-			else
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
-				
-			if (t_success)
-			{
-				t_success = MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact) 
-					&& MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
-			}
-			
-			if (!t_success)
-				t_app_name.Reset();
-		}
+        if (MCStringCreateMutable(0, &t_app_name))
+        {
+            bool t_success = true;
+            if (t_env == kMCEnvironmentTypeEditor ||
+                t_env == kMCEnvironmentTypeEditorCommandLine)
+            {
+                t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+            }
+            else
+            {
+                extern void MCEngineEvalEnvironment(MCExecContext& ctxt, MCNameRef& r_name);
+                MCExecContext ctxt;
+                MCNewAutoNameRef t_environment_name;
+                MCEngineEvalEnvironment(ctxt, &t_environment_name);
+                t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, *t_environment_name, MC_BUILD_ENGINE_SHORT_VERSION);
+            }
+            
+            if (t_success)
+            {
+                t_success = MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact) 
+                    && MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
+            }
+            
+            if (!t_success)
+                t_app_name.Reset();
+        }
 	}
-	else
-	{
+        break;
+    default:
 		t_app_name = MCNameGetString(MCdispatcher->gethome()->getname());
-	}
-
+        break;
+    }
     if (t_app_name_cstr.Lock(*t_app_name))
 	{
 		chints.res_name = (char*)*t_app_name_cstr;

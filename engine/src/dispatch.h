@@ -35,6 +35,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCStackSecurityCreateDispatch(MCDispatch*& r_dispatch);
 
+typedef enum
+{
+    kMCEnvironmentTypeEditor,
+    kMCEnvironmentTypeEditorCommandLine,
+    kMCEnvironmentTypeDesktop,
+    kMCEnvironmentTypeMobile,
+    kMCEnvironmentTypeCommandLine,
+    kMCEnvironmentTypeInstaller,
+    kMCEnvironmentTypeServer,
+    kMCEnvironmentTypeHelper,
+    kMCEnvironmentTypeEmbedded,
+    kMCEnvironmentTypeMobileEmbedded,
+} MCEnvironmentType;
+
 typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
 class MCDispatch : public MCObject
@@ -103,7 +117,9 @@ public:
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
 	virtual IO_stat startup(void);
-	
+    
+    virtual MCEnvironmentType getenvironmenttype(void);
+    
 	void wreshape(Window w);
 	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
 	void wiconify(Window w);
