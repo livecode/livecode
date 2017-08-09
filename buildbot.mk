@@ -218,6 +218,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	                -o -name '*-bin.tar.bz2' \
+	                -o -name 'LiveCodeEmbeddedBuilder.zip' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
