@@ -151,6 +151,7 @@ private variable mDataDetectorTypes as String
 private variable mMultiline as Boolean
 private variable mEditable as Boolean
 private variable mScrollingEnabled as Boolean
+private variable mPassReturnKey as Boolean
 
 // Properties
 /**
@@ -472,6 +473,33 @@ field.
 property scrollingEnabled get GetScrollingEnabled set SetScrollingEnabled
 metadata scrollingEnabled.label is "Scrolling enabled"
 
+/**
+Syntax:
+set the passReturnKey of <widget> to {true|false}
+get the passReturnKey of <widget>
+
+Summary: Whether the return key adds a new line to the field
+
+Example:
+command createField
+   create widget as "com.livecode.widget.native.android.field"
+   set the passReturnKey of it to false
+end createField
+
+-- In the widget script
+on returnKey
+   answer "You entered" && the text of the target
+end returnKey
+
+Description:
+Use the <passReturnKey> property to control whether the
+native keyboard return key adds a new line to the field or
+not.
+*/
+property passReturnKey get mPassReturnKey set mPassReturnKey
+metadata passReturnKey.label is "Return key adds new line"
+metadata passReturnKey.default is "true"
+
 // Non-persistent
 /**
 Syntax:
@@ -527,6 +555,7 @@ public handler OnSave(out rProperties as Array)
    put mMultiline into rProperties["Multiline"]
    put mEditable into rProperties["Editable"]
    put mScrollingEnabled into rProperties["ScrollingEnabled"]
+   put mPassReturnKey into rProperties["PassReturnKey"]
 end handler
 
 // Set all persistent properties in OnLoad
@@ -545,6 +574,7 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["Multiline"] into mMultiline
    put pProperties["Editable"] into mEditable
    put pProperties["ScrollingEnabled"] into mScrollingEnabled
+   put pProperties["PassReturnKey"] into mPassReturnKey
 end handler
 
 // Set up all the default values for properties in constants
@@ -575,6 +605,7 @@ public handler OnCreate()
    put true into mMultiline
    put true into mEditable
    put true into mScrollingEnabled
+   put true into mPassReturnKey
 end handler
 
 private handler InitView()
@@ -811,11 +842,11 @@ __safe foreign handler _JNI_TextWatcher_TextChangedListener(in pCallbacks as Arr
 __safe foreign handler _JNI_TextView_addTextChangedListener(in pObj as JObject, in pParam_watcher as JObject) returns nothing \
 	binds to "java:android.widget.TextView>addTextChangedListener(Landroid/text/TextWatcher;)V?ui"
 
-handler type EditorActionCallback(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject)
+handler type EditorActionCallback(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
 __safe foreign handler _JNI_View_OnEditorActionListener(in pHandler as EditorActionCallback) returns JObject \
-   binds to "java:android.view.View$OnEditorActionListener>interface()"
+   binds to "java:android.widget.TextView$OnEditorActionListener>interface()"
 __safe foreign handler _JNI_TextView_setOnEditorActionListener(in pObj as JObject, in pParam_listener as JObject) returns nothing \
-	binds to "java:android.widget.TextView>setOnEditorActionListener(Landroid/view/View$OnEditorActionListener;)V?ui"
+	binds to "java:android.widget.TextView>setOnEditorActionListener(Landroid/widget/TextView$OnEditorActionListener;)V?ui"
 
 __safe foreign handler _JNI_TextView_append(in pObj as JObject, in pParam_text as JString) returns nothing \
 	binds to "java:android.widget.TextView>append(Ljava/lang/CharSequence;)V?ui"
@@ -1001,7 +1032,7 @@ end handler
 __safe foreign handler _JNI_BooleanValue(in pBoolean as JObject) returns JBoolean \
    binds to "java:java.lang.Boolean>booleanValue()Z"
 private variable mOldText as optional String
-handler OnFocusChange(in pView as JObject, in pHasFocus as JObject)
+handler OnFocusChange(in pView as JObject, in pHasFocus as JObject) returns nothing
    variable tHasFocus as Boolean
    put _JNI_BooleanValue(pHasFocus) into tHasFocus
 
@@ -1024,12 +1055,22 @@ handler OnFocusChange(in pView as JObject, in pHasFocus as JObject)
    MCEngineRunloopBreakWait()
 end handler
 
-handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject)
+__safe foreign handler _JNI_Boolean_False() returns JObject \
+   binds to "java:java.lang.Boolean>get.FALSE()Ljava/lang/Boolean;!static"
+__safe foreign handler _JNI_Boolean_True() returns JObject \
+   binds to "java:java.lang.Boolean>get.TRUE()Ljava/lang/Boolean;!static"
+handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
    post "returnKey"
    MCEngineRunloopBreakWait()
+   // Return value determines whether the return key event is eaten
+   if mPassReturnKey then
+      return _JNI_Boolean_False()
+   else
+      return _JNI_Boolean_True()
+   end if
 end handler
 
-handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject)
+handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject) returns nothing
    post "textChanged"
    MCEngineRunloopBreakWait()
 end handler
@@ -1046,15 +1087,11 @@ handler SetListeners()
       into tTextChangedListener
    _JNI_TextView_addTextChangedListener(mNativeObj, tTextChangedListener)
 
-   // At the moment we can't support the returnKey message
-   // as the listener returns a Boolean values - see bug 19973
-/*
    // Add a listener for the returnKey action
    variable tEditorActionListener as JObject
    put _JNI_View_OnEditorActionListener(OnEditorAction) \
       into tEditorActionListener
    _JNI_TextView_setOnEditorActionListener(mNativeObj, tEditorActionListener)
-*/
 end handler
 
 // Set / get props

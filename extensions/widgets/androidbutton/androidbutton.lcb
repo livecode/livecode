@@ -102,7 +102,7 @@ __safe foreign handler _JNI_AddButtonView(in pParentView as JObject, in pChildVi
 	binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
 
 // Handlers for adding click listener
-handler type ClickCallback(in pView as JObject)
+handler type ClickCallback(in pView as JObject) returns nothing
 __safe foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject \
 	binds to "java:android.view.View$OnClickListener>interface()"
 __safe foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing \
@@ -204,7 +204,7 @@ public handler OnParentPropertyChanged()
 	SetEnabled(my enabled)
 end handler
 
-public handler ButtonClicked(in pView as JObject)
+public handler ButtonClicked(in pView as JObject) returns nothing
 	post "mouseUp"
 	
 	// Wake the engine to deal with the posted signal
