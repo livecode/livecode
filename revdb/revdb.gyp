@@ -187,6 +187,20 @@
 					'_releasedbconnectionref',
 				],
 			},
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
 			
 			'all_dependent_settings':
 			{
@@ -317,6 +331,20 @@
 					'_releasedbconnectionref',
 				],
 			},
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
 			
 			'all_dependent_settings':
 			{
@@ -411,6 +439,20 @@
 					'_releasedbconnectionref',
 				],
 			},
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
 			
 			'all_dependent_settings':
 			{
@@ -606,6 +648,17 @@
 						},
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -723,6 +776,20 @@
 			'sources!':
 			[
 				'src/iossupport.cpp',
+			],
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':
