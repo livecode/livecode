@@ -16,6 +16,9 @@ local sTargetArch
 command builderLog  pType, pMessage, pContext
    if there is a stack "Builder" then
       dispatch "__builderLog" to stack "Builder" with  pType, pMessage, pContext
+   else
+      write pType & ":" & pMessage & return to stdout
+      write pContext & return to stdout
    end if
 end builderLog
 
@@ -60,11 +63,11 @@ end builderSetTargetArch
 ////////////////////////////////////////////////////////////////////////////////
 
 on builderBuild pWhich, pPlatforms, pEdition, pType
-   builderInitialize  
-   
+   builderInitialize
+
    local tVersion
    put builderGetVersion() into tVersion
-   
+
    switch pWhich
       case "Tools"
          repeat for each line tPlatform in pPlatforms
@@ -116,8 +119,8 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
             dispatch "fmPackageBuilderRun" to stack builderFMPackageBuilderStack() with tPlatform, tPrivateRepo, tOutputFolder, tGitRevision, tTargetArch
          end repeat
    end switch
-   	
-   builderFinalize	
+
+   builderFinalize
 end builderBuild
 
 -- Fetch the platform string for the platform on which the builder is
@@ -147,7 +150,10 @@ function builderPlatform
    end switch
 end builderPlatform
 
-command builderFetchEngine pVersion, pPlatform
+command builderFetchEngine pVersion, pPlatform, pMode
+   if pMode is empty then
+      put "Release" into pMode
+   end if
    if pPlatform is empty then
       put builderPlatform() into pPlatform
    end if
@@ -178,7 +184,7 @@ command builderFetchEngine pVersion, pPlatform
    local tPlatform
    switch pPlatform
       case "windows"
-         get "windows/release"
+         get "windows/" & tolower(pMode)
          break
       case "linux-x86"
       case "linux-x86_64"
@@ -186,13 +192,13 @@ command builderFetchEngine pVersion, pPlatform
          get "linux"
          break
       case "macosx"
-         get "mac/Release"
+         get "mac/" & pMode
          break
       case "ios"
          get "ios"
          break
       case "android"
-         get "android/release"
+         get "android/" & tolower(pMode)
          break
    end switch
    return builderRepoFolder() & "/_build/" & it
@@ -207,7 +213,7 @@ private command copyFile pSrc, pDst
       put slash & item -1 of pSrc after pDst
       set the itemDelimiter to comma
    end if
-   
+
    put url ("binfile:" & pSrc) into url ("binfile:" & pDst)
 end copyFile
 
@@ -272,7 +278,7 @@ end builderSystemFolder
 
 -- Return the folder of the private builder system
 function builderSystemPrivateFolder
-   return builderPrivateRepoFolder() & slash & "builder" 
+   return builderPrivateRepoFolder() & slash & "builder"
 end builderSystemPrivateFolder
 
 -- Returns the folder where intermediate products should be placed
@@ -422,6 +428,10 @@ function builderFMPackageBuilderStack
    return builderSystemPrivateFolder() & slash & "package_solution.livecodescript"
 end builderFMPackageBuilderStack
 
+function builderEmbeddedBuilderStack
+   return builderSystemPrivateFolder() & slash & "embedded_builder_builder.livecodescript"
+end builderEmbeddedBuilderStack
+
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
    return the result & slash & "modules" & slash & "lci"
@@ -442,7 +452,7 @@ function builderInstallerEngine pPlatform
    local tEngineFolder
    builderFetchEngine empty, pPlatform
    put the result into tEngineFolder
-   
+
    switch pPlatform
       case "windows"
          return tEngineFolder & slash & "installer.exe"
@@ -463,7 +473,7 @@ function builderMakeTemporaryFile pTempFolder, pTag
    repeat while there is a file (pTempFolder & slash & pTag & "-" & tIndex)
       add 1 to tIndex
    end repeat
-   
+
    return pTempFolder & slash & pTag & "-" & tIndex
 end builderMakeTemporaryFile
 
@@ -475,14 +485,14 @@ command builderEnsureFolder pFolder
       --builderLog "error", "Attempt to create folder outside of root (" & pFolder & ")"
       --throw "failed"
    end if
-   
+
    set the itemDelimiter to slash
    repeat with i = 2 to the number of items in pFolder
       if there is no folder (item 1 to i of pFolder) then
          create folder item 1 to i of pFolder
       end if
    end repeat
-   
+
    if there is no folder pFolder then
       builderLog "error", "Folder creation failed (" & pFolder & ")"
       throw "failed"
@@ -501,7 +511,7 @@ function builderGetVersion
    put url ("file:" & builderRepoFolder() & slash & "version") into tVersionFile
    replace space with empty in tVersionFile
    split tVersionFile by return and "="
-   put tVersionFile["BUILD_SHORT_VERSION"] into tVersion   
+   put tVersionFile["BUILD_SHORT_VERSION"] into tVersion
    return tVersion
 end builderGetVersion
 
@@ -510,7 +520,7 @@ function builderGetBuildNumber
    put url ("file:" & builderRepoFolder() & slash & "version") into tVersionFile
    replace space with empty in tVersionFile
    split tVersionFile by return and "="
-   put tVersionFile["BUILD_REVISION"] into tVersion   
+   put tVersionFile["BUILD_REVISION"] into tVersion
    return tVersion
 end builderGetBuildNumber
 
@@ -537,7 +547,7 @@ end getExecutableArchs
 command dietAndStrip pArchs, pInput, pOutput
    local tCurrentArchs
    put getExecutableArchs(pInput) into tCurrentArchs
-   
+
    local tActualArchs
    repeat for each item tArch in pArchs
       if tArch is "x86-64" then
@@ -556,7 +566,7 @@ command dietAndStrip pArchs, pInput, pOutput
       end if
    end repeat
    delete the last char of tActualArchs
-   
+
    if the number of items of tCurrentArchs is not the number of items of tActualArchs then
       if  the number of items of tActualArchs is 1 then
          get shell("lipo -thin " & tActualArchs && "-output" && quote & pOutput & quote && quote & pInput & quote)
@@ -601,7 +611,7 @@ end macPList
 command builderEnsureZip pZipfile, pURL
    if there is not a file pZipfile then
       builderEnsureFolderForFile pZipfile
-      
+
       builderLog "message", "Downloading zip file:" && pZipfile
       get shell(merge("curl -k -o '[[pZipfile]]' '[[pUrl]]'"))
       if the result is not zero then
@@ -613,9 +623,9 @@ end builderEnsureZip
 
 command builderUnpackZip pZipfile, pFolder
    builderLog "message", "Unpacking zip file:" && pZipfile
-   
+
    builderEnsureFolder pFolder
-   
+
    get shell(merge("cd '[[pFolder]]' && unzip '[[pZipfile]]'"))
    if the result is not zero then
       builderLog "error", "Failed to unzip file:" && it
@@ -636,15 +646,15 @@ end builderMergExtDownloadedFilePath
 private command builderMergExtUnpack pMergExtVersion, pEdition
    local tFolder
    put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
-   
+
    local tZipFile
    put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tZipFile
-   
+
    local tURL
    put builderMergExtUrl(pMergExtVersion, pEdition) into tURL
-   
+
    builderEnsureZip tZipFile, tURL
-   
+
    builderUnpackZip tZipFile, tFolder
 end builderMergExtUnpack
 
@@ -661,15 +671,15 @@ end builderTSNetDownloadedFilePath
 private command builderTSNetUnpack pTSNetVersion, pEdition
    local tFolder
    put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
-   
+
    local tZipFile
    put builderTSNetDownloadedFilePath(pTSNetVersion, pEdition) into tZipFile
-   
+
    local tURL
    put builderTSNetUrl(pTSNetVersion, pEdition) into tURL
-   
+
    builderEnsureZip tZipFile, tURL
-   
+
    builderUnpackZip tZipFile, tFolder
 end builderTSNetUnpack
 
@@ -678,17 +688,17 @@ end builderTSNetUnpack
 command builderExtUnpack pEdition
    local tFolder
    put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
-   
+
    if there is a folder tFolder then
       builderLog "message", "Cleaning unpack folder" && tFolder
       get shell(merge("rm -r '[[tFolder]]'"))
    end if
-   
+
    local tEdition
    put editionTitleCase(pEdition) into tEdition
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack builderMergExtVersion(), tEdition
-   
+
    if editionCompare(pEdition, "communityplus") > 0 then
       -- Ensure that the TSNet bundle is downloaded and unpacked
       builderTSNetUnpack builderTSNetVersion(), tEdition
@@ -726,34 +736,34 @@ function builderComponentFolders
          if tComponent begins with "." then
             next repeat
          end if
-         
+
          local tPath
          put tFolder & "/components/" & tComponent & "/component.yml" into tPath
          if there is not a file tPath then
             next repeat
          end if
-         
+
          local tYAML
          put builderFileGetUTF8Contents(tPath) into tYAML
-         
+
          --!TODO Add YAMLToArray script-library so we can have more
          -- complex metadata structures here if necessary
          local tLine
          set the itemdelimiter to colon
-         
+
          local tMetadata
          delete variable tMetadata
          repeat for each line tLine in tYAML
             put word 1 to -1 of (item 2 to -1 of tLine) into tMetadata[item 1 of tLine]
          end repeat
-         
+
          local tIndex
          put the number of elements of tComponentFolders + 1 into tIndex
          put tFolder & "/components/" & tComponent into tComponentFolders[tIndex]["folder"]
          put tMetadata into tComponentFolders[tIndex]["metadata"]
       end repeat
    end repeat
-   
+
    return tComponentFolders
 end builderComponentFolders
 
@@ -793,25 +803,25 @@ The decoded content of a file with BOM removed if it existed
 **/
 function builderFileGetContents pPath, pEncoding
    local tContents, tResult
-   
+
    put url("binfile:" & pPath) into tContents
    put the result into tResult
    if tResult is not empty then
       throw merge("Failed to read [[pPath]]: [[tResult]]")
    end if
-   
+
    if pEncoding is not empty then
       __DeleteByteOrderMarks tContents, pEncoding
       put textDecode(tContents, pEncoding) into tContents
    end if
-   
+
    return tContents
 end builderFileGetContents
 
 private command __DeleteByteOrderMarks @xEncoded, pEncoding
    local tBom
    put textEncode(numToCodepoint(0xfeff), pEncoding) into tBom
-   
+
    if xEncoded begins with tBom then
       delete byte 1 to (the number of bytes in tBom) of xEncoded
    end if
@@ -853,7 +863,7 @@ the binary data of pContents is written.
 **/
 command builderFileSetContents pPath, pContents, pEncoding
    local tResult
-   
+
    if pEncoding is empty then
       open file pPath for binary write
    else
@@ -863,12 +873,12 @@ command builderFileSetContents pPath, pContents, pEncoding
    if tResult is not empty then
       throw merge("Failed to open [[pPath]]: [[tResult]]")
    end if
-   
+
    write pContents to file pPath
    put the result into tResult
    if tResult is not empty then
       throw merge("Failed to write [[pPath]]: [[tResult]]")
    end if
-   
+
    close file pPath -- unchecked
 end builderFileSetContents
