@@ -29,6 +29,10 @@ bool MCStackSecurityEncryptString(MCStringRef p_string, MCStringRef &r_enc);
 
 //////////
 
+bool MCStackSecurityCreateDispatch(MCDispatch*& r_dispatch);
+
+//////////
+
 bool MCStackSecurityCreateStack(MCStack *&r_stack);
 bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy);
 

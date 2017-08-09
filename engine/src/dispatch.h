@@ -33,10 +33,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
+bool MCStackSecurityCreateDispatch(MCDispatch*& r_dispatch);
+
 typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
 class MCDispatch : public MCObject
 {
+protected:
 	char *license;
 	MCStack *stacks;
 	MCFontlist *fonts;
@@ -55,7 +58,7 @@ class MCDispatch : public MCObject
 	MCExternalHandlerList *m_externals;
 
     MCStack *m_transient_stacks;
-    
+
 	static MCImage *imagecache;
 
     static MCPropertyInfo kProperties[];
@@ -67,13 +70,13 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
-    
+
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    
+
     virtual bool visit_self(MCObjectVisitor *p_visitor);
-	
+
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	
+
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *params, MCObject *pass_from);
@@ -94,19 +97,19 @@ public:
 	//   Specifically, embedded stacks and ones contained in deployed project info.
 	IO_stat readstartupstack(IO_handle stream, MCStack*& r_stack);
     IO_stat readscriptonlystartupstack(IO_handle stream, uindex_t p_length, MCStack*& r_stack);
-	
+
 	// Load the given external from within the app bundle
 	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
-	IO_stat startup(void);
-	
+	virtual IO_stat startup(void);
+
 	void wreshape(Window w);
 	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
 	void wiconify(Window w);
 	void wuniconify(Window w);
-	
+
 	void wclose(Window w);
 	void wkfocus(Window w);
 	void wkunfocus(Window w);
@@ -125,7 +128,7 @@ public:
 	void wmfocus_stack(MCStack *stack, int2 x, int2 y);
 	void wmdown_stack(MCStack *stack, uint2 which);
 	void wmup_stack(MCStack *stack, uint2 which);
-	
+
 	// This method is invoked when this application is acting as a drag-drop
 	// target and the mouse pointer has entered the given window.
 	//
@@ -177,7 +180,7 @@ public:
 	MCFontlist *getfontlist();
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
     MCFontStruct *loadfontwithhandle(MCSysFontHandle, MCNameRef p_name);
-	
+
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
 	void clearcursors(void);
@@ -195,22 +198,22 @@ public:
     bool is_transient_stack(MCStack *stack);
     void add_transient_stack(MCStack *stack);
     void remove_transient_stack(MCStack *stack);
-    
+
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
-	
+
 	MCStack *findstackname(MCNameRef);
 	MCStack *findstackid(uint4 fid);
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
 	MCStack *findstackwindowid(uintptr_t p_win_id);
 	MCStack *findstackd(Window w);
-	
+
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
 	bool foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context);
-    
+
 	bool foreachstack(MCStackForEachCallback p_callback, void *p_context);
-	
+
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjname(Chunk_term type, MCNameRef);
 	MCStack *gethome();
@@ -227,7 +230,7 @@ public:
 
 	// Recreate the fontlist.
 	void flushfonts(void);
-	
+
 	MCStack *getstacks(void)
 	{
 		return stacks;
@@ -235,26 +238,26 @@ public:
 
 	// This method is only present in commercial development engines.
 	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
-	
+
 	////////// PROPERTY ACCESSORS
 
     bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
-    
+
 	void GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font);
 	void GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size);
 	void GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
     void GetDefaultTextAlign(MCExecContext& ctxt, intenum_t& r_align);
     void GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height);
-    
+
     void GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel);
 	void GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
 	void GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
 
 	void GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 	void GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-    
+
 	void GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
-    
+
     // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
@@ -264,9 +267,9 @@ public:
         return m_library_mapping;
     }
     bool haslibrarymapping(MCStringRef p_name);
-    
+
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
-    
+
     // Try to read a binary stack from the stream. If the return value is
     // IO_ERROR, a reason is returned in r_result. If the return value is
     // IO_NORMAL, there was no error but the stream did not contain a binary
@@ -276,7 +279,7 @@ public:
                                  IO_handle &x_stream,
                                  MCObject* p_parent, MCStack* &r_stack,
                                  const char* &r_result);
-    
+
     // Try to read a script-only stack from the stream. If the return value is
     // IO_ERROR, a reason is returned in r_result. If the return value is
     // IO_NORMAL, there was no error but the stream did not contain a
@@ -286,7 +289,7 @@ public:
                                      MCObject* p_parent,
                                      MCStack* &r_stack,
                                      const char* &r_result);
-    
+
     // Read a script-only stack from p_size bytes of the stream. If the
     // return value is IO_ERROR, a reason is returned in r_result. If
     // the return value is IO_NORMAL, there was no error but the stream
@@ -297,16 +300,17 @@ public:
                                            MCObject* p_parent,
                                            MCStack* &r_stack,
                                            const char* &r_result);
-    
+
     // Determine if the stream contains a script-only stack
     bool streamstackisscriptonly(IO_handle stream);
-    
+
     // Integrate a loaded stack into the environemnt, sending reloadStack
     // if required.
     void processstack(MCStringRef p_openpath, MCStack* &x_stack);
-    
+
     void resolveparentscripts(void);
-private:
+
+protected:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
 	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);

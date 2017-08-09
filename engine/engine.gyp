@@ -249,7 +249,6 @@
 			'sources':
 			[
 				'>@(builtin_lcb_modules)',
-                '<@(engine_mobile_standalone_source_files)',
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
