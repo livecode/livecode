@@ -21,31 +21,46 @@ function deployUsableIosSdk
    return "6.1,7.1,8.2,9.2,10.2,11.0"
 end deployUsableIosSdk
 
+function deployGetIphoneSDKXCodeMapping
+   local tMapping
+   put "4.6" into tMapping["6.1"]
+   put "5.1" into tMapping["7.1"]
+   put "6.2" into tMapping["8.2"]
+   put "7.2" into tMapping["9.2"]
+   put "8.2" into tMapping["10.2"]
+   put "9.0" into tMapping["11.0"]
+   return tMapping
+end deployGetIphoneSDKXCodeMapping
+
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
-   local tList, tMacVersion
+   local tSDKs, tList, tMacVersion, tMapping
+   put deployGetIphoneSDKXCodeMapping() into tMapping
    put deploySanatizeSystemVersion() into tMacVersion
    if tMacVersion < 100800 then
-      put "6.1,4.6" into tList[1]
+      put "6.1" into tSDKs[1]
    else if tMacVersion < 100900 then
-      put "7.1,5.1" into tList[1]
+      put "7.1" into tSDKs[1]
    else if tMacVersion < 101000 then
-      put "8.2,6.2" into tList[1]
+      put "8.2" into tSDKs[1]
    else if tMacVersion < 101100 then
-      put "8.2,6.2" into tList[1]
+      put "8.2" into tSDKs[1]
       // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
       if tMacVersion >= 101005 then
-         put "9.2,7.2" into tList[2]
+         put "9.2" into tSDKs[2]
       end if
    else if tMacVersion < 101200 then
-      put "10.2,8.2" into tList[1]
+      put "10.2" into tSDKs[1]
    else if tMacVersion < 101206 then
-      put empty into tList[1]
       answer error "To use Xcode 9.0, you need to upgrade your Mac to MacOS Sierra 10.12.6"
    else
       // Xcode 9.0 requires a Mac running Mac OS 10.12.6 or later
-      put "11.0,9.0" into tList[1]
+      put "11.0" into tSDKs[1]
    end if
+   
+   repeat with x = 1 to the number of elements in tSDKs
+      put tSDKs[x] & comma & tMapping[tSDKs[x]] into tList[x]
+   end repeat
    
    return tList
 end deployGetIphoneOSes
