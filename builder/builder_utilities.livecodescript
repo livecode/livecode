@@ -104,6 +104,9 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          put builderGetBuildNumber() into tBuildNumber
          dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
+      case "Embedded"
+         dispatch "embeddedBuilderBuildPlugin" to stack builderEmbeddedBuilderStack()
+         break
    end switch
    	
    builderFinalize	
