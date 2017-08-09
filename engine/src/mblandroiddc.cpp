@@ -1322,8 +1322,11 @@ static void *mobile_main(void *arg)
 
 	// MW-2011-10-01: [[ Bug 9772 ]] Switch to the android thread until we get
 	//   a bitmap to render into!
-	while(s_android_bitmap == nil)
-		co_yield_to_android();
+	if (MCdispatcher->getenvironmenttype() != kMCEnvironmentTypeMobileEmbedded)
+    {
+		while(s_android_bitmap == nil)
+			co_yield_to_android();
+    }
 
 	MCLog("Starting up project", 0);
 	send_startup_message(false);
@@ -1333,10 +1336,13 @@ static void *mobile_main(void *arg)
     
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
-    
-	MCLog("Hiding splash screen", 0);
-	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
-
+	
+    if (MCdispatcher->getenvironmenttype() != kMCEnvironmentTypeMobileEmbedded)
+    {
+		MCLog("Hiding splash screen", 0);
+		MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
+	}
+	
 	while(s_engine_running)
 	{
 		if (!X_main_loop_iteration())
@@ -1348,12 +1354,15 @@ static void *mobile_main(void *arg)
 	MCLog("Calling X_close", 0);
 	X_close();
 
-	// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
-	// and wait for it to exit
-	MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+    if (MCdispatcher->getenvironmenttype() != kMCEnvironmentTypeMobileEmbedded)
+    {
+		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
+		// and wait for it to exit
+		MCAndroidEngineRemoteCall("finishActivity", "v", nil);
 	
-	while (s_engine_running)
-		co_yield_to_android();
+		while (s_engine_running)
+			co_yield_to_android();
+	}
 	
 	// Free arguments and environment vars
 	for (int i = 0; i < argc; i++)
