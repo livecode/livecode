@@ -729,9 +729,18 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		t_sleep = 0.0;
 		if (curtime >= exittime)
 			done = True;
-		else if (!done && eventtime > curtime)
-			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
-
+		else if (!done)
+		{
+			if (!MCEventQueueIsEmpty())
+			{
+				t_sleep = 0.0;
+			}
+			else if (eventtime > curtime)
+			{
+				t_sleep = MCMin(eventtime - curtime, exittime - curtime);
+			}
+		}
+		
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
@@ -1646,7 +1655,9 @@ static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
 void MCIPhoneBreakWait(void)
 {
 	if (s_break_wait_pending)
+	{
 		return;
+	}
 	
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
@@ -1662,18 +1673,18 @@ static void MCIPhoneDoScheduleWait(void *p_ctxt)
 }
 	
 static void MCIPhoneDoCancelWait(void *p_ctxt)
-	{
+{
 	[NSObject cancelPreviousPerformRequestsWithTarget: s_break_wait_helper selector: @selector(breakWait) object: nil];
-	}
+}
 
 static bool MCIPhoneWait(double p_sleep)
-	{
+{
 	if (s_break_wait_pending)
-		{
+	{
 		MCFiberCall(s_main_fiber, MCIPhoneDoCancelWait, nil);
 		s_break_wait_pending = false;
 		return true;
-		}
+	}
     
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
@@ -1689,13 +1700,13 @@ static bool MCIPhoneWait(double p_sleep)
 
 	// Unmark ourselves as waiting.
 	s_wait_depth -= 1;
-
+	
 	bool t_broken;
 	t_broken = s_break_wait_pending;
 	s_break_wait_pending = false;
 
 	return t_broken;
-	}
+}
 	
 ////////////////////////////////////////////////////////////////////////////////
 
