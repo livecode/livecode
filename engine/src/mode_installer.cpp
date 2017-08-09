@@ -124,7 +124,7 @@ MCLicenseParameters MClicenseparameters =
 	NULL,
 };
 
-// This method is implemented per-platform and locates a named section in the 
+// This method is implemented per-platform and locates a named section in the
 // current exe.
 static void *MCExecutableFindSection(const char *p_name);
 
@@ -175,7 +175,7 @@ static void *s_payload_data = nil;
 #endif
 
 #ifdef _WINDOWS
-// MM-2011-03-23: If the payload is specified via file, we need to preserve (and clean up) 
+// MM-2011-03-23: If the payload is specified via file, we need to preserve (and clean up)
 // a handle to the file, a mapping object and a pointer to where we map the file contents.
 HANDLE s_payload_file_handle = nil;
 HANDLE s_payload_file_map = nil;
@@ -207,7 +207,7 @@ public:
 		// Do nothing if its already open
 		if (s_payload_minizip != nil)
 			return;
-		
+
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
 
 		const void *t_payload_data;
@@ -235,11 +235,11 @@ public:
 		// MM-2011-03-23: If no payload file specified, then extract payload as before, from installer.
 		if (t_payload_data == nil)
 		{
-#ifdef _MACOSX		
+#ifdef _MACOSX
             // Force a reference to the project section to prevent extra-clever
             // optimising linkers from discarding the section.
             (void)MCcapsule.size;
-            
+
             // On Mac OS X, the payload is in a separate file.
 			// MM-2011-03-23: Refactored code to use method call.
 			MCAutoStringRef t_payload_file;
@@ -256,14 +256,14 @@ public:
 				{
 					ctxt . SetTheResultToCString("could not find payload");
 					return;
-				}			
-			}			
+				}
+			}
 #else
             // Force references to the payload and project sections to prevent
             // extra-clever optimising linkers from discarding the sections.
             (void)MCpayload.size;
             (void)MCcapsule.size;
-            
+
 			// Search for the payload section - first see if there is a payload
 			// section of suitable size; then if in debug mode, try to load a stack
 			// via env var.
@@ -340,7 +340,7 @@ private:
 			{
 				s_payload_mapped_data = mmap(nil, t_info . st_size, PROT_READ, MAP_FILE | MAP_PRIVATE, t_fd, 0);
 				s_payload_mapped_size = t_info . st_size;
-				
+
 				if (s_payload_mapped_data == nil)
 				{
 					s_payload_loaded_data = malloc(t_info . st_size);
@@ -353,7 +353,7 @@ private:
 						}
 					}
 				}
-							
+
 			}
 			close(t_fd);
 		}
@@ -391,7 +391,7 @@ private:
 			if (s_payload_mapped_data == nil)
 				t_success = false;
 		}
-		
+
 		if (t_success)
 		{
 			r_payload_data = s_payload_mapped_data;
@@ -436,7 +436,7 @@ public:
 		if (s_payload_loaded_data != nil)
 			free(s_payload_loaded_data);
 #else
-		
+
 #ifdef _WINDOWS
 		// MM-2011-03-23: Clean up any handles we have opened (if payload has been specified by file).
 		if (s_payload_mapped_data != nil)
@@ -450,7 +450,7 @@ public:
 #ifdef _DEBUG
 		MCMemoryDeallocate(s_payload_data);
 #endif
-		
+
 #endif
 
 		return;
@@ -463,7 +463,7 @@ public:
 	MCInternalPayloadList(void)
 	{
 	}
-	
+
 	~MCInternalPayloadList(void)
 	{
 	}
@@ -535,7 +535,7 @@ public:
         {
             return;
         }
-        
+
 		if (s_payload_minizip != nil)
 		{
 			MCMiniZipItemInfo t_info;
@@ -543,7 +543,7 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
-                
+
                 ctxt.SetTheResultToEmpty();
                 ctxt . SetItToValue(*t_string);
 			}
@@ -604,11 +604,11 @@ public:
 		MCAutoStringRef t_item;
         if (!ctxt . EvalExprAsStringRef(m_item_expr, EE_PUT_BADEXP, &t_item))
             return;
-				
+
 		MCAutoStringRef t_file;
         if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
-		
+
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
@@ -631,7 +631,7 @@ public:
 			}
 			else
 				ctxt . SetTheResultToCString("could not open file");
-			
+
 			if (t_context . stream != nil)
 				MCS_close(t_context . stream);
 		}
@@ -665,7 +665,7 @@ private:
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
             context->var.set(ctxt, *t_data, kMCVariableSetAfter);
 		}
-        
+
 		if (context->target.IsValid())
 		{
 			MCParameter p1, p2, p3;
@@ -889,23 +889,23 @@ public:
 
 		return PS_NORMAL;
 	}
-    
-    
+
+
     void exec_ctxt(MCExecContext& ctxt)
 	{
         MCAutoStringRef t_module_str;
         if (!ctxt . EvalExprAsStringRef(m_module, EE_INTERNAL_TASKS_BADMODULE, &t_module_str))
             return;
-        
+
 		State t_state;
 		t_state . module = *t_module_str;
 		/* UNCHECKED */ MCListCreateMutable('\n', t_state.list);
-    
+
 		MCSystemListProcesses(ListProcessCallback, &t_state);
-        
+
 		ctxt . SetTheResultToValue(t_state.list);
 	}
-    
+
 private:
 	MCExpression *m_module;
 
@@ -972,7 +972,7 @@ public:
         MCAutoStringRef t_string;
         if (!ctxt . EvalExprAsStringRef(m_key, EE_INTERNAL_DELETE_BADKEY, &t_string))
             return;
-        
+
         MCresult -> setvalueref(MCSystemCanDeleteKey(*t_string) == true ? kMCTrue : kMCFalse);
 
 		return;
@@ -1005,7 +1005,7 @@ public:
 		return PS_NORMAL;
 	}
 
-    
+
     void exec_ctxt(MCExecContext& ctxt)
 	{
         MCAutoStringRef t_string;
@@ -1013,7 +1013,7 @@ public:
             return;
 
         MCresult -> setvalueref(MCSystemCanDeleteFile(*t_string) == true ? kMCTrue : kMCFalse);
-        
+
 		return;
 	}
 
@@ -1034,27 +1034,27 @@ public:
 	{
 		return PS_NORMAL;
 	}
-	
+
 	void exec_ctxt(MCExecContext& ctxt)
 	{
 		MCSystemRequestUserAttention();
 		return;
-	}	
+	}
 };
 
 class MCInternalCancelRequestUserAttention: public MCStatement
 {
-public:	
+public:
 	Parse_stat parse(MCScriptPoint& sp)
 	{
 		return PS_NORMAL;
 	}
-	
+
 	void exec_ctxt(MCExecContext& ctxt)
 	{
 		MCSystemCancelRequestUserAttention();
 		return;
-	}	
+	}
 };
 
 // MM-2011-03-24: Added internal verb showBalloon. Takes two params, a title and a message.
@@ -1085,17 +1085,17 @@ public:
 			return PS_ERROR;
 		return PS_NORMAL;
 	}
-	
+
 	void exec_ctxt(MCExecContext& ctxt)
 	{
         MCAutoStringRef t_title;
         if (!ctxt . EvalOptionalExprAsNullableStringRef(m_title, EE_UNDEFINED, &t_title))
             return;
-    
+
         MCAutoStringRef t_message;
         if (!ctxt . EvalOptionalExprAsNullableStringRef(m_message, EE_UNDEFINED, &t_message))
             return;
-		
+
 		MCSystemBalloonNotification(*t_title, *t_message);
 		return ;
 	}
@@ -1180,19 +1180,19 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			MCresult -> sets("failed to read project stack");
 			return false;
 		}
-            
+
         // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
         //   the startup script and such work.
         MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
-            
+
     case kMCCapsuleSectionTypeScriptOnlyMainStack:
         if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
         {
             MCresult -> sets("failed to read project stack");
             return false;
         }
-        
+
         // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
         //   the startup script and such work.
         MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
@@ -1211,7 +1211,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			return false;
 		}
 		break;
-            
+
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
@@ -1221,7 +1221,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MCresult -> sets("failed to read startup script");
             return false;
         }
-            
+
         // Execute the startup script at this point since we have loaded
         // all stacks.
         MCAutoStringRef t_script_str;
@@ -1231,7 +1231,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         delete[] t_script;
         }
         break;
-			
+
     case kMCCapsuleSectionTypeAuxiliaryStack:
     {
         MCStack *t_aux_stack;
@@ -1247,7 +1247,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
-            
+
     case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
     {
         MCStack *t_aux_stack;
@@ -1266,7 +1266,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
-			
+
 	case kMCCapsuleSectionTypeLicense:
 	{
 		// Just read the license info and ignore it in installer mode.
@@ -1280,12 +1280,12 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		}
 	}
 		break;
-			
+
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -1300,10 +1300,10 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	
+
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
-	
+
 	// This little snippet of code allows an easy way to attach VS to a standalone
 	// instance to debug startup.
 #ifdef _DEBUG
@@ -1335,14 +1335,14 @@ IO_stat MCDispatch::startup(void)
 			return IO_ERROR;
 		}
 		MCS_close(t_stream);
-		
+
 		/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-		
+
 		t_stack -> extraopen(false);
-		
+
         MCdispatcher->resolveparentscripts();
-        
+
 		MCscreen->resetcursors();
 		MCImage::init();
 		send_startup_message();
@@ -1355,7 +1355,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 #endif
 	}
-	
+
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;
 	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
@@ -1403,9 +1403,9 @@ IO_stat MCDispatch::startup(void)
 	MCCapsuleClose(t_capsule);
 
 	t_info . stack -> extraopen(false);
-    
+
     MCdispatcher->resolveparentscripts();
-    
+
 	MCscreen->resetcursors();
 	MCtemplateimage->init();
 	send_startup_message();
@@ -1413,6 +1413,14 @@ IO_stat MCDispatch::startup(void)
 		t_info . stack -> open();
 
 	return IO_NORMAL;
+}
+
+MCEnvironmentType MCDispatch::getenvironmenttype()
+{
+    if (MCnoui)
+        return kMCEnvironmentTypeInstallerCommandLine;
+    else
+        return kMCEnvironmentTypeInstaller;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1503,20 +1511,6 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	}
 
 	return IO_NORMAL;
-}
-
-// In installer mode, the environment depends on the command line args
-MCNameRef MCModeGetEnvironment(void)
-{
-    if (MCnoui)
-        return MCN_installer_cmdline;
-    
-	return MCN_installer;
-}
-
-uint32_t MCModeGetEnvironmentType(void)
-{
-	return kMCModeEnvironmentTypeInstaller;
 }
 
 // SN-2015-01-16: [[ Bug 14295 ]] Installer-mode is standalone
@@ -1709,7 +1703,7 @@ bool MCModeGetPixelScalingEnabled(void)
 
 void MCModeFinalize(void)
 {
-    
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1845,17 +1839,17 @@ static void *MCExecutableFindSection(const char *p_name)
 {
 	const mach_header *t_header;
 	t_header = _dyld_get_image_header(0);
-	
+
 	const load_command *t_command;
 	t_command = (const load_command *)(t_header + 1);
-	
+
 	for(uint32_t i = 0; i < t_header -> ncmds; i++)
 	{
 		if (t_command -> cmd == LC_SEGMENT)
 		{
 			const segment_command *t_segment;
 			t_segment = (const segment_command *)t_command;
-			
+
 			if (MCMemoryEqual(t_segment -> segname, p_name, MCMin(16, strlen(p_name) + 1)))
 			{
 				const section *t_section;
@@ -1863,10 +1857,10 @@ static void *MCExecutableFindSection(const char *p_name)
 				return reinterpret_cast<char *>(t_section -> addr) + _dyld_get_image_vmaddr_slide(0);
 			}
 		}
-		
+
 		t_command = (const load_command *)((uint8_t *)t_command + t_command -> cmdsize);
 	}
-	
+
 	return NULL;
 }
 #elif defined(_LINUX)
