@@ -118,6 +118,10 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          repeat for each line tPlatform in pPlatforms
             dispatch "fmPackageBuilderRun" to stack builderFMPackageBuilderStack() with tPlatform, tPrivateRepo, tOutputFolder, tGitRevision, tTargetArch
          end repeat
+         break
+      case "Embedded"
+         dispatch "embeddedBuilderBuildPlugin" to stack builderEmbeddedBuilderStack()
+         break
    end switch
 
    builderFinalize

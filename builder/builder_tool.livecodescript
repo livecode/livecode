@@ -7,27 +7,27 @@ on startup
    start using stack (item 1 to -2 of the filename of me & slash & "builder_utilities.livecodescript")
    start using stack (item 1 to -2 of the filename of me & slash & "edition_utilities.livecodescript")
    set the itemDelimiter to comma
-   
+
    __loadExternal "revzip"
    __loadExternal "revxml"
    __loadExternal "revdb"
-   
+
    put false into sWarnAsError
    put ($BUILDER_DEBUG is not empty) into sDebug
-   
+
    local tArgs, tArgIndex
    repeat with tArgIndex = 1 to $# - 1
       put value("$" & tArgIndex) into tArgs[tArgIndex]
    end repeat
-   
+
    local tPlatforms, tStage, tEdition, tBuild
    put empty into tPlatforms
    put "tools" into tStage
    put "community" into tEdition
    put "stable" into tBuild
-   
+
    local tEngineDir, tPrivateDir, tOutputDir, tWorkDir, tDocsDir, tBuiltDocsDir, tArch
-   
+
    put 1 into tArgIndex
    repeat while tArgIndex is among the keys of tArgs
       if tArgs[tArgIndex] is "--platform" then
@@ -40,7 +40,7 @@ on startup
          set the itemdelimiter to "-"
          put item -1 of it into tArch
          set the itemdelimiter to comma
-		 
+
          if it is "linux" then
             put true into tPlatforms["linux-x86"]
             put true into tPlatforms["linux-x86_64"]
@@ -51,7 +51,7 @@ on startup
          end if
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--stage" then
-         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,bundle,server,notes,docs,disk,guide,fmpackage" then
+         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,bundle,server,notes,docs,disk,guide,fmpackage,embedded" then
             __builderLog "error", "Unknown stage '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tStage
@@ -111,27 +111,27 @@ on startup
       end if
       add 1 to tArgIndex
    end repeat
-   
+
    if the keys of tPlatforms is empty and tStage is "tools" then
       __builderLog "error", "No platforms specified"
    end if
-   
+
    if tEdition is "commercial" and tStage is not "server" then
       __builderLog "error", "Commercial is only a valid edition for server packages"
    end if
-   
+
    if tStage is "environment" then
       put empty into tPlatforms
       put true into tPlatforms["environment"]
       put "engine" into tStage
    end if
-   
+
    set the name of this stack to "Builder"
-   
+
    if tArch is not empty then
       builderSetTargetArch tArch
    end if
-   
+
    if tEngineDir is not empty then
       builderSetEngineDir tEngineDir
    end if
@@ -139,43 +139,43 @@ on startup
    if tPrivateDir is not empty then
       builderSetPrivateDir tPrivateDir
    end if
-   
+
    if tOutputDir is not empty then
       builderSetOutputDir tOutputDir
    end if
-   
+
    if tWorkDir is not empty then
       builderSetWorkDir tWorkDir
    end if
-   
+
    if tDocsDir is not empty then
       builderSetDocsDir tDocsDir
    end if
-   
+
    if tBuiltDocsDir is not empty then
       builderSetBuiltDocsDir tBuiltDocsDir
    end if
-   
+
    builderBuild tStage, the keys of tPlatforms, tEdition, tBuild
-   
+
    quit 0
 end startup
 
 command __loadExternal pExternal
    set the itemdelimiter to slash
-   
+
    if the platform is "MacOS" then
       set the externals of the templateStack to item 1 to -4 of specialFolderPath("engine") & slash & pExternal & ".bundle"
    else if the platform is "linux" then
       set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".so"
    end if
-   
+
    create stack pExternal && "External"
    start using it
    if the externalCommands of it is empty then
       __builderLog "error", "Cannot load external" && pExternal
    end if
-end __loadExternal 
+end __loadExternal
 
 command __builderLog pType, pMessage
    local tLine
@@ -188,9 +188,9 @@ command __builderLog pType, pMessage
    if pType is "warning" and sWarnAsError then
       put "error" into pType
    end if
-   
+
    put toUpper(char 1 of pType) into char 1 of pType
-   
+
    repeat for each line tLine in pMessage
       write ("[" && the internet date && "]" && ":" && pType && ":" && tLine & return) to stderr
    end repeat
