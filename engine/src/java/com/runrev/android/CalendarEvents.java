@@ -54,7 +54,7 @@ Log.i("revandroid", "CT showCalendarEvent: " + p_calendar_event_id);
 Log.i("revandroid", "CT createCalendarEvent");
         Intent t_create_intent = new Intent(Intent.ACTION_EDIT);  
         t_create_intent.setType("vnd.android.cursor.item/event");
-        m_activity.startActivityForResult(t_create_intent, CREATE_CALENDAR_RESULT);
+        m_engine.startActivityForResult(t_create_intent, CREATE_CALENDAR_RESULT);
     }
     
     public void updateCalendarEvent(String p_new_calendar_event_data)

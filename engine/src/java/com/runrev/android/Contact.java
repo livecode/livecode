@@ -186,21 +186,21 @@ public class Contact
     {
         int t_contact_id = 0;
         Intent t_pick_intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-        m_activity.startActivityForResult(t_pick_intent, PICK_CONTACT_RESULT);
+        m_engine.startActivityForResult(t_pick_intent, PICK_CONTACT_RESULT);
     }
     
     public void showContact(int p_contact_id)
     {
         int t_contact_id = 0;
         Intent t_view_intent = new Intent(Intent.ACTION_VIEW, ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, p_contact_id));
-        m_activity.startActivityForResult(t_view_intent, SHOW_CONTACT_RESULT);
+        m_engine.startActivityForResult(t_view_intent, SHOW_CONTACT_RESULT);
     }
     
     public void createContact()
     {
         int t_contact_id = 0;
         Intent t_create_intent = new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI);
-        m_activity.startActivityForResult(t_create_intent, CREATE_CONTACT_RESULT);
+        m_engine.startActivityForResult(t_create_intent, CREATE_CONTACT_RESULT);
     }
     
 	private ContentValues valuesForCategory(Map p_contact, ContactCategory p_category)
@@ -481,7 +481,7 @@ public class Contact
 		}
 		
         // Launch the intent
-        m_activity.startActivityForResult(t_update_intent, CREATE_CONTACT_RESULT);
+        m_engine.startActivityForResult(t_update_intent, CREATE_CONTACT_RESULT);
 	}
 
 	private void addCursorDataToContact(Map p_contact, Cursor p_cursor, List<Pair<String, String>> p_properties)

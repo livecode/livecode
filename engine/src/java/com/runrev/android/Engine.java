@@ -96,11 +96,11 @@ public class Engine extends View implements EngineApi
     private Alert m_beep_vibrate_module;
     private Contact m_contact_module;
     private CalendarEvents m_calendar_module;
-    
+
     private OpenGLView m_opengl_view;
 	private boolean m_disabling_opengl;
     private boolean m_enabling_opengl;
-    
+
 	private BitmapView m_bitmap_view;
 
 	private File m_temp_image_file;
@@ -123,21 +123,24 @@ public class Engine extends View implements EngineApi
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
-    
+
     // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
     private Collator m_collator;
-    
+
     // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
     private X509TrustManager m_trust_manager;
     private String m_last_certificate_verification_error;
-	
+
 	private boolean m_new_intent;
+
+	private int m_activity_result_code;
+	private int m_current_activity_result_code;
 
 	private int m_photo_width, m_photo_height;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-	public Engine(Context p_context)
+	public Engine(Context p_context, FrameLayout p_layout, int p_activity_result_code)
 	{
 		super(p_context);
 
@@ -172,14 +175,14 @@ public class Engine extends View implements EngineApi
         m_busy_indicator_module = new BusyIndicator (this);
         m_text_messaging_module = new TextMessaging (this);
 		m_beep_vibrate_module = new Alert (this);
-        m_contact_module = new Contact (this, ((LiveCodeActivity)getContext()));
-        m_calendar_module = new CalendarEvents (this, ((LiveCodeActivity)getContext()));
-        m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
+        m_contact_module = new Contact (this, ((Activity)getContext()));
+        m_calendar_module = new CalendarEvents (this, ((Activity)getContext()));
+        m_native_control_module = new NativeControlModule(this, p_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
 		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
-        
+
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
         PowerManager t_power_manager = (PowerManager) p_context.getSystemService(p_context.POWER_SERVICE);
         m_wake_lock = t_power_manager.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG);
@@ -211,22 +214,25 @@ public class Engine extends View implements EngineApi
 		m_opengl_view = null;
         m_disabling_opengl = false;
         m_enabling_opengl = false;
-        
+
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
-        
+
         // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
         m_collator = Collator.getInstance(Locale.getDefault());
-		
+
         // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
         m_trust_manager = null;
         m_last_certificate_verification_error = null;
-        
+
 		// MW-2013-10-09: [[ Bug 11266 ]] Turn off keep-alive connections to
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
 		System.setProperty("http.keepAlive", "false");
-		
+
+		m_activity_result_code = p_activity_result_code;
+		m_current_activity_result_code = -1;
+
 		m_new_intent = false;
 
 		m_photo_width = 0;
@@ -245,7 +251,7 @@ public class Engine extends View implements EngineApi
             }
         });
     }
-	
+
 	public void nativeNotify(int p_callback, int p_context)
 	{
 		final int t_callback = p_callback;
@@ -271,7 +277,7 @@ public class Engine extends View implements EngineApi
 	{
 		((Activity)getContext()).runOnUiThread(p_runnable);
 	}
-	
+
 ////////////////////////////////////////////////////////////////////////////////
 
 	public void showSplashScreen()
@@ -319,13 +325,13 @@ public class Engine extends View implements EngineApi
 	{
 		return getContext() . getApplicationInfo() . nativeLibraryDir;
 	}
-	
+
 	public void finishActivity()
 	{
         // MM-2012-03-19: [[ Bug 10104 ]] Stop tracking any sensors on shutdown - not doing so prevents a restart for some reason.
         if (m_sensor_module != null)
             m_sensor_module.finish();
-		((LiveCodeActivity)getContext()).finish();
+		((Activity)getContext()).finish();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,27 +440,27 @@ public class Engine extends View implements EngineApi
 	{
 		if ((p_orientation == 1 || p_orientation == 2) && Build.VERSION.SDK_INT < 9) // Build.VERSION_CODES.GINGERBREAD
 			return;
-        
+
         // MM-2014-03-25: [[ Bug 11708 ]] Moved call to update orientation (from onScreenOrientationChanged).
         //  This way we only flag orientation changed if the we've set it in the activity (i.e. or app has actually rotated).
         //  Prevents changes in device orientation during lock screen confusing things.
         // IM-2013-11-15: [[ Bug 10485 ]] Record the change in orientation
         updateOrientation(p_orientation);
-        
+
 		((LiveCodeActivity)getContext()).setRequestedOrientation(s_orientation_map[p_orientation]);
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 	protected CharSequence m_composing_text;
-	
+
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs)
     {
 		Log.i(TAG, "onCreateInputConnection()");
 		if (!m_text_editor_visible)
 			return null;
-		
+
 		m_composing_text = null;
         InputConnection t_connection = new BaseInputConnection(this, false) {
 			void handleKey(int keyCode, int charCode)
@@ -479,8 +485,8 @@ public class Engine extends View implements EngineApi
 						case KeyEvent.KEYCODE_DPAD_DOWN:
 							keyCode = 0xff54;
 							break;
-							
-							
+
+
 						default:
 					}
 				}
@@ -494,14 +500,14 @@ public class Engine extends View implements EngineApi
 				Log.i(TAG, "doing keypress for char " + charCode);
 				doKeyPress(0, charCode, keyCode);
 			}
-			
+
             @Override
             public boolean sendKeyEvent(KeyEvent key)
             {
-                
+
 				int t_key_code = key.getKeyCode();
 				int t_char_code = key.getUnicodeChar();
-                    
+
                 if (key.getAction() == KeyEvent.ACTION_DOWN)
 					handleKey(t_key_code, t_char_code);
 				else if (key.getAction() == KeyEvent.ACTION_MULTIPLE)
@@ -523,13 +529,13 @@ public class Engine extends View implements EngineApi
 							handleKey(t_key_code, t_char_code);
 					}
 				}
-                
+
 				if (m_wake_on_event)
 					doProcess(false);
-				
+
 				return true;
             }
-			
+
 			// IM-2013-02-25: [[ BZ 10684 ]] - updated to show text changes in the field
 			// as software keyboards modify the composing text.
 			void updateComposingText(CharSequence p_new)
@@ -539,12 +545,12 @@ public class Engine extends View implements EngineApi
 				int t_current_length = 0;
 				int t_new_length = 0;
 				int t_max_length = 0;
-				
+
 				if (m_composing_text != null)
 					t_current_length = m_composing_text.length();
 				if (p_new != null)
 					t_new_length = p_new.length();
-				
+
 				t_max_length = Math.min(t_current_length, t_new_length);
 				for (int i = 0; i < t_max_length; i++)
 				{
@@ -552,20 +558,20 @@ public class Engine extends View implements EngineApi
 						break;
 					t_match_length += 1;
 				}
-				
+
 				// send backspaces
 				for (int i = 0; i < t_current_length - t_match_length; i++)
 					handleKey(KeyEvent.KEYCODE_DEL, 0);
 				// send new text
 				for (int i = t_match_length; i < t_new_length; i++)
 					handleKey(KeyEvent.KEYCODE_UNKNOWN, p_new.charAt(i));
-				
+
 				m_composing_text = p_new;
-				
+
 				if (m_wake_on_event)
 					doProcess(false);
 			}
-			
+
 			// override input connection methods to catch changes to the composing text
 			@Override
 			public boolean commitText(CharSequence text, int newCursorPosition)
@@ -589,29 +595,29 @@ public class Engine extends View implements EngineApi
 				return super.setComposingText(text, newCursorPosition);
 			}
         };
-        
+
 		int t_type = getInputType(false);
-		
+
         outAttrs.actionLabel = null;
 		outAttrs.inputType = t_type;
         outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
-        
+
         return t_connection;
     }
-    
+
     public void showKeyboard()
     {
         if (!m_text_editor_visible)
             return;
 
         requestFocus();
-        
+
         InputMethodManager imm;
         imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		if (imm != null)
 			imm.restartInput(this);
-		
+
 		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
         imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
 	}
@@ -621,10 +627,10 @@ public class Engine extends View implements EngineApi
         // Hide the IME
         InputMethodManager imm;
         imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		
+
 		if (imm != null)
 			imm.restartInput(this);
-		
+
         imm.hideSoftInputFromWindow(getWindowToken(), 0);
 	}
 
@@ -639,16 +645,16 @@ public class Engine extends View implements EngineApi
 	public void setTextInputVisible(boolean p_visible)
 	{
 		m_text_editor_visible = p_visible;
-		
+
 		if (!s_running)
 			return;
-		
+
 		if (p_visible)
 			showKeyboard();
 		else
 			hideKeyboard();
 	}
-	
+
 	public void setTextInputMode(int p_mode)
 	{
 		// 0 is none
@@ -657,20 +663,20 @@ public class Engine extends View implements EngineApi
 		// 3 is decimal
 		// 4 is phone
 		// 5 is email
-		
+
 		boolean t_reset = s_running && m_text_editor_visible && p_mode != m_text_editor_mode;
-		
+
 		m_text_editor_mode = p_mode;
-		
+
 		if (t_reset)
 			resetKeyboard();
 	}
-	
+
 	public static final int TYPE_NUMBER_VARIATION_PASSWORD = 16;
 	public int getInputType(boolean p_password)
 	{
 		int t_type;
-		
+
 		int t_mode = m_text_editor_mode;
 		// the phone class does not support a password variant, so we switch this for one of the number types
 		if (p_password && t_mode == 4)
@@ -679,7 +685,7 @@ public class Engine extends View implements EngineApi
 		// we switch to the default text input type
 		if (p_password && Build.VERSION.SDK_INT < 11 && (t_mode == 2 || t_mode == 3))
 			t_mode = 1;
-		
+
 		switch(t_mode)
 		{
 			default:
@@ -707,13 +713,13 @@ public class Engine extends View implements EngineApi
 					t_type |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
 				break;
 		}
-		
+
 		return t_type;
 	}
-    
+
 	public void configureTextInput(int p_mode)
 	{
-     
+
 		m_text_editor_mode = p_mode;
 
 		if (!s_running)
@@ -982,54 +988,54 @@ public class Engine extends View implements EngineApi
 ////////////////////////////////////////////////////////////////////////////////
 
 	// Native layer view functionality
-	
+
 	Object getNativeLayerContainer()
 	{
 		if (m_view_layout == null)
 		{
 			FrameLayout t_main_view;
 			t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
-			
+
 			m_view_layout = new RelativeLayout(getContext());
 			t_main_view.addView(m_view_layout, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 			t_main_view.bringChildToFront(m_view_layout);
 		}
-		
+
 		return m_view_layout;
 	}
-	
+
 	Object createNativeLayerContainer()
 	{
 		return new RelativeLayout(getContext());
 	}
-	
+
 	// insert the view into the container, layered below p_view_above if not null.
 	void addNativeViewToContainer(Object p_view, Object p_view_above, Object p_container)
 	{
 		ViewGroup t_container;
 		t_container = (ViewGroup)p_container;
-		
+
 		int t_index;
 		if (p_view_above != null)
 			t_index = t_container.indexOfChild((View)p_view_above);
 		else
 			t_index = t_container.getChildCount();
-		
+
 		t_container.addView((View)p_view, t_index, new RelativeLayout.LayoutParams(0, 0));
 	}
-	
+
 	void removeNativeViewFromContainer(Object p_view)
 	{
 		// Remove view from its parent
 		View t_view;
 		t_view = (View)p_view;
-		
+
 		ViewGroup t_parent;
 		t_parent = (ViewGroup)t_view.getParent();
 		if (t_parent != null)
 			t_parent.removeView(t_view);
 	}
-	
+
 	void setNativeViewRect(Object p_view, int left, int top, int width, int height)
 	{
 		RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(width, height);
@@ -1037,14 +1043,14 @@ public class Engine extends View implements EngineApi
 		t_layout.topMargin = top;
 		t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-		
+
 		View t_view = (View)p_view;
-		
+
 		t_view.setLayoutParams(t_layout);
 	}
-	
+
     // native control functionality
-	
+
     void addNativeControl(Object p_control)
     {
         m_native_control_module.addControl(p_control);
@@ -1059,7 +1065,7 @@ public class Engine extends View implements EngineApi
 	{
 		return m_native_control_module.createControl(p_class_name);
 	}
-    
+
     Object createBrowserControl()
     {
         return m_native_control_module.createControl("com.runrev.android.nativecontrol.BrowserControl");
@@ -1069,12 +1075,12 @@ public class Engine extends View implements EngineApi
     {
         return m_native_control_module.createControl("com.runrev.android.nativecontrol.ScrollerControl");
     }
-    
+
     Object createPlayerControl()
     {
         return m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
     }
-    
+
     Object createInputControl()
     {
         return m_native_control_module.createControl("com.runrev.android.nativecontrol.InputControl");
@@ -1156,14 +1162,14 @@ public class Engine extends View implements EngineApi
         if (m_wake_on_event)
             doProcess(false);
     }
-    
+
     public void onAskPermissionDone(boolean p_granted)
     {
         doAskPermissionDone(p_granted);
     }
 
 ////////////////////////////////////////////////////////////////////////////////
-	
+
 	// Return a bitmap snapshot of the specified region of the root view
 	public Object getSnapshotBitmapAtSize(int x, int y, int width, int height, int sizeWidth, int sizeHeight)
 	{
@@ -1171,12 +1177,12 @@ public class Engine extends View implements EngineApi
 		Canvas t_canvas = new Canvas(t_bitmap);
 		t_canvas.scale((float)sizeWidth / (float)width, (float)sizeHeight / (float)height);
 		t_canvas.translate((float)-x, (float)-y);
-		
+
 		getActivity().getWindow().getDecorView().getRootView().draw(t_canvas);
-		
+
 		return t_bitmap;
 	}
-	
+
 ////////////////////////////////////////////////////////////////////////////////
 
 	public String getSystemVersion()
@@ -1209,10 +1215,10 @@ public class Engine extends View implements EngineApi
 	{
 		DisplayMetrics t_metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(t_metrics);
-		
+
 		return new Rect(0, 0, t_metrics.widthPixels, t_metrics.heightPixels);
 	}
-	
+
 	public String getViewportAsString()
 	{
 		return rectToString(getViewport());
@@ -1231,15 +1237,15 @@ public class Engine extends View implements EngineApi
 	{
 		return rectToString(getEffectiveWorkarea());
 	}
-	
+
 	private boolean m_know_portrait_size = false;
 	private boolean m_know_landscape_size = false;
 	private boolean m_know_statusbar_size = false;
-	
+
 	private Rect m_portrait_rect;
 	private Rect m_landscape_rect;
 	private int m_statusbar_size;
-	
+
 	// IM-2013-11-15: [[ Bug 10485 ]] Return the known work area, updating with new values
 	// if requested.
 	private Rect getWorkarea(boolean p_update, int p_new_width, int p_new_height)
@@ -1249,20 +1255,20 @@ public class Engine extends View implements EngineApi
 		// based on the total screen height being reduced by the same amount in either orientation.
 		Rect t_working_rect;
 		t_working_rect = null;
-		
+
 		Rect t_viewport;
 		t_viewport = getViewport();
-		
+
 		boolean t_portrait = t_viewport.height() > t_viewport.width();
 
 		int[] t_origin = new int[2];
 		getLocationOnScreen(t_origin);
-		
+
 		// We have new values and the keyboard isn't showing so update any sizes we don't already know
 		if (p_update && !m_keyboard_visible)
 		{
 			t_working_rect = new Rect(t_origin[0], t_origin[1], t_origin[0] + p_new_width, t_origin[1] + p_new_height);
-			
+
 			if (t_portrait && !m_know_portrait_size)
 			{
 				m_portrait_rect = t_working_rect;
@@ -1273,7 +1279,7 @@ public class Engine extends View implements EngineApi
 				m_landscape_rect = t_working_rect;
 				m_know_landscape_size = true;
 			}
-			
+
 			if (!m_know_statusbar_size)
 			{
 				m_statusbar_size = t_viewport.height() - p_new_height;
@@ -1287,7 +1293,7 @@ public class Engine extends View implements EngineApi
 			else if (!t_portrait && m_know_landscape_size)
 				t_working_rect = m_landscape_rect;
 		}
-		
+
 		// If we don't have a known size for the current orientation, compute by subtracting
 		// the height of the screen furniture from the viewport rect.
 		if (t_working_rect == null)
@@ -1297,15 +1303,15 @@ public class Engine extends View implements EngineApi
 				t_working_rect.bottom -= m_statusbar_size;
 			t_working_rect.offsetTo(t_origin[0], t_origin[1]);
 		}
-		
+
 		return t_working_rect;
 	}
-	
+
 	public Rect getWorkarea()
 	{
 		return getWorkarea(false, 0, 0);
 	}
-	
+
 	public String getWorkareaAsString()
 	{
 		return rectToString(getWorkarea());
@@ -1395,58 +1401,58 @@ public class Engine extends View implements EngineApi
 
 	private boolean m_keyboard_sizechange = false;
 	private boolean m_orientation_sizechange = false;
-	
+
 	private boolean m_keyboard_visible = false;
-	
+
 	void updateKeyboardVisible(boolean p_visible)
 	{
 		if (p_visible == m_keyboard_visible)
 			return;
-		
+
 		// Log.i(TAG, "updateKeyboardVisible(" + p_visible + ")");
-		
+
 		m_keyboard_visible = p_visible;
-		
+
 		// IM-2013-11-15: [[ Bug 10485 ]] Notify engine when keyboard visiblity changes
 		if (p_visible)
 			doKeyboardShown(0);
 		else
 			doKeyboardHidden();
-		
+
 		m_keyboard_sizechange = true;
 	}
-	
+
 	void updateOrientation(int p_orientation)
 	{
 		// Log.i(TAG, "updateOrientation(" + p_orientation + ")");
-		
+
 		m_orientation_sizechange = true;
 	}
-	
+
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh)
 	{
 		// Log.i(TAG, "onSizeChanged({" + w + "x" + h + "}, {" + oldw + ", " + oldh + "})");
-		
+
 		Rect t_rect;
 		t_rect = null;
-		
+
 		if ((oldw == 0 && oldh == 0) || m_orientation_sizechange)
 			t_rect = getWorkarea(true, w, h);
-		
+
 		m_keyboard_sizechange = m_orientation_sizechange = false;
-		
+
 		if (t_rect == null)
 			return;
-		
+
 		m_bitmap_view . resizeBitmap(t_rect.width(), t_rect.height());
-		
+
 		// pass view location
 		int[] t_origin = new int[2];
 		getLocationOnScreen(t_origin);
-		
+
 		doReconfigure(t_origin[0], t_origin[1], t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
-		
+
 		// Make sure we trigger handling
 		if (m_wake_on_event)
 			doProcess(false);
@@ -1459,7 +1465,7 @@ public class Engine extends View implements EngineApi
 										 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
 																	  FrameLayout.LayoutParams.MATCH_PARENT));
 	}
-	
+
 	public void invalidateBitmap(int l, int t, int r, int b)
 	{
 		if (m_bitmap_view != null && m_bitmap_view.getVisibility() == View.VISIBLE)
@@ -1557,7 +1563,7 @@ public class Engine extends View implements EngineApi
 	{
         m_network_module.setURLTimeout(p_timeout);
 	}
-	
+
 	public void setURLSSLVerification(boolean p_enabled)
 	{
 		m_network_module.setURLSSLVerification(p_enabled);
@@ -1645,7 +1651,7 @@ public class Engine extends View implements EngineApi
 			t_view_intent.setDataAndType(Uri.parse(p_url), t_type);
 		else
 			t_view_intent.setData(Uri.parse(p_url));
-		((LiveCodeActivity)getContext()).startActivityForResult(t_view_intent, LAUNCHURL_RESULT);
+		startActivityForResult(t_view_intent, LAUNCHURL_RESULT);
 	}
 
 	public void onLaunchUrlResult(int resultCode, Intent data)
@@ -1738,7 +1744,7 @@ public class Engine extends View implements EngineApi
 			stopVideo();
 			return true;
 		}
-        
+
         boolean t_success = true;
 
         m_video_control = (VideoControl)m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
@@ -1746,7 +1752,7 @@ public class Engine extends View implements EngineApi
 
 		Rect t_workarea = getWorkarea();
         m_video_control.setRect(0, 0, t_workarea.right - t_workarea.left, t_workarea.bottom - t_workarea.top);
-        
+
         if (p_is_url)
             t_success = m_video_control.setUrl(p_path);
         else
@@ -1783,7 +1789,7 @@ public class Engine extends View implements EngineApi
                 {
                 }
             });
-			
+
 			m_video_control.setOnMovieTouchedListener(new VideoControl.OnMovieTouchedListener() {
 				@Override
 				public void onMovieTouched()
@@ -1814,7 +1820,7 @@ public class Engine extends View implements EngineApi
 			m_video_control.stop();
 
             m_native_control_module.removeControl(m_video_control);
-            
+
             m_video_control = null;
 		}
 		doMovieStopped();
@@ -1865,7 +1871,7 @@ public class Engine extends View implements EngineApi
             onAskPermissionDone(true);
         return true;
     }
-    
+
     public boolean checkHasPermissionGranted(String p_permission)
     {
         if (Build.VERSION.SDK_INT >= 23)
@@ -1874,8 +1880,8 @@ public class Engine extends View implements EngineApi
         }
         return true;
     }
-    
-    
+
+
     public boolean checkPermissionExists(String p_permission)
     {
         if (Build.VERSION.SDK_INT >= 23)
@@ -1883,7 +1889,7 @@ public class Engine extends View implements EngineApi
             List<PermissionGroupInfo> t_group_info_list = getAllPermissionGroups();
             if (t_group_info_list == null)
                 return false;
-            
+
             ArrayList<String> t_group_name_list = new ArrayList<String>();
             for (PermissionGroupInfo t_group_info : t_group_info_list)
             {
@@ -1891,11 +1897,11 @@ public class Engine extends View implements EngineApi
                 if (t_group_name != null)
                     t_group_name_list.add(t_group_name);
             }
-            
+
             for (String t_group_name : t_group_name_list)
             {
                 ArrayList<String> t_permission_name_list = getPermissionsForGroup(t_group_name);
-                
+
                 if (t_permission_name_list.contains(p_permission))
                     return true;
             }
@@ -1903,21 +1909,21 @@ public class Engine extends View implements EngineApi
         }
         return true;
     }
-    
+
     private List<PermissionGroupInfo> getAllPermissionGroups()
     {
         final PackageManager t_package_manager = getContext().getPackageManager();
         if (t_package_manager == null)
             return null;
-        
+
         return t_package_manager.getAllPermissionGroups(0);
     }
-    
+
     private ArrayList<String> getPermissionsForGroup(String p_group_name)
     {
         final PackageManager t_package_manager = getContext().getPackageManager();
         final ArrayList<String> t_permission_name_list = new ArrayList<String>();
-        
+
         try
         {
             List<PermissionInfo> t_permission_info_list =
@@ -1936,18 +1942,18 @@ public class Engine extends View implements EngineApi
             // e.printStackTrace();
             Log.d(TAG, "permissions not found for group = " + p_group_name);
         }
-        
+
         Collections.sort(t_permission_name_list);
-        
+
         return t_permission_name_list;
     }
-    
-    
+
+
     public void showPhotoPicker(String p_source, int p_width, int p_height)
     {
         m_photo_width = p_width;
         m_photo_height = p_height;
-        
+
         if (p_source.equals("camera"))
             showCamera();
         else if (p_source.equals("album"))
@@ -1958,24 +1964,24 @@ public class Engine extends View implements EngineApi
         {
             doPhotoPickerError("source not available");
         }
-        
+
     }
-    
+
     // sent by the callback
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
         onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }
-    
+
 	public void showCamera()
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case
 		// the file needs to be made world-writable
 
 		boolean t_have_temp_file = false;
-		
-		Activity t_activity = (LiveCodeActivity)getContext();
-		
+
+		Activity t_activity = (Activity)getContext();
+
 		try
 		{
 			// try external cache first
@@ -2004,7 +2010,7 @@ public class Engine extends View implements EngineApi
 				t_have_temp_file = false;
 			}
 		}
-		
+
 		if (!t_have_temp_file)
 		{
 			doPhotoPickerError("error: could not create temporary image file");
@@ -2019,14 +2025,14 @@ public class Engine extends View implements EngineApi
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
 		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
+		startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
 	public void showLibrary()
 	{
 		Intent t_get_content = new Intent(Intent.ACTION_GET_CONTENT);
 		t_get_content.setType("image/*");
-		((LiveCodeActivity)getContext()).startActivityForResult(t_get_content, IMAGE_RESULT);
+		startActivityForResult(t_get_content, IMAGE_RESULT);
 	}
 
 	private void onImageResult(int resultCode, Intent data)
@@ -2044,7 +2050,7 @@ public class Engine extends View implements EngineApi
 					t_photo_uri = Uri.fromFile(m_temp_image_file);
 				else
 					t_photo_uri = data.getData();
-				InputStream t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
+				InputStream t_in = ((Activity)getContext()).getContentResolver().openInputStream(t_photo_uri);
 				ByteArrayOutputStream t_out = new ByteArrayOutputStream();
 				byte[] t_buffer = new byte[4096];
 				int t_readcount;
@@ -2065,7 +2071,7 @@ public class Engine extends View implements EngineApi
 				}
 				else
 					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
-				
+
 				t_in.close();
 				t_out.close();
 			}
@@ -2123,7 +2129,7 @@ public class Engine extends View implements EngineApi
 
 	public void sendEmail()
 	{
-		((LiveCodeActivity)getContext()).startActivityForResult(m_email.createIntent(), EMAIL_RESULT);
+		startActivityForResult(m_email.createIntent(), EMAIL_RESULT);
 	}
 
 	private void onEmailResult(int resultCode, Intent data)
@@ -2165,14 +2171,30 @@ public class Engine extends View implements EngineApi
     private static final int GOOGLE_BILLING_RESULT = 10001;
     private static final int SAMSUNG_BILLING_RESULT = 100;
     private static final int SAMSUNG_ACCOUNT_CERTIFICATION_RESULT = 101;
-	
+
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Activity result code for activities
 	//   launched through 'runActivity' API.
 	private static final int RUN_ACTIVITY_RESULT = 14;
 
+	public void startActivityForResult(Intent p_intent, int p_result_code)
+	{
+		m_current_activity_result_code = p_result_code;
+		((Activity)getContext()).startActivityForResult(p_intent, m_activity_result_code);
+	}
+
 	public void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
-		switch (requestCode)
+		if (requestCode != m_activity_result_code)
+			return;
+
+		if (m_current_activity_result_code == -1)
+			return;
+
+		int t_actual_activity_result_code;
+		t_actual_activity_result_code = m_current_activity_result_code;
+		m_current_activity_result_code = -1;
+
+		switch (t_actual_activity_result_code)
 		{
 			case IMAGE_RESULT:
 				onImageResult(resultCode, data);
@@ -2226,12 +2248,12 @@ public class Engine extends View implements EngineApi
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
-    
+
     private boolean openGLViewEnabled()
     {
         return m_opengl_view != null && m_opengl_view.getParent() != null;
     }
-    
+
     private void ensureBitmapViewVisibility()
     {
         if (openGLViewEnabled())
@@ -2247,20 +2269,20 @@ public class Engine extends View implements EngineApi
 	public void enableOpenGLView()
 	{
         Log.i("revandroid", "enableOpenGLView");
-        
+
         if (m_disabling_opengl)
         {
             m_disabling_opengl = false;
         }
-        
+
         if (!m_enabling_opengl)
         {
             m_enabling_opengl = true;
-            
+
             post(new Runnable() {
                 public void run() {
                     Log.i("revandroid", "enableOpenGLView callback");
-                    
+
                     if (!m_disabling_opengl && m_enabling_opengl)
                     {
                         if (!openGLViewEnabled())
@@ -2270,7 +2292,7 @@ public class Engine extends View implements EngineApi
                             {
                                 m_opengl_view = new OpenGLView(getContext());
                             }
-                            
+
                             // Add the view to the hierarchy - we add at the bottom and bring to
                             // the front as soon as we've shown the first frame.
                             ((ViewGroup)getParent()).addView(m_opengl_view, 0,
@@ -2283,7 +2305,7 @@ public class Engine extends View implements EngineApi
                             m_opengl_view.doSurfaceChanged(m_opengl_view);
                         }
                     }
-                    
+
                     m_enabling_opengl = false;
                     ensureBitmapViewVisibility();
                 }
@@ -2294,16 +2316,16 @@ public class Engine extends View implements EngineApi
 	public void disableOpenGLView()
 	{
         Log.i("revandroid", "disableOpenGLView");
-        
+
         if (m_enabling_opengl)
         {
             m_enabling_opengl = false;
         }
-        
+
         if (!m_disabling_opengl)
         {
             m_disabling_opengl = true;
-            
+
             // Before removing the OpenGL mode, make sure we show the bitmap view.
             m_bitmap_view.setVisibility(View.VISIBLE);
 
@@ -2313,7 +2335,7 @@ public class Engine extends View implements EngineApi
             post(new Runnable() {
                 public void run() {
                     Log.i("revandroid", "disableOpenGLView callback");
-                    
+
                     if (!m_enabling_opengl && m_disabling_opengl)
                     {
                        if (openGLViewEnabled())
@@ -2322,14 +2344,14 @@ public class Engine extends View implements EngineApi
                             ((ViewGroup)m_opengl_view.getParent()).removeView(m_opengl_view);
                         }
                     }
-                    
+
                     m_disabling_opengl = false;
                     ensureBitmapViewVisibility();
                 }
             });
         }
 	}
-    
+
     // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
     public void hideBitmapViewInTime()
     {
@@ -2339,7 +2361,7 @@ public class Engine extends View implements EngineApi
             }
         });
     }
-    
+
 	public void showBitmapView()
 	{
         // force visible for visual effects
@@ -2351,9 +2373,9 @@ public class Engine extends View implements EngineApi
 	// in-app purchasing
 
 	public static BillingModule mBillingModule;
-    
+
     public static BillingProvider mBillingProvider;
-    
+
     public EnginePurchaseObserver mPurchaseObserver;
 
 	private void initBilling()
@@ -2361,7 +2383,7 @@ public class Engine extends View implements EngineApi
         mBillingModule = new BillingModule();
         if (mBillingModule == null)
             return;
-        
+
         mBillingProvider = mBillingModule.getBillingProvider();
         // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
         if (mBillingProvider == null)
@@ -2404,41 +2426,41 @@ public class Engine extends View implements EngineApi
 		Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
         return mBillingProvider.sendRequest(purchaseId, productId, developerPayload);
 	}
-    
+
     public boolean storeConsumePurchase(String productID)
     {
         if (mPurchaseObserver == null)
 			return false;
-        
+
         return mBillingProvider.consumePurchase(productID);
     }
-    
+
     public boolean storeRequestProductDetails(String productId)
     {
         return mBillingProvider.requestProductDetails(productId);
     }
-    
+
     public String storeReceiveProductDetails(String productId)
     {
         return mBillingProvider.receiveProductDetails(productId);
     }
-    
+
     public boolean storeMakePurchase(String productId, String quantity, String payload)
     {
         return mBillingProvider.makePurchase(productId, quantity, payload);
     }
-    
+
     public boolean storeProductSetType(String productId, String productType)
     {
         Log.d(TAG, "Setting type for productId" + productId + ", type is : " + productType);
         return mBillingProvider.productSetType(productId, productType);
     }
-    
+
     public boolean storeSetPurchaseProperty(String productId, String propertyName, String propertyValue)
     {
         return mBillingProvider.setPurchaseProperty(productId, propertyName, propertyValue);
     }
-    
+
     public String storeGetPurchaseProperty(String productId, String propName)
     {
         return mBillingProvider.getPurchaseProperty(productId, propName);
@@ -2456,7 +2478,7 @@ public class Engine extends View implements EngineApi
     {
         return mBillingProvider.getPurchaseList();
     }
-    
+
 ////////
 
 	private class EnginePurchaseObserver extends PurchaseObserver
@@ -2474,7 +2496,7 @@ public class Engine extends View implements EngineApi
             final String tNotificationId = "";
             final String tProductId = productId;
             final String tOrderId = storeGetPurchaseProperty(productId, "orderId");
-            
+
             String tTimeString = storeGetPurchaseProperty(productId, "purchaseTime");
             long tTime = 0l;
             try
@@ -2483,14 +2505,14 @@ public class Engine extends View implements EngineApi
             }
             catch (NumberFormatException nfe)
             {
-                
+
             }
-            
+
             final long tPurchaseTime = tTime;
             final String tDeveloperPayload = storeGetPurchaseProperty(productId, "developerPayload");
             final String tSignedData = "";
             final String tSignature = storeGetPurchaseProperty(productId, "signature");
-            
+
             post(new Runnable() {
                 public void run() {
                     doPurchaseStateChanged(tVerified, tPurchaseState,
@@ -2501,7 +2523,7 @@ public class Engine extends View implements EngineApi
                 }
             });
         }
-        
+
         public void onProductDetailsReceived(String productId)
         {
             final String tProductId = productId;
@@ -2513,7 +2535,7 @@ public class Engine extends View implements EngineApi
                 }
             });
         }
-        
+
         public void onProductDetailsError(String productId, String error)
         {
             final String tProductId = productId;
@@ -2551,7 +2573,7 @@ public class Engine extends View implements EngineApi
     public void composeTextMessage(String p_recipients, String p_body)
 	{
         Intent t_intent = m_text_messaging_module.composeTextMessage(p_recipients, p_body);
-        ((LiveCodeActivity)getContext()).startActivityForResult(t_intent, TEXT_RESULT);
+        startActivityForResult(t_intent, TEXT_RESULT);
     }
 
     private void onTextResult(int resultCode, Intent data)
@@ -2598,21 +2620,21 @@ public class Engine extends View implements EngineApi
     ////////////////////////////////////////////////////////////////////////////////
 
     // processing contacts
-    
+
     public int pickContact ()
     {
         int t_result = 0;
         m_contact_module.pickContact();
         return t_result;
     }
-    
+
     public int showContact (int p_contact_id)
     {
         int t_result = 0;
         m_contact_module.showContact(p_contact_id);
         return t_result;
     }
-    
+
     public int createContact ()
     {
         int t_result = 0;
@@ -2641,13 +2663,13 @@ public class Engine extends View implements EngineApi
 		Log.i(TAG, "ENG addContact");
 		return m_contact_module.addContact(p_contact);
 	}
-    
+
     public void findContact(String p_contact_name)
     {
         Log.i("revandroid", "ENG findContact - name: " + p_contact_name);
         m_contact_module.findContact (p_contact_name);
-    }   
-    
+    }
+
     private void onPickContactResult(int resultCode, Intent data)
 	{
         Log.i("revandroid", "onPickContact Called");
@@ -2658,13 +2680,13 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "pickContact Okay1 : " + t_selected_contact);                
+                Log.i("revandroid", "pickContact Okay1 : " + t_selected_contact);
             }
 			doPickContactDone(t_selected_contact);
 		}
@@ -2678,7 +2700,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
         }
 	}
-       
+
     private void onUpdateContactResult(int resultCode, Intent data)
 	{
         Log.i("revandroid", "onUpdateContact Called");
@@ -2689,13 +2711,13 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "updateContact Okay1 : " + t_selected_contact);                
+                Log.i("revandroid", "updateContact Okay1 : " + t_selected_contact);
             }
 			doUpdateContactDone(t_selected_contact);
 		}
@@ -2720,13 +2742,13 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "createContact Okay1 : " + t_selected_contact);                
+                Log.i("revandroid", "createContact Okay1 : " + t_selected_contact);
             }
 			doCreateContactDone(t_selected_contact);
         }
@@ -2751,13 +2773,13 @@ public class Engine extends View implements EngineApi
             int t_selected_contact = 0;
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_contact = t_database_cursor.getInt(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "showContact Okay1 : " + t_selected_contact);                
+                Log.i("revandroid", "showContact Okay1 : " + t_selected_contact);
             }
 			doShowContactDone(t_selected_contact);
         }
@@ -2773,7 +2795,7 @@ public class Engine extends View implements EngineApi
 	}
 
     ////////////////////////////////////////////////////////////////////////////////
-    
+
     // TO BE EXTENDED FOR IPA LEVEL 14 ->
     public void createCalendarEvent ()
     {
@@ -2786,7 +2808,7 @@ public class Engine extends View implements EngineApi
         Log.i("revandroid", "updateCalendarEvent Called");
         m_calendar_module.updateCalendarEvent(p_calendar_event_id);
     }
-    
+
     private void onCreateCalendarEventResult(int resultCode, Intent data)
 	{
         Log.i("revandroid", "onCreateCalendarEvent Called with resultCode: " + resultCode);
@@ -2797,13 +2819,13 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "createCalendarEvent Okay1 : " + t_selected_calendar_event);                
+                Log.i("revandroid", "createCalendarEvent Okay1 : " + t_selected_calendar_event);
             }
 			doCreateCalendarEventDone(t_selected_calendar_event);
         }
@@ -2828,13 +2850,13 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "updateCalendarEvent Okay1 : " + t_selected_calendar_event);                
+                Log.i("revandroid", "updateCalendarEvent Okay1 : " + t_selected_calendar_event);
             }
 			doUpdateCalendarEventDone(t_selected_calendar_event);
 		}
@@ -2848,7 +2870,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
         }
 	}
-    
+
     private void onShowCalendarEventResult(int resultCode, Intent data)
 	{
         Log.i("revandroid", "onShowCalendarEvent Called");
@@ -2859,13 +2881,13 @@ public class Engine extends View implements EngineApi
             String t_selected_calendar_event = "";
             if (t_data != null)
             {
-                Cursor t_database_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_database_cursor = ((Activity)getContext()).getContentResolver().query(t_data, null, null, null, null);
                 if (t_database_cursor != null)
                 {
                     t_database_cursor.moveToFirst();
-                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID)); 
+                    t_selected_calendar_event = t_database_cursor.getString(t_database_cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 }
-                Log.i("revandroid", "showCalendarEvent Okay1 : " + t_selected_calendar_event);                
+                Log.i("revandroid", "showCalendarEvent Okay1 : " + t_selected_calendar_event);
             }
 			doShowCalendarEventDone(t_selected_calendar_event);
         }
@@ -2880,7 +2902,7 @@ public class Engine extends View implements EngineApi
         }
 	}
     // <- TO BE EXTENDED FOR IPA LEVEL 14
-    
+
     ////////////////////////////////////////////////////////////////////////////////
 
     public long createLocalNotification(String p_body, String p_action, String p_user_info, int p_seconds, boolean p_play_sound, int p_badge_value)
@@ -2937,22 +2959,22 @@ public class Engine extends View implements EngineApi
 	{
 		return m_nfc_module.isAvailable();
 	}
-	
+
 	public boolean isNFCEnabled()
 	{
 		return m_nfc_module.isEnabled();
 	}
-	
+
 	public void enableNFCDispatch()
 	{
 		m_nfc_module.setDispatchEnabled(true);
 	}
-	
+
 	public void disableNFCDispatch()
 	{
 		m_nfc_module.setDispatchEnabled(false);
 	}
-	
+
 ////////
 
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
@@ -2995,99 +3017,99 @@ public class Engine extends View implements EngineApi
 
 		if (p_class.isArray() && isValueRefCompatible(p_class.getComponentType()))
 			return true;
-			
+
 		return false;
 	}
-	
+
 	private static boolean isValueRefConvertable(Class p_class)
 	{
 		if (Bundle.class == p_class)
 			return true;
-		
+
 		if (p_class.isArray() && isValueRefConvertable(p_class.getComponentType()))
 			return true;
-		
+
 		return false;
 	}
-	
+
 	private static Object makeValueRefCompatible(Object p_object)
 	{
 		// Object types we can pass through safely
 		if (isValueRefCompatible(p_object.getClass()))
 			return p_object;
-			
+
 		// try converting bundle
 		else if (p_object instanceof Bundle)
 			return bundleToMap((Bundle)p_object);
-		
+
 		else if (p_object.getClass().isArray() && isValueRefConvertable(p_object.getClass()))
 		{
 			Object[] t_input_array = (Object[])p_object;
 			Object[] t_converted_array = new Object[t_input_array.length];
-			
+
 			for (int i = 0; i < t_input_array.length; i++)
 				t_converted_array[i] = makeValueRefCompatible(t_input_array[i]);
-			
+
 			return t_converted_array;
 		}
-		
+
 		// fallback to using toString() method
 		return p_object.toString();
 	}
-	
+
 	private static Map<String, Object> bundleToMap(Bundle p_bundle)
 	{
 		Map<String, Object> t_map;
 		t_map = new HashMap<String, Object>();
-		
+
 		for (String t_key : p_bundle.keySet())
 		{
 			Object t_value;
 			t_value = p_bundle.get(t_key);
-			
+
 			if (t_value != null)
 			{
 				Object t_converted;
 				t_converted = makeValueRefCompatible(t_value);
-			
+
 				if (t_converted != null)
 					t_map.put(t_key, t_converted);
 				else
 					Log.i(TAG, "conversion failed for bundle key " + t_key);
 			}
 		}
-		
+
 		return t_map;
 	}
-	
+
 	// IM-2015-07-08: [[ LaunchData ]] Retreive info from launch Intent and return as a Map object.
 	public Map<String, Object> getLaunchData()
 	{
 		Intent t_intent = ((Activity)getContext()).getIntent();
-		
+
 		// For now we're just storing strings, though this could change if we include the 'extra' data
 		Map<String, Object> t_data;
 		t_data = new HashMap<String, Object>();
-		
+
 		String t_value;
-		
+
 		if (t_intent != null)
 		{
 			t_value = t_intent.getAction();
 			if (t_value != null)
 				t_data.put("action", t_value);
-			
+
 			t_value = t_intent.getDataString();
 			if (t_value != null)
 				t_data.put("data", t_value);
-			
+
 			t_value = t_intent.getType();
 			if (t_value != null)
 				t_data.put("type", t_value);
-			
+
 			Set<String> t_categories;
 			t_categories = t_intent.getCategories();
-			
+
 			if (t_categories != null && !t_categories.isEmpty())
 			{
 				// Store categories as a string of comma-separated values
@@ -3101,21 +3123,21 @@ public class Engine extends View implements EngineApi
 					t_category_list.append(t_category);
 					t_first = false;
 				}
-				
+
 				t_data.put("categories", t_category_list.toString());
 			}
-			
+
 			// IM-2015-08-04: [[ Bug 15684 ]] Retrieve Intent extra data.
 			Bundle t_extras;
 			t_extras = t_intent.getExtras();
-			
+
 			if (t_extras != null && !t_extras.isEmpty())
 				t_data.put("extras", bundleToMap(t_extras));
 		}
-		
+
 		return t_data;
 	}
-	
+
 ////////////////////////////////////////////////////////////////////////////////
 
     // called from the engine to signal that the engine has launched
@@ -3141,7 +3163,7 @@ public class Engine extends View implements EngineApi
 	{
 		if (m_text_editor_visible)
 			hideKeyboard();
-		
+
 		s_running = false;
 
 		m_shake_listener.onPause();
@@ -3155,10 +3177,10 @@ public class Engine extends View implements EngineApi
 
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
-		
+
 		if (m_nfc_module != null)
 			m_nfc_module.onPause();
-		
+
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -3178,10 +3200,10 @@ public class Engine extends View implements EngineApi
 
         if (m_sound_module != null)
             m_sound_module.onResume();
-		
+
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
-		
+
 		if (m_nfc_module != null)
 			m_nfc_module.onResume();
 
@@ -3194,9 +3216,9 @@ public class Engine extends View implements EngineApi
 		{
 			if (m_nfc_module != null)
 				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
-				
+
 			doLaunchDataChanged();
-			
+
 			String t_launch_url;
 			t_launch_url = getLaunchUri();
 			if (t_launch_url != null)
@@ -3208,10 +3230,10 @@ public class Engine extends View implements EngineApi
 		s_running = true;
 		if (m_text_editor_visible)
 			showKeyboard();
-		
+
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
-		
+
 		if (m_wake_on_event)
 			doProcess(false);
 	}
@@ -3280,10 +3302,10 @@ public class Engine extends View implements EngineApi
         {
             File t_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
             String t_filename;
-            
+
             // SN-2015-01-05: [[ Bug 11417 ]] Ensure that the folder exists.
             t_folder.mkdirs();
-            
+
             // The user did not supply a file name, so create one now
             // SN-2015-04-29: [[ Bug 15296 ]] From 7.0 onwards, t_file_name will
             //   not be nil, but empty
@@ -3297,19 +3319,19 @@ public class Engine extends View implements EngineApi
             {
                 t_filename = t_file_name + t_file_type;
             }
-            
+
             // SN-2015-01-05: [[ Bug 11417 ]] Let File create the file with the File returned
             //  by getExternalStoragePublicDirectory and t_file_type.
             t_file = new File(t_folder, t_filename);
-            
+
             FileOutputStream fs = null;
             try
             {
                 fs = new FileOutputStream(t_file);
                 fs.write(t_image_data,0,t_image_data.length);
-                
+
                 fs.close();
-                
+
                 // SN-2015-01-05 [[ Bug 11417 ]] Ask the Media Scanner to scan the newly created file.
                 Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 intent.setData(Uri.fromFile(t_file));
@@ -3332,7 +3354,7 @@ public class Engine extends View implements EngineApi
         Log.i("revandroid", "MIME type: " + p_media_types);
         t_media_pick_intent.setType (p_media_types);
         Intent t_chooser = Intent.createChooser (t_media_pick_intent, "");
-        ((LiveCodeActivity)getContext()).startActivityForResult (t_chooser,MEDIA_RESULT);
+        startActivityForResult (t_chooser,MEDIA_RESULT);
     }
 
     private void onMediaResult(int resultCode, Intent data)
@@ -3346,7 +3368,7 @@ public class Engine extends View implements EngineApi
                 Cursor t_cursor = null;
                 try
                 {
-                    t_cursor = ((LiveCodeActivity) getContext())
+                    t_cursor = ((Activity) getContext())
                         .getContentResolver()
                         .query(t_data, null, null, null, null);
                 }
@@ -3377,34 +3399,34 @@ public class Engine extends View implements EngineApi
     // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
     public int compareInternational(String left, String right)
     {
-        Log.i("revandroid", "compareInternational"); 
+        Log.i("revandroid", "compareInternational");
         return m_collator.compare(left, right);
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////////
-    
+
     public Object createTypefaceFromAsset(String path)
     {
         Log.i("revandroid", "createTypefaceFromAsset");
         return Typeface.createFromAsset(getContext().getAssets(),path);
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////////
-    
+
     private X509TrustManager getTrustManager()
     {
         if (m_trust_manager != null)
             return m_trust_manager;
-        
+
         try
         {
             TrustManagerFactory t_trust_manager_factory;
             t_trust_manager_factory = TrustManagerFactory . getInstance("X509");
             t_trust_manager_factory . init((KeyStore) null);
-            
+
             TrustManager[] t_trust_managers;
             t_trust_managers = t_trust_manager_factory . getTrustManagers();
-            
+
             if (t_trust_managers != null)
             {
                 for (TrustManager t_trust_manager : t_trust_managers)
@@ -3421,17 +3443,17 @@ public class Engine extends View implements EngineApi
         {
             m_trust_manager = null;
         }
-        
+
         return m_trust_manager;
     }
-    
+
     private X509Certificate[] certDataToX509CertChain(Object[] p_cert_chain)
     {
         X509Certificate[] t_cert_chain;
         try
         {
             t_cert_chain = new X509Certificate[p_cert_chain . length];
-            
+
             CertificateFactory t_cert_factory;
             t_cert_factory = CertificateFactory . getInstance("X.509");
 
@@ -3439,13 +3461,13 @@ public class Engine extends View implements EngineApi
             {
                 byte[] t_cert_data;
                 t_cert_data = (byte[]) p_cert_chain[i];
-                
+
                 InputStream t_input_stream;
                 t_input_stream = new ByteArrayInputStream(t_cert_data);
-                
+
                 Certificate t_cert;
                 t_cert = t_cert_factory . generateCertificate(t_input_stream);
-                
+
                 t_cert_chain[i] = (X509Certificate) t_cert;
             }
         }
@@ -3456,7 +3478,7 @@ public class Engine extends View implements EngineApi
 
         return t_cert_chain;
     }
-    
+
     private boolean hostNameMatchesCertificateDNSName(String p_host_name, String p_cert_host_name)
     {
         if (p_host_name == null || p_host_name . isEmpty() || p_cert_host_name == null || p_cert_host_name . isEmpty())
@@ -3464,26 +3486,26 @@ public class Engine extends View implements EngineApi
 
         p_host_name = p_host_name . toLowerCase();
         p_cert_host_name = p_cert_host_name . toLowerCase();
-        
+
         if (!p_cert_host_name . contains("*"))
             return p_host_name . equals(p_cert_host_name);
 
         if (p_cert_host_name . startsWith("*.") && p_host_name . regionMatches(0, p_cert_host_name, 2, p_cert_host_name . length() - 2))
             return true;
-        
+
         String t_cert_host_name_prefix;
         t_cert_host_name_prefix = p_cert_host_name . substring(0, p_cert_host_name . indexOf('*'));
         if (t_cert_host_name_prefix != null && !t_cert_host_name_prefix . isEmpty() && !p_host_name . startsWith(t_cert_host_name_prefix))
             return false;
-            
+
         String t_cert_host_name_suffix;
         t_cert_host_name_suffix = p_cert_host_name . substring(p_cert_host_name . indexOf('*') + 1);
         if (t_cert_host_name_suffix != null && !t_cert_host_name_suffix . isEmpty() && !p_host_name . endsWith(t_cert_host_name_suffix))
             return false;
-        
+
         return true;
     }
-    
+
     private boolean hostNameIsValidForCertificate(String p_host_name, X509Certificate p_certificate)
     {
         Collection t_subject_alt_names;
@@ -3495,7 +3517,7 @@ public class Engine extends View implements EngineApi
         {
             return false;
         }
-        
+
         if (t_subject_alt_names != null)
         {
             for (Object t_subject_alt_name : t_subject_alt_names)
@@ -3504,31 +3526,31 @@ public class Engine extends View implements EngineApi
                 t_entry = (List) t_subject_alt_name;
                 if (t_entry == null || t_entry . size() < 2)
                     continue;
-                
+
                 Integer t_alt_name_type;
                 t_alt_name_type = (Integer) t_entry . get(0);
                 if (t_alt_name_type == null || t_alt_name_type != 2 /* DNS NAME */)
                     continue;
-                
+
                 String t_alt_name;
                 t_alt_name = (String) t_entry . get(1);
                 if (t_alt_name == null)
                     continue;
-                
+
                 if (hostNameMatchesCertificateDNSName(p_host_name, t_alt_name))
                     return true;
             }
         }
-        
+
         return false;
     }
-    
+
     // MM-2015-06-11: [[ MobileSockets ]] Return true if the given certifcate chain should be trusted and matches the passed domain name.
     public boolean verifyCertificateChainIsTrusted(Object[] p_cert_data, String p_host_name)
     {
         boolean t_success;
         t_success = true;
-        
+
         X509Certificate[] t_cert_chain;
         t_cert_chain = null;
         if (t_success)
@@ -3536,7 +3558,7 @@ public class Engine extends View implements EngineApi
             t_cert_chain = certDataToX509CertChain(p_cert_data);
             t_success = t_cert_chain != null;
         }
-        
+
         X509TrustManager t_trust_manager;
         t_trust_manager = null;
         if (t_success)
@@ -3544,7 +3566,7 @@ public class Engine extends View implements EngineApi
             t_trust_manager = getTrustManager();
             t_success = t_trust_manager != null;
         }
-        
+
         if (t_success)
         {
             try
@@ -3557,13 +3579,13 @@ public class Engine extends View implements EngineApi
                 t_success = false;
             }
         }
-        
+
         if (t_success)
             t_success = hostNameIsValidForCertificate(p_host_name, t_cert_chain[0]);
-        
+
         return t_success;
     }
-    
+
     // MM-2015-06-11: [[ MobileSockets ]] Return the last certificate verifcation error (if any) and reset the error to null.
     public String getLastCertificateVerificationError()
     {
@@ -3572,23 +3594,23 @@ public class Engine extends View implements EngineApi
         m_last_certificate_verification_error = null;
         return t_error;
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////////
 
 	// EngineApi implementation
-	
+
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getActivity()' API method.
 	public Activity getActivity()
 	{
-		return (LiveCodeActivity)getContext();
+		return (Activity)getContext();
 	}
-	
+
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getContainer()' API method.
 	public ViewGroup getContainer()
 	{
 		return (ViewGroup)getParent();
 	}
-	
+
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'runActivity()' API method -
 	//   hooks into onActivityResult handler too.
 	private boolean m_pending_activity_running = false;
@@ -3603,31 +3625,31 @@ public class Engine extends View implements EngineApi
 			p_callback . handleActivityResult(Activity.RESULT_CANCELED, null);
 			return;
 		}
-		
+
 		// Mark an activity as running.
 		m_pending_activity_running = true;
-		
+
 		// Run the activity.
-		((LiveCodeActivity)getContext()) . startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
-		
+		startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
+
 		// Wait until the activity returns.
 		while(m_pending_activity_running)
 			doWait(60.0, false, true);
-		
+
 		// Take local copies of the instance vars (to stop hanging data).
 		Intent t_data;
 		int t_result_code;
 		t_data = m_pending_activity_data;
 		t_result_code = m_pending_activity_result_code;
-		
+
 		// Reset the instance vars (to stop hanging data and so that the callback
 		// can start another activity if it wants).
 		m_pending_activity_data = null;
 		m_pending_activity_result_code = 0;
-		
+
 		p_callback . handleActivityResult(t_result_code, t_data);
 	}
-	
+
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Called when an activity invoked using
 	//   'runActivity()' API method returns data.
 	private void onRunActivityResult(int p_result_code, Intent p_data)
@@ -3636,7 +3658,7 @@ public class Engine extends View implements EngineApi
 		m_pending_activity_data = p_data;
 		m_pending_activity_result_code = p_result_code;
 		m_pending_activity_running = false;
-		
+
 		// Make sure we signal a switch back to the script thread.
 		if (m_wake_on_event)
 			doProcess(false);
@@ -3649,11 +3671,11 @@ public class Engine extends View implements EngineApi
         public void onStart(Context context);
         public void onFinish(Context context);
     }
-    
+
     Context m_service_context = null;
     ArrayList<ServiceListener> m_running_services = null;
     ArrayList<ServiceListener> m_pending_services = null;
-    
+
     private int serviceListFind(ArrayList<ServiceListener> p_list, ServiceListener p_obj)
     {
         for(int i = 0; i < p_list.size(); i++)
@@ -3665,20 +3687,20 @@ public class Engine extends View implements EngineApi
         }
         return -1;
     }
-    
+
     public void startService(ServiceListener p_listener)
     {
         if (m_running_services == null)
         {
             m_pending_services = new ArrayList<ServiceListener>();
         }
-        
+
         m_pending_services.add(p_listener);
-        
+
         Intent t_service = new Intent(getContext(), getServiceClass());
         getContext().startService(t_service);
     }
-    
+
     public void stopService(ServiceListener p_listener)
     {
         if (serviceListFind(m_pending_services, p_listener) != -1)
@@ -3686,13 +3708,13 @@ public class Engine extends View implements EngineApi
             m_pending_services.remove(serviceListFind(m_pending_services, p_listener));
             return;
         }
-        
+
         if (serviceListFind(m_running_services, p_listener) != -1)
         {
             p_listener.onFinish(m_service_context);
             m_running_services.remove(serviceListFind(m_running_services, p_listener));
         }
-        
+
         if (m_pending_services.isEmpty() &&
             m_running_services.isEmpty())
         {
@@ -3700,7 +3722,7 @@ public class Engine extends View implements EngineApi
             getContext().stopService(t_service);
         }
     }
-    
+
     public int handleStartService(Context p_service_context, Intent p_intent, int p_flags, int p_start_id)
     {
         if (m_pending_services == null ||
@@ -3715,44 +3737,44 @@ public class Engine extends View implements EngineApi
             }
             return Service.START_STICKY;
         }
-        
+
         m_service_context = p_service_context;
-        
+
         ServiceListener t_listener = m_pending_services.get(0);
         m_pending_services.remove(0);
-        
+
         if (m_running_services == null)
         {
             m_running_services = new ArrayList<ServiceListener>();
         }
-        
+
         m_running_services.add(t_listener);
         t_listener.onStart(p_service_context);
-        
+
         return Service.START_STICKY;
     }
-    
+
     public void handleFinishService(Context p_service_context)
     {
         m_pending_services = null;
-        
+
         while(!m_running_services.isEmpty())
         {
             m_running_services.get(0).onFinish(p_service_context);
             m_running_services.remove(0);
         }
         m_running_services = null;
-        
+
         m_service_context = null;
     }
-    
+
     public Class getServiceClass()
     {
         return ((LiveCodeActivity)getContext()).getServiceClass();
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////////
-    
+
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback
@@ -3787,7 +3809,7 @@ public class Engine extends View implements EngineApi
 	public static native void doLowMemory();
 
 	public static native void doNativeNotify(int callback, int context);
-			 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 	// Our engine interface
@@ -3801,7 +3823,7 @@ public class Engine extends View implements EngineApi
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
 	//   used by runActivity() API.
 	public static native void doWait(double time, boolean dispatch, boolean anyevent);
-	
+
     // sensor handlers
     public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course);
     public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, double p_timestamp,
@@ -3853,7 +3875,7 @@ public class Engine extends View implements EngineApi
 
 	public static native void doMediaDone(String p_media_content);
 	public static native void doMediaCanceled();
-    
+
 	public static native void doPickContactDone(int p_contact_id);
 	public static native void doPickContactCanceled(int p_contact_id);
 	public static native void doShowContact(int p_contact_id);
