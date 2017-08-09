@@ -116,4 +116,15 @@ bool MCJavaArrayToArrayRef(JNIEnv *p_env, jobjectArray p_object, MCArrayRef& r_v
 bool MCJavaObjectFromValueRef(JNIEnv *p_env, MCValueRef p_value, jobject& r_object);
 bool MCJavaObjectToValueRef(JNIEnv *p_env, jobject p_object, MCValueRef &r_value);
 
+bool MCJavaByteToDataRef(JNIEnv *p_env, jobject p_object, MCDataRef& r_value);
+bool MCJavaByteFromDataRef(JNIEnv *p_env, MCDataRef p_value, jobject& r_object);
+bool MCJavaCharToStringRef(JNIEnv *p_env, jobject p_object, MCStringRef& r_value);
+bool MCJavaCharFromStringRef(JNIEnv *p_env, MCStringRef p_value, jobject& r_object);
+bool MCJavaNumberArrayToArrayRef(JNIEnv *p_env, jobject p_object, MCArrayRef& r_value);
+bool MCJavaNumberArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobject& r_object);
+bool MCJavaStringArrayToArrayRef(JNIEnv *p_env, jobject p_object, MCArrayRef& r_value);
+bool MCJavaStringArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobject& r_object);
+bool MCJavaByteArrayArrayToArrayRef(JNIEnv *p_env, jobject p_object, MCArrayRef& r_value);
+bool MCJavaByteArrayArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobject& r_object);
+
 #endif //__MBLANDROIDJAVA_H__
