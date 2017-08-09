@@ -213,6 +213,15 @@ bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, sk_sp<SkSha
             // Because it implements repeats and mirroring differently, we need to synthesize extra stops for it
             uindex_t t_count = self->ramp_length;
             uindex_t t_repeats = MCMax(1, self->repeats);
+
+			MCGFloat t_gradient_scale = 1.0;
+			if (self->wrap && self->mirror && self->function != kMCGGradientFunctionSweep)
+			{
+				// IM-2017-08-04: [[ Bug 20218 ]] For mirrored + wrapped gradients we generate the ramp
+				// forward & reversed, then scale the length of the gradient.
+				t_gradient_scale = 2.0 / t_repeats;
+				t_repeats = 2;
+			}
             uindex_t t_length = t_count * t_repeats;
             MCGFloat t_scale = MCGFloat(1)/t_repeats;
             MCAutoArray<SkColor> t_colors;
@@ -250,16 +259,16 @@ bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, sk_sp<SkSha
             {
                 case kMCGGradientFunctionLinear:
                 {
-                    // The end points are always (0,0) and (1,0)
-                    SkPoint t_points[2] = {{0,0}, {1,0}};
+                    // The end points are scaled from (0,0) and (1,0)
+                    SkPoint t_points[2] = {{0,0}, {t_gradient_scale,0}};
                     t_shader = SkGradientShader::MakeLinear(t_points, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
                     break;
                 }
 
                 case kMCGGradientFunctionRadial:
                 {
-                    // The gradient is always from (0,0) with a unit radius
-                    t_shader = SkGradientShader::MakeRadial({0,0}, 1, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
+                    // The gradient is always from (0,0) with a scaled unit radius
+                    t_shader = SkGradientShader::MakeRadial({0,0}, t_gradient_scale, t_colors.Ptr(), t_stops.Ptr(), t_length, t_tile_mode, 0, &self->transform);
                     break;
                 }
 
