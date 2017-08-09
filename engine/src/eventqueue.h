@@ -31,6 +31,8 @@ enum MCMousePressState
 bool MCEventQueueInitialize(void);
 void MCEventQueueFinalize(void);
 
+bool MCEventQueueIsEmpty(void);
+	
 bool MCEventQueueDispatch(void);
 
 void MCEventQueueFlush(MCStack *p_stack);
