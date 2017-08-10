@@ -65,7 +65,7 @@ function ulExtInitDriver
 end ulExtInitDriver
 
 command ulExtRemoveDriver
-   __ulExtXMLHTTPDetroyAll
+   __ulExtXMLHTTPDestroyAll
 end ulExtRemoveDriver
 
 command ulExtResetDriver
@@ -240,11 +240,11 @@ private function __ulExtXMLHTTPFromURL pURL
    return sRequestMap[pURL]
 end __ulExtXMLHTTPFromURL
 
-private command __ulExtXMLHTTPDetroyAll
+private command __ulExtXMLHTTPDestroyAll
    repeat for each element tRequest in sRequestMap
       __ulExtXMLHTTPDestroy tRequest
    end repeat
-end __ulExtXMLHTTPDetroyAll
+end __ulExtXMLHTTPDestroyAll
 
 private function __ulExtIsValidXMLHTTP pRequest
    return __ulExtCallJS("isValidRequest", pRequest)
@@ -435,7 +435,10 @@ private function __ulExtCallJS pFunction
       local tParam
       put param(tParamNo) into tParam
       if tParam is not a number and tParam is not among the words of "true false" then
-         replace quote with slash & quote in tParam
+         replace quote with backslash & quote in tParam
+         replace return with "\n" in tParam
+         replace cr with "\r" in tParam
+         replace backslash with "\\" in tParam
          put quote & tParam & quote into tParam
       end if
       if PARAMLIST is not empty then
