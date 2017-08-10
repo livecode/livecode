@@ -68,49 +68,13 @@
 						'dependencies':
 						[
 							'kernel.gyp:kernel-java',
+							'community-classes',
 						],
 						
 						'sources':
 						[
 							'src/mblandroidad.cpp',
 						],
-						
-						'actions':
-						[
-							{
-								'action_name': 'jar',
-								'message': 'JAR',
-						
-								'inputs':
-								[
-									# Depend on the Java source files directly to ensure correct updates
-									'<@(engine_aidl_source_files)',
-									'<@(engine_java_source_files)',
-								],
-					
-								'outputs':
-								[
-									'<(PRODUCT_DIR)/Classes-Community',
-								],
-					
-								'action':
-								[
-									'<(jar_path)',
-									'cf',
-									'<@(_outputs)',
-									'-C', '<(PRODUCT_DIR)/classes_livecode_community',
-									'.',
-								],
-							},
-						],
-						
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files': [ '<(PRODUCT_DIR)/Classes-Community' ],
-							},
-						},
 					},
 				],
 				[
@@ -131,6 +95,7 @@
 			'dependencies':
 			[
 				'kernel.gyp:kernel',
+				'community-classes',
 			],
 			
 			'includes':
@@ -174,35 +139,6 @@
 							'src/mblandroidad.cpp',
 						],
 						
-						'actions':
-						[
-							{
-								'action_name': 'jar',
-								'message': 'JAR',
-						
-								'inputs':
-								[
-									# Depend on the Java source files directly to ensure correct updates
-									'<@(engine_aidl_source_files)',
-									'<@(engine_java_source_files)',
-								],
-					
-								'outputs':
-								[
-									'<(PRODUCT_DIR)/Classes-Community',
-								],
-					
-								'action':
-								[
-									'<(jar_path)',
-									'cf',
-									'<@(_outputs)',
-									'-C', '<(PRODUCT_DIR)/classes_livecode_community',
-									'.',
-								],
-							},
-						],
-						
 						'all_dependent_settings':
 						{
 							'variables':
@@ -214,5 +150,63 @@
 				],
 			],
 		},
+	],
+	
+	'conditions':
+	[
+		[
+			'OS == "android"',
+			{
+				'includes':
+				[
+					'../config/android.gypi',					
+				],
+				
+				'targets':
+				[
+					{
+						'target_name': 'community-classes',
+						'type':'none',
+					
+						'actions':
+						[
+							{
+								'action_name': 'jar',
+								'message': 'JAR',
+					
+								'inputs':
+								[
+									# Depend on the Java source files directly to ensure correct updates
+									'<@(engine_aidl_source_files)',
+									'<@(engine_java_source_files)',
+								],
+				
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/Classes-Community',
+								],
+				
+								'action':
+								[
+									'<(jar_path)',
+									'cf',
+									'<@(_outputs)',
+									'-C', '<(PRODUCT_DIR)/classes_livecode_community',
+									'.',
+								],
+							},
+						],
+					
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/Classes-Community' ],
+							},
+						},
+					},
+				],
+			},
+		],
 	],
 }
