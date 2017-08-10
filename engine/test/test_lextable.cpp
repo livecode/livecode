@@ -54,7 +54,7 @@ TEST(lextable, table_pointer)
 
 	for (uint4 i = 0; i < table_pointers_size; i++) {
 
-		LT* table = table_pointers[i];
+		const LT* table = table_pointers[i];
 		const uint4 table_size = table_sizes[i];
 
 		ASSERT_GE(table_size, (unsigned)1);
