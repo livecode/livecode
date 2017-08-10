@@ -79,7 +79,7 @@ on startup
          open file kAuxStackListFile for "UTF-8" text read
          read from file kAuxStackListFile until end
          put it into tAuxStacks
-         close file kExtensionListFile
+         close file kAuxStackListFile
          
          set the defaultfolder to kAuxStackFolder
          repeat for each line tFile in tAuxStacks

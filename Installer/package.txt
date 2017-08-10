@@ -833,7 +833,7 @@ component Toolset
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasstandalone.livecodescript
 		stack ide-support:revsblibrary.livecodescript
-		stack ide-support:revhtml5liburllibrary.livecodescript
+		stack ide-support:revhtml5urllibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 		file repo:extensions/script-libraries/dropbox/dropbox.livecodescript
