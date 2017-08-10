@@ -95,7 +95,6 @@
 			'dependencies':
 			[
 				'kernel.gyp:kernel',
-				'community-classes',
 			],
 			
 			'includes':
@@ -113,15 +112,11 @@
 				'<@(engine_standalone_mode_source_files)',
 			],
 			
-            'sources!':
-            [
-                '../livecode/src/engine-dispatch.cpp',
-            ],
-			
 			# Standalones do *not* contain error message strings
 			'sources!':
 			[
 				'<(INTERMEDIATE_DIR)/src/encodederrors.cpp',
+                'src/engine-dispatch.cpp',
 			],
 			
 			'conditions':
@@ -132,20 +127,13 @@
 						'dependencies':
 						[
 							'kernel.gyp:kernel-java',
+							'community-classes',
 						],
 						
 						'sources':
 						[
 							'src/mblandroidad.cpp',
 						],
-						
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files': [ '<(PRODUCT_DIR)/Classes-Community' ],
-							},
-						},
 					},
 				],
 			],
