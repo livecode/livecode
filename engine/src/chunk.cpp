@@ -836,6 +836,299 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_
     r_parid = t_obj_ptr . part_id;
 }
 
+/* We need to recognise:
+ *   stack
+ *   card
+ *   group
+ *   button
+ *   scrollbar
+ *   player
+ *   image
+ *   graphic
+ *   eps
+ *   widget
+ *   field
+ * We do this by checking the first char, and then using strcmp directly
+ * on the remainder. Thus this assumes that x_ptr is NUL terminated. */
+template<typename CharT, Chunk_term TermC>
+static inline bool MCChunkParseTermSuffix(const CharT*& x_ptr, const CharT* p_suffix, Chunk_term& r_term)
+{
+    while(*x_ptr == *p_suffix)
+    {
+        if (*p_suffix == '\0')
+        {
+            break;
+        }
+        
+        x_ptr++;
+        p_suffix++;
+    }
+    
+    if (*p_suffix != '\0')
+    {
+        return false;
+    }
+    
+    r_term = TermC;
+    return true;
+}
+
+template<typename CharT>
+static bool MCChunkParseTerm(const CharT*& x_ptr, Chunk_term& r_term)
+{
+    switch(*x_ptr++)
+    {
+    case 's':
+        // stack or scrollbar
+        if (*x_ptr++ == 't')
+        {
+            return MCChunkParseTermSuffix<CharT, CT_STACK>(x_ptr, "ack ", r_term);
+        }
+        else if (*x_ptr++ == 'c')
+        {
+            return MCChunkParseTermSuffix<CharT, CT_SCROLLBAR>(x_ptr, "rollbar id ", r_term);
+        }
+        break;
+    case 'c':
+        return MCChunkParseTermSuffix<CharT, CT_CARD>(x_ptr, "ard id ", r_term);
+    case 'g':
+        if (*x_ptr++ != 'r')
+        {
+            return false;
+        }
+        if (*x_ptr++ == 'o')
+        {
+            return MCChunkParseTermSuffix<CharT, CT_GROUP>(x_ptr, "up id ", r_term);
+        }
+        else if (*x_ptr++ == 'a')
+        {
+            return MCChunkParseTermSuffix<CharT, CT_GROUP>(x_ptr, "phic id ", r_term);
+        }
+        break;
+    case 'b':
+        return MCChunkParseTermSuffix<CharT, CT_BUTTON>(x_ptr, "utton id ", r_term);
+    case 'p':
+        return MCChunkParseTermSuffix<CharT, CT_PLAYER>(x_ptr, "layer id ", r_term);
+    case 'i':
+        return MCChunkParseTermSuffix<CharT, CT_IMAGE>(x_ptr, "mage id ", r_term);
+    case 'e':
+        return MCChunkParseTermSuffix<CharT, CT_EPS>(x_ptr, "ps id ", r_term);
+    case 'w':
+        return MCChunkParseTermSuffix<CharT, CT_WIDGET>(x_ptr, "idget id ", r_term);
+    case 'f':
+        return MCChunkParseTermSuffix<CharT, CT_FIELD>(x_ptr, "ield id ", r_term);
+    default:
+        break;
+    }
+    return false;
+}
+
+template<typename CharT>
+static inline bool MCChunkParseId(const CharT*& x_ptr, int& r_id)
+{
+    int t_value = 0;
+    if (*x_ptr == '0')
+    {
+        x_ptr++;
+    }
+    else if (*x_ptr >= '1' && *x_ptr <= '9')
+    {
+        while(*x_ptr >= '0' && *x_ptr <= '9')
+        {
+            t_value *= 10;
+            t_value += *x_ptr++ - '0';
+        }
+    }
+    else
+    {
+        return false;
+    }
+    
+    if (*x_ptr != ' ')
+    {
+        return false;
+    }
+    
+    x_ptr++;
+    
+    r_id = t_value;
+    
+    return true;
+}
+
+template<typename CharT>
+static inline bool MCChunkParseOf(const CharT*& x_ptr)
+{
+    if (*x_ptr != 'o')
+    {
+        return false;
+    }
+    x_ptr++;
+    if (*x_ptr != 'f')
+    {
+        return false;
+    }
+    x_ptr++;
+    if (*x_ptr != ' ')
+    {
+        return false;
+    }
+    x_ptr++;
+    return true;
+}
+
+// LongIds have a strict form:
+//   OBJECTCHUNK id INTEGER of { group id INTEGER } of card id INTEGER of stack NAME [ of stack NAME ]
+// Each token is separated by a space.
+// All integers are non-zero leading
+// All names are quoted.
+//
+// To prevent any sort of memory allocation, we limit ourselves to a maximum of
+// 16 chunks (which seems entirely reasonable).
+static bool MCChunkParseLongIdForwards(MCStringRef p_long_id, MCObjectPtr& r_object)
+{
+    enum { kGroupLimit = 16 };
+    Chunk_term t_first_chunk;
+    int t_first_chunk_id;
+    int t_group_ids[kGroupLimit];
+    int t_group_count = 0;
+    int t_card_id;
+    MCNewAutoNameRef t_stack_name;
+    
+    if (MCStringIsNative(p_long_id))
+    {
+        const char *t_char_ptr = (const char *)MCStringGetNativeCharPtr(p_long_id);
+        Chunk_term t_current_chunk;
+        
+        if (!MCChunkParseTerm<char>(t_char_ptr, t_first_chunk))
+        {
+            return false;
+        }
+        
+        if (t_first_chunk == CT_CARD || t_first_chunk == CT_STACK)
+        {
+            return false;
+        }
+    
+        if (!MCChunkParseId<char>(t_char_ptr, t_first_chunk_id))
+        {
+            return false;
+        }
+        
+        for(;;)
+        {
+            if (!MCChunkParseOf(t_char_ptr))
+            {
+                return false;
+            }
+            
+            if (!MCChunkParseTerm(t_char_ptr, t_current_chunk))
+            {
+                return false;
+            }
+            
+            if (t_current_chunk != CT_GROUP)
+            {
+                break;
+            }
+            
+            if (!MCChunkParseId(t_char_ptr, t_group_ids[t_group_count++]))
+            {
+                return false;
+            }
+        }
+        
+        if (t_current_chunk != CT_CARD)
+        {
+            return false;
+        }
+        
+        if (!MCChunkParseId(t_char_ptr, t_card_id))
+        {
+            return false;
+        }
+        
+        if (!MCChunkParseOf(t_char_ptr))
+        {
+            return false;
+        }
+        
+        if (!MCChunkParseTerm(t_char_ptr, t_current_chunk))
+        {
+            return false;
+        }
+        
+        if (t_current_chunk != CT_STACK)
+        {
+            return false;
+        }
+
+        if (*t_char_ptr++ != '"')
+        {
+            return false;
+        }
+        
+        const char *t_stack_name_end = t_char_ptr;
+        for(;;)
+        {
+            if (*t_stack_name_end == '\0')
+            {
+                return false;
+            }
+            
+            if (*t_stack_name_end++ == '"')
+            {
+                break;
+            }
+        }
+        
+        if (*t_stack_name_end != '\0')
+        {
+            return false;
+        }
+        
+        t_stack_name_end -= 1;
+        
+        if (!MCNameCreateWithNativeChars((const char_t*)t_char_ptr, t_stack_name_end - t_char_ptr, &t_stack_name))
+        {
+            return false;
+        }
+        
+        if (!MCdefaultstackptr)
+        {
+            return false;
+        }
+        
+        MCStack *t_stack = MCdefaultstackptr->findstackname(*t_stack_name);
+        if (t_stack == nullptr)
+        {
+            return false;
+        }
+        
+        if (t_stack->getcurcard()->getid() != t_card_id)
+        {
+            return false;
+        }
+        
+        MCObject *t_object = t_stack->findobjectbyid(t_first_chunk_id);
+        if (t_object == nullptr)
+        {
+            return false;
+        }
+        
+        r_object.object = t_object;
+        r_object.part_id = t_card_id;
+     
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    
+    return false;
+}
+
 void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean p_recurse)
 {
     MCObjectPtr t_object;
@@ -860,32 +1153,35 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
 
                 if (ctxt . HasError())
                     return;
-/*
-                MCAutoValueRef t_value;
-                ep . copyasvalueref(&t_value);
-                MCEngineEvalValueAsObject(ctxt, *t_value, t_object);
-*/
 
-                // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails 
-                MCScriptPoint sp(ctxt, *t_value);
-                MCChunk *tchunk = new (nothrow) MCChunk(False);
-                MCerrorlock++;
-                Symbol_type type;
-                if (tchunk->parse(sp, False) == PS_NORMAL
-                        && sp.next(type) == PS_EOF)
-                    t_error = false;
-                
-                MCerrorlock--;
-                
-                if (!t_error)
+                if (MCChunkParseLongIdForwards(*t_value, t_object))
                 {
-                    if (tchunk->getobj(ctxt, t_object, False))
-                        take_components(tchunk);
-                    else
-                        t_error= true;
+                    t_error = false;
                 }
-                
-                delete tchunk;
+                else
+                {
+                    MCLog("Failed to parse long id %@", *t_value);
+                    // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails
+                    MCScriptPoint sp(ctxt, *t_value);
+                    MCChunk *tchunk = new (nothrow) MCChunk(False);
+                    MCerrorlock++;
+                    Symbol_type type;
+                    if (tchunk->parse(sp, False) == PS_NORMAL
+                            && sp.next(type) == PS_EOF)
+                        t_error = false;
+                    
+                    MCerrorlock--;
+                    
+                    if (!t_error)
+                    {
+                        if (tchunk->getobj(ctxt, t_object, False))
+                            take_components(tchunk);
+                        else
+                            t_error= true;
+                    }
+                    
+                    delete tchunk;
+                }
             }
             // SN-2013-11-7: If no recurse, there is no error to trigger
             // Otherwise, the caller gets a 'marred' context with an error
