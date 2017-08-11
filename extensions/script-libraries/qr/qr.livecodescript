@@ -75,256 +75,260 @@ private command __Initialize
    put sChar0 & sChar0 & sChar0 into sPNGBlack
    put sChar255 & sChar255 & sChar255 into sPNGWhite
    
+   local tTmpString
    # alignment positioning
-   put "1,0" & LF & \
-         "2,1,6,18" & LF & \
-         "3,1,6,22" & LF & \
-         "4,1,6,26" & LF & \
-         "5,1,6,30" & LF & \
-         "6,1,6,34" & LF & \
-         "7,6,6,22,38" & LF & \
-         "8,6,6,24,42" & LF & \
-         "9,6,6,26,46" & LF & \
-         "10,6,6,28,50" & LF & \
-         "11,6,6,30,54" & LF & \
-         "12,6,6,32,58" & LF & \
-         "13,6,6,34,62" & LF & \
-         "14,13,6,26,46,66" & LF & \
-         "15,13,6,26,48,70" & LF & \
-         "16,13,6,26,50,74" & LF & \
-         "17,13,6,30,54,78" & LF & \
-         "18,13,6,30,56,82" & LF & \
-         "19,13,6,30,58,86" & LF & \
-         "20,13,6,34,62,90" & LF & \
-         "21,22,6,28,50,72,94" & LF & \
-         "22,22,6,26,50,74,98" & LF & \
-         "23,22,6,30,54,78,102" & LF & \
-         "24,22,6,28,54,80,106" & LF & \
-         "25,22,6,32,58,84,110" & LF & \
-         "26,22,6,30,58,86,114" & LF & \
-         "27,22,6,34,62,90,118" & LF & \
-         "28,33,6,26,50,74,98,122" & LF & \
-         "29,33,6,30,54,78,102,126" & LF & \
-         "30,33,6,26,52,78,104,130" & LF & \
-         "31,33,6,30,56,82,108,134" & LF & \
-         "32,33,6,34,60,86,112,138" & LF & \
-         "33,33,6,30,58,86,114,142" & LF & \
-         "34,33,6,34,62,90,118,146" & LF & \
-         "35,46,6,30,54,78,102,126,150" & LF & \
-         "36,46,6,24,50,76,102,128,154" & LF & \
-         "37,46,6,28,54,80,106,132,158" & LF & \
-         "38,46,6,32,58,84,110,136,162" & LF & \
-         "39,46,6,26,54,82,110,138,166" & LF & \
-         "40,46,6,30,58,86,114,142,170" \
-         into sAlignPosList
+   put "1,0" & LF after tTmpString
+   put "2,1,6,18" & LF after tTmpString
+   put "3,1,6,22" & LF after tTmpString
+   put "4,1,6,26" & LF after tTmpString
+   put "5,1,6,30" & LF after tTmpString
+   put "6,1,6,34" & LF after tTmpString
+   put "7,6,6,22,38" & LF after tTmpString
+   put "8,6,6,24,42" & LF after tTmpString
+   put "9,6,6,26,46" & LF after tTmpString
+   put "10,6,6,28,50" & LF after tTmpString
+   put "11,6,6,30,54" & LF after tTmpString
+   put "12,6,6,32,58" & LF after tTmpString
+   put "13,6,6,34,62" & LF after tTmpString
+   put "14,13,6,26,46,66" & LF after tTmpString
+   put "15,13,6,26,48,70" & LF after tTmpString
+   put "16,13,6,26,50,74" & LF after tTmpString
+   put "17,13,6,30,54,78" & LF after tTmpString
+   put "18,13,6,30,56,82" & LF after tTmpString
+   put "19,13,6,30,58,86" & LF after tTmpString
+   put "20,13,6,34,62,90" & LF after tTmpString
+   put "21,22,6,28,50,72,94" & LF after tTmpString
+   put "22,22,6,26,50,74,98" & LF after tTmpString
+   put "23,22,6,30,54,78,102" & LF after tTmpString
+   put "24,22,6,28,54,80,106" & LF after tTmpString
+   put "25,22,6,32,58,84,110" & LF after tTmpString
+   put "26,22,6,30,58,86,114" & LF after tTmpString
+   put "27,22,6,34,62,90,118" & LF after tTmpString
+   put "28,33,6,26,50,74,98,122" & LF after tTmpString
+   put "29,33,6,30,54,78,102,126" & LF after tTmpString
+   put "30,33,6,26,52,78,104,130" & LF after tTmpString
+   put "31,33,6,30,56,82,108,134" & LF after tTmpString
+   put "32,33,6,34,60,86,112,138" & LF after tTmpString
+   put "33,33,6,30,58,86,114,142" & LF after tTmpString
+   put "34,33,6,34,62,90,118,146" & LF after tTmpString
+   put "35,46,6,30,54,78,102,126,150" & LF after tTmpString
+   put "36,46,6,24,50,76,102,128,154" & LF after tTmpString
+   put "37,46,6,28,54,80,106,132,158" & LF after tTmpString
+   put "38,46,6,32,58,84,110,136,162" & LF after tTmpString
+   put "39,46,6,26,54,82,110,138,166" & LF after tTmpString
+   put "40,46,6,30,58,86,114,142,170" after tTmpString
+   put tTmpString into sAlignPosList
+   put empty into tTmpString
    
    # version / ECC capacity
    # version, codewords, remainder, *L, *M, *Q, *H (* = error correction codewords)
-   put "1,26,0,7,10,13,17" & LF & \
-         "2,44,7,10,16,22,28" & LF & \
-         "3,70,7,15,26,36,44" & LF & \
-         "4,100,7,20,36,52,64" & LF & \
-         "5,134,7,26,48,72,88" & LF & \
-         "6,172,7,36,64,96,112" & LF & \
-         "7,196,0,40,72,108,130" & LF & \
-         "8,242,0,48,88,132,156" & LF & \
-         "9,292,0,60,110,160,192" & LF & \
-         "10,346,0,72,130,192,224" & LF & \
-         "11,404,0,80,150,224,264" & LF & \
-         "12,466,0,96,176,260,308" & LF & \
-         "13,532,0,104,198,288,352" & LF & \
-         "14,581,3,120,216,320,384" & LF & \
-         "15,655,3,132,240,360,432" & LF & \
-         "16,733,3,144,280,408,480" & LF & \
-         "17,815,3,168,308,448,532" & LF & \
-         "18,901,3,180,338,504,588" & LF & \
-         "19,991,3,196,364,546,650" & LF & \
-         "20,1085,3,224,416,600,700" & LF & \
-         "21,1156,4,224,442,644,750" & LF & \
-         "22,1258,4,252,476,690,816" & LF & \
-         "23,1364,4,270,504,750,900" & LF & \
-         "24,1474,4,300,560,810,960" & LF & \
-         "25,1588,4,312,588,870,1050" & LF & \
-         "26,1706,4,336,644,952,1110" & LF & \
-         "27,1828,4,360,700,1020,1200" & LF & \
-         "28,1921,3,390,728,1050,1260" & LF & \
-         "29,2051,3,420,784,1140,1350" & LF & \
-         "30,2185,3,450,812,1200,1440" & LF & \
-         "31,2323,3,480,868,1290,1530" & LF & \
-         "32,2465,3,510,924,1350,1620" & LF & \
-         "33,2611,3,540,980,1440,1710" & LF & \
-         "34,2761,3,570,1036,1530,1800" & LF & \
-         "35,2876,0,570,1064,1590,1890" & LF & \
-         "36,3034,0,600,1120,1680,1980" & LF & \
-         "37,3196,0,630,1204,1770,2100" & LF & \
-         "38,3362,0,660,1260,1860,2220" & LF & \
-         "39,3532,0,720,1316,1950,2310" & LF & \
-         "40,3706,0,750,1372,2040,2430" \
-         into sCapacityList
+   put "1,26,0,7,10,13,17" & LF after tTmpString
+   put "2,44,7,10,16,22,28" & LF after tTmpString
+   put "3,70,7,15,26,36,44" & LF after tTmpString
+   put "4,100,7,20,36,52,64" & LF after tTmpString
+   put "5,134,7,26,48,72,88" & LF after tTmpString
+   put "6,172,7,36,64,96,112" & LF after tTmpString
+   put "7,196,0,40,72,108,130" & LF after tTmpString
+   put "8,242,0,48,88,132,156" & LF after tTmpString
+   put "9,292,0,60,110,160,192" & LF after tTmpString
+   put "10,346,0,72,130,192,224" & LF after tTmpString
+   put "11,404,0,80,150,224,264" & LF after tTmpString
+   put "12,466,0,96,176,260,308" & LF after tTmpString
+   put "13,532,0,104,198,288,352" & LF after tTmpString
+   put "14,581,3,120,216,320,384" & LF after tTmpString
+   put "15,655,3,132,240,360,432" & LF after tTmpString
+   put "16,733,3,144,280,408,480" & LF after tTmpString
+   put "17,815,3,168,308,448,532" & LF after tTmpString
+   put "18,901,3,180,338,504,588" & LF after tTmpString
+   put "19,991,3,196,364,546,650" & LF after tTmpString
+   put "20,1085,3,224,416,600,700" & LF after tTmpString
+   put "21,1156,4,224,442,644,750" & LF after tTmpString
+   put "22,1258,4,252,476,690,816" & LF after tTmpString
+   put "23,1364,4,270,504,750,900" & LF after tTmpString
+   put "24,1474,4,300,560,810,960" & LF after tTmpString
+   put "25,1588,4,312,588,870,1050" & LF after tTmpString
+   put "26,1706,4,336,644,952,1110" & LF after tTmpString
+   put "27,1828,4,360,700,1020,1200" & LF after tTmpString
+   put "28,1921,3,390,728,1050,1260" & LF after tTmpString
+   put "29,2051,3,420,784,1140,1350" & LF after tTmpString
+   put "30,2185,3,450,812,1200,1440" & LF after tTmpString
+   put "31,2323,3,480,868,1290,1530" & LF after tTmpString
+   put "32,2465,3,510,924,1350,1620" & LF after tTmpString
+   put "33,2611,3,540,980,1440,1710" & LF after tTmpString
+   put "34,2761,3,570,1036,1530,1800" & LF after tTmpString
+   put "35,2876,0,570,1064,1590,1890" & LF after tTmpString
+   put "36,3034,0,600,1120,1680,1980" & LF after tTmpString
+   put "37,3196,0,630,1204,1770,2100" & LF after tTmpString
+   put "38,3362,0,660,1260,1860,2220" & LF after tTmpString
+   put "39,3532,0,720,1316,1950,2310" & LF after tTmpString
+   put "40,3706,0,750,1372,2040,2430" after tTmpString
+   put into sCapacityList
+   put empty into tTmpString
    
    # ECC data
    # version-ECC, total ECC words, no. of blocks, total words per block, data words per block, no. of blocks, total words per block, data words per block
-   put "1-L,7,1,26,19" & LF & \
-         "1-M,10,1,26,16" & LF & \
-         "1-Q,13,1,26,13" & LF & \
-         "1-H,17,1,26,9" & LF & \
-         "2-L,10,1,44,34" & LF & \
-         "2-M,16,1,44,28" & LF & \
-         "2-Q,22,1,44,22" & LF & \
-         "2-H,28,1,44,16" & LF & \
-         "3-L,15,1,70,55" & LF & \
-         "3-M,26,1,70,44" & LF & \
-         "3-Q,36,2,35,17" & LF & \
-         "3-H,44,2,35,13" & LF & \
-         "4-L,20,1,100,80" & LF & \
-         "4-M,36,2,50,32" & LF & \
-         "4-Q,52,2,50,24" & LF & \
-         "4-H,64,4,25,9" & LF & \
-         "5-L,26,1,134,108" & LF & \
-         "5-M,48,2,67,43" & LF & \
-         "5-Q,72,2,33,15,2,34,16" & LF & \
-         "5-H,88,2,33,11,2,34,12" & LF & \
-         "6-L,36,2,86,68" & LF & \
-         "6-M,64,4,43,27" & LF & \
-         "6-Q,96,4,43,19" & LF & \
-         "6-H,112,4,43,15" & LF & \
-         "7-L,40,2,98,78" & LF & \
-         "7-M,72,4,49,31" & LF & \
-         "7-Q,108,2,32,14,4,33,15" & LF & \
-         "7-H,130,4,39,13,1,40,14" & LF & \
-         "8-L,48,2,121,97" & LF & \
-         "8-M,88,2,60,38,2,61,39" & LF & \
-         "8-Q,132,4,40,18,2,41,19" & LF & \
-         "8-H,156,4,40,14,2,41,15" & LF & \
-         "9-L,60,2,146,116" & LF & \
-         "9-M,110,3,58,36,2,59,37" & LF & \
-         "9-Q,160,4,36,16,4,37,17" & LF & \
-         "9-H,192,4,36,12,4,37,13" & LF & \
-         "10-L,72,2,86,68,2,87,69" & LF & \
-         "10-M,130,4,69,43,1,70,44" & LF & \
-         "10-Q,192,6,43,19,2,44,20" & LF & \
-         "10-H,224,6,43,15,2,44,16" & LF & \
-         "11-L,80,4,101,81" & LF & \
-         "11-M,150,1,80,50,4,81,51" & LF & \
-         "11-Q,224,4,50,22,4,51,23" & LF & \
-         "11-H,264,3,36,12,8,37,13" & LF & \
-         "12-L,96,2,116,92,2,117,93" & LF & \
-         "12-M,176,6,58,36,2,59,37" & LF & \
-         "12-Q,260,4,46,20,6,47,21" & LF & \
-         "12-H,308,7,42,14,4,43,15" & LF & \
-         "13-L,104,4,133,107" & LF & \
-         "13-M,198,8,59,37,1,60,38" & LF & \
-         "13-Q,288,8,44,20,4,45,21" & LF & \
-         "13-H,352,12,33,11,4,34,12" & LF & \
-         "14-L,120,3,145,115,1,146,116" & LF & \
-         "14-M,216,4,64,40,5,65,41" & LF & \
-         "14-Q,320,11,36,16,5,37,17" & LF & \
-         "14-H,384,11,36,12,5,37,13" & LF & \
-         "15-L,132,5,109,87,1,110,88" & LF & \
-         "15-M,240,5,65,41,5,66,42" & LF & \
-         "15-Q,360,5,54,24,7,55,25" & LF & \
-         "15-H,432,11,36,12,7,37,13" & LF & \
-         "16-L,144,5,122,98,1,123,99" & LF & \
-         "16-M,280,7,73,45,3,74,46" & LF & \
-         "16-Q,408,15,43,19,2,44,20" & LF & \
-         "16-H,480,3,45,15,13,46,16" & LF & \
-         "17-L,168,1,135,107,5,136,108" & LF & \
-         "17-M,308,10,74,46,1,75,47" & LF & \
-         "17-Q,448,1,50,22,15,51,23" & LF & \
-         "17-H,532,2,42,14,17,43,15" & LF & \
-         "18-L,180,5,150,120,1,151,121" & LF & \
-         "18-M,338,9,69,43,4,70,44" & LF & \
-         "18-Q,504,17,50,22,1,51,23" & LF & \
-         "18-H,588,2,42,14,19,43,15" & LF & \
-         "19-L,196,3,141,113,4,142,114" & LF & \
-         "19-M,364,3,70,44,11,71,45" & LF & \
-         "19-Q,546,17,47,21,4,48,22" & LF & \
-         "19-H,650,9,39,13,16,40,14" & LF & \
-         "20-L,224,3,135,107,5,136,108" & LF & \
-         "20-M,416,3,67,41,13,68,42" & LF & \
-         "20-Q,600,15,54,24,5,55,25" & LF & \
-         "20-H,700,15,43,15,10,44,16" & LF & \
-         "21-L,22,4,144,116,4,145,117" & LF & \
-         "21-M,442,17,68,42" & LF & \
-         "21-Q,644,17,50,22,6,51,23" & LF & \
-         "21-H,750,19,46,16,6,47,17" & LF & \
-         "22-L,252,2,139,111,7,140,112" & LF & \
-         "22-M,476,17,74,46" & LF & \
-         "22-Q,690,7,54,24,16,55,25" & LF & \
-         "22-H,816,34,37,13" & LF & \
-         "23-L,270,4,151,121,5,152,122" & LF & \
-         "23-M,504,4,75,47,14,76,48" & LF & \
-         "23-Q,750,11,54,24,14,55,25" & LF & \
-         "23-H,900,16,45,15,14,46,16" & LF & \
-         "24-L,300,6,147,117,4,148,118" & LF & \
-         "24-M,560,6,73,45,14,74,46" & LF & \
-         "24-Q,810,11,54,24,16,55,25" & LF & \
-         "24-H,960,30,46,16,2,47,17" & LF & \
-         "25-L,312,8,132,106,4,133,107" & LF & \
-         "25-M,588,8,75,47,13,76,48" & LF & \
-         "25-Q,870,7,54,24,22,55,25" & LF & \
-         "25-H,1050,22,45,15,13,46,16" & LF & \
-         "26-L,336,10,142,114,2,143,115" & LF & \
-         "26-M,644,19,74,46,4,75,47" & LF & \
-         "26-Q,952,28,50,22,6,51,23" & LF & \
-         "26-H,1110,33,46,16,4,47,17" & LF & \
-         "27-L,360,8,152,122,4,153,123" & LF & \
-         "27-M,700,22,73,45,3,74,46" & LF & \
-         "27-Q,1020,8,53,23,26,54,24" & LF & \
-         "27-H,1200,12,45,15,28,46,16" & LF & \
-         "28-L,390,3,147,117,10,148,118" & LF & \
-         "28-M,728,3,73,45,23,74,46" & LF & \
-         "28-Q,1050,4,54,24,31,55,25" & LF & \
-         "28-H,1260,11,45,15,31,46,16" & LF & \
-         "29-L,420,7,146,116,7,147,117" & LF & \
-         "29-M,784,21,73,45,7,74,46" & LF & \
-         "29-Q,1140,1,53,23,37,54,24" & LF & \
-         "29-H,1350,19,45,15,26,46,16" & LF & \
-         "30-L,450,5,145,115,10,146,116" & LF & \
-         "30-M,812,19,75,47,10,76,48" & LF & \
-         "30-Q,1200,15,54,24,25,55,25" & LF & \
-         "30-H,1440,23,45,15,25,46,16" & LF & \
-         "31-L,480,13,145,115,3,146,116" & LF & \
-         "31-M,868,2,74,46,29,75,47" & LF & \
-         "31-Q,1290,42,54,24,1,55,25" & LF & \
-         "31-H,1530,23,45,15,28,46,16" & LF & \
-         "32-L,510,17,145,115" & LF & \
-         "32-M,924,10,74,46,23,75,47" & LF & \
-         "32-Q,1350,10,54,24,35,55,25" & LF & \
-         "32-H,1620,19,45,15,35,46,16" & LF & \
-         "33-L,540,17,145,115,1,146,116" & LF & \
-         "33-M,980,14,74,46,21,75,47" & LF & \
-         "33-Q,1440,29,54,24,19,55,25" & LF & \
-         "33-H,1710,11,45,15,46,46,16" & LF & \
-         "34-L,570,13,145,115,6,146,116" & LF & \
-         "34-M,1036,14,74,46,23,75,47" & LF & \
-         "34-Q,1530,44,54,24,7,55,25" & LF & \
-         "34-H,1800,59,46,16,1,47,17" & LF & \
-         "35-L,570,12,151,121,7,152,122" & LF & \
-         "35-M,1064,12,75,47,26,76,48" & LF & \
-         "35-Q,1590,39,54,24,14,55,25" & LF & \
-         "35-H,1890,22,45,15,41,46,16" & LF & \
-         "36-L,600,6,151,121,14,152,122" & LF & \
-         "36-M,1120,6,75,47,34,76,48" & LF & \
-         "36-Q,1680,46,54,24,10,55,25" & LF & \
-         "36-H,1980,2,45,15,64,46,16" & LF & \
-         "37-L,630,17,152,122,4,153,123" & LF & \
-         "37-M,1204,29,74,46,14,75,47" & LF & \
-         "37-Q,1770,49,54,24,10,55,25" & LF & \
-         "37-H,2100,24,45,15,46,46,16" & LF & \
-         "38-L,660,4,152,122,18,153,123" & LF & \
-         "38-M,1260,13,74,46,32,75,47" & LF & \
-         "38-Q,1860,48,54,24,14,55,25" & LF & \
-         "38-H,2220,42,45,15,32,46,16" & LF & \
-         "39-L,720,20,147,117,4,148,118" & LF & \
-         "39-M,1316,40,75,47,7,76,48" & LF & \
-         "39-Q,1950,43,54,24,22,55,25" & LF & \
-         "39-H,2310,10,45,15,67,46,16" & LF & \
-         "40-L,750,19,148,118,6,149,119" & LF & \
-         "40-M,1372,18,75,47,31,76,48" & LF & \
-         "40-Q,2040,34,54,24,34,55,25" & LF & \
-         "40-H,2430,20,45,15,61,46,16" \
-         into sECCDataList
+   put "1-L,7,1,26,19" & LF after tTmpString
+   put "1-M,10,1,26,16" & LF after tTmpString
+   put "1-Q,13,1,26,13" & LF after tTmpString
+   put "1-H,17,1,26,9" & LF after tTmpString
+   put "2-L,10,1,44,34" & LF after tTmpString
+   put "2-M,16,1,44,28" & LF after tTmpString
+   put "2-Q,22,1,44,22" & LF after tTmpString
+   put "2-H,28,1,44,16" & LF after tTmpString
+   put "3-L,15,1,70,55" & LF after tTmpString
+   put "3-M,26,1,70,44" & LF after tTmpString
+   put "3-Q,36,2,35,17" & LF after tTmpString
+   put "3-H,44,2,35,13" & LF after tTmpString
+   put "4-L,20,1,100,80" & LF after tTmpString
+   put "4-M,36,2,50,32" & LF after tTmpString
+   put "4-Q,52,2,50,24" & LF after tTmpString
+   put "4-H,64,4,25,9" & LF after tTmpString
+   put "5-L,26,1,134,108" & LF after tTmpString
+   put "5-M,48,2,67,43" & LF after tTmpString
+   put "5-Q,72,2,33,15,2,34,16" & LF after tTmpString
+   put "5-H,88,2,33,11,2,34,12" & LF after tTmpString
+   put "6-L,36,2,86,68" & LF after tTmpString
+   put "6-M,64,4,43,27" & LF after tTmpString
+   put "6-Q,96,4,43,19" & LF after tTmpString
+   put "6-H,112,4,43,15" & LF after tTmpString
+   put "7-L,40,2,98,78" & LF after tTmpString
+   put "7-M,72,4,49,31" & LF after tTmpString
+   put "7-Q,108,2,32,14,4,33,15" & LF after tTmpString
+   put "7-H,130,4,39,13,1,40,14" & LF after tTmpString
+   put "8-L,48,2,121,97" & LF after tTmpString
+   put "8-M,88,2,60,38,2,61,39" & LF after tTmpString
+   put "8-Q,132,4,40,18,2,41,19" & LF after tTmpString
+   put "8-H,156,4,40,14,2,41,15" & LF after tTmpString
+   put "9-L,60,2,146,116" & LF after tTmpString
+   put "9-M,110,3,58,36,2,59,37" & LF after tTmpString
+   put "9-Q,160,4,36,16,4,37,17" & LF after tTmpString
+   put "9-H,192,4,36,12,4,37,13" & LF after tTmpString
+   put "10-L,72,2,86,68,2,87,69" & LF after tTmpString
+   put "10-M,130,4,69,43,1,70,44" & LF after tTmpString
+   put "10-Q,192,6,43,19,2,44,20" & LF after tTmpString
+   put "10-H,224,6,43,15,2,44,16" & LF after tTmpString
+   put "11-L,80,4,101,81" & LF after tTmpString
+   put "11-M,150,1,80,50,4,81,51" & LF after tTmpString
+   put "11-Q,224,4,50,22,4,51,23" & LF after tTmpString
+   put "11-H,264,3,36,12,8,37,13" & LF after tTmpString
+   put "12-L,96,2,116,92,2,117,93" & LF after tTmpString
+   put "12-M,176,6,58,36,2,59,37" & LF after tTmpString
+   put "12-Q,260,4,46,20,6,47,21" & LF after tTmpString
+   put "12-H,308,7,42,14,4,43,15" & LF after tTmpString
+   put "13-L,104,4,133,107" & LF after tTmpString
+   put "13-M,198,8,59,37,1,60,38" & LF after tTmpString
+   put "13-Q,288,8,44,20,4,45,21" & LF after tTmpString
+   put "13-H,352,12,33,11,4,34,12" & LF after tTmpString
+   put "14-L,120,3,145,115,1,146,116" & LF after tTmpString
+   put "14-M,216,4,64,40,5,65,41" & LF after tTmpString
+   put "14-Q,320,11,36,16,5,37,17" & LF after tTmpString
+   put "14-H,384,11,36,12,5,37,13" & LF after tTmpString
+   put "15-L,132,5,109,87,1,110,88" & LF after tTmpString
+   put "15-M,240,5,65,41,5,66,42" & LF after tTmpString
+   put "15-Q,360,5,54,24,7,55,25" & LF after tTmpString
+   put "15-H,432,11,36,12,7,37,13" & LF after tTmpString
+   put "16-L,144,5,122,98,1,123,99" & LF after tTmpString
+   put "16-M,280,7,73,45,3,74,46" & LF after tTmpString
+   put "16-Q,408,15,43,19,2,44,20" & LF after tTmpString
+   put "16-H,480,3,45,15,13,46,16" & LF after tTmpString
+   put "17-L,168,1,135,107,5,136,108" & LF after tTmpString
+   put "17-M,308,10,74,46,1,75,47" & LF after tTmpString
+   put "17-Q,448,1,50,22,15,51,23" & LF after tTmpString
+   put "17-H,532,2,42,14,17,43,15" & LF after tTmpString
+   put "18-L,180,5,150,120,1,151,121" & LF after tTmpString
+   put "18-M,338,9,69,43,4,70,44" & LF after tTmpString
+   put "18-Q,504,17,50,22,1,51,23" & LF after tTmpString
+   put "18-H,588,2,42,14,19,43,15" & LF after tTmpString
+   put "19-L,196,3,141,113,4,142,114" & LF after tTmpString
+   put "19-M,364,3,70,44,11,71,45" & LF after tTmpString
+   put "19-Q,546,17,47,21,4,48,22" & LF after tTmpString
+   put "19-H,650,9,39,13,16,40,14" & LF after tTmpString
+   put "20-L,224,3,135,107,5,136,108" & LF after tTmpString
+   put "20-M,416,3,67,41,13,68,42" & LF after tTmpString
+   put "20-Q,600,15,54,24,5,55,25" & LF after tTmpString
+   put "20-H,700,15,43,15,10,44,16" & LF after tTmpString
+   put "21-L,22,4,144,116,4,145,117" & LF after tTmpString
+   put "21-M,442,17,68,42" & LF after tTmpString
+   put "21-Q,644,17,50,22,6,51,23" & LF after tTmpString
+   put "21-H,750,19,46,16,6,47,17" & LF after tTmpString
+   put "22-L,252,2,139,111,7,140,112" & LF after tTmpString
+   put "22-M,476,17,74,46" & LF after tTmpString
+   put "22-Q,690,7,54,24,16,55,25" & LF after tTmpString
+   put "22-H,816,34,37,13" & LF after tTmpString
+   put "23-L,270,4,151,121,5,152,122" & LF after tTmpString
+   put "23-M,504,4,75,47,14,76,48" & LF after tTmpString
+   put "23-Q,750,11,54,24,14,55,25" & LF after tTmpString
+   put "23-H,900,16,45,15,14,46,16" & LF after tTmpString
+   put "24-L,300,6,147,117,4,148,118" & LF after tTmpString
+   put "24-M,560,6,73,45,14,74,46" & LF after tTmpString
+   put "24-Q,810,11,54,24,16,55,25" & LF after tTmpString
+   put "24-H,960,30,46,16,2,47,17" & LF after tTmpString
+   put "25-L,312,8,132,106,4,133,107" & LF after tTmpString
+   put "25-M,588,8,75,47,13,76,48" & LF after tTmpString
+   put "25-Q,870,7,54,24,22,55,25" & LF after tTmpString
+   put "25-H,1050,22,45,15,13,46,16" & LF after tTmpString
+   put "26-L,336,10,142,114,2,143,115" & LF after tTmpString
+   put "26-M,644,19,74,46,4,75,47" & LF after tTmpString
+   put "26-Q,952,28,50,22,6,51,23" & LF after tTmpString
+   put "26-H,1110,33,46,16,4,47,17" & LF after tTmpString
+   put "27-L,360,8,152,122,4,153,123" & LF after tTmpString
+   put "27-M,700,22,73,45,3,74,46" & LF after tTmpString
+   put "27-Q,1020,8,53,23,26,54,24" & LF after tTmpString
+   put "27-H,1200,12,45,15,28,46,16" & LF after tTmpString
+   put "28-L,390,3,147,117,10,148,118" & LF after tTmpString
+   put "28-M,728,3,73,45,23,74,46" & LF after tTmpString
+   put "28-Q,1050,4,54,24,31,55,25" & LF after tTmpString
+   put "28-H,1260,11,45,15,31,46,16" & LF after tTmpString
+   put "29-L,420,7,146,116,7,147,117" & LF after tTmpString
+   put "29-M,784,21,73,45,7,74,46" & LF after tTmpString
+   put "29-Q,1140,1,53,23,37,54,24" & LF after tTmpString
+   put "29-H,1350,19,45,15,26,46,16" & LF after tTmpString
+   put "30-L,450,5,145,115,10,146,116" & LF after tTmpString
+   put "30-M,812,19,75,47,10,76,48" & LF after tTmpString
+   put "30-Q,1200,15,54,24,25,55,25" & LF after tTmpString
+   put "30-H,1440,23,45,15,25,46,16" & LF after tTmpString
+   put "31-L,480,13,145,115,3,146,116" & LF after tTmpString
+   put "31-M,868,2,74,46,29,75,47" & LF after tTmpString
+   put "31-Q,1290,42,54,24,1,55,25" & LF after tTmpString
+   put "31-H,1530,23,45,15,28,46,16" & LF after tTmpString
+   put "32-L,510,17,145,115" & LF after tTmpString
+   put "32-M,924,10,74,46,23,75,47" & LF after tTmpString
+   put "32-Q,1350,10,54,24,35,55,25" & LF after tTmpString
+   put "32-H,1620,19,45,15,35,46,16" & LF after tTmpString
+   put "33-L,540,17,145,115,1,146,116" & LF after tTmpString
+   put "33-M,980,14,74,46,21,75,47" & LF after tTmpString
+   put "33-Q,1440,29,54,24,19,55,25" & LF after tTmpString
+   put "33-H,1710,11,45,15,46,46,16" & LF after tTmpString
+   put "34-L,570,13,145,115,6,146,116" & LF after tTmpString
+   put "34-M,1036,14,74,46,23,75,47" & LF after tTmpString
+   put "34-Q,1530,44,54,24,7,55,25" & LF after tTmpString
+   put "34-H,1800,59,46,16,1,47,17" & LF after tTmpString
+   put "35-L,570,12,151,121,7,152,122" & LF after tTmpString
+   put "35-M,1064,12,75,47,26,76,48" & LF after tTmpString
+   put "35-Q,1590,39,54,24,14,55,25" & LF after tTmpString
+   put "35-H,1890,22,45,15,41,46,16" & LF after tTmpString
+   put "36-L,600,6,151,121,14,152,122" & LF after tTmpString
+   put "36-M,1120,6,75,47,34,76,48" & LF after tTmpString
+   put "36-Q,1680,46,54,24,10,55,25" & LF after tTmpString
+   put "36-H,1980,2,45,15,64,46,16" & LF after tTmpString
+   put "37-L,630,17,152,122,4,153,123" & LF after tTmpString
+   put "37-M,1204,29,74,46,14,75,47" & LF after tTmpString
+   put "37-Q,1770,49,54,24,10,55,25" & LF after tTmpString
+   put "37-H,2100,24,45,15,46,46,16" & LF after tTmpString
+   put "38-L,660,4,152,122,18,153,123" & LF after tTmpString
+   put "38-M,1260,13,74,46,32,75,47" & LF after tTmpString
+   put "38-Q,1860,48,54,24,14,55,25" & LF after tTmpString
+   put "38-H,2220,42,45,15,32,46,16" & LF after tTmpString
+   put "39-L,720,20,147,117,4,148,118" & LF after tTmpString
+   put "39-M,1316,40,75,47,7,76,48" & LF after tTmpString
+   put "39-Q,1950,43,54,24,22,55,25" & LF after tTmpString
+   put "39-H,2310,10,45,15,67,46,16" & LF after tTmpString
+   put "40-L,750,19,148,118,6,149,119" & LF after tTmpString
+   put "40-M,1372,18,75,47,31,76,48" & LF after tTmpString
+   put "40-Q,2040,34,54,24,34,55,25" & LF after tTmpString
+   put "40-H,2430,20,45,15,61,46,16" after tTmpString
+   put tTmpString into sECCDataList
+   put empty into tTmpString
    
    # mode indicators
    put 1 into sModeNumeric
@@ -339,927 +343,934 @@ private command __Initialize
    
    # character count indicator
    # min version, max version, numeric mode, alpha mode, 8-bit mode, Kanji mode
-   put "1,9,10,9,8,8" & LF & \
-         "10,26,12,11,16,10" & LF & \
-         "27,40,14,13,16,12" \
-         into sCCIList
+   put "1,9,10,9,8,8" & LF after tTmpString
+   put "10,26,12,11,16,10" & LF after tTmpString
+   put "27,40,14,13,16,12" after tTmpString
+   put tTmpString into sCCIList
+   put empty into tTmpString
    
    # alphanumeric mode characters (codes 0 - 44)
    put "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:" into sAlphaChars
    
    # log antilog table for Galois Field 256
    # exp/integer lookup, integer, exponent
-   put "1,2,0" & LF & \
-         "2,4,1" & LF & \
-         "3,8,25" & LF & \
-         "4,16,2" & LF & \
-         "5,32,50" & LF & \
-         "6,64,26" & LF & \
-         "7,128,198" & LF & \
-         "8,29,3" & LF & \
-         "9,58,223" & LF & \
-         "10,116,51" & LF & \
-         "11,232,238" & LF & \
-         "12,205,27" & LF & \
-         "13,135,104" & LF & \
-         "14,19,199" & LF & \
-         "15,38,75" & LF & \
-         "16,76,4" & LF & \
-         "17,152,100" & LF & \
-         "18,45,224" & LF & \
-         "19,90,14" & LF & \
-         "20,180,52" & LF & \
-         "21,117,141" & LF & \
-         "22,234,239" & LF & \
-         "23,201,129" & LF & \
-         "24,143,28" & LF & \
-         "25,3,193" & LF & \
-         "26,6,105" & LF & \
-         "27,12,248" & LF & \
-         "28,24,200" & LF & \
-         "29,48,8" & LF & \
-         "30,96,76" & LF & \
-         "31,192,113" & LF & \
-         "32,157,5" & LF & \
-         "33,39,138" & LF & \
-         "34,78,101" & LF & \
-         "35,156,47" & LF & \
-         "36,37,225" & LF & \
-         "37,74,36" & LF & \
-         "38,148,15" & LF & \
-         "39,53,33" & LF & \
-         "40,106,53" & LF & \
-         "41,212,147" & LF & \
-         "42,181,142" & LF & \
-         "43,119,218" & LF & \
-         "44,238,240" & LF & \
-         "45,193,18" & LF & \
-         "46,159,130" & LF & \
-         "47,35,69" & LF & \
-         "48,70,29" & LF & \
-         "49,140,181" & LF & \
-         "50,5,194" & LF & \
-         "51,10,125" & LF & \
-         "52,20,106" & LF & \
-         "53,40,39" & LF & \
-         "54,80,249" & LF & \
-         "55,160,185" & LF & \
-         "56,93,201" & LF & \
-         "57,186,154" & LF & \
-         "58,105,9" & LF & \
-         "59,210,120" & LF & \
-         "60,185,77" & LF & \
-         "61,111,228" & LF & \
-         "62,222,114" & LF & \
-         "63,161,166" & LF & \
-         "64,95,6" & LF & \
-         "65,190,191" & LF & \
-         "66,97,139" & LF & \
-         "67,194,98" & LF & \
-         "68,153,102" & LF & \
-         "69,47,221" & LF & \
-         "70,94,48" & LF & \
-         "71,188,253" & LF & \
-         "72,101,226" & LF & \
-         "73,202,152" & LF & \
-         "74,137,37" & LF & \
-         "75,15,179" & LF & \
-         "76,30,16" & LF & \
-         "77,60,145" & LF & \
-         "78,120,34" & LF & \
-         "79,240,136" & LF & \
-         "80,253,54" & LF & \
-         "81,231,208" & LF & \
-         "82,211,148" & LF & \
-         "83,187,206" & LF & \
-         "84,107,143" & LF & \
-         "85,214,150" & LF & \
-         "86,177,219" & LF & \
-         "87,127,189" & LF & \
-         "88,254,241" & LF & \
-         "89,225,210" & LF & \
-         "90,223,19" & LF & \
-         "91,163,92" & LF & \
-         "92,91,131" & LF & \
-         "93,182,56" & LF & \
-         "94,113,70" & LF & \
-         "95,226,64" & LF & \
-         "96,217,30" & LF & \
-         "97,175,66" & LF & \
-         "98,67,182" & LF & \
-         "99,134,163" & LF & \
-         "100,17,195" & LF & \
-         "101,34,72" & LF & \
-         "102,68,126" & LF & \
-         "103,136,110" & LF & \
-         "104,13,107" & LF & \
-         "105,26,58" & LF & \
-         "106,52,40" & LF & \
-         "107,104,84" & LF & \
-         "108,208,250" & LF & \
-         "109,189,133" & LF & \
-         "110,103,186" & LF & \
-         "111,206,61" & LF & \
-         "112,129,202" & LF & \
-         "113,31,94" & LF & \
-         "114,62,155" & LF & \
-         "115,124,159" & LF & \
-         "116,248,10" & LF & \
-         "117,237,21" & LF & \
-         "118,199,121" & LF & \
-         "119,147,43" & LF & \
-         "120,59,78" & LF & \
-         "121,118,212" & LF & \
-         "122,236,229" & LF & \
-         "123,197,172" & LF & \
-         "124,151,115" & LF & \
-         "125,51,243" & LF & \
-         "126,102,167" & LF & \
-         "127,204,87" & LF & \
-         "128,133,7" & LF & \
-         "129,23,112" & LF & \
-         "130,46,192" & LF & \
-         "131,92,247" & LF & \
-         "132,184,140" & LF & \
-         "133,109,128" & LF & \
-         "134,218,99" & LF & \
-         "135,169,13" & LF & \
-         "136,79,103" & LF & \
-         "137,158,74" & LF & \
-         "138,33,222" & LF & \
-         "139,66,237" & LF & \
-         "140,132,49" & LF & \
-         "141,21,197" & LF & \
-         "142,42,254" & LF & \
-         "143,84,24" & LF & \
-         "144,168,227" & LF & \
-         "145,77,165" & LF & \
-         "146,154,153" & LF & \
-         "147,41,119" & LF & \
-         "148,82,38" & LF & \
-         "149,164,184" & LF & \
-         "150,85,180" & LF & \
-         "151,170,124" & LF & \
-         "152,73,17" & LF & \
-         "153,146,68" & LF & \
-         "154,57,146" & LF & \
-         "155,114,217" & LF & \
-         "156,228,35" & LF & \
-         "157,213,32" & LF & \
-         "158,183,137" & LF & \
-         "159,115,46" & LF & \
-         "160,230,55" & LF & \
-         "161,209,63" & LF & \
-         "162,191,209" & LF & \
-         "163,99,91" & LF & \
-         "164,198,149" & LF & \
-         "165,145,188" & LF & \
-         "166,63,207" & LF & \
-         "167,126,205" & LF & \
-         "168,252,144" & LF & \
-         "169,229,135" & LF & \
-         "170,215,151" & LF & \
-         "171,179,178" & LF & \
-         "172,123,220" & LF & \
-         "173,246,252" & LF & \
-         "174,241,190" & LF & \
-         "175,255,97" & LF & \
-         "176,227,242" & LF & \
-         "177,219,86" & LF & \
-         "178,171,211" & LF & \
-         "179,75,171" & LF & \
-         "180,150,20" & LF & \
-         "181,49,42" & LF & \
-         "182,98,93" & LF & \
-         "183,196,158" & LF & \
-         "184,149,132" & LF & \
-         "185,55,60" & LF & \
-         "186,110,57" & LF & \
-         "187,220,83" & LF & \
-         "188,165,71" & LF & \
-         "189,87,109" & LF & \
-         "190,174,65" & LF & \
-         "191,65,162" & LF & \
-         "192,130,31" & LF & \
-         "193,25,45" & LF & \
-         "194,50,67" & LF & \
-         "195,100,216" & LF & \
-         "196,200,183" & LF & \
-         "197,141,123" & LF & \
-         "198,7,164" & LF & \
-         "199,14,118" & LF & \
-         "200,28,196" & LF & \
-         "201,56,23" & LF & \
-         "202,112,73" & LF & \
-         "203,224,236" & LF & \
-         "204,221,127" & LF & \
-         "205,167,12" & LF & \
-         "206,83,111" & LF & \
-         "207,166,246" & LF & \
-         "208,81,108" & LF & \
-         "209,162,161" & LF & \
-         "210,89,59" & LF & \
-         "211,178,82" & LF & \
-         "212,121,41" & LF & \
-         "213,242,157" & LF & \
-         "214,249,85" & LF & \
-         "215,239,170" & LF & \
-         "216,195,251" & LF & \
-         "217,155,96" & LF & \
-         "218,43,134" & LF & \
-         "219,86,177" & LF & \
-         "220,172,187" & LF & \
-         "221,69,204" & LF & \
-         "222,138,62" & LF & \
-         "223,9,90" & LF & \
-         "224,18,203" & LF & \
-         "225,36,89" & LF & \
-         "226,72,95" & LF & \
-         "227,144,176" & LF & \
-         "228,61,156" & LF & \
-         "229,122,169" & LF & \
-         "230,244,160" & LF & \
-         "231,245,81" & LF & \
-         "232,247,11" & LF & \
-         "233,243,245" & LF & \
-         "234,251,22" & LF & \
-         "235,235,235" & LF & \
-         "236,203,122" & LF & \
-         "237,139,117" & LF & \
-         "238,11,44" & LF & \
-         "239,22,215" & LF & \
-         "240,44,79" & LF & \
-         "241,88,174" & LF & \
-         "242,176,213" & LF & \
-         "243,125,233" & LF & \
-         "244,250,230" & LF & \
-         "245,233,231" & LF & \
-         "246,207,173" & LF & \
-         "247,131,232" & LF & \
-         "248,27,116" & LF & \
-         "249,54,214" & LF & \
-         "250,108,244" & LF & \
-         "251,216,234" & LF & \
-         "252,173,168" & LF & \
-         "253,71,80" & LF & \
-         "254,142,88" & LF & \
-         "255,1,175" \
-         into sGF256List
+   put "1,2,0" & LF after tTmpString
+   put "2,4,1" & LF after tTmpString
+   put "3,8,25" & LF after tTmpString
+   put "4,16,2" & LF after tTmpString
+   put "5,32,50" & LF after tTmpString
+   put "6,64,26" & LF after tTmpString
+   put "7,128,198" & LF after tTmpString
+   put "8,29,3" & LF after tTmpString
+   put "9,58,223" & LF after tTmpString
+   put "10,116,51" & LF after tTmpString
+   put "11,232,238" & LF after tTmpString
+   put "12,205,27" & LF after tTmpString
+   put "13,135,104" & LF after tTmpString
+   put "14,19,199" & LF after tTmpString
+   put "15,38,75" & LF after tTmpString
+   put "16,76,4" & LF after tTmpString
+   put "17,152,100" & LF after tTmpString
+   put "18,45,224" & LF after tTmpString
+   put "19,90,14" & LF after tTmpString
+   put "20,180,52" & LF after tTmpString
+   put "21,117,141" & LF after tTmpString
+   put "22,234,239" & LF after tTmpString
+   put "23,201,129" & LF after tTmpString
+   put "24,143,28" & LF after tTmpString
+   put "25,3,193" & LF after tTmpString
+   put "26,6,105" & LF after tTmpString
+   put "27,12,248" & LF after tTmpString
+   put "28,24,200" & LF after tTmpString
+   put "29,48,8" & LF after tTmpString
+   put "30,96,76" & LF after tTmpString
+   put "31,192,113" & LF after tTmpString
+   put "32,157,5" & LF after tTmpString
+   put "33,39,138" & LF after tTmpString
+   put "34,78,101" & LF after tTmpString
+   put "35,156,47" & LF after tTmpString
+   put "36,37,225" & LF after tTmpString
+   put "37,74,36" & LF after tTmpString
+   put "38,148,15" & LF after tTmpString
+   put "39,53,33" & LF after tTmpString
+   put "40,106,53" & LF after tTmpString
+   put "41,212,147" & LF after tTmpString
+   put "42,181,142" & LF after tTmpString
+   put "43,119,218" & LF after tTmpString
+   put "44,238,240" & LF after tTmpString
+   put "45,193,18" & LF after tTmpString
+   put "46,159,130" & LF after tTmpString
+   put "47,35,69" & LF after tTmpString
+   put "48,70,29" & LF after tTmpString
+   put "49,140,181" & LF after tTmpString
+   put "50,5,194" & LF after tTmpString
+   put "51,10,125" & LF after tTmpString
+   put "52,20,106" & LF after tTmpString
+   put "53,40,39" & LF after tTmpString
+   put "54,80,249" & LF after tTmpString
+   put "55,160,185" & LF after tTmpString
+   put "56,93,201" & LF after tTmpString
+   put "57,186,154" & LF after tTmpString
+   put "58,105,9" & LF after tTmpString
+   put "59,210,120" & LF after tTmpString
+   put "60,185,77" & LF after tTmpString
+   put "61,111,228" & LF after tTmpString
+   put "62,222,114" & LF after tTmpString
+   put "63,161,166" & LF after tTmpString
+   put "64,95,6" & LF after tTmpString
+   put "65,190,191" & LF after tTmpString
+   put "66,97,139" & LF after tTmpString
+   put "67,194,98" & LF after tTmpString
+   put "68,153,102" & LF after tTmpString
+   put "69,47,221" & LF after tTmpString
+   put "70,94,48" & LF after tTmpString
+   put "71,188,253" & LF after tTmpString
+   put "72,101,226" & LF after tTmpString
+   put "73,202,152" & LF after tTmpString
+   put "74,137,37" & LF after tTmpString
+   put "75,15,179" & LF after tTmpString
+   put "76,30,16" & LF after tTmpString
+   put "77,60,145" & LF after tTmpString
+   put "78,120,34" & LF after tTmpString
+   put "79,240,136" & LF after tTmpString
+   put "80,253,54" & LF after tTmpString
+   put "81,231,208" & LF after tTmpString
+   put "82,211,148" & LF after tTmpString
+   put "83,187,206" & LF after tTmpString
+   put "84,107,143" & LF after tTmpString
+   put "85,214,150" & LF after tTmpString
+   put "86,177,219" & LF after tTmpString
+   put "87,127,189" & LF after tTmpString
+   put "88,254,241" & LF after tTmpString
+   put "89,225,210" & LF after tTmpString
+   put "90,223,19" & LF after tTmpString
+   put "91,163,92" & LF after tTmpString
+   put "92,91,131" & LF after tTmpString
+   put "93,182,56" & LF after tTmpString
+   put "94,113,70" & LF after tTmpString
+   put "95,226,64" & LF after tTmpString
+   put "96,217,30" & LF after tTmpString
+   put "97,175,66" & LF after tTmpString
+   put "98,67,182" & LF after tTmpString
+   put "99,134,163" & LF after tTmpString
+   put "100,17,195" & LF after tTmpString
+   put "101,34,72" & LF after tTmpString
+   put "102,68,126" & LF after tTmpString
+   put "103,136,110" & LF after tTmpString
+   put "104,13,107" & LF after tTmpString
+   put "105,26,58" & LF after tTmpString
+   put "106,52,40" & LF after tTmpString
+   put "107,104,84" & LF after tTmpString
+   put "108,208,250" & LF after tTmpString
+   put "109,189,133" & LF after tTmpString
+   put "110,103,186" & LF after tTmpString
+   put "111,206,61" & LF after tTmpString
+   put "112,129,202" & LF after tTmpString
+   put "113,31,94" & LF after tTmpString
+   put "114,62,155" & LF after tTmpString
+   put "115,124,159" & LF after tTmpString
+   put "116,248,10" & LF after tTmpString
+   put "117,237,21" & LF after tTmpString
+   put "118,199,121" & LF after tTmpString
+   put "119,147,43" & LF after tTmpString
+   put "120,59,78" & LF after tTmpString
+   put "121,118,212" & LF after tTmpString
+   put "122,236,229" & LF after tTmpString
+   put "123,197,172" & LF after tTmpString
+   put "124,151,115" & LF after tTmpString
+   put "125,51,243" & LF after tTmpString
+   put "126,102,167" & LF after tTmpString
+   put "127,204,87" & LF after tTmpString
+   put "128,133,7" & LF after tTmpString
+   put "129,23,112" & LF after tTmpString
+   put "130,46,192" & LF after tTmpString
+   put "131,92,247" & LF after tTmpString
+   put "132,184,140" & LF after tTmpString
+   put "133,109,128" & LF after tTmpString
+   put "134,218,99" & LF after tTmpString
+   put "135,169,13" & LF after tTmpString
+   put "136,79,103" & LF after tTmpString
+   put "137,158,74" & LF after tTmpString
+   put "138,33,222" & LF after tTmpString
+   put "139,66,237" & LF after tTmpString
+   put "140,132,49" & LF after tTmpString
+   put "141,21,197" & LF after tTmpString
+   put "142,42,254" & LF after tTmpString
+   put "143,84,24" & LF after tTmpString
+   put "144,168,227" & LF after tTmpString
+   put "145,77,165" & LF after tTmpString
+   put "146,154,153" & LF after tTmpString
+   put "147,41,119" & LF after tTmpString
+   put "148,82,38" & LF after tTmpString
+   put "149,164,184" & LF after tTmpString
+   put "150,85,180" & LF after tTmpString
+   put "151,170,124" & LF after tTmpString
+   put "152,73,17" & LF after tTmpString
+   put "153,146,68" & LF after tTmpString
+   put "154,57,146" & LF after tTmpString
+   put "155,114,217" & LF after tTmpString
+   put "156,228,35" & LF after tTmpString
+   put "157,213,32" & LF after tTmpString
+   put "158,183,137" & LF after tTmpString
+   put "159,115,46" & LF after tTmpString
+   put "160,230,55" & LF after tTmpString
+   put "161,209,63" & LF after tTmpString
+   put "162,191,209" & LF after tTmpString
+   put "163,99,91" & LF after tTmpString
+   put "164,198,149" & LF after tTmpString
+   put "165,145,188" & LF after tTmpString
+   put "166,63,207" & LF after tTmpString
+   put "167,126,205" & LF after tTmpString
+   put "168,252,144" & LF after tTmpString
+   put "169,229,135" & LF after tTmpString
+   put "170,215,151" & LF after tTmpString
+   put "171,179,178" & LF after tTmpString
+   put "172,123,220" & LF after tTmpString
+   put "173,246,252" & LF after tTmpString
+   put "174,241,190" & LF after tTmpString
+   put "175,255,97" & LF after tTmpString
+   put "176,227,242" & LF after tTmpString
+   put "177,219,86" & LF after tTmpString
+   put "178,171,211" & LF after tTmpString
+   put "179,75,171" & LF after tTmpString
+   put "180,150,20" & LF after tTmpString
+   put "181,49,42" & LF after tTmpString
+   put "182,98,93" & LF after tTmpString
+   put "183,196,158" & LF after tTmpString
+   put "184,149,132" & LF after tTmpString
+   put "185,55,60" & LF after tTmpString
+   put "186,110,57" & LF after tTmpString
+   put "187,220,83" & LF after tTmpString
+   put "188,165,71" & LF after tTmpString
+   put "189,87,109" & LF after tTmpString
+   put "190,174,65" & LF after tTmpString
+   put "191,65,162" & LF after tTmpString
+   put "192,130,31" & LF after tTmpString
+   put "193,25,45" & LF after tTmpString
+   put "194,50,67" & LF after tTmpString
+   put "195,100,216" & LF after tTmpString
+   put "196,200,183" & LF after tTmpString
+   put "197,141,123" & LF after tTmpString
+   put "198,7,164" & LF after tTmpString
+   put "199,14,118" & LF after tTmpString
+   put "200,28,196" & LF after tTmpString
+   put "201,56,23" & LF after tTmpString
+   put "202,112,73" & LF after tTmpString
+   put "203,224,236" & LF after tTmpString
+   put "204,221,127" & LF after tTmpString
+   put "205,167,12" & LF after tTmpString
+   put "206,83,111" & LF after tTmpString
+   put "207,166,246" & LF after tTmpString
+   put "208,81,108" & LF after tTmpString
+   put "209,162,161" & LF after tTmpString
+   put "210,89,59" & LF after tTmpString
+   put "211,178,82" & LF after tTmpString
+   put "212,121,41" & LF after tTmpString
+   put "213,242,157" & LF after tTmpString
+   put "214,249,85" & LF after tTmpString
+   put "215,239,170" & LF after tTmpString
+   put "216,195,251" & LF after tTmpString
+   put "217,155,96" & LF after tTmpString
+   put "218,43,134" & LF after tTmpString
+   put "219,86,177" & LF after tTmpString
+   put "220,172,187" & LF after tTmpString
+   put "221,69,204" & LF after tTmpString
+   put "222,138,62" & LF after tTmpString
+   put "223,9,90" & LF after tTmpString
+   put "224,18,203" & LF after tTmpString
+   put "225,36,89" & LF after tTmpString
+   put "226,72,95" & LF after tTmpString
+   put "227,144,176" & LF after tTmpString
+   put "228,61,156" & LF after tTmpString
+   put "229,122,169" & LF after tTmpString
+   put "230,244,160" & LF after tTmpString
+   put "231,245,81" & LF after tTmpString
+   put "232,247,11" & LF after tTmpString
+   put "233,243,245" & LF after tTmpString
+   put "234,251,22" & LF after tTmpString
+   put "235,235,235" & LF after tTmpString
+   put "236,203,122" & LF after tTmpString
+   put "237,139,117" & LF after tTmpString
+   put "238,11,44" & LF after tTmpString
+   put "239,22,215" & LF after tTmpString
+   put "240,44,79" & LF after tTmpString
+   put "241,88,174" & LF after tTmpString
+   put "242,176,213" & LF after tTmpString
+   put "243,125,233" & LF after tTmpString
+   put "244,250,230" & LF after tTmpString
+   put "245,233,231" & LF after tTmpString
+   put "246,207,173" & LF after tTmpString
+   put "247,131,232" & LF after tTmpString
+   put "248,27,116" & LF after tTmpString
+   put "249,54,214" & LF after tTmpString
+   put "250,108,244" & LF after tTmpString
+   put "251,216,234" & LF after tTmpString
+   put "252,173,168" & LF after tTmpString
+   put "253,71,80" & LF after tTmpString
+   put "254,142,88" & LF after tTmpString
+   put "255,1,175" after tTmpString
+   put tTmpString into sGF256List
+   put empty into tTmpString
    
    # generator polynomial alpha exponents for each number of error correction codewords
-   put "7,0,87,229,146,149,238,102,21" & LF & \
-         "10,0,251,67,46,61,118,70,64,94,32,45" & LF & \
-         "13,0,74,152,176,100,86,100,106,104,130,218,206,140,78" & LF & \
-         "15,0,8,183,61,91,202,37,51,58,58,237,140,124,5,99,105" & LF & \
-         "16,0,120,104,107,109,102,161,76,3,91,191,147,169,182,194,225,120" & LF & \
-         "17,0,43,139,206,78,43,239,123,206,214,147,24,99,150,39,243,163,136" & LF & \
-         "18,0,215,234,158,94,184,97,118,170,79,187,152,148,252,179,5,98,96,153" & LF & \
-         "20,0,17,60,79,50,61,163,26,187,202,180,221,225,83,239,156,164,212,212,188,190" & LF & \
-         "22,0,210,171,247,242,93,230,14,109,221,53,200,74,8,172,98,80,219,134,160,105,165,231" & LF & \
-         "24,0,229,121,135,48,211,117,251,126,159,180,169,152,192,226,228,218,111,0,117,232,87,96,227,21" & LF & \
-         "26,0,173,125,158,2,103,182,118,17,145,201,111,28,165,53,161,21,245,142,13,102,48,227,153,145,218,70" & LF & \
-         "28,0,168,223,200,104,224,234,108,180,110,190,195,147,205,27,232,201,21,43,245,87,42,195,212,119,242,37,9,123" & LF & \
-         "30,0,41,173,145,152,216,31,179,182,50,48,110,86,239,96,222,125,42,173,226,193,224,130,156,37,251,216,238,40,192,180" & LF & \
-         "32,0,10,6,106,190,249,167,4,67,209,138,138,32,242,123,89,27,120,185,80,156,38,69,171,60,28,222,80,52,254,185,220,241" & LF & \
-         "34,0,111,77,146,94,26,21,108,19,105,94,113,193,86,140,163,125,58,158,229,239,218,103,56,70,114,61,183,129,167,13,98,62,129,51" & LF & \
-         "36,0,200,183,98,16,172,31,246,234,60,152,115,0,167,152,113,248,238,107,18,63,218,37,87,210,105,177,120,74,121,196,117,251,113,233,30,120" & LF & \
-         "40,0,59,116,79,161,252,98,128,205,128,161,247,57,163,56,235,106,53,26,187,174,226,104,170,7,175,35,181,114,88,41,47,163,125,134,72,20,232,53,35,15" & LF & \
-         "42,0,250,103,221,230,25,18,137,231,0,3,58,242,221,191,110,84,230,8,188,106,96,147,15,131,139,34,101,223,39,101,213,199,237,254,201,123,171,162,194,117,50,96" & LF & \
-         "44,0,190,7,61,121,71,246,69,55,168,188,89,243,191,25,72,123,9,145,14,247,,238,44,78,143,62,224,126,118,114,68,163,52,194,217,147,204,169,37,130,113,102,73,181" & LF & \
-         "46,0,112,94,88,112,253,224,202,115,187,99,89,5,54,113,129,44,58,16,135,216,169,211,36,,4,96,60,241,73,104,234,8,249,245,119,174,52,25,157,224,43,202,223,19,82,15" & LF & \
-         "48,0,228,25,196,130,211,146,60,24,251,90,39,102,240,61,178,63,46,123,115,18,221,111,135,160,182,205,107,206,95,150,120,184,91,21,247,156,140,238,191,11,94,227,84,50,163,39,34,108" & LF & \
-         "50,0,232,125,157,161,164,9,118,46,209,99,203,193,35,3,209,111,195,242,203,225,46,13,32,160,126,209,130,160,242,215,242,75,77,42,189,32,113,65,124,69,228,114,235,175,124,170,215,232,133,205" & LF & \
-         "52,0,116,50,86,186,50,220,251,89,192,46,86,127,124,19,184,233,151,215,22,14,59,145,37,242,203,134,254,89,190,94,59,65,124,113,100,233,235,121,22,76,86,97,39,242,200,220,101,33,239,254,116,51" & LF & \
-         "54,0,183,26,201,87,210,221,113,21,46,65,45,50,238,184,249,225,102,58,209,218,109,165,26,95,184,192,52,245,35,254,238,175,172,79,123,25,122,43,120,108,215,80,128,201,235,8,153,59,101,31,198,76,31,156" & LF & \
-         "56,0,106,120,107,157,164,216,112,116,2,91,248,163,36,201,202,229,6,144,254,155,135,208,170,209,12,139,127,142,182,249,177,174,190,28,10,85,239,184,101,124,152,206,96,23,163,61,27,196,247,151,154,202,207,20,61,10" & LF & \
-         "58,0,82,116,26,247,66,27,62,107,252,182,200,185,235,55,251,242,210,144,154,237,176,141,192,248,152,249,206,85,253,142,65,165,125,23,24,30,122,240,214,6,129,218,29,145,127,134,206,245,117,29,41,63,159,142,233,125,148,123" & LF & \
-         "60,0,107,140,26,12,9,141,243,197,226,197,219,45,211,101,219,120,28,181,127,6,100,247,2,205,198,57,115,219,101,109,160,82,37,38,238,49,160,209,121,86,11,124,30,181,84,25,194,87,65,102,190,220,70,27,209,16,89,7,33,240" & LF & \
-         "62,0,65,202,113,98,71,223,248,118,214,94,0,122,37,23,2,228,58,121,7,105,135,78,243,118,70,76,223,89,72,50,70,111,194,17,212,126,181,35,221,117,235,11,229,149,147,123,213,40,115,6,200,100,26,246,182,218,127,215,36,186,110,106" & LF & \
-         "64,0,45,51,175,9,7,158,159,49,68,119,92,123,177,204,187,254,200,78,141,149,119,26,127,53,160,93,199,212,29,24,145,156,208,150,218,209,4,216,91,47,184,146,47,140,195,195,125,242,238,63,99,108,140,230,242,31,204,11,178,243,217,156,213,231" & LF & \
-         "66,0,5,118,222,180,136,136,162,51,46,117,13,215,81,17,139,247,197,171,95,173,65,137,178,68,111,95,101,41,72,214,169,197,95,7,44,154,77,111,236,40,121,143,63,87,80,253,240,126,217,77,34,232,106,50,168,82,76,146,67,106,171,25,132,93,45,105" & LF & \
-         "68,0,247,159,223,33,224,93,77,70,90,160,32,254,43,150,84,101,190,205,133,52,60,202,165,220,203,151,93,84,15,84,253,173,160,89,227,52,199,97,95,231,52,177,41,125,137,241,166,225,118,2,54,32,82,215,175,198,43,238,235,27,101,184,127,3,5,8,163,238" \
-         into sGenPolyAlphaExpList
+   put "7,0,87,229,146,149,238,102,21" & LF after tTmpString
+   put "10,0,251,67,46,61,118,70,64,94,32,45" & LF after tTmpString
+   put "13,0,74,152,176,100,86,100,106,104,130,218,206,140,78" & LF after tTmpString
+   put "15,0,8,183,61,91,202,37,51,58,58,237,140,124,5,99,105" & LF after tTmpString
+   put "16,0,120,104,107,109,102,161,76,3,91,191,147,169,182,194,225,120" & LF after tTmpString
+   put "17,0,43,139,206,78,43,239,123,206,214,147,24,99,150,39,243,163,136" & LF after tTmpString
+   put "18,0,215,234,158,94,184,97,118,170,79,187,152,148,252,179,5,98,96,153" & LF after tTmpString
+   put "20,0,17,60,79,50,61,163,26,187,202,180,221,225,83,239,156,164,212,212,188,190" & LF after tTmpString
+   put "22,0,210,171,247,242,93,230,14,109,221,53,200,74,8,172,98,80,219,134,160,105,165,231" & LF after tTmpString
+   put "24,0,229,121,135,48,211,117,251,126,159,180,169,152,192,226,228,218,111,0,117,232,87,96,227,21" & LF after tTmpString
+   put "26,0,173,125,158,2,103,182,118,17,145,201,111,28,165,53,161,21,245,142,13,102,48,227,153,145,218,70" & LF after tTmpString
+   put "28,0,168,223,200,104,224,234,108,180,110,190,195,147,205,27,232,201,21,43,245,87,42,195,212,119,242,37,9,123" & LF after tTmpString
+   put "30,0,41,173,145,152,216,31,179,182,50,48,110,86,239,96,222,125,42,173,226,193,224,130,156,37,251,216,238,40,192,180" & LF after tTmpString
+   put "32,0,10,6,106,190,249,167,4,67,209,138,138,32,242,123,89,27,120,185,80,156,38,69,171,60,28,222,80,52,254,185,220,241" & LF after tTmpString
+   put "34,0,111,77,146,94,26,21,108,19,105,94,113,193,86,140,163,125,58,158,229,239,218,103,56,70,114,61,183,129,167,13,98,62,129,51" & LF after tTmpString
+   put "36,0,200,183,98,16,172,31,246,234,60,152,115,0,167,152,113,248,238,107,18,63,218,37,87,210,105,177,120,74,121,196,117,251,113,233,30,120" & LF after tTmpString
+   put "40,0,59,116,79,161,252,98,128,205,128,161,247,57,163,56,235,106,53,26,187,174,226,104,170,7,175,35,181,114,88,41,47,163,125,134,72,20,232,53,35,15" & LF after tTmpString
+   put "42,0,250,103,221,230,25,18,137,231,0,3,58,242,221,191,110,84,230,8,188,106,96,147,15,131,139,34,101,223,39,101,213,199,237,254,201,123,171,162,194,117,50,96" & LF after tTmpString
+   put "44,0,190,7,61,121,71,246,69,55,168,188,89,243,191,25,72,123,9,145,14,247,,238,44,78,143,62,224,126,118,114,68,163,52,194,217,147,204,169,37,130,113,102,73,181" & LF after tTmpString
+   put "46,0,112,94,88,112,253,224,202,115,187,99,89,5,54,113,129,44,58,16,135,216,169,211,36,,4,96,60,241,73,104,234,8,249,245,119,174,52,25,157,224,43,202,223,19,82,15" & LF after tTmpString
+   put "48,0,228,25,196,130,211,146,60,24,251,90,39,102,240,61,178,63,46,123,115,18,221,111,135,160,182,205,107,206,95,150,120,184,91,21,247,156,140,238,191,11,94,227,84,50,163,39,34,108" & LF after tTmpString
+   put "50,0,232,125,157,161,164,9,118,46,209,99,203,193,35,3,209,111,195,242,203,225,46,13,32,160,126,209,130,160,242,215,242,75,77,42,189,32,113,65,124,69,228,114,235,175,124,170,215,232,133,205" & LF after tTmpString
+   put "52,0,116,50,86,186,50,220,251,89,192,46,86,127,124,19,184,233,151,215,22,14,59,145,37,242,203,134,254,89,190,94,59,65,124,113,100,233,235,121,22,76,86,97,39,242,200,220,101,33,239,254,116,51" & LF after tTmpString
+   put "54,0,183,26,201,87,210,221,113,21,46,65,45,50,238,184,249,225,102,58,209,218,109,165,26,95,184,192,52,245,35,254,238,175,172,79,123,25,122,43,120,108,215,80,128,201,235,8,153,59,101,31,198,76,31,156" & LF after tTmpString
+   put "56,0,106,120,107,157,164,216,112,116,2,91,248,163,36,201,202,229,6,144,254,155,135,208,170,209,12,139,127,142,182,249,177,174,190,28,10,85,239,184,101,124,152,206,96,23,163,61,27,196,247,151,154,202,207,20,61,10" & LF after tTmpString
+   put "58,0,82,116,26,247,66,27,62,107,252,182,200,185,235,55,251,242,210,144,154,237,176,141,192,248,152,249,206,85,253,142,65,165,125,23,24,30,122,240,214,6,129,218,29,145,127,134,206,245,117,29,41,63,159,142,233,125,148,123" & LF after tTmpString
+   put "60,0,107,140,26,12,9,141,243,197,226,197,219,45,211,101,219,120,28,181,127,6,100,247,2,205,198,57,115,219,101,109,160,82,37,38,238,49,160,209,121,86,11,124,30,181,84,25,194,87,65,102,190,220,70,27,209,16,89,7,33,240" & LF after tTmpString
+   put "62,0,65,202,113,98,71,223,248,118,214,94,0,122,37,23,2,228,58,121,7,105,135,78,243,118,70,76,223,89,72,50,70,111,194,17,212,126,181,35,221,117,235,11,229,149,147,123,213,40,115,6,200,100,26,246,182,218,127,215,36,186,110,106" & LF after tTmpString
+   put "64,0,45,51,175,9,7,158,159,49,68,119,92,123,177,204,187,254,200,78,141,149,119,26,127,53,160,93,199,212,29,24,145,156,208,150,218,209,4,216,91,47,184,146,47,140,195,195,125,242,238,63,99,108,140,230,242,31,204,11,178,243,217,156,213,231" & LF after tTmpString
+   put "66,0,5,118,222,180,136,136,162,51,46,117,13,215,81,17,139,247,197,171,95,173,65,137,178,68,111,95,101,41,72,214,169,197,95,7,44,154,77,111,236,40,121,143,63,87,80,253,240,126,217,77,34,232,106,50,168,82,76,146,67,106,171,25,132,93,45,105" & LF after tTmpString
+   put "68,0,247,159,223,33,224,93,77,70,90,160,32,254,43,150,84,101,190,205,133,52,60,202,165,220,203,151,93,84,15,84,253,173,160,89,227,52,199,97,95,231,52,177,41,125,137,241,166,225,118,2,54,32,82,215,175,198,43,238,235,27,101,184,127,3,5,8,163,238" after tTmpString
+   put tTmpString into sGenPolyAlphaExpList
+   put empty into tTmpString
    
    # symbol format data
    # ECC & mask code, data bits (LSB -> MSB)
-   put "L0,111011111000100" & LF &  \
-         "L1,111001011110011" & LF &  \
-         "L2,111110110101010" & LF &  \
-         "L3,111100010011101" & LF &  \
-         "L4,110011000101111" & LF &  \
-         "L5,110001100011000" & LF &  \
-         "L6,110110001000001" & LF &  \
-         "L7,110100101110110" & LF &  \
-         "M0,101010000010010" & LF &  \
-         "M1,101000100100101" & LF &  \
-         "M2,101111001111100" & LF &  \
-         "M3,101101101001011" & LF &  \
-         "M4,100010111111001" & LF &  \
-         "M5,100000011001110" & LF &  \
-         "M6,100111110010111" & LF &  \
-         "M7,100101010100000" & LF &  \
-         "Q0,011010101011111" & LF &  \
-         "Q1,011000001101000" & LF &  \
-         "Q2,011111100110001" & LF &  \
-         "Q3,011101000000110" & LF &  \
-         "Q4,010010010110100" & LF &  \
-         "Q5,010000110000011" & LF &  \
-         "Q6,010111011011010" & LF &  \
-         "Q7,010101111101101" & LF &  \
-         "H0,001011010001001" & LF &  \
-         "H1,001001110111110" & LF & \
-         "H2,001110011100111" & LF & \
-         "H3,001100111010000" & LF & \
-         "H4,000011101100010" & LF & \
-         "H5,000001001010101" & LF & \
-         "H6,000110100001100" & LF & \
-         "H7,000100000111011" \
-         into sFormatList
+   put "L0,111011111000100" & LF after tTmpString
+   put "L1,111001011110011" & LF after tTmpString
+   put "L2,111110110101010" & LF after tTmpString
+   put "L3,111100010011101" & LF after tTmpString
+   put "L4,110011000101111" & LF after tTmpString
+   put "L5,110001100011000" & LF after tTmpString
+   put "L6,110110001000001" & LF after tTmpString
+   put "L7,110100101110110" & LF after tTmpString
+   put "M0,101010000010010" & LF after tTmpString
+   put "M1,101000100100101" & LF after tTmpString
+   put "M2,101111001111100" & LF after tTmpString
+   put "M3,101101101001011" & LF after tTmpString
+   put "M4,100010111111001" & LF after tTmpString
+   put "M5,100000011001110" & LF after tTmpString
+   put "M6,100111110010111" & LF after tTmpString
+   put "M7,100101010100000" & LF after tTmpString
+   put "Q0,011010101011111" & LF after tTmpString
+   put "Q1,011000001101000" & LF after tTmpString
+   put "Q2,011111100110001" & LF after tTmpString
+   put "Q3,011101000000110" & LF after tTmpString
+   put "Q4,010010010110100" & LF after tTmpString
+   put "Q5,010000110000011" & LF after tTmpString
+   put "Q6,010111011011010" & LF after tTmpString
+   put "Q7,010101111101101" & LF after tTmpString
+   put "H0,001011010001001" & LF after tTmpString
+   put "H1,001001110111110" & LF after tTmpString
+   put "H2,001110011100111" & LF after tTmpString
+   put "H3,001100111010000" & LF after tTmpString
+   put "H4,000011101100010" & LF after tTmpString
+   put "H5,000001001010101" & LF after tTmpString
+   put "H6,000110100001100" & LF after tTmpString
+   put "H7,000100000111011" after tTmpString
+   put tTmpString into sFormatList
+   put empty into tTmpString
    
    # version, databits (LSB -> MSB)
-   put "7,001010010011111000" & LF & \
-         "8,001111011010000100" & LF & \
-         "9,100110010101100100" & LF & \
-         "10,110010110010010100" & LF & \
-         "11,011011111101110100" & LF & \
-         "12,010001101110001100" & LF & \
-         "13,111000100001101100" & LF & \
-         "14,101100000110011100" & LF & \
-         "15,000101001001111100" & LF & \
-         "16,000111101101000010" & LF & \
-         "17,101110100010100010" & LF & \
-         "18,111010000101010010" & LF & \
-         "19,010011001010110010" & LF & \
-         "20,011001011001001010" & LF & \
-         "21,110000010110101010" & LF & \
-         "22,100100110001011010" & LF & \
-         "23,001101111110111010" & LF & \
-         "24,001000110111000110" & LF & \
-         "25,100001111000100110" & LF & \
-         "26,110101011111010110" & LF & \
-         "27,011100010000110110" & LF & \
-         "28,010110000011001110" & LF & \
-         "29,111111001100101110" & LF & \
-         "30,101011101011011110" & LF & \
-         "31,000010100100111110" & LF & \
-         "32,101010111001000001" & LF & \
-         "33,000011110110100001" & LF & \
-         "34,010111010001010001" & LF & \
-         "35,111110011110110001" & LF & \
-         "36,110100001101001001" & LF & \
-         "37,011101000010101001" & LF & \
-         "38,001001100101011001" & LF & \
-         "39,100000101010111001" & LF & \
-         "40,100101100011000101" \
-         into sVersionList
+   put "7,001010010011111000" & LF after tTmpString
+   put "8,001111011010000100" & LF after tTmpString
+   put "9,100110010101100100" & LF after tTmpString
+   put "10,110010110010010100" & LF after tTmpString
+   put "11,011011111101110100" & LF after tTmpString
+   put "12,010001101110001100" & LF after tTmpString
+   put "13,111000100001101100" & LF after tTmpString
+   put "14,101100000110011100" & LF after tTmpString
+   put "15,000101001001111100" & LF after tTmpString
+   put "16,000111101101000010" & LF after tTmpString
+   put "17,101110100010100010" & LF after tTmpString
+   put "18,111010000101010010" & LF after tTmpString
+   put "19,010011001010110010" & LF after tTmpString
+   put "20,011001011001001010" & LF after tTmpString
+   put "21,110000010110101010" & LF after tTmpString
+   put "22,100100110001011010" & LF after tTmpString
+   put "23,001101111110111010" & LF after tTmpString
+   put "24,001000110111000110" & LF after tTmpString
+   put "25,100001111000100110" & LF after tTmpString
+   put "26,110101011111010110" & LF after tTmpString
+   put "27,011100010000110110" & LF after tTmpString
+   put "28,010110000011001110" & LF after tTmpString
+   put "29,111111001100101110" & LF after tTmpString
+   put "30,101011101011011110" & LF after tTmpString
+   put "31,000010100100111110" & LF after tTmpString
+   put "32,101010111001000001" & LF after tTmpString
+   put "33,000011110110100001" & LF after tTmpString
+   put "34,010111010001010001" & LF after tTmpString
+   put "35,111110011110110001" & LF after tTmpString
+   put "36,110100001101001001" & LF after tTmpString
+   put "37,011101000010101001" & LF after tTmpString
+   put "38,001001100101011001" & LF after tTmpString
+   put "39,100000101010111001" & LF after tTmpString
+   put "40,100101100011000101" after tTmpString
+   put tTmpString into sVersionList
+   put empty into tTmpString
    
    # version, databits (MSB -> LSB)
-   put "7,000111110010010100" & LF & \
-         "8,001000010110111100" & LF & \
-         "9,001001101010011001" & LF & \
-         "10,001010010011010011" & LF & \
-         "11,001011101111110110" & LF & \
-         "12,001100011101100010" & LF & \
-         "13,001101100001000111" & LF & \
-         "14,001110011000001101" & LF & \
-         "15,001111100100101000" & LF & \
-         "16,010000101101111000" & LF & \
-         "17,010001010001011101" & LF & \
-         "18,010010101000010111" & LF & \
-         "19,010011010100110010" & LF & \
-         "20,010100100110100110" & LF & \
-         "21,010101011010000011" & LF & \
-         "22,010110100011001001" & LF & \
-         "23,010111011111101100" & LF & \
-         "24,011000111011000100" & LF & \
-         "25,011001000111100001" & LF & \
-         "26,011010111110101011" & LF & \
-         "27,011011000010001110" & LF & \
-         "28,011100110000011010" & LF & \
-         "29,011101001100111111" & LF & \
-         "30,011110110101110101" & LF & \
-         "31,011111001001010000" & LF & \
-         "32,100000100111010101" & LF & \
-         "33,100001011011110000" & LF & \
-         "34,100010100010111010" & LF & \
-         "35,100011011110011111" & LF & \
-         "36,100100101100001011" & LF & \
-         "37,100101010000101110" & LF & \
-         "38,100110101001100100" & LF & \
-         "39,100111010101000001" & LF & \
-         "40,101000110001101001" \
-         into sVersionList2
+   put "7,000111110010010100" & LF after tTmpString
+   put "8,001000010110111100" & LF after tTmpString
+   put "9,001001101010011001" & LF after tTmpString
+   put "10,001010010011010011" & LF after tTmpString
+   put "11,001011101111110110" & LF after tTmpString
+   put "12,001100011101100010" & LF after tTmpString
+   put "13,001101100001000111" & LF after tTmpString
+   put "14,001110011000001101" & LF after tTmpString
+   put "15,001111100100101000" & LF after tTmpString
+   put "16,010000101101111000" & LF after tTmpString
+   put "17,010001010001011101" & LF after tTmpString
+   put "18,010010101000010111" & LF after tTmpString
+   put "19,010011010100110010" & LF after tTmpString
+   put "20,010100100110100110" & LF after tTmpString
+   put "21,010101011010000011" & LF after tTmpString
+   put "22,010110100011001001" & LF after tTmpString
+   put "23,010111011111101100" & LF after tTmpString
+   put "24,011000111011000100" & LF after tTmpString
+   put "25,011001000111100001" & LF after tTmpString
+   put "26,011010111110101011" & LF after tTmpString
+   put "27,011011000010001110" & LF after tTmpString
+   put "28,011100110000011010" & LF after tTmpString
+   put "29,011101001100111111" & LF after tTmpString
+   put "30,011110110101110101" & LF after tTmpString
+   put "31,011111001001010000" & LF after tTmpString
+   put "32,100000100111010101" & LF after tTmpString
+   put "33,100001011011110000" & LF after tTmpString
+   put "34,100010100010111010" & LF after tTmpString
+   put "35,100011011110011111" & LF after tTmpString
+   put "36,100100101100001011" & LF after tTmpString
+   put "37,100101010000101110" & LF after tTmpString
+   put "38,100110101001100100" & LF after tTmpString
+   put "39,100111010101000001" & LF after tTmpString
+   put "40,101000110001101001" after tTmpString
+   put tTmpString into sVersionList2
+   put empty into tTmpString
    
-   put "AliceBlue,239,247,255" & LF & \
-         "AntiqueWhite,249,232,210" & LF & \
-         "AntiqueWhite1,254,237,214" & LF & \
-         "AntiqueWhite2,235,219,197" & LF & \
-         "AntiqueWhite3,200,185,166" & LF & \
-         "AntiqueWhite4,139,131,120" & LF & \
-         "AntiqueWhite4,139,131,120" & LF & \
-         "Aquamarine,67,183,186" & LF & \
-         "Aquamarine1,127,255,212" & LF & \
-         "Aquamarine2,118,238,198" & LF & \
-         "Aquamarine4,65,124,100" & LF & \
-         "Azure,239,255,255" & LF & \
-         "Azure2,222,236,236" & LF & \
-         "Azure3,188,199,199" & LF & \
-         "Azure4,122,125,125" & LF & \
-         "Beige,245,243,215" & LF & \
-         "Beige,245,243,215" & LF & \
-         "Bisque,255,228,196" & LF & \
-         "Bisque1,253,224,188" & LF & \
-         "Bisque2,234,208,174" & LF & \
-         "Bisque3,199,175,146" & LF & \
-         "Bisque4,129,110,89" & LF & \
-         "Black,0,0,0" & LF & \
-         "BlanchedAlmond,254,232,198" & LF & \
-         "Blue,0,0,255" & LF & \
-         "Blue1,21,53,255" & LF & \
-         "Blue2,21,49,236" & LF & \
-         "Blue3,21,40,199" & LF & \
-         "Blue4,21,27,126" & LF & \
-         "BlueViolet,138,43,226" & LF & \
-         "Brown,152,5,23" & LF & \
-         "Brown1,246,53,38" & LF & \
-         "Brown2,228,45,23" & LF & \
-         "Brown3,194,34,23" & LF & \
-         "Brown4,126,5,23" & LF & \
-         "Burlywood,216,175,121" & LF & \
-         "Burlywood1,252,206,142" & LF & \
-         "Burlywood2,234,190,131" & LF & \
-         "Burlywood3,198,160,109" & LF & \
-         "Burlywood4,128,99,65" & LF & \
-         "CadetBlue,87,134,147" & LF & \
-         "CadetBlue1,152,245,255" & LF & \
-         "CadetBlue2,142,226,236" & LF & \
-         "CadetBlue3,119,191,199" & LF & \
-         "CadetBlue4,76,120,126" & LF & \
-         "Chartreuse,127,255,0" & LF & \
-         "Chartreuse2,118,238,0" & LF & \
-         "Chartreuse3,102,205,0" & LF & \
-         "Chartreuse4,67,124,23" & LF & \
-         "Chocolate,200,90,23" & LF & \
-         "Chocolate1,248,114,23" & LF & \
-         "Chocolate2,229,103,23" & LF & \
-         "Chocolate3,195,86,23" & LF & \
-         "Coral,247,101,65" & LF & \
-         "Coral2,229,91,60" & LF & \
-         "Coral3,195,74,44" & LF & \
-         "Coral4,126,40,23" & LF & \
-         "CornflowerBlue,100,149,237" & LF & \
-         "CornSilk,255,247,215" & LF & \
-         "CornSilk2,236,229,198" & LF & \
-         "CornSilk3,200,194,167" & LF & \
-         "CornSilk4,129,122,104" & LF & \
-         "Cyan,0,255,255" & LF & \
-         "Cyan1,87,254,255" & LF & \
-         "Cyan2,80,235,236" & LF & \
-         "Cyan3,70,199,199" & LF & \
-         "Cyan4,48,125,126" & LF & \
-         "DarkBlue,0,0,139" & LF & \
-         "DarkCyan,0,139,139" & LF & \
-         "DarkGoldenrod,175,120,23" & LF & \
-         "DarkGoldenrod1,251,177,23" & LF & \
-         "DarkGoldenrod2,232,163,23" & LF & \
-         "DarkGoldenrod3,197,137,23" & LF & \
-         "DarkGoldenrod4,127,82,23" & LF & \
-         "DarkGray,169,169,169" & LF & \
-         "DarkGreen,0,100,0" & LF & \
-         "DarkKhaki,183,173,89" & LF & \
-         "DarkMagenta,139,0,139" & LF & \
-         "DarkOliveGreen,74,65,23" & LF & \
-         "DarkOliveGreen1,202,255,112" & LF & \
-         "DarkOliveGreen2,188,233,84" & LF & \
-         "DarkOliveGreen3,160,197,68" & LF & \
-         "DarkOliveGreen4,102,124,38" & LF & \
-         "DarkOrange,248,128,23" & LF & \
-         "DarkOrchid,125,27,126" & LF & \
-         "DarkOrchid1,176,65,255" & LF & \
-         "DarkOrchid2,162,59,236" & LF & \
-         "DarkOrchid3,139,49,199" & LF & \
-         "DarkOrchid4,104,34,139" & LF & \
-         "DarkRed,139,0,0" & LF & \
-         "DarkSeaGreen,139,179,129" & LF & \
-         "DarkSeaGreen1,193,255,193" & LF & \
-         "DarkSeaGreen2,180,238,180" & LF & \
-         "DarkSeaGreen3,153,198,142" & LF & \
-         "DarkSeaGreen4,105,139,105" & LF & \
-         "DarkSlateBlue,43,56,86" & LF & \
-         "DarkSlateGray,37,56,60" & LF & \
-         "DarkSlateGray1,151,255,255" & LF & \
-         "DarkSlateGray2,141,238,238" & LF & \
-         "DarkSlateGray3,120,199,199" & LF & \
-         "DarkSlateGray4,76,125,126" & LF & \
-         "DarkTurquoise,59,156,156" & LF & \
-         "DarkViolet,132,45,206" & LF & \
-         "DeepPink,245,40,135" & LF & \
-         "DeepPink1,255,20,147" & LF & \
-         "DeepPink2,228,40,124" & LF & \
-         "DeepPink3,193,34,103" & LF & \
-         "DeepPink4,125,5,63" & LF & \
-         "DeepSkyBlue,0,191,255" & LF & \
-         "DeepSkyBlue1,59,185,255" & LF & \
-         "DeepSkyBlue2,0,178,238" & LF & \
-         "DeepSkyBlue3,0,154,205" & LF & \
-         "DeepSkyBlue4,0,104,139" & LF & \
-         "DimGray,70,62,65" & LF & \
-         "DodgerBlue,21,137,255" & LF & \
-         "DodgerBlue1,30,144,255" & LF & \
-         "DodgerBlue2,28,134,238" & LF & \
-         "DodgerBlue3,24,116,205" & LF & \
-         "DodgerBlue4,16,78,139" & LF & \
-         "Firebrick,128,5,23" & LF & \
-         "Firebrick1,246,40,23" & LF & \
-         "Firebrick2,228,34,23" & LF & \
-         "FloralWhite,255,249,238" & LF & \
-         "ForestGreen,34,139,34" & LF & \
-         "Gainsboro,216,217,215" & LF & \
-         "GhostWhite,247,247,255" & LF & \
-         "Gold,212,160,23" & LF & \
-         "Gold1,253,208,23" & LF & \
-         "Gold2,234,193,23" & LF & \
-         "Gold3,199,163,23" & LF & \
-         "Gold4,128,101,23" & LF & \
-         "Goldenrod,218,165,32" & LF & \
-         "Goldenrod1,251,185,23" & LF & \
-         "Goldenrod2,233,171,23" & LF & \
-         "Goldenrod3,198,142,23" & LF & \
-         "Goldenrod4,128,88,23" & LF & \
-         "Gray,190,190,190" & LF & \
-         "Gray18,37,5,23" & LF & \
-         "Gray21,43,27,23" & LF & \
-         "Gray23,48,34,23" & LF & \
-         "Gray24,48,34,38" & LF & \
-         "Gray25,52,40,38" & LF & \
-         "Gray26,52,40,44" & LF & \
-         "Gray27,56,45,44" & LF & \
-         "Gray28,59,49,49" & LF & \
-         "Gray29,62,53,53" & LF & \
-         "Gray30,65,56,57" & LF & \
-         "Gray31,65,56,60" & LF & \
-         "Gray32,70,62,63" & LF & \
-         "Gray34,74,67,68" & LF & \
-         "Gray35,76,70,70" & LF & \
-         "Gray36,78,72,72" & LF & \
-         "Gray37,80,74,75" & LF & \
-         "Gray38,84,78,79" & LF & \
-         "Gray39,86,80,81" & LF & \
-         "Gray4,10,10,10" & LF & \
-         "Gray40,102,102,102" & LF & \
-         "Gray41,105,105,105" & LF & \
-         "Gray42,107,107,107" & LF & \
-         "Gray43,110,110,110" & LF & \
-         "Gray44,100,96,96" & LF & \
-         "Gray45,102,99,98" & LF & \
-         "Gray46,105,101,101" & LF & \
-         "Gray47,109,105,104" & LF & \
-         "Gray48,110,106,107" & LF & \
-         "Gray49,114,110,109" & LF & \
-         "Gray5,13,13,13" & LF & \
-         "Gray50,116,113,112" & LF & \
-         "Gray51,120,116,115" & LF & \
-         "Gray52,122,119,119" & LF & \
-         "Gray53,124,121,121" & LF & \
-         "Gray54,128,125,124" & LF & \
-         "Gray55,130,128,126" & LF & \
-         "Gray56,133,131,129" & LF & \
-         "Gray57,135,133,131" & LF & \
-         "Gray58,139,137,135" & LF & \
-         "Gray59,141,139,137" & LF & \
-         "Gray6,15,15,15" & LF & \
-         "Gray60,143,142,141" & LF & \
-         "Gray61,147,145,144" & LF & \
-         "Gray62,149,148,146" & LF & \
-         "Gray63,153,151,149" & LF & \
-         "Gray64,154,153,152" & LF & \
-         "Gray65,158,156,155" & LF & \
-         "Gray67,163,162,160" & LF & \
-         "Gray68,165,164,163" & LF & \
-         "Gray69,169,168,166" & LF & \
-         "Gray7,18,18,18" & LF & \
-         "Gray70,172,171,169" & LF & \
-         "Gray71,174,173,172" & LF & \
-         "Gray72,177,177,175" & LF & \
-         "Gray73,179,179,177" & LF & \
-         "Gray74,183,182,180" & LF & \
-         "Gray75,185,184,182" & LF & \
-         "Gray76,188,187,186" & LF & \
-         "Gray77,190,190,188" & LF & \
-         "Gray78,193,193,191" & LF & \
-         "Gray79,195,196,194" & LF & \
-         "Gray8,20,20,20" & LF & \
-         "Gray80,199,199,197" & LF & \
-         "Gray81,202,202,201" & LF & \
-         "Gray82,204,204,203" & LF & \
-         "Gray83,208,207,207" & LF & \
-         "Gray84,210,210,209" & LF & \
-         "Gray85,213,213,212" & LF & \
-         "Gray86,215,215,215" & LF & \
-         "Gray87,219,219,217" & LF & \
-         "Gray88,221,221,220" & LF & \
-         "Gray89,224,224,224" & LF & \
-         "Gray90,226,227,225" & LF & \
-         "Gray91,229,230,228" & LF & \
-         "Gray92,232,233,232" & LF & \
-         "Gray93,235,235,234" & LF & \
-         "Gray94,238,238,238" & LF & \
-         "Gray95,240,241,240" & LF & \
-         "Gray97,246,246,245" & LF & \
-         "Gray98,249,249,250" & LF & \
-         "Gray99,251,251,251" & LF & \
-         "Green,0,255,0" & LF & \
-         "Green1,95,251,23" & LF & \
-         "Green2,0,238,0" & LF & \
-         "Green3,0,205,0" & LF & \
-         "Green4,0,139,0" & LF & \
-         "GreenYellow,173,255,47" & LF & \
-         "Honeydew,240,254,238" & LF & \
-         "Honeydew1,240,255,240" & LF & \
-         "Honeydew2,222,235,220" & LF & \
-         "Honeydew3,188,199,185" & LF & \
-         "Honeydew4,122,125,116" & LF & \
-         "HotPink,246,96,171" & LF & \
-         "HotPink1,246,101,171" & LF & \
-         "HotPink2,228,94,157" & LF & \
-         "HotPink3,194,82,131" & LF & \
-         "HotPink4,125,34,82" & LF & \
-         "IndianRed,205,92,92" & LF & \
-         "IndianRed1,247,93,89" & LF & \
-         "IndianRed2,229,84,81" & LF & \
-         "IndianRed3,194,70,65" & LF & \
-         "Ivory,255,255,238" & LF & \
-         "Ivory2,236,236,220" & LF & \
-         "Ivory3,201,199,185" & LF & \
-         "Ivory4,129,125,116" & LF & \
-         "Khaki,173,169,110" & LF & \
-         "Khaki1,255,243,128" & LF & \
-         "Khaki2,237,226,117" & LF & \
-         "Khaki3,201,190,98" & LF & \
-         "Khaki4,130,120,57" & LF & \
-         "Lavender,227,228,250" & LF & \
-         "LavenderBlush,253,238,244" & LF & \
-         "LavenderBlush1,255,240,245" & LF & \
-         "LavenderBlush2,235,221,226" & LF & \
-         "LavenderBlush3,200,187,190" & LF & \
-         "LavenderBlush4,129,118,121" & LF & \
-         "LawnGreen,124,252,0" & LF & \
-         "LemonChiffon,255,248,198" & LF & \
-         "LemonChiffon1,255,250,205" & LF & \
-         "LemonChiffon2,238,233,191" & LF & \
-         "LemonChiffon3,205,201,165" & LF & \
-         "LemonChiffon4,139,137,112" & LF & \
-         "LightBlue,173,216,230" & LF & \
-         "LightBlue1,189,237,255" & LF & \
-         "LightBlue2,175,220,236" & LF & \
-         "LightBlue3,149,185,199" & LF & \
-         "LightBlue4,104,131,139" & LF & \
-         "LightCoral,231,116,113" & LF & \
-         "LightCyan,224,255,255" & LF & \
-         "LightCyan2,207,236,236" & LF & \
-         "LightCyan3,175,199,199" & LF & \
-         "LightCyan4,113,125,125" & LF & \
-         "LightGoldenrod,236,216,114" & LF & \
-         "LightGoldenrod1,255,232,124" & LF & \
-         "LightGoldenrod2,236,214,114" & LF & \
-         "LightGoldenrod3,200,181,96" & LF & \
-         "LightGoldenrod4,129,115,57" & LF & \
-         "LightGoldenrodYellow,250,248,204" & LF & \
-         "LightGray,160,159,157" & LF & \
-         "LightGreen,144,238,144" & LF & \
-         "LightPink,250,175,186" & LF & \
-         "LightPink1,249,167,176" & LF & \
-         "LightPink2,231,153,163" & LF & \
-         "LightPink3,196,129,137" & LF & \
-         "LightPink4,127,78,82" & LF & \
-         "LightSalmon,249,150,107" & LF & \
-         "LightSalmon1,255,160,122" & LF & \
-         "LightSalmon2,231,138,97" & LF & \
-         "LightSalmon3,196,116,81" & LF & \
-         "LightSalmon4,127,70,44" & LF & \
-         "LightSeaGreen,32,178,170" & LF & \
-         "LightSkyBlue,130,202,250" & LF & \
-         "LightSkyBlue1,173,223,255" & LF & \
-         "LightSkyBlue2,160,207,236" & LF & \
-         "LightSkyBlue3,135,175,199" & LF & \
-         "LightSkyBlue4,86,109,126" & LF & \
-         "LightSlateBlue,115,106,255" & LF & \
-         "LightSlateGray,109,123,141" & LF & \
-         "LightSteelBlue,114,143,206" & LF & \
-         "LightSteelBlue1,198,222,255" & LF & \
-         "LightSteelBlue2,183,206,236" & LF & \
-         "LightSteelBlue3,154,173,199" & LF & \
-         "LightSteelBlue4,100,109,126" & LF & \
-         "LightYellow,255,254,220" & LF & \
-         "LightYellow1,255,255,224" & LF & \
-         "LightYellow2,237,235,203" & LF & \
-         "LightYellow3,201,199,170" & LF & \
-         "LightYellow4,130,125,107" & LF & \
-         "LimeGreen,50,205,50" & LF & \
-         "Linen,249,238,226" & LF & \
-         "Magenta,244,62,255" & LF & \
-         "Magenta1,255,0,255" & LF & \
-         "Magenta2,226,56,236" & LF & \
-         "Magenta3,192,49,199" & LF & \
-         "Maroon,129,5,65" & LF & \
-         "Maroon1,245,53,170" & LF & \
-         "Maroon2,227,49,157" & LF & \
-         "Maroon3,193,34,131" & LF & \
-         "Maroon4,125,5,82" & LF & \
-         "MediumAquamarine,102,205,170" & LF & \
-         "MediumBlue,0,0,205" & LF & \
-         "MediumForestGreen,52,114,53" & LF & \
-         "MediumGoldenrod,204,185,84" & LF & \
-         "MediumOrchid,176,72,181" & LF & \
-         "MediumOrchid1,212,98,255" & LF & \
-         "MediumOrchid2,196,90,236" & LF & \
-         "MediumOrchid3,167,74,199" & LF & \
-         "MediumOrchid4,106,40,126" & LF & \
-         "MediumPurple,132,103,215" & LF & \
-         "MediumPurple1,171,130,255" & LF & \
-         "MediumPurple2,159,121,238" & LF & \
-         "MediumPurple3,137,104,205" & LF & \
-         "MediumPurple4,93,71,139" & LF & \
-         "MediumSeaGreen,48,103,84" & LF & \
-         "MediumSlateBlue,123,104,238" & LF & \
-         "MediumSpringGreen,0,250,154" & LF & \
-         "MediumTurquoise,72,204,205" & LF & \
-         "MediumVioletRed,199,21,133" & LF & \
-         "MidnightBlue,21,27,84" & LF & \
-         "MintCream,245,255,249" & LF & \
-         "MistyRose,253,225,221" & LF & \
-         "MistyRose1,255,228,225" & LF & \
-         "MistyRose2,234,208,204" & LF & \
-         "MistyRose3,198,175,172" & LF & \
-         "MistyRose4,128,111,108" & LF & \
-         "Moccasin,253,224,172" & LF & \
-         "NavajoWhite,253,218,163" & LF & \
-         "NavajoWhite1,255,222,173" & LF & \
-         "NavajoWhite2,234,201,149" & LF & \
-         "NavajoWhite3,199,170,125" & LF & \
-         "NavajoWhite4,128,106,75" & LF & \
-         "Navy,0,0,128" & LF & \
-         "OldLace,252,243,226" & LF & \
-         "OliveDrab,101,128,23" & LF & \
-         "OliveDrab1,192,255,62" & LF & \
-         "OliveDrab2,179,238,58" & LF & \
-         "OliveDrab3,153,197,23" & LF & \
-         "OliveDrab4,105,139,34" & LF & \
-         "Orange,248,122,23" & LF & \
-         "Orange1,250,155,23" & LF & \
-         "Orange2,231,142,23" & LF & \
-         "Orange3,197,119,23" & LF & \
-         "Orange4,127,72,23" & LF & \
-         "OrangeRed,246,56,23" & LF & \
-         "OrangeRed1,255,69,0" & LF & \
-         "OrangeRed2,228,49,23" & LF & \
-         "OrangeRed3,194,40,23" & LF & \
-         "Orchid,218,112,214" & LF & \
-         "Orchid1,246,125,250" & LF & \
-         "Orchid2,228,115,231" & LF & \
-         "Orchid3,193,96,195" & LF & \
-         "Orchid4,125,56,124" & LF & \
-         "PaleGoldenrod,237,228,158" & LF & \
-         "PaleGreen,121,216,103" & LF & \
-         "PaleGreen1,154,255,154" & LF & \
-         "PaleGreen3,124,205,124" & LF & \
-         "PaleGreen4,78,124,65" & LF & \
-         "PaleTurquoise,174,235,236" & LF & \
-         "PaleTurquoise1,187,255,255" & LF & \
-         "PaleTurquoise2,173,235,236" & LF & \
-         "PaleTurquoise3,146,199,199" & LF & \
-         "PaleTurquoise4,102,139,139" & LF & \
-         "PaleVioletRed,209,101,135" & LF & \
-         "PaleVioletRed1,247,120,161" & LF & \
-         "PaleVioletRed2,229,110,148" & LF & \
-         "PaleVioletRed3,194,90,124" & LF & \
-         "PaleVioletRed4,126,53,77" & LF & \
-         "PapayaWhip,254,236,207" & LF & \
-         "PeachPuff,252,213,176" & LF & \
-         "PeachPuff1,255,218,185" & LF & \
-         "PeachPuff2,234,197,163" & LF & \
-         "PeachPuff3,198,166,136" & LF & \
-         "PeachPuff4,128,103,82" & LF & \
-         "Peru,197,119,38" & LF & \
-         "Pink,250,175,190" & LF & \
-         "Pink1,255,181,197" & LF & \
-         "Pink2,231,161,176" & LF & \
-         "Pink3,196,135,147" & LF & \
-         "Pink4,127,82,93" & LF & \
-         "Plum,185,59,143" & LF & \
-         "Plum1,249,183,255" & LF & \
-         "Plum2,230,169,236" & LF & \
-         "Plum3,195,142,199" & LF & \
-         "Plum4,126,88,126" & LF & \
-         "PowderBlue,173,220,227" & LF & \
-         "Purple,142,53,239" & LF & \
-         "Purple1,137,59,255" & LF & \
-         "Purple2,127,56,236" & LF & \
-         "Purple3,108,45,199" & LF & \
-         "Purple4,70,27,126" & LF & \
-         "Red,255,0,0" & LF & \
-         "Red1,246,34,23" & LF & \
-         "Red2,228,27,23" & LF & \
-         "Red3,193,27,23" & LF & \
-         "RosyBrown,179,132,129" & LF & \
-         "RosyBrown1,251,187,185" & LF & \
-         "RosyBrown2,232,173,170" & LF & \
-         "RosyBrown3,197,144,142" & LF & \
-         "RosyBrown4,127,90,88" & LF & \
-         "RoyalBlue,43,96,222" & LF & \
-         "RoyalBlue1,48,110,255" & LF & \
-         "RoyalBlue2,43,101,236" & LF & \
-         "RoyalBlue3,37,84,199" & LF & \
-         "RoyalBlue4,21,49,126" & LF & \
-         "SaddleBrown,126,49,23" & LF & \
-         "Salmon,225,139,107" & LF & \
-         "Salmon1,248,129,88" & LF & \
-         "Salmon2,230,116,81" & LF & \
-         "Salmon3,195,98,65" & LF & \
-         "Salmon4,126,56,23" & LF & \
-         "SandyBrown,238,154,77" & LF & \
-         "SeaGreen,46,139,87" & LF & \
-         "SeaGreen1,106,251,146" & LF & \
-         "SeaGreen2,100,233,134" & LF & \
-         "SeaGreen3,67,205,128" & LF & \
-         "Seashell,254,243,235" & LF & \
-         "Seashell1,255,245,238" & LF & \
-         "Seashell2,238,229,222" & LF & \
-         "Seashell3,205,197,191" & LF & \
-         "Seashell4,139,134,130" & LF & \
-         "Sienna,160,82,45" & LF & \
-         "Sienna1,248,116,49" & LF & \
-         "Sienna2,230,108,44" & LF & \
-         "Sienna3,195,88,23" & LF & \
-         "Sienna4,126,53,23" & LF & \
-         "SkyBlue,102,152,255" & LF & \
-         "SkyBlue1,130,202,255" & LF & \
-         "SkyBlue2,121,186,236" & LF & \
-         "SkyBlue3,101,158,199" & LF & \
-         "SkyBlue4,65,98,126" & LF & \
-         "SlateBlue,106,90,205" & LF & \
-         "SlateBlue1,115,105,255" & LF & \
-         "SlateBlue2,105,96,236" & LF & \
-         "SlateBlue3,105,89,205" & LF & \
-         "SlateBlue4,52,45,126" & LF & \
-         "SlateGray,101,115,131" & LF & \
-         "SlateGray1,194,223,255" & LF & \
-         "SlateGray2,180,207,236" & LF & \
-         "SlateGray3,152,175,199" & LF & \
-         "SlateGray4,108,123,139" & LF & \
-         "Snow,255,249,250" & LF & \
-         "Snow1,255,250,250" & LF & \
-         "Snow2,236,231,230" & LF & \
-         "Snow3,200,196,194" & LF & \
-         "Snow4,129,124,123" & LF & \
-         "SpringGreen,0,255,127" & LF & \
-         "SpringGreen1,94,251,110" & LF & \
-         "SpringGreen2,0,238,118" & LF & \
-         "SpringGreen3,0,205,102" & LF & \
-         "SpringGreen4,0,139,69" & LF & \
-         "SteelBlue,70,130,180" & LF & \
-         "SteelBlue1,92,179,255" & LF & \
-         "SteelBlue2,86,165,236" & LF & \
-         "SteelBlue3,72,138,199" & LF & \
-         "SteelBlue4,43,84,126" & LF & \
-         "Tan,210,180,140" & LF & \
-         "Tan1,250,155,60" & LF & \
-         "Tan2,231,142,53" & LF & \
-         "Thistle,210,185,211" & LF & \
-         "Thistle1,252,223,255" & LF & \
-         "Thistle2,233,207,236" & LF & \
-         "Thistle3,198,174,199" & LF & \
-         "Thistle4,128,109,126" & LF & \
-         "Tomato,247,84,49" & LF & \
-         "Tomato1,255,99,71" & LF & \
-         "Tomato2,229,76,44" & LF & \
-         "Tomato3,194,62,23" & LF & \
-         "Tomato4,126,34,23" & LF & \
-         "Transparent,21,5,23" & LF & \
-         "Turquoise,64,224,208" & LF & \
-         "Turquoise1,0,245,255" & LF & \
-         "Turquoise2,0,229,238" & LF & \
-         "Turquoise3,0,197,205" & LF & \
-         "Turquoise4,0,134,139" & LF & \
-         "Violet,141,56,201" & LF & \
-         "VioletRed,208,32,144" & LF & \
-         "VioletRed1,246,53,138" & LF & \
-         "VioletRed2,228,49,127" & LF & \
-         "VioletRed3,193,40,105" & LF & \
-         "VioletRed4,125,5,65" & LF & \
-         "Wheat,243,218,169" & LF & \
-         "Wheat1,254,228,177" & LF & \
-         "Wheat2,235,211,163" & LF & \
-         "Wheat3,200,177,137" & LF & \
-         "Wheat4,129,111,84" & LF & \
-         "White,255,255,255" & LF & \
-         "WhiteSmoke,244,244,243" & LF & \
-         "Yellow,255,255,0" & LF & \
-         "Yellow2,238,233,23" & LF & \
-         "Yellow3,202,197,23" & LF & \
-         "Yellow4,130,124,23" & LF & \
-         "YellowGreen,154,205,50" \
-         into sColorNames
+   put "AliceBlue,239,247,255" & LF after tTmpString
+   put "AntiqueWhite,249,232,210" & LF after tTmpString
+   put "AntiqueWhite1,254,237,214" & LF after tTmpString
+   put "AntiqueWhite2,235,219,197" & LF after tTmpString
+   put "AntiqueWhite3,200,185,166" & LF after tTmpString
+   put "AntiqueWhite4,139,131,120" & LF after tTmpString
+   put "AntiqueWhite4,139,131,120" & LF after tTmpString
+   put "Aquamarine,67,183,186" & LF after tTmpString
+   put "Aquamarine1,127,255,212" & LF after tTmpString
+   put "Aquamarine2,118,238,198" & LF after tTmpString
+   put "Aquamarine4,65,124,100" & LF after tTmpString
+   put "Azure,239,255,255" & LF after tTmpString
+   put "Azure2,222,236,236" & LF after tTmpString
+   put "Azure3,188,199,199" & LF after tTmpString
+   put "Azure4,122,125,125" & LF after tTmpString
+   put "Beige,245,243,215" & LF after tTmpString
+   put "Beige,245,243,215" & LF after tTmpString
+   put "Bisque,255,228,196" & LF after tTmpString
+   put "Bisque1,253,224,188" & LF after tTmpString
+   put "Bisque2,234,208,174" & LF after tTmpString
+   put "Bisque3,199,175,146" & LF after tTmpString
+   put "Bisque4,129,110,89" & LF after tTmpString
+   put "Black,0,0,0" & LF after tTmpString
+   put "BlanchedAlmond,254,232,198" & LF after tTmpString
+   put "Blue,0,0,255" & LF after tTmpString
+   put "Blue1,21,53,255" & LF after tTmpString
+   put "Blue2,21,49,236" & LF after tTmpString
+   put "Blue3,21,40,199" & LF after tTmpString
+   put "Blue4,21,27,126" & LF after tTmpString
+   put "BlueViolet,138,43,226" & LF after tTmpString
+   put "Brown,152,5,23" & LF after tTmpString
+   put "Brown1,246,53,38" & LF after tTmpString
+   put "Brown2,228,45,23" & LF after tTmpString
+   put "Brown3,194,34,23" & LF after tTmpString
+   put "Brown4,126,5,23" & LF after tTmpString
+   put "Burlywood,216,175,121" & LF after tTmpString
+   put "Burlywood1,252,206,142" & LF after tTmpString
+   put "Burlywood2,234,190,131" & LF after tTmpString
+   put "Burlywood3,198,160,109" & LF after tTmpString
+   put "Burlywood4,128,99,65" & LF after tTmpString
+   put "CadetBlue,87,134,147" & LF after tTmpString
+   put "CadetBlue1,152,245,255" & LF after tTmpString
+   put "CadetBlue2,142,226,236" & LF after tTmpString
+   put "CadetBlue3,119,191,199" & LF after tTmpString
+   put "CadetBlue4,76,120,126" & LF after tTmpString
+   put "Chartreuse,127,255,0" & LF after tTmpString
+   put "Chartreuse2,118,238,0" & LF after tTmpString
+   put "Chartreuse3,102,205,0" & LF after tTmpString
+   put "Chartreuse4,67,124,23" & LF after tTmpString
+   put "Chocolate,200,90,23" & LF after tTmpString
+   put "Chocolate1,248,114,23" & LF after tTmpString
+   put "Chocolate2,229,103,23" & LF after tTmpString
+   put "Chocolate3,195,86,23" & LF after tTmpString
+   put "Coral,247,101,65" & LF after tTmpString
+   put "Coral2,229,91,60" & LF after tTmpString
+   put "Coral3,195,74,44" & LF after tTmpString
+   put "Coral4,126,40,23" & LF after tTmpString
+   put "CornflowerBlue,100,149,237" & LF after tTmpString
+   put "CornSilk,255,247,215" & LF after tTmpString
+   put "CornSilk2,236,229,198" & LF after tTmpString
+   put "CornSilk3,200,194,167" & LF after tTmpString
+   put "CornSilk4,129,122,104" & LF after tTmpString
+   put "Cyan,0,255,255" & LF after tTmpString
+   put "Cyan1,87,254,255" & LF after tTmpString
+   put "Cyan2,80,235,236" & LF after tTmpString
+   put "Cyan3,70,199,199" & LF after tTmpString
+   put "Cyan4,48,125,126" & LF after tTmpString
+   put "DarkBlue,0,0,139" & LF after tTmpString
+   put "DarkCyan,0,139,139" & LF after tTmpString
+   put "DarkGoldenrod,175,120,23" & LF after tTmpString
+   put "DarkGoldenrod1,251,177,23" & LF after tTmpString
+   put "DarkGoldenrod2,232,163,23" & LF after tTmpString
+   put "DarkGoldenrod3,197,137,23" & LF after tTmpString
+   put "DarkGoldenrod4,127,82,23" & LF after tTmpString
+   put "DarkGray,169,169,169" & LF after tTmpString
+   put "DarkGreen,0,100,0" & LF after tTmpString
+   put "DarkKhaki,183,173,89" & LF after tTmpString
+   put "DarkMagenta,139,0,139" & LF after tTmpString
+   put "DarkOliveGreen,74,65,23" & LF after tTmpString
+   put "DarkOliveGreen1,202,255,112" & LF after tTmpString
+   put "DarkOliveGreen2,188,233,84" & LF after tTmpString
+   put "DarkOliveGreen3,160,197,68" & LF after tTmpString
+   put "DarkOliveGreen4,102,124,38" & LF after tTmpString
+   put "DarkOrange,248,128,23" & LF after tTmpString
+   put "DarkOrchid,125,27,126" & LF after tTmpString
+   put "DarkOrchid1,176,65,255" & LF after tTmpString
+   put "DarkOrchid2,162,59,236" & LF after tTmpString
+   put "DarkOrchid3,139,49,199" & LF after tTmpString
+   put "DarkOrchid4,104,34,139" & LF after tTmpString
+   put "DarkRed,139,0,0" & LF after tTmpString
+   put "DarkSeaGreen,139,179,129" & LF after tTmpString
+   put "DarkSeaGreen1,193,255,193" & LF after tTmpString
+   put "DarkSeaGreen2,180,238,180" & LF after tTmpString
+   put "DarkSeaGreen3,153,198,142" & LF after tTmpString
+   put "DarkSeaGreen4,105,139,105" & LF after tTmpString
+   put "DarkSlateBlue,43,56,86" & LF after tTmpString
+   put "DarkSlateGray,37,56,60" & LF after tTmpString
+   put "DarkSlateGray1,151,255,255" & LF after tTmpString
+   put "DarkSlateGray2,141,238,238" & LF after tTmpString
+   put "DarkSlateGray3,120,199,199" & LF after tTmpString
+   put "DarkSlateGray4,76,125,126" & LF after tTmpString
+   put "DarkTurquoise,59,156,156" & LF after tTmpString
+   put "DarkViolet,132,45,206" & LF after tTmpString
+   put "DeepPink,245,40,135" & LF after tTmpString
+   put "DeepPink1,255,20,147" & LF after tTmpString
+   put "DeepPink2,228,40,124" & LF after tTmpString
+   put "DeepPink3,193,34,103" & LF after tTmpString
+   put "DeepPink4,125,5,63" & LF after tTmpString
+   put "DeepSkyBlue,0,191,255" & LF after tTmpString
+   put "DeepSkyBlue1,59,185,255" & LF after tTmpString
+   put "DeepSkyBlue2,0,178,238" & LF after tTmpString
+   put "DeepSkyBlue3,0,154,205" & LF after tTmpString
+   put "DeepSkyBlue4,0,104,139" & LF after tTmpString
+   put "DimGray,70,62,65" & LF after tTmpString
+   put "DodgerBlue,21,137,255" & LF after tTmpString
+   put "DodgerBlue1,30,144,255" & LF after tTmpString
+   put "DodgerBlue2,28,134,238" & LF after tTmpString
+   put "DodgerBlue3,24,116,205" & LF after tTmpString
+   put "DodgerBlue4,16,78,139" & LF after tTmpString
+   put "Firebrick,128,5,23" & LF after tTmpString
+   put "Firebrick1,246,40,23" & LF after tTmpString
+   put "Firebrick2,228,34,23" & LF after tTmpString
+   put "FloralWhite,255,249,238" & LF after tTmpString
+   put "ForestGreen,34,139,34" & LF after tTmpString
+   put "Gainsboro,216,217,215" & LF after tTmpString
+   put "GhostWhite,247,247,255" & LF after tTmpString
+   put "Gold,212,160,23" & LF after tTmpString
+   put "Gold1,253,208,23" & LF after tTmpString
+   put "Gold2,234,193,23" & LF after tTmpString
+   put "Gold3,199,163,23" & LF after tTmpString
+   put "Gold4,128,101,23" & LF after tTmpString
+   put "Goldenrod,218,165,32" & LF after tTmpString
+   put "Goldenrod1,251,185,23" & LF after tTmpString
+   put "Goldenrod2,233,171,23" & LF after tTmpString
+   put "Goldenrod3,198,142,23" & LF after tTmpString
+   put "Goldenrod4,128,88,23" & LF after tTmpString
+   put "Gray,190,190,190" & LF after tTmpString
+   put "Gray18,37,5,23" & LF after tTmpString
+   put "Gray21,43,27,23" & LF after tTmpString
+   put "Gray23,48,34,23" & LF after tTmpString
+   put "Gray24,48,34,38" & LF after tTmpString
+   put "Gray25,52,40,38" & LF after tTmpString
+   put "Gray26,52,40,44" & LF after tTmpString
+   put "Gray27,56,45,44" & LF after tTmpString
+   put "Gray28,59,49,49" & LF after tTmpString
+   put "Gray29,62,53,53" & LF after tTmpString
+   put "Gray30,65,56,57" & LF after tTmpString
+   put "Gray31,65,56,60" & LF after tTmpString
+   put "Gray32,70,62,63" & LF after tTmpString
+   put "Gray34,74,67,68" & LF after tTmpString
+   put "Gray35,76,70,70" & LF after tTmpString
+   put "Gray36,78,72,72" & LF after tTmpString
+   put "Gray37,80,74,75" & LF after tTmpString
+   put "Gray38,84,78,79" & LF after tTmpString
+   put "Gray39,86,80,81" & LF after tTmpString
+   put "Gray4,10,10,10" & LF after tTmpString
+   put "Gray40,102,102,102" & LF after tTmpString
+   put "Gray41,105,105,105" & LF after tTmpString
+   put "Gray42,107,107,107" & LF after tTmpString
+   put "Gray43,110,110,110" & LF after tTmpString
+   put "Gray44,100,96,96" & LF after tTmpString
+   put "Gray45,102,99,98" & LF after tTmpString
+   put "Gray46,105,101,101" & LF after tTmpString
+   put "Gray47,109,105,104" & LF after tTmpString
+   put "Gray48,110,106,107" & LF after tTmpString
+   put "Gray49,114,110,109" & LF after tTmpString
+   put "Gray5,13,13,13" & LF after tTmpString
+   put "Gray50,116,113,112" & LF after tTmpString
+   put "Gray51,120,116,115" & LF after tTmpString
+   put "Gray52,122,119,119" & LF after tTmpString
+   put "Gray53,124,121,121" & LF after tTmpString
+   put "Gray54,128,125,124" & LF after tTmpString
+   put "Gray55,130,128,126" & LF after tTmpString
+   put "Gray56,133,131,129" & LF after tTmpString
+   put "Gray57,135,133,131" & LF after tTmpString
+   put "Gray58,139,137,135" & LF after tTmpString
+   put "Gray59,141,139,137" & LF after tTmpString
+   put "Gray6,15,15,15" & LF after tTmpString
+   put "Gray60,143,142,141" & LF after tTmpString
+   put "Gray61,147,145,144" & LF after tTmpString
+   put "Gray62,149,148,146" & LF after tTmpString
+   put "Gray63,153,151,149" & LF after tTmpString
+   put "Gray64,154,153,152" & LF after tTmpString
+   put "Gray65,158,156,155" & LF after tTmpString
+   put "Gray67,163,162,160" & LF after tTmpString
+   put "Gray68,165,164,163" & LF after tTmpString
+   put "Gray69,169,168,166" & LF after tTmpString
+   put "Gray7,18,18,18" & LF after tTmpString
+   put "Gray70,172,171,169" & LF after tTmpString
+   put "Gray71,174,173,172" & LF after tTmpString
+   put "Gray72,177,177,175" & LF after tTmpString
+   put "Gray73,179,179,177" & LF after tTmpString
+   put "Gray74,183,182,180" & LF after tTmpString
+   put "Gray75,185,184,182" & LF after tTmpString
+   put "Gray76,188,187,186" & LF after tTmpString
+   put "Gray77,190,190,188" & LF after tTmpString
+   put "Gray78,193,193,191" & LF after tTmpString
+   put "Gray79,195,196,194" & LF after tTmpString
+   put "Gray8,20,20,20" & LF after tTmpString
+   put "Gray80,199,199,197" & LF after tTmpString
+   put "Gray81,202,202,201" & LF after tTmpString
+   put "Gray82,204,204,203" & LF after tTmpString
+   put "Gray83,208,207,207" & LF after tTmpString
+   put "Gray84,210,210,209" & LF after tTmpString
+   put "Gray85,213,213,212" & LF after tTmpString
+   put "Gray86,215,215,215" & LF after tTmpString
+   put "Gray87,219,219,217" & LF after tTmpString
+   put "Gray88,221,221,220" & LF after tTmpString
+   put "Gray89,224,224,224" & LF after tTmpString
+   put "Gray90,226,227,225" & LF after tTmpString
+   put "Gray91,229,230,228" & LF after tTmpString
+   put "Gray92,232,233,232" & LF after tTmpString
+   put "Gray93,235,235,234" & LF after tTmpString
+   put "Gray94,238,238,238" & LF after tTmpString
+   put "Gray95,240,241,240" & LF after tTmpString
+   put "Gray97,246,246,245" & LF after tTmpString
+   put "Gray98,249,249,250" & LF after tTmpString
+   put "Gray99,251,251,251" & LF after tTmpString
+   put "Green,0,255,0" & LF after tTmpString
+   put "Green1,95,251,23" & LF after tTmpString
+   put "Green2,0,238,0" & LF after tTmpString
+   put "Green3,0,205,0" & LF after tTmpString
+   put "Green4,0,139,0" & LF after tTmpString
+   put "GreenYellow,173,255,47" & LF after tTmpString
+   put "Honeydew,240,254,238" & LF after tTmpString
+   put "Honeydew1,240,255,240" & LF after tTmpString
+   put "Honeydew2,222,235,220" & LF after tTmpString
+   put "Honeydew3,188,199,185" & LF after tTmpString
+   put "Honeydew4,122,125,116" & LF after tTmpString
+   put "HotPink,246,96,171" & LF after tTmpString
+   put "HotPink1,246,101,171" & LF after tTmpString
+   put "HotPink2,228,94,157" & LF after tTmpString
+   put "HotPink3,194,82,131" & LF after tTmpString
+   put "HotPink4,125,34,82" & LF after tTmpString
+   put "IndianRed,205,92,92" & LF after tTmpString
+   put "IndianRed1,247,93,89" & LF after tTmpString
+   put "IndianRed2,229,84,81" & LF after tTmpString
+   put "IndianRed3,194,70,65" & LF after tTmpString
+   put "Ivory,255,255,238" & LF after tTmpString
+   put "Ivory2,236,236,220" & LF after tTmpString
+   put "Ivory3,201,199,185" & LF after tTmpString
+   put "Ivory4,129,125,116" & LF after tTmpString
+   put "Khaki,173,169,110" & LF after tTmpString
+   put "Khaki1,255,243,128" & LF after tTmpString
+   put "Khaki2,237,226,117" & LF after tTmpString
+   put "Khaki3,201,190,98" & LF after tTmpString
+   put "Khaki4,130,120,57" & LF after tTmpString
+   put "Lavender,227,228,250" & LF after tTmpString
+   put "LavenderBlush,253,238,244" & LF after tTmpString
+   put "LavenderBlush1,255,240,245" & LF after tTmpString
+   put "LavenderBlush2,235,221,226" & LF after tTmpString
+   put "LavenderBlush3,200,187,190" & LF after tTmpString
+   put "LavenderBlush4,129,118,121" & LF after tTmpString
+   put "LawnGreen,124,252,0" & LF after tTmpString
+   put "LemonChiffon,255,248,198" & LF after tTmpString
+   put "LemonChiffon1,255,250,205" & LF after tTmpString
+   put "LemonChiffon2,238,233,191" & LF after tTmpString
+   put "LemonChiffon3,205,201,165" & LF after tTmpString
+   put "LemonChiffon4,139,137,112" & LF after tTmpString
+   put "LightBlue,173,216,230" & LF after tTmpString
+   put "LightBlue1,189,237,255" & LF after tTmpString
+   put "LightBlue2,175,220,236" & LF after tTmpString
+   put "LightBlue3,149,185,199" & LF after tTmpString
+   put "LightBlue4,104,131,139" & LF after tTmpString
+   put "LightCoral,231,116,113" & LF after tTmpString
+   put "LightCyan,224,255,255" & LF after tTmpString
+   put "LightCyan2,207,236,236" & LF after tTmpString
+   put "LightCyan3,175,199,199" & LF after tTmpString
+   put "LightCyan4,113,125,125" & LF after tTmpString
+   put "LightGoldenrod,236,216,114" & LF after tTmpString
+   put "LightGoldenrod1,255,232,124" & LF after tTmpString
+   put "LightGoldenrod2,236,214,114" & LF after tTmpString
+   put "LightGoldenrod3,200,181,96" & LF after tTmpString
+   put "LightGoldenrod4,129,115,57" & LF after tTmpString
+   put "LightGoldenrodYellow,250,248,204" & LF after tTmpString
+   put "LightGray,160,159,157" & LF after tTmpString
+   put "LightGreen,144,238,144" & LF after tTmpString
+   put "LightPink,250,175,186" & LF after tTmpString
+   put "LightPink1,249,167,176" & LF after tTmpString
+   put "LightPink2,231,153,163" & LF after tTmpString
+   put "LightPink3,196,129,137" & LF after tTmpString
+   put "LightPink4,127,78,82" & LF after tTmpString
+   put "LightSalmon,249,150,107" & LF after tTmpString
+   put "LightSalmon1,255,160,122" & LF after tTmpString
+   put "LightSalmon2,231,138,97" & LF after tTmpString
+   put "LightSalmon3,196,116,81" & LF after tTmpString
+   put "LightSalmon4,127,70,44" & LF after tTmpString
+   put "LightSeaGreen,32,178,170" & LF after tTmpString
+   put "LightSkyBlue,130,202,250" & LF after tTmpString
+   put "LightSkyBlue1,173,223,255" & LF after tTmpString
+   put "LightSkyBlue2,160,207,236" & LF after tTmpString
+   put "LightSkyBlue3,135,175,199" & LF after tTmpString
+   put "LightSkyBlue4,86,109,126" & LF after tTmpString
+   put "LightSlateBlue,115,106,255" & LF after tTmpString
+   put "LightSlateGray,109,123,141" & LF after tTmpString
+   put "LightSteelBlue,114,143,206" & LF after tTmpString
+   put "LightSteelBlue1,198,222,255" & LF after tTmpString
+   put "LightSteelBlue2,183,206,236" & LF after tTmpString
+   put "LightSteelBlue3,154,173,199" & LF after tTmpString
+   put "LightSteelBlue4,100,109,126" & LF after tTmpString
+   put "LightYellow,255,254,220" & LF after tTmpString
+   put "LightYellow1,255,255,224" & LF after tTmpString
+   put "LightYellow2,237,235,203" & LF after tTmpString
+   put "LightYellow3,201,199,170" & LF after tTmpString
+   put "LightYellow4,130,125,107" & LF after tTmpString
+   put "LimeGreen,50,205,50" & LF after tTmpString
+   put "Linen,249,238,226" & LF after tTmpString
+   put "Magenta,244,62,255" & LF after tTmpString
+   put "Magenta1,255,0,255" & LF after tTmpString
+   put "Magenta2,226,56,236" & LF after tTmpString
+   put "Magenta3,192,49,199" & LF after tTmpString
+   put "Maroon,129,5,65" & LF after tTmpString
+   put "Maroon1,245,53,170" & LF after tTmpString
+   put "Maroon2,227,49,157" & LF after tTmpString
+   put "Maroon3,193,34,131" & LF after tTmpString
+   put "Maroon4,125,5,82" & LF after tTmpString
+   put "MediumAquamarine,102,205,170" & LF after tTmpString
+   put "MediumBlue,0,0,205" & LF after tTmpString
+   put "MediumForestGreen,52,114,53" & LF after tTmpString
+   put "MediumGoldenrod,204,185,84" & LF after tTmpString
+   put "MediumOrchid,176,72,181" & LF after tTmpString
+   put "MediumOrchid1,212,98,255" & LF after tTmpString
+   put "MediumOrchid2,196,90,236" & LF after tTmpString
+   put "MediumOrchid3,167,74,199" & LF after tTmpString
+   put "MediumOrchid4,106,40,126" & LF after tTmpString
+   put "MediumPurple,132,103,215" & LF after tTmpString
+   put "MediumPurple1,171,130,255" & LF after tTmpString
+   put "MediumPurple2,159,121,238" & LF after tTmpString
+   put "MediumPurple3,137,104,205" & LF after tTmpString
+   put "MediumPurple4,93,71,139" & LF after tTmpString
+   put "MediumSeaGreen,48,103,84" & LF after tTmpString
+   put "MediumSlateBlue,123,104,238" & LF after tTmpString
+   put "MediumSpringGreen,0,250,154" & LF after tTmpString
+   put "MediumTurquoise,72,204,205" & LF after tTmpString
+   put "MediumVioletRed,199,21,133" & LF after tTmpString
+   put "MidnightBlue,21,27,84" & LF after tTmpString
+   put "MintCream,245,255,249" & LF after tTmpString
+   put "MistyRose,253,225,221" & LF after tTmpString
+   put "MistyRose1,255,228,225" & LF after tTmpString
+   put "MistyRose2,234,208,204" & LF after tTmpString
+   put "MistyRose3,198,175,172" & LF after tTmpString
+   put "MistyRose4,128,111,108" & LF after tTmpString
+   put "Moccasin,253,224,172" & LF after tTmpString
+   put "NavajoWhite,253,218,163" & LF after tTmpString
+   put "NavajoWhite1,255,222,173" & LF after tTmpString
+   put "NavajoWhite2,234,201,149" & LF after tTmpString
+   put "NavajoWhite3,199,170,125" & LF after tTmpString
+   put "NavajoWhite4,128,106,75" & LF after tTmpString
+   put "Navy,0,0,128" & LF after tTmpString
+   put "OldLace,252,243,226" & LF after tTmpString
+   put "OliveDrab,101,128,23" & LF after tTmpString
+   put "OliveDrab1,192,255,62" & LF after tTmpString
+   put "OliveDrab2,179,238,58" & LF after tTmpString
+   put "OliveDrab3,153,197,23" & LF after tTmpString
+   put "OliveDrab4,105,139,34" & LF after tTmpString
+   put "Orange,248,122,23" & LF after tTmpString
+   put "Orange1,250,155,23" & LF after tTmpString
+   put "Orange2,231,142,23" & LF after tTmpString
+   put "Orange3,197,119,23" & LF after tTmpString
+   put "Orange4,127,72,23" & LF after tTmpString
+   put "OrangeRed,246,56,23" & LF after tTmpString
+   put "OrangeRed1,255,69,0" & LF after tTmpString
+   put "OrangeRed2,228,49,23" & LF after tTmpString
+   put "OrangeRed3,194,40,23" & LF after tTmpString
+   put "Orchid,218,112,214" & LF after tTmpString
+   put "Orchid1,246,125,250" & LF after tTmpString
+   put "Orchid2,228,115,231" & LF after tTmpString
+   put "Orchid3,193,96,195" & LF after tTmpString
+   put "Orchid4,125,56,124" & LF after tTmpString
+   put "PaleGoldenrod,237,228,158" & LF after tTmpString
+   put "PaleGreen,121,216,103" & LF after tTmpString
+   put "PaleGreen1,154,255,154" & LF after tTmpString
+   put "PaleGreen3,124,205,124" & LF after tTmpString
+   put "PaleGreen4,78,124,65" & LF after tTmpString
+   put "PaleTurquoise,174,235,236" & LF after tTmpString
+   put "PaleTurquoise1,187,255,255" & LF after tTmpString
+   put "PaleTurquoise2,173,235,236" & LF after tTmpString
+   put "PaleTurquoise3,146,199,199" & LF after tTmpString
+   put "PaleTurquoise4,102,139,139" & LF after tTmpString
+   put "PaleVioletRed,209,101,135" & LF after tTmpString
+   put "PaleVioletRed1,247,120,161" & LF after tTmpString
+   put "PaleVioletRed2,229,110,148" & LF after tTmpString
+   put "PaleVioletRed3,194,90,124" & LF after tTmpString
+   put "PaleVioletRed4,126,53,77" & LF after tTmpString
+   put "PapayaWhip,254,236,207" & LF after tTmpString
+   put "PeachPuff,252,213,176" & LF after tTmpString
+   put "PeachPuff1,255,218,185" & LF after tTmpString
+   put "PeachPuff2,234,197,163" & LF after tTmpString
+   put "PeachPuff3,198,166,136" & LF after tTmpString
+   put "PeachPuff4,128,103,82" & LF after tTmpString
+   put "Peru,197,119,38" & LF after tTmpString
+   put "Pink,250,175,190" & LF after tTmpString
+   put "Pink1,255,181,197" & LF after tTmpString
+   put "Pink2,231,161,176" & LF after tTmpString
+   put "Pink3,196,135,147" & LF after tTmpString
+   put "Pink4,127,82,93" & LF after tTmpString
+   put "Plum,185,59,143" & LF after tTmpString
+   put "Plum1,249,183,255" & LF after tTmpString
+   put "Plum2,230,169,236" & LF after tTmpString
+   put "Plum3,195,142,199" & LF after tTmpString
+   put "Plum4,126,88,126" & LF after tTmpString
+   put "PowderBlue,173,220,227" & LF after tTmpString
+   put "Purple,142,53,239" & LF after tTmpString
+   put "Purple1,137,59,255" & LF after tTmpString
+   put "Purple2,127,56,236" & LF after tTmpString
+   put "Purple3,108,45,199" & LF after tTmpString
+   put "Purple4,70,27,126" & LF after tTmpString
+   put "Red,255,0,0" & LF after tTmpString
+   put "Red1,246,34,23" & LF after tTmpString
+   put "Red2,228,27,23" & LF after tTmpString
+   put "Red3,193,27,23" & LF after tTmpString
+   put "RosyBrown,179,132,129" & LF after tTmpString
+   put "RosyBrown1,251,187,185" & LF after tTmpString
+   put "RosyBrown2,232,173,170" & LF after tTmpString
+   put "RosyBrown3,197,144,142" & LF after tTmpString
+   put "RosyBrown4,127,90,88" & LF after tTmpString
+   put "RoyalBlue,43,96,222" & LF after tTmpString
+   put "RoyalBlue1,48,110,255" & LF after tTmpString
+   put "RoyalBlue2,43,101,236" & LF after tTmpString
+   put "RoyalBlue3,37,84,199" & LF after tTmpString
+   put "RoyalBlue4,21,49,126" & LF after tTmpString
+   put "SaddleBrown,126,49,23" & LF after tTmpString
+   put "Salmon,225,139,107" & LF after tTmpString
+   put "Salmon1,248,129,88" & LF after tTmpString
+   put "Salmon2,230,116,81" & LF after tTmpString
+   put "Salmon3,195,98,65" & LF after tTmpString
+   put "Salmon4,126,56,23" & LF after tTmpString
+   put "SandyBrown,238,154,77" & LF after tTmpString
+   put "SeaGreen,46,139,87" & LF after tTmpString
+   put "SeaGreen1,106,251,146" & LF after tTmpString
+   put "SeaGreen2,100,233,134" & LF after tTmpString
+   put "SeaGreen3,67,205,128" & LF after tTmpString
+   put "Seashell,254,243,235" & LF after tTmpString
+   put "Seashell1,255,245,238" & LF after tTmpString
+   put "Seashell2,238,229,222" & LF after tTmpString
+   put "Seashell3,205,197,191" & LF after tTmpString
+   put "Seashell4,139,134,130" & LF after tTmpString
+   put "Sienna,160,82,45" & LF after tTmpString
+   put "Sienna1,248,116,49" & LF after tTmpString
+   put "Sienna2,230,108,44" & LF after tTmpString
+   put "Sienna3,195,88,23" & LF after tTmpString
+   put "Sienna4,126,53,23" & LF after tTmpString
+   put "SkyBlue,102,152,255" & LF after tTmpString
+   put "SkyBlue1,130,202,255" & LF after tTmpString
+   put "SkyBlue2,121,186,236" & LF after tTmpString
+   put "SkyBlue3,101,158,199" & LF after tTmpString
+   put "SkyBlue4,65,98,126" & LF after tTmpString
+   put "SlateBlue,106,90,205" & LF after tTmpString
+   put "SlateBlue1,115,105,255" & LF after tTmpString
+   put "SlateBlue2,105,96,236" & LF after tTmpString
+   put "SlateBlue3,105,89,205" & LF after tTmpString
+   put "SlateBlue4,52,45,126" & LF after tTmpString
+   put "SlateGray,101,115,131" & LF after tTmpString
+   put "SlateGray1,194,223,255" & LF after tTmpString
+   put "SlateGray2,180,207,236" & LF after tTmpString
+   put "SlateGray3,152,175,199" & LF after tTmpString
+   put "SlateGray4,108,123,139" & LF after tTmpString
+   put "Snow,255,249,250" & LF after tTmpString
+   put "Snow1,255,250,250" & LF after tTmpString
+   put "Snow2,236,231,230" & LF after tTmpString
+   put "Snow3,200,196,194" & LF after tTmpString
+   put "Snow4,129,124,123" & LF after tTmpString
+   put "SpringGreen,0,255,127" & LF after tTmpString
+   put "SpringGreen1,94,251,110" & LF after tTmpString
+   put "SpringGreen2,0,238,118" & LF after tTmpString
+   put "SpringGreen3,0,205,102" & LF after tTmpString
+   put "SpringGreen4,0,139,69" & LF after tTmpString
+   put "SteelBlue,70,130,180" & LF after tTmpString
+   put "SteelBlue1,92,179,255" & LF after tTmpString
+   put "SteelBlue2,86,165,236" & LF after tTmpString
+   put "SteelBlue3,72,138,199" & LF after tTmpString
+   put "SteelBlue4,43,84,126" & LF after tTmpString
+   put "Tan,210,180,140" & LF after tTmpString
+   put "Tan1,250,155,60" & LF after tTmpString
+   put "Tan2,231,142,53" & LF after tTmpString
+   put "Thistle,210,185,211" & LF after tTmpString
+   put "Thistle1,252,223,255" & LF after tTmpString
+   put "Thistle2,233,207,236" & LF after tTmpString
+   put "Thistle3,198,174,199" & LF after tTmpString
+   put "Thistle4,128,109,126" & LF after tTmpString
+   put "Tomato,247,84,49" & LF after tTmpString
+   put "Tomato1,255,99,71" & LF after tTmpString
+   put "Tomato2,229,76,44" & LF after tTmpString
+   put "Tomato3,194,62,23" & LF after tTmpString
+   put "Tomato4,126,34,23" & LF after tTmpString
+   put "Transparent,21,5,23" & LF after tTmpString
+   put "Turquoise,64,224,208" & LF after tTmpString
+   put "Turquoise1,0,245,255" & LF after tTmpString
+   put "Turquoise2,0,229,238" & LF after tTmpString
+   put "Turquoise3,0,197,205" & LF after tTmpString
+   put "Turquoise4,0,134,139" & LF after tTmpString
+   put "Violet,141,56,201" & LF after tTmpString
+   put "VioletRed,208,32,144" & LF after tTmpString
+   put "VioletRed1,246,53,138" & LF after tTmpString
+   put "VioletRed2,228,49,127" & LF after tTmpString
+   put "VioletRed3,193,40,105" & LF after tTmpString
+   put "VioletRed4,125,5,65" & LF after tTmpString
+   put "Wheat,243,218,169" & LF after tTmpString
+   put "Wheat1,254,228,177" & LF after tTmpString
+   put "Wheat2,235,211,163" & LF after tTmpString
+   put "Wheat3,200,177,137" & LF after tTmpString
+   put "Wheat4,129,111,84" & LF after tTmpString
+   put "White,255,255,255" & LF after tTmpString
+   put "WhiteSmoke,244,244,243" & LF after tTmpString
+   put "Yellow,255,255,0" & LF after tTmpString
+   put "Yellow2,238,233,23" & LF after tTmpString
+   put "Yellow3,202,197,23" & LF after tTmpString
+   put "Yellow4,130,124,23" & LF after tTmpString
+   put "YellowGreen,154,205,50" after tTmpString
+   put tTmpString into sColorNames
+   put empty into tTmpString
    
 end __Initialize
 
@@ -2121,24 +2132,27 @@ command qrCreate pImg, pData, pECC, pSize, pMask
       end repeat
       
       # add format data
+      local tTmpString
       local tFormatBits, tFormatPos
       put item 2 of line lineOffset(LF & sECC & tMask, LF & sFormatList) of sFormatList into tFormatBits
-      put "1,9" & LF & \
-            "2,9" & LF & \
-            "3,9" & LF & \
-            "4,9" & LF & \
-            "5,9" & LF & \
-            "6,9" & LF & \
-            "8,9" & LF & \
-            "9,9" & LF & \
-            "9,8" & LF & \
-            "9,6" & LF & \
-            "9,5" & LF & \
-            "9,4" & LF & \
-            "9,3" & LF & \
-            "9,2" & LF & \
-            "9,1" \
-            into tFormatPos
+      put "1,9" & LF after tTmpString
+      put "2,9" & LF after tTmpString
+      put "3,9" & LF after tTmpString
+      put "4,9" & LF after tTmpString
+      put "5,9" & LF after tTmpString
+      put "6,9" & LF after tTmpString
+      put "8,9" & LF after tTmpString
+      put "9,9" & LF after tTmpString
+      put "9,8" & LF after tTmpString
+      put "9,6" & LF after tTmpString
+      put "9,5" & LF after tTmpString
+      put "9,4" & LF after tTmpString
+      put "9,3" & LF after tTmpString
+      put "9,2" & LF after tTmpString
+      put "9,1" after tTmpString
+      put tTmpString into tFormatPos
+      put empty into tTmpString
+      
       repeat with i = 1 to 15
          put item 1 of line i of tFormatPos into tX
          put item 2 of line i of tFormatPos into tY
