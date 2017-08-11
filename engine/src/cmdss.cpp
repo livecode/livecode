@@ -448,6 +448,10 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr)
 {
     MCStack *sptr = nil;
+    sptr = MCInterfaceTryToEvalStackFromString(p_value);
+    if (sptr != nil)
+        return sptr;
+
     if (MCInterfaceStringCouldBeStack(p_value))
     {
         sptr = MCInterfaceTryToEvalStackFromString(p_value);

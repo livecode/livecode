@@ -2481,18 +2481,18 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
                                   kMCCompareExact)))
         return true;
 
-    
-		//proof of concept code
-		char_t t_UTF8BOM[10] = "   script";
-		t_UTF8BOM[0] = 0xEF;
-		t_UTF8BOM[1] = 0xBB;
-		t_UTF8BOM[2] = 0xBF;
-		if (MCStringGetLength(p_string) > 8 &&
-		    MCStringBeginsWithCString(p_string, (const char_t *)t_UTF8BOM,
-															    kMCCompareExact))
-				return true;
-
-		
+    /*
+    //proof of concept code
+    char_t t_UTF8BOM[10] = "   script";
+    t_UTF8BOM[0] = 0xEF;
+    t_UTF8BOM[1] = 0xBB;
+    t_UTF8BOM[2] = 0xBF;
+    if (MCStringGetLength(p_string) > 8 &&
+        MCStringBeginsWithCString(p_string, (const char_t *)t_UTF8BOM,
+                                  kMCCompareExact))
+        return true;
+    /*
+	
     // Check if it could be a script-only stack
     MCScriptPoint sp(p_string);
     // Parse 'script' token.
