@@ -655,6 +655,7 @@
 						[
 							'rsrc/LiveCode.icns',
 							'rsrc/LiveCodeDoc.icns',
+							'rsrc/terminology.sdef',
 						],
 					},
 				],

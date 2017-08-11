@@ -414,7 +414,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         do
         {
             bptr = bptr->next();
-            
+
             // SN-2014-08-14: [[ Bug 13106 ]] We want the outside left edge
             coord_t origin = bptr->getorigin() + sgptr->GetLeft();
 
@@ -562,7 +562,14 @@ void MCLine::SegmentLine()
             // There was previously a comment here saying that creating the
             // empty block was a good thing. I have no idea why I wrote that...
             // Removed that behaviour as it breaks some things.
-            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
+            // MW-2017-08-07: [[ Bug 17098 ]]
+            // If the block has a trailing tab *and is the last block* we need
+            // to make sure there is an empty block, otherwise we don't get a
+            // segment for a trailing tab which means caret alignment / placement
+            // doesn't work. This strategy seems to fix 17098 and not reintroduce
+            // bug 13887.
+            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength() ||
+                (bptr == lastblock && bptr->HasTrailingTab()))
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)
