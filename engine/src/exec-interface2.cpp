@@ -2492,7 +2492,11 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
                                   kMCCompareExact))
         return true;
     */
-	
+
+    // rest of this function should not be needed based on the other
+    // change made in the calling function
+    // a valid script-only stack will never get evaluated here
+    
     // Check if it could be a script-only stack
     MCScriptPoint sp(p_string);
     // Parse 'script' token.

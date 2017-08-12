@@ -454,14 +454,16 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 
     if (MCInterfaceStringCouldBeStack(p_value))
     {
-        sptr = MCInterfaceTryToEvalStackFromString(p_value);
-        if (sptr == nil)
-        {
+        //sptr = MCInterfaceTryToEvalStackFromString(p_value);
+        //if (sptr == nil)
+        //{
             if (MCresult->isclear())
                 ctxt . SetTheResultToCString("can't build stack from string");
-        }
+        //}
         return sptr;
     }
+    else
+        MCresult->clear();
     
 	if (etype == CT_STACK)
         return NULL;
