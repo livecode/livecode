@@ -131,6 +131,18 @@
 						'product_extension': '',
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/<(_product_name).lcext' ],
+							},
+						},
+					},	
+				],				
 			],
 		},
 		{
@@ -455,6 +467,18 @@
 			'conditions':
 			[
 				[
+					'OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/<(_product_name).lcext' ],
+							},
+						},
+					},	
+				],
+				[
 					'OS != "win"',
 					{
 						'cflags_cc!':
@@ -625,6 +649,18 @@
 						'product_extension': '',
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/<(_product_name).lcext' ],
+							},
+						},
+					},	
+				],			
 				[
 					'OS == "mac" or OS == "ios"',
 					{
