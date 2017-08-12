@@ -447,9 +447,9 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 
 MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr)
 {
-    MCStack *sptr = nil;
+    MCStack *sptr = nullptr;
     sptr = MCInterfaceTryToEvalStackFromString(p_value);
-    if (sptr != nil)
+    if (sptr != nullptr)
         return sptr;
 
     if (MCInterfaceStringCouldBeStack(p_value))
@@ -465,13 +465,13 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
     else
         MCresult->clear();
     
-	if (etype == CT_STACK)
-        return NULL;
-	else
+    if (etype == CT_STACK)
+        return nullptr;
+    else
         sptr = MCdefaultstackptr->findstackname_string(p_value);
 
-	if (sptr != NULL)
-		return sptr;
+    if (sptr != nullptr)
+        return sptr;
 
 	MCObject *objptr;
 	MCChunk *tchunk = new (nothrow) MCChunk(False);
@@ -581,7 +581,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
                 sptr = findstack(ctxt, *t_value, stack->etype, cptr);
 			}
 
-			if (sptr != nil && stack->next != NULL)
+			if (sptr != nullptr && stack->next != NULL)
 			{
 				switch (stack->next->etype)
 				{
@@ -700,7 +700,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             if (cptr == NULL)
             {
 				sptr = findstack(ctxt, *t_exp, CT_STACK, cptr);
-				if (sptr == NULL)
+				if (sptr == nullptr)
 				{
 					if (MCresult->isclear())
 						MCresult->setvalueref(MCSTR("No such a card"));
