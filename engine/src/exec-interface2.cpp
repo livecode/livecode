@@ -2491,7 +2491,7 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
         MCStringBeginsWithCString(p_string, (const char_t *)t_UTF8BOM,
                                   kMCCompareExact))
         return true;
-    /*
+    */
 	
     // Check if it could be a script-only stack
     MCScriptPoint sp(p_string);
