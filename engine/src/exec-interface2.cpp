@@ -2481,23 +2481,17 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
                                   kMCCompareExact)))
         return true;
 
-    /*
-    //proof of concept code
-    char_t t_UTF8BOM[10] = "   script";
-    t_UTF8BOM[0] = 0xEF;
-    t_UTF8BOM[1] = 0xBB;
-    t_UTF8BOM[2] = 0xBF;
-    if (MCStringGetLength(p_string) > 8 &&
-        MCStringBeginsWithCString(p_string, (const char_t *)t_UTF8BOM,
-                                  kMCCompareExact))
-        return true;
-    */
+    //TODO: process BOM at the point of import into LiveCode (from URL)
 
-    // rest of this function should not be needed based on the other
-    // change made in the calling function
-    // a valid script-only stack will never get evaluated here
-    
-    // Check if it could be a script-only stack
+    //UTF-8 BOM would most likely result from a URL chunk.  It would
+    //not be evaluated any other way, so return true to have it evaluated
+    //as a script-only stack.
+    const char_t t_UTF8BOM[] = { 0xEF, 0xBB, 0xBF, 0x00 };
+    if (MCStringGetLength(p_string) > 12 &&
+        MCStringBeginsWithCString(p_string, t_UTF8BOM, kMCCompareExact))
+        return true;
+
+    // Check if it could be a script-only stack without BOM
     MCScriptPoint sp(p_string);
     // Parse 'script' token.
     if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
