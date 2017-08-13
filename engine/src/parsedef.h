@@ -2155,6 +2155,7 @@ enum {
     ST_ID,
     ST_ESC,
     ST_LIT,
+    ST_ESCLIT,
 	ST_LC,
     ST_RC,
     

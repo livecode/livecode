@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 
 #include "globals.h"
+#include "foundation-math.h"
 
 #define LOWERED_PAD 64
 
@@ -271,15 +272,151 @@ bool MCScriptPoint::token_is_cstring(const char *p_cstring)
 
 MCNameRef MCScriptPoint::gettoken_nameref(void)
 {
-	if (MCNameIsEmpty(token_nameref))
+    if (!MCNameIsEmpty(token_nameref))
+        return token_nameref;
+    
+    if (token_nameref != nil)
+        MCNameDelete(token_nameref);
+    
+    bool t_success = true;
+    
+    MCAutoStringRef t_string_token;
+    
+    if (m_type != ST_ESCLIT)
     {
-        MCAutoStringRef t_string_token;
-        if (token_nameref != nil)
-            MCNameDelete(token_nameref);
-        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
-		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
+        t_success = MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
     }
-	return token_nameref;
+    else
+    {
+        MCAutoStringRef t_escaped_string;
+        t_success = MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_escaped_string);
+        
+        MCAutoStringRefAsWString t_wide_string;
+        const unichar_t *t_format;
+        
+        if (t_success)
+        {
+            t_wide_string . Lock(*t_escaped_string);
+            
+            t_format = *t_wide_string;
+            
+            t_success = MCStringCreateMutable(0, &t_string_token);
+        }
+        
+        while (t_success && *t_format != '\0')
+        {
+            // All the unicode chars must be ignored from the format, and just copied
+            const unichar_t* t_start;
+            t_start = t_format;
+            while (*t_format && *t_format >= 256)
+                t_format++;
+            
+            // Case in which a copy of unicode characters is needed
+            if (t_format != t_start)
+            {
+                t_success = MCStringAppendChars(*t_string_token, t_start, t_format - t_start);
+                continue;
+            }
+            
+            if (*t_format == '\\')
+            {
+                codepoint_t t_result_char = 0;
+                uint8_t t_hex_length = 0;
+                switch (*++t_format)
+                {
+                    case 'a':
+                        t_result_char = '\a';
+                        break;
+                    case 'b':
+                        t_result_char = '\b';
+                        break;
+                    case 'f':
+                        t_result_char = '\f';
+                        break;
+                    case 'n':
+                        t_result_char = '\n';
+                        break;
+                    case 'r':
+                        t_result_char = '\r';
+                        break;
+                    case 't':
+                        t_result_char = '\t';
+                        break;
+                    case 'v':
+                        t_result_char = '\v';
+                        break;
+                    case 'q':
+                        t_result_char = '"';
+                        break;
+                    case 'x':
+                        t_hex_length = 2;
+                    case 'u':
+                        if (t_hex_length == 0)
+                            t_hex_length = 4;
+                    case 'U':
+                        if (t_hex_length == 0)
+                            t_hex_length = 8;
+                        
+                        if (isxdigit(*++t_format))
+                        {
+                            MCAutoStringRef t_hex;
+                            t_success = MCStringCreateWithChars(t_format, t_hex_length, &t_hex);
+                            
+                            bool t_negative;
+                            uinteger_t t_digits;
+                            bool t_error;
+                            t_success = MCMathConvertToBase10(*t_hex, 16, t_negative, t_digits, t_error);
+
+                            if (t_success)
+                                t_success = !t_error;
+                            
+                            if (t_success)
+                            {
+                                t_result_char = t_digits;
+                                t_format += t_hex_length-1;
+                            }
+                            else
+                                continue;
+                        }
+                        break;
+                    default:
+                        if (isdigit(*t_format))
+                        {
+                            const unichar_t *t_sptr = t_format;
+                            while (isdigit(*t_format) && t_format - t_sptr < 3)
+                                t_result_char = (t_result_char << 3) + (*t_format++ - '0');
+                            t_format--;
+                        }
+                        else
+                            t_result_char = *t_format;
+                        break;
+                }
+                t_success = MCStringAppendCodepoint(*t_string_token, t_result_char);
+                t_format++;
+                continue;
+            }
+            else
+            {
+                const unichar_t *t_startptr = t_format;
+                while (*t_format && *t_format != '\\')
+                    t_format++;
+                t_success = MCStringAppendChars(*t_string_token, t_startptr, t_format - t_startptr);
+                continue;
+            }
+        }
+        
+        if (!t_success)
+            MCperror->add(PE_PARSE_BADLIT_ESCAPE, line, pos);
+        
+    }
+    
+    if (t_success)
+        t_success = MCNameCreate(*t_string_token, token_nameref);
+    
+    if (!t_success)
+        MCValueAssign(token_nameref, kMCEmptyName);
+        
+    return token_nameref;
 }
 
 MCStringRef MCScriptPoint::gettoken_stringref(void)
@@ -942,7 +1079,7 @@ Parse_stat MCScriptPoint::skip_eol()
 		type = gettype(getcurrent());
 		if (type == ST_EOF)
 			return PS_EOF;
-		if (type == ST_LIT)
+		if (type == ST_LIT || type == ST_ESCLIT)
 			lit = !lit;
 		// MW-2011-06-23: [[ SERVER ]] When we are asked to skip past a ?>
 		//   we must eat the following newling - PHP-semantics.
@@ -1168,7 +1305,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		backupptr = tokenptr;
 		tokenptr = curptr;
 	}
-	if (type == ST_LIT)
+	if (type == ST_LIT || type == ST_ESCLIT)
 		advance();
 	token.setstring((const char *)curptr);
 
@@ -1194,24 +1331,34 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		}
 		break;
 	case ST_LIT:
-		while (True)
-		{
-			Symbol_type newtype = gettype(getcurrent());
-			if (escapes && newtype == ST_ESC && getnext())
-                advance(2);
-			else
-			{
-				if (newtype == ST_EOL || newtype == ST_EOF)
-				{
-					MCperror->add(PE_PARSE_BADLIT, *this);
-					return PS_ERROR;
-				}
-				else
-					if (newtype == ST_LIT)
-						break;
-				advance();
-			}
-		}
+    case ST_ESCLIT:
+        {
+            bool t_escaping = false;
+            while (True)
+            {
+                Symbol_type newtype = gettype(getcurrent());
+                if (ST_LIT == type && escapes && newtype == ST_ESC && getnext())
+                    advance(2);
+                else
+                {
+                    if (newtype == ST_EOL || newtype == ST_EOF)
+                    {
+                        MCperror->add(PE_PARSE_BADLIT, *this);
+                        return PS_ERROR;
+                    }
+                    else
+                        if (!t_escaping && newtype == type)
+                            break;
+                    
+                    if (type == ST_ESCLIT && newtype == ST_ESC && !t_escaping)
+                        t_escaping = true;
+                    else if (t_escaping)
+                        t_escaping = false;
+                    
+                    advance();
+                }
+            }
+        }
 		break;
 	case ST_OP:
 		while (True)
@@ -1248,7 +1395,8 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		advance();
 		break;
 	}
-	if (type == ST_LIT && gettype(getcurrent()) == ST_LIT)
+	if ((type == ST_LIT && gettype(getcurrent()) == ST_LIT) ||
+        (type == ST_ESCLIT && gettype(getcurrent()) == ST_ESCLIT))
 	{
 		token.setlength(curptr - tokenptr - 1);
 		advance();
@@ -1275,8 +1423,8 @@ Parse_stat MCScriptPoint::nexttoken()
 
 Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 {
-	if (m_type == ST_LIT)
-		return PS_NO_MATCH;
+    if (m_type == ST_LIT || m_type == ST_ESCLIT)
+        return PS_NO_MATCH;
 	
 	if (token.getlength())
 	{
@@ -1341,7 +1489,7 @@ bool MCScriptPoint::lookupconstantvalue(const char *& r_value)
 
 Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 {
-	if (m_type == ST_LIT)
+	if (m_type == ST_LIT || m_type == ST_ESCLIT)
 		return PS_NO_MATCH;
 	
 	if (gethandler() != NULL
@@ -1547,7 +1695,8 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
         }
 			break;
 		case ST_LIT:
-			newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);
+        case ST_ESCLIT:
+            newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);
 			newfact->parse(*this, doingthe);
 			needfact = False;
 			break;

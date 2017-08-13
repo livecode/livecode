@@ -849,8 +849,9 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		}
 		else
 		{
-			switch(type_table[t_char])
-			{
+            uint8_t t_current_type = type_table[t_char];
+            switch(t_current_type)
+            {
 				case ST_SPC:
 					t_class = COLOURIZE_CLASS_WHITESPACE;
 					while(t_index < p_length && type_table[(t_char = next_valid_char(p_text, t_index))] == ST_SPC)
@@ -992,10 +993,25 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 				break;
 
 				case ST_LIT:
-					t_char = next_valid_char(p_text, t_index);
-					while(t_index < p_length && type_table[t_char] != ST_EOL && (type_table[t_char] != ST_LIT))
+				case ST_ESCLIT:
+                {
+                    uint8_t t_previous_type = t_current_type;
+                    t_char = next_valid_char(p_text, t_index);
+                    bool t_escaping = false;
+					while(t_index < p_length &&
+                          type_table[t_char] != ST_EOL &&
+                          ((t_current_type == ST_ESCLIT && t_escaping) ||
+                           (type_table[t_char] != t_current_type)))
+                    {
+                        t_previous_type = type_table[t_char];
+                        if (t_previous_type == ST_ESC && !t_escaping)
+                            t_escaping = true;
+                        else if (t_escaping)
+                            t_escaping = false;
 						t_char = next_valid_char(p_text, t_index);
-					if (t_index < p_length && type_table[t_char] == ST_LIT)
+                    }
+                    
+					if (t_index < p_length && type_table[t_char] == t_current_type)
 					{
 						t_char = next_valid_char(p_text, t_index);
 						t_class = COLOURIZE_CLASS_STRING;
@@ -1003,6 +1019,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					else
 						t_class = COLOURIZE_CLASS_ERROR;
 					t_end = t_index;
+                }
 				break;
 
 				case ST_NUM:
@@ -1215,7 +1232,8 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 		}
 		else
 		{
-			switch(get_codepoint_type(t_char))
+            uint8_t t_current_type = get_codepoint_type(t_char);
+			switch(t_current_type)
 			{
 				case ST_SPC:
 					t_class = COLOURIZE_CLASS_WHITESPACE;
@@ -1367,10 +1385,26 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
                     break;
                     
 				case ST_LIT:
-					t_char = next_valid_unichar(p_string, t_index);
-					while(t_index < t_length && get_codepoint_type(t_char) != ST_EOL && get_codepoint_type(t_char) != ST_LIT)
-						t_char = next_valid_unichar(p_string, t_index);
-					if (t_index < t_length && get_codepoint_type(t_char) == ST_LIT)
+                case ST_ESCLIT:
+                {
+                    uint8_t t_previous_type = t_current_type;
+                    t_char = next_valid_unichar(p_string, t_index);
+                    bool t_escaping = false;
+                        
+                    while(t_index < t_length &&
+                          get_codepoint_type(t_char) != ST_EOL &&
+                          ((t_current_type == ST_ESCLIT && t_escaping) ||
+                           (get_codepoint_type(t_char) != t_current_type)))
+                    {
+                        t_previous_type = get_codepoint_type(t_char);
+                        if (t_previous_type == ST_ESC && !t_escaping)
+                            t_escaping = true;
+                        else if (t_escaping)
+                            t_escaping = false;
+                        t_char = next_valid_unichar(p_string, t_index);
+                    }
+                        
+					if (t_index < t_length && get_codepoint_type(t_char) == t_current_type)
 					{
 						t_char = next_valid_unichar(p_string, t_index);
 						t_class = COLOURIZE_CLASS_STRING;
@@ -1378,6 +1412,7 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 					else
 						t_class = COLOURIZE_CLASS_ERROR;
 					t_end = t_index;
+                }
                     break;
                     
 				case ST_NUM:
