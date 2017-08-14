@@ -4,7 +4,7 @@ Synonyms: answer directory
 
 Type: command
 
-Syntax: answer folder <prompt> [with <defaultPath>] [as sheet]
+Syntax: answer folder <prompt> [with <defaultPath>] [titled <windowTitle>] [as sheet]
 
 Summary:
 Displays a <file dialog box|standard file dialog> for the user to choose
@@ -35,6 +35,11 @@ defaultPath:
 The name and location of the folder whose contents are listed when the
 dialog box appears. If no defaultPath is specified, the dialog box lists
 the contents of the last folder you used with a file dialog box.
+
+windowTitle:
+If specified, appears in the title bar of the dialog box.
+If no <windowTitle> is given, the title bar is blank. This parameter
+has no effect on macOS 10.11 (El Capitan) and above, so make sure that any important information is placed in the <prompt> parameter.
 
 It:
 The absolute file path of the folder the user selects is placed in the

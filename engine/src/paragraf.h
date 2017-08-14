@@ -133,6 +133,20 @@ struct MCParagraphAttrs
 
 class MCSegment;
 
+/* MCParagraphCursorType describes the type of cursor (caret) which can be
+ * requested when using 'getcursorrect'. */
+enum MCParagraphCursorType
+{
+    /* The full cursor rect, ignoring RTL split cursors. */
+    kMCParagraphCursorTypeFull,
+    
+    /* The primary part of an RTL cursor. */
+    kMCParagraphCursorTypePrimary,
+    
+    /* The secondary part of an RTL cursor. */
+    kMCParagraphCursorTypeSecondary,
+};
+
 // Don't change this until everything dealing with fields, paragraphs, etc
 // is capable of dealing with 32-bit offsets or things will break!
 #define PARAGRAPH_MAX_LEN	INT32_MAX
@@ -772,8 +786,7 @@ public:
 	//   MCField::fcenter
 	//   MCField::fmove
 	//   MCField::getcompositionrect
-	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space);
-    MCRectangle getsplitcursorrect(findex_t fi, uint2 fixedheight, bool include_space, bool primary);
+	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space, MCParagraphCursorType type = kMCParagraphCursorTypeFull);
 
 	// Compute the (x, y) location of the given index in the paragraph
 	// Called by:
