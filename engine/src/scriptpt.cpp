@@ -379,6 +379,12 @@ MCNameRef MCScriptPoint::gettoken_nameref(void)
                                 continue;
                         }
                         break;
+                    case '\n':
+                        t_result_char = *t_format++;
+                        while (*t_format == ' ' || *t_format == '\t')
+                            t_format++;
+                        t_format--;
+                        break;
                     default:
                         if (isdigit(*t_format))
                         {
@@ -1341,7 +1347,8 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
                     advance(2);
                 else
                 {
-                    if (newtype == ST_EOL || newtype == ST_EOF)
+                    if (((type == ST_LIT || !t_escaping) && newtype == ST_EOL) ||
+                        newtype == ST_EOF)
                     {
                         MCperror->add(PE_PARSE_BADLIT, *this);
                         return PS_ERROR;
