@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
 WIN32_EXTRACT_DIR="${SCRIPT_DIR}/unpacked"
-URL="http://downloads.livecode.com/prebuilts"
+URL="http://downloads.livecode.com/prebuilts/test_uploads"
 
 # Platform specific settings
 if [ "${OS}" = "Windows_NT" ]; then
