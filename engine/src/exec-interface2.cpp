@@ -2481,12 +2481,10 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
                                   kMCCompareExact)))
         return true;
 
-    //TODO: process BOM at the point of import into LiveCode (from URL)
-
-    //UTF-8 BOM would most likely result from a URL chunk.  It would
-    //not be evaluated any other way, so return true to have it evaluated
-    //as a script-only stack.
-    const char_t t_UTF8BOM[] = { 0xEF, 0xBB, 0xBF, 0x00 };
+    //Check for UTF-8 BOM script-only stack
+    //Minimum length of a script-only stack is 13 bytes: 'BOMscript "x"'
+    const char_t t_UTF8BOM[] = { 0xEF, 0xBB, 0xBF, 's', 'c', 'r', 'i', 'p',
+                                 't', 0x00 };
     if (MCStringGetLength(p_string) > 12 &&
         MCStringBeginsWithCString(p_string, t_UTF8BOM, kMCCompareExact))
         return true;
