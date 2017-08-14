@@ -2481,10 +2481,12 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
                                   kMCCompareExact)))
         return true;
 
-    //Check for UTF-8 BOM script-only stack
-    //Minimum length of a script-only stack is 13 bytes: 'BOMscript "x"'
+    //Here we check whether it is very likely that the string is a UTF-8
+    //encoded script-only stack and not a name. Any UTF-8 encoded script-only
+    //stack with BOM will start with 'BOMscript "'. - i.e. have the 3 byte
+    //BOM prefix and then 'script "'.
     const char_t t_UTF8BOM[] = { 0xEF, 0xBB, 0xBF, 's', 'c', 'r', 'i', 'p',
-                                 't', ,' ', '"', 0x00 };
+                                 't', ' ', '"', 0x00 };
     if (MCStringGetLength(p_string) > 12 &&
         MCStringBeginsWithCString(p_string, t_UTF8BOM, kMCCompareExact))
         return true;
