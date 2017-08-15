@@ -22,6 +22,14 @@ function doPackage {
 	else
 		local PACKAGE_ARCH="${ARCH}"
 	fi
+	
+	if [ "${PLATFORM}" == "ios" ] ; then
+		source "scripts/ios.inc"
+		queryiOS "${SUBPLATFORM}"
+		local PACKAGE_SUBPLATFORM="${SUBPLATFORM_NAME}${VERSION}"
+	else
+		local PACKAGE_SUBPLATFORM=
+	fi
 
 	echo "Creating packages: ${PLATFORM} ${ARCH} ${SUBPLATFORM}"
 
@@ -31,8 +39,8 @@ function doPackage {
 		local ARCHDIR="${ARCH}"
 	fi
 
-	if [ ! -z "${SUBPLATFORM}" ] ; then
-		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${SUBPLATFORM}"
+	if [ ! -z "${PACKAGE_SUBPLATFORM}" ] ; then
+		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${PACKAGE_SUBPLATFORM}"
 	else
 		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}"
 	fi
