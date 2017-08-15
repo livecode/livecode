@@ -4,15 +4,15 @@ Synonyms: num
 
 Type: function
 
-Syntax: the number of [card|cd|background|bkgnd|bg] {<objectType> | parts | controls}
+Syntax: the number of [{card | background}] {<objectType> | controls}
 
-Syntax: the number of {<objectType> | parts | controls} [{in | of} <group>]
+Syntax: the number of {<objectType> | controls} [of <group>]
 
-Syntax: the number of {backgrounds | groups} [ [{in | of} <card>] {in | of} <stack>]
+Syntax: the number of {backgrounds | groups} [ [of <card>] of <stack>]
 
-Syntax: the number of [marked] cards [{in | of} <stack>]
+Syntax: the number of [marked] cards [of <stack>]
 
-Syntax: the number of {char[acters] | items | words | lines} {in | of} <string>
+Syntax: the number of {characters | items | words | lines} of <string>
 
 Summary:
 <return|Returns> the number of <object|objects> of a certain kind, or
@@ -32,9 +32,8 @@ if the number of card buttons &gt; 0 then doTheButtons
 
 Parameters:
 objectType:
-One of buttons (or btns), fields (or flds), images, graphics (or grcs),
-players, scrollbars, EPSs, audioClips, videoClips, groups, backgrounds,
-or cards.
+One of buttons, fields, images, graphics, players, scrollbars, EPSs,
+audioClips, videoClips, widgets, groups, backgrounds, or cards.
 
 group:
 A reference to any group in the current stack.

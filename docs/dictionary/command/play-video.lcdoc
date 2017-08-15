@@ -2,7 +2,7 @@ Name: play video
 
 Type: command
 
-Syntax: play video (<video-file> | <video-url>)
+Syntax: play video {<video-file> | <video-url>}
 
 Summary:
 Plays a full screen video.

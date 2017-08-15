@@ -4,7 +4,7 @@ Type: command
 
 Syntax: wait {until | while} <condition> [with messages]
 
-Syntax: wait [for] <number> [seconds | ticks | milliseconds] [with messages]
+Syntax: wait [for] <number> [{seconds | ticks | milliseconds}] [with messages]
 
 Syntax: wait for messages
 
