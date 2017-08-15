@@ -16,6 +16,9 @@ function doPackage {
 	# Linux x86 packages use i386 in their name (but still use x86 in the library folder!)
 	if [ "${PLATFORM}" == "linux" -a "${ARCH}" == "x86" ] ; then
 		local PACKAGE_ARCH=i386
+	elif [ "${ARCH}" == "universal" ] ; then
+		# watch case of "Universal" arch
+		local PACKAGE_ARCH=Universal
 	else
 		local PACKAGE_ARCH="${ARCH}"
 	fi
