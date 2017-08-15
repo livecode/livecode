@@ -2,7 +2,7 @@ Name: kill
 
 Type: command
 
-Syntax: kill [<signalNumber> | <signalName>] process <processName>
+Syntax: kill [{<signalNumber> | <signalName>}] process <processName>
 
 Summary:
 Signals or quits another <process> or application on the same system.
