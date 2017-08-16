@@ -117,7 +117,7 @@ use com.livecode.library.scriptitems
 -- metadata
 metadata title is "Segmented Control"
 metadata author is "LiveCode"
-metadata version is "1.0.1"
+metadata version is "1.0.2"
 metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9c4.2,0,7.7-3.4,7.7-7.7v-14C80.2,3.4,76.8,0,72.6,0z M7.8,13.5h8v2.3h-8V13.5z M19.7,20.6h-12v-2.3h12V20.6z M19.7,11h-12V8.8h12V11z M27.8,25.5h-1V3.8h1V25.5z M46.1,20.6h-12v-2.3h12V20.6zM36.1,15.7v-2.3h8v2.3H36.1z M46.1,11h-12V8.8h12V11z M54.4,25.5h-1V3.8h1V25.5z M72.7,20.6h-12v-2.3h12V20.6z M72.7,15.7h-8v-2.3h8V15.7z M72.7,11h-12V8.8h12V11z"
 metadata preferredSize is "200,32"
 
@@ -166,6 +166,7 @@ metadata themeClass.user_visible is "false"
 
 -- private instance variables
 private variable mMultiSelect		as Boolean
+private variable mToggleHilites	as Boolean
 
 private variable mSegmentNames		as List
 private variable mSegmentLabels		as List
@@ -206,6 +207,7 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mMultiSelect		into rProperties["multiSelect"]
+	put mToggleHilites 	into rProperties["toggleHilites"]
 	put mSegmentNames		into rProperties["segmentNames"]
 	put mSegmentLabels		into rProperties["segmentLabels"]
 	put mSegmentIcons		into rProperties["segmentIcons"]
@@ -226,6 +228,9 @@ public handler OnLoad(in pProperties as Array)
 	put the number of elements in mSegmentNames into mNumSegments
 
 	put pProperties["multiSelect"]		into mMultiSelect
+	if "toggleHilites" is among the keys of pProperties then
+		put pProperties["toggleHilites"] into mToggleHilites
+	end if
 	put pProperties["segmentLabels"]	into mSegmentLabels
 	put pProperties["segmentIcons"]		into mSegmentIcons
 	put pProperties["selectedIcons"]	into mSelectedIcons
@@ -244,7 +249,8 @@ end handler
 public handler OnCreate()
 	// Set the default values of all the properties
 	put false into mMultiSelect
-	
+	put true into mToggleHilites
+
 	put ["segment1","segment2","segment3"] into mSegmentNames
 	put ["Label 1","Label 2","Label 3"] into mSegmentLabels
 	put ["align left","align center","align right"] into mSegmentIcons
@@ -329,19 +335,27 @@ public handler OnClick() returns nothing
 	 end if
 	 
 	if mMultiSelect is false then
-		-- if cannot multiselect, then need to select the clicked-on segment and deselect the currently selected segment
-		-- if the clicked-on segment is already selected, then do nothing		
-		if mSegmentSelected[tX] then
-			setSelected([])
-		else
+		-- If cannot multiselect, then need to select the clicked-on segment and
+		-- deselect the currently selected segment. If the clicked-on segment is
+		-- already selected, then act according to toggleHilites property
+		if mSegmentSelected[tX] and mToggleHilites then
+				setSelected([])
+		else if not mSegmentSelected[tX] then
 			setSelected([tX])
 		end if
 	else
-		-- if can multiselect, then select the clicked-on segment if it is unselected or unselect if its selected
+		-- If can multiselect, then select the clicked-on segment if it is
+		-- unselected. If it is selected, act according to toggleHilites property
 		variable tState as List
-		put not mSegmentSelected[tX] into mSegmentSelected[tx]
-		post "hiliteChanged"
-		redraw all
+		if mSegmentSelected[tX] and mToggleHilites then
+			put false into mSegmentSelected
+			post "hiliteChanged"
+			redraw all
+		else if not mSegmentSelected[tX] then
+			put true into mSegmentSelected[tX]
+			post "hiliteChanged"
+			redraw all
+		end if
 	end if
 end handler
 
@@ -1025,6 +1039,22 @@ private handler setMultiSelect(in pCanMultiSelect as Boolean)
 		setSelected([])
 	end if
 end handler
+
+/**
+Syntax: set the toggleHilites of <widget> to {true | false}
+Syntax: get the toggleHilites of <widget>
+
+Summary: Whether a segment can be unhighlighted by clicking
+
+Description:
+The <toggleHilites> property controls whether a click on
+a highlighted segment causes it to be unhighlighted or not.
+**/
+property toggleHilites get mToggleHilites set mToggleHilites
+metadata toggleHilites.editor is "com.livecode.pi.boolean"
+metadata toggleHilites.default is "true"
+metadata toggleHilites.section is "Basic"
+metadata toggleHilites.label is "Clicking toggles highlight"
 
 /**
 Summary: Whether the widget has a border or not
