@@ -1315,6 +1315,12 @@ bool MCModeHandleMessage(LPARAM lparam)
 	return false;
 }
 
+// Pixel scaling can be enabled in standalone mode.
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone
 // if dpiAwareness has been configured in the application manifest.
 bool MCModeGetPixelScalingEnabled()

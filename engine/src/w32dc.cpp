@@ -366,7 +366,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 // IM-2014-08-08: [[ Bug 12372 ]] Set up dpi-awareness if pixel scaling is enabled
 void MCResPlatformInitPixelScaling()
 {
-	if (MCModeGetPixelScalingEnabled())
+	if (MCModeCanEnablePixelScaling() && MCModeGetPixelScalingEnabled())
 	{
 		BOOL t_result;
 		/* UNCHECKED */ MCWin32SetProcessDPIAware(t_result);
