@@ -4829,4 +4829,21 @@ void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef&
         r_descriptions = t_value;
 }
 
+void MCObject::GetRevBehaviorUses(MCExecContext& ctxt, MCArrayRef& r_objects)
+{
+    MCParentScript *t_parent;
+    t_parent = MCParentScript::Lookup(this);
+    
+    if (t_parent == nullptr)
+    {
+        r_objects = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    if (!t_parent->CopyUses(r_objects))
+    {
+        ctxt.Throw();
+        return;
+    }
+}
 

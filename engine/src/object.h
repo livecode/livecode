@@ -1541,7 +1541,7 @@ public:
     void GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables);
     void GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status);
     void GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_handlers);
-    
+    void GetRevBehaviorUses(MCExecContext& ctxt, MCArrayRef& r_objects);
     
 //////////
 			
