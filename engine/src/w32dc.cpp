@@ -345,7 +345,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 	HRESULT t_result;
 	
 	// try to get per-monitor DPI setting
-	if (!MCWin32GetDPIForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
+	if (!MCWin32GetDpiForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
 		t_result != S_OK)
 	{
 		// fallback to the global system DPI setting
