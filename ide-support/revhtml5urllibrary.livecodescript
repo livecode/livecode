@@ -435,10 +435,10 @@ private function __ulExtCallJS pFunction
       local tParam
       put param(tParamNo) into tParam
       if tParam is not a number and tParam is not among the words of "true false" then
+         replace backslash with "\\" in tParam
          replace quote with backslash & quote in tParam
          replace return with "\n" in tParam
          replace cr with "\r" in tParam
-         replace backslash with "\\" in tParam
          put quote & tParam & quote into tParam
       end if
       if PARAMLIST is not empty then
