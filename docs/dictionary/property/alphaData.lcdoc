@@ -5,8 +5,8 @@ Type: property
 Syntax: set the alphaData of <image> to <binaryData>
 
 Summary:
-Specifies the <binary file|binary data> that makes up the <alpha
-channel> of the picture in an <image> object.
+Specifies the <binary file|binary data> that makes up the 
+<alpha channel> of the picture in an <image> object.
 
 Associations: image
 
