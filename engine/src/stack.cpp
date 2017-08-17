@@ -303,6 +303,10 @@ MCStack::MCStack()
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
     m_is_script_only = false;
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Script-only-stack line endings default to LF.
+    m_use_LF_line_endings = true;
+    m_use_CR_line_endings = false;
+
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
     
@@ -2043,6 +2047,19 @@ void MCStack::setasscriptonly(MCStringRef p_script)
         cards->setparent(this);
     }
 }
+
+// BWM-2017-08-16: [[ Bug 17810 ]] Retain line endings used when importing a
+// script-only-stack.
+void MCStack::setuseLFlineendings(bool p_value)
+{
+    m_use_LF_line_endings = p_value;
+}
+
+void MCStack::setuseCRlineendings(bool p_value)
+{
+    m_use_CR_line_endings = p_value;
+}
+
 
 MCPlatformControlType MCStack::getcontroltype()
 {

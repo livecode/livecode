@@ -751,6 +751,15 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     // Set its name.
     t_stack -> setname(*t_script_name);
     
+    // Save line endings from raw script string to restore when saving file.
+    t_stack -> setuseLFlineendings(MCStringContains(*t_raw_script_string,
+                                   MCSTR("\n"), kMCStringOptionCompareExact));
+    t_stack -> setuseCRlineendings(MCStringContains(*t_raw_script_string,
+                                   MCSTR("\r"), kMCStringOptionCompareExact));
+    // If neither line ending character found, default to LF.
+    if (!(t_stack->getuseLFlineendings() || t_stack->getuseCRlineendings()))
+        t_stack -> setuseLFlineendings(true);
+    
     return t_stack;
 }
 
@@ -1130,14 +1139,12 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         sptr -> unsecurescript(sptr);
         
         // Write out the standard script stack header, and then the script itself
-		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
-		// Convert line endings - but only if the native line ending isn't CR!
-#ifndef __CR__
-		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
-#else
-		t_converted = *t_script_body;
-#endif
+        MCStringConvertLineEndingsFromLiveCode(*t_script_body, 
+                                               sptr -> getuseLFlineendings(),
+                                               sptr -> getuseCRlineendings(),
+                                               &t_converted);
 	}
     
     // Open the output stream.

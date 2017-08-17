@@ -314,6 +314,34 @@ bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// BWM-2017-08-16: [[ Bug 17810 ]] Restore line endings of script-only-stack to
+// match how they were when originally imported.
+bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, 
+    bool p_use_LF_line_endings, bool p_use_CR_line_endings, MCStringRef& r_output)
+{
+    if (p_use_CR_line_endings)
+    {
+        MCStringRef t_mutable_input;
+        if (p_use_LF_line_endings)
+        {
+            /* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+            /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), MCSTR("\r\n"), kMCStringOptionCompareExact);
+        }
+        else
+        {
+            /* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+            /* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\n', '\r', kMCStringOptionCompareExact);
+        }
+        /* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+    }
+    else
+    {
+        r_output = MCValueRetain(p_input);
+    }
+    
+    return true;
+}
+
 bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_output)
 {
 	

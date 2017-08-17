@@ -300,6 +300,10 @@ protected:
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
+    
+    // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
+    bool m_use_LF_line_endings : 1;
+    bool m_use_CR_line_endings : 1;
 	
 	bool m_is_ide_stack : 1;
 	
@@ -947,6 +951,12 @@ public:
     bool isscriptonly(void) const { return m_is_script_only; }
     void setasscriptonly(MCStringRef p_script);
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
+    bool getuseLFlineendings(void) const { return m_use_LF_line_endings; }
+    bool getuseCRlineendings(void) const { return m_use_CR_line_endings; }
+    void setuseLFlineendings(bool p_value);
+    void setuseCRlineendings(bool p_value);
+
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;
