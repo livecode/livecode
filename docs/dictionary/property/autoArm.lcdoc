@@ -32,8 +32,8 @@ the "New Control" submenu of the Object menu have their <autoArm>
 Description:
 Use the <autoArm> <property> to provide visual feedback to the user
 about which button the <mouse pointer> is over. Usually, the <autoArm>
-<property> is used for <button(object)|buttons> that are part of <stack
-menu|stack menus>.
+<property> is used for <button(object)|buttons> that are part of 
+<stack menu|stack menus>.
 
 A button whose <autoArm> <property> is set to true does not receive
 <mouseDown> <message|messages>.
