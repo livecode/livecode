@@ -322,10 +322,13 @@ on TestLoadExtension pName
 end TestLoadExtension
 
 on TestLoadExternal pExternal
+   local tEnginePath
+   put specialfolderpath("engine") into tEnginePath
+
    if the platform is "MacOS" then
-      set the externals of the templateStack to TestGetEngineRepositoryPath() & slash & pExternal & ".bundle"
+      set the externals of the templateStack to tEnginePath & slash & pExternal & ".bundle"
    else if the platform is "linux" then
-      set the externals of the templateStack to TestGetEngineRepositoryPath() & slash & pExternal & ".so"
+      set the externals of the templateStack to tEnginePath & slash & pExternal & ".so"
    end if
 
    create stack pExternal && "External"
