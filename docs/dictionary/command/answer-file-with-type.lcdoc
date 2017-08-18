@@ -29,7 +29,7 @@ Example:
 answer file (field "Prompt") with type "LiveCode Stacks|rev|RSTK"
 
 Example:
-answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG" \
+answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG"
 
 Parameters:
 prompt (string):
