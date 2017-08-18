@@ -54,6 +54,8 @@ on TestSetup
       return "SKIP database tests can only be run on Linux"
    end if
    
+   TestLoadExternal "revdb"
+   
    put TestGetEngineRepositoryPath() & "/_tests/_build/sqlite_binary_test" into lDatabaseDir
    create directory lDatabaseDir
 end TestSetup
