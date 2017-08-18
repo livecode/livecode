@@ -59,12 +59,12 @@ lets other windows be seen.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
-> systems>, an <image> must be 128x128 <pixels> or less, and both its
-> <height> and <width> must be a power of 2. To be used on <Windows> and
-> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
-> be used as a fully cross-platform pattern, both an image's dimensions
-> should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on
+> <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less,
+> and both its <height> and <width> must be a power of 2. To be used on
+> <Windows> and <Unix|Unix systems>, <height> and <width> must be
+> divisible by 8. To be used as a fully cross-platform pattern,
+> both an image's dimensions should be one of 8, 16, 32, 64, or 128.
 
 >*Cross-platform note:*  On <Mac OS|Mac OS systems>, if you use the
 > <launch> or <open process> <command|commands> to start up another
