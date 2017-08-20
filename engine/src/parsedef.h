@@ -2157,6 +2157,7 @@ enum {
     ST_LIT,
 	ST_LC,
     ST_RC,
+    ST_COL,
     
 	// MW-2009-03-03: The ST_DATA symbol type is a string that shoudl be treated
 	//   as an echoed literal - it represents the data between <?rev ?> blocks in

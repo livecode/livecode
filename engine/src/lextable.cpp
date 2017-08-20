@@ -51,7 +51,7 @@ uint8_t type_table[256] =
     ST_SEP,  ST_MIN,  ST_NUM,  ST_OP,   //      ,       -       .       /
     ST_NUM,  ST_NUM,  ST_NUM,  ST_NUM,  //      0       1       2       3
     ST_NUM,  ST_NUM,  ST_NUM,  ST_NUM,  //      4       5       6       7
-    ST_NUM,  ST_NUM,  ST_OP,   ST_SEMI, //      8       9       :       ;
+    ST_NUM,  ST_NUM,  ST_COL,   ST_SEMI, //      8       9       :       ;
     ST_OP,   ST_OP,   ST_OP,   ST_TAG,   //      <       =       >       ?
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      @       A       B       C
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      D       E       F       G
@@ -119,7 +119,7 @@ uint8_t unicode_type_table[256] =
     ST_SEP,         ST_MIN,         ST_NUM,         ST_OP,          //      ,       -       .       /
     ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      0       1       2       3
     ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      4       5       6       7
-    ST_NUM,         ST_NUM,         ST_OP,          ST_SEMI,        //      8       9       :       ;
+    ST_NUM,         ST_NUM,         ST_COL,         ST_SEMI,        //      8       9       :       ;
     ST_OP,          ST_OP,          ST_OP,          ST_TAG,         //      <       =       >       ?
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      @       A       B       C
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      D       E       F       G
