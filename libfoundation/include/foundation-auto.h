@@ -137,6 +137,17 @@ public:
         return t_value;
     }
     
+    // The MakeUnique method inters the value-ref so that it uses an existing
+    // uniqued value if present.
+    inline bool MakeUnique(void)
+    {
+        if (!MCValueInterAndRelease(m_value, m_value))
+        {
+            return false;
+        }
+        return true;
+    }
+    
     friend T In<>(const MCAutoValueRefBase<T>&);
     friend T& Out<>(MCAutoValueRefBase<T>&);
     friend T& InOut<>(MCAutoValueRefBase<T>&);
