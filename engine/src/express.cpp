@@ -55,6 +55,11 @@ MCExpression::~MCExpression()
 	delete right;
 }
 
+MCExpressionAttrs MCExpression::getattrs(void) const
+{
+    return {};
+}
+
 MCVarref *MCExpression::getrootvarref(void)
 {
 	return NULL;
@@ -412,6 +417,30 @@ void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void 
 		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , p_type, r_value);
 }
 
+bool MCExpression::constant_eval_typed(MCExecValueType p_type, void* r_value_ptr)
+{
+    MCerrorlock++;
+    
+    bool t_has_error = false;
+    
+    MCExecContext ctxt;
+    MCExecValue t_value;
+    eval_ctxt(ctxt, t_value);
+    if (!ctxt.HasError())
+    {
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, p_type, r_value_ptr);
+    }
+    else
+    {
+        ;
+    }
+    
+    t_has_error = ctxt.HasError();
+    
+    MCerrorlock--;
+    
+    return !t_has_error;
+}
 
 void MCExpression::initpoint(MCScriptPoint &sp)
 {

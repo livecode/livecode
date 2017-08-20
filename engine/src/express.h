@@ -26,6 +26,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #endif
 
+class MCExpressionAttrs
+{
+public:
+    bool IsConstant(void) const
+    {
+        return (m_flags & kIsConstant) != 0;
+    }
+
+    MCExpressionAttrs SetIsConstant(void)
+    {
+        m_flags |= kIsConstant;
+        return *this;
+    }
+    
+private:
+    enum
+    {
+        kIsConstant = 1 << 0,
+    };
+    
+    uint32_t m_flags = 0;
+};
+
 class MCExpression
 {
 protected:
@@ -39,10 +62,11 @@ protected:
 public:
 	MCExpression();
 	virtual ~MCExpression();
+
+    virtual MCExpressionAttrs getattrs(void) const;
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
-	
 	// Evaluate the expression as its natural type basic type (note that
 	// execvalue's cannot be set/enum/custom, they should all be resolved
 	// to the appropriate basic type first!). This form should be used for
@@ -81,6 +105,16 @@ public:
 	void eval_typed(MCExecContext& ctxt, MCExecValueType return_type, void* return_value);
 	
 	//////////
+    
+    template<typename T>
+    bool constant_eval(T& r_value)
+    {
+        return constant_eval_typed(MCExecValueTraits<T>::type_enum, &r_value);
+    }
+    
+    bool constant_eval_typed(MCExecValueType return_type, void* return_value_ptr);
+    
+    //////////
 	
 	void setrank(Factor_rank newrank)
 	{
