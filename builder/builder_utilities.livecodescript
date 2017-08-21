@@ -654,3 +654,193 @@ command builderExtUnpack pEdition
       builderTSNetUnpack builderTSNetVersion(), tEdition
    end if
 end builderExtUnpack
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+
+Return valid component categories for note sections
+
+Returns:
+An commma delimited list
+
+**/
+function builderComponentCategories
+   return "engine,IDE,extension"
+end builderComponentCategories
+
+/**
+
+Return the names of editions in notes priority order
+
+Returns:
+An commma delimited list
+
+**/
+function builderEditionNames
+   return "Business,Indy,Community Extra,Community"
+end builderEditionNames
+
+/**
+
+Iterate the components directories of the public and private repositories
+and parse the yaml file in each subdirectory.
+
+Returns:
+An array  of component directories with keys folder (full path) & metadata
+(array from of YAML file).
+
+**/
+function builderComponentFolders
+   local tComponentFolders
+   repeat for each line tFolder in builderPrivateRepoFolder() & return & builderRepoFolder()
+      repeat for each line tComponent in folders(tFolder & "/components")
+         if tComponent begins with "." then
+            next repeat
+         end if
+         
+         local tPath
+         put tFolder & "/components/" & tComponent & "/component.yml" into tPath
+         if there is not a file tPath then
+            next repeat
+         end if
+         
+         local tYAML
+         put builderFileGetUTF8Contents(tPath) into tYAML
+         
+         --!TODO Add YAMLToArray script-library so we can have more
+         -- complex metadata structures here if necessary
+         local tLine
+         set the itemdelimiter to colon
+         
+         local tMetadata
+         delete variable tMetadata
+         repeat for each line tLine in tYAML
+            put word 1 to -1 of (item 2 to -1 of tLine) into tMetadata[item 1 of tLine]
+         end repeat
+         
+         local tIndex
+         put the number of elements of tComponentFolders + 1 into tIndex
+         put tFolder & "/components/" & tComponent into tComponentFolders[tIndex]["folder"]
+         put tMetadata into tComponentFolders[tIndex]["metadata"]
+      end repeat
+   end repeat
+   
+   return tComponentFolders
+end builderComponentFolders
+
+/**
+
+Read UTF-8 file
+
+Parameters:
+
+pPath (string):
+full file path
+
+Returns:
+The decoded content of a UTF-8 file with BOM removed if it existed
+
+**/
+function builderFileGetUTF8Contents pPath
+   return builderFileGetContents(pPath, "UTF-8")
+end builderFileGetUTF8Contents
+
+/**
+
+Read file
+
+Parameters:
+
+pPath (string):
+full file path
+
+pEncoding (optional string):
+The encoding to decode with if any. If empty the the binary file
+is returned.
+
+Returns:
+The decoded content of a file with BOM removed if it existed
+
+**/
+function builderFileGetContents pPath, pEncoding
+   local tContents, tResult
+   
+   put url("binfile:" & pPath) into tContents
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to read [[pPath]]: [[tResult]]")
+   end if
+   
+   if pEncoding is not empty then
+      __DeleteByteOrderMarks tContents, pEncoding
+      put textDecode(tContents, pEncoding) into tContents
+   end if
+   
+   return tContents
+end builderFileGetContents
+
+private command __DeleteByteOrderMarks @xEncoded, pEncoding
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), pEncoding) into tBom
+   
+   if xEncoded begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xEncoded
+   end if
+end __DeleteByteOrderMarks
+
+/**
+
+Write UTF-8 file
+
+Parameters:
+
+pPath (string):
+full file path
+
+pContents (string):
+The file content to write
+
+**/
+command builderFileSetUTF8Contents pPath, pContents
+   builderFileSetContents pPath, pContents, "UTF-8"
+end builderFileSetUTF8Contents
+
+/**
+
+Write file
+
+Parameters:
+
+pPath (string):
+full file path
+
+pContents:
+The file content to write. Either string or data.
+
+pEncoding (optional string):
+The encoding to encode the string in if any.. If not set
+the binary data of pContents is written.
+
+**/
+command builderFileSetContents pPath, pContents, pEncoding
+   local tResult
+   
+   if pEncoding is empty then
+      open file pPath for binary write
+   else
+      open file pPath for pEncoding text write
+   end if
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to open [[pPath]]: [[tResult]]")
+   end if
+   
+   write pContents to file pPath
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to write [[pPath]]: [[tResult]]")
+   end if
+   
+   close file pPath -- unchecked
+end builderFileSetContents
