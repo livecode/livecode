@@ -50,9 +50,9 @@ Use the <answer folder> <command> when you want the user to choose a
 
 If the as sheet form is used, the dialog box appears as a sheet on OS X
 systems. On other systems, the as sheet form has no effect and the
-dialog box appears normally. Attempting to open a sheet from within
+<dialog box> appears normally. Attempting to open a sheet from within
 another sheet displays the second stack as a <modal dialog box> instead.
-To give a dialog box a prompt when using the as sheet form a non-empty
+To give a <dialog box> a prompt when using the as sheet form a non-empty
 title must be provided. This will cause the prompt to appear in the same
 place it would if as sheet was not being used.
 
