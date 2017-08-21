@@ -27,7 +27,7 @@ local myCount
 if the shiftKey is down and myCount > 1 then exit mouseUp
 
 Parameters:
-leftValue: (bool):
+leftValue (bool):
 leftValue is true or false, or an expression that evaluates to
 true or false.
 
