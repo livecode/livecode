@@ -70,7 +70,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put "extension" into tComponents[tIndex]["metadata"]["category"]
                
                if tPath is  builderPrivateRepoFolder() then
-                  put "community extra" into tComponents[tIndex]["metadata"]["edition"]
+                  put "community+" into tComponents[tIndex]["metadata"]["edition"]
                else
                   put "community" into tComponents[tIndex]["metadata"]["edition"]
                end if

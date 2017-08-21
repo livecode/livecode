@@ -130,7 +130,7 @@ private command toolsBuilderPrepareExt pEdition, pPlatform
    -- Remove un-needed files from the unpacked Ext collection
    local tOldFolder
    local tCollectionFolder
-   put builderUnpackFolder() & slash & "Ext" into tCollectionFolder
+   put builderUnpackFolder(pEdition) & slash & "Ext" into tCollectionFolder
    put the defaultFolder into tOldFolder
    set the defaultFolder to tCollectionFolder
    repeat for each line tExtension in the folders
@@ -198,7 +198,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
-   packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder()
+   packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder(pEdition)
    if editionIsInPrivateRepo(tEditionType) then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
