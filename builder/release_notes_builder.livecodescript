@@ -482,7 +482,15 @@ private command NotesScanVersion pType, pVersion, pFiles, @xScan
       put tFileInfo["metadata"]["version"] into tVersion
       if tVersion is empty then
          put pVersion into tVersion
+      else
+         -- filter out touched files with version headers
+         set the itemDelimiter to "-"
+         if item 1 of tVersion is not item 1 of pVersion then
+            builderLog "report", "Filtering touched file with version header" && tFile
+            next repeat
+         end if
       end if
+      
       put tFileInfo["metadata"]["basename"] into tBasename
       if tBasename is empty then
          put FileGetBasename(tFile) into tBasename
