@@ -2,8 +2,25 @@
 
 script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-OpenSSL_VERSION=$(cat "${script_dir}/../versions/openssl")
-ICU_VERSION=$(cat "${script_dir}/../versions/icu")
-ICU_VERSION_MAJOR=$(cat "${script_dir}/../versions/icu_major")
-Curl_VERSION=$(cat "${script_dir}/../versions/curl")
-CEF_VERSION=$(cat "${script_dir}/../versions/cef")
+function readVersion {
+	local LIBNAME=$1
+	local LIBNAME_LC=$(tr "[:upper:]" "[:lower:]" <<< $LIBNAME)
+	
+	local VERSION=$(cat "${script_dir}/../versions/${LIBNAME_LC}")
+	eval ${LIBNAME}_VERSION='"${VERSION}"'
+	
+	if [ -f "${script_dir}/../versions/${LIBNAME_LC}_major" ] ; then
+		local VERSION_MAJOR=$(cat "${script_dir}/../versions/${LIBNAME_LC}_major")
+		eval ${LIBNAME}_VERSION_MAJOR='"${VERSION_MAJOR}"'
+	fi
+	
+	if [ -f "${script_dir}/../versions/${LIBNAME_LC}_buildrevision" ] ; then
+		local BUILDREVISION=$(cat "${script_dir}/../versions/${LIBNAME_LC}_buildrevision")
+		eval ${LIBNAME}_BUILDREVISION='"${BUILDREVISION}"'
+	fi
+}
+
+readVersion OpenSSL
+readVersion ICU
+readVersion Curl
+readVersion CEF

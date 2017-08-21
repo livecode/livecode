@@ -7,6 +7,23 @@ source "scripts/lib_versions.inc"
 PACKAGE_DIR="`pwd`/packaged"
 mkdir -p "${PACKAGE_DIR}"
 
+function generateTarFileName {
+	local LIBNAME=$1
+	local PLATFORM=$2
+	
+	eval local BUILDREVISION="\$${LIBNAME}_BUILDREVISION"
+	eval local VERSION="\$${LIBNAME}_VERSION"
+	
+	# Tar file name may include prebuilt build revision number
+	if [ ! -z "${BUILDREVISION}" ] ; then
+		local TAR_FILE="${PACKAGE_DIR}/${LIBNAME}-${VERSION}-${PLATFORM}-${BUILDREVISION}.tar"
+	else
+		local TAR_FILE="${PACKAGE_DIR}/${LIBNAME}-${VERSION}-${PLATFORM}.tar"
+	fi
+	
+	eval ${LIBNAME}_TAR='"${TAR_FILE}"'
+}
+
 # Packager function
 function doPackage {
 	local PLATFORM=$1
@@ -40,30 +57,30 @@ function doPackage {
 	fi
 
 	if [ ! -z "${PACKAGE_SUBPLATFORM}" ] ; then
-		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${PACKAGE_SUBPLATFORM}"
+		local SUFFIX="${PLATFORM}-${PACKAGE_ARCH}-${PACKAGE_SUBPLATFORM}"
 	else
-		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}"
+		local SUFFIX="${PLATFORM}-${PACKAGE_ARCH}"
 	fi
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
-	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}${SUFFIX}.tar"
-	local CURL_TAR="${PACKAGE_DIR}/Curl-${Curl_VERSION}${SUFFIX}.tar"
-	local ICU_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}${SUFFIX}.tar"
-	local CEF_TAR="${PACKAGE_DIR}/CEF-${CEF_VERSION}${SUFFIX}.tar"
-
+	generateTarFileName OpenSSL "${SUFFIX}"
+	generateTarFileName Curl "${SUFFIX}"
+	generateTarFileName ICU "${SUFFIX}"
+	generateTarFileName CEF "${SUFFIX}"
+	
 	# Package up OpenSSL
 	if [ -f "${LIBPATH}/libcustomcrypto.a" ] ; then
-		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libcustomcrypto.a" "${LIBPATH}/libcustomssl.a"
+		tar -cf "${OpenSSL_TAR}" "${LIBPATH}/libcustomcrypto.a" "${LIBPATH}/libcustomssl.a"
 	elif [ -f "${LIBPATH}/revsecurity.dll" ] ; then
-		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll" "${LIBPATH}/revsecurity.def"
+		tar -cf "${OpenSSL_TAR}" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll" "${LIBPATH}/revsecurity.def"
 	fi
 
 	# Package up Curl
 	if [ -f "${LIBPATH}/libcurl.a" ] ; then
-		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl.a"
+		tar -cf "${Curl_TAR}" "${LIBPATH}/libcurl.a"
 	elif [ -f "${LIBPATH}/libcurl_a.lib" ] ; then
-		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl_a.lib"
+		tar -cf "${Curl_TAR}" "${LIBPATH}/libcurl_a.lib"
 	fi
 
 	# Package up ICU
@@ -95,11 +112,11 @@ function doPackage {
 	fi
 
 	# Compress the packages
-	if [ -f "${OPENSSL_TAR}" ] ; then
-		bzip2 -zf --best "${OPENSSL_TAR}"
+	if [ -f "${OpenSSL_TAR}" ] ; then
+		bzip2 -zf --best "${OpenSSL_TAR}"
 	fi
-	if [ -f "${CURL_TAR}" ] ; then
-		bzip2 -zf --best "${CURL_TAR}"
+	if [ -f "${Curl_TAR}" ] ; then
+		bzip2 -zf --best "${Curl_TAR}"
 	fi
 	if [ -f "${ICU_TAR}" ] ; then
 		bzip2 -zf --best "${ICU_TAR}"
