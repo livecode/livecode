@@ -323,8 +323,9 @@ function builderMergExtVersion
    return kMergExtVersion
 end builderMergExtVersion
 
-function builderUnpackFolder
-   return sWorkDir & "/ext/unpacked"
+function builderUnpackFolder pEdition
+   replace space with "_" in pEdition
+   return sWorkDir & "/ext/unpacked/" & toLower(pEdition)
 end builderUnpackFolder
 
 function builderTSNetVersion
@@ -595,7 +596,7 @@ end builderMergExtDownloadedFilePath
 
 private command builderMergExtUnpack pMergExtVersion, pEdition
    local tFolder
-   put builderUnpackFolder() & slash & "Ext" into tFolder
+   put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
    
    local tZipFile
    put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tZipFile
@@ -620,7 +621,7 @@ end builderTSNetDownloadedFilePath
 
 private command builderTSNetUnpack pTSNetVersion, pEdition
    local tFolder
-   put builderUnpackFolder() & slash & "Ext" into tFolder
+   put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
    
    local tZipFile
    put builderTSNetDownloadedFilePath(pTSNetVersion, pEdition) into tZipFile
@@ -637,7 +638,7 @@ end builderTSNetUnpack
 
 command builderExtUnpack pEdition
    local tFolder
-   put builderUnpackFolder() & slash & "Ext" into tFolder
+   put builderUnpackFolder(pEdition) & slash & "Ext" into tFolder
    
    if there is a folder tFolder then
       builderLog "message", "Cleaning unpack folder" && tFolder
@@ -678,7 +679,7 @@ An commma delimited list
 
 **/
 function builderEditionNames
-   return "Business,Indy,Community Extra,Community"
+   return "Business,Indy,Community+,Community"
 end builderEditionNames
 
 /**
