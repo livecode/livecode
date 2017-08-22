@@ -672,14 +672,15 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
                                              uindex_t p_size,
                                              MCStringEncoding p_encoding)
 {
-    MCAutoStringRef t_raw_script_string, t_LC_script_string;
+    MCAutoStringRef t_raw_script_string, t_lc_script_string;
     MCStringLineEndingStyle t_line_encoding_style;
     
     if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
                                  &t_raw_script_string) ||
         !MCStringNormalizeLineEndings(*t_raw_script_string,
-                                      kMCStringLineEndingStyleLF,
-                                      &t_LC_script_string,
+                                      kMCStringLineEndingStyleLF, 
+                                      true,
+                                      &t_lc_script_string,
                                       &t_line_encoding_style))
     {
         return nullptr;
@@ -687,7 +688,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     
     // Now attempt to parse the header line:
     //   'script' <string>
-    MCScriptPoint sp(*t_LC_script_string);
+    MCScriptPoint sp(*t_lc_script_string);
     
     // Parse 'script' token.
     if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
@@ -722,7 +723,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     uint32_t t_index = 0;
     
     // Jump over the possible lines before the string token
-    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index,
+    while (MCStringFirstIndexOfChar(*t_lc_script_string, '\n', t_index,
                                     kMCStringOptionCompareExact, t_index)
            && t_lines > 0)
     {
@@ -733,13 +734,13 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     t_index += 1;
     
     // t_line now has the last LineFeed of the token
-    MCAutoStringRef t_LC_script_body;
+    MCAutoStringRef t_lc_script_body;
     
     // We copy the body of the stack script
-    if (!MCStringCopySubstring(*t_LC_script_string,
+    if (!MCStringCopySubstring(*t_lc_script_string,
                                MCRangeMake(t_index,
-                                           MCStringGetLength(*t_LC_script_string)
-                                           - t_index), &t_LC_script_body))
+                                           MCStringGetLength(*t_lc_script_string)
+                                           - t_index), &t_lc_script_body))
     {
         return nullptr;
     }
@@ -750,7 +751,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     
     // Set it up as script only.
-    t_stack -> setasscriptonly(*t_LC_script_body);
+    t_stack -> setasscriptonly(*t_lc_script_body);
     
     // Set its name.
     t_stack -> setname(*t_script_name);
@@ -1126,7 +1127,6 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     
     // Compute the body of the script file.
 	MCAutoStringRef t_converted;
-    //MCStringLineEndingStyle t_line_encoding_style;
 
 	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
 	//   platforms for line-ending conversion so temporarily need a stringref - hence we
@@ -1140,8 +1140,11 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         // Write out the standard script stack header, and then the script itself
         MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
-        MCStringNormalizeLineEndings(*t_script_body, sptr -> getlineencodingstyle(),
-                                     &t_converted, nullptr);
+        MCStringNormalizeLineEndings(*t_script_body, 
+                                     sptr -> getlineencodingstyle(), 
+                                     false,
+                                     &t_converted, 
+                                     nullptr);
 	}
     
     // Open the output stream.

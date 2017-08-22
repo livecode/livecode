@@ -1462,7 +1462,11 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
             t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
         if (t_success)
-            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
+            t_success = MCStringNormalizeLineEndings(*t_text, 
+                                                     kMCStringLineEndingStyleLF, 
+                                                     true, 
+                                                     r_text, 
+                                                     nullptr);
         
         MCresult -> clear();
     }
@@ -1564,7 +1568,15 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     // convert the line endings before writing
     MCAutoStringRef t_converted;
     if (t_success)
-        t_success = MCStringConvertLineEndingsFromLiveCode(p_string, &t_converted);
+        t_success = MCStringNormalizeLineEndings(p_string, 
+#ifdef __CRLF__
+                                                 kMCStringLineEndingStyleCRLF, 
+#else
+                                                 kMCStringLineEndingStyleLF, 
+#endif
+                                                 false, 
+                                                 &t_converted, 
+                                                 nullptr);
     
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
@@ -1789,8 +1801,14 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
         // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was in 6.x:
         //  line-ending conversion for servers and Windows only
 #if defined(_SERVER) || defined(_WINDOWS)
-        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
+        if (!MCStringNormalizeLineEndings(*t_data_string, 
+                                           kMCStringLineEndingStyleLF, 
+                                           true, 
+                                           r_output, 
+                                           nullptr))
+        {
             r_output = MCValueRetain(kMCEmptyString);
+        }
 #else
         r_output = MCValueRetain(*t_data_string);
 #endif

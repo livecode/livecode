@@ -2047,14 +2047,6 @@ void MCStack::setasscriptonly(MCStringRef p_script)
     }
 }
 
-// BWM-2017-08-16: [[ Bug 17810 ]] Retain line endings used when importing a
-// script-only-stack.
-void MCStack::setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
-{
-    m_line_encoding_style = p_line_encoding_style;
-}
-
-
 MCPlatformControlType MCStack::getcontroltype()
 {
     MCPlatformControlType t_type;

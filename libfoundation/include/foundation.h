@@ -2730,11 +2730,15 @@ enum MCStringLineEndingStyle
     kMCStringLineEndingStyleCRLF
 };
 
-MC_DLLEXPORT bool MCStringNormalizeLineEndings(
-                            MCStringRef p_input, 
-                            MCStringLineEndingStyle p_to_style, 
-                            MCStringRef& r_output, 
-                            MCStringLineEndingStyle* r_original_style);
+// Converts LF, CR, CRLF line endings in p_input to p_to_style line endings and
+// places the result into r_output. If p_normalize_ps_ls is true, then it also converts
+// PS to p_to_style, and LS to VTAB.
+MC_DLLEXPORT bool
+MCStringNormalizeLineEndings(MCStringRef p_input, 
+                             MCStringLineEndingStyle p_to_style, 
+                             bool p_normalize_ps_ls,
+                             MCStringRef& r_output, 
+                             MCStringLineEndingStyle* r_original_style);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

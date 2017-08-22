@@ -302,7 +302,7 @@ protected:
     bool m_is_script_only : 1;
     
     // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
-    MCStringLineEndingStyle m_line_encoding_style;
+    MCStringLineEndingStyle m_line_encoding_style : 2;
 	
 	bool m_is_ide_stack : 1;
 	
@@ -951,8 +951,15 @@ public:
     void setasscriptonly(MCStringRef p_script);
     
     // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
-    MCStringLineEndingStyle getlineencodingstyle(void) const { return m_line_encoding_style; }
-    void setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style);
+    MCStringLineEndingStyle getlineencodingstyle(void) const
+    {
+        return m_line_encoding_style;
+    }
+    
+    void setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
+    {
+        m_line_encoding_style = p_line_encoding_style;
+    }
 
 	inline bool getextendedstate(uint4 flag) const
 	{

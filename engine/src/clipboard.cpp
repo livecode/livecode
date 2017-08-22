@@ -1476,7 +1476,11 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))
         return false;
     
-    return MCStringConvertLineEndingsToLiveCode(*t_string, r_text);
+    return MCStringNormalizeLineEndings(*t_string, 
+                                        kMCStringLineEndingStyleLF, 
+                                        true, 
+                                        r_text, 
+                                        nullptr);
 }
 
 bool MCClipboard::CopyAsData(MCRawClipboardKnownType p_type, MCDataRef& r_data) const
