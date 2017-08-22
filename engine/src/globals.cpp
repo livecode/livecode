@@ -1471,6 +1471,9 @@ int X_close(void)
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();
 	
+	// Finalize the event queue
+	MCEventQueueFinalize();
+	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();
 	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.

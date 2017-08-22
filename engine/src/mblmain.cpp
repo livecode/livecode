@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "system.h"
 #include "font.h"
+#include "eventqueue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,6 +105,9 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 	MCFontInitialize();
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
+
+	// Initialize the event queue
+	MCEventQueueInitialize();
 
     // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
 #if defined(TARGET_SUBPLATFORM_ANDROID)
