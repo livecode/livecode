@@ -472,6 +472,9 @@ public:
 
 void MCAndroidBackPressed()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
 	MCMessageEvent *t_event;
 	MCObjectHandle t_handle;
 	t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
@@ -481,6 +484,9 @@ void MCAndroidBackPressed()
 
 void MCAndroidMenuKey()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
     MCMessageEvent *t_event;
     MCObjectHandle t_handle;
     t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
@@ -490,6 +496,9 @@ void MCAndroidMenuKey()
 
 void MCAndroidSearchKey()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
     //MCLog("MCAndroidSearchKey()", nil);
     MCMessageEvent *t_event;
     MCObjectHandle t_handle;
