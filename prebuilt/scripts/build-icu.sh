@@ -10,6 +10,7 @@ ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=st
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
 ICU_VERSION_ALT=$(echo "${ICU_VERSION}" | sed 's/\./_/g')
+ICU_VERSION_MAJOR=$(echo "${ICU_VERSION}" | sed 's/\..*//g')
 
 # Grab the source for the library
 ICU_TGZ="icu-${ICU_VERSION}.tar.gz"

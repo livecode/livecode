@@ -9,11 +9,6 @@ function readVersion {
 	local VERSION=$(cat "${script_dir}/../versions/${LIBNAME_LC}")
 	eval ${LIBNAME}_VERSION='"${VERSION}"'
 	
-	if [ -f "${script_dir}/../versions/${LIBNAME_LC}_major" ] ; then
-		local VERSION_MAJOR=$(cat "${script_dir}/../versions/${LIBNAME_LC}_major")
-		eval ${LIBNAME}_VERSION_MAJOR='"${VERSION_MAJOR}"'
-	fi
-	
 	if [ -f "${script_dir}/../versions/${LIBNAME_LC}_buildrevision" ] ; then
 		local BUILDREVISION=$(cat "${script_dir}/../versions/${LIBNAME_LC}_buildrevision")
 		eval ${LIBNAME}_BUILDREVISION='"${BUILDREVISION}"'
