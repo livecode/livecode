@@ -2723,6 +2723,19 @@ MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
 MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
+enum MCStringLineEndingStyle
+{
+    kMCStringLineEndingStyleLF,
+    kMCStringLineEndingStyleCR,
+    kMCStringLineEndingStyleCRLF
+};
+
+MC_DLLEXPORT bool MCStringNormalizeLineEndings(
+                            MCStringRef p_input, 
+                            MCStringLineEndingStyle p_to_style, 
+                            MCStringRef& r_output, 
+                            MCStringLineEndingStyle* r_original_style);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DATA DEFINITIONS

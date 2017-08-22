@@ -304,8 +304,7 @@ MCStack::MCStack()
     m_is_script_only = false;
     
     // BWM-2017-08-16: [[ Bug 17810 ]] Script-only-stack line endings default to LF.
-    m_use_LF_line_endings = true;
-    m_use_CR_line_endings = false;
+    m_line_encoding_style = kMCStringLineEndingStyleLF;
 
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
@@ -2050,14 +2049,9 @@ void MCStack::setasscriptonly(MCStringRef p_script)
 
 // BWM-2017-08-16: [[ Bug 17810 ]] Retain line endings used when importing a
 // script-only-stack.
-void MCStack::setuseLFlineendings(bool p_value)
+void MCStack::setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
 {
-    m_use_LF_line_endings = p_value;
-}
-
-void MCStack::setuseCRlineendings(bool p_value)
-{
-    m_use_CR_line_endings = p_value;
+    m_line_encoding_style = p_line_encoding_style;
 }
 
 

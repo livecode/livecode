@@ -6963,6 +6963,60 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
         return false;
 }
 
+MC_DLLEXPORT
+bool MCStringNormalizeLineEndings(MCStringRef p_input, 
+                                  MCStringLineEndingStyle p_to_style, 
+                                  MCStringRef& r_output, 
+                                  MCStringLineEndingStyle* r_original_style)
+{
+    uindex_t t_firstLF = 0;
+    uindex_t t_firstCR = 0;
+    MCStringLineEndingStyle t_original_style = kMCStringLineEndingStyleLF;
+    MCStringRef t_mutable_input;
+    
+    if (MCStringFirstIndexOfChar(p_input, '\r', 0, kMCStringOptionCompareExact, t_firstCR))
+    {
+        if (MCStringFirstIndexOfChar(p_input, '\n', 0, kMCStringOptionCompareExact, t_firstLF))
+        {
+            if ((t_firstCR + 1 == t_firstLF) || (t_firstLF + 1 == t_firstCR))
+                t_original_style = kMCStringLineEndingStyleCRLF;
+            else if (t_firstCR < t_firstLF)
+                t_original_style = kMCStringLineEndingStyleCR;
+        }
+        else
+            t_original_style = kMCStringLineEndingStyleCR;
+    }
+    
+    // normalize input to LF line endings first
+    /* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+    /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), 
+                        MCSTR("\n\r"), kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n\r"), 
+                        MCSTR("\n"), kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r"), 
+                        MCSTR("\n"), kMCStringOptionCompareExact);
+    
+    // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 
+                        (const codepoint_t)0x2028, (const codepoint_t)0x0B, 
+                        kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 
+                        (const codepoint_t)0x2029, (const codepoint_t)0x0A, 
+                        kMCStringOptionCompareExact);
+    
+    // now convert the line endings to the proper version
+    if (p_to_style == kMCStringLineEndingStyleCR)
+        /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), 
+                                               MCSTR("\r"), kMCStringOptionCompareExact);
+    else if (p_to_style == kMCStringLineEndingStyleCRLF)
+        /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), 
+                                               MCSTR("\r\n"), kMCStringOptionCompareExact);
+    
+    if (r_original_style != nullptr) *r_original_style = t_original_style;
+    /* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+    return true;
+}
+
 static void __MCStringCheck(MCStringRef self)
 {
     __MCAssertIsString(self);

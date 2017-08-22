@@ -673,10 +673,14 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
                                              MCStringEncoding p_encoding)
 {
     MCAutoStringRef t_raw_script_string, t_LC_script_string;
+    MCStringLineEndingStyle t_line_encoding_style;
+    
     if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
                                  &t_raw_script_string) ||
-        !MCStringConvertLineEndingsToLiveCode(*t_raw_script_string,
-                                              &t_LC_script_string))
+        !MCStringNormalizeLineEndings(*t_raw_script_string,
+                                      kMCStringLineEndingStyleLF,
+                                      &t_LC_script_string,
+                                      &t_line_encoding_style))
     {
         return nullptr;
     }
@@ -752,13 +756,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     t_stack -> setname(*t_script_name);
     
     // Save line endings from raw script string to restore when saving file.
-    t_stack -> setuseLFlineendings(MCStringContains(*t_raw_script_string,
-                                   MCSTR("\n"), kMCStringOptionCompareExact));
-    t_stack -> setuseCRlineendings(MCStringContains(*t_raw_script_string,
-                                   MCSTR("\r"), kMCStringOptionCompareExact));
-    // If neither line ending character found, default to LF.
-    if (!(t_stack->getuseLFlineendings() || t_stack->getuseCRlineendings()))
-        t_stack -> setuseLFlineendings(true);
+    t_stack -> setlineencodingstyle(t_line_encoding_style);
     
     return t_stack;
 }
@@ -1128,6 +1126,7 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     
     // Compute the body of the script file.
 	MCAutoStringRef t_converted;
+    //MCStringLineEndingStyle t_line_encoding_style;
 
 	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
 	//   platforms for line-ending conversion so temporarily need a stringref - hence we
@@ -1141,10 +1140,8 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         // Write out the standard script stack header, and then the script itself
         MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
-        MCStringConvertLineEndingsFromLiveCode(*t_script_body, 
-                                               sptr -> getuseLFlineendings(),
-                                               sptr -> getuseCRlineendings(),
-                                               &t_converted);
+        MCStringNormalizeLineEndings(*t_script_body, sptr -> getlineencodingstyle(),
+                                     &t_converted, nullptr);
 	}
     
     // Open the output stream.
