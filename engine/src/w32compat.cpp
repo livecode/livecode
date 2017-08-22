@@ -100,9 +100,9 @@ bool MCWin32IsProcessDPIAware(BOOL &r_result)
 
 // IM-2014-01-28: [[ HiDPI ]] Weak-linked GetProcessDPIAwareness function
 typedef HRESULT (WINAPI *GetProcessDpiAwarenessPTR)(HANDLE hprocess,
-													MCWin32ProcessDPIAwareness *value);
+													MCWin32ProcessDpiAwareness *value);
 bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
-								   MCWin32ProcessDPIAwareness *r_awareness)
+								   MCWin32ProcessDpiAwareness *r_awareness)
 {
 	static GetProcessDpiAwarenessPTR s_GetProcessDpiAwareness = NULL;
 	static bool s_init = true;
@@ -125,10 +125,10 @@ bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
 
 // IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDPIForMonitor function
 typedef HRESULT (WINAPI *GetDpiForMonitorPTR)(HMONITOR hmonitor,
-											  MCWin32MonitorDPIType dpiType,
+											  MCWin32MonitorDpiType dpiType,
 											  UINT *dpiX, UINT *dpiY);
 bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
-							 MCWin32MonitorDPIType p_dpi_type,
+							 MCWin32MonitorDpiType p_dpi_type,
 							 UINT *r_dpi_x, UINT *r_dpi_y)
 {
 	static GetDpiForMonitorPTR s_GetDpiForMonitor = NULL;
