@@ -227,8 +227,8 @@ get the fillRule of <widget>
 
 Parameters:
 pRule(enum): The fill rule to be used.
-- "non-zero": Fill regions encircled at least once by the path.
-- "even odd": Fill regions encircled an even number of times by the path.
+- "nonzero": Fill regions encircled at least once by the path.
+- "evenodd": Fill regions encircled an even number of times by the path.
 
 Summary: The fill rule to be used when rendering the SVG path.
 
@@ -244,12 +244,12 @@ When it goes around a region anticlockwise, it subtracs 1 from the number of
 encirclements.
 
 See https://www.w3.org/TR/SVG/painting.html#FillRuleProperty for examples of
-the "non-zero" and "even odd" fill rules.
+the "nonzero" and "evenodd" fill rules.
 */
 property fillRule       get mFillRule      set setFillRule
 metadata fillRule.editor is "com.livecode.pi.enum"
-metadata fillRule.options is "non-zero,even odd"
-metadata fillRule.default is "non-zero"
+metadata fillRule.options is "nonzero,evenodd"
+metadata fillRule.default is "nonzero"
 metadata fillRule.label is "Fill rule"
 --
 
@@ -260,7 +260,7 @@ public handler OnCreate()
 	put false into mHilited
 	put true into mMaintainAspectRatio
 	put false into mFlipVertically
-	put "non-zero" into mFillRule
+	put "nonzero" into mFillRule
 	setPathPreset("Star")
 end handler
 ----------
