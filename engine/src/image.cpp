@@ -104,7 +104,7 @@ MCPropertyInfo MCImage::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
     DEFINE_RW_OBJ_PROPERTY(P_CENTER_RECTANGLE, OptionalRectangle, MCImage, CenterRectangle)
     DEFINE_RO_OBJ_RECORD_PROPERTY(P_METADATA, MCImage, Metadata)
-
+    DEFINE_RW_OBJ_PROPERTY(P_TOOL, OptionalString, MCImage, Tool)
 };
 
 MCObjectPropertyTable MCImage::kPropertyTable =
@@ -147,7 +147,6 @@ MCImage::MCImage()
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
     m_animate_posted = false;
-    
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)

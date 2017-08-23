@@ -357,6 +357,9 @@ private:
 	int2 irepeatcount;
 	uint1 resizequality;
 	MCStringRef filename;
+    
+    Tool m_tool = T_UNDEFINED;
+    
 	static int2 magmx;
 	static int2 magmy;
 	static MCRectangle magrect;
@@ -400,7 +403,6 @@ private:
 	bool setdata(void *p_data, uindex_t p_size);
 	
 	void notifyneeds(bool p_deleting);
-	
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -480,6 +482,11 @@ public:
 	{
 		return resizequalitytoimagefilter(resizequality);
 	}
+
+    Tool gettool(void) const
+    {
+        return m_tool;
+    }
 
 	void setframe(int32_t p_newframe);
 	void advanceframe();
@@ -687,6 +694,9 @@ public:
     void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
     void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
     void GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
+    
+    void GetTool(MCExecContext& ctxt, MCStringRef& r_tool);
+    void SetTool(MCExecContext& ctxt, MCStringRef p_tool);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);

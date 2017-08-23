@@ -900,3 +900,32 @@ void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecV
     }
     
 }
+
+void MCImage::GetTool(MCExecContext& ctxt, MCStringRef& r_tool)
+{
+    if (m_tool != T_UNDEFINED)
+    {
+        r_tool = MCSTR("pencil");
+        return;
+    }
+    
+    r_tool = MCValueRetain(kMCEmptyString);
+}
+
+void MCImage::SetTool(MCExecContext& ctxt, MCStringRef p_tool_str)
+{
+    if (MCStringIsEmpty(p_tool_str))
+    {
+        m_tool = T_UNDEFINED;
+        return;
+    }
+    
+    if (MCStringIsEqualToCString(p_tool_str, "pencil", kMCStringOptionCompareCaseless))
+    {
+        m_tool = T_PENCIL;
+        return;
+    }
+    
+    ctxt.LegacyThrow(EE_CHOOSE_BADTOOL);
+}
+

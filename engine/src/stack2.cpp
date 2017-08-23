@@ -288,6 +288,15 @@ Tool MCStack::gettool(MCObject *optr) const
 {
 	if (MCcurtool == T_HELP)
 		return T_HELP;
+    
+    if (optr->gettype() == CT_IMAGE)
+    {
+        Tool t_tool = static_cast<MCImage *>(optr)->gettool();
+        if (t_tool != T_UNDEFINED)
+        {
+            return t_tool;
+        }
+    }
 
 	// MW-2008-01-30: [[ Bug 5749 ]] Recurse up the object tree to see if any
 	//   parent of the object (up to card level) has CANT_SELECT set, if so
