@@ -321,6 +321,23 @@ on TestLoadExtension pName
 
 end TestLoadExtension
 
+on TestLoadExternal pExternal
+   local tEnginePath
+   put specialfolderpath("engine") into tEnginePath
+
+   if the platform is "MacOS" then
+      set the externals of the templateStack to tEnginePath & slash & pExternal & ".bundle"
+   else if the platform is "linux" then
+      set the externals of the templateStack to tEnginePath & slash & pExternal & ".so"
+   end if
+
+   create stack pExternal && "External"
+   start using it
+   if the externalCommands of it is empty then
+      write "Cannot load external" && pExternal & return to stderr
+   end if
+end TestLoadExternal 
+
 private function __GetCaller
    get item 1 to -3 of line -3 of the executionContexts
    if there is not an it then
