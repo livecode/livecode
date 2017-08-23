@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Versions
+source "scripts/platform.inc"
 source "scripts/lib_versions.inc"
 
 # Package directory
@@ -41,7 +42,6 @@ function doPackage {
 	fi
 	
 	if [ "${PLATFORM}" == "ios" ] ; then
-		source "scripts/ios.inc"
 		queryiOS "${SUBPLATFORM}"
 		local PACKAGE_SUBPLATFORM="${SUBPLATFORM_NAME}${VERSION}"
 	else
