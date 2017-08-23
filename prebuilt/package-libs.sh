@@ -63,6 +63,7 @@ function doPackage {
 	fi
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
+	local SHAREPATH="share/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
 	generateTarFileName OpenSSL "${SUFFIX}"
 	generateTarFileName Curl "${SUFFIX}"
@@ -84,24 +85,25 @@ function doPackage {
 	fi
 
 	# Package up ICU
-	local ICU_LIBS=
+	local ICU_FILES=
+	if [ -f "${SHAREPATH}/icudata.dat" ] ; then
+		ICU_FILES+="${SHAREPATH}/icudata.dat "
+	fi
 	if [ -f "${LIBPATH}/libicudata.a" ] ; then
-		for LIB in data i18n io le lx tu uc ; do
+		for LIB in i18n io le lx tu uc ; do
 			if [ -f "${LIBPATH}/libicu${LIB}.a" ] ; then
-				ICU_LIBS+="${LIBPATH}/libicu${LIB}.a "
-			fi	
-		done
-
-		tar -cf "${ICU_TAR}" ${ICU_LIBS}
-
-	elif [ -f "${LIBPATH}/sicudt.lib" ] ; then
-		for LIB in dt in io le lx tu uc ; do
-			if [ -f "${LIBPATH}/sicu${LIB}.lib" ] ; then
-				ICU_LIBS+="${LIBPATH}/sicu${LIB}.lib "
+				ICU_FILES+="${LIBPATH}/libicu${LIB}.a "
 			fi
 		done
-
-		tar -cf "${ICU_TAR}" ${ICU_LIBS}
+	elif [ -f "${LIBPATH}/sicudt.lib" ] ; then
+		for LIB in in io le lx tu uc ; do
+			if [ -f "${LIBPATH}/sicu${LIB}.lib" ] ; then
+				ICU_FILES+="${LIBPATH}/sicu${LIB}.lib "
+			fi
+		done
+	fi
+	if [ ! -z "${ICU_FILES}" ] ; then
+		tar -cf "${ICU_TAR}" ${ICU_FILES}
 	fi
 
 	# Package up CEF
