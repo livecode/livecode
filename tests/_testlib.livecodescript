@@ -355,16 +355,29 @@ on TestLoadExternal pExternal
    local tEnginePath
    put specialfolderpath("engine") into tEnginePath
 
+   local tExternalsPath, tExtension
+   set the itemdelimiter to slash
    if the platform is "MacOS" then
-      set the externals of the templateStack to tEnginePath & slash & pExternal & ".bundle"
+      put item 1 to -4 of tEnginePath into tExternalsPath
+      put "bundle" into tExtension
    else if the platform is "linux" then
-      set the externals of the templateStack to tEnginePath & slash & pExternal & ".so"
+      put tEnginePath into tExternalsPath
+      put "so" into tExtension
    end if
+
+   set the externals of the templateStack to tExternalsPath & slash & \
+      pExternal & "." & tExtension
 
    create stack pExternal && "External"
    start using it
    if the externalCommands of it is empty then
       write "Cannot load external" && pExternal & return to stderr
+      quit 1
+   end if
+   
+   -- Ensure drivers can be found
+   if pExternal is "revdb" then
+      revSetDatabaseDriverPath tExternalsPath
    end if
 end TestLoadExternal 
 
@@ -562,6 +575,27 @@ private function __MeetsRequirements pRequirement, pOptions
          return the platform is not "HTML5"
       case "write"
          return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+      case "ui"
+         return not (the environment ends with "command line")
+      case "desktop"
+         return the platform is among the items of "MacOS,Win32,Linux"
+      case "mobile"
+         return the platform is among the items of "Android,iOS"
+      case "external"
+         -- TODO: make externals tests work in standalone test builder
+         if TestIsInStandalone() then
+            return false
+         end if
+         return the platform is not "HTML5"
+      case "database"
+         if not __MeetsRequirements("external", "revdb") then
+            return false
+         end if
+         if "odbc" is among the items of pOptions or \ 
+               "postgresql" is among the items of pOptions then
+            return __MeetsRequirements("desktop")
+         end if  
+         return the platform is not "HTML5"
    end switch
    return true
 end __MeetsRequirements

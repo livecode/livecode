@@ -50,9 +50,8 @@ private function __retrBinaryData pTable, pData
 end __retrBinaryData
 
 on TestSetup
-   if the platform is not "linux" then
-      return "SKIP database tests can only be run on Linux"
-   end if
+   TestSkipIfNot "database", "sqlite"
+   TestSkipIfNot "external", "revsecurity"
    
    TestLoadExternal "revdb"
    
