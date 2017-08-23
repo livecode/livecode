@@ -2,7 +2,7 @@ Name: iphoneUseDeviceResolution
 
 Type: command
 
-Syntax: iphoneUseDeviceResolution { true | false }, [{ true | false }]
+Syntax: iphoneUseDeviceResolution <coordsInPixels> [, <customCtrlsInPixels>]
 
 Summary:
 Sets whether the full resolution of high-resolution devices is to be
@@ -15,23 +15,31 @@ OS: ios
 Platforms: mobile
 
 Example:
+-- All co-ordinates and sizes treated as pixels
 iphoneUseDeviceResolution true
 
 Example:
+-- All co-ordinates and sizes treated as pixels
 iphoneUseDeviceResolution true, true
 
 Example:
+-- Co-ordinates and sizes for custom controls are treated 
+-- as logical points
 iphoneUseDeviceResolution true, false
 
 Example:
+-- All co-ordinates and sizes treated as logical points
 iphoneUseDeviceResolution false
 
 Parameters:
-true:
+coordsInPixels(bool):
+When `true`, co-ordinates and sizes specified in LiveCode are treated as 
+being in pixels, rather than logical points.
 
-
-false:
-
+customCtrlsInPixels(bool):
+When `true`, co-ordinates and sizes specified in LiveCode for 
+custom controls are treated as being in pixels, rather
+than logical points.
 
 Description:
 Use the <iphoneUseDeviceResolution> command to specify whether the full
@@ -50,7 +58,7 @@ iPhone 4 devices.
 If the <iphoneUseDeviceResolution> command is passed <true> as the first
 argument, LiveCode ensures that co-ordinates and sizes specified in
 LiveCode are treated as being in pixels, rather than logical points. In
-particular, when changed, a resizeStack message is sent notifying the
+particular, when changed, a <resizeStack> message is sent notifying the
 size change of the current main-stack, and functions and properties
 (such as the screenRect) reflects co-ordinates in pixels.
 
@@ -62,9 +70,11 @@ than logical points.
 >*Note:* The notion of pixel and logical point remains valid on older
 > devices, it is just that it is always 1-1 thus using this command has
 > no effect there. The scale of the device's screen (relative to a
-> non-Retina display) can be queried using iphoneDeviceScale(). This
+> non-Retina display) can be queried using <iphoneDeviceScale>(). This
 > function returns 2 if the display is a Retina display, or 1 otherwise.
 
-References: iphoneDeviceScale (function),
-iphoneDeviceResolution (function)
+References: iphoneDeviceScale (function), resizeStack (message)
+iphoneDeviceResolution (function), scaleFactor (property),
+pixelScale (property), screenPixelScale (property), 
+screenPixelScales (property), systemPixelScale (property)
 

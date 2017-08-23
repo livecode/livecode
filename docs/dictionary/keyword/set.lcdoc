@@ -32,6 +32,9 @@ The <set> mode can be used only on <Unix> and <Windows|Windows systems>.
 On <Mac OS|Mac OS systems>, <object|objects> whose <ink> <property> is
 set to this mode appear as though their <ink> were set to <reverse>.
 
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
+
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),
 transfer mode (glossary), reverse (keyword), notSrcCopy (keyword),

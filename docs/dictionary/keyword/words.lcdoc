@@ -27,6 +27,9 @@ Use the <words> <keyword> to <sort> or <select> individual <words>.
 
 A word is a set of characters enclosed by spaces, tabs, or returns.
 
+>*Note:* To refer to actual words, i.e., words <delimit|delimited> 
+> by <Unicode> word breaks, use the <keyword> <trueWords>.
+
 When used with the <find> <command>, the <words> <keyword> finds
 <card|cards> that contain each of the specified <words>, though not
 necessarily next to each other.
@@ -36,7 +39,7 @@ sort (command), function (control structure), number (function),
 keyword (glossary), command (glossary), quoted (glossary),
 delimit (glossary), word (keyword), string (keyword), words (keyword),
 card (object), is among (operator), is not among (operator),
-properties (property)
+properties (property), trueWords (keyword), Unicode (glossary)
 
 Tags: database
 

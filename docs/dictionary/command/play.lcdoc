@@ -2,9 +2,9 @@ Name: play
 
 Type: command
 
-Syntax: play [<filePath> | <type>] [looping] [at <point>] [options <xOptions>]
+Syntax: play [<clipType>] {<filePath> | <clip>} [looping] [at <point>] [options <xOptions>]
 
-Syntax: play [stop | pause | resume | step {forward | back}] [<type>] <clip>
+Syntax: play {stop | pause | resume | step {forward | back}} [<clipType>] [<clip>]
 
 Summary:
 Plays a movie or sound.
@@ -27,18 +27,24 @@ play audioClip "Trust No One" looping
 Example:
 play "/usr/local/clips/music.aiff"
 
+Example:
+# to stop the currently playing audio clip
+play stop
+
 Parameters:
+clipType (enum):
+The type of clip to play.
+
+- audioClip
+- videoClip
+
 filePath:
 The location and name of the file you want to play. If you specify a
 name but not a location, LiveCode assumes the file is in the
 defaultFolder. 
 
-type (enum):
-The type of clip to play.
-
-- "audioClip"
-- "videoClip"
-
+clip:
+A reference to an audio clip or video clip in an open stack.
 
 point:
 Specifies the center of the movie to be played, relative to the current
@@ -49,9 +55,6 @@ at the center of the current card. If a sound is being played, the
 xOptions:
 Are command line parameters passed to the "xanim" package on Unix
 systems. (On Mac OS and Windows systems, this parameter has no effect.).
-
-clip:
-A reference to an audio clip or video clip in an open stack.
 
 The result:
 To pause a movie, use the play pause form. Continue playing with play
@@ -89,22 +92,28 @@ the <current card>. You cannot play two sounds at the same time, nor can
 you queue a sound while another sound is playing.
 
 On Unix systems, the "xanim" program must be located in a directory in
-the PATH environment variable. You can set the PATH from within LiveCode
+the PATH <environment variable>. You can set the PATH from within LiveCode
 by using the put <command> :
 
     put newPath into $PATH
 
+> *Note:* The type of audio and video clip formats supported  
+> by the <play> command is limited. See the entries for <audioClip> 
+> and <videoClip> for details. To play a wider variety of formats, 
+> use a <player> object.
 
-References: stop (command), prepare (command), import (command),
-start (command), beep (command), revStopAnimation (command),
-iphoneSetAudioCategory (command), function (control structure),
-QTVersion (function), result (function), MCISendString (function),
-Unix (glossary), current card (glossary), message (glossary),
-command (glossary), return (glossary), execute (glossary),
-playStarted (message), playStopped (message), looping (property),
-dontRefresh (property), playRate (property), showSelection (property),
-frameCount (property), playLoudness (property), callbacks (property),
-currentTime (property), playDestination (property)
+References: audioClip (object), beep (command), callbacks (property), 
+command (glossary), current card (glossary), currentTime (property), 
+dontRefresh (property), environment variable (glossary), 
+execute (glossary), frameCount (property), function (control structure), 
+import (command), iphoneSetAudioCategory (command), looping (property), 
+MCISendString (function), message (glossary), 
+playDestination (property), player (object), playLoudness (property), 
+playRate (property), playStarted (message), playStopped (message), 
+prepare (command), QTVersion (function), result (function), 
+return (glossary), revStopAnimation (command), showSelection (property), 
+sound (function), start (command), stop (command), Unix (glossary), 
+videoClip (object)
 
 Tags: multimedia
 

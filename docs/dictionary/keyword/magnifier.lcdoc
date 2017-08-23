@@ -13,5 +13,7 @@ OS: mac, windows, linux
 
 Platforms: desktop, server
 
-References: reserved word (glossary), magnify (property)
+Description:
+The <magnifier> <keyword> is <reserved word|reserved> for internal use only
 
+References: reserved word (glossary), magnify (property), keyword (glossary)

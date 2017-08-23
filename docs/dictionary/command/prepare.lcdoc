@@ -26,12 +26,11 @@ name but not a location, LiveCode assumes the file is in the
 defaultFolder. 
 
 startPoint:
+This is the number of the interval where the selection begins. (The 
+number of intervals per second is specified by the player's timeScale 
+property. The total number of intervals is given in the player's 
+duration property.)
 
-
-point:
-The point specifies the center of the movie to be played, relative to
-the current stack window. If the point is not specified, the movie is
-positioned at the center of the card.
 
 Description:
 Use the <prepare> <command> to speed up <execute|execution> of the

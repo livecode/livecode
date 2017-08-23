@@ -27,16 +27,7 @@ libURLSetLogField(the cLogField of me)
 
 Parameters:
 longFieldDescriptor:
-
-
-fieldDescriptor:
-Any expression that evaluates to a field reference.>*Important:* The
-libURLSetLogField command does not accept direct field references. For
-example, the following statement causes an error message:
-libURLSetLogField field "Log" -- CAN'T USE THIS FORM Instead, use a form
-that evaluates to a field reference, like this: : libURLSetLogField the
-name of field "Log" -- use this form instead libURLSetLogField ("field"
-&& quote & "Log" & quote) -- or this
+Any expression that evaluates to a field reference.
 
 Description:
 Use the <libURLSetLogField> <command> to <debug> file transfers.

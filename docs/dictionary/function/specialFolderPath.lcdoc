@@ -37,9 +37,7 @@ Example:
 # get file listing of files in a given folder
 on mouseUp
     local tMyImages
-    set the defaultFolder \
-          to specialFolderPath("resources") & "/myimages"
-    put the files into tMyImages
+    put files(specialFolderPath("resources") & "/myimages") into tMyImages
 end mouseUp
 
 Parameters:
@@ -54,7 +52,7 @@ location.
 
 The result:
 If the <folderIdentifier> is either not supported on the current
-<platform> or doesn't exist on the current system, <the result> is set
+<platform> or doesn't exist on the current system, the <result> is set
 to "folder not found".
 
 Description:
@@ -65,7 +63,7 @@ files are installed in the System or Fonts <folder|folders>, and so on.
 If the folder is not found, the <specialFolderPath> function
 <return|returns> empty. If the <folderIdentifier> is either not
 supported on the current <platform> or doesn't exist on the current
-system, <the result> is set to "folder not found".
+system, the <result> is set to "folder not found".
 
 Some of the <special folder|special folders> you can specify with the 
 <specialFolderPath> function need not have the standard names. 
@@ -78,8 +76,7 @@ name of the folder.
 Constant Special Item ID List (CSIDL) value that identifies a <special
 folder>. Note that not all CSIDL values work on all versions of Windows.
 
-    The following <folderIdentifier> values are supported:
-
+The following <folderIdentifier> values are supported:
 
 * Windows folder names:
   * "home": The current user's profile folder
@@ -92,9 +89,9 @@ folder>. Note that not all CSIDL values work on all versions of Windows.
   * "fonts": The folder that contains fonts
   * "temporary": The folder where temporary files can be placed
   * "engine": The folder containing the LiveCode engine and the
-    executable files   copied in the standalone application
+    executable files copied in the standalone application
   * "resources": In development mode, the current stack's folder.  In a
-    standalone,   the resources folder where files or folders specified
+    standalone, the resources folder where files or folders specified
     in the Standalone Builder are located.
 * Examples of common Windows CSIDL numbers:
   * 0x001a: Same as "support"
@@ -105,8 +102,8 @@ folder>. Note that not all CSIDL values work on all versions of Windows.
   * 0x000a: The "Recycle Bin".
 
 
-**On Mac OS systems**, the following <folderIdentifier> values are
-supported: 
+**On Mac OS systems**, the following <folderIdentifier> values 
+are supported: 
 
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
@@ -118,10 +115,9 @@ supported:
 * "temporary": The folder where temporary files can be placed
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
-* "resources": In development mode, the current stack's folder. In a 
-
-<standalone application|standalone>, the resources folder where files or
-folders specified in the Standalone Builder are located.
+* "resources": In development mode, the current stack's folder. In 
+a <standalone application|standalone>, the resources folder where files 
+or folders specified in the Standalone Builder are located.
 
 **On iOS systems**, only create files in the "documents", "cache" and
 "temporary" folders.  Be careful not to change or add any files within
@@ -135,33 +131,29 @@ application in iOS is stored in its own "sandbox" <folder>
 write files anywhere beneath this <folder>, but it is not allowed to
 access anything outside of the "sandbox".
 
-Note that iOS devices have <case-sensitive> file systems, but the iOS
-simulator's file system has the same <case-sensitive|case-sensitivity>
-as the host system (i.e. usually <case-insensitive>).
+> *Note:* iOS devices have <case-sensitive> file systems, but the iOS
+> simulator's file system has the same <case-sensitive|case-sensitivity>
+> as the host system (i.e. usually <case-insensitive>).
 
 The following <folderIdentifier> values are supported:
 
 * "home": The (unique) folder containing the <application bundle> and
   its associated data and folders
 * "documents": The folder in which document data should be stored 
-
 (backed up by iTunes on sync)
-
-* "library": The folder in which to store data of various types 
-
-(backed up by iTunes on sync).  In particular, data private to the
-application should be stored in a folder named with the <application
-bundle|app's bundle> identifier inside the "library" folder
-
+* "library": The folder in which to store data of various types (backed 
+up by iTunes on sync). In particular, data private to the
+application should be stored in a folder named with the 
+<application bundle|app's bundle> identifier inside the "library" folder
 * "cache": The folder where transient data that needs to be preserved
   between launches should be stored (*not* backed up by iTunes)
 * "temporary": The folder where temporary data that is *not* preserved
   between launches should be stored (*not* backed up by iTunes)
-* "engine": The folder containing the built <standalone
-  application|standalone> <engine> (i.e. the <application
-  bundle|bundle>). This is useful for constructing paths to resources
-  that have been copied into the <application bundle|bundle> at build
-  time 
+* "engine": The folder containing the built 
+  <standalone application|standalone> <engine> (i.e. the 
+  <application bundle|bundle>). This is useful for constructing paths to 
+  resources that have been copied into the <application bundle|bundle> 
+  at build time 
 * "resources": Same as "engine".
 
 
@@ -180,17 +172,15 @@ The following <folderIdentifier> values are supported:
 * "documents": The folder where application-specific data can be placed
   (typically valuable)
 * "cache": The folder where transient application-specific data can be 
-
 placed (typically not valuable)
-
 * "engine": The (virtual) folder containing the
   <application|application's> LiveCode <engine>  and other resources
   that were copied into the <application> at build time
 * "resources": Same as "engine".
 
 
-**On Linux systems**, the following <folderIdentifier> values are
-supported: 
+**On Linux systems**, the following <folderIdentifier> values 
+are supported: 
 
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
@@ -230,7 +220,7 @@ Changes:
 
 
 References: revSetDatabaseDriverPath (command), files (function),
-folders (function), tempName (function), the resut (function),
+folders (function), tempName (function), result (function),
 application (glossary), application bundle (glossary),
 case-insensitive (glossary), case-sensitive (glossary),
 constant (glossary), engine (glossary), folder (glossary),

@@ -48,8 +48,6 @@ are not currently mounted, do not appear in the list returned by the
 > <function>. On <Windows|Windows systems>, empty but connected
 > removable drives are reported by the <volumes> <function>.
 
-This function always returns empty on Unix systems.
-
 >*Note:* On Mac OS and OS X systems, volumes may contain slash
 > characters (/) in their names. To use such a volume as part of a path,
 > <replace> the slash with a semi colon before constructing the path.

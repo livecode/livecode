@@ -17,7 +17,7 @@ Example:
 set the hilite of the third button to true
 
 Example:
-repeat until third line of keysPressed is "Control"
+repeat until third line of tKeysPressed is "Control"
 
 Description:
 Use the <third> <keyword> in an <object reference> or <chunk

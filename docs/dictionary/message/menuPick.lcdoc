@@ -2,7 +2,7 @@ Name: menuPick
 
 Type: message
 
-Syntax: menuPick <pChosenItem> [| <pSubmenuName>], <pPreviousTab>
+Syntax: menuPick <chosenItem>, [<previousTab>]
 
 Summary:
 Sent to a <button(object)> when a <menu item> is chosen from the <menu>
@@ -26,11 +26,7 @@ Parameters:
 pChosenItem:
 The label of the menu item the user chose.
 
-pSubmenuName:
-If the menu item chosen is part of a submenu, the menu item label is 
-followed by a vertical bar (|) and the submenu's label.
-
-pPreviousTab:
+previousTab:
 The text of the menu item that was selected before the user chose a new
 menu item. This parameter is included only if the button's menuMode
 property is set to "tabbed".

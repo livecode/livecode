@@ -12,39 +12,40 @@ Summary:
 Transforms a list into an <array>.
 
 Introduced: 1.1
-Changed:8.0.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
 Example:
+local tData
 put "one,two,three" into tData
 split tData by comma
-// RESULT
-// tData[1] = "one"
-// tData[2] = "two"
-// tData[3] = "three"
+# RESULT
+# tData[1] = "one"
+# tData[2] = "two"
+# tData[3] = "three"
 
 Example:
+local tData
 put "one;;two;;three" into line 1 of tData
 put "ben;;fraser;;elanor" into line 2 of tData
 put "apple;;orange;;grape" into line 3 of tData
 set the columndel to ";;"
 split tData by column
-// RESULT
-// tData[1] = 
-// one
-// two
-// three
-// tData[2] = 
-// ben
-// fraser
-// elanor
-// tData[3] = 
-// apple
-// orange
-// grape
+# RESULT
+# tData[1] =
+# one
+# ben
+# apple
+# tData[2] =
+# two
+# fraser
+# orange
+# tData[3] =
+# three
+# elanor
+# grape
 
 Parameters:
 variable:
@@ -58,76 +59,79 @@ secondaryDelimiter:
 A string of <character|characters> or an expression that evaluates to a
 string of <character|characters>.
 
-The result:
-If the first form of the <split> command is used, the parts that become
-elements are defined by the <primaryDelimiter>. For example, if the
-<primaryDelimiter> is <return>, each line of the variable becomes an
-element in the resulting array.The resulting array looks like this:. If
-the second form of the <split> command is used, the string is split into
-elements of an array where each element using the <rowDelimiter> or
-<columnDelimiter>, where each element of the resulting array is a row or
-column of the string respectively.
-
 Description:
-From LiveCode 7.0, you can pass a string of <character|characters> as a
-column and row delimiter (it is no longer restricted to a single
-character). From LiveCode 8.0, you can split by empty delimiters, which
-are treated as never appearing in the input string.
 
-Use the <split> command to place a list in an array so you can easily
+Use the <split> command to place a list in an <array> so you can easily
 address each part of the list.
 
-The <split> command separates the parts of the variable into elements of
-an array. After the command is finished executing, the variable
-specified is an array.
+The <split> command separates the parts of the variable into
+<element|elements> of an <array>. After the command is finished
+executing, the variable specified is an <array>.
 
-If you don't specify a <secondaryDelimiter>, then a simple numeric array
-is created, with each key being a number, starting with 1.
+If the first form of the <split> command is used, the parts that become
+<element|elements> are defined by the <primaryDelimiter>. For example,
+if the <primaryDelimiter> is <return>, each line of the variable becomes
+an <element> in the resulting <array>.
 
-If you specify a <secondaryDelimiter>, the key for each element is the
-first portion of each part of the variable, separated from the element's
-content by the <secondaryDelimiter>. For example, if the
-<primaryDelimiter> is <return> and the <secondaryDelimiter> is <space>,
-the remainder of each line of the variable is placed in an array element
-whose key is the first word of the line.
+If you don't specify a <secondaryDelimiter>, then a simple numeric
+<array> is created, with each <key> being a number, starting with 1.
 
-If you use the as set form the <split> command converts the passed
-variable to an array with the keys being equal to the original list and
-the values being true.
+If you specify a <secondaryDelimiter>, the <key> for each <element> is the
+first portion of each part of the variable, separated from the
+<element|element's> content by the <secondaryDelimiter>. For example, if
+the <primaryDelimiter> is <return> and the <secondaryDelimiter> is
+<space>, the remainder of each line of the variable is placed in an
+<array> <element> whose <key> is the first word of the line.
 
-For example, the following statements create an array: 
+If you use the `as set` form the <split> command converts the passed
+<variable> to an <array> with the <keys> being equal to the original
+list and the values being true.
 
-put "A apple;;B bottle;;C cradle" into myVariable 
-split myVariable by ";;" and space 
+For example, the following statements create an <array>: 
 
+    put "A apple;;B bottle;;C cradle" into myVariable 
+    split myVariable by ";;" and space 
+
+    # resultant array looks like this:
     KEY    VALUE 
     A    apple 
     B    bottle 
     C    cradle 
 
-    >*Important:* Using the <split> command can discard data if any of
-    > the keys in the original variable are duplicated. If more than one
-    > part of the variable delimited by the <primaryDelimiter> has the
-    > same first portion delimited by the <secondaryDelimiter>, only the
-    > element corresponding to the first part is created. (For example,
-    > if you are splitting a variable by <return> and <space>, and two
-    > lines happen to have the same first word, only one of the lines is
-    > retained in the array.) Only one element is created for each
-    > unique key.
+>*Important:* Using the <split> command can discard data if any of
+> the <key|keys> in the original variable are duplicated. If more than 
+> one part of the variable delimited by the <primaryDelimiter> has the
+> same first portion delimited by the <secondaryDelimiter>, only the
+> <element> corresponding to the first part is created. (For example,
+> if you are splitting a variable by <return> and <space>, and two
+> lines happen to have the same first word, only one of the lines is
+> retained in the <array>.) Only one <element> is created for each
+> unique <key>.
 
+If the second form of the <split> command is used, the string is split
+into <element|elements> of an <array> where each <element> using the
+<rowDelimiter> or <columnDelimiter>, where each element of the resulting
+<array> is a row or column of the string respectively.
 
-Splitting a string by row converts the string into an array where each
-element of the array corresponds to a row in the string separated by the
-<rowDelimiter>. 
+Splitting a string by row converts the string into an <array> where each
+<element> of the <array> corresponds to a row in the string separated by
+the <rowDelimiter>.
 
-Splitting a string by column converts the string into an array where
-each element of the array corresponds to a column in the string
+Splitting a string by column converts the string into an <array> where
+each <element> of the <array> corresponds to a column in the string
 separated by the <columnDelimiter>.
 
-References: combine (command), intersect (command), space (constant),
-return (constant), extents (function), keys (function), array (glossary),
-[] (keyword), using (keyword), columnDelimiter (property),
-rowDelimiter (property)
+Changes: 
+Starting with LiveCode 7.0, you can pass a string of 
+<character|characters> as a column and row delimiter (it is no longer
+restricted to a single character). Starting with LiveCode 8.0, you can 
+split by empty delimiters, which are treated as never appearing in the 
+input string.
 
-Tags: properties
+References: [] (keyword), array (glossary), columnDelimiter (property), 
+combine (command), element (glossary), extents (function), 
+intersect (command), key (glossary), keys (function), 
+return (constant), rowDelimiter (property), space (constant), 
+union (command), using (keyword), 
 
+Tags: arrays

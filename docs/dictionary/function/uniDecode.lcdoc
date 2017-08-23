@@ -59,19 +59,19 @@ If a <language> is specified, the <uniDecode> <function> encodes the
 <stringToDecode> into single-byte text, using the appropriate method for
 the specified <language>.
 
-The result:
-As of LiveCode 7.0 the uniDecode function has been deprecated. It will
-continue to work as in previous versions but should not be used in new
-code as the existing behaviour is incompatible with the new, transparent
-Unicode handling (the resulting value will be treated as binary data
-rather than text). This functions is only useful in combination with the
-also-deprecated uniEncode function and unicodeText field property.
-
 Description:
 Use the <uniDecode> <function(control structure)> to convert double-byte
 characters to single-byte characters.
 
->*Important:* 
+>*Important:* As of LiveCode 7.0 the <uniDecode> function has been 
+> deprecated. It will continue to work as in previous versions but 
+> should not be used in newcode as the existing behaviour is
+> incompatible with the new, transparent Unicode handling (the resulting 
+> value will be treated as binary data rather than text). This function 
+> is only useful in combination with the also-deprecated <uniEncode> 
+> function and <unicodeText> field property. Instead, for converting 
+> text between encodings, use the <textEncode> and <textDecode> 
+> functions.
 
 The <uniDecode> function is the <inverse> of the <uniEncode> function
 and removes the <null> <byte|bytes> inserted for <Unicode>
@@ -87,8 +87,8 @@ If the <stringToDecode> contains an odd number of <byte|bytes>, the last
 > Unicode text in an <object(glossary)>, use either "Unicode" or a
 > language name as the second item of the <object|object's> <textFont>.
 
->*Important:* The <format> expected by the <uniDecode> <function(control
-> structure)> is processor-dependent. On "little-endian" processors,
+>*Important:* The <format> expected by the <uniDecode> 
+> <function(control structure)> is processor-dependent. On "little-endian" processors,
 > where the first <byte> is least significant (such as Intel and Alpha
 > processors), the <uniDecode> <function(control structure)> removes the
 > second byte of each <character>. On "big-endian" processors, where the
@@ -108,12 +108,13 @@ added in version 2.0. In previous versions, the <uniDecode>
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
-References: null (constant), function (control structure),
-format (function), uniEncode (function), uniDecode (function),
-platform (function), object (glossary), property (glossary),
-Unicode (glossary), function (glossary), byte (glossary),
-return (glossary), inverse (keyword), characters (keyword),
-character (keyword), textFont (property), unicodeText (property)
+References: 
+byte (glossary), character (keyword), characters (keyword), 
+format (function), function (control structure), function (glossary), 
+inverse (keyword), null (constant), object (glossary), 
+platform (function), property (glossary), return (glossary), 
+textDecode (function), textEncode (function), textFont (property), 
+Unicode (glossary), unicodeText (property), uniEncode (function)
 
 Tags: text processing
 

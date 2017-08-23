@@ -2,7 +2,7 @@ Name: save
 
 Type: command
 
-Syntax: save <stack> [as <filePath>] [with format <stackFormat> | with newest format]
+Syntax: save <stack> [as <filePath>] [with {format <stackFormat> | newest format}]
 
 Summary:
 Saves a <stack file> on the user's system.

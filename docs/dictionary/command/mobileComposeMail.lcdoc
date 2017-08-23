@@ -19,12 +19,14 @@ Example:
 mobileComposeMail
 
 Example:
+local tAttachment
 mobileComposeMail "Test E-mail", "guido@example.net",,, "This is the e-mail body text", tAttachment
 
 Example:
 mobileComposeMail "Help", "help@example.com",,,field "Message"
 
 Example:
+local tAttachment
 put "Hello World!" into tAttachment["data"]
 put "text/plain" into tAttachment["type"]
 put "Greetings.txt" into tAttachment["name"]
@@ -32,6 +34,7 @@ mobileComposeMail "Greetings", "test@livecode.com",,,, tAttachment
 
 Example:
 -- Attach an image --
+local tAttachment
 put image 1 into tAttachment["data"]
 put "image/gif" into tAttachment["type"]
 put "my picture" into tAttachment["name"]
@@ -73,16 +76,13 @@ The result (enum):
 Set by <mobileComposeMail> to indicate its results.
 
 -   sent  (iOS): the email was sent successfully
--   cancel  (iOS): the email was not sent, and the user elected not to
-    save it for later
--   unknown  (Android): On Android the email activity does not return
-    its status back to the calling activity so the result is set to
-    'unknown' in all cases
+-   cancel  (iOS): the email was not sent, and the user elected not to save it for later
+-   unknown  (Android): On Android the email activity does not return its status back to the calling activity so the result is set to 'unknown' in all cases
 
 
 Description:
 Use the <mobileComposeMail> <command> to create a text email message
-with attachments from within a <stack on iOS or Android>.
+with attachments from within a <stack> on iOS or Android.
 
 This command interfaces with the iOS and Android mail composition
 interface. 
@@ -91,16 +91,17 @@ If you specify a file for the attachment, the engine tries to use the
 least amount of memory by asking the operating system to only load it
 from disk when the file is needed. Therefore, using <mobileComposeMail>
 should be the preferred method when attaching large amounts of data to
-an e-mail. For example, sending multiple attachments may be done like
-this: 
+an e-mail. For example, sending multiple attachments may be done like this: 
 
-put "Hello World!" into tAttachments[1]["data"]
-put "text/plain" into tAttachments[1]["type"]
-put "Greetings.txt" into tAttachments[1]["name"]
-put "Goodbye World!" into tAttachments[2]["data"]
-put "text/plain" into tAttachments[2]["type"]
-put "Farewell.txt" into tAttachments[2]["name"]
-<mobileComposeMail> tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
+
+     local tAttachments
+     put "Hello World!" into tAttachments[1]["data"]
+     put "text/plain" into tAttachments[1]["type"]
+     put "Greetings.txt" into tAttachments[1]["name"]
+     put "Goodbye World!" into tAttachments[2]["data"]
+     put "text/plain" into tAttachments[2]["type"]
+     put "Farewell.txt" into tAttachments[2]["name"]
+     mobileComposeMail tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
 
 Some devices are not configured with e-mail sending capability. To
 determine if the current device is, use the <mobileCanSendMail>
@@ -113,7 +114,7 @@ function. This returns true if the mail client is configured.
 References: revMail (command), revGoURL (command),
 revMailUnicode (command), mobileComposeUnicodeMail (command),
 mobileComposeHtmlMail (command), mobileCanSendMail (function),
-command (glossary), stack on iOS or Android (object)
+command (glossary), stack (object)
 
 Tags: networking
 

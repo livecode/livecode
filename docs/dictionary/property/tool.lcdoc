@@ -2,7 +2,7 @@ Name: tool
 
 Type: property
 
-Syntax: set the tool [of <stack>] to <toolName>
+Syntax: set the tool to <toolName>
 
 Summary:
 Specifies which <tool> is currently chosen.

@@ -27,10 +27,11 @@ numToChar(13) & numToChar(10).
 The <CRLF> <constant> is needed because you can't type the <characters>
 it represents in a <script>.
 
-The line feed character is the standard end-of-line delimiter on Unix
-systems. The end-of-line delimiter for Mac OS systems is a carriage
-return, and the end-of-line delimiter for Windows systems is a carriage
-return followed by a line feed.
+* The standard end-of-line delimiter on Unix systems is 
+  the line feed character (lf). 
+* The end-of-line delimiter for Mac OS systems is a carriage return (cr).
+* The end-of-line delimiter for Windows systems is a carriage return followed 
+  by a line feed (crlf).
 
 References: constant (command), read from file (command),
 write to file (command), return (constant), characters (keyword),

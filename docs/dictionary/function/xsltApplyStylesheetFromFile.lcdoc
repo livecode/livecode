@@ -2,7 +2,11 @@ Name: xsltApplyStylesheetFromFile
 
 Type: function
 
-Syntax: xsltApplyStylesheetFromFile xmlDocID, pathToXSLTFile
+Syntax: xsltApplyStylesheetFromFile (<xmlDocID>,<pathToXSLTFile>)
+
+Summary:
+Returns the data set resulting from applying the xslt document in the specified
+file against the specified xml document.
 
 Introduced: 6.5
 
@@ -14,145 +18,147 @@ Example:
 put xsltApplyStylesheetFromFile(tDocID, "getData.xml" ) into tProcessedData
 put xsltApplyStylesheetFromFile(tDocID, tFilePath) into tProcessedData
 
-The result:
-&lt;!-- order the result by revenue --&gt;.
+Parameters:
+xmlDocID(string):
+The ID of the xml document to use.
+
+pathToXSLTFile(string):
+The file path to the xslt document that will be applied to the xml document.
+
 
 Description:
 The xsltApplyStylesheetFromFile function returns the data set resulting
 from applying the xslt document in the specified file against the
 specified xml document. For instance, given xml data of
 
-&lt;sales&gt;
+    &lt;sales&gt;
 
-    &lt;division id="North"&gt;
+        &lt;division id="North"&gt;
 
-    &lt;revenue&gt;10&lt;/revenue&gt;
-    &lt;growth&gt;9&lt;/growth&gt;
-    &lt;bonus&gt;7&lt;/bonus&gt;
+        &lt;revenue&gt;10&lt;/revenue&gt;
+        &lt;growth&gt;9&lt;/growth&gt;
+        &lt;bonus&gt;7&lt;/bonus&gt;
 
-    &lt;/division&gt;
-    &lt;division id="South"&gt;
+        &lt;/division&gt;
+        &lt;division id="South"&gt;
 
-    &lt;revenue&gt;4&lt;/revenue&gt;
-    &lt;growth&gt;3&lt;/growth&gt;
-    &lt;bonus&gt;4&lt;/bonus&gt;
+        &lt;revenue&gt;4&lt;/revenue&gt;
+        &lt;growth&gt;3&lt;/growth&gt;
+        &lt;bonus&gt;4&lt;/bonus&gt;
 
-    &lt;/division&gt;
-    &lt;division id="West"&gt;
+        &lt;/division&gt;
+        &lt;division id="West"&gt;
 
-    &lt;revenue&gt;6&lt;/revenue&gt;
-    &lt;growth&gt;-1.5&lt;/growth&gt;
-    &lt;bonus&gt;2&lt;/bonus&gt;
+        &lt;revenue&gt;6&lt;/revenue&gt;
+        &lt;growth&gt;-1.5&lt;/growth&gt;
+        &lt;bonus&gt;2&lt;/bonus&gt;
 
-    &lt;/division&gt;
+        &lt;/division&gt;
 
-&lt;/sales&gt;
+    &lt;/sales&gt;
 
 and a file containing xslt data of
 
-&lt;html xsl:version="1.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    &lt;html xsl:version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" lang="en"&gt;
+        &lt;head&gt;
 
-    lang="en"&gt;
+        &lt;title&gt;Sales Results By Division&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+
+        &lt;table border="1"&gt;
+
+        &lt;tr&gt;
+
+        &lt;th&gt;Division&lt;/th&gt;
+        &lt;th&gt;Revenue&lt;/th&gt;
+        &lt;th&gt;Growth&lt;/th&gt;
+        &lt;th&gt;Bonus&lt;/th&gt;
+
+        &lt;/tr&gt;
+        &lt;xsl:for-each select="sales/division"&gt;
+
+        &lt;!-- order the result by revenue --&gt;
+        &lt;xsl:sort select="revenue"
+            data-type="number"
+            order="descending"/&gt;
+
+        &lt;tr&gt;
+
+        &lt;td&gt;
+
+        &lt;em&gt;&lt;xsl:value-of select="@id"/&gt;&lt;/em&gt;
+
+        &lt;/td&gt;
+        &lt;td&gt;
+
+        &lt;xsl:value-of select="revenue"/&gt;
+
+        &lt;/td&gt;
+        &lt;td&gt;
+
+        &lt;!-- highlight negative growth in red --&gt;
+        &lt;xsl:if test="growth &lt; 0"&gt;
+
+        &lt;xsl:attribute name="style"&gt;
+
+        &lt;xsl:text&gt;color:red&lt;/xsl:text&gt;
+
+        &lt;/xsl:attribute&gt;
+
+        &lt;/xsl:if&gt;
+        &lt;xsl:value-of select="growth"/&gt;
+
+        &lt;/td&gt;
+        &lt;td&gt;
+
+        &lt;xsl:value-of select="bonus"/&gt;
+
+        &lt;/td&gt;
+
+        &lt;/tr&gt;
+
+        &lt;/xsl:for-each&gt;
+
+        &lt;/table&gt;
+        &lt;/body&gt;
+
+    &lt;/html&gt;
+
+You would end up with
+
+    &lt;html lang="en"&gt;
     &lt;head&gt;
-
-    &lt;title&gt;Sales Results By Division&lt;/title&gt;
+    &lt;meta http-equiv="Content-Type" content="text/html;
+    charset=UTF-8"&gt; &lt;title&gt;Sales Results By Division&lt;/title&gt;
     &lt;/head&gt;
-    &lt;body&gt;
-
-    &lt;table border="1"&gt;
-
+    &lt;body&gt;&lt;table border="1"&gt;
     &lt;tr&gt;
-
     &lt;th&gt;Division&lt;/th&gt;
     &lt;th&gt;Revenue&lt;/th&gt;
     &lt;th&gt;Growth&lt;/th&gt;
     &lt;th&gt;Bonus&lt;/th&gt;
-
     &lt;/tr&gt;
-    &lt;xsl:for-each select="sales/division"&gt;
-
-    &lt;xsl:sort select="revenue"
-
-    data-type="number"
-    order="descending"/&gt;
-
     &lt;tr&gt;
-
-    &lt;td&gt;
-
-    &lt;em&gt;&lt;xsl:value-of select="@id"/&gt;&lt;/em&gt;
-
-    &lt;/td&gt;
-    &lt;td&gt;
-
-    &lt;xsl:value-of select="revenue"/&gt;
-
-    &lt;/td&gt;
-    &lt;td&gt;
-
-    &lt;!-- highlight negative growth in red --&gt;
-    &lt;xsl:if test="growth &lt; 0"&gt;
-
-    &lt;xsl:attribute name="style"&gt;
-
-    &lt;xsl:text&gt;color:red&lt;/xsl:text&gt;
-
-    &lt;/xsl:attribute&gt;
-
-    &lt;/xsl:if&gt;
-    &lt;xsl:value-of select="growth"/&gt;
-
-    &lt;/td&gt;
-    &lt;td&gt;
-
-    &lt;xsl:value-of select="bonus"/&gt;
-
-    &lt;/td&gt;
-
+    &lt;td&gt;&lt;em&gt;North&lt;/em&gt;&lt;/td&gt;
+    &lt;td&gt;10&lt;/td&gt;
+    &lt;td&gt;9&lt;/td&gt;
+    &lt;td&gt;7&lt;/td&gt;
     &lt;/tr&gt;
-
-    &lt;/xsl:for-each&gt;
-
-    &lt;/table&gt;
-    &lt;/body&gt;
-
-&lt;/html&gt;
-
-You would end up with
-
-&lt;html lang="en"&gt;
-&lt;head&gt;
-&lt;meta http-equiv="Content-Type" content="text/html;
-charset=UTF-8"&gt; &lt;title&gt;Sales Results By Division&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;&lt;table border="1"&gt;
-&lt;tr&gt;
-&lt;th&gt;Division&lt;/th&gt;
-&lt;th&gt;Revenue&lt;/th&gt;
-&lt;th&gt;Growth&lt;/th&gt;
-&lt;th&gt;Bonus&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;em&gt;North&lt;/em&gt;&lt;/td&gt;
-&lt;td&gt;10&lt;/td&gt;
-&lt;td&gt;9&lt;/td&gt;
-&lt;td&gt;7&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;em&gt;West&lt;/em&gt;&lt;/td&gt;
-&lt;td&gt;6&lt;/td&gt;
-&lt;td style="color:red"&gt;-1.5&lt;/td&gt;
-&lt;td&gt;2&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;em&gt;South&lt;/em&gt;&lt;/td&gt;
-&lt;td&gt;4&lt;/td&gt;
-&lt;td&gt;3&lt;/td&gt;
-&lt;td&gt;4&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/table&gt;&lt;/body&gt;
-&lt;/html&gt;
+    &lt;tr&gt;
+    &lt;td&gt;&lt;em&gt;West&lt;/em&gt;&lt;/td&gt;
+    &lt;td&gt;6&lt;/td&gt;
+    &lt;td style="color:red"&gt;-1.5&lt;/td&gt;
+    &lt;td&gt;2&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+    &lt;td&gt;&lt;em&gt;South&lt;/em&gt;&lt;/td&gt;
+    &lt;td&gt;4&lt;/td&gt;
+    &lt;td&gt;3&lt;/td&gt;
+    &lt;td&gt;4&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;/table&gt;&lt;/body&gt;
+    &lt;/html&gt;
 
 References: revXMLEvaluateXpath (function), xsltLoadStylesheet (function),
 xsltLoadStylesheetFromFile (function),
@@ -160,4 +166,3 @@ revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
 xsltApplyStylesheetFromFile (function)
 
 Tags: xml
-

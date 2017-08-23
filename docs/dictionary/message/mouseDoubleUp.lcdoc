@@ -5,29 +5,35 @@ Type: message
 Syntax: mouseDoubleUp <pButtonNumber>
 
 Summary:
-Sent when the user <double-click|double-clicks> and the <mouse button>
-is released.
+Sent when the <mouse button> is released at the end of a <double-click>.
 
 Associations: stack, card, field, button, graphic, scrollbar, player,
 image
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android,html5
 
 Platforms: desktop, server, mobile
 
 Example:
-on mouseDoubleUp theMouseButton -- show dialog on Control/Right-click
-  if theMouseButton is "3" then showConfigDialog
-  else pass mouseDoubleUp
+on mouseDoubleUp theMouseButton 
+  if theMouseButton is 3 then
+    answer file "Please choose a file to open."
+  else 
+    pass mouseDoubleUp
+  end if
 end mouseDoubleUp
 
 Parameters:
-pButtonNumber (enum): Specifies which mouse button was pressed:
-- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
-- "2": the middle button on Unix systems.
-- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
+mouseButtonNumber (enum):
+The mouseButtonNumber specifies which mouse button was pressed:
+
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 Handle the <mouseDoubleUp> <message> to perform an action when the user
@@ -37,23 +43,25 @@ The <mouseDoubleUp> <message> is sent to the <control> that was
 <double-click|double-clicked>, or to the <card> if no <control> was
 under the <mouse pointer>.
 
-If a tool other than the Browse tool is being used, no <mouseDoubleUp>
+If a tool other than the <Browse tool> is being used, no <mouseDoubleUp>
 <message> is sent. If an <unlock|unlocked> <field> is clicked with
 <mouse button> 1 or 2, no <mouseDoubleUp> <message> is sent.
 
 The <doubleClickInterval> and <doubleClickDelta> <properties> determine
 what LiveCode accepts as a <double-click|double click>.
 
->*Important:*  If the user clicks a transparent <pixel> in an <image>,
+>*Note:*  If the user clicks a transparent <pixel> in an <image>,
 > the <mouseDoubleUp> <message> is sent to the <object(glossary)> behind
 > the <image>, not to the <image>.
 
-References: click (command), clickLoc (function), mouse (function),
-double-click (glossary), mouse pointer (glossary), pixel (glossary),
-mouse button (glossary), message (glossary), unlock (glossary),
-card (glossary), field (glossary), image (glossary), object (glossary),
-control (keyword), mouseDoubleDown (message), properties (property),
-doubleClickDelta (property), doubleClickInterval (property)
+References: answer file (command), Browse tool (glossary), 
+card (glossary), click (command), clickLoc (function), 
+control (glossary), double-click (glossary), doubleClickDelta (property), 
+doubleClickInterval (property), field (glossary), image (glossary), 
+message (glossary), mouse (function), mouse button (glossary), 
+mouse pointer (glossary), mouseDoubleDown (message), object (glossary), 
+pass (command), pixel (glossary), properties (property), 
+unlock (glossary)
 
 Tags: ui
 

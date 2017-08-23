@@ -7,10 +7,20 @@ Type: glossary
 Description:
 An <XML-RPC> document is a data structure containing all the information
 associated with a remote procedure call according to the <XML-RPC>
-protocol. An XML-RPC document contains either a request to execute, or a
+protocol. An <XML-RPC document> contains either a request to execute, or a
 response to such an executed request.
 
-References: XML-RPC (glossary)
+>*Important:*  The <revXMLRPC_DeleteDocument> <command> is part of the
+> <XML-RPC library>. To ensure that the <command> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
+> library checkbox is checked.
+
+References: XML-RPC (glossary), LiveCode custom library (glossary),
+Standalone Application Settings (glossary), standalone application (glossary),
+command (glossary), function (control structure),
+XML-RPC library (library)
 
 Tags: networking
-

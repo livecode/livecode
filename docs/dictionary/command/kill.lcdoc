@@ -26,13 +26,13 @@ kill QUIT process it
 
 Parameters:
 signalNumber:
-The number of the Unix signal to send to the process. The signalName is
-the name of a Unix signal, minus the leading "SIG". (For example, to
-send SIGHUP to a process, use HUP as the signalName.) (The signalNumber
-or signalName parameter is ignored on Mac OS and Windows systems.)
+The number of the Unix signal to send to the process. 
+>*Note:* The <signalNumber> parameter is ignored on Mac OS and Windows systems.
 
 signalName:
-
+The name of a Unix signal, minus the leading "SIG". (For example, to
+send SIGHUP to a process, use HUP as the <signalName>.)
+>*Note:* The <signalName> parameter is ignored on Mac OS and Windows systems.
 
 processName:
 The name of a currently executing process.

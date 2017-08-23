@@ -9,21 +9,25 @@ Changes a date, a time, or a date and time to a specified format.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
 Example:
-convert "11/22/90" to long english date
+convert "11/22/2016" to long english date
+put it
 
 Example:
 convert the internet date from internet date to system date
 
 Example:
+local lastChangedTime
+put the date && the long time into lastChangedTime
 convert lastChangedTime to abbreviated time and long date
 
 Example:
 convert the date && the time to seconds
+put it
 
 Parameters:
 dateAndTime (string):
@@ -31,22 +35,22 @@ A string or container with a date, a time, or a date and time separated
 by a space, tab, or return character.
 
 format:
-One of the following (examples are February 17, 2000 at 10:13:21 PM, in
+One of the following (examples are February 17, 2017 at 10:13:21 PM, in
 the Eastern time zone, using US date and time formats): If you specify
 both a date and time format, they can be in either order and must be
 separated by a space. The resulting date and time are in the order you
-provided, separated by a space. If you specify seconds or dateItems, you
+provided, separated by a space. If you specify seconds or <dateItems>, you
 can request only one format.
 
-- "short date":  2/17/00
-- "abbreviated date":  Thu, Feb 17, 2000
-- "long date":  Thursday, February 17, 2000
+- "short date":  2/17/17
+- "abbreviated date":  Thu, Feb 17, 2017
+- "long date":  Thursday, February 17, 2017
 - "short time":  10:13 PM
 - "abbreviated time":  10:13 PM
 - "long time":  10:13:21 PM
-- "internet date":   Thu, 17 Feb 2000 22:13:21 -0500
+- "internet date":   Thu, 17 Feb 2017 22:13:21 -0500
 - "seconds":   the number of seconds since the start of the epoch
-- "dateItems":   2000,2,17,22,13,21,5
+- "dateItems":   2017,2,17,22,13,21,5
 
 
 It:
@@ -55,18 +59,11 @@ placed in the <container>, replacing the previous contents. If the
 <dateAndTime> is a <string>, the converted date and time is placed in
 the <it> <variable>.
 
-The result:
-For example, suppose you start with 9:30 AM , convert that time to
-<dateItems> format, then add 45 minutes to item 5 (the minute) of the
-resulting value. This gives you 75 as the minute. When you convert the
-value to any other time format, the <convert> <command> automatically
-converts "75 minutes" to "1 hour and 15 minutes" :.
-
 Description:
 Use the <convert> <command> to change a date or time to a <format>
 that's more convenient for calculation or display.
 
-The dateItems format is a comma-separated list of numbers:
+The <dateItems> format is a comma-separated list of numbers:
 
 * the year
 * the month number
@@ -78,11 +75,17 @@ The dateItems format is a comma-separated list of numbers:
   and so forth
 
 
-The <convert> <command> can handle dates in dateItems format where one
+The <convert> <command> can handle dates in <dateItems> format where one
 or more of the items is out of the normal range. This means you can add
-arbitrary numbers to an item in the dateItems and let the <convert>
+arbitrary numbers to an item in the <dateItems> and let the <convert>
 <command> handle the calculations that span minute, hour, day, month,
 and year boundaries.
+
+For example, suppose you start with 9:30 AM, convert that time to
+<dateItems> format, then add 45 minutes to item 5 (the minute) of the
+resulting value. This gives you 75 as the minute. When you convert the
+value to any other time format, the <convert> <command> automatically
+converts "75 minutes" to "1 hour and 15 minutes" :
 
     convert "9:30 AM" to dateItems
     add 45 to item 5 of it
@@ -95,7 +98,7 @@ is true, or if you use the <system> keyword, the user's current system
 preferences are used to format the date or time. Otherwise, the standard
 US date and time formats are used.
 
-The internet date, seconds, and dateItems formats are invariant and do
+The internet date, seconds, and <dateItems> formats are invariant and do
 not change according to the user's preferences.
 
 >*Note:* The <convert> command assumes all dates / times are in local
@@ -108,9 +111,9 @@ not change according to the user's preferences.
 > limited by the operating system's date routines. In particular,
 > Windows systems are limited to dates after 1/1/1970.
 
-References: sort container (command), convert (command), time (function),
+References: sort container (command), time (function),
 dateFormat (function), milliseconds (function), date (function),
-format (function), keyword (glossary), variable (glossary),
+format (glossary), keyword (glossary), variable (glossary),
 command (glossary), container (glossary), dateItems (keyword),
 system (keyword), long (keyword), short (keyword), string (keyword),
 seconds (keyword), abbreviated (keyword), internet (keyword),
@@ -119,4 +122,3 @@ useSystemDate (property), centuryCutoff (property),
 twelveHourTime (property)
 
 Tags: math
-

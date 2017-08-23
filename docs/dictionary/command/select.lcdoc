@@ -2,7 +2,7 @@ Name: select
 
 Type: command
 
-Syntax: select [before | after] {text | <chunk>} of <field>
+Syntax: select [{before | after}] {text | <chunk>} of <field>
 
 Syntax: select empty
 

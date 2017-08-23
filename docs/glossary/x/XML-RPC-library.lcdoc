@@ -9,7 +9,18 @@ The <LiveCode custom library|LiveCode custom library> that supports
 creating and executing remote procedure calls according to the <XML-RPC>
 protocol and interpreting the results.
 
-References: XML-RPC (glossary), LiveCode custom library (glossary)
+>*Important:*  To ensure that the <command|commands> and
+> <function|functions> of the <XML-RPC library> work in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "XML-RPC"
+> library checkbox is checked.
+
+References: XML-RPC (glossary), LiveCode custom library (glossary),
+Standalone Application Settings (glossary), standalone application (glossary),
+command (glossary), function (control structure),
+XML-RPC library (library)
+
 
 Tags: networking
-

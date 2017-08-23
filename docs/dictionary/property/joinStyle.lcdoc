@@ -21,26 +21,28 @@ set the joinstyle of graphic 1 of card "myCard" to "bevel"
 Example:
 set the joinstyle of the selectedobject to "round"
 
-Value (enum):
+Value: The <joinStyle> of a <graphic> is one of the following:
 
--   round: A circular arc is drawn between the outer edges of the
-    adjoining lines. This is the default.
--   bevel: A straight line is drawn between the outer edges of the
-    adjoining lines.
--   miter: Outer edges are extended to meet at a sharp point.  If the
-    distance from the corner exceeds the miter limit, a bevel join is
-    used for the corner.
+- "round" - A circular arc is drawn between the outer edges of the
+adjoining lines. This is the default.
+- "bevel" - A straight line is drawn between the outer edges of the
+adjoining lines.
+- "miter" - Outer edges are extended to meet at a sharp point.  If the
+distance from the corner exceeds the <miterLimit>, a bevel join is
+used for the corner.
 
 
 Description:
-Set the <joinStyle> property to specifies how joins between two lines
+Set the <joinStyle> property to specify how joins between two lines
 appear. 
 
-This property can be set for the line, freehand polygon and freehand
-line graphic types.
+This property can be set for the <line>, freehand <polygon> and freehand
+<curve> graphic types.
 
->*Note:*  This only affects polygon, freehand curve and line graphics
-> which have their antialiased set to true.
+>*Note:*  This only affects <polygon>, freehand <curve> and <line> 
+> <graphic|graphics> which have their <antialiased> set to true.
 
-References: roundEnds (property), antialiased (property)
+References: antialiased (property), capStyle (property), curve (keyword), 
+graphic (object), line (keyword), miterLimit (property), 
+polygon (keyword), roundEnds (property)
 

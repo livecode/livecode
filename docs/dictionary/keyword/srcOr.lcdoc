@@ -17,9 +17,6 @@ Platforms: desktop, server, mobile
 Example:
 set the ink of control 11 to srcOr
 
-The result:
-Each component of the resulting color is equal to the result of this
-expression:. 
 
 Description:
 Use the <srcOr> <keyword> to make the dark-colored parts of an object
@@ -33,7 +30,7 @@ When the <srcOr> <transfer mode> is used, LiveCode performs a <bitOr>
 operation on each component of the <object(glossary)> color with the
 corresponding component of the color under the <object(glossary)>.
 
-object component bitOr background component
+    object component bitOr background component
 
 The effect is that the darker an object is, the more transparent it is.
 Black parts of an object are completely transparent, and white parts are
@@ -42,12 +39,20 @@ completely opaque.
 For example, suppose an object's color is 45,0,255, and the color of the
 pixels under the object is 20,45,100. If the <srcOr> <transfer mode> is
 used, the <object|object's> displayed color is 61,0,255 (the decimal
-equivalent). 
+equivalent). In <binary(glossary)> it is:
+
+    00101101, 00000000, 11111111
+    11101011, 11010010, 10011011 Logic OR
+    ========  ========  ========
+    11101111, 11010010, 11111111
 
 The <srcOr> mode can be used only on <Unix> and <Windows|Windows
 systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink>
 <property> is set to this mode appear as though their <ink> were set to
 <srcCopy>. 
+
+A list of all <transfer mode|transfer modes> can be found in the
+<transfer mode> glossary page for easy reference.
 
 References: object (glossary), property (glossary), keyword (glossary),
 Unix (glossary), Windows (glossary), Mac OS (glossary),

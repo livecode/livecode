@@ -17,8 +17,7 @@ Example:
 add one to field "Total" -- same as "add 1 to..."
 
 Description:
-Use the <one> <constant> when it is easier to read than the numeral
-1<a/>. 
+Use the <one> <constant> when it is easier to read than the numeral 1. 
 
 References: constant (command), arrow (constant)
 

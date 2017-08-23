@@ -17,24 +17,19 @@ Platforms: desktop, server
 Example:
 get URL "resfile:/Disk/System Folder/Apple Menu Items/Calculator App"
 
-The result:
->*Important:*  Unlike the <file> and <binfile> <URL> types, the
-> <resfile> <keyword> cannot be used to create a <file>. If the <file>
-> "myFile" doesn't yet exist, attempting to use it with the <resfile>
-> <keyword> will fail and the <result> <function> will be set to
-> "file not found". To create a new resource file, first use a <file>
-> <URL> to create the <file> with an empty <data fork>, then write the
-> needed data to its <resource fork>:.
+Example:
+put tResForkData into URL "resfile:MyFile"
+
 
 Description:
 Use the <resfile> <keyword> to work with <Mac OS> <resource
 fork|resource forks>.
 
-On Mac OS systems, files consist of either or both of a data fork and a
-resource fork. The resource fork contains defined resources such as
+On Mac OS systems, files consist of either or both of a <data fork> and
+a <resource fork>. The resource fork contains defined resources such as
 icons, menu definitions, dialog boxes, fonts, and so forth.
 
-A URL container can be used anywhere another container type is used. The
+A <URL> container can be used anywhere another container type is used. The
 LiveCode-specific scheme "resfile" indicates the resource fork of a file
 which is located on the user's system. The file is specified by either
 an absolute path starting with "/", or a relative path from the
@@ -44,10 +39,19 @@ A <resfile> <URL> specifies the entire <resource fork>, not just one
 <resource>. The most common use for this <URL> <URL scheme|scheme> is to
 copy an entire <resource fork> from one <file> to another. To modify the
 data from a <resfile> <URL>, you need to understand the details of
-Apple's <resource fork> format.
+Apple's <resource fork> format and its relationship with the <data fork>.
 
     put empty into URL "file:myFile" -- creates an empty file
+
     put myStoredResources into URL "resfile:myFile"
+    
+>*Important:*  Unlike the <file> and <binfile> <URL> types, the
+> <resfile> <keyword> cannot be used to create a <file>. If the <file>
+> "myFile" doesn't yet exist, attempting to use it with the <resfile>
+> <keyword> will fail and the <result> <function> will be set to
+> "file not found". To create a new resource file, first use a <file>
+> <URL> to create the <file> with an empty <data fork>, then write the
+> needed data to its <resource fork>.
 
 
 References: get (command), load (command), revCopyFile (command),

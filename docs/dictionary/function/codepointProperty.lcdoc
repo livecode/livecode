@@ -21,14 +21,13 @@ Example:
 put codePointProperty(codepoint 1 of tString, "Name")
 
 Parameters:
-unicodeCodepoint:
+unicodeCodepoint(string):
 A Unicode codepoint, or an expression which evaulates to a Unicode
-codepoint. 
+codepoint.
 
 propertyName (enum):
-The name of a supported UCD codepoint property Examples of supported
-properties, for a full list see
-http://www.unicode.org/versions/Unicode6.2.0/ch04.pdf 
+The name of a supported UCD codepoint property. Examples of supported
+properties, for a full list see http://www.unicode.org/versions/Unicode6.2.0/ch04.pdf
 
 -   "Name": Unique name for the codepoint
 -   "Numeric_Value": Numerical value, e.g. 4 for 4
@@ -37,7 +36,7 @@ http://www.unicode.org/versions/Unicode6.2.0/ch04.pdf
 -   "Lowercase": True if the codepoint is lower-case
 
 
-Returns:
+Returns(string):
 The codepointProperty returns the value of the UCD property for the
 specified Unicode codepoint.
 
@@ -55,12 +54,11 @@ There are many properties available; please see the version 6.3.0 of the
 Unicode standard, Chapter 4 and Section 5 of Unicode Technical Report
 (TR)#44 for details on the names and values of properties. Property
 names may be specified with either spaces or underscores and are not
-case-sensitive. 
+case-sensitive.
 
 >*Note:*  This function is not intended for general-purpose use; please
-> use functions such as <toUpper> or the is operators instead.
+> use functions such as <toUpper> or the <is|equals> operators instead.
 
 References: nativeCharToNum (function), numToNativeChar (function),
 toUpper (function), numToCodepoint (function), codepoint (keyword),
-codepoints (keyword)
-
+codepoints (keyword), equals (operator)

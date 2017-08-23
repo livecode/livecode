@@ -3565,7 +3565,13 @@ end libUrlSetLogField
 ---------------------------
 on libUrlSetStatusCallback pMessage,pObject
   ##pObject must be a long ID
-  if pMessage <> empty and exists(pObject)  then
+  ##Allow empty value in which case we use send to self.
+  if pMessage is not empty and the paramCount is 1 then
+    put pMessage & comma into lvStatusCallback
+  else if pMessage is not empty and the paramCount is 2 then
+    if not exists(pObject) then
+      return "invalid callback target object" for error
+    end if
     put pMessage & comma & pObject into lvStatusCallback
   else
     put empty into lvStatusCallback
@@ -3939,15 +3945,20 @@ on ulSendMessage pUrl
 end ulSendMessage
 ----------------------------
 on ulSendCallback pUrl, pStatus
-  local tMessage,tObject
+  local tMessage,tObject,tSendStr
   
   if lvStatusCallback is empty then exit ulSendCallback
   put item 1 of lvStatusCallback into tMessage
 
   put item 2 to -1 of lvStatusCallback into tObject   ##modified dc 220905
+  put tMessage && "pURL, pStatus" into tSendStr
+  
   if exists(tObject) then
     ## need quotes for the url formatting and the possibility of multiple items in second argument
-    send tMessage &&  quote & pUrl & quote & comma & quote & pStatus & quote to tObject in 0 milliseconds
+    send tSendStr to tObject in 0 milliseconds
+   else
+    # If no target then just send to self so it propagates through message path.
+    send tSendStr to me in 0 milliseconds
   end if
 end ulSendCallback
 -----------------------------

@@ -36,11 +36,11 @@ However, the expression
 
     "22 + 3,23" is a point
 
-evaluates to false, because the double quotes prevent the expression
-"22 + 3,23" from being evaluated.
+evaluates to false, because the double quotes making it a string
+prevent the expression "22 + 3,23" from being evaluated.
 
 References: value (function), operator (glossary), keyword (glossary),
-expression (glossary), point (keyword), is a (operator),
+expression (glossary), points (property), is a (operator),
 is not a (operator)
 
 Tags: properties

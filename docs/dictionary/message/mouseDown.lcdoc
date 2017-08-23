@@ -12,21 +12,38 @@ image
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
 Example:
-on mouseDown theButton -- show popup menu on Control/Right-click
-  if theButton is 3 then popup button "Configure"
-  else pass mouseDown
+# show popup menu on Right-click/Control-click (Mac OS)
+#  assumes presence of a popup-style menu button, "Configure"
+on mouseDown theButton 
+  if theButton is 3 then 
+    popup button "Configure"
+  else 
+    pass mouseDown
+  end if
+end mouseDown
+
+Example:
+# To let the user click and drag an object
+#  put this handler in the object's script
+on mouseDown
+  grab me
 end mouseDown
 
 Parameters:
-pButtonNumber (enum): Specifies which mouse button was pressed:
-- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
-- "2": the middle button on Unix systems.
-- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
+mouseButtonNumber (enum):
+The mouseButtonNumber specifies which mouse button was pressed:
+
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
+
 
 Description:
 Handle the <mouseDown> <message> to perform an action when the user
@@ -35,12 +52,12 @@ presses the <mouse button>, before the <mouse button> is released.
 The <mouseDown> <message> is sent to the <control> that was clicked, or
 to the <card> if no <control> was under the <mouse pointer>.
 
-If the Browse tool is being used, and you click an unlocked field with
-mouse button 1 or 2, no <mouseDown> <message> is sent. If you click with
-button 3, the <mouseDown> <message> is sent even though the <field> is
-not <lock|locked>.
+If the Browse tool is being used, and you click an unlocked <field> with
+<mouse button> 1 or 2, no <mouseDown> <message> is sent. If you click with
+<button|mouse button> 3, the <mouseDown> <message> is sent even though the 
+<field> is not <lock|locked>.
 
->*Important:*  If the user clicks a transparent <pixel> in an <image>,
+>*Note:*  If the user clicks a transparent <pixel> in an <image>,
 > the <mouseDown> <message> is sent to the <object(glossary)> behind the
 > <image>, not to the <image>.
 

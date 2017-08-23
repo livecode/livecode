@@ -17,8 +17,8 @@ Platforms: desktop, server, mobile
 
 Example:
 on deleteField -- first save the contents in a custom property
-   set the uFieldText[the short name of the target] of this card to \
-         the text of the target
+   set the uFieldText[the short name of the target] \
+        of this card to the text of the target
    pass deleteField
 end deleteField
 
@@ -32,19 +32,18 @@ prevent the <field> from being removed.
 
 However, the undo <command> will restore a <field> after it is deleted
 by the user. For example, the following <handler>, placed in a <card> or
-stack <script>, effectively prevents a <field> from being deleted by the
-user: 
+stack <script>, effectively prevents a <field> from being deleted by 
+the user: 
 
-    on deleteField
-    beep
-    send "undo" to this card in 5 milliseconds
-
-    end deleteField
+     on deleteField
+        beep
+        send "undo" to this card in 5 milliseconds
+     end deleteField
 
 
 References: delete (command), pass (control structure),
 handler (glossary), trap (glossary), message (glossary),
-command (glossary), card (glossary), field (keyword), stack (object),
+command (glossary), card (glossary), field (object), stack (object),
 script (property)
 
 Tags: objects

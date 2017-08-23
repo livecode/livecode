@@ -30,14 +30,12 @@ the same format.
 The <internet> form of a date consists of the following parts, separated
 by spaces:
 
-        * the day of the week followed by a comma
-        * the day of the month
-        * the three-letter abbreviation for the month name
-        * the four-digit year
-        * the time in 24-hour format, including seconds, delimited by
-          colons 
-        * the four-digit time zone relative to UTC (Greenwich) time
-
+* the day of the week followed by a comma
+* the day of the month
+* the three-letter abbreviation for the month name
+* the four-digit year
+* the time in 24-hour format, including seconds, delimited by colons 
+* the four-digit time zone relative to UTC (Greenwich) time
 
 An internet <date> looks like this: Sun, 28 Oct 2001 17:18:54 -0800
 

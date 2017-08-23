@@ -16,29 +16,24 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-tan(pi) -- returns zero
+put tan(pi/4) -- returns 1
 
 Example:
-the tan of myAngle
+put the tan of tMyAngle
 
 Parameters:
-angleInRadians:
-
-
-angle:
+angleInRadians(number):
 A positive or negative number, or an expression that evaluates to a
-number. 
+number.
 
-Returns:
+Returns(number):
 The <tan> <function> <return|returns> a number.
 
 Description:
 Use the <tan> <function> to find the tangent of an angle.
 
-The <tan> <function> repeats every 2*pi <radian|radians>: tan(x) = tan(x
-
-+ 2 * pi), for any value of x.
-
+The <tan> <function> repeats every 2 ** *pi <radian|radians>:
+tan(x) = tan(x + 2 * pi), for any value of x.
 
 If the <angleInRadians> is an odd multiple of pi/2, the tangent is
 infinite (undefined). The <tan> <function> instead <return|returns> a
@@ -46,11 +41,10 @@ very large number for such angles, due to internal number handling.
 
 The <tan> <function> requires its input to be in <radian|radians>. To
 provide an angle in <degree|degrees>, use the following <custom
-function>: 
+function>:
 
     function tanInDegrees angleInDegrees
-    return tan(angleInDegrees * pi / 180)
-
+        return tan(angleInDegrees * pi / 180)
     end tanInDegrees
 
 
@@ -59,4 +53,3 @@ radian (glossary), custom function (glossary), return (glossary),
 degree (glossary)
 
 Tags: math
-

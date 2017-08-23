@@ -124,23 +124,22 @@ to find out how and where to upload files.)
 > take long enough to be noticeable to the user.
 
 The following example shows how to set a flag in a global variable to
-prevent multiple downloads. The variable "downloadInProgress" is set to
+prevent multiple downloads. The variable "gDownloadInProgress" is set to
 true while a download is going on, and back to false when the download
 concludes. If the user clicks the button again while the download is
 still going on, the handler simply beeps:
 
     on mouseUp
 
-    global downloadInProgress
-    if downloadInProgress then
-
-    beep
-    exit mouseUp
-
+    global gDownloadInProgress
+    if gDownloadInProgress then
+        beep
+        exit mouseUp
     end if
-    put true into downloadInProgress -- about to start
+    put true into gDownloadInProgress -- about to start
     put URL (field "Page to get") into field "Command Result"
-    put false into downloadInProgress -- finished
+    put false into gDownloadInProgress -- finished
+    
     end mouseUp
 
 

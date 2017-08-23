@@ -13,6 +13,8 @@ OS: mac, windows, linux
 
 Platforms: desktop, server
 
+Description:
+<reserved word|Reserved> for internal use.
+
 References: ask password (command), reserved word (glossary),
 password (property)
-

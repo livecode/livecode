@@ -31,12 +31,16 @@ example above. A <\> character which is used within a <literal string>
 does not break the line, because the <\> is treated as part of the
 <quoted> <string> instead of being treated as a line continuation. For
 example, the following <statement> causes a <compile error> because the
-<\> <character> is inside the quotes: answer
-"This is a test. This is only a test. \ Had this been an actual life..."
-with "OK" -- BAD EXAMPLE The above bad example can be corrected by using
-the <operator> to break up the long <string> : answer
-"This is a test. This is only a test." \
-"Had this been an actual life..." with "OK" -- good example
+<\> <character> is inside the quotes: 
+
+    answer "This is a test. This is only a test. \ 
+        Had this been an actual life..." with "OK" -- BAD EXAMPLE
+
+The above bad example can be corrected by using
+the <operator> to break up the long <string> : 
+
+    answer "This is a test. This is only a test." \
+        "Had this been an actual life..." with "OK" -- good example
 
 The string has been broken into two substrings, so the <\> <character>
 is no longer within a <literal string>. This second example does not

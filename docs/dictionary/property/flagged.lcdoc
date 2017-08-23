@@ -5,8 +5,7 @@ Type: property
 Syntax: set the flagged of <fieldChunk> to {true | false}
 
 Summary:
-The <flagged> property of a field chunk specifies whether it is
-underlined with a red dotted line.
+Underlines the chunk with a red dotted line.
 
 Associations: field
 
@@ -29,7 +28,10 @@ if the flagged of word 10 of field 1 is true then
    answer "You have a mistake in your text"
 end if
 
+Description:
+The <flagged> property of a field chunk specifies whether it is
+underlined with a red dotted line.
+
 References: styledText (property), metadata (property)
 
 Tags: text processing
-

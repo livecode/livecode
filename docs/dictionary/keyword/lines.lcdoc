@@ -16,7 +16,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put the number of lines of the result into linesToCheck
+put the number of lines of the result into tLinesToCheck
 
 Description:
 Use the <lines> <keyword>  to <sort> or <select> individual <lines>.

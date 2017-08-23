@@ -18,7 +18,8 @@ Example:
 choose image tool
 
 Description:
-Use the <image> <keyword> to create <image|images>.
+Use the <image> <keyword> together with the <tool> <function> to 
+create <image|images>.
 
 When using the Image tool, the cursor is a crosshairs. This tool is used
 for creating images by clicking at one corner of the image and dragging

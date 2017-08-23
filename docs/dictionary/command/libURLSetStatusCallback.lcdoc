@@ -2,7 +2,7 @@ Name: libURLSetStatusCallback
 
 Type: command
 
-Syntax: libURLSetStatusCallback [<messageName>, <objectLongID>]
+Syntax: libURLSetStatusCallback [<messageName>[, <objectLongID>]]
 
 Summary:
 Sets up a <callback|callback message> to be sent periodically during
@@ -25,6 +25,9 @@ Example:
 libURLSetStatusCallback myAction,the long ID of button "Upload"
 
 Example:
+libURLSetStatusCallback "putPercentage" -- sends message to url library. Handle the message in a frontscript, backscript, or stack in use.
+
+Example:
 libURLSetStatusCallback -- turns off status callback messages
 
 Parameters:
@@ -33,7 +36,10 @@ The name of a message to be sent whenever the URLStatus function is
 updated. 
 
 objectLongID:
-The long ID of the object to send the message to.
+The long ID of the object to send the message to. If <messageName> is 
+not empty and <objectLongID> is not specified then the message will be sent to
+the revLibURL library stack. The message can be handled in a frontscript,
+backscript, or library stack.
 
 Description:
 Use the <libURLSetStatusCallback> <command> if you want to do periodic

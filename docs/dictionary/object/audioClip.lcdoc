@@ -16,27 +16,48 @@ OS: mac, windows, linux
 Platforms: desktop, server
 
 Example:
+# play an internal (imported) audio clip
+local theCurrentSoundtrack
+put the short name of audioClip 1 into theCurrentSoundtrack
 play audioClip theCurrentSoundtrack
 
+Example:
+# play an external audio clip
+play audioClip "/Documents/audio/sample.wav"
+
+Example:
+delete audioClip 1
+
 Description:
-Use the <audioClip> <object type> to play a sound that is stored in the 
-<stack>, rather than in another file.
+Use the <audioClip> <object type> to play a sound that can either be
+stored in the <stack>, or in an external file.
 
-Unlike a player, an audio clip contains the sound that it plays. This 
-increases the memory required by your stack, because the sound data is 
-loaded into memory along with the rest of the stack whenever the stack 
-file is open. However, it prevents the sound from being accidentally 
-separated from the stack file and lost.
+Unlike a player, an <audio clip> contains the sound that it plays. In 
+the case of imported <audio clip|audio clips>, this 
+increases the memory required by your <stack>, because the sound data is 
+loaded into memory along with the rest of the <stack> whenever the 
+<stack file> is open. However, it prevents the sound from being 
+accidentally separated from the <stack file> and lost.
 
-Audio clips can be in WAV, AIFF, or AU format
+If your stack accesses external <audio clip|audio clips> you must take
+care to keep the external file together with the <stack file>.
 
-An audio clip is contained in a stack. Audio clips cannot contain other 
-objects. (An audio clip is not a control, since it has no user
-interface and cannot be owned by a <card>.)
+<audio clip|Audio clips> can be in *uncompressed* WAV, AIFF, or AU format,
+which is always compressed. An audio clip may also be in 2:1 
+&micro;-law compressed AU format.
+
+An <audioClip> object is contained in a <stack>. <audioClip|Audio clips> 
+cannot contain other objects. (Hence, an <audioClip> is not a <control>, 
+since it has no user interface and cannot be owned by a <card>.)
 
 To play an audioClip, use the syntax 
 
     play audioClip <filename_of_audioclip>
+    
+
+Or the syntax
+
+    play audioClip "/path/to/file.wav"
 
 
 To stop an audioClip, use the syntax 
@@ -44,6 +65,9 @@ To stop an audioClip, use the syntax
     play stop
 
 
-References: object type (glossary), card (keyword),
-templateAudioClip (keyword), stack (object)
+References: object type (glossary), card (object),
+templateAudioClip (keyword), stack (object), play (command)
+audio clip (glossary), videoClip (object), control (glossary),
+stack file (glossary)
 
+Tags: multimedia

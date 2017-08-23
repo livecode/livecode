@@ -2,7 +2,7 @@ Name: urlWakeUp
 
 Type: message
 
-Syntax: urlWakeUp <pWakeUpString>
+Syntax: urlWakeUp <wakeUpURL>
 
 Summary:
 Sent to an application when a custom URL is selected.
@@ -19,11 +19,11 @@ on urlWakeUp pURL
 end urlWakeUp
 
 Parameters:
-pWakeUpString (string):
+wakeUpURL (string):
 The custom url that was used to launch the application
 
 Description:
-Handle the urlWakeUp messags if you want to perform an action when an
+Handle the urlWakeUp messages if you want to perform an action when an
 application is started up using the custom URL scheme.
 
 Custom URLs allow an application to be woken up when a specific URL is

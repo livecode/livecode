@@ -2,7 +2,7 @@ Name: play video
 
 Type: command
 
-Syntax: play video {<video-file> | <video-url>}
+Syntax: play video {<videoFile> | <videoUrl>}
 
 Summary:
 Plays a full screen video.
@@ -55,15 +55,19 @@ the <templatePlayer> to true before executing the <play video> command.
 Looping a video is only supported on iOS 3.2 and later.
 
 A section of a video can be played by setting the <playSelection>
-property of the <templatePlayer> to true before executing the play video
+property of the <templatePlayer> to true before executing the <play video>
 command. This will use the <startTime> and <endTime> properties of the
 <templatePlayer> to determine what section to play. The values of these
 properties are interpreted as the number of milliseconds from the
 beginning of the video.
+
+Parameters:
+videoFile (string): The path to a video file to play.
+
+videoUrl (string): The url of a video file to play.
 
 References: play stop (command), play (command), templatePlayer (keyword),
 movieTouched (message), looping (property), endTime (property),
 playSelection (property), showController (property), startTime (property)
 
 Tags: multimedia
-

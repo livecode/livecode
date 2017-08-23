@@ -2,7 +2,7 @@ Name: encrypt
 
 Type: command
 
-Syntax: encrypt <source> using <cipher> with [password|key] <passorkey> [and salt <saltvalue>] [and IV <IVvalue>] [at <bitvalue> bit]
+Syntax: encrypt <source> using <cipher> with {password|key} <passorkey> [and salt <saltvalue>] [and IV <IVvalue>] [at <bitvalue> bit]
 
 Summary:
 Encrypt data using a cipher.

@@ -39,5 +39,6 @@ if the application was configured to handle Push Notifications in the
 pList (iOS) or manifest (Android).
 
 References: pushNotificationReceived (message),
-pushNotificationRegistered (message)
+pushNotificationRegistered (message),
+mobileGetDeviceToken (function)
 

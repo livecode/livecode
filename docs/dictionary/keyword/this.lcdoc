@@ -17,7 +17,8 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put the name of this card into currentName
+local tCurrentName
+put the name of this card into tCurrentName
 
 Example:
 sort cards by the mark of this card

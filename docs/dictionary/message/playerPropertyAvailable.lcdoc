@@ -22,9 +22,13 @@ on playerPropertyAvailable theProperty
 end playerPropertyAvailable
 
 Parameters:
-pPropertyName (enum): The name of the property that has become available.
-- "duration": The duration of the movie, measured in milliseconds.
-- "naturalSize": The raw size of a video frame in pixels.
+propertyName (enum):
+The name of the property that has become available. These 
+properties can be: 
+
+-   "duration": The duration of the movie, measured in milliseconds.
+-   "naturalSize": The raw size of a video frame in pixels.
+
 
 Description:
 Handle the <playerPropertyAvailable> message when sufficient information

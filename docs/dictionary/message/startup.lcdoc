@@ -5,7 +5,7 @@ Type: message
 Syntax: startup <pMode>
 
 Summary:
-Sent to the first <stack> opened when the <application> starts up.
+Sent to the first <card> opened when the <application> starts up.
 
 Associations: stack
 
@@ -38,14 +38,16 @@ drive, you can use <pMode> to respond to U3 actions.
 - "u3uninstall": sent when the application is being removed from the U3 drive.
 
 Description:
-Handle the <startup> <message> if you want to do initialization or other
-tasks when the <application> starts up.
+Handle the <startup> <message> if you want to do initialization or
+other tasks when the <application> starts up.  The target of the
+<startup> <message> is the first <card> of the application's initial
+<stack>.
 
 The <startup> <message> is sent only when the <application> starts up,
 not when a <stack> is opened when the <application> is already running.
 
 If the application is opened with multiple stacks, the <startup> message
-is sent to the first <stack> opened.
+is sent to the first <card> of the first <stack> opened.
 
 You will only get the U3 actions u3install, u3configure, u3cleanup and
 u3uninstall if the corresponding tick boxes have been checked in the
@@ -53,7 +55,7 @@ advanced U3 settings of the Standalone Settings.
 
 References: application (glossary), message (glossary), resume (message),
 openBackground (message), u3eject (message), relaunch (message),
-stack (object)
+stack (object), card (object)
 
 Tags: windowing
 

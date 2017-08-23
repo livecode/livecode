@@ -26,13 +26,13 @@ set the points of graphic "newline" to 50,50 & return & 200,200
 set the lineSize of graphic "newline" to 6
 set the capStyle of graphic "newline" to "butt"
 
-Value (enum):
+Value (enum): The <capStyle> of a graphic is one of the following:
 
--   round: Lines are ended by a half-circle centred at the end-point of
-    the line. This is the default.
--   butt: No cap is added.
--   square: The edge is extended beyond the end-point by half the line
-    width. 
+- "round" - Lines are ended by a half-circle centred at the end-point of
+the line. This is the default.
+- "butt" - No cap is added.
+- "square" - The edge is extended beyond the end-point by half the line
+width. 
 
 
 Description:

@@ -52,5 +52,5 @@ handle the message without being launched.
 References: iphoneSetNotificationBadgeValue (command),
 iphoneGetNotificationBadgeValue (function),
 pushNotificationRegistered (message),
-pushNotificationRegistrationError (message)
-
+pushNotificationRegistrationError (message),
+mobileGetDeviceToken (function)

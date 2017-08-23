@@ -28,7 +28,7 @@ uniEncode(inputText,"Japanese") -- converts Shift-JIS to Unicode
 
 Parameters:
 stringToEncode (string):
-
+any string, or expression that evaluates to a string.
 
 language (enum):
 one of the following
@@ -50,13 +50,10 @@ one of the following
 - "SimplifiedChinese"
 - "Unicode" (UTF-16)
 - "UTF8"
-- "w" (synonym for "Unicode"
+- "w" (synonym for "Unicode")
 
 
-stringToDecode (string):
-any string, or expression that evaluates to a string.
-
-Returns:
+Returns (string):
 The <uniEncode> <function> <return|returns> a <Unicode> <string>.
 If you don't specify a <language>, the <string> has each <character> of
 <stringToEncode> either followed or led (depending on <platform>) by a
@@ -66,24 +63,26 @@ If a <language> is specified, the <uniEncode> <function> returns the
 <Unicode> equivalent of the <stringToEncode>, assuming the appropriate
 single-byte encoding for the specified <language>.
 
-The result:
-As of LiveCode 7.0 the uniEncode function has been deprecated. It will
-continue to work as in previous versions but shoud not be used in new
-code as the existing behaviour is incompatible with the new, transparent
-Unicode handling (the resulting value will be treated as binary data
-rather than text). This functions is only useful in combination with the
-also-deprecated uniDecode function and unicodeText field property.
 
 Description:
 Use the <uniEncode> <function(control structure)> to convert single-byte
 characters to double-byte characters.
 
->*Important:* 
+>*Important:* As of LiveCode 7.0 the <uniEncode> function has been 
+> deprecated. It will continue to work as in previous versions but 
+> should not be used in newcode as the existing behaviour is
+> incompatible with the new, transparent Unicode handling (the resulting 
+> value will be treated as binary data rather than text). This function 
+> is only useful in combination with the also-deprecated <uniDecode> 
+> function and <unicodeText> field property. Instead, for converting 
+> text between encodings, use the <textEncode> and <textDecode> 
+> functions.
 
-The <uniEncode> <function(control structure)> is the <inverse> of the
-<uniDecode> <function(control structure)> and inserts <null> bytes for
-<Unicode> compatibility. In other words, it turns single-byte characters
-into their double-byte equivalent.
+>*Important:*
+> The <uniEncode> <function(control structure)> is the <inverse> of the
+> <uniDecode> <function(control structure)> and inserts <null> bytes for
+> <Unicode> compatibility. In other words, it turns single-byte 
+> <character|characters> into their double-byte equivalent.
 
 >*Note:*  You can use the UTF8 encoding only with the <uniDecode> and
 > <uniEncode> <function(glossary)|functions>. You cannot set an
@@ -91,14 +90,14 @@ into their double-byte equivalent.
 > Unicode text in an <object(glossary)>, use either "Unicode" or a
 > language name as the second item of the <object|object's> <textFont>.
 
->*Important:* The <format> produced by the <uniEncode> <function(control
-> structure)> is processor-dependent. On "big-endian" processors, where
-> the first <byte> is least significant (such as Intel and Alpha
-> processors), the <uniEncode> <function(control structure)> adds the
-> <null> <byte> after each <character>. On "little-endian" processors,
-> where the last <byte> is least significant (such as PowerPC
-> processors), the <uniEncode> <function(control structure)> adds the
-> <null> <byte> before each <character>.
+>*Important:* The <format> produced by the <uniEncode> 
+> <function(control structure)> is processor-dependent. On "big-endian" 
+> processors, where the first <byte> is least significant (such as Intel 
+> and Alpha processors), the <uniEncode> <function(control structure)> 
+> adds the <null> <byte> after each <character>. On "little-endian" 
+> processors, where the last <byte> is least significant (such as 
+> PowerPC processors), the <uniEncode> <function(control structure)> 
+> adds the <null> <byte> before each <character>.
 
 The ability to handle double-byte characters on "little-endian"
 processors was added in version 2.0. In previous versions, the
@@ -112,10 +111,15 @@ added in version 2.0. In previous versions, the <uniEncode>
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
-References: null (constant), function (control structure),
-uniDecode (function), format (function), platform (function),
-object (glossary), property (glossary), Unicode (glossary),
-function (glossary), byte (glossary), return (glossary), string (keyword),
-inverse (keyword), character (keyword), textFont (property),
-unicodeTitle (property)
+The tokens uniEncode, uniDecode and unicodeText are all deprecated 
+from version 7.0.
+
+References: byte (glossary), character (keyword), format (function), 
+function (control structure), function (glossary), inverse (keyword), 
+null (constant), object (glossary), platform (function), 
+property (glossary), return (glossary), string (keyword), 
+textDecode (function), textEncode (function), textFont (property), 
+Unicode (glossary), unicodeTitle (property), uniDecode (function)
+
+Tags: text processing
 
