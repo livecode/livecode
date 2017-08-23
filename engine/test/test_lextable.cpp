@@ -44,7 +44,7 @@ TEST(lextable, table_pointer)
 // Checks that the entries of factor_table are in alphabetical order.
 //
 {
-	extern const LT *table_pointers[];
+	extern const LT * const table_pointers[];
 	extern const uint4 table_pointers_size;
 
 	extern const uint2 table_sizes[];
