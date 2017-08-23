@@ -299,7 +299,7 @@ MCControl *MCSellist::clone(MCObject *target)
 	MCSelnode *t_node = objects;
 	for (uint32_t i = 0; i < t_selobj_count; i++)
 	{
-		t_selobj_handles[i] = t_node->m_ref->GetHandle();
+		t_selobj_handles[i] = t_node->m_ref;
 		t_node = t_node->next();
 	}
 

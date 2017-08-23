@@ -1192,7 +1192,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
-	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
+	MCStackHandle t_old_stack = MCdefaultstackptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
