@@ -21,8 +21,8 @@ Example:
 go back
 
 Description:
-Use the <back> <keyword> to <return(constant)> to the most <recent
-cards|recently visited card>, or to designate a <backScript>.
+Use the <back> <keyword> to <return(constant)> to the most 
+<recent cards|recently visited card>, or to designate a <backScript>.
 
 When used with the go <command>, the <back> <keyword> designates the
 <card> the user visited most recently. The <statement> go back
