@@ -30,10 +30,10 @@ However, the first is easier to read and understand in LiveCode.
 
 >*Important:*  If you use the <arrow> <cursor(property)> or other
 > standard <cursor(glossary)|cursors> in your application, you must
-> include the cursors when you create your <standalone
-> application|standalone>. Make sure the "Cursors" option on the
-> Inclusions section on the General screen of the <Standalone
-> Application Settings> window is checked.
+> include the cursors when you create your
+> <standalone application|standalone>. Make sure the "Cursors"
+> option on the Inclusions section on the General screen of the
+> <Standalone Application Settings> window is checked.
 
 References: constant (command), one (constant),
 Standalone Application Settings (glossary),
