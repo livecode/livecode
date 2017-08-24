@@ -47,16 +47,10 @@ on TestDocsValidateExtractedLibraries
    local tExtractedDocsFolder
    put TestGetExtractedDocsFolder() into tExtractedDocsFolder
    
-   TestAssert "extracted docs folder exists", there is a folder tExtractedDocsFolder
-   
    local tFiles
    put files(tExtractedDocsFolder) into tFiles
    
-   TestAssert "some files are in the extracted docs folder", tFiles is not empty
-   
    filter tFiles with "*.lcdoc"
-   
-   TestAssert "some lcdoc files are in the extracted docs folder", tFiles is not empty
    
    set the itemDelimiter to "."
    
