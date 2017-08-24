@@ -21,6 +21,7 @@ constant kTestFile = "utf8bom.livecodescript"
 
 on TestLoadBomScriptOnlyStack
    local tUrlBinfilePath
+   local tScriptOnlyStack
    
    put quote & "binfile:" & testFilesFolder() & slash & \
       kTestFile & quote into tUrlBinfilePath
@@ -34,5 +35,14 @@ on TestLoadBomScriptOnlyStack
    // Tests correction implemented for Bug 18998
    
    TestAssert "Open UTF8 BOM Script-Only stack file as URL", \
-      kStackName is among the lines of the openStacks
+      "utf8bom" is among the lines of the openStacks
+
+   // try with building a string
+   put numToByte(239) & numToByte(187) & numToByte(191) & \
+      "script" && quote & "utf8bom2" & quote & cr & "--" \
+      into tScriptOnlyStack
+   
+   open stack tScriptOnlyStack
+   TestAssert "Open UTF8 BOM Script-Only stack file as URL 2", \
+      "utf8bom2" is among the lines of the openStacks
 end TestLoadBomScriptOnlyStack
