@@ -1,0 +1,53 @@
+#!
+
+try
+   -- Compute the filename of the test runner
+   local tRunner, tBehavior, tCmdInfo
+   put getStackOfFolder("_testrunner") into tRunner
+   put getStackOfFolder("_testrunnerbehavior") into tBehavior
+   set the behavior of stack tRunner to tBehavior
+   put getCommandLineInfo() into tCmdInfo   
+catch tException
+	write "Failed to set up test runner:" & return & tException & return to stderr
+	quit 1
+end try
+send "TestRunnerMainWithInfo tCmdInfo" to tRunner 
+
+private function getStackOfFolder pStack
+   -- Compute the filename of the test runner
+   local tTestsPath, tStack
+   set the itemdelimiter to "/"
+   put item 1 to -2 of the effective filename of me into tTestsPath
+   put tTestsPath & "/" & pStack & ".livecodescript" into tStack
+   return the long id of stack tStack
+end getStackOfFolder
+
+function getCommandLineInfo
+   local tRawArg, tSelfCommand, tSelfScript, tInArgs, tArgs
+
+   put false into tInArgs
+
+   -- Treat everything up to & including the first
+   -- ".lc" file as the command for running the test
+   -- runner, and everything after it as test runner arguments
+   put the commandName into tSelfCommand[1]
+   repeat for each element tRawArg in the commandArguments
+      if tInArgs then
+         put tRawArg into tArgs[1 + the number of elements in tArgs]
+      else
+         put tRawArg into tSelfCommand[1 + the number of elements in tSelfCommand]
+         if tRawArg ends with ".lc" then
+            put tRawArg into tSelfScript
+            put true into tInArgs
+         end if
+      end if
+
+   end repeat
+
+   local tInfo
+   put tSelfCommand into tInfo["self-command"]
+   put tSelfScript into tInfo["self-script"]
+   put tArgs into tInfo["args"]
+
+   return tInfo
+end getCommandLineInfo

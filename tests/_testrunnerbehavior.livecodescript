@@ -56,13 +56,16 @@ end getCommandLineInfo
 command TestRunnerMain
    local tInfo
    put getCommandLineInfo() into tInfo
+   TestRunnerMainWithInfo tInfo
+end TestRunnerMain
 
-   switch tInfo["args"][1]
+command TestRunnerMainWithInfo pInfo
+   switch pInfo["args"][1]
       case "invoke"
-         doInvoke tInfo
+         doInvoke pInfo
          break
       case "run"
-         doRun tInfo
+         doRun pInfo
          break
       case "--help"
       case "-h"
@@ -75,7 +78,7 @@ command TestRunnerMain
    end switch
    
    send "DoQuit" to me
-end TestRunnerMain
+end TestRunnerMainWithInfo
 
 on DoQuit
    -- Allow errorDialog message to be sent
