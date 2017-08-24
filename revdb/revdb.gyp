@@ -298,6 +298,15 @@
 							'-lodbc32.lib',
 						],
 					},
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
 				],
 			],
 			
@@ -331,20 +340,6 @@
 					'_releasedbconnectionref',
 				],
 			},
-			'conditions':
-			[
-				[
-					'OS == "linux"',
-					{
-						'libraries':
-						[
-							'-Wl,-Bstatic',
-							'-lstdc++',
-							'-Wl,-Bdynamic',
-						],
-					},
-				],
-			],
 			
 			'all_dependent_settings':
 			{
@@ -453,7 +448,7 @@
 					},
 				],
 			],
-			
+
 			'all_dependent_settings':
 			{
 				'variables':
