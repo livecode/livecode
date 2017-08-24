@@ -36,7 +36,7 @@ The result of the <atan> function is <return|returned> in
 following <custom function>:
 
     function atanInDegrees pMagnitude
-        return atan(theMagnitude) * 180 / pi
+        return atan(pMagnitude) * 180 / pi
     end atanInDegrees
 
 Description:
