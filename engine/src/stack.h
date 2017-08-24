@@ -302,7 +302,7 @@ protected:
     bool m_is_script_only : 1;
     
     // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
-    MCStringLineEndingStyle m_line_encoding_style : 2;
+    MCStringLineEndingStyle m_line_encoding_style : 3;
 	
 	bool m_is_ide_stack : 1;
 	

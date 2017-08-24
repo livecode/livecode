@@ -1955,12 +1955,13 @@ static void MCFilesReadComplete(MCExecContext& ctxt, MCValueRef p_output, IO_sta
             MCAutoStringRef t_output;
             if (!MCStringNormalizeLineEndings((MCStringRef)p_output, 
                                               kMCStringLineEndingStyleLF, 
-                                              true, 
+                                              kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                              kMCStringLineEndingOptionNormalizeLSToVT, 
                                               &t_output, 
                                               nullptr))
             {
-                // handle error condition?
-                // ctxt . SetTheResultToStaticCString("error normalizing line endings");
+                ctxt . SetItToEmpty();
+                ctxt . SetTheResultToStaticCString("error normalizing line endings");
             }
             else
             {
@@ -2461,11 +2462,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
     {
         MCAutoStringRef t_text_data;
         if (!MCStringNormalizeLineEndings(p_data, 
-#ifdef __CRLF__
-                                          kMCStringLineEndingStyleCRLF, 
-#else
-                                          kMCStringLineEndingStyleLF, 
-#endif
+                                          kMCStringLineEndingStyleLegacyNative, 
                                           false, 
                                           &t_text_data, 
                                           nullptr))
@@ -2533,11 +2530,7 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 	{
 		MCStringRef t_text_data;
         if (!MCStringNormalizeLineEndings(p_data, 
-#ifdef __CRLF__
-                                          kMCStringLineEndingStyleCRLF, 
-#else
-                                          kMCStringLineEndingStyleLF, 
-#endif
+                                          kMCStringLineEndingStyleLegacyNative,
                                           false, 
                                           t_text_data, 
                                           nullptr))

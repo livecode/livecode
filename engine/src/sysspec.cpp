@@ -1464,7 +1464,8 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         if (t_success)
             t_success = MCStringNormalizeLineEndings(*t_text, 
                                                      kMCStringLineEndingStyleLF, 
-                                                     true, 
+                                                     kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                                     kMCStringLineEndingOptionNormalizeLSToVT, 
                                                      r_text, 
                                                      nullptr);
         
@@ -1569,11 +1570,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     MCAutoStringRef t_converted;
     if (t_success)
         t_success = MCStringNormalizeLineEndings(p_string, 
-#ifdef __CRLF__
-                                                 kMCStringLineEndingStyleCRLF, 
-#else
-                                                 kMCStringLineEndingStyleLF, 
-#endif
+                                                 kMCStringLineEndingStyleLegacyNative, 
                                                  false, 
                                                  &t_converted, 
                                                  nullptr);
@@ -1803,7 +1800,8 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
 #if defined(_SERVER) || defined(_WINDOWS)
         if (!MCStringNormalizeLineEndings(*t_data_string, 
                                            kMCStringLineEndingStyleLF, 
-                                           true, 
+                                           kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                           kMCStringLineEndingOptionNormalizeLSToVT, 
                                            r_output, 
                                            nullptr))
         {

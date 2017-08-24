@@ -1478,7 +1478,8 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     
     return MCStringNormalizeLineEndings(*t_string, 
                                         kMCStringLineEndingStyleLF, 
-                                        true, 
+                                        kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                        kMCStringLineEndingOptionNormalizeLSToVT, 
                                         r_text, 
                                         nullptr);
 }

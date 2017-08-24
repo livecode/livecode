@@ -679,7 +679,8 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
                                  &t_raw_script_string) ||
         !MCStringNormalizeLineEndings(*t_raw_script_string,
                                       kMCStringLineEndingStyleLF, 
-                                      true,
+                                      kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                      kMCStringLineEndingOptionNormalizeLSToVT,
                                       &t_lc_script_string,
                                       &t_line_encoding_style))
     {

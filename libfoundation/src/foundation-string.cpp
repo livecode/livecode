@@ -6966,7 +6966,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
 MC_DLLEXPORT bool
 MCStringNormalizeLineEndings(MCStringRef p_input, 
                              MCStringLineEndingStyle p_to_style, 
-                             bool p_normalize_ps_ls,
+                             MCStringLineEndingOptions p_options,
                              MCStringRef& r_output, 
                              MCStringLineEndingStyle* r_original_style)
 {
@@ -7015,40 +7015,39 @@ MCStringNormalizeLineEndings(MCStringRef p_input,
     }
     
     // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
-    if (p_normalize_ps_ls)
+    if (((p_options & kMCStringLineEndingOptionNormalizeLSToVT) != 0) &&
+        !MCStringFindAndReplaceChar(*t_mutable_input, 
+                                   (const codepoint_t)0x2028, 
+                                   (const codepoint_t)0x0B, 
+                                    kMCStringOptionCompareExact))
     {
-        if (!MCStringFindAndReplaceChar(*t_mutable_input, 
-                                       (const codepoint_t)0x2028, 
-                                       (const codepoint_t)0x0B, 
-                                        kMCStringOptionCompareExact))
-        {
-            return false;
-        }
-        if (!MCStringFindAndReplaceChar(*t_mutable_input, 
-                                       (const codepoint_t)0x2029, 
-                                       (const codepoint_t)0x0A, 
-                                        kMCStringOptionCompareExact))
-        {
-            return false;
-        }
+        return false;
+    }
+    if (((p_options & kMCStringLineEndingOptionNormalizePSToLineEnding) != 0) &&
+        !MCStringFindAndReplaceChar(*t_mutable_input, 
+                                   (const codepoint_t)0x2029, 
+                                   (const codepoint_t)0x0A, 
+                                    kMCStringOptionCompareExact))
+    {
+        return false;
     }
     
     // now convert the line endings to the proper version
-    if (p_to_style == kMCStringLineEndingStyleCR)
+    if ((p_to_style == kMCStringLineEndingStyleCR) &&
+        !MCStringFindAndReplace(*t_mutable_input, 
+                                MCSTR("\n"), 
+                                MCSTR("\r"), 
+                                kMCStringOptionCompareExact))
     {
-        if (!MCStringFindAndReplace(*t_mutable_input, MCSTR("\n"), 
-                                    MCSTR("\r"), kMCStringOptionCompareExact))
-        {
-            return false;
-        }
+        return false;
     }
-    else if (p_to_style == kMCStringLineEndingStyleCRLF)
+    else if ((p_to_style == kMCStringLineEndingStyleCRLF) &&
+             !MCStringFindAndReplace(*t_mutable_input, 
+                                     MCSTR("\n"), 
+                                     MCSTR("\r\n"), 
+                                     kMCStringOptionCompareExact))
     {
-        if (!MCStringFindAndReplace(*t_mutable_input, MCSTR("\n"), 
-                                    MCSTR("\r\n"), kMCStringOptionCompareExact))
-        {
-            return false;
-        }
+        return false;
     }
     
     if (!t_mutable_input.MakeImmutable())

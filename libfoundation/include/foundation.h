@@ -2727,16 +2727,35 @@ enum MCStringLineEndingStyle
 {
     kMCStringLineEndingStyleLF,
     kMCStringLineEndingStyleCR,
-    kMCStringLineEndingStyleCRLF
+    kMCStringLineEndingStyleCRLF,
+#if defined(__CRLF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCRLF,
+#elif defined(__CR__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCR,
+#elif defined(__LF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleLF,
+#else
+#error Unknown default line ending style (no __CRLF__, __CR__, __LF__ definition)
+#endif
+};
+
+typedef uint32_t MCStringLineEndingOptions;
+enum
+{
+  /* Normalize any occurrence of PS (paragraph separator) to the specified line-ending style */
+  kMCStringLineEndingOptionNormalizePSToLineEnding = 1 << 0,
+  /* Normalize any occurrence of LS (line separator) to VT (vertical tab) */
+  kMCStringLineEndingOptionNormalizeLSToVT = 1 << 1,
 };
 
 // Converts LF, CR, CRLF line endings in p_input to p_to_style line endings and
-// places the result into r_output. If p_normalize_ps_ls is true, then it also converts
-// PS to p_to_style, and LS to VTAB.
+// places the result into r_output. PS to p_to_style and LS to VTAB conversions
+// are performed if the appropriate flags are set in p_options. Detected line
+// endings of p_input are returned in r_original_style.
 MC_DLLEXPORT bool
 MCStringNormalizeLineEndings(MCStringRef p_input, 
                              MCStringLineEndingStyle p_to_style, 
-                             bool p_normalize_ps_ls,
+                             MCStringLineEndingOptions p_options,
                              MCStringRef& r_output, 
                              MCStringLineEndingStyle* r_original_style);
 
