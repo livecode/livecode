@@ -543,6 +543,12 @@ private function __MeetsRequirements pRequirement, pOptions
 				return the platform is not "HTML5"
 		case "write"
 			return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+		case "ui"
+		    return not (the environment ends with "command line")
+		case "desktop"
+		    return the platform is among the items of "MacOS,Win32,Linux"
+		case "mobile"
+		    return the platform is among the items of "Android,iOS"
 	end switch
    
    return true

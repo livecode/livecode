@@ -211,12 +211,18 @@ end TestExtensionExecuteScript
 
 /////////
 
+/*
+On server, extension logs go directly to stderr, so skip these tests.
+*/
+
 local sLastLog
 on logChanged pMsg
    put pMsg into sLastLog
 end logChanged
 
 on TestExtensionLogInteger
+	TestSkipIf "environment", "server"
+	
 	// log 1
 	get TestExtensionLog_Integer()
 	wait for 0 with messages
@@ -224,6 +230,8 @@ on TestExtensionLogInteger
 end TestExtensionLogInteger
 
 on TestExtensionLogList
+	TestSkipIf "environment", "server"
+	
 	// log [1,2,3]
 	get TestExtensionLog_List()
 	wait for 0 with messages
@@ -231,6 +239,8 @@ on TestExtensionLogList
 end TestExtensionLogList
 
 on TestExtensionLogArray
+	TestSkipIf "environment", "server"
+	
 	// log {a: 1}
 	get TestExtensionLog_Array()
 	wait for 0 with messages
@@ -238,6 +248,8 @@ on TestExtensionLogArray
 end TestExtensionLogArray
 
 on TestExtensionLogString
+	TestSkipIf "environment", "server"
+	
 	// log "log"
 	get TestExtensionLog_String()
 	wait for 0 with messages
@@ -245,6 +257,8 @@ on TestExtensionLogString
 end TestExtensionLogString
 
 on TestExtensionLogScriptObject
+   TestSkipIf "environment", "server"
+	
   // resolve script object "button 1"
   // log the result
   create button
