@@ -17,7 +17,7 @@ In HyperCard, the <blindTyping> <property> determines whether the user
 can type into the <message box> when the <message box> is not visible.
 
 In LiveCode, the message box always acts as though the <blindTyping> is
-set to false<a/>: it must be visible for the user to type into it.
+set to false: it must be visible for the user to type into it.
 
 References: type (command), stacks (function), property (glossary),
 LiveCode (glossary), HyperCard (glossary), message box (keyword),
