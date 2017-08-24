@@ -1,4 +1,6 @@
 #!/bin/bash
+#Abort packaging on error
+set -e
 
 # Versions
 source "scripts/platform.inc"
@@ -42,6 +44,7 @@ function doPackage {
 	fi
 	
 	if [ "${PLATFORM}" == "ios" ] ; then
+		source "scripts/ios.inc"
 		queryiOS "${SUBPLATFORM}"
 		local PACKAGE_SUBPLATFORM="${SUBPLATFORM_NAME}${VERSION}"
 	else
