@@ -16,15 +16,17 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+// Tests correction implemented for Bug 18998
+
 constant kStackName = "utf8bom"
 constant kTestFile = "utf8bom.livecodescript"
 
-on TestLoadBomScriptOnlyStack
+on TestLoadBomScriptOnlyStackFile
    local tUrlBinfilePath
    local tScriptOnlyStack
    
-   put quote & "binfile:" & testFilesFolder() & slash & \
-      kTestFile & quote into tUrlBinfilePath
+   put "binfile:" & testFilesFolder() & slash & kTestFile \
+      into tUrlBinfilePath
    
    open stack url tUrlBinfilePath
    
@@ -32,17 +34,31 @@ on TestLoadBomScriptOnlyStack
    // is coming from a chunk.  Most likely source would be URL
    // "binfile:" and "http(s):", but others could be possible.
    
-   // Tests correction implemented for Bug 18998
-   
-   TestAssert "Open UTF8 BOM Script-Only stack file as URL", \
-      "utf8bom" is among the lines of the openStacks
+   TestAssert "Open UTF8 BOM Script-Only stack file as URL binfile", \
+      kStackName is among the lines of the openStacks
+end TestLoadBomScriptOnlyStackFile
 
-   // try with building a string
+on TestLoadBomScriptOnlyStackFromString
+   local tScriptOnlyStack
+   
    put numToByte(239) & numToByte(187) & numToByte(191) & \
-      "script" && quote & "utf8bom2" & quote & cr & "--" \
+      "script" && quote & kStackName & quote & cr & "--" \
       into tScriptOnlyStack
    
    open stack tScriptOnlyStack
-   TestAssert "Open UTF8 BOM Script-Only stack file as URL 2", \
-      "utf8bom2" is among the lines of the openStacks
-end TestLoadBomScriptOnlyStack
+   
+   TestAssert "Open UTF8 BOM Script-Only stack from string", \
+      kStackName is among the lines of the openStacks
+end TestLoadBomScriptOnlyStackFromString
+
+on TestLoadNoBomScriptOnlyStackFromString
+   local tScriptOnlyStack
+   
+   put "script" && quote & kStackName & quote & cr & "--" \
+      into tScriptOnlyStack
+   
+   open stack tScriptOnlyStack
+   
+   TestAssert "Open Script-Only stack without BOM from string", \
+      kStackName is among the lines of the openStacks
+end TestLoadNoBomScriptOnlyStackFromString
