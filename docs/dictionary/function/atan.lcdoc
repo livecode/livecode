@@ -35,9 +35,8 @@ The result of the <atan> function is <return|returned> in
 <radian|radians>. To get this result in <degree|degrees>, use the
 following <custom function>:
 
-    function atanInDegrees theMagnitude
-    return atan(theMagnitude) * 180 / pi
-
+    function atanInDegrees pMagnitude
+        return atan(theMagnitude) * 180 / pi
     end atanInDegrees
 
 Description:
