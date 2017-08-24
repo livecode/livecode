@@ -35,9 +35,8 @@ The result of the <atan2> <function> is <return|returned> in
 <radian|radians>. To get this result in <degree|degrees>, use the
 following <custom function>:
 
-    function atan2InDegrees firstArg,secondArg
-    return atan2(firstArg,secondArg) * 180 / pi
-
+    function atan2InDegrees pFirstArg,pSecondArg
+        return atan2(pFirstArg,pSecondArg) * 180 / pi
     end atan2InDegrees
 
 Description:
