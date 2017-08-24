@@ -24,14 +24,14 @@ set the height of image 1 \
       to the height of image 1 div (metadataArray["density"] / 72)
 
 Parameters:
-string (string):
-A string of text.
+metadataArray (array):
+An array of image metadata. Currently the only key supported is "density"
+with a value in pixels per inch (ppi) for JPEG and PNG files. 
 
 Description:
 Use the <metadata> property to access the metadata of the image as an
-array. Currently the only key supported is "density" with a value in
-pixels per inch (ppi) for JPEG and PNG files. Other types of image and
-JPEG and PNG images without metadata will return empty.
+array. Other types of image and JPEG and PNG images without metadata will
+return empty.
 
 The metadata array is the same form used for the image export commands.
 The image metadata property is read only.

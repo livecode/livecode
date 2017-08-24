@@ -15,14 +15,14 @@ OS: ios, android
 Platforms: mobile
 
 Example:
-on playerPropertyAvailable theProperty
+on playerPropertyAvailable pPropertyName
     if theProperty is "duration" then
         answer "You can now query the length of the movie"
     end if
 end playerPropertyAvailable
 
 Parameters:
-propertyName (enum):
+pPropertyName (enum):
 The name of the property that has become available. These 
 properties can be: 
 
