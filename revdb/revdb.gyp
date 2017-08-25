@@ -292,13 +292,14 @@
 							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
 						],
 					},
-					'OS == "win"',
 					{
 						'libraries':
 						[
 							'-lodbc32.lib',
 						],
 					},
+				],
+				[
 					'OS == "linux"',
 					{
 						'libraries':
