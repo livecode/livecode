@@ -15,7 +15,7 @@ close INPUT;
 my $input = join('', @lines); 
 	
 # Split into bytes
-my @bytes = unpack('C*', $lines);
+my @bytes = unpack('C*', $input);
 
 # Convert to a list of uint8_t values appropriate for an array in C
 my $cArray = "";
