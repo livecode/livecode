@@ -19,7 +19,9 @@ if x &gt; 0 then exit repeat
 
 Description:
 Use the <exit repeat> <control structure> to skip the rest of a <repeat>
-<loop>. Form:The <exit repeat> <statement> appears on a line by itself,
+<loop>. 
+
+**Form:** The <exit repeat> <statement> appears on a line by itself,
 anywhere inside a <repeat> <control structure>.
 
 After an <exit repeat> <statement>, none of the remaining
@@ -34,9 +36,8 @@ condition is false. This example stops the <loop> when the user presses
 the mouse button:
 
     repeat with x = 1 to the number of cards
-    go card x
-    if the mouse is down then exit repeat -- bail out
-
+        go card x
+        if the mouse is down then exit repeat -- bail out
     end repeat
 
 
