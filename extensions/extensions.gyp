@@ -131,6 +131,7 @@
 
 				'libraries/androidbgaudio/androidbgaudio.lcb',
 				'libraries/androidaudiorecorder/androidaudiorecorder.lcb',
+				'libraries/toast/toast.lcb',
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
