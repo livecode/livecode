@@ -53,6 +53,7 @@ function fetchLibrary {
 	local SUBPLATFORM=$4
 
 	eval "local VERSION=\${${LIB}_VERSION}"
+	eval "local BUILDREVISION=\${${LIB}_BUILDREVISION}"
 
 	# We now use standard GNU triple ordering for the naming of windows prebuilts
 	local NAME=""
@@ -71,6 +72,10 @@ function fetchLibrary {
 		if [ ! -z "${SUBPLATFORM}" ] ; then
 			NAME+="-${SUBPLATFORM}"
 		fi
+	fi
+	
+	if [ ! -z "${BUILDREVISION}" ] ; then
+		NAME+="-${BUILDREVISION}"
 	fi
 
 	if [ ! -f "${FETCH_DIR}/${NAME}.tar.bz2" ]; then
