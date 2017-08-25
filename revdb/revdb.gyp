@@ -292,6 +292,7 @@
 							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
 						],
 					},
+					'OS == "win"',
 					{
 						'libraries':
 						[
