@@ -45,9 +45,12 @@ types:
 The types parameter specifies which extensions are available at the
 bottom of the dialog box. A file type consists of an optional
 description, a line feed or comma, and a file extension specification:
+
   [description],*.extension 
+
 You can include more than one file type by separating the file types 
 with commas.
+
 >*Cross-platform note:*  The <types> <parameter> applies only to
 > <Windows|Windows systems>. On <Mac OS> and <Unix|Unix systems>, this
 > <parameter> has no effect.
