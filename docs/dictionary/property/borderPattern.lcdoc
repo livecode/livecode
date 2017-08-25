@@ -39,15 +39,15 @@ Use the <borderPattern> <property> to specify the border pattern of a
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
-> systems>, an <image> must be 128x128 <pixels> or less, and both its
-> <height> and <width> must be a power of 2. To be used on <Windows> and
-> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
-> be used as a fully cross-platform pattern, both an image's dimensions
-> should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on 
+> <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less,
+> and both its <height> and <width> must be a power of 2. To be used
+> on <Windows> and <Unix|Unix systems>, <height> and <width> must be
+> divisible by 8. To be used as a fully cross-platform pattern, both
+> an image's dimensions should be one of 8, 16, 32, 64, or 128.
 
-The <borderPattern> of <control(object)|controls> is drawn starting at
-the <control(object)|control's> upper right corner: if the
+The <borderPattern> of <control(glossary)|controls> is drawn starting at
+the <control(glossary)|control's> upper right corner: if the
 <control(keyword)> is moved, the pattern does not shift.
 
 Setting the <borderPattern> of an <object(glossary)> to empty allows the
@@ -101,19 +101,19 @@ depending on the <object type>:
 If an object's <borderPattern> is set, the pattern is shown instead of
 the color specified by <borderColor>.
 
-References: group (command), stacks (function), object (glossary),
-property (glossary), current stack (glossary), audio clip (glossary),
-Windows (glossary), object type (glossary), Mac OS (glossary),
-keyword (glossary), Unix (glossary), button menu (glossary),
-video clip (glossary), effective (keyword), field (keyword),
-image (keyword), button (keyword), player (keyword), graphic (keyword),
-card (keyword), control (keyword), scrollbar (keyword), EPS (object),
-button (object), field (object), stack (object), control (object),
-textStyle (property), pixels (property), patterns (property),
-width (property), threeD (property), height (property), style (property),
-markerFilled (property), borderWidth (property), menuMode (property),
-foregroundPattern (property), owner (property), shadowPattern (property),
-borderColor (property)
+References: group (command), stacks (function), audio clip (glossary),
+button menu (glossary), control (glossary), current stack (glossary),
+keyword (glossary), Mac OS (glossary), object (glossary),
+object type (glossary), property (glossary), Unix (glossary),
+video clip (glossary), Windows (glossary), button (keyword),
+card (keyword), control (keyword), effective (keyword), field (keyword),
+graphic (keyword), image (keyword), player (keyword), scrollbar (keyword),
+button (object), EPS (object), field (object), stack (object),
+borderColor (property), borderWidth (property), foregroundPattern (property),
+height (property), markerFilled (property), menuMode (property),
+owner (property), patterns (property), pixels (property),
+shadowPattern (property), style (property), textStyle (property),
+threeD (property), width (property)
 
 Tags: ui
 
