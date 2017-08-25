@@ -4,6 +4,67 @@
 		'../common.gypi',
 	],
 	
+	'target_defaults':
+	{
+		'variables':
+		{
+			'target_conditions':
+			[
+				[
+					'toolset_os == "mac"',
+					{
+						'icu_library_dir': 'lib/mac',
+						'icu_include_dir': 'include',
+						'icu_share_dir': 'share/mac',
+					},
+				],
+				[
+					'toolset_os == "ios"',
+					{
+						'icu_library_dir': 'lib/ios/$(SDK_NAME)',
+						'icu_include_dir': 'include',
+						'icu_share_dir': 'share/ios/$(SDK_NAME)',
+					},
+				],
+				[
+					'toolset_os == "linux"',
+					{
+						# Gyp doesn't seem to handle non-absolute paths here properly...
+						'icu_library_dir': 'lib/linux/>(toolset_arch)',
+						'icu_include_dir': 'include',
+						'icu_share_dir': 'share/linux/>(toolset_arch)',
+					},
+				],
+				[
+					'toolset_os == "android"',
+					{
+						# Gyp doesn't seem to handle non-absolute paths here properly...
+						'icu_library_dir': 'lib/android/<(target_arch)',
+						'icu_include_dir': 'include',
+						'icu_share_dir': 'share/android/<(target_arch)',
+					},
+				],
+				[
+					'toolset_os == "win"',
+					{
+						'icu_library_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
+						'icu_include_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+						'icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
+					},
+				],
+				[
+					'OS == "emscripten"',
+					{
+						'icu_library_dir': 'lib/emscripten/js',
+						'icu_include_dir': 'include',
+						'icu_share_dir': 'share/emscripten/js',
+					},
+				],
+				
+			],
+		},
+	},
+	
 	'targets':
 	[
 		{
@@ -67,7 +128,6 @@
 											'lib/mac/libicuio.a',
 											'lib/mac/libicutu.a',
 											'lib/mac/libicuuc.a',
-											'lib/mac/libicudata.a',
 										],
 									},
 									{
@@ -82,7 +142,6 @@
 											'-licuio',
 											'-licutu',
 											'-licuuc',
-											'-licudata',
 										],
 									},
 								],
@@ -97,7 +156,6 @@
 								'lib/ios/$(SDK_NAME)/libicui18n.a',
 								'lib/ios/$(SDK_NAME)/libicuio.a',
 								'lib/ios/$(SDK_NAME)/libicuuc.a',
-								'lib/ios/$(SDK_NAME)/libicudata.a',
 							],
 						},
 					],
@@ -116,7 +174,6 @@
 								'-licuio',
 								'-licutu',
 								'-licuuc',
-								'-licudata',
 								'-ldl',
 							],
 						},
@@ -135,7 +192,6 @@
 								'-licui18n',
 								'-licuio',
 								'-licuuc',
-								'-licudata',
 								'-lstdc++',
 								'-lm',
 							],
@@ -176,12 +232,49 @@
 								'-licuio',
 								'-licutu',
 								'-licuuc',
-								'-licudata',
 							],
 						},
 					],
 				],
 			},
+		},
+
+		{
+			'target_name': 'encode_icu_data',
+			'type': 'none',
+			
+			'toolsets': ['host','target'],
+
+			'dependencies':
+			[
+				'libicu',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'encode_icu_data',
+					'inputs':
+					[
+						'../util/encode_data.pl',
+						'>(icu_share_dir)/icudata.dat',
+					],
+					'outputs':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/src/icudata.cpp',
+					],
+					
+					'action':
+					[
+						'<@(perl)',
+						'../util/encode_data.pl',
+						'>(icu_share_dir)/icudata.dat',
+						'<@(_outputs)',
+						# Really nasty hack to prevent this from being treated as a path
+						'$(this_is_an_undefined_variable)s_icudata',
+					],
+				},
+			],
 		},
 	],
 }
