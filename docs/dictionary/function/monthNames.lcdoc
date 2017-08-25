@@ -4,8 +4,6 @@ Type: function
 
 Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] monthNames
 
-Syntax: the [internet] [{ english | system }] monthNames
-
 Syntax: monthNames()
 
 Summary:
