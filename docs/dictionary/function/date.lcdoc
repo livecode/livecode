@@ -4,8 +4,6 @@ Type: function
 
 Syntax: the [{ long | abbreviated | short }] [{ english | system }] date
 
-Syntax: the internet date
-
 Syntax: date()
 
 Summary:
