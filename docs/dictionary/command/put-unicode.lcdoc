@@ -4,6 +4,8 @@ Type: command
 
 Syntax: put  unicode <value> {before | into | after} <fieldChunk>
 
+Deprecated: 7.0
+
 Summary:
 Inserts a unicode string into a field where specified.
 
