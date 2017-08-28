@@ -580,7 +580,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern uint8_t type_table[256];
+extern const uint8_t type_table[256];
 
 
 MCIdeScriptColourize::MCIdeScriptColourize(void)

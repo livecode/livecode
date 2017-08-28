@@ -25,7 +25,7 @@ TEST(lextable, constant_table)
 // Checks that the entries of constant_table are in alphabetical order.
 //
 {
-	extern Cvalue constant_table[];
+	extern const Cvalue constant_table[];
 	extern const uint4 constant_table_size;
 
 	ASSERT_GE(constant_table_size, (unsigned)1);
@@ -44,17 +44,17 @@ TEST(lextable, table_pointer)
 // Checks that the entries of factor_table are in alphabetical order.
 //
 {
-	extern LT *table_pointers[];
+	extern const LT * const table_pointers[];
 	extern const uint4 table_pointers_size;
 
-	extern uint2 table_sizes[];
+	extern const uint2 table_sizes[];
 	extern const uint4 table_sizes_size;
 
 	ASSERT_EQ(table_pointers_size, table_sizes_size);
 
 	for (uint4 i = 0; i < table_pointers_size; i++) {
 
-		LT* table = table_pointers[i];
+		const LT* table = table_pointers[i];
 		const uint4 table_size = table_sizes[i];
 
 		ASSERT_GE(table_size, (unsigned)1);

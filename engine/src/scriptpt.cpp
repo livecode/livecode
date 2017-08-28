@@ -42,15 +42,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define LOWERED_PAD 64
 
-extern uint8_t type_table[];
-extern uint8_t unicode_type_table[];
-extern Cvalue constant_table[];
+extern const uint8_t type_table[];
+extern const uint8_t unicode_type_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT *table_pointers[];
-extern uint2 table_sizes[];
-extern LT command_table[];
+extern const LT * const table_pointers[];
+extern const uint2 table_sizes[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 static struct { codepoint_t codepoint; Symbol_type type; } remainder_table[] =

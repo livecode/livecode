@@ -1132,7 +1132,7 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 
 // This *must* be updated if any chunk terms are added between CT_STACK
 // and CT_LAST_CONTROL in the Chunk_term enum
-static const char **nametable[] =
+static const char * const * const nametable[] =
 {
 	&MCstackstring,			/* CT_STACK */
 	&MCnullstring,			/* CT_TOOLTIP */

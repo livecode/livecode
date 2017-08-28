@@ -48,7 +48,7 @@ static uint4 version;
 static uint2 iconx, icony;
 static uint2 cursorx, cursory;
 
-static uint2 hc_icons[HC_NICONS] =
+static const uint2 hc_icons[HC_NICONS] =
     {
         24694, 2002, 1000, 1001, 1002, 1003,
         1004, 1005, 1006, 1007, 1008, 1019, 26884, 18814, 27056, 15420,
@@ -71,7 +71,7 @@ static uint2 hc_icons[HC_NICONS] =
         59013, 49014, 49044, 49045, 49046, 49047, 49048, 49049, 49056,
         49124, 65535, 1, 2, 59457 };
 
-static uint2 mc_icons[HC_NICONS] =
+static const uint2 mc_icons[HC_NICONS] =
     {
         330, 361, 344, 344, 379, 379, 342, 343,
         359, 335, 336, 359, 379, 339, 356, 320, 321, 396, 325, 324, 319,
@@ -90,7 +90,7 @@ static uint2 mc_icons[HC_NICONS] =
         386, 394, 386, 394, 394, 393, 392, 391, 390, 339, 348, 605, 604,
         331, 349 };
 
-static uint1 hqx[82] =
+static const uint1 hqx[82] =
     {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 13,
         14, 15, 16, 17, 18, 19, 0, 20, 21, 0, 0, 0, 0, 0,
@@ -99,7 +99,7 @@ static uint1 hqx[82] =
         45, 46, 47, 0, 0, 0, 0, 48, 49, 50, 51,52, 53, 54,
         0, 55, 56, 57, 58, 59, 60, 0, 0, 61, 62, 63};
 
-static uint1 h1[256] =
+static const uint1 h1[256] =
     {
         0x00, 0x01, 0x03, 0x02, 0x07, 0x06, 0x04, 0x05,
         0x0f, 0x0e, 0x0c, 0x0d, 0x08, 0x09, 0x0b, 0x0a, 0x1f, 0x1e, 0x1c,
