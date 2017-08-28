@@ -2,7 +2,7 @@ Name: dateFormat
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] dateFormat
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] dateFormat
 
 Summary:
 <return|Returns> a <string> describing a given date format using the
