@@ -1940,10 +1940,10 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	{
 		if (this != MCdispatcher)
 		{
-			if (!parent)
-				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
-			else
+			if (parent)
 				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
+            else if (MCdefaultstackptr)
+                t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 		}
 
         MCFontRef t_default_font;

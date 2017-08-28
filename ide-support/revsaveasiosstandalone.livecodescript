@@ -99,7 +99,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies pSettings
+   revSBUpdateForDependencies "ios", pSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
