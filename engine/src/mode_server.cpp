@@ -379,6 +379,12 @@ bool MCModeHasHomeStack(void)
 	return true;
 }
 
+// Pixel scaling is disabled on the server.
+bool MCModeCanEnablePixelScaling()
+{
+	return false;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is disabled on the server.
 bool MCModeGetPixelScalingEnabled(void)
 {
