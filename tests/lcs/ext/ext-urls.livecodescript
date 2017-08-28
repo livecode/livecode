@@ -18,10 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
+   TestSkipIfNot "platform", "MacOS,Linux"
+   TestSkipIf "stack", "StandaloneTestRunnerMainstack"
    
    local tBuilderUtilities
    put TestGetEngineRepositoryPath() & "/builder/builder_utilities.livecodescript" into tBuilderUtilities

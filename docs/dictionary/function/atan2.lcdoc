@@ -33,7 +33,11 @@ The <atan2> <function> <return|returns> a number between -pi and pi.
 The result:
 The result of the <atan2> <function> is <return|returned> in
 <radian|radians>. To get this result in <degree|degrees>, use the
-following <custom function>:.
+following <custom function>:
+
+    function atan2InDegrees pFirstArg,pSecondArg
+        return atan2(pFirstArg,pSecondArg) * 180 / pi
+    end atan2InDegrees
 
 Description:
 Use the <atan2> <function> to find the arc tangent of one number divided
@@ -43,12 +47,6 @@ In most cases, atan2(y,x) is equal to atan(y/x). However, if both x and
 y are negative, the sign of x/y is positive. In this case, the atan
 function <return|returns> an angle in the first quadrant, but the
 <atan2> <function> <return|returns> an angle in the third quadrant.
-
-    function atan2InDegrees firstArg,secondArg
-    return atan2(firstArg,secondArg) * 180 / pi
-
-    end atan2InDegrees
-
 
 References: pi (constant), function (control structure), sign (glossary),
 radian (glossary), custom function (glossary), return (glossary),

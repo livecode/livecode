@@ -134,7 +134,7 @@ public:
 
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
-    bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
+    bool enumerate(MCExecContext& ctxt, bool p_include_private, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 	
 	bool listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context);
 	bool listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context);

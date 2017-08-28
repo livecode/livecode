@@ -551,14 +551,6 @@ static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
     {
         case kMCForeignPrimitiveTypeVoid:
             return &ffi_type_void;
-        case kMCForeignPrimitiveTypeBool:
-            if (sizeof(bool) == 1)
-                return &ffi_type_uint8;
-            if (sizeof(bool) == 2)
-                return &ffi_type_uint16;
-            if (sizeof(bool) == 4)
-                return &ffi_type_uint32;
-            return &ffi_type_uint64;
         case kMCForeignPrimitiveTypeUInt8:
             return &ffi_type_uint8;
         case kMCForeignPrimitiveTypeSInt8:
@@ -647,6 +639,8 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . doimport = p_descriptor -> doimport;
     self -> foreign . descriptor . doexport = p_descriptor -> doexport;
     self -> foreign . descriptor . describe = p_descriptor -> describe;
+    self -> foreign . descriptor . promotedtype = MCValueRetain(p_descriptor->promotedtype);
+    self -> foreign . descriptor . promote = p_descriptor -> promote;
     
     if (!__MCForeignTypeInfoComputeLayoutType(self))
     {
@@ -803,6 +797,20 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
     for (index_t i = 0; i < p_field_count; ++i)
     {
 	    __MCAssertIsTypeInfo(p_fields[i].type);
+        
+        if (p_fields[i].mode == kMCHandlerTypeFieldModeVariadic)
+        {
+            if (i == 0 || p_field_count != i + 1)
+            {
+                MCValueRelease(self);
+                return MCErrorThrowGeneric(MCSTR("Variadic parameter cannot be first, and must be last"));
+            }
+            
+            p_field_count = i;
+            self->flags |= kMCTypeInfoFlagHandlerIsVariadic;
+            break;
+        }
+        
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -842,6 +850,17 @@ bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
     MCAssert(MCTypeInfoIsHandler(self));
 
     return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsHandler(self));
+
+    return (self -> flags & kMCTypeInfoFlagHandlerIsVariadic) != 0;
 }
 
 MC_DLLEXPORT_DEF

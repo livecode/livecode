@@ -8,7 +8,7 @@ Summary:
 Sent to the <current card> of the <defaultStack> when the
 <application> is quitting.
 
-Associations: stack
+Associations: card
 
 Introduced: 1.0
 

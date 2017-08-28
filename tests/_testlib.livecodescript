@@ -146,39 +146,44 @@ end _TestLoadExtension
 function TestBuildErrorMap pErrorFile, pErrorPrefix, pZerothError
    local tSourceFile
    put TestGetEngineRepositoryPath() & slash & "engine/src/" & \
-         pErrorFile into tSourceFile
-   		
+      pErrorFile into tSourceFile
+   
    local tSource
    put textDecode(url("binfile:" & tSourceFile), "utf-8") into tSource
    
-   local tErrorMap, tCurrentCode, tCodeFound
-   put false into tCodeFound
+   local tErrorMap, tCode
    repeat for each line tLine in tSource
       if tLine is empty then next repeat
       if word 1 of tLine begins with pErrorPrefix & "_" & pZerothError then 
-      	  next repeat
-      end if
-      
-      local tCode
-      if matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
-         put tCode into tCurrentCode
-         put true into tCodeFound
          next repeat
       end if
-      if word 1 of tLine begins with pErrorPrefix & "_" then
-         if tCodeFound is false then
-            if tCurrentCode is empty then 
-               throw "no error code found:" && tLine
-            else
-               throw "duplicate error code" && tCurrentCode && "found:" && tLine
-            end if
-            
+      
+      if tCode is empty and \
+            matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
+         next repeat
+      end if
+      
+      local tError
+      put item 1 of (word 1 of tLine) into tError
+      if tError begins with pErrorPrefix & "_" or \ 
+            tError begins with "NOTUSED__" & pErrorPrefix & "_" then
+         if tCode is empty then 
+            throw "no error code found for" && tError
          end if
-         put item 1 of (word 1 of tLine) into tErrorMap[tCurrentCode]
-         put false into tCodeFound
+         if tErrorMap[tCode] is not empty then
+            throw "duplicate error code" && tCode && "found for" && tError && \
+               "change to" && the number of elements of tErrorMap + 1
+         end if
+         if tCode - 1 is not the number of elements of tErrorMap then
+            throw "incorrect error code" && tCode && "for" && tError && \
+               "change to" && the number of elements of tErrorMap + 1
+         end if
+
+         put tError into tErrorMap[tCode]
+         put empty into tCode
       end if
    end repeat
-   
+
    return tErrorMap
 end TestBuildErrorMap
 
@@ -204,6 +209,10 @@ end __TestErrorMatches
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
+
+on TestSetExecErrorMap pErrorMap
+   put pErrorMap into sExecErrorMap
+end TestSetExecErrorMap
 
 on TestOutputToVariable
    put true into sOutputToVariable
@@ -302,6 +311,10 @@ function TestGetExtractedDocsFolder
 end TestGetExtractedDocsFolder
 
 on TestLoadExtension pName
+   if pName is among the lines of the loadedExtensions then
+      return empty
+   end if
+   
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
@@ -338,12 +351,26 @@ on TestLoadExtension pName
 
 end TestLoadExtension
 
+private function __GetCaller
+   get item 1 to -3 of line -3 of the executionContexts
+   if there is not an it then
+      delete item -1 of it
+   end if
+   return it
+end __GetCaller
+
+private function __StackOfObject pLongID
+   local tOffset
+   put wordOffset("stack",pLongID) into tOffset
+   return word tOffset to -1 of pLongID
+end __StackOfObject
+
 -- This loads an extension whose lcb source sits in the same folder as the
 -- current test.
 on TestLoadAuxillaryExtension pName
 	local tBasePath, tExtraPath
 	set the itemDelimiter to slash
-	put item 1 to -2 of the filename of this stack into tBasePath
+	put item 1 to -2 of the effective filename of __StackOfObject(__GetCaller()) into tBasePath
 	repeat while the last item of tBasePath is not "tests"
 		put item -1 of tBasePath & slash before tExtraPath
 		delete the last item of tBasePath
@@ -460,3 +487,63 @@ on TestRunStack pOptions, pStackFilePath
 
 	return the result
 end TestRunStack
+
+function TestIsInStandalone
+   return "StandaloneTestRunnerMainstack" is among the lines of the mainstacks
+end TestIsInStandalone
+
+on TestSkipIf pRequirement, pOptions
+   if __MeetsRequirements(pRequirement, pOptions) then
+      if pOptions is not empty then
+         put " :" & pOptions after pRequirement
+      end if
+      throw "SKIP test incompatible with" && pRequirement
+   end if
+end TestSkipIf
+
+on TestSkipIfNot pRequirement, pOptions
+   if not __MeetsRequirements(pRequirement, pOptions) then
+      if pOptions is not empty then
+         put " :" & pOptions after pRequirement
+      end if
+      throw "SKIP test requires" && pRequirement
+   end if
+end TestSkipIfNot
+
+private function __MeetsRequirements pRequirement, pOptions
+   switch pRequirement
+      case "ide"
+      case "docs"
+      case "lcb"
+         return not TestIsInStandalone()
+         break
+      case "securitypermissions"
+         if "set" is among the items of pOptions then
+            return not TestIsInStandalone()
+         end if
+         break
+      case "platform"
+         return the platform is among the items of pOptions
+         break
+      case "processor"
+         return the processor is among the items of pOptions
+         break
+      case "environment"
+         return the environment is among the items of pOptions
+         break
+      case "stack"
+         repeat for each item tStack in pOptions
+            if there is not a stack tStack then
+               return false
+            end if
+         end repeat
+		case "clipboard"
+		case "wait"
+		case "security"
+				return the platform is not "HTML5"
+		case "write"
+			return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+	end switch
+   
+   return true
+end __MeetsRequirements

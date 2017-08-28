@@ -73,6 +73,8 @@ public foreign handler MCEngineEvalTheRowDelimiter(out rDelimiter as String) ret
 public foreign handler MCEngineEvalTheLineDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalTheItemDelimiter(out rDelimiter as String) returns nothing binds to "<builtin>"
 
+public foreign handler MCEngineEvalMyResourcesFolder(out pFile as optional String) returns nothing binds to "<builtin>"
+
 /**
 Summary:	Resolves a string to a script object.
 Object:		The string describing the script object.
@@ -556,6 +558,28 @@ syntax TheItemDelimiter is expression
     "the" "item" "delimiter"
 begin
     MCEngineEvalTheItemDelimiter(output)
+end syntax
+
+/**
+Summary:    Returns the resources folder for the current module
+
+Example:
+    -- Work out the filename of a file in the module's
+    -- resources folder.
+    variable tResourceFile as String
+    put my resources folder & "/foobar.txt" into tResourceFile
+
+Description:
+Returns the full path to the resources folder for the calling
+module. If there is no resources folder attached to the calling
+module, nothing is returned.
+
+Tags: Script Engine
+*/
+syntax MyResourcesFolder is expression
+    "my" "resources" "folder"
+begin
+    MCEngineEvalMyResourcesFolder(output)
 end syntax
 
 end module

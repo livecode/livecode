@@ -2,7 +2,7 @@ Name: motionEnd
 
 Type: message
 
-Syntax: motionEnd <motion>
+Syntax: motionEnd <pMotion>
 
 Summary:
 Sent when a motion ends
@@ -19,7 +19,7 @@ on motionEnd
 end motionEnd
 
 Parameters:
-motion:
+pMotion:
 The type of motion detected by the device.
 
 Description:

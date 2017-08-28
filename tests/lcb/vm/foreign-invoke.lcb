@@ -18,4 +18,41 @@ public handler TestForeignInvoke_OptionalPointerResult()
    test "non-nullptr maps to non-nothing for optional Pointer" when tNonNullNativeCharPtr is not nothing
 end handler
 
+--
+
+foreign handler malloc(in pSize as UIntSize) returns Pointer binds to "<builtin>"
+foreign handler free(in pBlock as Pointer) returns nothing binds to "<builtin>"
+foreign handler sprintf(in pTarget as Pointer, in pFormat as ZStringNative, ...) returns CInt binds to "<builtin>"
+foreign handler MCStringCreateWithCString(in pCString as Pointer, out rString as String) returns CBool binds to "<builtin>"
+
+public handler TestForeignInvoke_Varargs()
+   variable tString1 as String
+   variable tString2 as String
+   unsafe
+      variable tOutputBuffer as Pointer
+      put malloc(4096) into tOutputBuffer
+
+      sprintf(tOutputBuffer, "no formats")
+      MCStringCreateWithCString(tOutputBuffer, tString1)
+
+      variable tInt as SInt16
+      variable tLong as SInt32
+      variable tLongLong as SInt64
+      variable tFloat as CFloat
+      variable tDouble as CDouble
+      put 1000 into tInt
+      put 1000000000 into tLong
+      put tLong * 1000000 into tLongLong
+      put 3.5 into tFloat
+      put 7.5 into tDouble
+      sprintf(tOutputBuffer, "%d %ld %lld %.1f %.1lf", tInt, tLong, tLongLong, tFloat, tDouble)
+      MCStringCreateWithCString(tOutputBuffer, tString2)
+
+      free(tOutputBuffer)
+   end unsafe
+   test "sprintf works with no variadic arguments" when tString1 is "no formats"
+   test diagnostic tString2
+   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
+end handler
+
 end module

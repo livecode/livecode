@@ -21,6 +21,8 @@ constant kBytecodePath = "../_tests/_build/lcs/core/engine"
 local sTestExtension
 
 on TestSetup
+   TestSkipIfNot "lcb"
+   
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 

@@ -304,7 +304,7 @@ typedef struct
 }
 DT;
 
-static DT domenu_table[] = {
+static const DT domenu_table[] = {
                                {"new stack...", "create stack\n\
                                 set the mainStack of the topStack to \"Home\"\n\
                                 modal \"Stack Properties\""},

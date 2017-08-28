@@ -2,13 +2,13 @@ Name: closeBackground
 
 Type: message
 
-Syntax: closeBackground <backgroundID>
+Syntax: closeBackground <pBackgroundID>
 
 Summary:
 Sent to the <current card> when the user is leaving a <card> that has a
 <group> to go to one that doesn't have the <group>.
 
-Associations: card, group
+Associations: card
 
 Introduced: 1.0
 
@@ -24,7 +24,7 @@ on closeBackground theClosedGroupID
 end closeBackground
 
 Parameters:
-backgroundID:
+pBackgroundID:
 The ID number of the background being exited.
 
 Description:

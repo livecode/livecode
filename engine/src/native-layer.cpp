@@ -82,6 +82,16 @@ void MCNativeLayer::OnDetach()
 
 bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 {
+    /* We must make sure that any geometry changes are in sync if we are
+     * rendering to context, but are not visible */
+    if (m_can_render_to_context && m_defer_geometry_changes)
+    {
+        doSetViewportGeometry(m_deferred_viewport_rect);
+        doSetGeometry(m_deferred_rect);
+        m_viewport_rect = m_deferred_viewport_rect;
+        m_rect = m_deferred_rect;
+		m_defer_geometry_changes = false;
+    }
 	return doPaint(p_context);
 }
 

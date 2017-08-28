@@ -45,7 +45,7 @@ void ParseMenuItemLabel(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_
 void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuItem *p_menuitem);
 bool IsEscapeChar(MCStringRef p_string, uindex_t p_offset, uint1 p_menumod);
 
-static Keynames accelerator_keys[] =
+static const Keynames accelerator_keys[] =
     {
         {XK_F1, "f1"},
         {XK_F2, "f2"},

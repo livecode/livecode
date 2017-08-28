@@ -677,6 +677,7 @@ typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
 typedef struct __MCJavaObject *MCJavaObjectRef;
+typedef struct __MCObjcObject *MCObjcObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1745,7 +1746,6 @@ MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRe
 enum MCForeignPrimitiveType
 {
     kMCForeignPrimitiveTypeVoid,
-    kMCForeignPrimitiveTypeBool,
     kMCForeignPrimitiveTypeUInt8,
     kMCForeignPrimitiveTypeSInt8,
     kMCForeignPrimitiveTypeUInt16,
@@ -1776,6 +1776,14 @@ struct MCForeignTypeDescriptor
     bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
     bool (*doexport)(MCValueRef value, bool release, void *contents);
 	bool (*describe)(void *contents, MCStringRef & r_desc);
+    
+    /* The promotedtype typeinfo is the type to which this type must be promoted
+     * when passed through variadic parameters. The 'promote' method does the
+     * promotion. */
+    MCTypeInfoRef promotedtype;
+    /* Promote the value in contents as necessary. The slot ptr must be big enough
+     * to hold the promotedtype. */
+    void (*promote)(void *contents);
 };
 
 MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
@@ -1866,6 +1874,7 @@ enum MCHandlerTypeFieldMode
 	kMCHandlerTypeFieldModeIn,
 	kMCHandlerTypeFieldModeOut,
 	kMCHandlerTypeFieldModeInOut,
+    kMCHandlerTypeFieldModeVariadic,
 };
 
 struct MCHandlerTypeFieldInfo
@@ -1890,12 +1899,16 @@ MC_DLLEXPORT bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *f
 
 // Returns true if the handler is of foreign type.
 MC_DLLEXPORT bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+
+// Returns true if the handler is variadic.
+MC_DLLEXPORT bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef typeinfo);
     
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
-// Get the number of parameters the handler takes.
+// Get the number of parameters the handler takes. If the handler is variadic,
+// this returns the number of fixed parameters.
 MC_DLLEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
 
 // Return the mode of the index'th parameter.
@@ -3349,7 +3362,7 @@ typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCVal
 MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
-typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
+typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef *left, const MCValueRef *right);
 MC_DLLEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
 
 typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
@@ -3403,6 +3416,58 @@ MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef
 MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
 MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
+////////////////////////////////////////////////////////////////////////////////
+//
+//  OBJC DEFINITIONS
+//
+
+/* The ObjcObject type manages the lifetime of the obj-c object it contains.
+ * Specifcally, it sends 'release' to the object when the ObjcObject is dropped */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcObjectTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcObjectTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcId type describes an id which is passed into, or out of an obj-c
+ * method with no implicit action on its reference count. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcRetainedId type describes an id which is passed into, or out of an
+ * obj-c method and is expected to already have been retained. (i.e. the
+ * caller or callee expects to receive it with +1 ref count). */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcRetainedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcRetainedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcAutoreleasedId type describes an id which has been placed in the
+ * innermost autorelease pool before being returned to the caller. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcAutoreleasedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcAutoreleasedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, retaining it to make sure it owns a reference to it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, taking a +1 reference count from it (i.e. it assumes the value has
+ * already been retained before being called). */
+MC_DLLEXPORT bool MCObjcObjectCreateWithRetainedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithAutoreleasedId function creates an ObjcObject out of
+ * a raw id value which is in the innermost autorelease pool. Currently this
+ * means that it retains it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithAutoreleasedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectGetId function returns the raw id value contained within
+ * an ObjcObject. The retain count of the id remains unchanged. */
+MC_DLLEXPORT void *MCObjcObjectGetId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetRetainedId function returns the raw id value contained within
+ * an ObjcObject. The id is retained before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetAutoreleasedId function returns the raw id value contained within
+ * an ObjcObject. The id is autoreleased before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

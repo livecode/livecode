@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _MACOSX
 //normal, control, alt, alt-control
-Keytranslations MCField::emacs_keys[] =
+const Keytranslations MCField::emacs_keys[] =
 {
 	{XK_Home, {FT_HOME, FT_FOCUSFIRST, FT_HOME, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -107,7 +107,7 @@ Keytranslations MCField::emacs_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Keytranslations MCField::std_keys[] =
+const Keytranslations MCField::std_keys[] =
 {
 	{XK_Home, {FT_BOL, FT_BOF, FT_BOF, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -152,7 +152,7 @@ Keytranslations MCField::std_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Field_translations MCField::trans_lookup(Keytranslations table[], KeySym key,
+Field_translations MCField::trans_lookup(const Keytranslations table[], KeySym key,
 										 uint2 modifiers)
 {
 	uint2 i = 0;
@@ -646,7 +646,11 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
 			//   of background color (apart from 128,128,128!).
 			p_context->setforeground(p_context->getwhite());
-			p_context->setfunction(GXxor);
+            
+            /* The XOR blend is no longer supported, fortunately exlusion
+             * (and difference) are the same as XOR when the source is white or
+             * black. */
+			p_context->setfunction(GXblendExclusion);
 			
 			// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
 			//   ink works correctly.
@@ -1443,7 +1447,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 						selectedmark(False, si, ei, False);
 						if (ti >= si && ti < ei && si != ei)
 						{
-							// Here we mark the fact a mouse-down has occured in
+							// Here we mark the fact a mouse-down has occurred in
 							// the selection. This is used in mdrag to work out
 							// whether to initiate a drag-drop operation.
 							state |= CS_SOURCE_TEXT;

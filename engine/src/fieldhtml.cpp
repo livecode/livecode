@@ -105,7 +105,7 @@ struct export_html_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *s_export_html_tag_strings[] =
+static const char * const s_export_html_tag_strings[] =
 {
 	"a",
 	"span",
@@ -122,7 +122,7 @@ static const char *s_export_html_tag_strings[] =
 	"font"
 };
 
-static const char *s_export_html_list_types[] =
+static const char * const s_export_html_list_types[] =
 {
 	"",
 	"disc",
@@ -138,7 +138,7 @@ static const char *s_export_html_list_types[] =
 
 // This is the list of HTML entities for ISO8859-1 (unicode) codepoints in the range
 // 0x00A0 to 0x00FF inclusive.
-static const char *s_export_html_native_entities[] =
+static const char * const s_export_html_native_entities[] =
 {
 	"nbsp", "iexcl", "cent", "pound", "curren", "yen", "brvbar", "sect", 
 	"uml", "copy", "ordf", "laquo", "not", "shy", "reg", "macr", 
@@ -154,7 +154,7 @@ static const char *s_export_html_native_entities[] =
 	"oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml", 
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
 {
 	{ "OElig", 0x0152 }, { "oelig", 0x0153 }, { "Scaron", 0x0160 }, 
 	{ "scaron", 0x0161 }, { "Yuml", 0x0178 }, { "fnof", 0x0192 }, { "circ", 0x02C6 }, 
@@ -902,7 +902,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "start", kImportHtmlAttrStart },
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
 {
 	{ "AElig", 0x00C6 }, { "Aacute", 0x00C1 }, { "Acirc", 0x00C2 }, { "Agrave", 0x00C0 }, 
 	{ "Alpha", 0x0391 }, { "Aring", 0x00C5 }, { "Atilde", 0x00C3 }, { "Auml", 0x00C4 }, 

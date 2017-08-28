@@ -334,6 +334,8 @@ extern "C" bool com_livecode_foreign_Initialize(void)
     d . doimport = __nativecstring_import;
     d . doexport = __nativecstring_export;
     d . describe = nullptr;
+    d . promotedtype = kMCNullTypeInfo;
+    d . promote = nullptr;
     if (!__build_typeinfo("com.livecode.foreign.NativeCString", &d, kMCNativeCStringTypeInfo))
         return false;
 
@@ -353,6 +355,8 @@ extern "C" bool com_livecode_foreign_Initialize(void)
 	d . doimport = __wstring_import;
 	d . doexport = __wstring_export;
     d . describe = nullptr;
+    d . promotedtype = kMCNullTypeInfo;
+    d . promote = nullptr;
 	if (!__build_typeinfo("com.livecode.foreign.WString", &d, kMCWStringTypeInfo))
 		return false;
 
@@ -372,6 +376,8 @@ extern "C" bool com_livecode_foreign_Initialize(void)
 	d . doimport = __utf8string_import;
 	d . doexport = __utf8string_export;
     d . describe = nullptr;
+    d . promotedtype = kMCNullTypeInfo;
+    d . promote = nullptr;
 	if (!__build_typeinfo("com.livecode.foreign.UTF8String", &d, kMCUTF8StringTypeInfo))
 		return false;
 	

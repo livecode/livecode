@@ -171,6 +171,7 @@ metadata horizontal.label is "Horizontal"
 
 -- private instance variables
 private variable mMultiSelect		as Boolean
+private variable mToggleHilites	as Boolean
 
 private variable mSegmentNames		as List
 private variable mSegmentLabels		as List
@@ -213,6 +214,7 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mMultiSelect		into rProperties["multiSelect"]
+	put mToggleHilites 	into rProperties["toggleHilites"]
 	put mSegmentNames		into rProperties["segmentNames"]
 	put mSegmentLabels		into rProperties["segmentLabels"]
 	put mSegmentIcons		into rProperties["segmentIcons"]
@@ -233,6 +235,9 @@ public handler OnLoad(in pProperties as Array)
 	put the number of elements in mSegmentNames into mNumSegments
 
 	put pProperties["multiSelect"]		into mMultiSelect
+	if "toggleHilites" is among the keys of pProperties then
+		put pProperties["toggleHilites"] into mToggleHilites
+	end if
 	put pProperties["segmentLabels"]	into mSegmentLabels
 	put pProperties["segmentIcons"]		into mSegmentIcons
 	put pProperties["selectedIcons"]	into mSelectedIcons
@@ -255,7 +260,8 @@ end handler
 public handler OnCreate()
 	// Set the default values of all the properties
 	put false into mMultiSelect
-	
+	put true into mToggleHilites
+
 	put ["segment1","segment2","segment3"] into mSegmentNames
 	put ["Label 1","Label 2","Label 3"] into mSegmentLabels
 	put ["align left","align center","align right"] into mSegmentIcons
@@ -340,19 +346,27 @@ public handler OnClick() returns nothing
 	 end if
 	 
 	if mMultiSelect is false then
-		-- if cannot multiselect, then need to select the clicked-on segment and deselect the currently selected segment
-		-- if the clicked-on segment is already selected, then do nothing
-		if mSegmentSelected[tSegmentIndex] then
-			setSelected([])
-		else
+		-- If cannot multiselect, then need to select the clicked-on segment and
+		-- deselect the currently selected segment. If the clicked-on segment is
+		-- already selected, then act according to toggleHilites property
+		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
+				setSelected([])
+		else if not mSegmentSelected[tSegmentIndex] then
 			setSelected([tSegmentIndex])
 		end if
 	else
-		-- if can multiselect, then select the clicked-on segment if it is unselected or unselect if its selected
+		-- If can multiselect, then select the clicked-on segment if it is
+		-- unselected. If it is selected, act according to toggleHilites property
 		variable tState as List
-		put not mSegmentSelected[tSegmentIndex] into mSegmentSelected[tSegmentIndex]
-		post "hiliteChanged"
-		redraw all
+		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
+			put false into mSegmentSelected
+			post "hiliteChanged"
+			redraw all
+		else if not mSegmentSelected[tSegmentIndex] then
+			put true into mSegmentSelected[tSegmentIndex]
+			post "hiliteChanged"
+			redraw all
+		end if
 	end if
 end handler
 
@@ -1088,6 +1102,22 @@ private handler setMultiSelect(in pCanMultiSelect as Boolean)
 		setSelected([])
 	end if
 end handler
+
+/**
+Syntax: set the toggleHilites of <widget> to {true | false}
+Syntax: get the toggleHilites of <widget>
+
+Summary: Whether a segment can be unhighlighted by clicking
+
+Description:
+The <toggleHilites> property controls whether a click on
+a highlighted segment causes it to be unhighlighted or not.
+**/
+property toggleHilites get mToggleHilites set mToggleHilites
+metadata toggleHilites.editor is "com.livecode.pi.boolean"
+metadata toggleHilites.default is "true"
+metadata toggleHilites.section is "Basic"
+metadata toggleHilites.label is "Clicking toggles highlight"
 
 /**
 Summary: Whether the widget has a border or not

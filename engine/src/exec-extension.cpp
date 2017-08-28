@@ -882,7 +882,7 @@ bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_ty
 // Ensure that if the input value is a name it comes out as a string.
 // Ensure that if the input value is an array, all elements that are names (recursed)
 // come out as strings.
-// If r_output is nil, then no mutation occured; otherwise it is the mutated value.
+// If r_output is nil, then no mutation occurred; otherwise it is the mutated value.
 static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_output)
 {
     if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeName)

@@ -102,15 +102,17 @@ void MCNativeLayerMac::doDetach()
 
 bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 {
+    NSRect t_bounds = [m_view bounds];
+    
     // Get an image rep suitable for storing the cached bitmap
     if (m_cached == nil)
     {
-        m_cached = [[m_view bitmapImageRepForCachingDisplayInRect:[m_view bounds]] retain];
+        m_cached = [[m_view bitmapImageRepForCachingDisplayInRect:t_bounds] retain];
     }
     
     // Draw the widget
     bzero([m_cached bitmapData], [m_cached bytesPerRow] * [m_cached pixelsHigh]);
-    [m_view cacheDisplayInRect:[m_view bounds] toBitmapImageRep:m_cached];
+    [m_view cacheDisplayInRect:t_bounds toBitmapImageRep:m_cached];
     
     // Turn the NSBitmapImageRep into something we can actually draw
     MCGRaster t_raster;
@@ -124,9 +126,9 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
     if (!MCGImageCreateWithRasterNoCopy(t_raster, t_gimage))
 		return false;
     
-    // Draw the image
-    // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
-    MCGRectangle rect = {{0, 1}, {MCGFloat(t_raster.width), MCGFloat(t_raster.height)}};
+    // Draw the image - we use the bounds width/height as the cached bitmap
+    // might be retina sized (NSBitmapImageRep has not concept of resolution)
+    MCGRectangle rect = {{0, 0}, {MCGFloat(t_bounds.size.width), MCGFloat(t_bounds.size.height)}};
     MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
     

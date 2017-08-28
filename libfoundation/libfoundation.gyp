@@ -159,9 +159,15 @@
 				[
 					'OS != "mac" and OS != "ios"',
 					{
+                        'sources':
+                        [
+                            'src/foundation-objc-dummy.cpp',
+                        ],
+                    
 						'sources!':
 						[
 							'src/foundation-string-cf.cpp',
+                            'src/foundation-objc.mm',
 						],
 					},
 				],

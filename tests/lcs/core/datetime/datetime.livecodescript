@@ -28,3 +28,13 @@ on TestLongTime24Hours
  TestAssert "Test 24-hour format 3", tDateItems is "02:00:00"
 end TestLongTime24Hours
 
+on Test2038Problem
+   local tDate
+   put 2147483648 into tDate
+   convert tDate to dateItems
+   if the platform is "HTML5" or (the platform is "Linux" and the processor is "x86") then
+      TestAssertBroken "Convert dates over long max seconds", item 1 of tDate is 2038, "Bug 19801"
+   else
+      TestAssert "Convert dates over long max seconds", item 1 of tDate is 2038
+   end if
+end Test2038Problem

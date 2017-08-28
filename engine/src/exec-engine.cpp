@@ -105,6 +105,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendScript, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
@@ -235,11 +236,11 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern LT command_table[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern Cvalue constant_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1474,6 +1475,32 @@ void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
 {
 	MCEngineSendOrCall(ctxt, p_script, p_target, false);
+}
+
+void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+{
+    MCObject *optr;
+    if (p_target == nil)
+        optr = ctxt . GetObject();
+    else
+        optr = p_target -> object;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = False;
+
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (optr->domess(p_script, nil, false) == ES_ERROR)
+        ctxt . Throw();
+    
+	if (added)
+		MCnexecutioncontexts--;
+	MClockmessages = oldlock;
 }
 
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units)

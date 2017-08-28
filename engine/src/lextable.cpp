@@ -30,12 +30,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ST_MNB ST_ID
 #endif
 
+
+// Some of these tables need to be accessed from other compilation units and C++
+// mandates that variables declared as "const" have internal linkage unless also
+// declared as "extern".
+extern const LT command_table[];
+extern const Cvalue constant_table[];
+extern const LT factor_table[];
+extern const LT * const table_pointers[];
+extern const uint2 table_sizes[];
+extern const uint8_t type_table[];
+extern const uint8_t unicode_type_table[];
+
+
 // MW-2011-06-22: [[ SERVER ]] We mark '?' as ST_TAG so we can parse server
 //   style scripts. If the SP's tagged property is false, it reverts to ST_ID.
 //   Also, cr is marked as ST_EOL rather than ST_SPC. This will make little
 //   difference to object scripts but means we can be newline agnostic in server
 //   scripts.
-uint8_t type_table[256] =
+const uint8_t type_table[256] =
 {
     ST_EOF,  ST_ID,   ST_ID,   ST_ID,   //     ^@      ^A      ^B      ^C
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //     ^D      ^E      ^F      ^G
@@ -103,7 +116,7 @@ uint8_t type_table[256] =
     ST_ID,   ST_ID,   ST_ID,   ST_ID    //      0xFC    0xFD    0xFE    0xFF
 };
 
-uint8_t unicode_type_table[256] =
+const uint8_t unicode_type_table[256] =
 {
     ST_EOF,         ST_ID,          ST_ID,          ST_ID,          //     ^@      ^A      ^B      ^C
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^D      ^E      ^F      ^G
@@ -171,7 +184,7 @@ uint8_t unicode_type_table[256] =
     ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xFC    0xFD    0xFE    0xFF
 };
 
-Cvalue constant_table[] =
+const Cvalue constant_table[] =
 {
     {"arrow", "29", 29.0},
     {"backslash", "\\", BAD_NUMERIC},
@@ -224,7 +237,7 @@ Cvalue constant_table[] =
 };
 extern const uint4 constant_table_size = ELEMENTS(constant_table);
 
-static LT accept_table[] =
+const static LT accept_table[] =
     {
         {"connections", TT_UNDEFINED, AC_CONNECTIONS},
         {"datagram", TT_UNDEFINED, AC_DATAGRAM},
@@ -234,7 +247,7 @@ static LT accept_table[] =
         {"secure", TT_UNDEFINED, AC_SECURE}
     };
 
-static LT ae_table[] =
+const static LT ae_table[] =
     {
         {"ae", TT_UNDEFINED, AE_AE},
         {"appleevent", TT_UNDEFINED, AE_AE},
@@ -245,7 +258,7 @@ static LT ae_table[] =
         {"sender", TT_UNDEFINED, AE_SENDER}
     };
 
-static LT ask_table[] =
+const static LT ask_table[] =
     {
         {"application", TT_UNDEFINED, AT_PROGRAM},
         {"clear", TT_UNDEFINED, AT_CLEAR},
@@ -274,7 +287,7 @@ static LT ask_table[] =
         {"warning", TT_UNDEFINED, AT_WARNING}
     };
 
-LT command_table[] =
+const LT command_table[] =
     {
 		{"_internal", TT_STATEMENT, S_INTERNAL},
         {"accept", TT_STATEMENT, S_ACCEPT},
@@ -431,7 +444,7 @@ LT command_table[] =
     };
 extern const uint4 command_table_size = ELEMENTS(command_table);
 
-static LT convert_table[] =
+const static LT convert_table[] =
     {
         {"abbr", TT_CHUNK, CF_ABBREVIATED},
         {"abbrev", TT_CHUNK, CF_ABBREVIATED},
@@ -449,7 +462,7 @@ static LT convert_table[] =
         {"time", TT_CHUNK, CF_TIME}
     };
 
-static LT encryption_table[] =
+const static LT encryption_table[] =
     {
         {"bit", TT_UNDEFINED, ENCRT_BIT},
         {"cert", TT_UNDEFINED, RSA_CERT},
@@ -466,7 +479,7 @@ static LT encryption_table[] =
         {"using", TT_UNDEFINED, ENCRT_USING},
     };
 
-static LT exit_table[] =
+const static LT exit_table[] =
     {
         {"hypercard", TT_UNDEFINED, ET_ALL},
         {"metacard", TT_UNDEFINED, ET_ALL},
@@ -477,7 +490,7 @@ static LT exit_table[] =
         {"top", TT_UNDEFINED, ET_ALL}
     };
 
-static LT export_table[] =
+const static LT export_table[] =
     {
 		{"abgr", TT_UNDEFINED, EX_RAW_ABGR},
         {"ac", TT_UNDEFINED, EX_AUDIO_CLIP},
@@ -511,7 +524,7 @@ static LT export_table[] =
         {"xwd", TT_UNDEFINED, EX_XWD}
     };
 
-LT factor_table[] =
+const LT factor_table[] =
     {
         {"&", TT_BINOP, O_CONCAT},
         {"&&", TT_BINOP, O_CONCAT_SPACE},
@@ -1847,7 +1860,7 @@ LT factor_table[] =
 
 extern const uint4 factor_table_size = ELEMENTS(factor_table);
 
-static LT find_table[] =
+const static LT find_table[] =
     {
         {"characters", TT_CHUNK, FM_CHARACTERS},
         {"chars", TT_CHUNK, FM_CHARACTERS},
@@ -1858,7 +1871,7 @@ static LT find_table[] =
         {"words", TT_CHUNK, FM_WORD}
     };
 
-static LT flip_table[] =
+const static LT flip_table[] =
     {
         {"down", TT_UNDEFINED, FL_VERTICAL},
         {"horizontal", TT_UNDEFINED, FL_HORIZONTAL},
@@ -1868,7 +1881,7 @@ static LT flip_table[] =
         {"vertical", TT_UNDEFINED, FL_VERTICAL}
     };
 
-static LT go_table[] =
+const static LT go_table[] =
     {
         {"back", TT_CHUNK, CT_BACKWARD},
         {"backward", TT_CHUNK, CT_BACKWARD},
@@ -1881,7 +1894,7 @@ static LT go_table[] =
         {"start", TT_CHUNK, CT_START}
     };
 
-static LT handler_table[] =
+const static LT handler_table[] =
     {
 		{"after", TT_HANDLER, HT_AFTER},
 		{"before", TT_HANDLER, HT_BEFORE},
@@ -1898,13 +1911,13 @@ static LT handler_table[] =
         {"variable", TT_VARIABLE, S_LOCAL}
     };
 
-static LT insert_table[] =
+const static LT insert_table[] =
     {
         {"back", TT_UNDEFINED, IP_BACK},
         {"front", TT_UNDEFINED, IP_FRONT}
     };
 
-static LT lock_table[] =
+const static LT lock_table[] =
     {
         {"clipboard", TT_UNDEFINED, LC_CLIPBOARD},
         {"colormap", TT_UNDEFINED, LC_COLORMAP},
@@ -1919,7 +1932,7 @@ static LT lock_table[] =
         {"screen", TT_UNDEFINED, LC_SCREEN}
     };
 
-static LT mark_table[] =
+const static LT mark_table[] =
     {
         {"all", TT_UNDEFINED, MC_ALL},
         {"by", TT_UNDEFINED, MC_BY},
@@ -1929,7 +1942,7 @@ static LT mark_table[] =
         {"where", TT_UNDEFINED, MC_WHERE}
     };
 
-static LT mode_table[] =
+const static LT mode_table[] =
     {
         {"append", TT_UNDEFINED, OM_APPEND},
         {"appending", TT_UNDEFINED, OM_APPEND},
@@ -1944,13 +1957,13 @@ static LT mode_table[] =
         {"writing", TT_UNDEFINED, OM_WRITE}
     };
 
-static LT move_table[] =
+const static LT move_table[] =
     {
         {"messages", TT_UNDEFINED, MM_MESSAGES},
         {"waiting", TT_UNDEFINED, MM_WAITING}
     };
 
-static LT open_table[] =
+const static LT open_table[] =
     {
         {"directory", TT_UNDEFINED, OA_DIRECTORY},
         {"driver", TT_UNDEFINED, OA_DRIVER},
@@ -1968,7 +1981,7 @@ static LT open_table[] =
         {"stdout", TT_UNDEFINED, OA_STDOUT}
     };
 
-static LT play_table[] =
+const static LT play_table[] =
     {
         {"ac", TT_UNDEFINED, PP_AUDIO_CLIP},
         {"audioclip", TT_UNDEFINED, PP_AUDIO_CLIP},
@@ -1987,7 +2000,7 @@ static LT play_table[] =
         {"videoclip", TT_UNDEFINED, PP_VIDEO_CLIP}
     };
 
-static LT record_table[] =
+const static LT record_table[] =
     {
         {"best", TT_UNDEFINED, RC_BEST},
         {"better", TT_UNDEFINED, RC_BETTER},
@@ -1998,7 +2011,7 @@ static LT record_table[] =
         {"sound", TT_UNDEFINED, RC_SOUND}
     };
 
-static LT repeat_table[] =
+const static LT repeat_table[] =
     {
         {"each", TT_UNDEFINED, RF_EACH},
         {"for", TT_UNDEFINED, RF_FOR},
@@ -2011,7 +2024,7 @@ static LT repeat_table[] =
         {"with", TT_UNDEFINED, RF_WITH}
     };
 
-static LT reset_table[] =
+const static LT reset_table[] =
     {
         {"cursors", TT_UNDEFINED, RT_CURSORS},
         {"paint", TT_UNDEFINED, RT_PAINT},
@@ -2030,7 +2043,7 @@ static LT reset_table[] =
         {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP},
     };
 
-static LT show_table[] =
+const static LT show_table[] =
     {
         {"all", TT_UNDEFINED, SO_ALL},
         {"background", TT_UNDEFINED, SO_BACKGROUND},
@@ -2056,7 +2069,7 @@ static LT show_table[] =
         {"window", TT_UNDEFINED, SO_WINDOW}
     };
 
-static LT sort_table[] =
+const static LT sort_table[] =
     {
         {"ascending", TT_UNDEFINED, ST_ASCENDING},
         {"binary", TT_UNDEFINED, ST_BINARY},
@@ -2076,14 +2089,14 @@ static LT sort_table[] =
     };
 
 
-static LT ssl_table[] =
+const static LT ssl_table[] =
     {
         {"certificate", TT_UNDEFINED, SSL_CERTIFICATE},
         {"verification", TT_UNDEFINED, SSL_VERIFICATION}
     };
 
 
-static LT start_table[] =
+const static LT start_table[] =
     {
         {"drag", TT_UNDEFINED, SC_DRAG},
         {"editing", TT_UNDEFINED, SC_EDITING},
@@ -2097,7 +2110,7 @@ static LT start_table[] =
         {"using", TT_UNDEFINED, SC_USING}
     };
 
-static LT sugar_table[] =
+const static LT sugar_table[] =
     {
 		{"anchor", TT_UNDEFINED, SG_ANCHOR},
 		{"bookmark", TT_UNDEFINED, SG_BOOKMARK},
@@ -2170,7 +2183,7 @@ static LT sugar_table[] =
 		{"without", TT_PREP, PT_WITHOUT},
     };
 
-static LT there_table[] =
+const static LT there_table[] =
     {
         {"directory", TT_UNDEFINED, TM_DIRECTORY},
         {"file", TT_UNDEFINED, TM_FILE},
@@ -2179,7 +2192,7 @@ static LT there_table[] =
         {"url", TT_UNDEFINED, TM_URL}
     };
 
-static LT tool_table[] =
+const static LT tool_table[] =
     {
         {"browse", TT_TOOL, T_BROWSE},
         {"brush", TT_TOOL, T_BRUSH},
@@ -2215,7 +2228,7 @@ static LT tool_table[] =
         {"tool", TT_END, T_UNDEFINED}
     };
 
-static LT unit_table[] =
+const static LT unit_table[] =
     {
 		{"byte", TT_UNDEFINED, FU_BYTE},
 		{"bytes", TT_UNDEFINED, FU_BYTE},
@@ -2267,7 +2280,7 @@ static LT unit_table[] =
         {"words", TT_UNDEFINED, FU_WORD}
     };
 
-static LT validation_table[] =
+const static LT validation_table[] =
 {
     {"a", TT_UNDEFINED, IV_UNDEFINED},
     {"among", TT_UNDEFINED, IV_AMONG},
@@ -2286,7 +2299,7 @@ static LT validation_table[] =
     {"rectangle", TT_UNDEFINED, IV_RECT},
 };
 
-static LT visual_table[] =
+const static LT visual_table[] =
 {
     {"barn", TT_VISUAL, VE_BARN},
     {"black", TT_VISUAL, VE_BLACK},
@@ -2335,7 +2348,7 @@ static LT visual_table[] =
     {"zoom", TT_VISUAL, VE_ZOOM}
 };
 
-static LT server_table[] =
+const static LT server_table[] =
 {
 	{"binary", TT_PREP, PT_BINARY},
 	{"content", TT_PREP, PT_CONTENT},
@@ -2348,7 +2361,7 @@ static LT server_table[] =
 	{"unicode", TT_SERVER, SK_UNICODE},
 };
 
-LT *table_pointers[] =
+const LT * const table_pointers[] =
 {
     accept_table,
     ae_table,
@@ -2387,7 +2400,7 @@ LT *table_pointers[] =
 };
 extern const uint4 table_pointers_size = ELEMENTS(table_pointers);
 
-uint2 table_sizes[] =
+const uint2 table_sizes[] =
 {
     ELEMENTS(accept_table),
     ELEMENTS(ae_table),

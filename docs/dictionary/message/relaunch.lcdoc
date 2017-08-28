@@ -2,7 +2,7 @@ Name: relaunch
 
 Type: message
 
-Syntax: relaunch <commandlinearguments>
+Syntax: relaunch <pCommandLineArguments>
 
 Summary:
 After having launched an application, upon launching a successive
@@ -23,7 +23,7 @@ on relaunch pDocument
 end relaunch
 
 Parameters:
-commandlinearguments:
+pCommandLineArguments:
 
 
 Description:
@@ -60,11 +60,8 @@ the Resources/Examples folder within this LiveCode distribution folder.
 >*Note:* You must not initiate any modal loops (e.g. caused by answer
 > file, popup, modal commands) within the body of the relaunch handler
 > as this will cause an automatic 'pass'. Instead, send a message to be
-> executed 
-
-    immediately after the relaunch handler has returned (i.e. use 'send
-    processRelaunch to me in 0 millisecs').
-
+> executed immediately after the relaunch handler has returned (i.e. use 
+> 'send processRelaunch to me in 0 millisecs').
 
 >*Note:* This feature is only available in the standalone engine, as the
 > IDE engine uses the relaunch facitily to suport loading of stack files

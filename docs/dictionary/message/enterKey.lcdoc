@@ -8,6 +8,8 @@ Summary:
 Sent when the user presses the Enter key, if there is no text
 <selection>. 
 
+Associations: card, field
+
 Introduced: 1.0
 
 OS: mac, windows, linux

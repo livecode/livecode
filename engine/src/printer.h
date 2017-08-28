@@ -57,7 +57,7 @@ class MCPrinterDevice
 public:
 	virtual ~MCPrinterDevice(void) {};
 
-	// Return a descriptive string of the last printer error that occured. This
+	// Return a descriptive string of the last printer error that occurred. This
 	// call should return NULL if ERROR has not been returned by any method of
 	// the object.
 	//
@@ -68,7 +68,7 @@ public:
 
 	// Cancel the current document.
 	//
-	// If an error has occured with printing, ERROR should be returned, else
+	// If an error has occurred with printing, ERROR should be returned, else
 	// CANCEL should be returned.
 	//
 	virtual MCPrinterResult Cancel(void) = 0;
@@ -77,7 +77,7 @@ public:
 	//
 	// If this call succeeds, SUCCESS should be returned.
 	// If the job has been cancelled, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	//
 	virtual MCPrinterResult Show(void) = 0;
 
@@ -89,7 +89,7 @@ public:
 	// If the call succeeds, SUCCESS should be returned and r_context will be
 	// a valid graphics context.
 	// If the job has been cancelld, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	//
 	virtual MCPrinterResult Begin(const MCPrinterRectangle& p_src_rect, const MCPrinterRectangle& p_dst_rect, MCContext*& r_context) = 0;
 
@@ -98,7 +98,7 @@ public:
 	//
 	// If the call succeeds, SUCCESS should be returned.
 	// If the job has been cancelled, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	//
 	virtual MCPrinterResult End(MCContext *p_context) = 0;
 
@@ -108,7 +108,7 @@ public:
 	//
 	// If the call succeeds, SUCCESS should be returned.
 	// If the job has been cancelled, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	//
 	virtual MCPrinterResult Anchor(const char *name, double x, double y) = 0;
 
@@ -118,7 +118,7 @@ public:
 	//
 	// If the call succeeds, SUCCESS should be returned.
 	// If the job has been cancelled, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	virtual MCPrinterResult Link(const char *destination, const MCPrinterRectangle& area, MCPrinterLinkType type) = 0;
 
 	// Make a bookmark with the given title, nested at the given depth.
@@ -127,7 +127,7 @@ public:
 	//
 	// If the call succeeds, SUCCESS should be returned.
 	// If the job has been cancelled, CANCEL should be returned.
-	// If a printer error has occured, ERROR should be returned.
+	// If a printer error has occurred, ERROR should be returned.
 	//
 	virtual MCPrinterResult Bookmark(const char *title, double x, double y, int depth, bool closed) = 0;
 };
@@ -362,7 +362,7 @@ protected:
 	//
 	// The return value should reflect the starting state of the device object
 	// note that a valid device object must be returned regardless of whether
-	// a printer error, or cancellation occured.
+	// a printer error, or cancellation occurred.
 	//
 	virtual MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) = 0;
 

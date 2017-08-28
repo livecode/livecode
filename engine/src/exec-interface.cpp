@@ -3925,13 +3925,18 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 			MCInterfaceExecImportGetStream(ctxt, p_mask_filename, t_mask_stream);
 		if (p_mask_filename == nil || t_mask_stream != NULL)
 		{
-			MCtemplateimage->setparent(nullptr);
+			MCtemplateimage->setparent(p_container);
 			MCImage *t_image = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			MCtemplateimage->setparent(NULL);
 			t_image->setflag(True, F_I_ALWAYS_BUFFER);
 
 			if (t_image->import(p_filename, t_stream, t_mask_stream) == IO_NORMAL)
+			{
 				t_image->attach(OP_CENTER, false);
+				MCAutoValueRef t_id;
+				t_image -> names(P_LONG_ID, &t_id);
+				ctxt . SetItToValue(*t_id);
+			}
 			else
 			{
 				ctxt . LegacyThrow(EE_IMPORT_CANTREAD);

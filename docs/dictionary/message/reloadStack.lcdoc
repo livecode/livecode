@@ -2,7 +2,7 @@ Name: reloadStack
 
 Type: message
 
-Syntax: reloadStack <stackName>, <fileName>
+Syntax: reloadStack <pStackName>, <pFileName>
 
 Summary:
 Sent to a <main stack> when the user tries to open a <main stack> with
@@ -26,10 +26,10 @@ on reloadStack theStack,thePath -- bring reloaded window to front
 end reloadStack
 
 Parameters:
-stackName:
+pStackName:
 The short name that belongs to the two conflicting main stacks.
 
-fileName:
+pFileName:
 The full path to the file that is opening--the file that contains the
 second main stack with the same name.
 

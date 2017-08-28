@@ -250,7 +250,7 @@ function revDocsParseDictionaryToLibraryArray pRootDir
    local tCount
    put 1 into tCount
    
-   local tText, tLibraryA, tParsedA
+   local tText, tLibraryA, tParsedA, tDisplayName, tSynonymA
    
    repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
       repeat for each line tLine in folders(tRoot)
@@ -268,6 +268,22 @@ function revDocsParseDictionaryToLibraryArray pRootDir
             put revDocsParseDocText(tText, tFullPath) into tParsedA
             put tParsedA["doc"][1] into tLibraryA[tCount]
             add 1 to tCount
+            -- BWM fix for Bug 18305
+            -- add an additional entry to dictionary for each synonym to allow keyword search
+            if tParsedA["doc"][1]["Synonyms"] is not empty then
+               put tParsedA["doc"][1]["display name"] into tDisplayName
+               put tParsedA["doc"][1]["Synonyms"] into tSynonymA
+               repeat for each element tSynonymName in tSynonymA
+                  if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
+                  put tParsedA["doc"][1] into tLibraryA[tCount]
+                  put tSynonymName into tLibraryA[tCount]["display name"]
+                  if tParsedA["doc"][1]["Type"] is not "glossary" then
+                     put " (Synonym of " & tDisplayName & ")" after tLibraryA[tCount]["display name"]
+                  end if
+                  add 1 to tCount
+               end repeat
+            end if
+            -- end fix for Bug 18305
          end repeat
       end repeat
    end repeat
@@ -436,7 +452,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    put false into tInComment
    put false into tInEntry
    
-   local tFirstWord, tEntryData
+   local tFirstWord, tEntryData, tTrimLine
    local tComment, tData
    local tHandlerData, tPhraseData
    
@@ -598,14 +614,23 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
       end if
       
       # If we are in an entry, add the line to the current data
-      if tInEntry then         
+      if tInEntry then
+         # handle line continuations
+         if char -2 of tData is "\" then
+            delete char -2 to -1 of tData
          # ignore empty lines
-         if tFirstWord is empty then 
+         else if tFirstWord is empty then
             next repeat
          else if tFirstWord is "end" then
             put true into tEntryEnded
          end if
-         put tLine & return after tData
+         # continuation character can have spaces afterwards [[Bug 19927]]
+         # trim trailing spaces before adding
+         if matchText(tLine, "^(.*\\)\s*$", tTrimLine) then
+            put tTrimLine & return after tData
+         else
+            put tLine & return after tData
+         end if
       end if
       
       # If the entry is ended, convert all the collected data to a structured array

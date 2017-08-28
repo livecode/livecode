@@ -40,6 +40,8 @@
 
 #include "module-engine.h"
 
+#include "libscript/script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct __MCScriptObject *MCScriptObjectRef;
@@ -881,6 +883,28 @@ MCEngineEvalTheItemDelimiter(MCStringRef& r_del)
             MCECptr != nil ? MCECptr->GetItemDelimiter() : MCSTR(",");
     
     r_del = MCValueRetain(t_del);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path);
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalMyResourcesFolder(MCStringRef& r_folder)
+{
+    MCScriptModuleRef t_module = MCScriptGetCurrentModule();
+    if (t_module == nullptr)
+    {
+        r_folder = nullptr;
+        return;
+    }
+    
+    if (!MCEngineLookupResourcePathForModule(t_module,
+                                             r_folder))
+    {
+        r_folder = nullptr;
+        return;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

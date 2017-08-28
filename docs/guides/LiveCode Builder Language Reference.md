@@ -79,7 +79,10 @@ A LiveCode builder statement or declaration can be continued onto
 multiple lines of code by placing the line continuation character `\`
 at the end each line.
 
-- **Line continuation**: \\(\n|\r\n|\r)
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
 
 > **Note:** A line continuation cannot occur within a comment.
 
@@ -433,6 +436,14 @@ statement blocks.
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
+
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
+
 There are a number of types defined in the foreign module which map to
 the appropriate foreign type when used in foreign handler signatures.
 
@@ -554,8 +565,8 @@ non-Windows platform then it is taken to be `default`.
 
 The Java binding string has the following form:
 
-    "java:[className>][functionType.]function[!calling]"
-    
+    "java:[className>][functionType.]function[!calling][?thread]"
+
 Here *className* is the qualified name of the Java class to bind to.
 
 Here *functionType* is either empty, or `get` or `set`, which are 
@@ -584,19 +595,23 @@ The foreign handler binding to such a function takes a value that should
 either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
 listener should only have one available callback. If the listener has 
 multiple callbacks, an array can be used to assign handlers to each. Each 
-key in the array must match the name of a callback in the listener.
+key in the array must match the name of a callback in the listener. The 
+specified handlers must match the callback's parameters and return type, 
+using JObject where primitive type parameters are used.
+
 Overloaded methods in the interface are not currently supported.
 
 For example:
 
-	handler type ClickCallback(in pView as JObject)
+	handler type ClickCallback(in pView as JObject) returns nothing
 
 	foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject binds to "java:android.view.View$OnClickListener>interface()"
 
 	foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V"	
 	
-	public handler ButtonClicked(in pView as JObject)
-		-- do something on button click
+	public handler ButtonClicked(in pView as JObject) returns nothing
+		post "buttonClicked"
+		MCEngineRunloopBreakWait()
 	end handler
 	
 	public handler SetOnClickListenerCallback(in pButton as JObject)
@@ -609,14 +624,15 @@ For example:
 	
 or
 
-	handler type MouseEventCallback(in pMouseEvent as JObject)
+	handler type MouseEventCallback(in pMouseEvent as JObject) returns nothing
 
 	foreign handler _JNI_MouseListener(in pCallbacks as Array) returns JObject binds to "java:java.awt.event.MouseListener>interface()"
 
 	foreign handler _JNI_SetMouseListener(in pJButton as JObject, in pListener as JObject) returns nothing binds to "java:java.awt.Component>addMouseListener(Ljava/awt/event/MouseListener;)V"	
 	
-	public handler MouseEntered(in pEvent as JObject)
-		-- do something on mouse entter
+	public handler MouseEntered(in pEvent as JObject) returns nothing
+		post "mouseEnter"
+		MCEngineRunloopBreakWait()
 	end handler
 	
 	public handler MouseExited(in pEvent as JObject)
@@ -633,7 +649,12 @@ or
 			_JNI_SetMouseListener(pJButton, tListener)
 		end unsafe
 	end handler
-	
+
+>*Important:* On Android, interface callbacks are *always* run on the
+> engine thread. This means JNI local references from other threads
+> (in particular the UI thread) are unavailable. Therefore it is not 
+> advised to do anything using the JNI in interface callbacks. 
+
 Here *calling* specifies the calling convention which can be one of:
 
  - `instance`
@@ -643,6 +664,9 @@ Here *calling* specifies the calling convention which can be one of:
 Instance and nonvirtual calling conventions require instances of the given
 Java class, so the foreign handler declaration will always require a Java
 object parameter.
+
+Here, *thread* is either empty or `ui`. The `ui` form is used on 
+Android when binding to methods that must be run on the UI thread. 
 
 > **Warning:** At the moment it is not advised to use callbacks that may be
 > executed on arbitrary threads, as this is likely to cause your application

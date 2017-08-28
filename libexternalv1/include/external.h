@@ -82,7 +82,7 @@ typedef struct __MCObject *MCObjectRef;
 // generated while using the externals interface.
 typedef enum MCError
 {
-	// No errors occured, the operation succeeded.
+	// No errors occurred, the operation succeeded.
 	kMCErrorNone = 0,
 
 	// Memory ran out while performing the operation.
@@ -297,10 +297,10 @@ typedef enum MCInvokeStatus
 	// The script was successfully executed.
 	kMCInvokeStatusSuccess = 0,
 	
-	// A parse error occured while compiling the script
+	// A parse error occurred while compiling the script
 	kMCInvokeStatusParseError = 1,
 	
-	// An execution error occured while running the script
+	// An execution error occurred while running the script
 	kMCInvokeStatusExecutionError = 2
 } MCInvokeStatus;
 	

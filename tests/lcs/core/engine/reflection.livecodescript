@@ -18,14 +18,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
 	create button "IsolatedBehavior"
-	set the script of it to "command myBehaviorHandler; end myBehaviorHandler"
+	set the script of it to "command myBehaviorHandler; end myBehaviorHandler; private command myPrivateBehaviorHandler; end myPrivateBehaviorHandler"
 
 	create button "ChainedBehavior"
 	set the script of it to "command myChainedBehaviorHandler; end myChainedBehaviorHandler"
 	set the behavior of it to the long id of button "IsolatedBehavior"
 
 	create button "TestButton"
-	set the script of it to "command myHandler; end myHandler"
+	set the script of it to "command myHandler; end myHandler; private command myPrivateHandler; end myPrivateHandler"
 end TestSetup
 
 on TestTeardown
@@ -37,11 +37,15 @@ end TestTeardown
 on TestRevAvailableHandlers
 	set the behavior of button "TestButton" to the long id of button "IsolatedBehavior"
 	TestAssert "lists handlers only in object script", the revAvailableHandlers of button "TestButton" contains " myHandler "
+	TestAssert "lists private handlers only in object script", the revAvailableHandlers of button "TestButton" contains " myPrivateHandler "
 end TestRevAvailableHandlers
 
 on TestRevEffectiveAvailableHandlersBehavior
 	set the behavior of button "TestButton" to the long id of button "IsolatedBehavior"
+	TestAssert "lists object's handlers", the effective revAvailableHandlers of button "TestButton" contains " myHandler "
+	TestAssert "lists object's private handlers", the effective revAvailableHandlers of button "TestButton" contains " myPrivateHandler "
 	TestAssert "lists object's behavior handlers", the effective revAvailableHandlers of button "TestButton" contains " myBehaviorHandler "
+	TestAssert "does not list object's behavior private handlers", not (the effective revAvailableHandlers of button "TestButton" contains " myPrivateBehaviorHandler ")
 end TestRevEffectiveAvailableHandlersBehavior
 
 on TestRevEffectiveAvailableHandlersChainedBehavior
@@ -50,6 +54,7 @@ on TestRevEffectiveAvailableHandlersChainedBehavior
 end TestRevEffectiveAvailableHandlersChainedBehavior
 
 on TestRevEffectiveAvailableHandlersBlockedBehavior
+	TestSkipIf "platform", "HTML5"
 	-- Behaviors can only become 'blocked' when deserialized. Therefore, we
 	-- do this by creating a new behavior and user of the behavior, copying the
 	-- user to the clipboard (which serializes), then deleting both, and then

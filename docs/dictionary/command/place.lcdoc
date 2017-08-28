@@ -55,7 +55,7 @@ Placing a group onto another card automatically sets the
 > leave its <backgroundBehavior> property as true.
 
 References: create card (command), start editing (command),
-copy (command), insert script (command), onto (keyword),
+copy (command), insert script (command), remove (command), onto (keyword),
 groupNames (property), sharedBehavior (property),
 backgroundBehavior (property)
 

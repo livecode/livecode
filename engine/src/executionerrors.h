@@ -2639,13 +2639,13 @@ enum Exec_errors
     // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
     //  incremented whenever new codes are merged up from below.
     // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
-    // {EE-0863} extension: error occured with domain
+    // {EE-0863} extension: error occurred with domain
     EE_EXTENSION_ERROR_DOMAIN,
-    // {EE-0864} extension: error occured with description
+    // {EE-0864} extension: error occurred with description
     EE_EXTENSION_ERROR_DESCRIPTION,
-    // {EE-0865} extension: error occured with file
+    // {EE-0865} extension: error occurred with file
     EE_EXTENSION_ERROR_FILE,
-    // {EE-0866} extension: error occured with line
+    // {EE-0866} extension: error occurred with line
     EE_EXTENSION_ERROR_LINE,
     
     // {EE-0867} load: error in extension expression
@@ -2738,7 +2738,7 @@ enum Exec_errors
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
 
-	// {EE-0897} extension: error occured with column
+	// {EE-0897} extension: error occurred with column
 	EE_EXTENSION_ERROR_COLUMN,
 	
 	// {EE-0898} parentScript: can't change parent while parent script is executing
@@ -2753,10 +2753,10 @@ enum Exec_errors
     // {EE-0901} messageDigest: error in digest type parameter
     EE_MESSAGEDIGEST_BADTYPE,
 
-    // {EE-0901} messageDigest: error in message data parameter
+    // {EE-0902} messageDigest: error in message data parameter
     EE_MESSAGEDIGEST_BADDATA,
 
-    // {EE-0902} snapshot: no screen
+    // {EE-0903} snapshot: no screen
     EE_SNAPSHOT_FAILED,
 };
 

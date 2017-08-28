@@ -1692,6 +1692,12 @@ bool MCModeHasHomeStack(void)
 	return false;
 }
 
+// Pixel scaling can be enabled in the installer
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is enabled for the installer
 bool MCModeGetPixelScalingEnabled(void)
 {

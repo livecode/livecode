@@ -112,6 +112,7 @@ extern "C" void EmitBeginForeignHandlerType(intptr_t return_type_index);
 extern "C" void EmitHandlerTypeInParameter(NameRef name, intptr_t type_index);
 extern "C" void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index);
 extern "C" void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index);
+extern "C" void EmitHandlerTypeVariadicParameter(NameRef name);
 extern "C" void EmitEndHandlerType(intptr_t& r_index);
 extern "C" void EmitHandlerParameter(NameRef name, intptr_t type_index, intptr_t& r_index);
 extern "C" void EmitHandlerVariable(NameRef name, intptr_t type_index, intptr_t& r_index);
@@ -343,7 +344,7 @@ static uindex_t s_emitted_builtin_count = 0;
 
 static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name, uindex_t p_type_index)
 {
-    if (!OutputFileAsC)
+    if (!OutputFileAsC || OutputFileAsAuxC)
     {
         return MCNameGetString(to_mcnameref(p_symbol_name));
     }
@@ -405,8 +406,8 @@ static struct { MCScriptForeignPrimitiveType type; const char *ctype; } s_primit
     DEFINE_PRIMITIVE_TYPE_MAPPING(UInt32, uint32_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(SInt64, int64_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(UInt64, uint64_t)
-    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntSize, intsize_t)
-    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntSize, uintsize_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntSize, ssize_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntSize, size_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(SIntPtr, intptr_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(UIntPtr, uintptr_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(Float32, float)
@@ -558,7 +559,7 @@ static bool EmitEmittedBuiltins(void)
             return false;
         }
     }
-    if (0 > fprintf(t_file, "};\n\n"))
+    if (0 > fprintf(t_file, "\tnullptr\n};\n\n"))
     {
         return false;
     }
@@ -570,6 +571,7 @@ static bool EmitEmittedBuiltins(void)
 
 static const char *kOutputCDefinitions =
     "#include <stdint.h>\n"
+    "#include <stddef.h>\n"
     "typedef void (*__builtin_shim_type)(void*, void**);\n"
     "struct __builtin_module_info\n"
     "{\n"
@@ -1536,6 +1538,13 @@ void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index)
 void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index)
 {
     EmitHandlerTypeParameter(kMCHandlerTypeFieldModeInOut, name, type_index);
+}
+
+void EmitHandlerTypeVariadicParameter(NameRef name)
+{
+    intptr_t type_index;
+    EmitListType(type_index);
+    EmitHandlerTypeParameter(kMCHandlerTypeFieldModeVariadic, name, type_index);
 }
 
 void EmitEndHandlerType(intptr_t& r_type_index)

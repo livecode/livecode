@@ -4,14 +4,12 @@ Synonyms: xbrowser_beforenavigateframe
 
 Type: message
 
-Syntax: browserBeforeNavigateFrame <instanceId>, <url>
+Syntax: browserBeforeNavigateFrame <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_BeforeNavigateFrame <url>, <instanceId>
+Syntax: XBrowser_BeforeNavigateFrame <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser is about to navigate to a new url in a frame
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -30,12 +28,10 @@ on browserBeforeNavigateFrame pInstanceId, pUrl
 end browserBeforeNavigateFrame
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceID:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The new url that is about to be navigated to in the frame
 
 Description:

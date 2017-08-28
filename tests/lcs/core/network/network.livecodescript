@@ -22,27 +22,43 @@ on TestSetup
    end if
 end TestSetup
 
-on TestNetwork2
-TestAssert "test", the dnsservers is not empty
+on TestNetworkDNSServers
+   TestAssert "dnsservers", the dnsservers is not empty
 
-repeat for each line tServer in the dnsservers
-	set the itemdelimiter to "."
-	TestAssert "test", the number of items in tServer is 4
-	repeat for each item tComponent in tServer
-		TestAssert "test", tComponent is an integer
-		TestAssert "test", tComponent >= 0 and tComponent <= 255
-	end repeat
-end repeat
+   repeat for each line tServer in the dnsservers
+   	set the itemdelimiter to "."
+      local tIPv4Items
+      put the number of items in tServer into tIPv4Items
+      set the itemdelimiter to ":"
+      local tIPv6Items
+      put the number of items in tServer into tIPv6Items
+   	TestAssert "test", tIPv4Items is 4 or tIPv6Items is 8
+      
+      if tIPv4Items is 4 then
+         set the itemdelimiter to "."
+      end if
+      
+   	repeat for each item tComponent in tServer
+         if tIPv4Items is 4 then
+      		TestAssert "test", tComponent is an integer
+      		TestAssert "test", tComponent >= 0 and tComponent <= 255
+         else
+            TestAssert "test", tComponent is empty or \
+               baseConvert(tComponent, 16, 10) <= 0xffff
+         end if
+   	end repeat
+   end repeat
 
-end TestNetwork2
+end TestNetworkDNSServers
+
 on TestNetwork4
 
-TestAssert "test", hostnametoaddress("google-public-dns-a.google.com") is "8.8.8.8"
+TestAssert "hostnametoaddress", hostnametoaddress("google-public-dns-a.google.com") is "8.8.8.8"
 
 end TestNetwork4
 on TestNetwork13
 
-put "www.livecode.com:80" into tSock
+put "www.livecode.com:80|" & uuid() into tSock
 open socket tSock
 TestAssert "test", tSock is among the lines of the openSockets
 close socket tSock
@@ -50,7 +66,7 @@ close socket tSock
 end TestNetwork13
 
 on TestPeerAddress
-put "www.livecode.com:80" into tSock
+   put "www.livecode.com:80|" & uuid() into tSock
 open socket tSock 
 
 local tTimeOut, tTime
@@ -70,36 +86,45 @@ close socket tSock
 end TestPeerAddress
 
 on TestOpenSocketFrom
-   open socket from ":8000" to "livecode.com"
-   TestAssert "open socket from", "livecode.com" is among the lines of the openSockets
-   close socket "livecode.com"
+   put "livecode.com|" & uuid() into tSock
+
+   open socket from ":8000" to tSock
+   TestAssert "open socket from", tSock is among the lines of the openSockets
+   close socket tSock
 end TestOpenSocketFrom
 
 on TestOpenSocketFromWithLSOF
    if the platform is "MacOS" or the platform contains "linux" then
-      open socket from ":8001" to "livecode.com"
+      put "livecode.com|" & uuid() into tSock
+      open socket from ":8001" to tSock
       get shell("lsof -i4TCP:8001")
       TestAssert "open socket from testing with lsof", it contains "LiveCode"
-      close socket "livecode.com"
+      close socket tSock
    end if
 end TestOpenSocketFromWithLSOF
 
 on TestOpenSocketFromMultipleHostsSamePort
-   open socket from ":8002" to "livecode.com"
-   open socket from ":8002" to "google.com"
-   TestAssert "open socket from with multiple hosts on same local port", "livecode.com" is among the lines of the openSockets
-   TestAssert "open socket from with multiple hosts on same local port", "google.com" is among the lines of the openSockets
-   close socket "livecode.com"
-   close socket "google.com"
+   put "livecode.com|" & uuid() into tSock1
+   put "google.com|" & uuid() into tSock2
+   open socket from ":8002" to tSock1
+   TestAssert "open socket result is empty: " & the result, the result is empty
+   open socket from ":8002" to tSock2
+   TestAssert "open socket result is empty: " & the result, the result is empty
+   TestAssert "open socket from with multiple hosts on same local port", tSock1 is among the lines of the openSockets
+   TestAssert "open socket from with multiple hosts on same local port", tSock2 is among the lines of the openSockets
+   close socket tSock1
+   close socket tSock2
 end TestOpenSocketFromMultipleHostsSamePort
 
 on TestOpenSocketFromSameHostDifferentPort
-   open socket from ":8003" to "livecode.com|1"
-   open socket from ":8004" to "livecode.com|2"
-   TestAssert "open socket from with same host on different local port", "livecode.com|1" is among the lines of the openSockets
-   TestAssert "open socket from with same host on different local port", "livecode.com|2" is among the lines of the openSockets
-   close socket "livecode.com|1"
-   close socket "livecode.com|2"
+   put "livecode.com|" & uuid() into tSock1
+   put "livecode.com|" & uuid() into tSock2
+   open socket from ":8003" to tSock1
+   open socket from ":8004" to tSock2
+   TestAssert "open socket from with same host on different local port", tSock1 is among the lines of the openSockets
+   TestAssert "open socket from with same host on different local port", tSock2 is among the lines of the openSockets
+   close socket tSock1
+   close socket tSock2
 end TestOpenSocketFromSameHostDifferentPort
 
 on TestOpenSocketFromWithAddress
@@ -112,9 +137,10 @@ on TestOpenSocketFromWithAddress
    end repeat
 
    if tLocalAddress is not empty then
-      open socket from tLocalAddress to "livecode.com"
-      TestAssert "open socket from with local address", "livecode.com" is among the lines of the openSockets
-      close socket "livecode.com"
+      put "livecode.com|" & uuid() into tSock
+      open socket from tLocalAddress to tSock
+      TestAssert "open socket from with local address", tSock is among the lines of the openSockets
+      close socket tSock1
    end if
 end TestOpenSocketFromWithAddress
 
@@ -128,9 +154,10 @@ on TestOpenSocketFromWithAddressAndPort
    end repeat
 
    if tLocalAddress is not empty then
-      open socket from tLocalAddress & ":8005" to "livecode.com"
-      TestAssert "open socket from with local address and port", "livecode.com" is among the lines of the openSockets
-      close socket "livecode.com"
+      put "livecode.com|" & uuid() into tSock
+      open socket from tLocalAddress & ":8005" to tSock
+      TestAssert "open socket from with local address and port", tSock is among the lines of the openSockets
+      close socket tSock
    end if
 end TestOpenSocketFromWithAddressAndPort
 
@@ -144,12 +171,16 @@ on TestOpenSocketFromMultipleHostsSameAddress
    end repeat
 
    if tLocalAddress is not empty then
-      open socket from tLocalAddress & ":8006" to "livecode.com"
-      open socket from tLocalAddress & ":8006" to "google.com"
-      TestAssert "open socket from with multiple hosts using same local address", "livecode.com" is among the lines of the openSockets
-      TestAssert "open socket from with multiple hosts using same local address", "google.com" is among the lines of the openSockets
-      close socket "livecode.com"
-      close socket "google.com"
+      put "livecode.com|" & uuid() into tSock1
+      put "google.com|" & uuid() into tSock2
+      open socket from tLocalAddress & ":8006" to tSock1
+      TestAssert "open socket result is empty: " & the result, the result is empty
+      open socket from tLocalAddress & ":8006" to tSock2
+      TestAssert "open socket result is empty: " & the result, the result is empty
+      TestAssert "open socket from with multiple hosts using same local address", tSock1 is among the lines of the openSockets
+      TestAssert "open socket from with multiple hosts using same local address", tSock2 is among the lines of the openSockets
+      close socket tSock1
+      close socket tSock2
    end if
 end TestOpenSocketFromMultipleHostsSameAddress
 
@@ -161,13 +192,16 @@ on TestOpenSocketFromSameHostDifferentAddress
    if the number of lines in tLocalAddresses > 1 then
       local tSocketCount
       put 1 into tSocketCount
+      local tSockets
       repeat for each line tLocalAddress in tLocalAddresses
-         open socket from tLocalAddress & ":8007" to "livecode.com|" & tSocketCount
-         TestAssert "open socket from with same host on different local address", "livecode.com|" & tSocketCount is among the lines of the openSockets
+         put "livecode.com|" & uuid() into tSock
+         open socket from tLocalAddress & ":8007" to tSock
+         TestAssert "open socket from with same host on different local address", tSock is among the lines of the openSockets
+         put tSock into tSockets[tSocketCount]
          add 1 to tSocketCount
       end repeat
       repeat with tSocketCount = 1 to the number of lines in tLocalAddresses
-         close socket "livecode.com|" & tSocketCount
+         close socket tSockets[tSocketCount]
       end repeat
    end if
 end TestOpenSocketFromSameHostDifferentAddress

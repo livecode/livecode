@@ -214,11 +214,9 @@ you're using the `down to` form), the loop performs its final
 <iteration> and then ends.
 
 If you specify an *increment*, the *increment* is added to the *counter*
-each time through the loop, rather than the *counter* being increased by
-
-1. (The *increment* is not treated as an absolute value: if you're using
-
-the `down to` form, the *increment* must be negative.)
+each time through the loop, rather than the *counter* being increased 
+by 1. (The *increment* is not treated as an absolute value: if you're 
+using the `down to` form, the *increment* must be negative.)
 
 As with the `for `*`number`*` times` form described above, the
 *startValue* and *endValue* are evaluated when the loop is first

@@ -5,8 +5,8 @@ Type: property
 Syntax: set the alphaData of <image> to <binaryData>
 
 Summary:
-Specifies the <binary file|binary data> that makes up the <alpha
-channel> of the picture in an <image> object.
+Specifies the <binary file|binary data> that makes up the 
+<alpha channel> of the picture in an <image> object.
 
 Associations: image
 
@@ -37,9 +37,9 @@ A value of zero means the pixel is fully transparent; a value of 255 is
 fully opaque; and values in between indicate a level of partial
 translucency. 
 
->*Important:*  Since the <alphaData> of an <image> is <binary
-> file|binary data> rather than text, trying to display the data in a
-> <field> may cause unexpected behavior.
+>*Important:*  Since the <alphaData> of an <image> is 
+> <binary file|binary data> rather than text, trying to display the data
+> in a <field> may cause unexpected behavior.
 
 Since each pixel is represented by 8 bits (1 byte or 1 character), you
 can obtain the numeric value for a given pixel using the charToNum
@@ -48,9 +48,9 @@ tenth <pixel> is given by the <expression> charToNum(char 10 of the
 alphaData of <image>).
 
 >*Important:*  When changing the <alphaData> property, make sure the new
-> data is the correct size: 1 byte per pixel in the image. If you set an
-> image's <alphaData> property to data whose total length is incorrect,
-> the <a/>image appearance may be distorted.
+> data is the correct size: 1 byte per pixel in the <image>. If you set an
+> <image|image's> <alphaData> property to data whose total length is
+> incorrect, the <image|image's> appearance may be distorted.
 
 References: function (control structure), property (glossary),
 binary file (glossary), pixel (glossary), expression (glossary),

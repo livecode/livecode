@@ -513,6 +513,11 @@
 
     'rule' Parameter(-> parameter(Position, in, Name, Type)):
         Identifier(-> Name) @(-> Position) OptionalTypeClause(-> Type)
+
+    'rule' Parameter(-> parameter(Position, variadic, Name, unspecified)):
+        "..." @(-> Position)
+        MakeNameLiteral("" -> Identifier)
+		AssignId(Position, Identifier, nil -> Name)
         
 'nonterm' Mode(-> MODE)
 

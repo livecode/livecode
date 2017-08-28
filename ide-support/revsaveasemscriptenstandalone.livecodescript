@@ -46,17 +46,43 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles, tAuxStackFiles, tExtensions
+   local tName, tFiles
    put pSettings["name"] into tName
    put pSettings["files"] into tFiles
+   
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies "emscripten", pSettings
+   
+   -- Set up the list of auxiliary stacks based on the script libraries
+   local tAuxStackFiles
    put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
-   put pSettings["extensions"] into tExtensions
-
-   -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+   
+   local tIncludeDataGrid
+   repeat for each line tLibrary in pSettings["scriptLibraries"]
+      if tLibrary is "DataGrid" then
+         put true into tIncludeDataGrid
+         next repeat
+      end if
+      local tLibraryStack
+      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      if there is a stack tLibraryStack then
+         if the  effective filename of stack tLibraryStack is not among the lines of tAuxStackFiles then
+            put the effective filename of stack tLibraryStack & return after tAuxStackFiles
+         end if
+      end if
+   end repeat
+   
+   -- Handle the datagrid as a special case
+   if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      if the  effective filename of stack "revDataGridLibrary" is not among the lines of tAuxStackFiles then
+         put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+      end if
    end if
-
+   
+   -- Set up the list of extensions
+   local tExtensions
+   put pSettings["extensions"] into tExtensions
+   
    local tError
    try
       ---------- Check deployment entitlement
@@ -113,20 +139,9 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
       -- Store the initial stack
       local tBootHash
       storeBootStack tBuildZip, tBootStackPath, tBuildFolder, tStackFile, tBootHash
-
+      
       -- Store auxiliary stacks
-      local tZipAuxPath, tAuxStackFile
-      repeat for each line tAuxStackFile in tAuxStackFiles
-         set the itemdelimiter to slash
-         put item -1 of tAuxStackFile into tZipAuxPath
-         put tAuxStackPath & slash before tZipAuxPath
-         
-         logDebug "aux", "Storing" && tAuxStackFile
-         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tAuxStackFile
-         if the result is not empty then
-            throw "could not store auxiliary stack in standalone archive"
-         end if
-      end repeat
+      storeAuxStacks tBuildZip, tAuxStackFiles, tAuxStackPath
       
       -- Store extensions
       storeExtensions tBuildZip, tExtensions, tExtensionsPath
@@ -169,10 +184,10 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
             "revStandaloneProgressCallback", the long id of me
       
    catch tError
-	if tError is empty then
-		put "an unknown error occurred" into tError
-	end if
-
+      if tError is empty then
+         put "an unknown error occurred" into tError
+      end if
+      
       -- Cleanup on failure
       if there is a folder pOutputFolder then
          revDeleteFolder pOutputFolder
@@ -193,6 +208,38 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    end if
    
 end revSaveAsEmscriptenStandalone
+
+----------------------------------------------------------------
+-- Auxiliary stack files
+----------------------------------------------------------------
+
+private command storeAuxStacks pZip, pAuxStackFiles, pAuxStackPath
+   local tZipAuxPath, tAuxManifest
+   repeat for each line tAuxStackFile in pAuxStackFiles
+      set the itemdelimiter to slash
+      put item -1 of tAuxStackFile into tZipAuxPath
+      put pAuxStackPath & slash before tZipAuxPath
+      
+      logDebug "aux", "Storing" && tAuxStackFile
+      revZipAddUncompressedItemWithFile pZip, tZipAuxPath, tAuxStackFile
+      if the result is not empty then
+         logDebug "aux", the result
+         throw "could not store auxiliary stack in standalone archive"
+      end if
+      
+      put item -1 of tAuxStackFile & return after tAuxManifest
+   end repeat
+   
+   if tAuxManifest is not empty then
+      logDebug "aux", "Storing auxiliary stack file manifest"
+      put textEncode(tAuxManifest, "UTF-8") into tAuxManifest
+      revZipAddUncompressedItemWithData pZip, pAuxStackPath & slash & "auxiliary_stackfiles.txt", "tAuxManifest"
+      if the result is not empty then
+         logDebug "aux", the result
+         throw "could not store auxiliary stack file list in standalone archive"
+      end if
+   end if
+end storeAuxStacks
 
 ----------------------------------------------------------------
 -- LiveCode Builder extensions
@@ -672,6 +719,10 @@ private command scanFolder_recurse @xCount, @xFiles, pRelPath
 
    set the defaultFolder to tSaveFolder
 end scanFolder_recurse
+
+function revGetEmscriptenFiles
+   return getEngineFiles()
+end revGetEmscriptenFiles
 
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.

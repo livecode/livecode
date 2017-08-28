@@ -5,10 +5,10 @@ Type: message
 Syntax: backspaceKey
 
 Summary:
-Sent to the <active (focused) control(glossary)>, or to the <current
-card> if no <control> is <focus|focused>.
+Sent to the <active control(glossary)>, or to the <current card> if no 
+<control> is <focus|focused>.
 
-Associations: button
+Associations: card, field
 
 Introduced: 1.0
 

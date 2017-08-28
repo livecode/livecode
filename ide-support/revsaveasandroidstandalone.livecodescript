@@ -106,7 +106,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    end if
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies pSettings
+   revSBUpdateForDependencies "android", pSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "android", tConfirm, pSettings
@@ -328,7 +328,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if tManifest is empty then
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
       end if
-      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
@@ -700,7 +700,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
-      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
       if there is no file tDeploy["engine"] then
          throw "Could not find standalone engine"
       end if
@@ -824,7 +824,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if pSettings["android,include revsecurity"] then
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "revsecurity")) into url ("binfile:" & tArmLibsBuildFolder & slash & "librevsecurity.so")
          
-         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
          if the result is not empty then
             throw "Could not find revsecurity library"
          end if
@@ -838,7 +838,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             next repeat
          end if
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tEntry)) into url ("binfile:" & tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
-         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
          if the result is not empty then
             throw "Could not find " & tEntry && "library"
          end if

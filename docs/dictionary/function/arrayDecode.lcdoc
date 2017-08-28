@@ -37,8 +37,8 @@ reference for more information on doing this.
 >*Note:* It is possible for two different strings to produce the same
 > array. This is due to arrays having a different ordering of <keys>. To
 > see if two encoded arrays are equal, first decode them back into the
-> original array, then directly compare them using the <= operator.>
+> original array, then directly compare them using the <=> <operator>.
 
 References: function (glossary), keys (function),
-arrayEncode (function), URLDecode (function), = operator. (operator)
+arrayEncode (function), URLDecode (function), = (operator)
 

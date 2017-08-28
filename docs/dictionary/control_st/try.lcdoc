@@ -39,12 +39,14 @@ Description:
 Use the <try> <control structure> to execute a series of
 <statement|statements> and handle any <error message|error messages> in
 the <catch> section, instead of letting LiveCode display the error
-window. Form:The <try> <control structure> begins with the word try on a
+window. 
+
+**Form:** The <try> <control structure> begins with the word try on a
 single line, followed by a list of LiveCode <statement|statements>.
 
 The catch section begins with the <catch> <keyword>, followed by a
 <parameter> name. If any <error|errors> occur during <execute|execution>
-of the <statementList>, the <error message> is placed in the
+of the <statementList>, the <error> <message> is placed in the
 <errorVariable> <parameter>, and the <errorStatementsList> is
 <execute|executed>. <statement|statements> in the <errorStatementsList>
 can refer to the <value> of the errorReport.

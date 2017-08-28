@@ -43,13 +43,12 @@ You can also specify a chunk of a container, but in this case the
 <exists> <function> always <return|returns> true.
 
 >*Tip:*  To find out whether a <file> or <folder> exists, or whether a
-> <process> is running, use the <there is a operator>.
+> <process> is running, use the <there is a> operator.
 
 References: function (control structure), isNumber (function),
 folder (glossary), current card (glossary), return (glossary),
 process (glossary), object (glossary), file (keyword), image (object),
-there is a operator (operator), there is a (operator),
-there is no (operator), owner (property)
+there is a (operator), there is no (operator), owner (property)
 
 Tags: objects
 

@@ -2,7 +2,7 @@ Name: accelerationChanged
 
 Type: message
 
-Syntax: accelerationChanged <x>, <y>, <z>
+Syntax: accelerationChanged <pXAccel>, <pYAccel>, <pZAccel>
 
 Summary:
 Sent to the current card of the defaultStack at the interval specified
@@ -21,13 +21,13 @@ on accelerationChanged pXAccel, pYAccel, pZAccel
 end accelerationChanged
 
 Parameters:
-x:
+pXAccel:
 the acceleration along the x axis relative to gravity
 
-y:
+pYAccel:
 the acceleration along the y axis relative to gravity
 
-z:
+pZAccel:
 the acceleration along the z axis relative to gravity
 
 Description:

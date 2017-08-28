@@ -798,7 +798,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	uint32_t t_end_offset, t_end_size;
 	if (t_success)
 	{
-		// Compute the shift that will have occured to any post-project sections
+		// Compute the shift that will have occurred to any post-project sections
 		int32_t t_project_delta, t_payload_delta;
 		t_project_delta = t_project_size - t_project_section -> sh_size;
 		if (t_payload_section != NULL)

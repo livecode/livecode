@@ -302,7 +302,7 @@ bool MCTileCacheOpenGLCompositor_EndTiling(void *p_context)
 	// Flush any empty textures.
 	MCTileCacheOpenGLCompositorFlushSuperTiles(self, false);
 	
-	// If an OpenGL error occured, then return false.
+	// If an OpenGL error occurred, then return false.
 	GLenum t_error;
 	t_error = glGetError();
 	if (t_error != GL_NO_ERROR)
