@@ -22,6 +22,88 @@
 	'targets':
 	[
 		{
+			'target_name': 'extract_docs',
+			'type': 'none',
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files':
+					[
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/extracted_docs/',
+					],
+				},
+			},
+			
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'host_os == "linux"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "mac"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "win"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community.exe',
+						},
+					],
+				],
+			},
+			
+			'dependencies':
+			[
+				# Requires a working LiveCode engine
+				'server',
+			],
+			
+			'sources':
+			[
+				
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'extract_docs_from_stacks',
+					'message': 'Extracting docs from stacks',
+					
+					'inputs':
+					[
+						'../util/extract-docs.livecodescript',
+						'../ide-support/revdocsparser.livecodescript',
+						'<@(_sources)',
+					],
+					
+					'outputs':
+					[
+						'<(PRODUCT_DIR)/extracted_docs',
+					],
+					
+					'action':
+					[
+						'<(engine)',
+						'../util/extract-docs.livecodescript',
+						'../ide-support/revdocsparser.livecodescript',
+						'<(PRODUCT_DIR)/extracted_docs',
+						'<@(_sources)',
+					],
+				},
+			],
+		},
+		
+		{
 			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
 			
@@ -625,6 +707,7 @@
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
+				'extract_docs',
 			],
 			
 			'sources':

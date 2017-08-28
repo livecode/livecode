@@ -26,8 +26,8 @@ on mouseDoubleUp theMouseButton
 end mouseDoubleUp
 
 Parameters:
-mouseButtonNumber (enum):
-The mouseButtonNumber specifies which mouse button was pressed:
+pButtonNumber (enum):
+The pButtonNumber parameter specifies which mouse button was pressed:
 
 -  1 is the the left button on systems with a multi-button mouse
    and the mouse button on Mac OS systems with a single-button mouse.
