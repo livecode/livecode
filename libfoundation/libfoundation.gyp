@@ -129,7 +129,7 @@
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
 				
-				'<(SHARED_INTERMEDIATE_DIR)/src/icudata.cpp',
+				'<(INTERMEDIATE_DIR)/src/icudata.cpp',
 			],
 
 			'actions':

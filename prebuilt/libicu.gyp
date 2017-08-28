@@ -4,67 +4,6 @@
 		'../common.gypi',
 	],
 	
-	'target_defaults':
-	{
-		'variables':
-		{
-			'target_conditions':
-			[
-				[
-					'toolset_os == "mac"',
-					{
-						'icu_library_dir': 'lib/mac',
-						'icu_include_dir': 'include',
-						'icu_share_dir': 'share/mac',
-					},
-				],
-				[
-					'toolset_os == "ios"',
-					{
-						'icu_library_dir': 'lib/ios/$(SDK_NAME)',
-						'icu_include_dir': 'include',
-						'icu_share_dir': 'share/ios/$(SDK_NAME)',
-					},
-				],
-				[
-					'toolset_os == "linux"',
-					{
-						# Gyp doesn't seem to handle non-absolute paths here properly...
-						'icu_library_dir': 'lib/linux/>(toolset_arch)',
-						'icu_include_dir': 'include',
-						'icu_share_dir': 'share/linux/>(toolset_arch)',
-					},
-				],
-				[
-					'toolset_os == "android"',
-					{
-						# Gyp doesn't seem to handle non-absolute paths here properly...
-						'icu_library_dir': 'lib/android/<(target_arch)',
-						'icu_include_dir': 'include',
-						'icu_share_dir': 'share/android/<(target_arch)',
-					},
-				],
-				[
-					'toolset_os == "win"',
-					{
-						'icu_library_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
-						'icu_include_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
-						'icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
-					},
-				],
-				[
-					'OS == "emscripten"',
-					{
-						'icu_library_dir': 'lib/emscripten/js',
-						'icu_include_dir': 'include',
-						'icu_share_dir': 'share/emscripten/js',
-					},
-				],
-				
-			],
-		},
-	},
-	
 	'targets':
 	[
 		{
@@ -250,6 +189,52 @@
 				'libicu',
 			],
 			
+			'variables':
+			{
+				'target_conditions':
+				[
+					[
+						'OS == "mac"',
+						{
+							'icu_share_dir': 'share/mac',
+						},
+					],
+					[
+						'OS == "ios"',
+						{
+							'icu_share_dir': 'share/ios/$(SDK_NAME)',
+						},
+					],
+					[
+						'OS == "linux"',
+						{
+							# Gyp doesn't seem to handle non-absolute paths here properly...
+							'icu_share_dir': 'share/linux/>(toolset_arch)',
+						},
+					],
+					[
+						'OS == "android"',
+						{
+							# Gyp doesn't seem to handle non-absolute paths here properly...
+							'icu_share_dir': 'share/android/<(target_arch)',
+						},
+					],
+					[
+						'OS == "win"',
+						{
+							'icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
+						},
+					],
+					[
+						'OS == "emscripten"',
+						{
+							'icu_share_dir': 'share/emscripten/js',
+						},
+					],
+					
+				],
+			},
+			
 			'actions':
 			[
 				{
@@ -261,7 +246,7 @@
 					],
 					'outputs':
 					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/icudata.cpp',
+						'<(INTERMEDIATE_DIR)/src/icudata.cpp',
 					],
 					
 					'action':
