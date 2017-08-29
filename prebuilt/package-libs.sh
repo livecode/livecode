@@ -147,10 +147,16 @@ doPackage "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 # We only need shared headers to be packaged once, so only do this on linux-x86_64
 if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
 	# Package up the includes
-	OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers.tar"
-	ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
-	tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
-	tar -cf "${ICU_HDR_TAR}" include/unicode/*.h
-	bzip2 -zf --best "${OPENSSL_HDR_TAR}"
-	bzip2 -zf --best "${ICU_HDR_TAR}"
+	OPENSSL_HDR_NAME="OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers"
+	if [ ! -z "${OpenSSL_BUILDREVISION}" ] ; then
+		OPENSSL_HDR_NAME+="-${OpenSSL_BUILDREVISION}"
+	fi
+	ICU_HDR_NAME="ICU-${ICU_VERSION}-All-Universal-Headers"
+	if [ ! -z "${ICU_BUILDREVISION}" ] ; then
+		ICU_HDR_NAME+="-${ICU_BUILDREVISION}"
+	fi
+	tar -cf "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar" include/openssl/*.h
+	tar -cf "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar" include/unicode/*.h
+	bzip2 -zf --best "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar"
+	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar"
 fi
