@@ -253,6 +253,8 @@ MCPropertyInfo MCObject::kProperties[] =
     DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_REV_SCRIPT_DESCRIPTION, Any, MCObject, RevScriptDescription)
     DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_REV_SCRIPT_DESCRIPTION, Any, MCObject, RevScriptDescription)
 
+    DEFINE_RO_OBJ_PROPERTY(P_REV_BEHAVIOR_USES, Array, MCObject, RevBehaviorUses)
+
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
