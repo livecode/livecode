@@ -182,6 +182,8 @@ dist-tools-commercial:
 # Ensure that the version for which we're trying to build installers
 # hasn't already been tagged.
 dist-tools-version-check:
+	@git tag -l | xargs git tag -d; \
+	@git fetch --tags; \
 	@if git rev-parse refs/tags/$(BUILD_SHORT_VERSION) \
 	        >/dev/null 2>&1 ; then \
 	  echo; \
