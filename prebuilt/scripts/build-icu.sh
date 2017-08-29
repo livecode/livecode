@@ -172,8 +172,14 @@ function buildICU {
 	done
 
 	# Copy executables
-	mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
-	cp "${INSTALL_DIR}/${NAME}/bin/pkgdata" "${INSTALL_DIR}/${NAME}/sbin/icupkg" "${OUTPUT_DIR}/bin/${NAME}"
+	if [ -f "${INSTALL_DIR}/${NAME}/bin/pkgdata" ] ; then
+		mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
+		cp "${INSTALL_DIR}/${NAME}/bin/pkgdata" "${OUTPUT_DIR}/bin/${NAME}"
+	fi
+	if [ -f "${INSTALL_DIR}/${NAME}/sbin/icupkg" ] ; then
+		mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
+		cp "${INSTALL_DIR}/${NAME}/sbin/icupkg" "${OUTPUT_DIR}/bin/${NAME}"
+	fi
 	
 	# Copy over the headers, if it has not yet been done
 	if [ ! -e "${OUTPUT_DIR}/include/unicode" ] ; then
