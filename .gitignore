@@ -118,6 +118,7 @@ sdks/
 ###################
 prebuilt/include
 prebuilt/lib
+prebuilt/bin
 prebuilt/share
 prebuilt/build
 prebuilt/packaged

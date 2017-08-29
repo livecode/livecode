@@ -154,9 +154,11 @@ function buildICU {
 		HOST_ICU_BINDIR="${HOST_ICU_DIR}/bin"
 	fi
 	
+	# Copy data files
 	mkdir -p "${OUTPUT_DIR}/share/${NAME}"
 	cp "${INSTALL_DIR}/${NAME}/share/icu/${ICU_VERSION}/icudt${ICU_VERSION_MAJOR}l.dat" "${OUTPUT_DIR}/share/${NAME}/icudata.dat"
 	
+	# Copy libraries
 	for L in data i18n io le lx tu uc ; do
 		if [ -f "${INSTALL_DIR}/${NAME}/lib/libicu${L}.a" ] ; then
 			if [ "${PLATFORM}" == "mac" -o "${PLATFORM}" == "ios" ] ; then
@@ -169,6 +171,10 @@ function buildICU {
 		fi
 	done
 
+	# Copy executables
+	mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
+	cp "${INSTALL_DIR}/${NAME}/bin/pkgdata" "${INSTALL_DIR}/${NAME}/sbin/icupkg" "${OUTPUT_DIR}/bin/${NAME}"
+	
 	# Copy over the headers, if it has not yet been done
 	if [ ! -e "${OUTPUT_DIR}/include/unicode" ] ; then
 		echo "Copying ICU headers"

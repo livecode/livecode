@@ -67,6 +67,7 @@ function doPackage {
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 	local SHAREPATH="share/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
+	local BINPATH="bin/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
 	generateTarFileName OpenSSL "${SUFFIX}"
 	generateTarFileName Curl "${SUFFIX}"
@@ -104,6 +105,12 @@ function doPackage {
 				ICU_FILES+="${LIBPATH}/sicu${LIB}.lib "
 			fi
 		done
+	fi
+	if [ -f "${BINPATH}/pkgdata" ] ; then
+		ICU_FILES+="${BINPATH}/pkgdata "
+	fi
+	if [ -f "${BINPATH}/icupkg" ] ; then
+		ICU_FILES+="${BINPATH}/icupkg "
 	fi
 	if [ ! -z "${ICU_FILES}" ] ; then
 		tar -cf "${ICU_TAR}" ${ICU_FILES}
