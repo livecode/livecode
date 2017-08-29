@@ -149,6 +149,9 @@ end handler
 
 private handler ButtonActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
 	post "mouseUp"
+    
+    // Wake the engine to deal with the posted signal
+    MCEngineRunloopBreakWait()
 end handler
 
 /****/
