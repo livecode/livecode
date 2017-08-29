@@ -39,7 +39,7 @@
 			'dependencies':
 			[
 				'../prebuilt/libicu.gyp:libicu',
-				'../prebuilt/libicu.gyp:encode_icu_data',
+				'../prebuilt/libicu.gyp:encode_minimal_icu_data#host',
 				'../thirdparty/libffi/libffi.gyp:libffi',
 				'../thirdparty/libz/libz.gyp:libz',
 			],
@@ -129,7 +129,7 @@
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
 				
-				'<(INTERMEDIATE_DIR)/src/icudata.cpp',
+				'<(SHARED_INTERMEDIATE_DIR)/src/icudata-minimal.cpp',
 			],
 
 			'actions':

@@ -2,6 +2,7 @@
 	'includes':
 	[
 		'../common.gypi',
+		'prebuilt-common.gypi',
 	],
 	
 	'targets':
@@ -182,58 +183,12 @@
 			'target_name': 'encode_icu_data',
 			'type': 'none',
 			
-			'toolsets': ['host','target'],
+			'toolsets': ['host'],
 
 			'dependencies':
 			[
 				'libicu',
 			],
-			
-			'variables':
-			{
-				'target_conditions':
-				[
-					[
-						'OS == "mac"',
-						{
-							'icu_share_dir': 'share/mac',
-						},
-					],
-					[
-						'OS == "ios"',
-						{
-							'icu_share_dir': 'share/ios/$(SDK_NAME)',
-						},
-					],
-					[
-						'OS == "linux"',
-						{
-							# Gyp doesn't seem to handle non-absolute paths here properly...
-							'icu_share_dir': 'share/linux/>(toolset_arch)',
-						},
-					],
-					[
-						'OS == "android"',
-						{
-							# Gyp doesn't seem to handle non-absolute paths here properly...
-							'icu_share_dir': 'share/android/<(target_arch)',
-						},
-					],
-					[
-						'OS == "win"',
-						{
-							'icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
-						},
-					],
-					[
-						'OS == "emscripten"',
-						{
-							'icu_share_dir': 'share/emscripten/js',
-						},
-					],
-					
-				],
-			},
 			
 			'actions':
 			[
@@ -242,18 +197,18 @@
 					'inputs':
 					[
 						'../util/encode_data.pl',
-						'>(icu_share_dir)/icudata.dat',
+						'>(prebuilt_share_dir)/icudata.dat',
 					],
 					'outputs':
 					[
-						'<(INTERMEDIATE_DIR)/src/icudata.cpp',
+						'<(SHARED_INTERMEDIATE_DIR)/src/icudata.cpp',
 					],
 					
 					'action':
 					[
 						'<@(perl)',
 						'../util/encode_data.pl',
-						'>(icu_share_dir)/icudata.dat',
+						'>(prebuilt_share_dir)/icudata.dat',
 						'<@(_outputs)',
 						# Really nasty hack to prevent this from being treated as a path
 						'$(this_is_an_undefined_variable)s_icudata',
@@ -261,5 +216,125 @@
 				},
 			],
 		},
+		
+		{
+			'target_name': 'minimal_icu_data',
+			'type': 'none',
+			
+			'toolsets': ['host'],
+
+			'dependencies':
+			[
+				'libicu',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'list_icu_data',
+					'inputs':
+					[
+						'>(prebuilt_bin_dir)/icupkg',
+						'>(prebuilt_share_dir)/icudata.dat',
+					],
+					'outputs':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+					],
+					'action':
+					[
+						'>(prebuilt_bin_dir)/icupkg',
+						'--list',
+						'>(prebuilt_share_dir)/icudata.dat',
+						'--auto_toc_prefix',
+						'--outlist',
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+					],
+				},
+				
+				{
+					'action_name': 'gen_icu_data_remove_list',
+					'inputs':
+					[
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'rsrc/icudata-minimal-list.txt',
+					],
+					'outputs':
+					[
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+					],
+					'action':
+					[
+						'../util/remove_matching.py',
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'rsrc/icudata-minimal-list.txt',
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+					],
+				},
+				
+				{
+					'action_name': 'minimal_icu_data',
+					'inputs':
+					[
+						'>(prebuilt_bin_dir)/icupkg',
+						'>(prebuilt_share_dir)/icudata.dat',
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+					],
+					'outputs':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
+					],
+					
+					'action':
+					[
+						'>(prebuilt_bin_dir)/icupkg',
+						'--remove',
+						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+						'--auto_toc_prefix',
+						'>(prebuilt_share_dir)/icudata.dat',
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
+					],
+				},
+			],
+		},
+
+		{
+			'target_name': 'encode_minimal_icu_data',
+			'type': 'none',
+			
+			'toolsets': ['host'],
+
+			'dependencies':
+			[
+				'minimal_icu_data',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'encode_minimal_icu_data',
+					'inputs':
+					[
+						'../util/encode_data.pl',
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
+					],
+					'outputs':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/src/icudata-minimal.cpp',
+					],
+					
+					'action':
+					[
+						'<@(perl)',
+						'../util/encode_data.pl',
+						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
+						'<@(_outputs)',
+						# Really nasty hack to prevent this from being treated as a path
+						'$(this_is_an_undefined_variable)s_icudata',
+					],
+				},
+			],
+		},
+		
 	],
 }
