@@ -1312,7 +1312,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
 		t_old_project_offset = t_project_segment -> fileoff;
 		t_project_segment -> filesize = t_project_size;
 		t_project_segment -> vmsize = t_project_size;
-		((section *)(t_project_segment + 1))[0] . size = t_project_size;
+		((typename T::section *)(t_project_segment + 1))[0] . size = t_project_size;
         
 		if (t_payload_segment != nil)
 		{
@@ -1321,7 +1321,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
 			t_old_payload_offset = t_payload_segment -> fileoff;
 			t_payload_segment -> filesize = t_payload_size;
 			t_payload_segment -> vmsize = t_payload_size;
-			((section *)(t_payload_segment + 1))[0] . size = t_payload_size;
+			((typename T::section *)(t_payload_segment + 1))[0] . size = t_payload_size;
 			relocate_segment_command<T>(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
 		}
 		
