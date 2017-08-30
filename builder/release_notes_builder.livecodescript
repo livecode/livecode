@@ -809,6 +809,8 @@ private function ExtensionsGetLcbName pExtPath
    
    local tTargetName
    put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
+   
+   revXMLDeleteTree tXmlId
    if tTargetName begins with "xmlerr" then
       return empty
    end if
