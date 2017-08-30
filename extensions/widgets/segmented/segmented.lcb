@@ -117,7 +117,7 @@ use com.livecode.library.scriptitems
 -- metadata
 metadata title is "Segmented Control"
 metadata author is "LiveCode"
-metadata version is "1.0.2"
+metadata version is "1.1.0"
 metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9c4.2,0,7.7-3.4,7.7-7.7v-14C80.2,3.4,76.8,0,72.6,0z M7.8,13.5h8v2.3h-8V13.5z M19.7,20.6h-12v-2.3h12V20.6z M19.7,11h-12V8.8h12V11z M27.8,25.5h-1V3.8h1V25.5z M46.1,20.6h-12v-2.3h12V20.6zM36.1,15.7v-2.3h8v2.3H36.1z M46.1,11h-12V8.8h12V11z M54.4,25.5h-1V3.8h1V25.5z M72.7,20.6h-12v-2.3h12V20.6z M72.7,15.7h-8v-2.3h8V15.7z M72.7,11h-12V8.8h12V11z"
 metadata preferredSize is "200,32"
 
@@ -164,6 +164,11 @@ metadata hilitedTextColor.label is "Hilited segment label color"
 metadata themeClass.default is "list"
 metadata themeClass.user_visible is "false"
 
+property horizontal get mIsHorizontal set SetHorizontal
+metadata horizontal.editor is "com.livecode.pi.boolean"
+metadata horizontal.default is "true"
+metadata horizontal.label is "Horizontal"
+
 -- private instance variables
 private variable mMultiSelect		as Boolean
 private variable mToggleHilites	as Boolean
@@ -174,7 +179,7 @@ private variable mSegmentIcons		as List
 private variable mSelectedIcons		as List
 
 private variable mSegmentDisplay	as String
-private variable mSegmentMinWidth	as List
+private variable mSegmentMinExtent	as List
 private variable mSegmentSelected	as List
 
 private variable mShowFrameBorder	as Boolean
@@ -186,9 +191,11 @@ private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
 private variable mRadius			as Real
 
-private variable mCalculatedWidths as List
+private variable mCalculatedExtents as List
 
 private variable mSelectedLabelColor as optional Color
+
+private variable mIsHorizontal as Boolean
 
 -- constants
 constant kIconSize is 16
@@ -198,7 +205,7 @@ constant kIconPaddingRatio is 0.2
 constant kDefaultSegmentName is "segment"
 constant kDefaultSegmentIcon is "circle"
 constant kDefaultSegmentLabel is "Label"
-constant kDefaultSegmentMinWidth is 50
+constant kDefaultSegmentMinExtent is 50
 constant kDefaultSelectedLabelColor is [1,1,1]
 
 --
@@ -213,7 +220,7 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentIcons		into rProperties["segmentIcons"]
 	put mSelectedIcons		into rProperties["selectedIcons"]
 	put mSegmentDisplay		into rProperties["segmentDisplay"]
-	put mSegmentMinWidth	into rProperties["segmentMinWidth"]	
+	put mSegmentMinExtent	into rProperties["segmentMinExtent"]
 	put getSelected()		into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
 	
@@ -235,7 +242,11 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["segmentIcons"]		into mSegmentIcons
 	put pProperties["selectedIcons"]	into mSelectedIcons
 	put pProperties["segmentDisplay"]	into mSegmentDisplay
-	put pProperties["segmentMinWidth"]	into mSegmentMinWidth
+	if "segmentMinWidth" is among the keys of pProperties then
+		put pProperties["segmentMinWidth"]	into mSegmentMinExtent
+	else if "segmentMinExtent" is among the keys of pProperties then
+		put pProperties["segmentMinExtent"]	into mSegmentMinExtent
+	end if
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
 	setSelected(pProperties["selectedSegment"])
 
@@ -257,7 +268,7 @@ public handler OnCreate()
 	put ["align left","align center","align right"] into mSelectedIcons
 	
 	put "text" into mSegmentDisplay
-	put [kDefaultSegmentMinWidth, kDefaultSegmentMinWidth, kDefaultSegmentMinWidth] into mSegmentMinWidth
+	put [kDefaultSegmentMinExtent, kDefaultSegmentMinExtent, kDefaultSegmentMinExtent] into mSegmentMinExtent
 	setSelected([])
 	
 	put true into mShowFrameBorder
@@ -269,12 +280,12 @@ public handler OnCreate()
 	put the empty list into mLines
 	put 0 into mRadius
 
-	put [] into mCalculatedWidths
+	put [] into mCalculatedExtents
 end handler
 
 public handler OnPaint()	
 	if mGeometryIsChanged then
-		calculateWidths()
+		calculateExtents()
 		-- update mPerimeter and mLines variables if the geometry has changed
 		put (the trunc of my height)/5 into mRadius
 		updatePerimeter()
@@ -312,10 +323,10 @@ public handler OnGeometryChanged()
 end handler
 
 private handler clickPosToComponent(in pLoc as Point) returns Integer
-	variable tX as Integer
-	repeat with tX from 1 up to mNumSegments
-		if pLoc is within fetchBounds(tX) then
-			return tX
+	variable tSegmentIndex as Integer
+	repeat with tSegmentIndex from 1 up to mNumSegments
+		if pLoc is within fetchBounds(tSegmentIndex) then
+			return tSegmentIndex
 		end if
 	end repeat
 	return 0
@@ -327,10 +338,10 @@ public handler OnClick() returns nothing
 	variable tSegment
 	variable tCount as Integer
 
-	variable tX as Integer
-	put clickPosToComponent(the click position) into tX
-	 
-	 if tX is 0 then
+	variable tSegmentIndex as Integer
+	put clickPosToComponent(the click position) into tSegmentIndex
+
+	 if tSegmentIndex is 0 then
 		 return
 	 end if
 	 
@@ -338,21 +349,21 @@ public handler OnClick() returns nothing
 		-- If cannot multiselect, then need to select the clicked-on segment and
 		-- deselect the currently selected segment. If the clicked-on segment is
 		-- already selected, then act according to toggleHilites property
-		if mSegmentSelected[tX] and mToggleHilites then
+		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
 				setSelected([])
-		else if not mSegmentSelected[tX] then
-			setSelected([tX])
+		else if not mSegmentSelected[tSegmentIndex] then
+			setSelected([tSegmentIndex])
 		end if
 	else
 		-- If can multiselect, then select the clicked-on segment if it is
 		-- unselected. If it is selected, act according to toggleHilites property
 		variable tState as List
-		if mSegmentSelected[tX] and mToggleHilites then
+		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
 			put false into mSegmentSelected
 			post "hiliteChanged"
 			redraw all
-		else if not mSegmentSelected[tX] then
-			put true into mSegmentSelected[tX]
+		else if not mSegmentSelected[tSegmentIndex] then
+			put true into mSegmentSelected[tSegmentIndex]
 			post "hiliteChanged"
 			redraw all
 		end if
@@ -370,50 +381,67 @@ handler hintUpper(in pBound as Number) returns Number
 end handler
 
 private handler drawSegments() returns nothing
-	variable tX as Integer
+	variable tSegmentIndex as Integer
 	variable tLabel as String
-	variable tWidth as Real
+	variable tStart as Real
 	variable tIsIn as Boolean
-	variable tLeft as Real
 	variable tBorderOffset as Real
-	put 0 into tLeft
+	put 0 into tStart
 	set the font of this canvas to my font
-	
+
 	if mShowFrameBorder then
 		put 0.5 into tBorderOffset // border is hard coded at 1 pixel
 	else
 		put 0 into tBorderOffset
 	end if
-	
-	repeat with tX from 1 up to mNumSegments
-		put fetchWidth(tX) into tWidth
-		put mSegmentSelected[tX] into tIsIn
-		
+
+	repeat with tSegmentIndex from 1 up to mNumSegments
+		variable tExtent as Real
+		put fetchExtent(tSegmentIndex) into tExtent
+		put mSegmentSelected[tSegmentIndex] into tIsIn
+
 		if tIsIn then
 			set the paint of this canvas to my highlight paint
 		else
 			set the paint of this canvas to my background paint
-		end if	
-		
-		variable tSegmentRect as List
-		put [hintLower(tLeft), tBorderOffset, \
-				hintUpper(tLeft + tWidth), my height-tBorderOffset] \
-				into tSegmentRect
-		if tX is 1 then
-			put tBorderOffset into element 1 of tSegmentRect
-		else if tX is mNumSegments then
-			subtract tBorderOffset from element 3 of tSegmentRect
 		end if
-		
+
+		variable tSegmentRect as List
+		if mIsHorizontal then
+			put [hintLower(tStart), tBorderOffset, \
+				hintUpper(tStart + tExtent), my height-tBorderOffset] \
+				into tSegmentRect
+		else
+			put [tBorderOffset, hintLower(tStart), \
+				my width - tBorderOffset, hintUpper(tStart + tExtent)] \
+				into tSegmentRect
+		end if
+
+		variable tStartIndex as Integer
+		variable tEndIndex as Integer
+		if mIsHorizontal then
+			put 1 into tStartIndex
+			put 3 into tEndIndex
+		else
+			put 2 into tStartIndex
+			put 4 into tEndIndex
+		end if
+
+		if tSegmentIndex is 1 then
+			put tBorderOffset into element tStartIndex of tSegmentRect
+		else if tSegmentIndex is mNumSegments then
+			subtract tBorderOffset from element tEndIndex of tSegmentRect
+		end if
+
 		save state of this canvas
-		clip to rectangle tSegmentRect on this canvas	
-		-- For the rounded rectangle segments at the ends, we fill the round rect beyond the 
+		clip to rectangle tSegmentRect on this canvas
+		-- For the rounded rectangle segments at the ends, we fill the round rect beyond the
 		-- curvature and use the clip rect to display as we would like.
-		if tX = 1 then
-			put tLeft + tWidth + mRadius into element 3 of tSegmentRect
+		if tSegmentIndex = 1 then
+			put tStart + tExtent + mRadius into element tEndIndex of tSegmentRect
 			fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
-		else if tX = mNumSegments then
-			put tLeft - mRadius into element 1 of tSegmentRect
+		else if tSegmentIndex = mNumSegments then
+			put tStart - mRadius into element tStartIndex of tSegmentRect
 			fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
 		else
 			fill rectangle path of rectangle tSegmentRect on this canvas
@@ -434,45 +462,62 @@ private handler drawSegments() returns nothing
 		variable tIconPath as Path
 		variable tLabelRect as Rectangle
 
+		variable tBound as Real
+		if mIsHorizontal then
+			put my height into tBound
+		else
+			put my width into tBound
+		end if
 		if mSegmentDisplay is "icons" then
             -- Compute the minimum margin required to provide the correct
             -- padding ratio.
             variable tIconMargin as Number
-            if tWidth > my height then
-                put my height * kIconPaddingRatio into tIconMargin
+            if tExtent > tBound then
+                put tBound * kIconPaddingRatio into tIconMargin
             else
-                put tWidth * kIconPaddingRatio into tIconMargin
+                put tExtent * kIconPaddingRatio into tIconMargin
             end if
 
             -- Compute the corresponding icon bounding box
-            put rectangle [tLeft + tIconMargin, \
-                tIconMargin, \
-                tLeft + tWidth - tIconMargin, \
-                my height - tIconMargin] into tLabelRect
+				if mIsHorizontal then
+	            put rectangle [tStart + tIconMargin, \
+	                tIconMargin, \
+	                tStart + tExtent - tIconMargin, \
+	                my height - tIconMargin] into tLabelRect
+				else
+					put rectangle [tIconMargin, \
+						 tStart + tIconMargin, \
+						 my width - tIconMargin, \
+						 tStart + tExtent - tIconMargin] into tLabelRect
+				end if
 
 			if tIsIn then
-				put path iconSVGPathFromName(element tX of mSelectedIcons) into tIconPath
+				put path iconSVGPathFromName(element tSegmentIndex of mSelectedIcons) into tIconPath
 			else
-				put path iconSVGPathFromName(element tX of mSegmentIcons) into tIconPath
+				put path iconSVGPathFromName(element tSegmentIndex of mSegmentIcons) into tIconPath
 			end if
 			constrainPathToRect(tLabelRect, tIconPath)
 			fill tIconPath on this canvas
 		else
-			put rectangle [tLeft, 0, tLeft + tWidth, my height] into tLabelRect
-			put (element tX of mSegmentLabels) into tLabel
+			if mIsHorizontal then
+				put rectangle [tStart, 0, tStart + tExtent, my height] into tLabelRect
+			else
+				put rectangle [0, tStart, my width, tStart + tExtent] into tLabelRect
+			end if
+			put (element tSegmentIndex of mSegmentLabels) into tLabel
 			fill text tLabel at center of tLabelRect on this canvas
 		end if
 
-		add tWidth to tLeft
+		add tExtent to tStart
 	end repeat
 	
 end handler
 
 private handler updateLines() returns nothing
-	
-	variable tX as Integer
-	variable tWidth as Real
-	variable tLeft as Real
+
+	variable tSegmentIndex as Integer
+	variable tExtent as Real
+	variable tStart as Real
 	variable tBorderOffset as Real
 	
 	if mShowFrameBorder then
@@ -482,15 +527,19 @@ private handler updateLines() returns nothing
 	end if
 	
 	put the empty list into mLines
-	
-	put 0 into tLeft
-	
-	repeat with tX from 1 up to mNumSegments
-	
-		put fetchWidth(tX) into tWidth
-		add tWidth to tLeft
-		if tX < mNumSegments then
-			push line path from point [tLeft, tBorderOffset] to point [tLeft, my height-tBorderOffset] onto back of mLines
+
+	put 0 into tStart
+
+	repeat with tSegmentIndex from 1 up to mNumSegments
+
+		put fetchExtent(tSegmentIndex) into tExtent
+		add tExtent to tStart
+		if tSegmentIndex < mNumSegments then
+			if mIsHorizontal then
+				push line path from point [tStart, tBorderOffset] to point [tStart, my height-tBorderOffset] onto back of mLines
+			else
+				push line path from point [tBorderOffset, tStart] to point [my width-tBorderOffset, tStart] onto back of mLines
+			end if
 		end if
 		
 	end repeat
@@ -502,85 +551,99 @@ private handler updatePerimeter() returns nothing
 	put rounded rectangle path of tRect with radius mRadius into mPerimeter
 end handler
 
-private handler fetchWidth(in pSegment as Integer) returns Real
+private handler fetchExtent(in pSegment as Integer) returns Real
 	if pSegment is 0 then
 		return 0
 	end if
 
-	return mCalculatedWidths[pSegment]
+	return mCalculatedExtents[pSegment]
 end handler
 
-private handler calculateWidths() returns nothing
+private handler calculateExtents() returns nothing
+	variable tBound as Real
+	if mIsHorizontal then
+		put my width into tBound
+	else
+		put my height into tBound
+	end if
 	variable tCount as Number
 	// Retain existing behavior if display is "icons"
 	if mSegmentDisplay is "icons" then
-		variable tWidth as Real
-		put my width / mNumSegments into tWidth
+		variable tExtent as Real
+		put tBound / mNumSegments into tExtent
 
-        variable tWidths as List
-        put [] into tWidths
+      variable tExtents as List
+      put [] into tExtents
 		repeat with tCount from 1 up to mNumSegments
-          push the maximum of tWidth and mSegmentMinWidth[tCount] onto tWidths
+          push the maximum of tExtent and mSegmentMinExtent[tCount] onto tExtents
 		end repeat
-        put tWidths into mCalculatedWidths
+        put tExtents into mCalculatedExtents
 		return
 	end if
 
 	// We want to be able to fit as much of the text in as possible whilst
-	// respecting the minWidths of each segment.
+	// respecting the minExtents of each segment.
 
 	// Measure the labels
 	variable tTextSizes as List
-    put [] into tTextSizes
+   put [] into tTextSizes
 	variable tTotal as Number
 	put 0 into tTotal
 
 	variable tTextBounds as Rectangle
 	repeat with tCount from 1 up to mNumSegments
 		measure mSegmentLabels[tCount] on this canvas into tTextBounds
-		push the width of tTextBounds onto back of tTextSizes
+		if mIsHorizontal then
+			push the width of tTextBounds onto back of tTextSizes
+		else
+			push the height of tTextBounds onto back of tTextSizes
+		end if
 		add the tail of tTextSizes to tTotal
 	end repeat
 
-	// Work out how much to add to respect min widths
+	// Work out how much to add to respect min extents
 	variable tOK as Boolean
 	put true into tOK
 
 	variable tDifference as Number
 	repeat with tCount from 1 up to mNumSegments
-		put mSegmentMinWidth[tCount] - tTextSizes[tCount] into tDifference
+		put mSegmentMinExtent[tCount] - tTextSizes[tCount] into tDifference
 		if tDifference > 0 then
-			put mSegmentMinWidth[tCount] into tTextSizes[tCount]
+			put mSegmentMinExtent[tCount] into tTextSizes[tCount]
             add tDifference to tTotal
 		end if
 	end repeat
 
 	// If there is still space to expand, do so
-	if tTotal < my width then
+	if tTotal < tBound then
         variable tNeededIncrease as Number
-		put (my width - tTotal) / mNumSegments into tNeededIncrease
+		put (tBound - tTotal) / mNumSegments into tNeededIncrease
         repeat with tCount from 1 up to mNumSegments
             add tNeededIncrease to tTextSizes[tCount]
         end repeat
 	end if
 
-	put tTextSizes into mCalculatedWidths
+	put tTextSizes into mCalculatedExtents
 end handler
 
 private handler fetchBounds(in pSegment as Integer) returns Rectangle
-	
-	variable tLeft as Real
-	put 0 into tLeft
-	
-	variable tX as Integer
-	repeat with tX from 1 up to pSegment-1
-	 	add fetchWidth(tX) to tLeft
+
+	variable tStart as Real
+	put 0 into tStart
+
+	variable tSegmentIndex as Integer
+	repeat with tSegmentIndex from 1 up to pSegment-1
+	 	add fetchExtent(tSegmentIndex) to tStart
 	end repeat
-		
-	variable tWidth
-	put fetchWidth(pSegment) into tWidth
-	
-	return rectangle [tLeft, 0, tLeft + tWidth, my height]
+
+	variable tExtent as Real
+	put fetchExtent(pSegment) into tExtent
+
+	if mIsHorizontal then
+		return rectangle [tStart, 0, tStart + tExtent, my height]
+	else
+		return rectangle [0, tStart, my width, tStart + tExtent]
+	end if
 end handler
 
 private handler getSelectedLabelColor() returns String
@@ -741,7 +804,7 @@ handler reduceSegmentCount(in pCount as Number)
 	delete element (pCount + 1) to -1 of mSegmentLabels
 	delete element (pCount + 1) to -1 of mSegmentIcons
 	delete element (pCount + 1) to -1 of mSelectedIcons
-	delete element (pCount + 1) to -1 of mSegmentMinWidth
+	delete element (pCount + 1) to -1 of mSegmentMinExtent
 	put pCount into mNumSegments
 
 	-- This may have caused the highlighting to change by deleting the
@@ -774,7 +837,7 @@ handler increaseSegmentCount(in pCount as Number)
 		push tLabel onto mSegmentLabels
 		push kDefaultSegmentIcon onto mSegmentIcons
 		push kDefaultSegmentIcon onto mSelectedIcons
-		push kDefaultSegmentMinWidth onto mSegmentMinWidth
+		push kDefaultSegmentMinExtent onto mSegmentMinExtent
 	end repeat
 
 	put pCount into mNumSegments
@@ -952,8 +1015,8 @@ handler getSelectedIcons() returns String
 end handler
 
 /**
-Syntax: set the itemMinWidths of <widget> to <numberList>
-Syntax: get the itemMinWidths of <widget>
+Syntax: set the itemMinExtents of <widget> to <numberList>
+Syntax: get the itemMinExtents of <widget>
 
 Summary: The minimum width of each segment
 
@@ -961,47 +1024,47 @@ Value(string): A comma-delimited list of positive numbers.
 
 Description:
 The minimum width of each segment in the control.  Each of the
-<itemMinWidths> must be a positive number.
+<itemMinExtents> must be a positive number.
 
-When you set the <itemMinWidths> to a string that has fewer than
+When you set the <itemMinExtents> to a string that has fewer than
 <itemCount> numbers in it, the remaining segments are given a minimum
 a width of 0.
 
-When you set the <itemMinWidths> to a string that has more than
+When you set the <itemMinExtents> to a string that has more than
 <itemCount> numbers in it, the extra numbers are ignored.
 
 Related: itemCount (property)
 **/
 
-property itemMinWidths get getSegmentMinWidth set setSegmentMinWidth
-metadata itemMinWidths.editor is "com.livecode.pi.editorList"
-metadata itemMinWidths.subeditor is "com.livecode.pi.number"
-metadata itemMinWidths.delimiter is ","
-metadata itemMinWidths.default is "50,50,50"
-metadata itemMinWidths.label is "Minimum segment widths"
+property itemMinExtents get getSegmentMinExtent set setSegmentMinExtent
+metadata itemMinExtents.editor is "com.livecode.pi.editorList"
+metadata itemMinExtents.subeditor is "com.livecode.pi.number"
+metadata itemMinExtents.delimiter is ","
+metadata itemMinExtents.default is "50,50,50"
+metadata itemMinExtents.label is "Minimum segment widths"
 
-handler setSegmentMinWidth(in pWidths as String) returns nothing
-	variable tWidths as List
-	put parseNumberListProperty(pWidths, 0) into tWidths
+handler setSegmentMinExtent(in pExtents as String) returns nothing
+	variable tExtents as List
+	put parseNumberListProperty(pExtents, 0) into tExtents
 
-	variable tWidth
-	repeat for each element tWidth in tWidths
-		if tWidth < 0 then
+	variable tExtent
+	repeat for each element tExtent in tExtents
+		if tExtent < 0 then
 			throw "segment minimum widths must be positive"
 		end if
 	end repeat
 
-	if tWidths is mSegmentMinWidth then
+	if tExtents is mSegmentMinExtent then
 		return -- No change
 	end if
 
-	put tWidths into mSegmentMinWidth
+	put tExtents into mSegmentMinExtent
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-handler getSegmentMinWidth() returns String
-	return formatNumberListAsItems(mSegmentMinWidth)
+handler getSegmentMinExtent() returns String
+	return formatNumberListAsItems(mSegmentMinExtent)
 end handler
 
 /**
@@ -1218,6 +1281,11 @@ private handler getSelectedSegmentNames() returns String
 		push mSegmentNames[tIndex] onto tNames
 	end repeat
 	return formatStringListAsItems(tNames)
+end handler
+
+public handler SetHorizontal(in pHorizontal as Boolean) returns nothing
+	put pHorizontal into mIsHorizontal
+	redraw all
 end handler
 
 end widget
