@@ -398,6 +398,31 @@ void MCParentScript::Flush(void)
 		t_use -> ClearVars();
 }
 
+bool MCParentScript::CopyUses(MCArrayRef& r_use)
+{
+    MCAutoArrayRef t_use_list;
+    if (!MCArrayCreateMutable(&t_use_list))
+        return false;
+    
+    index_t t_index = 1;
+    for(MCParentScriptUse *t_use = m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
+    {
+        MCAutoValueRef t_object_id;
+        if (!(t_use -> GetReferrer() -> names(P_LONG_ID, &t_object_id)) ||
+            !MCArrayStoreValueAtIndex(*t_use_list, t_index++, *t_object_id))
+            return false;
+    }
+    
+    if (!t_use_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_use = t_use_list.Take();
+    
+    return true;
+}
+
 // MW-2013-05-30: [[ InheritedPscripts ]] Loop through all uses of this parentScript
 //   and ensure the super-use chains are correct.
 bool MCParentScript::Reinherit(void)

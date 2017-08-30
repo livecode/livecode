@@ -46,7 +46,7 @@ single line, followed by a list of LiveCode <statement|statements>.
 
 The catch section begins with the <catch> <keyword>, followed by a
 <parameter> name. If any <error|errors> occur during <execute|execution>
-of the <statementList>, the <error> <message> is placed in the
+of the <statementList>, the <error message> is placed in the
 <errorVariable> <parameter>, and the <errorStatementsList> is
 <execute|executed>. <statement|statements> in the <errorStatementsList>
 can refer to the <value> of the errorReport.

@@ -1289,8 +1289,8 @@ MCPrinterResult MCWindowsPrinterDevice::Begin(const MCPrinterRectangle& p_src_re
 	// Calculate the convex integer hull of the source rectangle.
 	//
 	MCRectangle t_src_rect_hull;
-	t_src_rect_hull . x = (int4)floor(p_src_rect . top);
-	t_src_rect_hull . y = (int4)floor(p_src_rect . left);
+	t_src_rect_hull . x = (int4)floor(p_src_rect . left);
+	t_src_rect_hull . y = (int4)floor(p_src_rect . top);
 	t_src_rect_hull . width = (int4)(ceil(p_src_rect . right) - floor(p_src_rect . left));
 	t_src_rect_hull . height = (int4)(ceil(p_src_rect . bottom) - floor(p_src_rect . top));
 

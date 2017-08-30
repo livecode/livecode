@@ -1474,6 +1474,7 @@ const LT factor_table[] =
         {"retainpostscript", TT_PROPERTY, P_RETAIN_POSTSCRIPT},
 		{"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
+        {"revbehavioruses", TT_PROPERTY, P_REV_BEHAVIOR_USES},
 #ifdef MODE_DEVELOPMENT
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif

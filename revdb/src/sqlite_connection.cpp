@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include <sstream>
 
@@ -443,7 +444,7 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 		else
 		{
 			// According to documentation in sqlitedecode.cpp, this is the required size of output buffer
-			t_escaped_string = malloc(2 + (257 * t_parameter_value . length) / 254);
+			t_escaped_string = malloc(2 + (257 * (int64_t)t_parameter_value . length) / 254);
 			t_escaped_string_length = sqlite_encode_binary((const unsigned char *)t_parameter_value . sptr, t_parameter_value . length, (unsigned char *)t_escaped_string);
 		}
 	}
