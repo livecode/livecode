@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 #include "system.h"
+#include "eventqueue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -113,6 +114,9 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCFontInitialize();
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
+	
+	// Initialize the event queue
+	MCEventQueueInitialize();
 	
 	////
 
