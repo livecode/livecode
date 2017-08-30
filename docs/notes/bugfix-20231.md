@@ -1,0 +1,1 @@
+# Fix crash on Windows when exiting with taskbar hidden.
