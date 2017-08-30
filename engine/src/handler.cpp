@@ -676,6 +676,27 @@ Parse_stat MCHandler::newconstant(MCNameRef p_name, MCValueRef p_value)
 	return PS_NORMAL;
 }
 
+bool MCHandler::getconstantnames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nconstants; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, cinfo[i].name))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
+
 void MCHandler::newglobal(MCNameRef p_name)
 {
 	uint2 i;
@@ -736,6 +757,26 @@ bool MCHandler::getvariablenames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+bool MCHandler::getvariablenames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nvnames; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, vinfo[i].name))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
 bool MCHandler::getglobalnames(MCListRef& r_list)
 {
 	MCAutoListRef t_list;
@@ -762,6 +803,27 @@ bool MCHandler::getglobalnames(MCListRef& r_list)
 
 	return MCListCopy(*t_list, r_list);
 }
+
+bool MCHandler::getglobalnames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nglobals; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, globals[i]->getname()))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
 
 bool MCHandler::getvarnames(bool p_all, MCListRef& r_list)
 {
