@@ -51,12 +51,27 @@ include Makefile.common
 .DEFAULT: all
 
 all: all-$(guess_platform)
+	
 check: check-$(guess_platform)
-
+	
 check-common-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:checkengine"
+endif
 	$(MAKE) -C tests bin_dir=../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:checkengine"
+	@echo "travis_fold:start:checkide"
+endif
 	$(MAKE) -C ide/tests bin_dir=../../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:checkide"
+	@echo "travis_fold:start:checkextensions"
+endif
 	$(MAKE) -C extensions bin_dir=../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:checkextensions"
+endif
 
 ################################################################
 # Linux rules
@@ -75,8 +90,18 @@ check-linux-%:
 	$(MAKE) check-common-linux-$*
 
 all-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:config"
+endif
 	$(MAKE) config-linux-$*
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:config"
+	@echo "travis_fold:start:compile"
+endif
 	$(MAKE) compile-linux-$*
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:compile"
+endif
 
 $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 
