@@ -325,11 +325,18 @@ on TestLoadExternal pExternal
    local tEnginePath
    put specialfolderpath("engine") into tEnginePath
 
+   local tExternalsPath, tExtension
+   set the itemdelimiter to slash
    if the platform is "MacOS" then
-      set the externals of the templateStack to tEnginePath & slash & pExternal & ".bundle"
+      put item 1 to -3 of tEnginePath into tExternalsPath
+      put "bundle" into tExtension
    else if the platform is "linux" then
-      set the externals of the templateStack to tEnginePath & slash & pExternal & ".so"
+      put tEnginePath into tExternalsPath
+      put "so" into tExtension
    end if
+
+   set the externals of the templateStack to tExternalsPath & slash & \
+      pExternal & "." & tExtension
 
    create stack pExternal && "External"
    start using it

@@ -6,7 +6,20 @@
 sudo: required
 dist: trusty
 
+# Build on both Linux and OSX
+os:
+  - linux
+  - osx
+
+# Use a Travis image containing an Xcode we support
+# This prevents surprise upgrades!
+osx_image: xcode7.3
+
 language: c++
+
+compiler: 
+  - clang
+  - gcc
 
 # Skip vulcan CI branches
 branches:
@@ -23,15 +36,49 @@ env:
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "c++11"
 
+# Build using clang on mac and gcc on linux
+matrix:
+  exclude:
+  - os: osx
+    compiler: gcc
+  - os: linux
+    compiler: clang
+
+# Install any required tools
+before_install:
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+      rvm --default use 2.2.1
+      gem install xcpretty
+    fi
+
 # Set up the source tree by fetching Linux-specific prebuilt objects
-install: (cd prebuilt && ./fetch-libraries.sh linux)
+install: 
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
-script: >
-  if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
-      make all-linux;
-      make check-linux V=1 || travis_terminate 1;
+script: |
+  case "${TRAVIS_OS_NAME}" in
+    linux)
+      BUILD_PLATFORM=linux
+      LICENSE_DIR="${HOME}/.runrev/licenses"
+      ;;
+    osx)
+      BUILD_PLATFORM=mac
+      LICENSE_DIR="${HOME}/Library/Application Support/RunRev/Licenses"
+      export XCODE_TARGET_SDK=macosx10.11
+      export XCODEBUILD="set -o pipefail && xcodebuild"
+      export XCODEBUILD_FILTER="| xcpretty"
+      ;;
+  esac
+
+  if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
+    mkdir -p "${LICENSE_DIR}" &&
+    touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
+    make all-${BUILD_PLATFORM} &&
+    make check-${BUILD_PLATFORM} V=1
   fi
 
 addons:
