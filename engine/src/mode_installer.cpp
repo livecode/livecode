@@ -1282,9 +1282,11 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			
 	case kMCCapsuleSectionTypeLicense:
 	{
-		// Just read the edition byte and ignore it in installer mode.
-		char t_edition_byte;
-		if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+		// Just read the license info and ignore it in installer mode.
+		uint8_t t_class;
+        MCAutoValueRef t_addons;
+        if (IO_read(&t_class, 1, p_stream) != IO_NORMAL ||
+            (p_length > 1 && IO_read_valueref_new(&t_addons, p_stream) != IO_NORMAL))
 		{
 			MCresult -> sets("failed to read license");
 			return false;

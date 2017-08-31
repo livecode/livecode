@@ -426,7 +426,9 @@ enum
 	
 enum
 {
+    kLCLicenseEditionNone = 0,
     kLCLicenseEditionCommunity = 1000,
+    kLCLicenseEditionCommunityPlus = 1500,
     kLCLicenseEditionIndy = 2000,
     kLCLicenseEditionBusiness = 3000,
 };

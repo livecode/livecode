@@ -47,11 +47,12 @@ enum
     kMCLicenseDeployToHTML5 = 1 << 10,
 };
 
-enum
+enum MCLicenseClass
 {
 	kMCLicenseClassNone,
 	kMCLicenseClassCommunity,
-	kMCLicenseClassEvaluation,
+    kMCLicenseClassCommunityPlus,
+    kMCLicenseClassEvaluation,
 	kMCLicenseClassCommercial,
 	kMCLicenseClassProfessionalEvaluation,
 	kMCLicenseClassProfessional,
