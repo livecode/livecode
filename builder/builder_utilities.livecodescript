@@ -679,7 +679,7 @@ An commma delimited list
 
 **/
 function builderEditionNames
-   return "Business,Indy,Community+,Community"
+   return "Business,Indy,Community Plus,Community"
 end builderEditionNames
 
 /**
