@@ -194,3 +194,26 @@ on TestRevEffectiveScriptDescriptionDeletedBehavior
    
 	TestAssert "ignores blocked behaviors", tDescription[tButtonIndex]["description"]["handlers"]["myHandler"] is an array
 end TestRevEffectiveScriptDescriptionDeletedBehavior
+
+
+on TestRevBehaviorUses
+   set the behavior of button "TestButton" to the long id of button "IsolatedBehavior"
+   local tUses
+   put the revBehaviorUses of button "IsolatedBehavior" into tUses
+   TestAssert "lists uses of behavior", exists(tUses[1])
+   
+   put the revBehaviorUses of button "TestButton" into tUses
+   TestAssert "empty if no uses of behavior", the number of elements of tUses is 0
+end TestRevBehaviorUses
+
+on TestRevBehaviorUsesChainedBehavior
+   set the behavior of button "TestButton" to the long id of button "ChainedBehavior"
+   
+   local tUses
+   put the revBehaviorUses of button "ChainedBehavior" into tUses
+   TestAssert "lists uses of behavior", exists(tUses[1])
+   TestAssert "does not list behavior chain", the number of elements of tUses is 1
+   
+   put the revBehaviorUses of button "IsolatedBehavior" into tUses
+   TestAssert "lists multiple uses of behavior", exists(tUses[2])
+end TestRevBehaviorUsesChainedBehavior

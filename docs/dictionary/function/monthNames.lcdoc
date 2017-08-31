@@ -2,9 +2,7 @@ Name: monthNames
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] monthNames
-
-Syntax: the [internet] [{ english | system }] monthNames
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] monthNames
 
 Syntax: monthNames()
 

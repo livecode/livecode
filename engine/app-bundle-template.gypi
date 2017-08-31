@@ -37,6 +37,7 @@
 					'rsrc/sv.lproj/Localisation.strings',
 					'rsrc/zh_CN.lproj/Localisation.strings',
 					'rsrc/zh_TW.lproj/Localisation.strings',
+                    'rsrc/terminology.sdef',
 				],
 	
 				'xcode_settings':

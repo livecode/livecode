@@ -35,8 +35,9 @@ The <fontFile> is the path of the font file to unload
 > newly unloaded font, compare the value of the <fontNames> before and 
 > after unloading the font.
 
->*Warning:* Ensure fonts are not in use before unloading them to avoid 
-> unexpected behaviour. 
+References: start using font (command), function (glossary),
+fontNames (function), property (glossary),
+fontFilesInUse (property)
 
 References: start using font (command), function (glossary),
 fontNames (function), property (glossary),
