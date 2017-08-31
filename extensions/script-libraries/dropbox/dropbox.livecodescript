@@ -657,12 +657,12 @@ Returns the metadata for a file or folder.
 Syntax: dropboxGetMetadata <pAccessToken>, <pPath>, <pIncludeMediaInfo>, [<pCallback>]
 
 Description:
+
 >*Note:* Metadata for the root folder is unsupported.
 
-If the path is a folder, all its contents will be deleted too.
-A successful response indicates that the file or folder was deleted. The returned
-metadata will be the corresponding FileMetadata or FolderMetadata for the item at
-time of deletion, and not a DeletedMetadata object.
+If the path is a folder, then a folderMetadata json is returned.
+If the path is a file then a fileMetadata json is returned.
+If the path is a file or folder that has been deleted, then a deletedMetadata json is returned.
 
 If the callback parameter is not empty the request will be asynchronus and
 when complete the callback will be sent to the object that accessed the API.
@@ -676,7 +676,7 @@ The callback will be sent with three parameters:
 Parameters:
 pAccessToken: An OAuth2 Access token to access the user's account
 
-pPath: Path in the user's Dropbox to be deleted.
+pPath: Path to a file or folder in the user's Dropbox to be queried
 
 pIncludeMediaInfo (boolean): If true, FileMetadata.media_info is set for photo and
 video. The default for this field is False.
@@ -5011,6 +5011,7 @@ private function __get_metadata_POST pPath,pIncludeMediaInfo
    path can be file or folder
    {"path":"/apps/MyApp/seasons.txt"}
    */
+   if pIncludeMediaInfo is empty then put "false" into pIncludeMediaInfo
    return __CB(__Q("path") & ":" &  __Q(pPath) & "," &__Q("include_media_info") & ":" & pIncludeMediaInfo)
 end __get_metadata_POST
 
