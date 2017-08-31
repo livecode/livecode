@@ -554,13 +554,14 @@ private function __MeetsRequirements pRequirement, pOptions
                return false
             end if
          end repeat
-		case "clipboard"
-		case "wait"
-		case "security"
-				return the platform is not "HTML5"
-		case "write"
-			return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
-	end switch
-   
+         return true
+         break
+      case "clipboard"
+      case "wait"
+      case "security"
+         return the platform is not "HTML5"
+      case "write"
+         return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+   end switch
    return true
 end __MeetsRequirements
