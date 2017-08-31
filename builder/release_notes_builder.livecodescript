@@ -69,11 +69,14 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put tFolder into tComponents[tIndex]["folder"]
                put "extension" into tComponents[tIndex]["metadata"]["category"]
                
-               if tPath is  builderPrivateRepoFolder() then
-                  put "community+" into tComponents[tIndex]["metadata"]["edition"]
-               else
-                  put "community" into tComponents[tIndex]["metadata"]["edition"]
-               end if
+               --!TODO move these extensions to components
+               switch tFolder
+                  case "drawing"
+                     put "indy" into tComponents[tIndex]["metadata"]["edition"]
+                     break
+                  default
+                     put "community" into tComponents[tIndex]["metadata"]["edition"]
+               end switch
             end repeat
             put ExtensionsGetLcbSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
          end repeat

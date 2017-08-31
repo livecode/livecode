@@ -634,7 +634,7 @@ table{border-spacing:1em 2px;}
     border: 1ex solid rgb(48,160,209);
  }
   
-  h1.community-extra {
+  h1.community-plus {
     background: rgb(129,181,22);
     border: 1ex solid rgb(129,181,22);
   }
@@ -691,9 +691,9 @@ function regenerate() {
          {
             t_class = "business";
          } 
-         else if (text.indexOf("Community Extra") !== -1)
+         else if (text.indexOf("Community Plus") !== -1)
          {
-            t_class = "community-extra";
+            t_class = "community-plus";
          }
          
          return '<h' + level + ' class="' + t_class + '" id="' + escapedText + '">'

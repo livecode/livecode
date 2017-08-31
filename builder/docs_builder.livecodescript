@@ -1968,8 +1968,8 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
             if pEdition is not among the items of "business,indy" then
                break
             end if
-         case "community+"
-            if pEdition is not among the items of "business,indy,community+" then
+         case "community plus"
+            if pEdition is not among the items of "business,indy,community plus" then
                break
             end if
          default
