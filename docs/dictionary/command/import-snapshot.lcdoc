@@ -110,7 +110,6 @@ as the Tools palette).
 The format of the resulting <image> depends on the current setting of the
 <paintCompression> <property>.
 
-<<<<<<< HEAD
 To import a snapshot for a portion of a stack you use the form:
 
     import snapshot from rect[angle] rectDescription of stack winID 
@@ -129,65 +128,6 @@ graphic effects, use the `with effects` form:
 
     import snapshot from objectRef with effects 
 
-=======
-iOS supports both the object and screen snapshot variants of the 
-<import snapshot> command. In the screen snapshot case, coordinates 
-are given relative to the top-left of the screen, including the 
-area where status bar is, but not including the status bar itself.
-
-If you do not specify the rect[angle] <token> or an <objectRef>, LiveCode 
-displays a crosshairs <cursor>. Click at one corner of the rectangular
-area to be imported and drag to the opposite corner to <select> the area.
-
-If taking a snapshot using the rect[angle] <token> and <rectangle(property)> 
-of an object, the coordinates in the <rectDescription> are absolute (screen) 
-coordinates. The portions of all windows and other objects on the screen 
-that intersect the <rectDescription> will be included in the snapshot. 
-
-If taking a snapshot using the rectangle <token>, <rectDescription>, and 
-a <stackRef>, the coordinates in <rectDescription> are relative to the 
-top left corner of the stack you specify. The portions of all 
-objects that intersect the <rectDescription> will be included in the
-snapshot. In addition, if the window is partly overlapped by another 
-window, whatever is visible on the screen within that <rectDescription> 
-is placed in the snapshot. In other words, you cannot take a snapshot 
-of a part of a window that is hidden by another overlapping window.
-
-If taking a snapshot using an <objectRef>, the object is rendered into 
-an <image> as if no other objects existed around it. The snapshot is taken 
-without applying the object's <blendlevel>, <ink>, or graphic effects. 
-You can take a snapshot of an object regardless of its visibility or open 
-status--in particular, snapshots can be taken of objects that are not on 
-the current card or in stacks that are not open.
-
-Use the `at size sizeDescription` extension if you wish the engine 
-to resize the snapshot taken to the dimensions specified.
-
-While you take the snapshot, LiveCode hides its own IDE windows (such 
-as the Tools palette).
-
-The format of the resulting <image> depends on the current setting of the
-<paintCompression> <property>.
-
-To import a snapshot for a portion of a stack you use the form:
-
-    import snapshot from rect[angle] rectDescription of stack winID 
-
-Where *winID* is the <windowID> property of the given stack.
-
-To import a snapshot of a specific (non-stack) object, use the form:
-
-    import snapshot from objectRef
-
-Where <objectRef> is any control or card <object reference>, or any
-<expression> evaluating to a control or card <object reference>.
-
-To import a snapshot of an object, including its <blendLevel>, <ink>, or 
-graphic effects, use the `with effects` form: 
-
-    import snapshot from objectRef with effects 
-
->>>>>>> upstream/develop-8.2
 Where <objectRef> is any control <object reference>, or any 
 <expression> evaluating to a control <object reference>.
 
