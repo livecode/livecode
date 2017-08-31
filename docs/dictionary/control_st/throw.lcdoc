@@ -19,7 +19,7 @@ open file tFile for text read
 Example:
 if the result is not empty then
   throw "failed_to_open_file"
- end if
+end if
 
 Parameters:
 errorString (string):
