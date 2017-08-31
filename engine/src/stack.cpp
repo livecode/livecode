@@ -303,6 +303,9 @@ MCStack::MCStack()
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
     m_is_script_only = false;
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Script-only-stack line endings default to LF.
+    m_line_encoding_style = kMCStringLineEndingStyleLF;
+
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
     

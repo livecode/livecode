@@ -1953,8 +1953,20 @@ static void MCFilesReadComplete(MCExecContext& ctxt, MCValueRef p_output, IO_sta
         if (t_textmode)
         {
             MCAutoStringRef t_output;
-            /* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode((MCStringRef)p_output, &t_output);
-            ctxt . SetItToValue(*t_output);
+            if (!MCStringNormalizeLineEndings((MCStringRef)p_output, 
+                                              kMCStringLineEndingStyleLF, 
+                                              kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                              kMCStringLineEndingOptionNormalizeLSToVT, 
+                                              &t_output, 
+                                              nullptr))
+            {
+                ctxt . SetItToEmpty();
+                ctxt . SetTheResultToStaticCString("error normalizing line endings");
+            }
+            else
+            {
+                ctxt . SetItToValue(*t_output);
+            }
         }
         else
         {
@@ -2447,12 +2459,19 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	}
 
     if (t_encoding != kMCFileEncodingBinary)
-	{
-		MCAutoStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
+    {
+        MCAutoStringRef t_text_data;
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative, 
+                                          false, 
+                                          &t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
         MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_encoding, t_stat);
-	}
-	else
+    }
+    else
         MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_encoding, t_stat);
 
 	if (t_stat != IO_NORMAL)
@@ -2510,7 +2529,14 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
     if (MCprocesses[t_index].encoding != EN_BINARY)
 	{
 		MCStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative,
+                                          false, 
+                                          t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
 		if (MCStringFirstIndexOfChar(t_text_data, '\004', 0, kMCCompareExact, t_offset))
 		{
