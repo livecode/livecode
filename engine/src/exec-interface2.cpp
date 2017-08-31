@@ -2480,8 +2480,18 @@ bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
          MCStringBeginsWithCString(p_string, (const char_t *)"REVO",
                                   kMCCompareExact)))
         return true;
-    
-    // Check if it could be a script-only stack
+
+    //Here we check whether it is very likely that the string is a UTF-8
+    //encoded script-only stack and not a name. Any UTF-8 encoded script-only
+    //stack with BOM will start with 'BOMscript "'. - i.e. have the 3 byte
+    //BOM prefix and then 'script "'.
+    const char_t k_utf8bom[] = { 0xEF, 0xBB, 0xBF, 's', 'c', 'r', 'i', 'p',
+                                 't', ' ', '"', 0x00 };
+    if (MCStringGetLength(p_string) > 12 &&
+        MCStringBeginsWithCString(p_string, k_utf8bom, kMCCompareExact))
+        return true;
+
+    // Check if it could be a script-only stack without BOM
     MCScriptPoint sp(p_string);
     // Parse 'script' token.
     if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
