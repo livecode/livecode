@@ -2808,6 +2808,37 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 
 MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned int p_min_edition)
 {
+    MCAutoStringRef t_key;
+    
+    uint32_t t_index;
+    if (MCCStringFirstIndexOf(s_current_external->GetName(), '.', t_index))
+    {
+        if (!MCStringCreateWithCString(s_current_external->GetName(), &t_key))
+        {
+            return kMCExternalErrorFailed;
+        }
+    }
+    else
+    {
+        if (!MCStringFormat(&t_key, "com.livecode.external.%s", s_current_external->GetName()))
+        {
+            return kMCExternalErrorFailed;
+        }
+    }
+    
+    MCNewAutoNameRef t_key_as_nameref;
+    if (!MCNameCreate(*t_key, &t_key_as_nameref))
+    {
+        return kMCExternalErrorFailed;
+    }
+    
+    MCAutoValueRef t_value;
+    if (MClicenseparameters . addons != nil &&
+        MCArrayFetchValue(MClicenseparameters . addons, false, *t_key_as_nameref, &t_value))
+    {
+        return kMCExternalErrorNone;
+    }
+    
 	unsigned int t_current_edition;
 	switch(MClicenseparameters . license_class)
 	{
@@ -2834,7 +2865,8 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
 			break;
 	}
 	
-	if (t_current_edition < p_min_edition)
+	if (kMCExternalLicenseTypeNone == p_min_edition ||
+        t_current_edition < p_min_edition)
 	{
 		s_current_external -> SetWasLicensed(false);
 		return kMCExternalErrorUnlicensed;
