@@ -291,6 +291,13 @@ MCSLibraryCreateWithAddress(void *p_address,
 }
 
 MC_DLLEXPORT_DEF bool
+MCSLibraryCopyNativePath(MCSLibraryRef p_library,
+                         MCStringRef& r_path)
+{
+    return __MCSLibraryGetImpl(p_library).CopyNativePath(r_path);
+}
+
+MC_DLLEXPORT_DEF bool
 MCSLibraryCopyPath(MCSLibraryRef p_library,
                    MCStringRef& r_path)
 {

@@ -1945,22 +1945,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
                  || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
-            /* MCcmd is in LiveCode format, but this function actuall returns native
-             * paths so we just replicate what GetExecutablePath() does. */
-		    WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
-		    DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
-		
-            WCHAR* t_last_slash = wcsrchr(wcFileNameBuf, '\\');
-            if (t_last_slash != nullptr)
-            {
-                *t_last_slash = '\0';
-            }
-            
-		    if (!MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_native_path))
-            {
-                delete wcFileNameBuf;
-                return false;
-            }
+            MCSAutoLibraryRef t_self;
+            MCSLibraryCreateWithAddress(reinterpret_cast<void *>(legacy_path_to_nt_path),
+                                        &t_self);
+            MCSLibraryCopyNativePath(*t_self,
+                                     &t_native_path);
 
             t_wasfound = True;
         }
