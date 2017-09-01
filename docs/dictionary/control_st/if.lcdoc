@@ -5,7 +5,7 @@ Type: control structure
 Syntax: if <condition> then <statementList> [else <elseStatementList>]
 
 Syntax:if <condition> then
- <statementList>
+   <statementList>
  [else if <condition> then
    <elseifStatementList>]
  [else 
@@ -81,7 +81,7 @@ are four forms of the <if> <control structure>:
 This form may have a line break before the words `then` or `else` or both.
 
     if condition then
-        statementList 
+       statementList 
     [else
        elseStatementList]
     end if
