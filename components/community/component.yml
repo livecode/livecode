@@ -1,0 +1,12 @@
+edition: community
+category: ide
+type: edition
+name: Community
+license_class: community
+color: 173,208,54
+pb_line_selected_color: 226,238,185
+revonline_hilite_color: 156,199,45
+revabout_hilite_color: 135,183,43
+password_protection: false
+start_center_tile_color_step: -9
+open_source_required: true
