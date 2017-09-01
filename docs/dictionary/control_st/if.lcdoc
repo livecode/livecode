@@ -104,9 +104,16 @@ If the <condition> <evaluate|evaluates> to true, the statement or
 <evaluate|evaluates> to false, the statement or <statementList> is
 skipped. 
 
-If the <if> <control structure> contains an <else> clause, the
-elseStatement or <elseStatementList> is <execute|executed> if the
-<condition> is false.
+if the <condition> evaluates to false and the <if> <control structure>
+contains an <else> <keyword>, the <elseStatement> or <elseStatementList>
+which follows it is <execute|executed>.
+
+If the <if> <control structure> contains 1 or more <else if>
+<keyword|keywords> which have a <conditional expression|condition>
+and one of those <conditional expression|conditions> evaluates to be
+true the respective <elseIfstatment|else if statement> or
+<elseIfstatementlist|else if statement list> following that
+<else if|else if> <keyword> is executed.
 
 If one <if> <control structure> is nested inside another, use of the
 second form described above is recommended, since the other forms may
