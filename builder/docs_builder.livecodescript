@@ -1946,13 +1946,13 @@ private command addFolderToListIfExists pFolder, pThrowIfNot, @xArray
    end if
 end addFolderToListIfExists
 
-private function RepoIndyDocsFolder
-   return builderPrivateRepoFolder() & slash & "docs" & slash & "indy"
-end RepoIndyDocsFolder
-
-private function RepoBusinessDocsFolder
-   return builderPrivateRepoFolder() & slash & "docs" & slash & "business"
-end RepoBusinessDocsFolder
+private function RepoEditionDocsFolder pEdition
+   if editionIsInPrivateRepo(pEdition) then
+      return builderPrivateRepoFolder() & slash & "docs" & slash & toLower(pEdition)
+   else
+      return builderRepoFolder() & slash & "docs" & slash & toLower(pEdition)
+   end if
+end RepoEditionDocsFolder
 
 private command docsBuilderGetGuideFolders pEdition, @xFolders
    local tRepoGuides
@@ -1963,17 +1963,13 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    put builderIDEDocsFolder() & slash & "guides" into tIDEGuides
    addFolderToListIfExists tIDEGuides, true, xFolders
    
-   if pEdition is not "community" then
-      local tIndyGuides
-      put RepoIndyDocsFolder() & slash & "guides" into tIndyGuides
-      addFolderToListIfExists tIndyGuides, false, xFolders
-   end if
-   
-   if pEdition is "business" then
-      local tBusinessGuides
-      put RepoBusinessDocsFolder() & slash & "guides" into tBusinessGuides
-      addFolderToListIfExists tBusinessGuides, false, xFolders
-   end if
+   repeat for each item tEdition in "indy,business"
+      if editionCompare(pEdition, tEdition) >= 0 then
+         local tGuides
+         put RepoEditionDocsFolder(tEdition) & slash & "guides" into tGuides
+         addFolderToListIfExists tGuides, false, xFolders
+      end if
+   end repeat
 
    addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
@@ -2003,13 +1999,11 @@ private command docsBuilderGetDictionaryFolders pEdition, @xFolders
    put builderRepoFolder() & slash & "docs" into tCommunityDocs
    addFolderToListIfExists tCommunityDocs, true, xFolders
    
-   if pEdition is not "community" then
-      addFolderToListIfExists RepoIndyDocsFolder(), true, xFolders
-   end if
-   
-   if pEdition is "business" then
-      addFolderToListIfExists RepoBusinessDocsFolder(), false, xFolders
-   end if
+   repeat for each item tEdition in "indy,business"
+      if editionCompare(pEdition, tEdition) >= 0 then
+         addFolderToListIfExists RepoEditionDocsFolder(), true, xFolders
+      end if
+   end repeat
 end docsBuilderGetDictionaryFolders
 
 command docsBuilderGenerateDistributedGuide pEdition
@@ -2249,8 +2243,7 @@ end docsBuilderPopulateDatabase
 
 private command docsBuilderGenerateZip pEdition, pVersion
    -- Ensure edition string is in titlecase
-   put toLower(pEdition) into pEdition
-   put toUpper(char 1 of pEdition) into char 1 of pEdition
+   put editionTitleCase(pEdition) into pEdition
    put replaceText(pVersion, "[-,\.]", "_") into pVersion
 
    local tInputs, tZipPath

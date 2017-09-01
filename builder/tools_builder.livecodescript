@@ -155,15 +155,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tBaseEditionType
    put pEdition into tEditionType
    
-   switch tEditionType
-      case "Community"
-         put "Community" into tBaseEditionType
-         break
-      case "Indy"
-      case "Business"
-         put "Commercial" into tBaseEditionType
-         break
-   end switch
+   put editionBaseEditionType(pEdition) into tBaseEditionType
 
    -- Escape the version (by replacing all non-alphanumeric characters with "_")
    local tVersionEscaped
@@ -207,7 +199,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
    packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder()
-   if tEditionType is among the items of "indy,business" then
+   if editionIsInPrivateRepo(tEditionType) then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
    
@@ -242,32 +234,28 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    
    -- Now all the names
    local tProductName
-   if pEdition is "Community" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      put "LiveCode Community" into tProductName
-   else if pEdition is "Indy" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Indy" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodeindy_" & getTaggedVersion(pVersion)
-      put "LiveCode Indy" into tProductName
-   else if pEdition is "Business" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Business" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodebusiness_" & getTaggedVersion(pVersion)
-      put "LiveCode Business" into tProductName
-   end if
+   put "LiveCode" && editionDisplayName(pEdition) into tProductName
+
+   -- product tag is the lowercase product name with spaces removed
+   local tProductTag
+   put toLower(tProductName) into tProductTag
+   replace space with empty in tProductTag
+   
+   packageCompilerConfigureVariable tPackager, "ProductTitle", tProductName && getReadableVersion(pVersion)
+   packageCompilerConfigureVariable tPackager, "ProductTag", tProductTag & "_" & getTaggedVersion(pVersion)
+
    -- For Linux only, case-fold the product name to lowercase and
-   -- remove all spaces
+   -- remove all spaces - we can just use the product tag
    if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-      put toLower(tProductName) into tProductName
-      replace " " with "" in tProductName
+      put tProductTag into tProductName
    end if
    packageCompilerConfigureVariable tPackager, "ProductName", tProductName
    
    -- The edition tags.
-   packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(char 1 of tEditionType) & char 2 to -1 of tEditionType
-   packageCompilerConfigureVariable tPackager, "EditionTagUpper", "-" & toUpper(char 1 of tEditionType) & char 2 to -1 of tEditionType
-   packageCompilerConfigureVariable tPackager, "BaseEditionTagLower", "-" & toLower(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
-   packageCompilerConfigureVariable tPackager, "BaseEditionTagUpper", "-" & toUpper(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
+   packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(tEditionType)
+   packageCompilerConfigureVariable tPackager, "EditionTagUpper", "-" & editionTitleCase(tEditionType)
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagLower", "-" & toLower(tBaseEditionType)
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagUpper", "-" & editionTitleCase(tBaseEditionType)
    
    local tSuccess
    put true into tSuccess
@@ -322,7 +310,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    lock messages
    
    -- Ensure the correct capitalisation of the edition name
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into pEdition
+   put editionTitleCase(pEdition) into pEdition
    
    -- Compute the deploy temp folder
    local tTempFolder
@@ -349,24 +337,21 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    set the mainStack of stack tResources to tInstaller
    
    -- Make sure the installer library knows what product it is (for logging file name)
-   if pEdition is "Community" then
-      set the uProduct of stack tInstaller to "LiveCode Community"
-      set the uProductTitle of stack tInstaller to "LiveCode Community" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodecommunity-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
+   local tProductName
+   put "LiveCode" && editionDisplayName(pEdition) into tProductName
+   local tProductTag
+   put toLower(tProductName) into tProductTag
+   replace space with empty in tProductTag
+   
+   set the uProduct of stack tInstaller to tProductName
+   set the uProductTitle of stack tInstaller to tProductName && getReadableVersion(pVersion)
+   set the uProductTag of stack tInstaller to tProductTag & "-" & pVersion
+   set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
+   
+   if editionIsInPrivateRepo(pEdition) then
+      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
+   else
       set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
-   else if pEdition is "Indy" then
-      set the uProduct of stack tInstaller to "LiveCode Indy"
-      set the uProductTitle of stack tInstaller to "LiveCode Indy" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodeindy-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
-      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
-   else if pEdition is "Business" then
-      set the uProduct of stack tInstaller to "LiveCode Business"
-      set the uProductTitle of stack tInstaller to "LiveCode Business" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodebusiness-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
-      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
    end if
    
    -- move behaviors to substacks
