@@ -1,6 +1,5 @@
-script "EditionUtilities"
-
-private constant kEditionNames="community,communityplus,indy,business,commercial"
+﻿script "EditionUtilities"
+constant kEditionNames="community,communityplus,indy,business,commercial"
 function editionNames
    return kEditionNames
 end editionNames
