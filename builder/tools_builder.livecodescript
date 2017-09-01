@@ -155,15 +155,11 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tBaseEditionType
    put pEdition into tEditionType
    
-   switch tEditionType
-      case "Community"
-         put "Community" into tBaseEditionType
-         break
-      case "Indy"
-      case "Business"
-         put "Commercial" into tBaseEditionType
-         break
-   end switch
+   if tEditionType is "Community" then
+      put "Community" into tBaseEditionType
+   else
+      put "Commercial" into tBaseEditionType
+   end if
 
    -- Escape the version (by replacing all non-alphanumeric characters with "_")
    local tVersionEscaped
@@ -231,7 +227,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
    packageCompilerConfigureVariable tPackager, "EscapedVersionTag", tVersionEscaped
    packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
-   packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
+   packageCompilerConfigureVariable tPackager, "TargetArchitecture", "i386"
    if pPlatform is "linux-x86" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86"
    else if pPlatform is "linux-x86_64" then

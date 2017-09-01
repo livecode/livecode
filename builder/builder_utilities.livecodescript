@@ -15,6 +15,10 @@ local sBuiltDocsDir
 command builderLog  pType, pMessage, pContext
    if there is a stack "Builder" then
       dispatch "__builderLog" to stack "Builder" with  pType, pMessage, pContext
+   else if pType is "error" then
+      write pMessage & return to stderr
+   else
+      write pMessage & return to stdout
    end if
 end builderLog
 
@@ -293,12 +297,12 @@ end builderIDEDocsFolder
 
 # Location for api js file in > LC8
 function builderAPIFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/api"
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
 end builderAPIFolder
 
 # Location for guide js file in > LC8
 function builderGuideFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/guide"
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/guide"
 end builderGuideFolder
 
 function builderDocsFolder
@@ -325,7 +329,7 @@ end builderMergExtVersion
 
 function builderUnpackFolder pEdition
    replace space with "_" in pEdition
-   return sWorkDir & "/ext/unpacked/" & toLower(pEdition)
+   return builderWorkFolder() & "/ext/unpacked/" & toLower(pEdition)
 end builderUnpackFolder
 
 function builderTSNetVersion
@@ -468,22 +472,23 @@ end builderEnsureFolderForFile
 ////////////////////////////////////////////////////////////////////////////////
 
 function builderGetVersion
-   local tVersionFile, tVersion
-   put url ("file:" & builderRepoFolder() & slash & "version") into tVersionFile
-   replace space with empty in tVersionFile
-   split tVersionFile by return and "="
-   put tVersionFile["BUILD_SHORT_VERSION"] into tVersion   
-   return tVersion
+   return __GetVersionInfo("BUILD_SHORT_VERSION")
 end builderGetVersion
 
 function builderGetBuildNumber
+   return __GetVersionInfo("BUILD_REVISION")
+end builderGetBuildNumber
+
+function builderGetLongVersion
+   return __GetVersionInfo("BUILD_LONG_VERSION")
+end builderGetLongVersion
+
+private function __GetVersionInfo pName
    local tVersionFile, tVersion
    put url ("file:" & builderRepoFolder() & slash & "version") into tVersionFile
-   replace space with empty in tVersionFile
-   split tVersionFile by return and "="
-   put tVersionFile["BUILD_REVISION"] into tVersion   
-   return tVersion
-end builderGetBuildNumber
+   split tVersionFile by return and " = "
+   return word 1 to -1 of tVersionFile[pName]
+end __GetVersionInfo
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -591,7 +596,7 @@ function builderMergExtUrl pMergExtVersion, pEdition
 end builderMergExtUrl
 
 private function builderMergExtDownloadedFilePath pMergExtVersion, pEdition
-   return sWorkDir & "/ext/downloads/MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
+   return builderWorkFolder() & "/ext/downloads/MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
 end builderMergExtDownloadedFilePath
 
 private command builderMergExtUnpack pMergExtVersion, pEdition
@@ -616,7 +621,7 @@ function builderTSNetUrl pTSNetVersion, pEdition
 end builderTSNetUrl
 
 private function builderTSNetDownloadedFilePath pTSNetVersion, pEdition
-   return sWorkDir & "/ext/downloads/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
+   return builderWorkFolder() & "/ext/downloads/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
 end builderTSNetDownloadedFilePath
 
 private command builderTSNetUnpack pTSNetVersion, pEdition

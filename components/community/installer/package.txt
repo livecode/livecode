@@ -1,0 +1,26 @@
+component Edition.Toolset.Community
+	into "[[ToolsFolder]]/Toolset/resources/edition" place
+		rfolder "repo:components/community/skin"
+		file "repo:components/community/component.yml"
+      
+component Edition.Misc.Community
+	desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+	into [[SupportFolder]] place
+		textfile "ide:License Agreement.txt"
+		textfile "ide:about.txt"
+
+component Edition.Ext.Community
+	into [[ToolsFolder]] place
+		rfolder "ext:Ext"
+
+component Edition.Uninstaller.Community
+
+component Edition.Plugins.Community
+
+component Edition.Resources.Community
+
+component Edition.Documentation.Community
+
+component Edition.Extensions.Community
+
+component Edition.Externals.Community

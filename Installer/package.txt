@@ -26,8 +26,10 @@
 //    LiveCode
 
 installer LiveCode
+	additional manifest "components/community/installer/package.txt"
 	if BaseEdition is Commercial then
 		additional manifest "../Installer/commercial-package.txt"
+		include Commercial
 	include Misc
 	include Toolset
 	include Plugins
@@ -81,32 +83,14 @@ installer LiveCode
 		include Runtime.Android
 		include Runtime.Emscripten
 		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
-		if TargetEdition is Community then
-			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
-		if TargetEdition is Indy then
-			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
-		if TargetEdition is Business then
-			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 	include Uninstaller
-	if TargetEdition is Indy then
-		include Commercial.IndyComponents
-	if TargetEdition is Business then
-		include Commercial.BusinessComponents
-
+	
 component Runtime
 	include Runtime.[[TargetPlatform]]
 
 component Externals
 	include Externals.[[TargetPlatform]]
-	if TargetEdition is "Business" then
-		include Commercial.BusinessExternals
-	if TargetEdition is "Indy" then
-		include Commercial.IndyExternals
-	include Databases.[[TargetPlatform]]
-	if TargetEdition is "Business" then
-		include Commercial.BusinessDatabases
-	if TargetEdition is "Indy" then
-		include Commercial.IndyDatabases
+	include Edition.Externals.[[TargetEdition]]
 	if TargetPlatform is Linux then
 		include Externals.CEF.Linux
 	if TargetPlatform is Windows then
@@ -115,9 +99,8 @@ component Externals
 	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
 
 component Ext
-	into [[ToolsFolder]] place
-		rfolder "ext:Ext"
-
+	include Edition.Ext.[[TargetEdition]]
+	
 component Uninstaller
 	if TargetPlatform is "Windows" then
 		place uninstaller at "[[TargetFolder]]/.setup.exe"
@@ -137,23 +120,16 @@ component Uninstaller
 		place uninstaller at "[[TargetFolder]]/setup.[[TargetArchitecture]]"
 	if TargetPlatform is "MacOSX" then
 		place uninstaller at "[[TargetFolder]]/LiveCode Setup.app"
+	include Edition.Uninstaller.[[TargetEdition]]
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 component Misc
 	into [[SupportFolder]] place
-		if TargetEdition is "Community" then
-			textfile "ide:License Agreement.txt"
-			textfile "ide:about.txt"
-		if TargetEdition is "Indy" then
-			textfile "private:License Agreement.txt"
-			textfile "private:about.txt"
-		if TargetEdition is "Business" then
-			textfile "private:License Agreement.txt"
-			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
+	include Edition.Misc.[[TargetEdition]]
 		
 component Plugins
 	into [[ToolsFolder]]/Plugins place
@@ -165,6 +141,7 @@ component Plugins
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
 		stack "ide:Plugins/revTabRuler 1.2.rev"
+	include Edition.Plugins.[[TargetEdition]]
 
 component Resources
 	into [[SupportFolder]]/Resources/Examples place
@@ -345,6 +322,7 @@ component Resources
 		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-5.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-retina.png"
+	include Edition.Resources.[[TargetEdition]]
 
 component Documentation
 	into [[ToolsFolder]]/Documentation place
@@ -379,11 +357,13 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/resources/media"
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
+		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
-		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+		
+	include Edition.Documentation.[[TargetEdition]]
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
@@ -420,6 +400,7 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.tile
+	include Edition.Extensions.[[TargetEdition]]
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
@@ -848,6 +829,7 @@ component Databases.MacOSX
 component Toolset
 	into [[ToolsFolder]] place
 		rfolder ide:Toolset
+	emit variable TargetEdition to "[[ToolsFolder]]/edition.txt"
 	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
@@ -859,5 +841,6 @@ component Toolset
 		stack ide-support:revsblibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
+	include Edition.Toolset.[[TargetEdition]]
 
 ////////////////////////////////////////////////////////////////////////////////
