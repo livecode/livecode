@@ -5,7 +5,7 @@ Type: property
 Syntax: set the altID of <object> to <IDNumber>
 
 Summary:
-Specifies an alternate ID for <object|objects>.
+Specifies an alternate <ID> for <object|objects>.
 
 Associations: stack, card, field, button, graphic, scrollbar, player,
 image
@@ -27,20 +27,20 @@ The <altID> property of an <object(glossary)> is a non-negative integer.
 By default, the <altID> for all <object|objects> is zero.
 
 Description:
-Use the <altID> <property> to specify an additional ID for an
+Use the <altID> <property> to specify an additional <ID> for an
 <object(glossary)>. Both the <ID> and the <altID> <property> are checked
-when you refer to an <object(glossary)> by ID.
+when you refer to an <object(glossary)> by <ID>.
 
 This property can be used to ensure compatibility with imported
 SuperCard and HyperCard stacks that assume buttons and fields are
-created with sequential IDs. You can also use the <altID> of a <stack>
+created with sequential <ID|IDs>. You can also use the <altID> of a <stack>
 as a consistent way of referring to it, since the <ID> of a <stack>
 changes every time an <object(glossary)> is created.
 
 >*Important:*  Be careful not to set an <object|object's> <altID>
 > <property> to the <ID> of an <object(glossary)> of the same type.
 > Since both <properties> are checked when you refer to an
-> <object(glossary)> by ID, doing this may cause the wrong
+> <object(glossary)> by <ID>, doing this may cause the wrong
 > <object(glossary)> to be found because its <altID> <property> is the
 > same as the <ID> of the <object(glossary)> you want.
 

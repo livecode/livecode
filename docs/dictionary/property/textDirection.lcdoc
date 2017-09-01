@@ -2,7 +2,7 @@ Name: textDirection
 
 Type: property
 
-Syntax: set the textDirection of field to {ltr | rtl | auto}
+Syntax: set the textDirection of field to <direction>
 
 Summary:
 Specifies whether the field should lay out its contents in a

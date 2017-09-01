@@ -46,15 +46,15 @@ an <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
-> systems>, an <image> must be 128x128 <pixels> or less, and both its
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>,
+> an <image> must be 128x128 <pixels> or less, and both its
 > <height> and <width> must be a power of 2, however, in LiveCode
 > version 2.7, this restriction was partially lifted and the engine will
 > tile rectangular regions correctly with arbitrarily sized background
 > patterns.To be used on <Windows> and <Unix|Unix systems>, <height> and
 > <width> must be divisible by 8. To be used as a fully cross-platform
-> pattern, both an image's dimensions should be one of 8, 16, 32, 64, or
-> 128. 
+> pattern, both an image's dimensions should be one of 8, 16, 32, 64,
+> or 128. 
 
 The <backgroundPattern> of <control(object)|controls> is drawn starting
 at the <control(object)|control's> upper left corner: if the
@@ -68,8 +68,8 @@ the <backgroundPattern> of the object's <owner> to show through. Use the
 The setting of the <backgroundPattern> <property> has different effects,
 depending on the <object type>:
 
-* The <backgroundPattern> of a <stack> or <card> fills the entire <stack
-  window>, as well as determining the <backgroundPattern> of each
+* The <backgroundPattern> of a <stack> or <card> fills the entire 
+  <stack window>, as well as determining the <backgroundPattern> of each
   <object(glossary)> in the <stack> or <card> that does not have its own
   <backgroundPattern>. 
 

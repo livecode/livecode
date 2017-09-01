@@ -2,7 +2,7 @@ Name: send to program
 
 Type: command
 
-Syntax: send <message> to {program | application} <programAddress> \  [with <classID>] [{with | without} reply]
+Syntax: send <message> to {program | application} <programAddress> [with <classID>] [{with | without} reply]
 
 Summary:
 Sends an <Apple event> to a program.

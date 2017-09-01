@@ -20,9 +20,10 @@ if the result is not empty then exit to top -- stop everything
 
 Description:
 Use the <exit to top> <control structure> to stop <execute|executing>
-the current <handler> and suppress pending <message|messages>. Form:The
-<exit to top> <statement> appears on a line by itself, anywhere inside a
-<handler>. 
+the current <handler> and suppress pending <message|messages>. 
+
+**Form:** The <exit to top> <statement> appears on a line by itself, 
+anywhere inside a <handler>. 
 
 Usually, <exit to top> is used within an <if> <control structure>, so
 that <execute|execution> stops if a condition is true and continues if

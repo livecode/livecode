@@ -22,7 +22,7 @@ put the result into sPlayerID
 mobileControlSet sPlayerID, "filename", tMoviePath
 
 Description:
-An Androind native player control is created using a control type of
+An Android native player control is created using a control type of
 "player". 
 
 References: mobileControlDelete (command), mobileControlDo (command),

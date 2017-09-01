@@ -26,7 +26,7 @@ Value:
 The <beepLoudness> is an <integer> between zero and 100.
 
 Description:
-Use the <beepLoudness> <property> to vary the volumne of the beep, in
+Use the <beepLoudness> <property> to vary the volume of the beep, in
 order to increase or decrease its urgency.
 
 Set the <beepLoudness> to -1 to use the <default> system setting.

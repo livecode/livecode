@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 #include "font.h"
 #include "util.h"
+#include "eventqueue.h"
 
 #include <arpa/inet.h>
 
@@ -175,6 +176,12 @@ X_init(const X_init_options& p_options)
 		goto error_cleanup;
 	}
 
+	// Initialize the event queue
+	if (!MCEventQueueInitialize())
+	{
+		goto error_cleanup;
+	}
+	
 	/* ---------- More globals */
 
 	/* Locales */

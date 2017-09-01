@@ -13,14 +13,13 @@ on descriptifyStack
    
    local tInputStackName
    try
-      go stack tInputStack
       put the short name of stack tInputStack into tInputStackName
    catch tError
       write "Error: could not open source environment stack:" && tError & return to stderr
       quit 1
    end try
 
-   local tArg, tStack, tStackName
+   local tArg, tStack, tName
    repeat with tArg = 2 to $#
       do "put $" & tArg && "into tStack" 
       

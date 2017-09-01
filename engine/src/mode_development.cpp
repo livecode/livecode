@@ -822,6 +822,12 @@ void MCModePreMain(void)
 	}
 }
 
+// Pixel scaling can be enabled in Development mode
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
 // on startup depending on the usePixelScaling registry value
 bool MCModeGetPixelScalingEnabled()

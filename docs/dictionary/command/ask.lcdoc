@@ -34,7 +34,7 @@ ask information "Please enter your user name."
 
 Example:
 # formatted prompt text
-put "Enter your <font color='red'><b>last name only</b></font>." into tPromptText
+put "Enter your &lt;font color='red'&gt;&lt;b&gt;last name only&lt;/b&gt;&lt;/font&gt;." into tPromptText
 ask tPromptText
 
 Parameters:

@@ -147,7 +147,7 @@ private:
 	static uint2 focusedtab;
 	static uint2 mnemonicoffset;
 	static MCRectangle optionrect;
-	static Keynames button_keys[];
+	static const Keynames button_keys[];
 	static uint4 clicktime;
 	static uint2 menubuttonheight;
 	static Boolean starthilite;

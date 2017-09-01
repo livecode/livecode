@@ -236,11 +236,11 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern LT command_table[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern Cvalue constant_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////

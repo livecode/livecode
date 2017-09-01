@@ -1945,12 +1945,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
                  || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
-            uindex_t t_last_slash;
-            
-            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
-                t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+            MCSAutoLibraryRef t_self;
+            MCSLibraryCreateWithAddress(reinterpret_cast<void *>(legacy_path_to_nt_path),
+                                        &t_self);
+            MCSLibraryCopyNativePath(*t_self,
+                                     &t_native_path);
+
+            t_wasfound = True;
         }
         else
         {

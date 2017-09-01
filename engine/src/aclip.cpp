@@ -59,7 +59,7 @@ uint4 MCAudioClip::curindex;
 Boolean MCAudioClip::looping;
 real8 MCAudioClip::endtime;
 
-static int2 ulaw_table[256] = {
+static const int2 ulaw_table[256] = {
                                   -32124, -31100, -30076, -29052, -28028, -27004, -25980, -24956,
                                   -23932, -22908, -21884, -20860, -19836, -18812, -17788, -16764,
                                   -15996, -15484, -14972, -14460, -13948, -13436, -12924, -12412,

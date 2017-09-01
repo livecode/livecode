@@ -711,7 +711,7 @@ void MCGroup::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_i
 		{
 			MCAutoStringRef t_property;
             
-			if (which == P_CHILD_CONTROL_NAMES)
+			if (which == P_CHILD_CONTROL_NAMES || which == P_CONTROL_NAMES)
 			{
 				t_object -> GetShortName(ctxt, &t_property);
 				t_success = !ctxt . HasError();

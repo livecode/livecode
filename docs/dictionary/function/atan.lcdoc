@@ -33,7 +33,11 @@ The <atan> <function> <return|returns> a number between -pi/2 and pi/2.
 The result:
 The result of the <atan> function is <return|returned> in
 <radian|radians>. To get this result in <degree|degrees>, use the
-following <custom function>:.
+following <custom function>:
+
+    function atanInDegrees pMagnitude
+        return atan(pMagnitude) * 180 / pi
+    end atanInDegrees
 
 Description:
 Use the <atan> <function> to find the arc tangent of a number.
@@ -41,12 +45,6 @@ Use the <atan> <function> to find the arc tangent of a number.
 The arc tangent of <number> is an angle whose tangent is equal to
 <number>. In other words, <atan> is an <inverse> of the <tan>
 <function>. 
-
-    function atanInDegrees theMagnitude
-    return atan(theMagnitude) * 180 / pi
-
-    end atanInDegrees
-
 
 References: pi (constant), function (control structure), tan (function),
 radian (glossary), custom function (glossary), return (glossary),

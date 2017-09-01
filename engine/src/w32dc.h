@@ -352,7 +352,7 @@ public:
 	void redrawbackdrop(void);
 
 	void settaskbarstate(bool p_visible);
-	void processdesktopchanged(bool p_notify = true);
+	void processdesktopchanged(bool p_notify = true, bool p_update_fonts = true);
 	void processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 	// These rountines convert a UTF-8 string into with a 'WIDE' or 'ANSI'

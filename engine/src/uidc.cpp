@@ -81,7 +81,7 @@ typedef struct
 }
 SCCLUT;
 
-static SCCLUT sccolors[] =
+static const SCCLUT sccolors[] =
     {
         {255,255,255}, {255,255,204}, {255,255,153}, {255,255,102},
         {255,255,51}, {255,255,0}, {255,204,255}, {255,204,204},
@@ -140,7 +140,7 @@ static SCCLUT sccolors[] =
         {34,34,34}, {17,17,17}, {0,0,0}
     };
 
-static uint4 stdcmap[256] =
+static const uint4 stdcmap[256] =
     {
         0x000000, 0x800000, 0x008000, 0x808000, 0x000080,
         0x800080, 0x008080, 0xC0C0C0, 0xC0DCC0, 0xA6CAF0,

@@ -23,14 +23,14 @@ Description:
 Handle the <backKey> message to perform an action when the back button
 is pressed.
 
-The <backKey> message is sent to the current card of the <default stack>
+The <backKey> message is sent to the current card of the <defaultStack>
 when the hardware back button is pressed.
 
 >*Note:* If this message is passed or not handled, then the engine
 > automatically quits.
 
 References: searchKey (message), menuKey (message),
-default stack (property)
+defaultStack (property)
 
 Tags: ui
 

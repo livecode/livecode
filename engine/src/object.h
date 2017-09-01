@@ -896,7 +896,10 @@ public:
 
 	MCObject *getparent() const
 	{
-		return parent;
+        if (parent)
+            return parent;
+        else
+            return NULL;
 	}
 	
 	uint4 getscriptdepth() const
@@ -1504,6 +1507,9 @@ public:
     void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
     void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
     void GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables);
+    void GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status);
+    void GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_handlers);
+    void GetRevBehaviorUses(MCExecContext& ctxt, MCArrayRef& r_objects);
     
 //////////
 			

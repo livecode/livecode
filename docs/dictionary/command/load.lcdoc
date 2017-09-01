@@ -93,19 +93,19 @@ remove it from the <cache>.
 > included, the <Internet library> implementation will be used instead of
 > the engine implementation.
 
-> *Note:* The current HTML5 support for 'load url' is experimental, and
-> will be replaced by a libUrl-like API in a subsequent DP ensuring it has
-> parity with other platforms when 'Internet Library' is used.
-
 > *Note:* When specifying URLs for iOS or Android, you must use the
 > appropriate form that conforms to [RFC
 > 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
-> *Note:* The HTML5 engine only supports HTTP and HTTPs protocols.
-> Also, only URLs from the domain hosting the web page running the HTML5
-> engine can be fetched.
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
+
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
 
 References: unload (command), libURLftpUpload (command),
 libURLDownloadToFile (command), get (command), load (command),

@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _MACOSX
 //normal, control, alt, alt-control
-Keytranslations MCField::emacs_keys[] =
+const Keytranslations MCField::emacs_keys[] =
 {
 	{XK_Home, {FT_HOME, FT_FOCUSFIRST, FT_HOME, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -107,7 +107,7 @@ Keytranslations MCField::emacs_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Keytranslations MCField::std_keys[] =
+const Keytranslations MCField::std_keys[] =
 {
 	{XK_Home, {FT_BOL, FT_BOF, FT_BOF, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -152,7 +152,7 @@ Keytranslations MCField::std_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Field_translations MCField::trans_lookup(Keytranslations table[], KeySym key,
+Field_translations MCField::trans_lookup(const Keytranslations table[], KeySym key,
 										 uint2 modifiers)
 {
 	uint2 i = 0;
@@ -696,15 +696,15 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 		indextoparagraph(paragraphs,compsi,compei);
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drectp = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, true);
-        drects = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, false);
+		drectp = focusedparagraph->getcursorrect(compsi, fixedheight, false, kMCParagraphCursorTypePrimary);
+        drects = focusedparagraph->getcursorrect(compsi, fixedheight, false, kMCParagraphCursorTypeSecondary);
 	}
 	else
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drectp = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, true);
-        drects = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, false);
+		drectp = focusedparagraph->getcursorrect(-1, fixedheight, false, kMCParagraphCursorTypePrimary);
+        drects = focusedparagraph->getcursorrect(-1, fixedheight, false, kMCParagraphCursorTypeSecondary);
 	}
 	positioncursor(force, goal, drects, focusedy, false);
     positioncursor(force, goal, drectp, focusedy, true);

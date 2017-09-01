@@ -1111,10 +1111,11 @@ void MCScreenDC::settaskbarstate(bool p_visible)
 		}
 	}
 
-	processdesktopchanged(false);
+	// Don't notify or update fonts when changing titlebar visibility
+	processdesktopchanged(false, false);
 }
 
-void MCScreenDC::processdesktopchanged(bool p_notify)
+void MCScreenDC::processdesktopchanged(bool p_notify, bool p_update_fonts)
 {
 	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
@@ -1132,7 +1133,8 @@ void MCScreenDC::processdesktopchanged(bool p_notify)
 	}
 
     // Force a recompute of fonts as they may have changed
-    MCdispatcher->recomputefonts(NULL, true);
+	if (p_update_fonts)
+	    MCdispatcher->recomputefonts(NULL, true);
     //MCRedrawDirtyScreen();
     
 	if (p_notify && t_changed)

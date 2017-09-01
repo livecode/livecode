@@ -248,18 +248,18 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error)
 {
-	bool t_success = true;
+    if (!InitSSLCrypt())
+    {
+        MCCStringClone("error: ssl library initialization failed", r_result);
+        return false;
+    }
+    
+    bool t_success = true;
 	EVP_PKEY *t_key = NULL;
 	RSA *t_rsa = NULL;
 	int32_t t_rsa_size;
 	uint8_t *t_output_buffer = NULL;
 	int32_t t_output_length;
-
-	if (!InitSSLCrypt())
-	{
-		t_success = false;
-		MCCStringClone("error: ssl library initialization failed", r_result);
-	}
 
 	if (t_success)
 	{

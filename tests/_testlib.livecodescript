@@ -127,7 +127,7 @@ private function _TestGetBuildFolder
          return tPath
       end if
       delete item -1 of tPath
-   end repeat
+   end repeat	
 end _TestGetBuildFolder
 
 private function _TestGetBuiltExtensionsFolder
@@ -351,6 +351,36 @@ on TestLoadExtension pName
 
 end TestLoadExtension
 
+on TestLoadExternal pExternal
+   local tEnginePath
+   put specialfolderpath("engine") into tEnginePath
+
+   local tExternalsPath, tExtension
+   set the itemdelimiter to slash
+   if the platform is "MacOS" then
+      put item 1 to -4 of tEnginePath into tExternalsPath
+      put "bundle" into tExtension
+   else if the platform is "linux" then
+      put tEnginePath into tExternalsPath
+      put "so" into tExtension
+   end if
+
+   set the externals of the templateStack to tExternalsPath & slash & \
+      pExternal & "." & tExtension
+
+   create stack pExternal && "External"
+   start using it
+   if the externalCommands of it is empty then
+      write "Cannot load external" && pExternal & return to stderr
+      quit 1
+   end if
+   
+   -- Ensure drivers can be found
+   if pExternal is "revdb" then
+      revSetDatabaseDriverPath tExternalsPath
+   end if
+end TestLoadExternal 
+
 private function __GetCaller
    get item 1 to -3 of line -3 of the executionContexts
    if there is not an it then
@@ -537,19 +567,35 @@ private function __MeetsRequirements pRequirement, pOptions
                return false
             end if
          end repeat
-		case "clipboard"
-		case "wait"
-		case "security"
-				return the platform is not "HTML5"
-		case "write"
-			return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
-		case "ui"
-		    return not (the environment ends with "command line")
-		case "desktop"
-		    return the platform is among the items of "MacOS,Win32,Linux"
-		case "mobile"
-		    return the platform is among the items of "Android,iOS"
-	end switch
-   
+         return true
+         break
+      case "clipboard"
+      case "wait"
+      case "security"
+         return the platform is not "HTML5"
+      case "write"
+         return the platform is not "HTML5" and ("disk" is in the securityPermissions or the secureMode is false)
+      case "ui"
+         return not (the environment ends with "command line")
+      case "desktop"
+         return the platform is among the items of "MacOS,Win32,Linux"
+      case "mobile"
+         return the platform is among the items of "Android,iOS"
+      case "external"
+         -- TODO: make externals tests work in standalone test builder
+         if TestIsInStandalone() then
+            return false
+         end if
+         return the platform is not "HTML5"
+      case "database"
+         if not __MeetsRequirements("external", "revdb") then
+            return false
+         end if
+         if "odbc" is among the items of pOptions or \ 
+               "postgresql" is among the items of pOptions then
+            return __MeetsRequirements("desktop")
+         end if  
+         return the platform is not "HTML5"
+   end switch
    return true
 end __MeetsRequirements
