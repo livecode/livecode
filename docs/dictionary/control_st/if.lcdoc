@@ -14,15 +14,20 @@ end if
 
 
 Summary:
-A <conditional statement> following an <if> or an optional series of
-<condtional statement|conditional statments> following an <else if|else if>
-that if true will <execute> the <statement list|statementList>
-that follows that <conditional statement>.  If none of the
-<condtional statement|conditional statments> are true then the
-<statement list|elseStatementList> following the <else> keyword,
-if present, will execute. If the <if> <control structure> contains
-more than one line the <if> <control structure> must end with an 
-<end if> keyword.
+Evaluates a <conditional expression|condition> to determine if it is true
+and if so <execute|executes> a subsequent <statment|statement> or <statementlist|statement list>.
+
+If the <conditional expression|condition> is false and the <if> <control structure> contains
+an <else> keyword the <statement|statement> or <statementlist|statement list> following the <else>
+<keyword> is executed.
+
+The  <if> <control structure> may contain 1 or more <else if|else if> <keyword|keywords> which have a
+<conditional expression|condition>. If the <conditional expression|condition> one of these evaluates to be
+true then the <statment|statement> or <statementlist|statement list> following that <else if|else if>
+<keyword> is executed. 
+
+If the <if> <control structure> contains
+more than one line then the <if> <control structure> must end with an <end if> keyword.
 
 Introduced: 1.0
 
