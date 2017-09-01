@@ -645,7 +645,7 @@ command builderExtUnpack pEdition
    end if
    
    local tEdition
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   put editionTitleCase(pEdition) into tEdition
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack builderMergExtVersion(), tEdition
    
