@@ -370,6 +370,15 @@ MCScriptThrowJavaBindingNotSupported(void)
 }
 
 bool
+MCScriptThrowForeignExceptionError(MCStringRef p_reason)
+{
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                 "reason",
+                                 p_reason,
+                                 nil);
+}
+
+bool
 MCScriptThrowObjCBindingNotSupported(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,

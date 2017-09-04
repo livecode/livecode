@@ -683,6 +683,9 @@ bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void);
 
 bool
+MCScriptThrowForeignExceptionError(MCStringRef p_reason);
+
+bool
 MCScriptThrowObjCBindingNotSupported(void);
 
 bool

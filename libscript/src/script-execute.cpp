@@ -311,12 +311,13 @@ public:
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
 #endif
-        ffi_call(t_cif,
-                 (void(*)())objc_msgSend,
-                 p_result_slot_ptr,
-                 t_objc_values);
-        
-        return true;
+        /* We must use a wrapper function written in an obj-c++ source file so that
+         * we can capture any obj-c exceptions. */
+        extern bool MCScriptCallObjCCatchingErrors(ffi_cif*, void (*)(), void *, void **);
+        return MCScriptCallObjCCatchingErrors(t_cif,
+                                              (void(*)())objc_msgSend,
+                                              p_result_slot_ptr,
+                                              t_objc_values);
 #else
         return true;
 #endif
