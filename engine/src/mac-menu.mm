@@ -1372,7 +1372,10 @@ bool MCPlatformInitializeMenu(void)
     MCPlatformReleaseMenu(t_menubar);
     
     /* Initialize the diamond NSImage */
-    s_diamond_image = [[NSImage alloc] initWithData: [NSData dataWithBytesNoCopy: (void *)kDiamondTiffImage length:kDiamondTiffImageLength]];
+    s_diamond_image = [[NSImage alloc] initWithData:
+                            [NSData dataWithBytesNoCopy: (void *)kDiamondTiffImage
+                                                 length: kDiamondTiffImageLength
+                                           freeWhenDone: NO]];
     
     return true;
 }
@@ -1380,6 +1383,7 @@ bool MCPlatformInitializeMenu(void)
 void MCPlatformFinalizeMenu(void)
 {
     [s_diamond_image release];
+    s_diamond_image = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
