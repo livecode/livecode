@@ -1949,6 +1949,9 @@ MC_DLLEXPORT extern MCStringRef kMCLineEndString;
 // The default string for '\t'.
 MC_DLLEXPORT extern MCStringRef kMCTabString;
 
+// The default string for '\0'.
+MC_DLLEXPORT extern MCStringRef kMCNulString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that
