@@ -293,12 +293,12 @@ end builderIDEDocsFolder
 
 # Location for api js file in > LC8
 function builderAPIFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/api"
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
 end builderAPIFolder
 
 # Location for guide js file in > LC8
 function builderGuideFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/guide"
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/guide"
 end builderGuideFolder
 
 function builderDocsFolder
@@ -325,7 +325,7 @@ end builderMergExtVersion
 
 function builderUnpackFolder pEdition
    replace space with "_" in pEdition
-   return sWorkDir & "/ext/unpacked/" & toLower(pEdition)
+   return builderWorkFolder() & "/ext/unpacked/" & toLower(pEdition)
 end builderUnpackFolder
 
 function builderTSNetVersion
@@ -591,7 +591,7 @@ function builderMergExtUrl pMergExtVersion, pEdition
 end builderMergExtUrl
 
 private function builderMergExtDownloadedFilePath pMergExtVersion, pEdition
-   return sWorkDir & "/ext/downloads/MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
+   return builderWorkFolder() & "/ext/downloads/MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
 end builderMergExtDownloadedFilePath
 
 private command builderMergExtUnpack pMergExtVersion, pEdition
@@ -616,7 +616,7 @@ function builderTSNetUrl pTSNetVersion, pEdition
 end builderTSNetUrl
 
 private function builderTSNetDownloadedFilePath pTSNetVersion, pEdition
-   return sWorkDir & "/ext/downloads/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
+   return builderWorkFolder() & "/ext/downloads/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
 end builderTSNetDownloadedFilePath
 
 private command builderTSNetUnpack pTSNetVersion, pEdition

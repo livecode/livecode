@@ -96,58 +96,21 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-ifeq ($(BUILD_EDITION),commercial)
-  dist-docs: dist-docs-commercial
-  dist-docs: dist-guide-commercial
-  dist-notes: dist-notes-commercial
-endif
-
-dist-docs: dist-docs-community
-dist-docs: dist-guide-community
-dist-notes: dist-notes-community
-
-dist-docs-community:
+dist-docs:
 	mkdir -p $(docs_build_dir)
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
-	  --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 	  
-dist-docs-commercial:
-	mkdir -p $(docs_build_dir)
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-
-dist-notes-community:
+dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
 	  --stage notes --warn-as-error \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 
-dist-notes-commercial:
+dist-guide:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage notes --warn-as-error \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-
-dist-guide-community:
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition community \
-	    --stage guide --warn-as-error
-	    
-dist-guide-commercial:
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition indy \
-	    --stage guide --warn-as-error
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition business \
-	    --stage guide --warn-as-error
+		--stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-server: dist-server-commercial
@@ -217,7 +180,11 @@ dist-upload-files.txt sha1sum.txt:
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
-		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-file; \
+		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-file.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.md' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.html' >> dist-upload-file.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.html' >> dist-upload-file.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.pdf' >> dist-upload-file.txt; \
 	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
