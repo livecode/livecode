@@ -352,11 +352,11 @@ MCScriptThrowUnableToLoadForiegnLibraryError(void)
 }
 
 bool
-MCScriptThrowUnknownJavaThreadError(void)
+MCScriptThrowUnknownThreadAffinityError(void)
 {
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
                                  "reason",
-                                 MCSTR("unknown thread for java binding"),
+                                 MCSTR("unknown thread affinity specified in binding string"),
                                  nil);
 }
 
@@ -367,6 +367,15 @@ MCScriptThrowJavaBindingNotSupported(void)
 								 "reason",
 								 MCSTR("java binding not supported on this platform"),
 								 nil);
+}
+
+bool
+MCScriptThrowForeignExceptionError(MCStringRef p_reason)
+{
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                 "reason",
+                                 p_reason,
+                                 nil);
 }
 
 bool

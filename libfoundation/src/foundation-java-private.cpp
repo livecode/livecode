@@ -1849,8 +1849,8 @@ jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_
         return nullptr;
     
     MCErrorRef t_error =
-        MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
-                                     t_mutable_list, &t_result);
+        MCHandlerTryToExternalInvokeWithList(static_cast<MCHandlerRef>(t_handler),
+                                             t_mutable_list, &t_result);
     jobject t_return = nullptr;
     if (*t_result != nil)
     {
@@ -1869,7 +1869,7 @@ jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_
     if (t_error != nil)
         MCErrorThrow(t_error);
     
-    return s_env->NewGlobalRef(t_return);
+    return s_env->NewLocalRef(t_return);
 }
 #else
 

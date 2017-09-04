@@ -40,37 +40,20 @@ static void __MCScriptDropValueRef(void *p_value)
 	MCValueRelease(*(MCValueRef *)p_value);
 }
 
-#ifdef TARGET_SUBPLATFORM_ANDROID
-struct remote_call_t
-{
-    MCScriptForeignHandlerDefinition *p_handler;
-    MCTypeInfoRef p_handler_signature;
-    void *p_result_slot_ptr;
-    void **m_argument_values;
-    uindex_t m_argument_count;
-};
-
-static void remote_call_func(void *p_context)
-{
-    extern void *MCAndroidGetSystemJavaEnv();
-    auto ctxt = static_cast<remote_call_t *>(p_context);
-
-    extern bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
-
-    MCJavaPrivateCallJNIMethodOnEnv(MCAndroidGetSystemJavaEnv(),
-                             ctxt -> p_handler -> java . class_name,
-                             ctxt -> p_handler -> java . method_id,
-                             ctxt -> p_handler -> java . call_type,
-                             ctxt -> p_handler_signature,
-                             ctxt -> p_result_slot_ptr,
-                             ctxt -> m_argument_values,
-                             ctxt -> m_argument_count);
-}
-#endif
-
 class MCScriptForeignInvocation
 {
 public:
+    struct CallTrampolineContext
+    {
+        MCScriptForeignInvocation* invocation;
+        MCScriptForeignHandlerDefinition *handler;
+        MCTypeInfoRef signature;
+        void *result_slot_ptr;
+        bool return_value;
+    };
+    
+    /**/
+
 	MCScriptForeignInvocation(void)
 		: m_argument_count(0),
 		  m_storage_frontier(0)
@@ -173,175 +156,239 @@ public:
 		return true;
 	}
 	
-	// Call
+    /**/
+    
+    bool CallJava(MCScriptForeignHandlerDefinition *p_handler,
+                  MCTypeInfoRef p_handler_signature,
+                  void *p_result_slot_ptr)
+    {
+        if (p_handler->thread_affinity != kMCScriptThreadAffinityDefault)
+        {
+#if defined(TARGET_SUBPLATFORM_ANDROID) && !defined(CROSS_COMPILE_HOST)
+            extern void *MCAndroidGetSystemJavaEnv();
+            extern bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+            
+            return MCJavaPrivateCallJNIMethodOnEnv(MCAndroidGetSystemJavaEnv(),
+                                                   p_handler->java.class_name,
+                                                   p_handler->java.method_id,
+                                                   p_handler->java.call_type,
+                                                   p_handler_signature,
+                                                   p_result_slot_ptr,
+                                                   m_argument_values,
+                                                   m_argument_count);
+#endif
+        }
+        
+        return MCJavaCallJNIMethod(p_handler->java.class_name,
+                                   p_handler->java.method_id,
+                                   p_handler->java.call_type,
+                                   p_handler_signature,
+                                   p_result_slot_ptr,
+                                   m_argument_values,
+                                   m_argument_count);
+    }
+    
+    /**/
+    
+    bool CallC(MCScriptForeignHandlerDefinition *p_handler,
+			   MCTypeInfoRef p_handler_signature,
+			   void *p_result_slot_ptr)
+    {
+        MCAssert(p_handler->language == kMCScriptForeignHandlerLanguageC);
+        
+        if (!MCHandlerTypeInfoIsVariadic(p_handler_signature))
+        {
+            ffi_call((ffi_cif *)p_handler ->c.function_cif,
+                     (void(*)())p_handler ->c.function,
+                     p_result_slot_ptr,
+                     m_argument_values);
+        }
+        else
+        {
+            ffi_cif *t_fixed_cif = (ffi_cif *)p_handler->c.function_cif;
+            ffi_cif t_cif;
+            if (ffi_prep_cif_var(&t_cif,
+                                 t_fixed_cif->abi,
+                                 t_fixed_cif->nargs,
+                                 m_argument_count,
+                                 t_fixed_cif->rtype,
+                                 m_argument_types) != FFI_OK)
+            {
+                return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
+            }
+            
+            ffi_call(&t_cif,
+                     (void(*)())p_handler ->c.function,
+                     p_result_slot_ptr,
+                     m_argument_values);
+        }
+        
+        return true;
+    }
+
+    /**/
+    
+    bool CallObjC(MCScriptForeignHandlerDefinition *p_handler,
+                  MCTypeInfoRef p_handler_signature,
+                  void *p_result_slot_ptr)
+    {
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+        /* At this point we have a argument values array which will match
+         * the LCB signature - depending on the call type we need to modify
+         * it. */
+        void *t_objc_values[kMaxArguments];
+        if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeInstanceMethod)
+        {
+            /* In the case of an instance method call, we need to insert
+             * the method pointer as the second argument. */
+            if (m_argument_count + 1 >= kMaxArguments)
+            {
+                return MCErrorThrowOutOfMemory();
+            }
+            t_objc_values[0] = m_argument_values[0];
+            t_objc_values[1] = &p_handler->objc.objc_selector;
+            for(uindex_t i = 1; i < m_argument_count; i++)
+                t_objc_values[i + 1] = m_argument_values[i];
+        }
+        else if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeClassMethod)
+        {
+            /* In the case of a class method call, we need to insert both
+             * the class, and method pointer as the first two arguments. */
+            if (m_argument_count + 2 >= kMaxArguments)
+            {
+                return MCErrorThrowOutOfMemory();
+            }
+            
+            t_objc_values[0] = &p_handler->objc.objc_class;
+            t_objc_values[1] = &p_handler->objc.objc_selector;
+            for(uindex_t i = 0; i < m_argument_count; i++)
+                t_objc_values[i + 2] = m_argument_values[i];
+        }
+        
+        /* There are different variants of objc_msgSend we need to use
+         * depending on architecture and return type:
+         *   struct return
+         *     all: _stret
+         *   float return
+         *     arm: no difference
+         *     i386: _fpret
+         *     x86-64: no difference
+         *   double return
+         *     arm: no difference
+         *     i386: _fpret
+         *     x86-64: no difference
+         *   long double
+         *     arm: no difference
+         *     i386: _fpret
+         *     x86-64: _fpret
+         *   _Complex long double (TODO)
+         *     arm: no difference
+         *     i386: no difference
+         *     x86-64: _fp2ret
+         */
+         
+        ffi_cif *t_cif = (ffi_cif *)p_handler->objc.function_cif;
+        void (*t_objc_msgSend)() = nullptr;
+#if defined(__ARM__)
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+            t_objc_msgSend = (void(*)())objc_msgSend_stret;
+        else
+            t_objc_msgSend = (void(*)())objc_msgSend;
+#elif defined(__X86_64__)
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+            t_objc_msgSend = (void(*)())objc_msgSend_stret;
+        else if (t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
+            t_objc_msgSend = (void(*)())objc_msgSend_fpret;
+        else
+            t_objc_msgSend = (void(*)())objc_msgSend;
+#elif defined(__I386__)
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+            t_objc_msgSend = (void(*)())objc_msgSend_stret;
+        else if (t_cif->rtype->type == FFI_TYPE_FLOAT ||
+                 t_cif->rtype->type == FFI_TYPE_DOUBLE ||
+                 t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
+            t_objc_msgSend = (void(*)())objc_msgSend_fpret;
+        else
+            t_objc_msgSend = (void(*)())objc_msgSend;
+#endif
+        /* We must use a wrapper function written in an obj-c++ source file so that
+         * we can capture any obj-c exceptions. */
+        extern bool MCScriptCallObjCCatchingErrors(ffi_cif*, void (*)(), void *, void **);
+        return MCScriptCallObjCCatchingErrors(t_cif,
+                                              (void(*)())objc_msgSend,
+                                              p_result_slot_ptr,
+                                              t_objc_values);
+#else
+        return true;
+#endif
+    }
+
+    bool CallAny(MCScriptForeignHandlerDefinition *p_handler,
+                 MCTypeInfoRef p_handler_signature,
+                 void *p_result_slot_ptr)
+    {
+        switch(p_handler->language)
+        {
+            case kMCScriptForeignHandlerLanguageJava:
+                return CallJava(p_handler, p_handler_signature, p_result_slot_ptr);
+            
+            case kMCScriptForeignHandlerLanguageC:
+                return CallC(p_handler, p_handler_signature, p_result_slot_ptr);
+                
+            case kMCScriptForeignHandlerLanguageBuiltinC:
+                ((void(*)(void*, void**))p_handler->builtin_c.function)(p_result_slot_ptr,
+                                                                        m_argument_values);
+                return true;
+                
+            case kMCScriptForeignHandlerLanguageObjC:
+                return CallObjC(p_handler, p_handler_signature, p_result_slot_ptr);
+            
+            case kMCScriptForeignHandlerLanguageUnknown:
+                MCUnreachableReturn(false);
+        }
+        
+        return false;
+    }
+    
+    static void CallAnyTrampoline(void *p_context)
+    {
+        auto ctxt = static_cast<CallTrampolineContext *>(p_context);
+        ctxt->return_value = ctxt->invocation->CallObjC(ctxt->handler,
+                                                        ctxt->signature,
+                                                        ctxt->result_slot_ptr);
+    }
+    
+	// Call the foreign handler, taking into account which thread it must run
+    // on.
 	bool Call(MCScriptForeignHandlerDefinition *p_handler,
 			  MCTypeInfoRef p_handler_signature,
 			  void *p_result_slot_ptr)
-	{
-        switch(p_handler->language)
+    {
+        /* If the handler has a thread affinity which is non-default, then on split
+         * thread engines (android / ios) we must do the actual call on the other
+         * thread. */
+        if (p_handler->thread_affinity != kMCScriptThreadAffinityDefault)
         {
-        case kMCScriptForeignHandlerLanguageJava:
-#ifdef TARGET_SUBPLATFORM_ANDROID
-            extern bool MCAndroidIsOnSystemThread();
-            if (p_handler->java.thread != kMCJavaThreadUI || MCAndroidIsOnSystemThread())
+#if defined(TARGET_SUBPLATFORM_IPHONE) && !defined(CROSS_COMPILE_HOST)
+            extern void MCIPhoneRunOnMainFiber(void (*)(void *), void *);
+            CallTrampolineContext t_context = { this, p_handler, p_handler_signature, p_result_slot_ptr, true };
+            MCIPhoneRunOnMainFiber(CallAnyTrampoline, &t_context);
+            return t_context.return_value;
+#elif defined(TARGET_SUBPLATFORM_ANDROID) && !defined(CROSS_COMPILE_HOST)
+            typedef void (*co_yield_callback_t)(void *);
+            extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+            CallTrampolineContext t_context = { this, p_handler, p_handler_signature, p_result_slot_ptr, true };
+            co_yield_to_android_and_call(CallAnyTrampoline, &t_context);
+            return t_context.return_value;
 #endif
-            {
-                MCJavaCallJNIMethod(p_handler->java.class_name,
-                                    p_handler->java.method_id,
-                                    p_handler->java.call_type,
-                                    p_handler_signature,
-                                    p_result_slot_ptr,
-                                    m_argument_values,
-                                    m_argument_count);
-            }
-#ifdef TARGET_SUBPLATFORM_ANDROID
-            else
-            {
-                typedef void (*co_yield_callback_t)(void *);
-                extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
-                remote_call_t t_context =
-                {
-                    p_handler,
-                    p_handler_signature,
-                    p_result_slot_ptr,
-                    m_argument_values,
-                    m_argument_count
-                };
-                co_yield_to_android_and_call(remote_call_func, &t_context);
-            }
-#endif
-            break;
-        
-        case kMCScriptForeignHandlerLanguageC:
-            if (!MCHandlerTypeInfoIsVariadic(p_handler_signature))
-            {
-                ffi_call((ffi_cif *)p_handler ->c.function_cif,
-                         (void(*)())p_handler ->c.function,
-                         p_result_slot_ptr,
-                         m_argument_values);
-            }
-            else
-            {
-                ffi_cif *t_fixed_cif = (ffi_cif *)p_handler->c.function_cif;
-                ffi_cif t_cif;
-                if (ffi_prep_cif_var(&t_cif,
-                                     t_fixed_cif->abi,
-                                     t_fixed_cif->nargs,
-                                     m_argument_count,
-                                     t_fixed_cif->rtype,
-                                     m_argument_types) != FFI_OK)
-                {
-                    return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
-                }
-                
-                ffi_call(&t_cif,
-                         (void(*)())p_handler ->c.function,
-                         p_result_slot_ptr,
-                         m_argument_values);
-            }
-            break;
-            
-        case kMCScriptForeignHandlerLanguageBuiltinC:
-            ((void(*)(void*, void**))p_handler->builtin_c.function)(p_result_slot_ptr,
-                    m_argument_values);
-            break;
-        
-        case kMCScriptForeignHandlerLanguageObjC:
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-        {
-            /* At this point we have a argument values array which will match
-             * the LCB signature - depending on the call type we need to modify
-             * it. */
-            void *t_objc_values[kMaxArguments];
-            if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeInstanceMethod)
-            {
-                /* In the case of an instance method call, we need to insert
-                 * the method pointer as the second argument. */
-                if (m_argument_count + 1 >= kMaxArguments)
-                {
-                    return MCErrorThrowOutOfMemory();
-                }
-                t_objc_values[0] = m_argument_values[0];
-                t_objc_values[1] = &p_handler->objc.objc_selector;
-                for(uindex_t i = 1; i < m_argument_count; i++)
-                    t_objc_values[i + 1] = m_argument_values[i];
-            }
-            else if (p_handler->objc.call_type == kMCScriptForeignHandlerObjcCallTypeClassMethod)
-            {
-                /* In the case of a class method call, we need to insert both
-                 * the class, and method pointer as the first two arguments. */
-                if (m_argument_count + 2 >= kMaxArguments)
-                {
-                    return MCErrorThrowOutOfMemory();
-                }
-                
-                t_objc_values[0] = &p_handler->objc.objc_class;
-                t_objc_values[1] = &p_handler->objc.objc_selector;
-                for(uindex_t i = 0; i < m_argument_count; i++)
-                    t_objc_values[i + 2] = m_argument_values[i];
-            }
-            
-            /* There are different variants of objc_msgSend we need to use
-             * depending on architecture and return type:
-             *   struct return
-             *     all: _stret
-             *   float return
-             *     arm: no difference
-             *     i386: _fpret
-             *     x86-64: no difference
-             *   double return
-             *     arm: no difference
-             *     i386: _fpret
-             *     x86-64: no difference
-             *   long double
-             *     arm: no difference
-             *     i386: _fpret
-             *     x86-64: _fpret
-             *   _Complex long double (TODO)
-             *     arm: no difference
-             *     i386: no difference
-             *     x86-64: _fp2ret
-             */
-             
-            ffi_cif *t_cif = (ffi_cif *)p_handler->objc.function_cif;
-            void (*t_objc_msgSend)() = nullptr;
-#if defined(__ARM__)
-            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
-                t_objc_msgSend = (void(*)())objc_msgSend_stret;
-            else
-                t_objc_msgSend = (void(*)())objc_msgSend;
-#elif defined(__X86_64__)
-            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
-                t_objc_msgSend = (void(*)())objc_msgSend_stret;
-            else if (t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
-                t_objc_msgSend = (void(*)())objc_msgSend_fpret;
-            else
-                t_objc_msgSend = (void(*)())objc_msgSend;
-#elif defined(__I386__)
-            if (t_cif->rtype->type == FFI_TYPE_STRUCT)
-                t_objc_msgSend = (void(*)())objc_msgSend_stret;
-            else if (t_cif->rtype->type == FFI_TYPE_FLOAT ||
-                     t_cif->rtype->type == FFI_TYPE_DOUBLE ||
-                     t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
-                t_objc_msgSend = (void(*)())objc_msgSend_fpret;
-            else
-                t_objc_msgSend = (void(*)())objc_msgSend;
-#endif
-            ffi_call(t_cif,
-                     (void(*)())objc_msgSend,
-                     p_result_slot_ptr,
-                     t_objc_values);
         }
-#endif
-        break;
-            
-        case kMCScriptForeignHandlerLanguageUnknown:
-            MCUnreachableReturn(false);
-            break;
-		}
-		
-		return true;
-	}
+        
+        /* Either thread affinity is default, or the platform does not have split
+         * threads. */
+        return CallAny(p_handler,
+                       p_handler_signature,
+                       p_result_slot_ptr);
+    }
     
 	// Take the contents of a slot - this stops the invocation
 	// cleaning up the taken slot.

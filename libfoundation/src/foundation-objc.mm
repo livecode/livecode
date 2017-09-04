@@ -310,7 +310,7 @@ MC_DLLEXPORT_DEF void *MCObjcObjectGetAutoreleasedId(const MCObjcObjectRef p_obj
     }
     
     MCAutoValueRef t_result;
-    if (!MCHandlerInvoke(m_handler, t_args, m_context != nullptr ? 2 : 1, &t_result))
+    if (!MCHandlerExternalInvoke(m_handler, t_args, m_context != nullptr ? 2 : 1, &t_result))
     {
         return;
     }

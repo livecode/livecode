@@ -703,21 +703,21 @@ static MCJavaCallType __MCScriptGetJavaCallType(MCStringRef p_class, MCStringRef
 }
 
 // Resolve the call type
-static bool __MCScriptGetJavaThread(MCStringRef p_thread, MCJavaThread &r_thread)
+static bool __MCScriptGetThreadAffinity(MCStringRef p_thread, MCScriptThreadAffinity &r_thread)
 {
     if (MCStringIsEmpty(p_thread))
     {
-        r_thread = kMCJavaThreadDefault;
+        r_thread = kMCScriptThreadAffinityDefault;
         return true;
     }
     
     if (MCStringIsEqualToCString(p_thread, "ui", kMCStringOptionCompareCaseless))
     {
-        r_thread = kMCJavaThreadUI;
+        r_thread = kMCScriptThreadAffinityUI;
         return true;
     }
     
-    return MCScriptThrowUnknownJavaThreadError();
+    return MCScriptThrowUnknownThreadAffinityError();
 }
 
 static bool
@@ -729,23 +729,37 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
 	MCAutoStringRef t_library;
 	MCAutoStringRef t_function;
 	MCAutoStringRef t_calling;
+    MCAutoStringRef t_thread;
 	if (!__MCScriptSplitForeignBindingString(d_binding,
 											 '>',
 											 &t_library) ||
+        !__MCScriptSplitForeignBindingString(d_binding,
+                                             '!',
+                                             &t_function) ||
 		!MCStringDivideAtChar(d_binding,
-							  '!',
+							  '?',
 							  kMCStringOptionCompareExact,
-							  &t_function,
-							  &t_calling))
+							  &t_calling,
+							  &t_thread))
 	{
 		MCValueRelease(d_binding);
 		return false;
 	}
     MCValueRelease(d_binding);
     
+    /* If the function is empty, but calling is not, then there must have
+     * been no ! part. */
+    if (MCStringIsEmpty(*t_function) &&
+        !MCStringIsEmpty(*t_calling))
+    {
+        t_function.Reset(*t_calling);
+        t_calling.Reset(kMCEmptyString);
+    }
+    
     int t_cc;
 	if (!MCStringIsEmpty(*t_calling))
 	{
+        MCLog("%@", *t_calling);
 		static const char *s_callconvs[] =
 		{
 			"default",
@@ -778,6 +792,12 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
 	{
 		return MCScriptThrowMissingFunctionInForeignBindingError();
 	}
+    
+    MCScriptThreadAffinity t_thread_affinity;
+    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
+    {
+        return false;
+    }
     
     /* TODO: This leaks a module handle if library is not empty (builtin) */
     MCSLibraryRef t_module;
@@ -844,6 +864,8 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     }
     
     p_handler->language = kMCScriptForeignHandlerLanguageC;
+    p_handler->thread_affinity = t_thread_affinity;
+    
     p_handler->c.function = t_pointer;
     
     if (r_bound != nullptr)
@@ -855,7 +877,7 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
 }
 
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-/* objc:library>class.method */
+/* objc:library>class.method[?thread] */
 static bool
 __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                                                MCScriptForeignHandlerDefinition *p_handler,
@@ -864,19 +886,30 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
 {	MCAutoStringRef t_library;
 	MCAutoStringRef t_class;
 	MCAutoStringRef t_method;
+    MCAutoStringRef t_thread;
 	if (!__MCScriptSplitForeignBindingString(d_binding,
 											 '>',
 											 &t_library) ||
 		!__MCScriptSplitForeignBindingString(d_binding,
 											 '.',
 											 &t_class) ||
+        !__MCScriptSplitForeignBindingString(d_binding,
+                                             '?',
+                                             &t_method) ||
         !MCStringCopy(d_binding,
-                      &t_method))
+                      &t_thread))
 	{
 		MCValueRelease(d_binding);
 		return false;
 	}
     MCValueRelease(d_binding);
+
+    /* If method is empty, then there must have been no '?' part. */
+    if (MCStringIsEmpty(*t_method))
+    {
+        t_method.Reset(*t_thread);
+        t_thread.Reset(kMCEmptyString);
+    }
 
     /* Make sure the method name is non-empty */
     if (*t_method == nullptr ||
@@ -929,6 +962,12 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         
             return true;
         }
+    }
+    
+    MCScriptThreadAffinity t_thread_affinity;
+    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
+    {
+        return false;
     }
     
     MCAutoStringRefAsUTF8String t_selector_name_cstring;
@@ -1144,6 +1183,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     p_handler->objc.function_cif = static_cast<ffi_cif*>(t_layout_cif.Release());
     
     p_handler->language = kMCScriptForeignHandlerLanguageObjC;
+    p_handler->thread_affinity = t_thread_affinity;
 
     if (r_bound != nullptr)
     {
@@ -1208,10 +1248,9 @@ __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
 	if (!__split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return))
 		return false;
     
-    MCJavaThread t_java_thread;
-    if (!__MCScriptGetJavaThread(*t_thread, t_java_thread))
+    MCScriptThreadAffinity t_thread_affinity;
+    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
         return false;
-    p_handler->java.thread = t_java_thread;
     
     p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
                                                               *t_function,
@@ -1271,6 +1310,7 @@ __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
     }
     
     p_handler->language = kMCScriptForeignHandlerLanguageJava;
+    p_handler->thread_affinity = t_thread_affinity;
     
     if (r_bound != nullptr)
     {
@@ -1453,7 +1493,7 @@ __MCScriptInternalHandlerInvoke(void *p_context,
 	
 	if (context->definition->kind != kMCScriptDefinitionKindHandler)
 		return MCErrorThrowGeneric(MCSTR("out-of-frame indirect foreign handler calls not yet supported"));
-	
+
 	return MCScriptCallHandlerInInstanceInternal(context->instance,
 												 static_cast<MCScriptHandlerDefinition *>(context->definition),
 												 p_arguments,

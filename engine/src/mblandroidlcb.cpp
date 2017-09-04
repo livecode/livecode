@@ -35,52 +35,13 @@
 
 extern jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args);
 
-#ifdef TARGET_SUBPLATFORM_ANDROID
-struct remote_call_t
-{
-    jlong p_handler;
-    jstring p_method_name;
-    jobjectArray p_args;
-    jobject *t_return;
-};
-
-static void remote_call_func(void *p_context)
-{
-    auto ctxt = static_cast<remote_call_t *>(p_context);
-    *(ctxt->t_return) = MCJavaPrivateDoNativeListenerCallback(ctxt->p_handler,
-                                                              ctxt->p_method_name,
-                                                              ctxt->p_args);
-}
-#endif
-
 extern "C" JNIEXPORT jobject JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback(JNIEnv *env, jobject object, jlong handler, jstring p_method, jobjectArray p_args) __attribute__((visibility("default")));
 
 JNIEXPORT jobject JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback(JNIEnv *env, jobject object, jlong p_handler, jstring p_method_name, jobjectArray p_args)
 {
-    jobject t_global_return = nullptr;
-#ifdef TARGET_SUBPLATFORM_ANDROID
-    extern bool MCAndroidIsOnEngineThread(void);
-    if (!MCAndroidIsOnEngineThread())
-    {
-        // Take globalrefs of java objects we need to persist after
-        // jumping threads
-        p_args = static_cast<jobjectArray>(env->NewGlobalRef(p_args));
-        p_method_name = static_cast<jstring>(env->NewGlobalRef(p_method_name));
-        typedef void (*co_yield_callback_t)(void *);
-        extern void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context);
-        remote_call_t t_context = {p_handler, p_method_name, p_args, &t_global_return};
-        co_yield_to_engine_and_call(remote_call_func, &t_context);
-        env->DeleteGlobalRef(p_args);
-        env->DeleteGlobalRef(p_method_name);
-    }
-    else
-    {
-#endif
-        t_global_return = MCJavaPrivateDoNativeListenerCallback(p_handler, p_method_name, p_args);
-#ifdef TARGET_SUBPLATFORM_ANDROID
-    }
-#endif
-    
+    jobject t_result =
+            MCJavaPrivateDoNativeListenerCallback(p_handler, p_method_name, p_args);
+
     // At the moment we have no way of dealing with any errors thrown in
     // the course of handling or attempting to handle the native listener
     // callback, so
@@ -93,17 +54,7 @@ JNIEXPORT jobject JNICALL Java_com_runrev_android_LCBInvocationHandler_doNativeL
         MCsystem->Debug(*t_string);
     }
     
-    // Turn global ref'd return into a local ref for this env, so it
-    // can be garbage-collected
-    
-    jobject t_return = nullptr;
-    if (t_global_return != nullptr)
-    {
-        t_return = env->NewLocalRef(t_global_return);
-        env->DeleteGlobalRef(t_global_return);
-    }
-    
-    return t_return;
+    return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

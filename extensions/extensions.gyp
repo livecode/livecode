@@ -29,6 +29,7 @@
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
 				'widgets/macbutton/macbutton.lcb',
+				'widgets/iosbutton/iosbutton.lcb',
 				'widgets/browser/browser.lcb',
 				#’widgets/chart/chart.lcb',
 				#'widgets/checkbox/checkbox.lcb',
