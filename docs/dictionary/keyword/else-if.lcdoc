@@ -6,9 +6,9 @@ Syntax: else if <condition> then
    <statementList>
 
 Summary:
-Used within an <if> <control structure> to evaluate an alternate <conditional expression|condition> and contain
-a <statement|statement> or <statementlist|Statement List> to be executed if it's
-<conditional expression|condition> is true.
+Used within an <if> <control structure> to evaluate an alternate <condition|conditional expression> and contain
+a <statement> or <statementlist|statement list> to be executed if its
+<condition|conditional expression> is true.
 
 Introduced: 1.0
 
@@ -41,8 +41,8 @@ Of one or more <LiveCode> <statement|statements>, and can also include
 structures>. 
 
 Description:
-Use the <else if><keyword> to add an alternate <conditional expression|condition> to be evaluated in the
-<if><control structure>. If the <conditional expression|condition> evaluates to true then the <statment> or
+Use the <else if> <keyword> to add an alternate <condition|conditional expression> to be evaluated in the
+<if> <control structure>. If the <conditional expression|condition> evaluates to true then the <statement> or
 <statementlist|statement list> following the <else if><keyword> will be executed.
 
 References: if (control structure), break (control structure),
