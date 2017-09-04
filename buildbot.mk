@@ -23,11 +23,13 @@
 # Load version information
 include version
 
+GIT_HASH_HEXIT_COUNT=10
+
 # Get git commit information
 ifeq ($(BUILD_EDITION),commercial)
-GIT_VERSION=g$(shell git --git-dir=../.git rev-parse --short HEAD)
+GIT_VERSION=g$(shell git --git-dir=../.git rev-parse --short=$(GIT_HASH_HEXIT_COUNT) HEAD)
 else
-GIT_VERSION=g$(shell git rev-parse --short HEAD)
+GIT_VERSION=g$(shell git rev-parse --short=$(GIT_HASH_HEXIT_COUNT) HEAD)
 endif
 
 ################################################################
