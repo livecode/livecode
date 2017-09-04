@@ -14,14 +14,14 @@ end if
 
 
 Summary:
-Evaluates a <conditional expression|condition> to determine if it is true
-and if so <execute|executes> a subsequent <statment|statement> or <statementlist|statement list>.
+Evaluates a <condition|conditional expression> to determine if it is true
+and if so <execute|executes> a subsequent <statement> or <statementlist|statement list>.
 
 If the <conditional expression|condition> is false and the <if> <control structure> contains
-an <else> keyword the <statement|statement> or <statementlist|statement list> following the <else>
+an <else> keyword the <statement> or <statementlist|statement list> following the <else>
 <keyword> is executed.
 
-The  <if> <control structure> may contain 1 or more <else if|else if> <keyword|keywords> which have a
+The <if> <control structure> may contain one or more <else if> <keyword|keywords> which have a
 <conditional expression|condition>. If the <conditional expression|condition> one of these evaluates to be
 true then the <statment|statement> or <statementlist|statement list> following that <else if|else if>
 <keyword> is executed. 
@@ -51,7 +51,7 @@ condition (bool):
 Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
 the <statement|statements> execute for that <condition>.
 If the <condition> <evaluate|evaluates> to false, the <statement> or 
-<statement list|statementList> following that <condition> is
+<statementlist|statement list> following that <condition> is
 skipped.)
 
 statementList:
@@ -71,9 +71,9 @@ structures>.
 
 Description:
 Use the <if> <control structure> to <execute> a <statement>
-(or <list of statements|statementList>) only under certain circumstances. 
+(or <statementlist|list of statements>) only under certain circumstances. 
 
-The <if> <control structure> always begins with the <word> if. There
+The <if> <control structure> always begins with the word if. There
 are four forms of the <if> <control structure>:
 
     if condition then statementList [else elseStatementList]
@@ -108,12 +108,12 @@ if the <condition> evaluates to false and the <if> <control structure>
 contains an <else> <keyword>, the <elseStatement> or <elseStatementList>
 which follows it is <execute|executed>.
 
-If the <if> <control structure> contains 1 or more <else if>
-<keyword|keywords> which have a <conditional expression|condition>
-and one of those <conditional expression|conditions> evaluates to be
-true the respective <elseIfstatment|else if statement> or
+If the <if> <control structure> contains one or more <else if>
+<keyword|keywords> which have a <condition|conditional expression>,
+and, one of those <condition|conditional expressions> evaluates to be
+true, then, the respective <elseIfstatement|else if statement> or
 <elseIfstatementlist|else if statement list> following that
-<else if|else if> <keyword> is executed.
+<else if> <keyword> is executed.
 
 If one <if> <control structure> is nested inside another, use of the
 second form described above is recommended, since the other forms may
