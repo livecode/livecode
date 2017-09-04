@@ -22,8 +22,8 @@ an <else> keyword the <statement> or <statementlist|statement list> following th
 <keyword> is executed.
 
 The <if> <control structure> may contain one or more <else if> <keyword|keywords> which have a
-<conditional expression|condition>. If the <conditional expression|condition> one of these evaluates to be
-true then the <statment|statement> or <statementlist|statement list> following that <else if|else if>
+<condition|conditional expression>. If the <condition|conditional expression> for one of these evaluates to be
+true then the <statment|statement> or <statementlist|statement list> following that <else if>
 <keyword> is executed. 
 
 If the <if> <control structure> contains
