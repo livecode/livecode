@@ -2,7 +2,8 @@ Name: else if
 
 Type: keyword
 
-Syntax: else if
+Syntax: else if <condition> then
+   <statementList>
 
 Summary:
 Used within an <if> <control structure> to evaluate an alternate <conditional expression|condition> and contain
@@ -24,6 +25,20 @@ else if tPH > 7 then
 else
    put "neutral" into tDescription
 end if
+
+
+Parameters:
+condition (bool):
+Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
+the <statement|statements> execute for that <condition>.
+If the <condition> <evaluate|evaluates> to false, the <statement> or 
+<statementlist|statement list> following that <condition> is
+skipped.)
+
+statementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
 Description:
 Use the <else if><keyword> to add an alternate <conditional expression|condition> to be evaluated in the
