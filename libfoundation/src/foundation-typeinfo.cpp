@@ -1187,6 +1187,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> foreign . descriptor . basetype);
         MCValueRelease(self -> foreign . descriptor . bridgetype);
         MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+        MCValueRelease(self->foreign.descriptor.promotedtype);
     }
     else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {
