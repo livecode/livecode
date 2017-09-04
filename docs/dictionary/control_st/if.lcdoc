@@ -110,8 +110,8 @@ which follows it is <execute|executed>.
 
 If the <if> <control structure> contains one or more <else if>
 <keyword|keywords> which have a <condition|conditional expression>,
-and, one of those <condition|conditional expressions> evaluates to be
-true, then, the respective <elseIfstatement|else if statement> or
+and one of those <condition|conditional expressions> evaluates to be
+true, then the respective <elseIfstatement|else if statement> or
 <elseIfstatementlist|else if statement list> following that
 <else if> <keyword> is executed.
 
