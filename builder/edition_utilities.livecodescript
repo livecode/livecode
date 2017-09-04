@@ -53,6 +53,6 @@ end editionBaseEditionType
 
 constant kPrivateRepoEditions="communityplus,indy,business,commercial"
 function editionIsInPrivateRepo pEdition
-	return pEdition is among the lines of kPrivateRepoEditions
+   return pEdition is among the items of kPrivateRepoEditions
 end editionIsInPrivateRepo
 
