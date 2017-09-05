@@ -51,7 +51,8 @@ on TestIconGravity
 end TestIconGravity
 
 on TestBug18293
-   TestSkipIf "environment", "command line"
+   TestSkipIfNot "ui"
+   TestSkipIf "environment", "server"
    TestSkipIfNot "wait"
    
    create stack "popup menu"

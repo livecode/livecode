@@ -3,6 +3,7 @@
 on TestSetup
    TestSkipIfNot "platform", "MacOS,Windows,Linux"
    TestSkipIf "stack", "StandaloneTestRunnerMainstack"
+   TestSkipIf "environment", "server"
          
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl

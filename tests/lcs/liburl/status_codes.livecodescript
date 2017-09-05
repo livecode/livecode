@@ -4,6 +4,7 @@ local sLogField
 
 on TestSetup
    TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "environment", "server"
    
    if not TestIsInStandalone() then
       local tLibURl

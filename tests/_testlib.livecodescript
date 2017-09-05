@@ -351,21 +351,33 @@ on TestLoadExtension pName
 
 end TestLoadExtension
 
+function TestGetBinariesPath
+   local tEngineFolder
+   put specialfolderpath("engine") into tEngineFolder
+
+   set the itemdelimiter to slash
+   if the platform is "MacOS" and the environment is not "server" then
+      return item 1 to -4 of tEngineFolder
+   end if
+
+   return tEngineFolder
+end TestGetBinariesPath
+
 on TestLoadExternal pExternal
    local tEnginePath
    put specialfolderpath("engine") into tEnginePath
 
-   local tExternalsPath, tExtension
+   local tBinariesPath, tExtension
    set the itemdelimiter to slash
    if the platform is "MacOS" then
-      put item 1 to -4 of tEnginePath into tExternalsPath
       put "bundle" into tExtension
    else if the platform is "linux" then
-      put tEnginePath into tExternalsPath
       put "so" into tExtension
    end if
 
-   set the externals of the templateStack to tExternalsPath & slash & \
+   put TestGetBinariesPath() into tBinariesPath
+
+   set the externals of the templateStack to tBinariesPath & slash & \
       pExternal & "." & tExtension
 
    create stack pExternal && "External"
@@ -377,7 +389,7 @@ on TestLoadExternal pExternal
    
    -- Ensure drivers can be found
    if pExternal is "revdb" then
-      revSetDatabaseDriverPath tExternalsPath
+      revSetDatabaseDriverPath tBinariesPath
    end if
 end TestLoadExternal 
 
