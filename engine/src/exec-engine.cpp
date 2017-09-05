@@ -50,6 +50,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
+#include "license.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -2063,32 +2065,12 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 {
-    bool t_success;
-    switch (MClicenseparameters.license_class)
+    if (!MCStringFromLicenseClass(MClicenseparameters.license_class,
+                                     true,
+                                     r_edition))
     {
-        case kMCLicenseClassCommunity:
-            t_success = MCStringCreateWithCString("community", r_edition);
-            break;
-			
-		case kMCLicenseClassEvaluation:
-        case kMCLicenseClassCommercial:
-            t_success = MCStringCreateWithCString("commercial", r_edition);
-            break;
-			
-		case kMCLicenseClassProfessionalEvaluation:
-        case kMCLicenseClassProfessional:
-            t_success = MCStringCreateWithCString("professional", r_edition);
-            break;
-            
-        default:
-            t_success = false;
-            break;
+        ctxt . Throw();
     }
-    
-    if (t_success)
-        return;
-    
-    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

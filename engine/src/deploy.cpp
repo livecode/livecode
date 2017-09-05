@@ -801,8 +801,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 
 	// If the banner_class field is set and we are not a trial license, we
 	// override the license class with that specified.
-	uint32_t t_license_class;
-	t_license_class = kMCLicenseClassNone;
+	MCLicenseClass t_license_class = kMCLicenseClassNone;
 	if (MClicenseparameters . license_class == kMCLicenseClassCommercial)
 	{
 		// If we have a commercial license, then we only allow a commercial
