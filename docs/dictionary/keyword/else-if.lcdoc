@@ -47,4 +47,5 @@ Use the <else if> <keyword> to add an alternate <condition|conditional expressio
 
 References: if (control structure), break (control structure),
 keyword (glossary), control structure (glossary), then (keyword),
-end (keyword), else (keyword), control (keyword)
+end (keyword), else (keyword), control (keyword), switch control structure),
+repeat (control structure), try (control structure)
