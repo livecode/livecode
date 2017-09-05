@@ -1644,6 +1644,13 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSIntPtrTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignUIntPtrTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignSIntPtrTypeInfo(void) ATTRIBUTE_PURE;
 
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalSIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalFloatTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalSIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalFloatTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCCBoolTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignCBoolTypeInfo(void) ATTRIBUTE_PURE;
 

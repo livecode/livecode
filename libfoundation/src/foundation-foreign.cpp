@@ -61,6 +61,12 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSIntPtrTypeInfo;
  * provide an element of safety against nullptr vs non-nullptr. */
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 
+/* The natural int and float types are 32-bit wide on 32-bit processors and
+ * 64-bit wide on 64-bit processors. */
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalUIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalSIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalFloatTypeInfo;
+
 /* C Types
  *
  * These types represent the C types which are relative to the compiler,
@@ -109,6 +115,10 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntSizeTypeInfo() { return kMCSIntSizeT
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntPtrTypeInfo() { return kMCUIntPtrTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntPtrTypeInfo() { return kMCSIntPtrTypeInfo; }
 
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalUIntTypeInfo() { return kMCNaturalUIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalSIntTypeInfo() { return kMCNaturalSIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalFloatTypeInfo() { return kMCNaturalFloatTypeInfo; }
+
 /**/
 
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCBoolTypeInfo() { return kMCCBoolTypeInfo; }
@@ -131,11 +141,29 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(__32_BIT__)
+typedef uint32_t natural_uint_t;
+typedef int32_t natural_sint_t;
+typedef float natural_float_t;
+#elif defined(__64_BIT__)
+typedef uint64_t natural_uint_t;
+typedef int64_t natural_sint_t;
+typedef float natural_float_t;
+#else
+#error Bitness of target not defined
+#endif
+
 static_assert(sizeof(int) == 4,
               "Assumption that int is 4 bytes in size not valid");
 
 static_assert(sizeof(bool) == 1,
               "Assumption that bool is 1 byte in size not valid");
+
+static_assert(sizeof(uintptr_t) == sizeof(natural_uint_t),
+              "Assumption that natural_uint_t is the same width as uintptr_t not valid");
+
+static_assert(sizeof(intptr_t) == sizeof(natural_sint_t),
+              "Assumption that natural_uint_t is the same width as uintptr_t not valid");
 
 template <typename CType, typename Enable = void>
 struct compute_primitive_type
@@ -317,6 +345,33 @@ struct sintptr_type_desc_t: public integral_type_desc_t<intptr_t>  {
     static constexpr auto describe_format = "<foreign signed intptr %zd>";
     static constexpr auto is_promotable = false;
 };
+
+/**/
+
+struct naturaluint_type_desc_t: public integral_type_desc_t<natural_uint_t> {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalUIntTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural unsigned integer %zu>";
+    static constexpr auto is_promotable = false;
+};
+
+struct naturalsint_type_desc_t: public integral_type_desc_t<natural_sint_t> {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalSIntTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural signed integer %zd>";
+    static constexpr auto is_promotable = false;
+};
+
+#if defined(__32_BIT__)
+struct naturalfloat_type_desc_t: public float_type_desc_t {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalFloatTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural float %lg>";
+};
+#elif defined(__64_BIT__)
+struct naturalfloat_type_desc_t: public double_type_desc_t {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalFloatTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural float %lg>";
+};
+#endif
+
 
 /**/
 
@@ -1044,6 +1099,9 @@ bool __MCForeignValueInitialize(void)
           DescriptorBuilder<uintptr_type_desc_t>::create("__builtin__.uintptr") &&
           DescriptorBuilder<sintptr_type_desc_t>::create("__builtin__.sintptr") &&
           DescriptorBuilder<pointer_type_desc_t>::create("__builtin__.pointer") &&
+          DescriptorBuilder<naturaluint_type_desc_t>::create("__builtin__.naturaluint") &&
+          DescriptorBuilder<naturalsint_type_desc_t>::create("__builtin__.naturalsint") &&
+          DescriptorBuilder<naturalfloat_type_desc_t>::create("__builtin__.naturalfloat") &&
           DescriptorBuilder<cbool_type_desc_t>::create("__builtin__.cbool") &&
           DescriptorBuilder<cuchar_type_desc_t>::create("__builtin__.cuchar") &&
           DescriptorBuilder<cschar_type_desc_t>::create("__builtin__.cschar") &&
@@ -1088,6 +1146,9 @@ void __MCForeignValueFinalize(void)
 	MCValueRelease(kMCUIntPtrTypeInfo);
 	MCValueRelease(kMCSIntPtrTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
+	MCValueRelease(kMCNaturalUIntTypeInfo);
+	MCValueRelease(kMCNaturalSIntTypeInfo);
+    MCValueRelease(kMCNaturalFloatTypeInfo);
     
 	MCValueRelease(kMCCCharTypeInfo);
 	MCValueRelease(kMCCUCharTypeInfo);
