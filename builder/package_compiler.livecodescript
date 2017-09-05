@@ -490,7 +490,7 @@ private command compilerParse @self, pScript
             break
          case "emit"
             local tMaxWords
-            switch word 2 if tLine
+            switch word 2 of tLine
             case "externals"
             case "dbdrivers"
                put 4 into tMaxWords
