@@ -36,19 +36,20 @@ end editionDisplayName
 
 
 function editionCompare pA, pB
-	local tA, tB
-	put itemOffset(pA, kEditionNames) into tA
-	put itemOffset(pB, kEditionNames) into tB
-	return tA - tB
+   local tA, tB
+   set the wholeMatches to true
+   put itemOffset(pA, kEditionNames) into tA
+   put itemOffset(pB, kEditionNames) into tB
+   return tA - tB
 end editionCompare
 
-constant kCommercialBaseEditions="communityplus,indy,business,commercial"
 function editionBaseEditionType pEdition
-	if pEdition is among the items of kCommercialBaseEditions then
-		return "Commercial"
-	else
-		return "Community"
-	end if
+   -- Editions in private repo use Commercial base rather than Community
+   if editionIsInPrivateRepo(pEdition) then
+      return "Commercial"
+   else
+      return "Community"
+   end if
 end editionBaseEditionType
 
 constant kPrivateRepoEditions="communityplus,indy,business,commercial"
