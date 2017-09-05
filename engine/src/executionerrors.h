@@ -2737,6 +2737,9 @@ enum Exec_errors
     
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
+
+    // {EE-0897} stack: password protecting stacks not supported in this edition
+    EE_STACK_PASSWORD_NOT_SUPPORTED,
 };
 
 extern const char *MCexecutionerrors;

@@ -190,8 +190,8 @@ MCPropertyInfo MCStack::kProperties[] =
    	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
     
-    DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
-    DEFINE_RO_OBJ_PROPERTY(P_PASSWORD, BinaryString, MCStack, Password)
+    DEFINE_RW_OBJ_PROPERTY(P_KEY, Any, MCStack, Key)
+    DEFINE_RW_OBJ_PROPERTY(P_PASSWORD, Any, MCStack, Password)
     
     // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
     DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
