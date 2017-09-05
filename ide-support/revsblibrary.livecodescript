@@ -854,7 +854,7 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    if xSettingsA["MacOSX x86-32"] is empty then put true into xSettingsA["MacOSX x86-32"]
    
    -- Auto-remove stack passwords from community stacks
-   if revLicenseType() is "community" then
+   if not revEnvironmentEditionProperty("password_protection") then
       if xSettingsA["password"] is not empty then
          delete variable xSettingsA["password"]
       end if
