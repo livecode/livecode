@@ -356,7 +356,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 @implementation com_runrev_livecode_MCFileDialogAccessoryView
 
-- (id)initWithPanel: (NSSavePanel *)panel;
+- (id)initWithPanel: (NSSavePanel *)panel
 {
 	self = [ super init ];
     if (self == nil)
@@ -626,12 +626,13 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
     else
     {
         [t_panel setPrompt: @"Choose"];
-        [t_panel setCanChooseFiles: NO];
-        [t_panel setCanChooseDirectories: YES];
-        [t_panel setAllowsMultipleSelection: NO];
+        [(NSOpenPanel *)t_panel setCanChooseFiles: NO];
+        [(NSOpenPanel *)t_panel setCanChooseDirectories: YES];
+        [(NSOpenPanel *)t_panel setAllowsMultipleSelection: NO];
     }
     
-    if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
+    if (p_kind != kMCPlatformFileDialogKindSave && 
+        [t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
     {
         // show accessory view when dialog opens
         [t_panel setAccessoryViewDisclosed: YES];
