@@ -19,7 +19,9 @@ if x &gt; 0 then exit repeat
 
 Description:
 Use the <exit repeat> <control structure> to skip the rest of a <repeat>
-<loop>. Form:The <exit repeat> <statement> appears on a line by itself,
+<loop>. 
+
+**Form:** The <exit repeat> <statement> appears on a line by itself,
 anywhere inside a <repeat> <control structure>.
 
 After an <exit repeat> <statement>, none of the remaining
@@ -30,14 +32,22 @@ any more <loop|loops> are skipped. The <handler> <resume|resumes>
 
 Usually, <exit repeat> is used within an <if> <control structure>, so
 that the <loop> stops if a condition is true and continues if the
-condition is false. This example stops the <loop> when the user presses
-the mouse button:
+condition is false. This example reads a file in chunks and stops 
+the <loop> when it encounters the end of file or if the file is empty:
 
-    repeat with x = 1 to the number of cards
-    go card x
-    if the mouse is down then exit repeat -- bail out
-
+    constant kChunk = 1024
+    open file tFile for binary read
+    repeat
+        read from file tFile for kChunk
+        put the result into tResult
+        if tResult is empty or tResult is "eof" then
+            ProcessFileChunk it
+        end if
+        if tResult is not empty then
+            exit repeat
+        end if
     end repeat
+    close file tFile
 
 
 References: exit (control structure), next repeat (control structure),
