@@ -859,6 +859,7 @@ component Databases.MacOSX
 component Toolset
 	into [[ToolsFolder]] place
 		rfolder ide:Toolset
+	emit variable TargetEdition to "[[ToolsFolder]]/edition.txt"
 	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
