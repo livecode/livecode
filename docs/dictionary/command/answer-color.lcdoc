@@ -47,10 +47,10 @@ Description:
 Use the <answer color> <command> to select a custom color.
 
 The <answer color> <command> displays a <dialog box> where the user can
-select a color. (This dialog box is displayed by the operating system,
+select a color. (This <dialog box> is displayed by the operating system,
 not by LiveCode.)
 
-If you specify a <startingColor>, the dialog box displays that color by
+If you specify a <startingColor>, the <dialog box> displays that color by
 default. 
 
 The color is returned in the form of three comma-separated integers

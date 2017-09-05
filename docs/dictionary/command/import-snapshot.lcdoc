@@ -68,7 +68,8 @@ Use the <import snapshot> <command> to place a screenshot in the
 <current stack>.
 
 The <import snapshot> <command> creates a new <image> in the center of
-the <current card> and places the snapshot in the <image>.
+the <current card> and places the snapshot in the <image> and sets 
+the <it> variable to long id of the created <image>.
 
 iOS supports both the object and screen snapshot variants of the 
 <import snapshot> command. In the screen snapshot case, coordinates 

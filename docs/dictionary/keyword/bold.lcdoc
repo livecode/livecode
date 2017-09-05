@@ -27,16 +27,13 @@ the object) or a chunk in a field or button.
 
 To add boldfacing to an object without removing other styles (such as
 italic), add the <bold> <keyword> to the end of the <textStyle>. The
-following example adds bold to the styles of a <button> :
+following example adds bold to the styles of a <button>:
 
     if the textStyle of button 1 is empty then
-
-    set the textStyle of button 1 to bold
+        set the textStyle of button 1 to "bold"
     else
-
-    set the textStyle of button 1 to \
-
-    (the textStyle of button 1) & comma & "bold"
+        set the textStyle of button 1 to \
+            (the textStyle of button 1) & comma & "bold"
     end if
 
 

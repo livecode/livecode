@@ -57,14 +57,14 @@ If <types> are specified, the result function will return the tag of the
 corresponding type selected from the supplied drop-down list.
 
 Description:
-Use the ask file <command> to let the user provide the <file path|name
-and location> of a new <file>.
+Use the ask file <command> to let the user provide the 
+<file path|name and location> of a new <file>.
 
 The dialog box is the same one most applications use for the "Save"
 command in the File menu. (If the systemFileSelector <property> is set
 to true on <Mac OS> and <Windows|Windows systems>, and always on
-<Unix|Unix systems>, the <application> displays its own built-in <dialog
-box>, instead of the one provided by the operating system.)
+<Unix|Unix systems>, the <application> displays its own built-in 
+<dialog box>, instead of the one provided by the operating system.)
 
 >*Important:*  The ask file command does not create the file. It only
 > displays the dialog box and retrieves the path to the file the user
@@ -84,8 +84,8 @@ appears normally. Attempting to open a sheet from within another sheet
 displays the second stack as a <modal dialog box> instead.
 
 If the systemFileSelector <property> is set to false, LiveCode's
-built-in <dialog box> is used instead of the operating system's <file
-dialog box|standard file dialog>.
+built-in <dialog box> is used instead of the operating system's 
+<file dialog box|standard file dialog>.
 
 Changes:
 The ask file ... with type ... form was introduced in version 2.6.
