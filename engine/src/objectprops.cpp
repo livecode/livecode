@@ -343,7 +343,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
-        MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+        MCStackHandle t_old_defaultstack = MCdefaultstackptr;
         MCdefaultstackptr = getstack();
         MCObjectPartHandle oldtargetptr(this);
         swap(MCtargetptr, oldtargetptr);
@@ -447,7 +447,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		p1.setvalueref_argument(t_param_name);
 		p2.setvalueref_argument(p_value);
 		
-		MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+		MCStackHandle t_old_defaultstack = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
         MCObjectPartHandle oldtargetptr(this);
         swap(MCtargetptr, oldtargetptr);

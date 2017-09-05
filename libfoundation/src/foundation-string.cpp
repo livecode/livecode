@@ -6228,6 +6228,7 @@ MC_DLLEXPORT_DEF MCStringRef kMCMixedString;
 MC_DLLEXPORT_DEF MCStringRef kMCCommaString;
 MC_DLLEXPORT_DEF MCStringRef kMCLineEndString;
 MC_DLLEXPORT_DEF MCStringRef kMCTabString;
+MC_DLLEXPORT_DEF MCStringRef kMCNulString;
 
 bool __MCStringInitialize(void)
 {
@@ -6251,6 +6252,9 @@ bool __MCStringInitialize(void)
     
     if (!MCStringCreateWithNativeChars((const char_t *)"\t", 1, kMCTabString))
 		return false;
+        
+    if (!MCStringCreateWithNativeChars((const char_t *)"\0", 1, kMCNulString))
+		return false;
 
 	return true;
 }
@@ -6272,6 +6276,8 @@ void __MCStringFinalize(void)
     kMCLineEndString = nil;
     MCValueRelease(kMCTabString);
     kMCTabString = nil;
+    MCValueRelease(kMCNulString);
+    kMCNulString = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

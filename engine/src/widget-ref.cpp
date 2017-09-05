@@ -883,7 +883,7 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
 	MCStack *t_this_stack;
-	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr;
 	
 	// Preserve the host ptr we get across the dispatch so that
 	// we definitely return things to the way they were.

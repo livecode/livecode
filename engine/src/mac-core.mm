@@ -1429,7 +1429,11 @@ bool MCMacPlatformMapKeyCode(uint32_t p_mac_keycode, uint32_t p_modifier_flags, 
     else
         r_keycode = keysyms[p_mac_keycode];
     
-	// r_keycode = s_mac_keycode_map[p_mac_keycode];
+    /* The keysyms and shift_keysyms arrays don't have entries for everything. If
+     * we get 0 here we fall back to the underlying list's entries. This means
+     * that modifier keys are correctly handled */
+    if (r_keycode == 0)
+        r_keycode = s_mac_keycode_map[p_mac_keycode];
     
 	return true;
 }
