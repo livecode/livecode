@@ -30,10 +30,10 @@ on TestPassword
    TestAssert "stack initial passKey true", the passKey of stack "foo"
    
    TestAssertThrow "can't set password in community", \ 
-      "SetPasswordOnStack", the long id of me, "EE_OBJECT_SETNOPROP"
+      "SetPasswordOnStack", the long id of me, "EE_STACK_PASSWORD_NOT_SUPPORTED"
    
    TestAssertThrow "can't set passKey in community", \
-      "SetPasskeyOnStack", the long id of me, "EE_OBJECT_SETNOPROP"
+      "SetPasskeyOnStack", the long id of me, "EE_STACK_PASSWORD_NOT_SUPPORTED"
    
    delete stack "foo"
 end TestPassword
