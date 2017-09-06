@@ -999,7 +999,16 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-            if (MCNameIsEqualTo(t_entry -> key, p_key, p_case_sensitive, MCArrayIsFormSensitive(self)))
+            MCStringOptions t_options = 0;
+            if (p_case_sensitive)
+            {
+                t_options |= kMCStringOptionFoldBit;
+            }
+            if (MCArrayIsFormSensitive(self))
+            {
+                t_options |= kMCStringOptionNormalizeBit;
+            }
+            if (MCNameIsEqualTo(t_entry -> key, p_key, t_options))
 			{
 				r_slot = t_probe;
 				return true;
