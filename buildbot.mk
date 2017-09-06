@@ -80,7 +80,11 @@ else ifeq ($(BUILD_PLATFORM),linux-x86_64)
   LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
   UPLOAD_ENABLE_CHECKSUM ?= yes
+ifeq ($(BUILD_EDITION),commercial)
   UPLOAD_RELEASE_NOTES ?= yes
+else
+  UPLOAD_RELEASE_NOTES ?= no
+endif
 endif
 
 # FIXME add --warn-as-error
@@ -128,7 +132,7 @@ dist-server-commercial:
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
-distmac-disk: distmac-disk-indy distmac-disk-business
+distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
 endif
 
 dist-tools: dist-tools-community dist-tools-version-check
@@ -136,12 +140,14 @@ distmac-disk: distmac-disk-community
 
 dist-tools-community:
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 dist-tools-commercial:
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition communityplus \
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+  	  --built-docs-dir $(docs_build_dir)
 # Ensure that the version for which we're trying to build installers
 # hasn't already been tagged.
 dist-tools-version-check:
@@ -158,6 +164,8 @@ dist-tools-version-check:
 
 distmac-bundle-community:
 	$(buildtool_command) --platform mac --stage bundle --edition community
+distmac-bundle-communityplus:
+	$(buildtool_command) --platform mac --stage bundle --edition communityplus
 distmac-bundle-indy:
 	$(buildtool_command) --platform mac --stage bundle --edition indy
 distmac-bundle-business:
