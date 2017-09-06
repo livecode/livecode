@@ -1776,13 +1776,13 @@ struct MCForeignTypeDescriptor
     bool (*initialize)(void *contents);
     void (*finalize)(void *contents);
     bool (*defined)(void *contents);
-    bool (*move)(void *source, void *target);
-    bool (*copy)(void *source, void *target);
-    bool (*equal)(void *left, void *right, bool& r_equal);
-    bool (*hash)(void *contents, hash_t& r_hash);
-    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
-    bool (*doexport)(MCValueRef value, bool release, void *contents);
-	bool (*describe)(void *contents, MCStringRef & r_desc);
+    bool (*move)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*copy)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*equal)(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal);
+    bool (*hash)(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash);
+    bool (*doimport)(const MCForeignTypeDescriptor* desc, void *contents, bool release, MCValueRef& r_value);
+    bool (*doexport)(const MCForeignTypeDescriptor* desc, MCValueRef value, bool release, void *contents);
+	bool (*describe)(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef & r_desc);
     
     /* The promotedtype typeinfo is the type to which this type must be promoted
      * when passed through variadic parameters. The 'promote' method does the

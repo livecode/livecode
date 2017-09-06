@@ -95,7 +95,7 @@ void check_export_raw(MCTypeInfoRef p_type_info, bool (*p_bridge)(W, U&), T p_va
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doexport != nullptr);
     T t_exported_value;
-    EXPECT_TRUE(t_desc->doexport(*t_bridge_value, false, &t_exported_value));
+    EXPECT_TRUE(t_desc->doexport(t_desc, *t_bridge_value, false, &t_exported_value));
     EXPECT_EQ(t_exported_value, p_value);
 }
 
@@ -108,7 +108,7 @@ void check_integral_raw_export_overflow(MCTypeInfoRef p_type_info, MCTypeInfoRef
     EXPECT_TRUE(t_desc->doexport != nullptr);
     MCAutoForeignValueRef t_boxed_value;
     T t_exported_value = 0;
-    EXPECT_FALSE(t_desc->doexport(*t_bridge_value, false, &t_exported_value));
+    EXPECT_FALSE(t_desc->doexport(t_desc, *t_bridge_value, false, &t_exported_value));
     if (t_exported_value != 0)
     {
         MCAutoErrorRef t_error;
@@ -125,7 +125,7 @@ void check_import_raw(MCTypeInfoRef p_type_info, bool (*p_bridge)(W, U&), T p_va
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doimport != nullptr);
     MCAutoValueRef t_imported_value;
-    EXPECT_TRUE(t_desc->doimport(&p_value, false, &t_imported_value));
+    EXPECT_TRUE(t_desc->doimport(t_desc, &p_value, false, &t_imported_value));
     if (t_imported_value.IsSet())
         EXPECT_TRUE(MCValueIsEqualTo(*t_imported_value, *t_bridge_value));
 }
@@ -136,7 +136,7 @@ void check_integral_raw_import_overflow(MCTypeInfoRef p_type_info, MCTypeInfoRef
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doimport != nullptr);
     MCAutoValueRef t_imported_value;
-    EXPECT_FALSE(t_desc->doimport(&p_value, false, &t_imported_value));
+    EXPECT_FALSE(t_desc->doimport(t_desc, &p_value, false, &t_imported_value));
     if (!t_imported_value.IsSet())
     {
         MCAutoErrorRef t_error;

@@ -89,7 +89,8 @@ bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_typeinfo, const void *p
         MCAutoValueRef t_value;
         if (t_descriptor->doimport != nil)
         {
-            if (!t_descriptor->doimport((void *)p_values,
+            if (!t_descriptor->doimport(t_descriptor,
+                                        (void *)p_values,
                                         false,
                                         &t_value))
             {

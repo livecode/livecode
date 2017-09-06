@@ -944,7 +944,8 @@ MCScriptExecuteContext::ConvertToResolvedType(MCValueRef p_value,
         // Import the contents of the foreign value as its bridge type. Note
         // that not all types can be imported (i.e there is no bridging type)
 		if (t_from_desc->doimport == nil ||
-            !t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+            !t_from_desc->doimport(t_from_desc,
+                                   MCForeignValueGetContentsPtr(p_value),
 								   false,
 								   r_new_value))
 		{
@@ -1089,7 +1090,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
             // If the two foreign types are the same, copy the contents
             if (t_slot_desc == t_from_desc)
             {
-                if (!t_slot_desc->copy(MCForeignValueGetContentsPtr(p_value),
+                if (!t_slot_desc->copy(t_slot_desc,
+                                       MCForeignValueGetContentsPtr(p_value),
                                        x_slot_ptr))
                 {
                     Rethrow();
@@ -1104,8 +1106,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
                 MCAssert(t_slot_desc->bridgetype == t_from_desc->bridgetype);
                 
                 MCAutoValueRef t_bridged_value;
-                if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value), false, &t_bridged_value) ||
-                    !t_slot_desc->doexport(*t_bridged_value, false, x_slot_ptr))
+                if (!t_from_desc->doimport(t_from_desc, MCForeignValueGetContentsPtr(p_value), false, &t_bridged_value) ||
+                    !t_slot_desc->doexport(t_slot_desc, *t_bridged_value, false, x_slot_ptr))
                 {
                     Rethrow();
                     return false;
@@ -1124,7 +1126,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 					return false;
 				}
 			}
-			else if (!t_slot_desc->doexport(p_value,
+			else if (!t_slot_desc->doexport(t_slot_desc,
+                                            p_value,
 											false,
 											x_slot_ptr))
 			{
@@ -1144,7 +1147,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
             t_resolved_from_type.type != p_slot_type.type)
         {
             MCValueRef t_bridged_value;
-            if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+            if (!t_from_desc->doimport(t_from_desc,
+                                       MCForeignValueGetContentsPtr(p_value),
                                        false,
                                        t_bridged_value))
             {

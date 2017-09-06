@@ -478,7 +478,7 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . copy(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.copy(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -505,7 +505,7 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.move(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -533,7 +533,7 @@ bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeig
         return false;
 
     if (t_resolved_typeinfo->foreign.descriptor.doexport == nil ||
-        !t_resolved_typeinfo->foreign.descriptor.doexport(p_value, false, t_value + 1))
+        !t_resolved_typeinfo->foreign.descriptor.doexport(&t_resolved_typeinfo->foreign.descriptor, p_value, false, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -559,7 +559,7 @@ void __MCForeignValueDestroy(__MCForeignValue *self)
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
-    t_resolved_typeinfo -> foreign . descriptor . finalize(self + 1);
+    t_resolved_typeinfo->foreign.descriptor.finalize(self + 1);
 	
 	MCValueRelease(self -> typeinfo);
 }
@@ -570,7 +570,7 @@ hash_t __MCForeignValueHash(__MCForeignValue *self)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     hash_t t_hash;
-    if (!t_resolved_typeinfo -> foreign . descriptor . hash(self + 1, t_hash))
+    if (!t_resolved_typeinfo->foreign.descriptor.hash(&t_resolved_typeinfo->foreign.descriptor, self + 1, t_hash))
         return 0;
     return t_hash;
 }
@@ -581,7 +581,7 @@ bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_s
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     bool t_result;
-    if (!t_resolved_typeinfo -> foreign . descriptor . equal(self + 1, other_self + 1, t_result))
+    if (!t_resolved_typeinfo->foreign.descriptor.equal(&t_resolved_typeinfo->foreign.descriptor, self + 1, other_self + 1, t_result))
         return false;
     
     return t_result;
@@ -592,11 +592,12 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 	MCTypeInfoRef t_resolved_typeinfo;
 	t_resolved_typeinfo = __MCTypeInfoResolve(self->typeinfo);
 
-	bool (*t_describe_func)(void *, MCStringRef &);
+	bool (*t_describe_func)(const MCForeignTypeDescriptor*, void *, MCStringRef &);
 	t_describe_func = t_resolved_typeinfo->foreign.descriptor.describe;
 
 	if (NULL != t_describe_func)
-		return t_describe_func (MCForeignValueGetContentsPtr (self),
+		return t_describe_func (&t_resolved_typeinfo->foreign.descriptor,
+                                MCForeignValueGetContentsPtr (self),
 		                        r_description);
 	else
 		return MCStringFormat(r_description, "<foreign: %p>", self);
@@ -691,40 +692,40 @@ bool defined(void *contents)
 }
 
 template <typename TypeDesc>
-bool equal(void *left, void *right, bool& r_equal)
+bool equal(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal)
 {
     r_equal = *static_cast<typename TypeDesc::c_type *>(left) == *static_cast<typename TypeDesc::c_type *>(right);
     return true;
 }
 
 template <typename TypeDesc>
-bool copy(void *from, void *to)
+bool copy(const MCForeignTypeDescriptor* desc, void *from, void *to)
 {
     *static_cast<typename TypeDesc::c_type *>(to) = *static_cast<typename TypeDesc::c_type *>(from);
     return true;
 }
 
 template <typename TypeDesc>
-bool move(void *from, void *to)
+bool move(const MCForeignTypeDescriptor* desc, void *from, void *to)
 {
-    return copy<TypeDesc>(from, to);
+    return copy<TypeDesc>(desc, from, to);
 }
 
 template <typename TypeDesc>
-bool hash(void *value, hash_t& r_hash)
+bool hash(const MCForeignTypeDescriptor* desc, void *value, hash_t& r_hash)
 {
     r_hash = TypeDesc::hash_func(*static_cast<typename TypeDesc::c_type *>(value));
     return true;
 }
 
 template <typename TypeDesc>
-bool describe(void *contents, MCStringRef& r_string)
+bool describe(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef& r_string)
 {
     return Describe<TypeDesc>::describe(*static_cast<typename TypeDesc::c_type *>(contents), r_string);
 }
 
 template <typename TypeDesc>
-bool doexport(MCValueRef p_value, bool p_release, void *contents)
+bool doexport(const MCForeignTypeDescriptor* desc, MCValueRef p_value, bool p_release, void *contents)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
     
@@ -743,7 +744,7 @@ bool doexport(MCValueRef p_value, bool p_release, void *contents)
 }
 
 template <typename TypeDesc>
-bool doimport(void *contents, bool p_release, MCValueRef& r_value)
+bool doimport(const MCForeignTypeDescriptor* desc, void *contents, bool p_release, MCValueRef& r_value)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
     return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),

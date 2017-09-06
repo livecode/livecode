@@ -259,7 +259,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
             {
                 if (t_descriptor -> bridgetype != kMCNullTypeInfo)
                 {
-                    if (!t_descriptor -> doimport(args[t_arg_index], false, t_value_args[t_arg_index]))
+                    if (!t_descriptor -> doimport(t_descriptor, args[t_arg_index], false, t_value_args[t_arg_index]))
                         goto cleanup;
                 }
                 else
@@ -287,7 +287,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         {
             const MCForeignTypeDescriptor *t_descriptor;
             t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
-            if (!t_descriptor -> doexport(t_value_result, false, ret))
+            if (!t_descriptor -> doexport(t_descriptor, t_value_result, false, ret))
                 goto cleanup;
         }
         else
