@@ -346,7 +346,7 @@ const char *MCObject::gettypestring()
 // Object names are always compared effectively.
 bool MCObject::hasname(MCNameRef p_other_name)
 {
-	return MCNameIsEqualTo(getname(), p_other_name, kMCCompareCaseless);
+	return MCNameIsEqualToCaseless(getname(), p_other_name);
 }
 
 void MCObject::setname(MCNameRef p_new_name)
@@ -783,7 +783,7 @@ Boolean MCObject::doubleup(uint2 which)
 
 void MCObject::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && hashandlers & HH_IDLE
 		        && getstack()->gettool(this) == T_BROWSE)
@@ -820,7 +820,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
                 domess(*t_mptr_string);
 
 		}
-		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
+		if (stat == ES_ERROR && !MCNameIsEqualToCaseless(mptr, MCM_error_dialog))
 			senderror();
 	}
 }
@@ -2121,10 +2121,6 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCStackHandle t_stack = getstack();
 	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
-
-    // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
-	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
-    //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
 	MCscreen->flush(t_stack->getw());
 	
@@ -4769,7 +4765,7 @@ bool MCObject::mapfont(bool recursive)
 
         // If the font is explicitly requesting the default font for this
         // control type, use the themed font
-        if (MCNameIsEqualTo(t_textfont, MCN_font_default))
+        if (MCNameIsEqualToCaseless(t_textfont, MCN_font_default))
         {
             // Don't inherit the parent's themed font
             if (recursive)

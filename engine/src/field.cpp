@@ -1353,7 +1353,7 @@ Boolean MCField::doubleup(uint2 which)
 
 void MCField::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (opened && (state & CS_KFOCUSED)
 		        && !(state & CS_DRAG_TEXT))
@@ -1365,7 +1365,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 		}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal2))
 		{
 			if (opened)
 			{

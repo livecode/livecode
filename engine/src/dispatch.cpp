@@ -865,7 +865,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
                     tstk = stacks;
                     do
                     {
-                        if (MCNameIsEqualTo(*t_stack_name, tstk->getname(), kMCCompareCaseless))
+                        if (MCNameIsEqualToCaseless(*t_stack_name, tstk->getname()))
                         {
                             x_stack = tstk;
                             break;
@@ -2127,7 +2127,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{
 		MCStackSecurityExecutionTimeout();
 	}

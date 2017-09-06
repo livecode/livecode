@@ -593,7 +593,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
     MCAutoPointer<char> t_host_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_host, &t_host_cstring);
 
-	if (MCNameIsEqualTo(p_message, kMCEmptyName))
+	if (MCNameIsEqualToCaseless(p_message, kMCEmptyName))
 	{
 		t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}

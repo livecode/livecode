@@ -378,7 +378,7 @@ Boolean MCControl::doubleup(uint2 which)
 
 void MCControl::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && getstack()->gettool(this) == T_BROWSE)
 		{

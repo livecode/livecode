@@ -61,7 +61,7 @@ void MCTooltip::close(void)
 void MCTooltip::timer(MCNameRef mptr, MCParameter *params)
 {
 #ifndef _MOBILE
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 		opentip();
 	else
 		close();

@@ -2062,12 +2062,13 @@ MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
 // Returns true if the given name is the empty name.
 MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
 
-}
-
 // Returns true if the names are equal (caselessly). Note that MCNameIsEqualTo
 // is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
 // the name's string) rather than exact.
-bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
+MC_DLLEXPORT bool MCNameIsEqualToCaseless(MCNameRef left, MCNameRef right);
+
+}
+
 bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
 
 extern "C" {

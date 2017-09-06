@@ -177,7 +177,7 @@ bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
 	IO_cleansockets(MCS_time());
 	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
-		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
+		if (MCNameIsEqualToCaseless(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
 }

@@ -236,7 +236,7 @@ void MCVariable::clearuql(void)
     
     // SN-2014-04-09 [[ Bug 12160 ]] Put after/before on an uninitialised, by-reference parameter inserts the variable's name in it
     // The content of a UQL value was not cleared when needed
-    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, *name))
+    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualToCaseless(value . nameref_value, *name))
         clear();
     
 	is_uql = false;
