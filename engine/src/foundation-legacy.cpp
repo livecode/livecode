@@ -1121,11 +1121,6 @@ bool MCNameIsEqualToCString(MCNameRef p_left, const char *p_cstring, MCCompareOp
 	return MCStringIsEqualToCString(MCNameGetString(p_left), p_cstring, p_options);
 }
 
-bool MCNameIsEqualToOldString(MCNameRef p_left, const MCString& p_oldstring, MCCompareOptions p_options)
-{
-	return MCStringIsEqualToOldString(MCNameGetString(p_left), p_oldstring, p_options);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct get_array_extent_context_t
