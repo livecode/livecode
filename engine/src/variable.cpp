@@ -897,10 +897,13 @@ bool MCVariable::converttomutabledata(MCExecContext& ctxt)
 
 MCVariable *MCVariable::lookupglobal_cstring(const char *p_name)
 {
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_string);
+
 	// If we can't find an existing name, then there can be no global with
 	// name 'p_name'.
 	MCNameRef t_name;
-	t_name = MCNameLookupWithCString(p_name, kMCCompareCaseless);
+	t_name = MCNameLookupCaseless(*t_string);
 	if (t_name == nil)
 		return nil;
 
