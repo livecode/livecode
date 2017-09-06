@@ -1750,7 +1750,7 @@ MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRe
 
 //////////
 
-enum MCForeignPrimitiveType
+enum MCForeignPrimitiveType : uint8_t
 {
     kMCForeignPrimitiveTypeVoid,
     kMCForeignPrimitiveTypeBool,

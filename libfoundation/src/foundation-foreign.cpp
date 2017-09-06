@@ -461,6 +461,7 @@ struct sint_type_desc_t: public integral_type_desc_t<integer_t> {
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignExportErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignAggregateExportErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1080,6 +1081,382 @@ private:
 
 /* ---------------------------------------------------------------- */
 
+static bool _aggregate_query_prim_type(MCForeignPrimitiveType p_type, MCTypeInfoRef& r_typeinfo, size_t& r_size, size_t& r_alignment)
+{
+    switch(p_type)
+    {
+        case kMCForeignPrimitiveTypeVoid:
+            MCUnreachableReturn(false);
+        case kMCForeignPrimitiveTypeBool:
+            r_typeinfo = kMCBoolTypeInfo;
+            r_size = sizeof(uint8_t);
+            r_alignment = alignof(uint8_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt8:
+            r_typeinfo = kMCUInt8TypeInfo;
+            r_size = sizeof(uint8_t);
+            r_alignment = alignof(uint8_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt8:
+            r_typeinfo = kMCSInt8TypeInfo;
+            r_size = sizeof(int8_t);
+            r_alignment = alignof(int8_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt16:
+            r_typeinfo = kMCUInt16TypeInfo;
+            r_size = sizeof(uint16_t);
+            r_alignment = alignof(uint16_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt16:
+            r_typeinfo = kMCSInt16TypeInfo;
+            r_size = sizeof(int16_t);
+            r_alignment = alignof(int16_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt32:
+            r_typeinfo = kMCUInt32TypeInfo;
+            r_size = sizeof(uint32_t);
+            r_alignment = alignof(uint32_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt32:
+            r_typeinfo = kMCSInt32TypeInfo;
+            r_size = sizeof(int32_t);
+            r_alignment = alignof(int32_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt64:
+            r_typeinfo = kMCUInt64TypeInfo;
+            r_size = sizeof(uint64_t);
+            r_alignment = alignof(uint64_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt64:
+            r_typeinfo = kMCSInt64TypeInfo;
+            r_size = sizeof(int64_t);
+            r_alignment = alignof(int64_t);
+            break;
+        case kMCForeignPrimitiveTypeFloat32:
+            r_typeinfo = kMCFloatTypeInfo;
+            r_size = sizeof(float);
+            r_alignment = alignof(float);
+            break;
+        case kMCForeignPrimitiveTypeFloat64:
+            r_typeinfo = kMCDoubleTypeInfo;
+            r_size = sizeof(double);
+            r_alignment = alignof(double);
+            break;
+        case kMCForeignPrimitiveTypePointer:
+            r_typeinfo = kMCPointerTypeInfo;
+            r_size = sizeof(void*);
+            r_alignment = alignof(void*);
+            break;
+    }
+    
+    return true;
+}
+
+static bool _aggregate_initialize(void *contents)
+{
+    return true;
+}
+
+static void _aggregate_finalize(void *contents)
+{
+}
+
+static bool _aggregate_move(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memcpy(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_copy(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memmove(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_equal(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal)
+{
+    r_equal = (memcmp(left, right, desc->size) == 0);
+    return true;
+}
+
+static bool _aggregate_hash(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash)
+{
+    r_hash = MCHashBytes(contents, desc->size);
+    return true;
+}
+
+static bool _aggregate_describe(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef& r_desc)
+{
+    return MCStringFormat(r_desc, "<foreign aggregate>");
+}
+
+static bool _aggregate_import(const MCForeignTypeDescriptor* desc, void *contents, bool p_release, MCValueRef& r_value)
+{
+    MCAssert(!p_release);
+    
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    void *t_ptr = contents;
+    
+    for(uindex_t i = 0; i < desc->layout_size; i++)
+    {
+        MCTypeInfoRef t_field_type = nullptr;
+        size_t t_size = 0, t_align = 0;
+        if (!_aggregate_query_prim_type(desc->layout[i], t_field_type, t_size, t_align))
+        {
+            MCUnreachableReturn(false);
+        }
+        
+        t_ptr = (void*)(((uintptr_t)t_ptr + (t_align - 1)) & ~(t_align - 1));
+        
+        const MCForeignTypeDescriptor *t_field_desc = MCForeignTypeInfoGetDescriptor(t_field_type);
+        
+        MCAutoValueRef t_field;
+        if (t_field_desc->bridgetype != kMCNullTypeInfo)
+        {
+            if (!t_field_desc->doimport(t_field_desc, t_ptr, false, &t_field))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (t_field_desc->defined != nullptr &&
+                !t_field_desc->defined(t_ptr))
+            {
+                t_field = kMCNull;
+            }
+            else
+            {
+                if (!MCForeignValueCreate(t_field_type, t_ptr, (MCForeignValueRef&)&t_field))
+                {
+                    return false;
+                }
+            }
+        }
+        
+        if (!MCProperListPushElementOntoBack(*t_list, *t_field))
+        {
+            return false;
+        }
+        
+        t_ptr = (void *)((uintptr_t)t_ptr + t_size);
+    }
+
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_value = t_list.Take();
+    
+    return true;
+}
+
+static bool _aggregate_export(const MCForeignTypeDescriptor* desc, MCValueRef p_value, bool p_release, void *contents)
+{
+    MCAssert(!p_release);
+
+    MCProperListRef t_list = static_cast<MCProperListRef>(p_value);
+    
+    if (MCProperListGetLength(t_list) != desc->layout_size)
+    {
+        return false;
+    }
+    
+    void *t_ptr = contents;
+    for(uindex_t i = 0; i < desc->layout_size; i++)
+    {
+        MCValueRef t_element = MCProperListFetchElementAtIndex(t_list, i);
+        MCTypeInfoRef t_element_type = MCValueGetTypeInfo(t_element);
+        
+        MCTypeInfoRef t_field_type = nullptr;
+        size_t t_size = 0, t_align = 0;
+        if (!_aggregate_query_prim_type(desc->layout[i], t_field_type, t_size, t_align))
+        {
+            return false;
+        }
+        
+        t_ptr = (void*)(((uintptr_t)t_ptr + (t_align - 1)) & ~(t_align - 1));
+        
+        if (t_element_type == t_field_type)
+        {
+            memcpy(t_ptr, MCForeignValueGetContentsPtr(t_element), t_size);
+        }
+        else
+        {
+            bool t_success = true;
+            
+            const MCForeignTypeDescriptor *t_field_desc = MCForeignTypeInfoGetDescriptor(t_field_type);
+            if (t_element_type == t_field_desc->bridgetype)
+            {
+                if (!t_field_desc->doexport(t_field_desc, t_element, false, t_ptr))
+                {
+                    t_success = false;
+                }
+            }
+            else if (MCTypeInfoIsForeign(t_element_type))
+            {
+                const MCForeignTypeDescriptor *t_element_desc = MCForeignTypeInfoGetDescriptor(t_element_type);
+                if (t_element_desc->bridgetype == t_field_desc->bridgetype)
+                {
+                    MCAutoValueRef t_pivot;
+                    if (!t_element_desc->doimport(t_element_desc, MCForeignValueGetContentsPtr(t_element), false, &t_pivot))
+                    {
+                        t_success = false;
+                    }
+                    if (!t_field_desc->doexport(t_field_desc, *t_pivot, false, t_ptr))
+                    {
+                        t_success = false;
+                    }
+                }
+                else
+                {
+                    t_success = false;
+                }
+            }
+            else
+            {
+                t_success = false;
+            }
+            
+            if (!t_success)
+            {
+                MCAutoErrorRef t_error;
+                MCAutoStringRef t_reason;
+                if (!MCErrorCatch(&t_error))
+                {
+                    t_reason = MCSTR("type mismatch");
+                }
+                else
+                {
+                    t_reason = MCErrorGetMessage(*t_error);
+                }
+                
+                MCAutoNumberRef t_field_index;
+                if (!MCNumberCreateWithInteger(i + 1, &t_field_index))
+                {
+                    return false;
+                }
+                
+                return MCErrorCreateAndThrow(kMCForeignAggregateExportErrorTypeInfo,
+                                             "field", *t_field_index,
+                                             "reason", *t_reason,
+                                             nil);
+            }
+        }
+        
+        t_ptr = (void *)((uintptr_t)t_ptr + t_size);
+    }
+    
+    return true;
+}
+
+static bool _aggregate_compute(MCStringRef p_binding, MCForeignPrimitiveType* p_type, size_t& r_size)
+{
+    size_t t_offset = 0;
+    for(uindex_t i = 0; i < MCStringGetLength(p_binding); i++)
+    {
+        size_t t_size, t_align;
+        MCForeignPrimitiveType t_prim_type;
+#define FORMAT(Char, Type) \
+            case Char: \
+                t_align = alignof(Type##_type_desc_t::c_type); \
+                t_size = sizeof(Type##_type_desc_t::c_type); \
+                t_prim_type = Type##_type_desc_t::primitive_type; \
+                break;
+        switch(MCStringGetCharAtIndex(p_binding, i))
+        {
+                FORMAT('a', cbool)
+                FORMAT('b', cchar)
+                FORMAT('c', cuchar)
+                FORMAT('C', cschar)
+                FORMAT('d', cushort)
+                FORMAT('D', csshort)
+                FORMAT('e', cuint)
+                FORMAT('E', csint)
+                FORMAT('f', culong)
+                FORMAT('F', cslong)
+                FORMAT('g', culonglong)
+                FORMAT('G', cslonglong)
+                FORMAT('h', uint8)
+                FORMAT('H', sint8)
+                FORMAT('i', uint16)
+                FORMAT('I', sint16)
+                FORMAT('j', uint32)
+                FORMAT('J', sint32)
+                FORMAT('k', uint64)
+                FORMAT('K', sint64)
+                FORMAT('l', uintptr)
+                FORMAT('L', sintptr)
+                FORMAT('m', uintsize)
+                FORMAT('M', sintsize)
+                FORMAT('n', float)
+                FORMAT('N', double)
+                FORMAT('o', uint)
+                FORMAT('O', sint)
+                FORMAT('p', naturaluint)
+                FORMAT('P', naturalsint)
+                FORMAT('q', naturalfloat)
+                FORMAT('r', pointer)
+            default:
+                return false;
+        }
+#undef FORMAT
+        
+        p_type[i] = t_prim_type;
+        
+        t_offset = (t_offset + (t_align - 1)) & ~(t_align - 1);
+        t_offset += t_size;
+    }
+    
+    r_size = t_offset;
+    
+    return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCAggregateTypeInfo(MCStringRef p_binding, MCTypeInfoRef& r_typeinfo)
+{
+    MCForeignTypeDescriptor d;
+    
+    MCAutoArray<MCForeignPrimitiveType> t_layout;
+    if (!t_layout.Resize(MCStringGetLength(p_binding)))
+    {
+        return false;
+    }
+    
+    if (!_aggregate_compute(p_binding, t_layout.Ptr(), d.size))
+    {
+        return false;
+    }
+
+    d.layout = t_layout.Ptr();
+    d.layout_size = MCStringGetLength(p_binding);
+    d.basetype = kMCNullTypeInfo;
+    d.bridgetype = kMCProperListTypeInfo;
+    d.promotedtype = kMCNullTypeInfo;
+    d.initialize = nullptr;
+    d.finalize = _aggregate_finalize;
+    d.defined = nullptr;
+    d.move = _aggregate_move;
+    d.copy = _aggregate_copy;
+    d.equal = _aggregate_equal;
+    d.hash = _aggregate_hash;
+    d.doimport = _aggregate_import;
+    d.doexport = _aggregate_export;
+    d.describe = _aggregate_describe;
+    d.promote = nullptr;
+    
+    return MCForeignTypeInfoCreate(&d, r_typeinfo);
+}
+
+/* ---------------------------------------------------------------- */
+
 bool __MCForeignValueInitialize(void)
 {
     /* We must initialized uint32, sint32 and double first as they are used as
@@ -1124,6 +1501,8 @@ bool __MCForeignValueInitialize(void)
     if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
         return false;
     if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeExportError"), MCNAME("runtime"), MCSTR("error exporting foreign '%{type}' value: %{reason}"), kMCForeignExportErrorTypeInfo))
+        return false;
+    if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignAggregateExportError"), MCNAME("runtime"), MCSTR("error exporting aggregate field %{field}: %{reason}"), kMCForeignAggregateExportErrorTypeInfo))
         return false;
 
     return true;
