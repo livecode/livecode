@@ -279,6 +279,15 @@ TEST(foreign, Double)
     test_numeric<double>(kMCDoubleTypeInfo, DBL_MIN, DBL_MAX, MCHashDouble, "<foreign double %lg>", MCNumberCreateWithReal);
 }
 
+TEST(foreign, NaturalFloat)
+{
+#ifdef __32_BIT__
+    test_numeric<float>(kMCNaturalFloatTypeInfo, FLT_MIN, FLT_MAX, MCHashDouble, "<foreign natural float %lg>", MCNumberCreateWithReal);
+#else
+    test_numeric<double>(kMCNaturalFloatTypeInfo, DBL_MIN, DBL_MAX, MCHashDouble, "<foreign natural float %lg>", MCNumberCreateWithReal);
+#endif
+}
+
 /* Integral Type Tests */
 
 template<typename T>
@@ -400,6 +409,9 @@ TEST_INTEGRAL(UIntSize, size_t, "unsigned size %zu")
 TEST_INTEGRAL(SIntSize, ssize_t, "signed size %zd")
 TEST_INTEGRAL(UIntPtr, uintptr_t, "unsigned intptr %zu")
 TEST_INTEGRAL(SIntPtr, intptr_t, "signed intptr %zd")
+
+TEST_INTEGRAL(NaturalUInt, uintptr_t, "natural unsigned integer %zu")
+TEST_INTEGRAL(NaturalSInt, intptr_t, "natural signed integer %zd")
 
 TEST_INTEGRAL(CChar, char, "c char '%c'");
 TEST_INTEGRAL(CUChar, unsigned char, "c unsigned char %u")

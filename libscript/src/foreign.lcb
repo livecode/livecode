@@ -51,6 +51,10 @@ public foreign type SIntPtr binds to "MCForeignSIntPtrTypeInfo"
 
 public type IntPtr is SIntPtr
 
+public foreign type NaturalUInt binds to "MCForeignNaturalUIntTypeInfo"
+public foreign type NaturalSInt binds to "MCForeignNaturalSIntTypeInfo"
+public foreign type NaturalFloat binds to "MCForeignNaturalFloatTypeInfo"
+
 ----------------------------------------------------------------
 -- C types
 ----------------------------------------------------------------

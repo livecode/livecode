@@ -456,6 +456,10 @@ There are the standard machine types (defined in the foreign module):
  - Int64/SInt64 and UInt64 map to 64-bit integers
  - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
  - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
+ - NaturalSInt and NaturalUInt map to 32-bit integers on 32-bit processors and
+   64-bit integers on 64-bit processors
+ - NaturalFloat maps to the 32-bit float type on 32-bit processors and the 64-bit
+   float (double) type on 64-bit processors
 
 There are the standard C primitive types (defined in the foreign module)
 
