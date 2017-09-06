@@ -390,11 +390,11 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/resources/media"
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
+		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
-		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
