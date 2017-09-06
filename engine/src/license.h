@@ -63,7 +63,7 @@ struct MCLicenseParameters
     MCStringRef license_token;
     MCStringRef license_name;
     MCStringRef license_organization;
-	uint32_t license_class;
+	MCLicenseClass license_class;
 	uint4 license_multiplicity;
 
 	uint4 script_limit;
@@ -78,5 +78,52 @@ struct MCLicenseParameters
 
 extern MCLicenseParameters MClicenseparameters;
 extern Boolean MCenvironmentactive;
+
+static const struct { const char *tag; MCLicenseClass value; } s_class_map[] =
+{
+    { "community", kMCLicenseClassCommunity },
+    { "communityplus", kMCLicenseClassCommunityPlus },
+    { "evaluation", kMCLicenseClassEvaluation },
+    { "commercial", kMCLicenseClassCommercial },
+    { "professional evaluation", kMCLicenseClassProfessionalEvaluation },
+    { "professional", kMCLicenseClassProfessional },
+    { "", kMCLicenseClassNone }
+};
+
+inline bool MCStringToLicenseClass(MCStringRef p_class, MCLicenseClass &r_class)
+{
+    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+    {
+        if (MCStringIsEqualToCString(p_class, s_class_map[t_index].tag, kMCCompareCaseless))
+        {
+            r_class = s_class_map[t_index].value;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+inline bool MCStringFromLicenseClass(MCLicenseClass p_class, bool p_simplified, MCStringRef &r_class)
+{
+    if (p_simplified && p_class == kMCLicenseClassEvaluation)
+    {
+        p_class = kMCLicenseClassCommercial;
+    }
+    else if (p_simplified && p_class == kMCLicenseClassProfessionalEvaluation)
+    {
+        p_class = kMCLicenseClassProfessional;
+    }
+    
+    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+    {
+        if (s_class_map[t_index].value == p_class)
+        {
+            return MCStringCreateWithCString(s_class_map[t_index].tag, r_class);
+        }
+    }
+    
+    return false;
+}
 
 #endif
