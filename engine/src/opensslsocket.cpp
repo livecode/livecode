@@ -909,9 +909,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
     
 	if (s->datagram)
 	{
-		MCValueRelease(s->message);
-		/* UNCHECKED */ MCNameClone(mptr, s -> message);
-		
+        MCValueAssign(s->message, mptr);
 		s->object = ctxt . GetObject();
 	}
 	else
@@ -1385,8 +1383,8 @@ MCSocketread::MCSocketread(uint4 s, char *u, MCObject *o, MCNameRef m)
 	timeout = curtime + MCsockettimeout;
 	optr = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
-	else
+        message = MCValueRetain(m);
+    else
 		message = nil;
 }
 
@@ -1408,7 +1406,7 @@ MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m, Boolean se
 	optr = o;
 	done = 0;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 }
@@ -1430,7 +1428,7 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 	name = MCValueRetain(n);
 	object = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 	datagram = d;

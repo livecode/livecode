@@ -704,11 +704,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     }
     
-    MCNewAutoNameRef t_script_name;
-    if (!MCNameClone(sp . gettoken_nameref(), &t_script_name))
-    {
-        return nullptr;
-    }
+    MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
     
     // Parse end of line.
     Parse_stat t_stat;

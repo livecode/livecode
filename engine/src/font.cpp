@@ -124,7 +124,7 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 		return false;
 
 	self -> references = 1;
-	/* UNCHECKED */ MCNameClone(p_name, self -> name);
+    self->name = MCValueRetain(p_name);
 	self -> style = p_style;
 	self -> size = p_size;
 

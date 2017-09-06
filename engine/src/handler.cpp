@@ -166,7 +166,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 		return PS_ERROR;
 	}
 
-	/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), name);
+    name = MCValueRetain(sp . gettoken_nameref());
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
@@ -631,7 +631,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_ref)
 {
 	MCU_realloc((char **)&vinfo, nvnames, nvnames + 1, sizeof(MCHandlerVarInfo));
-	/* UNCHECKED */ MCNameClone(p_name, vinfo[nvnames] . name);
+    vinfo[nvnames] . name = MCValueRetain(p_name);
 	if (p_init != nil)
 		/* UNCHECKED */ vinfo[nvnames] . init = MCValueRetain(p_init);
 	else
@@ -671,8 +671,8 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 Parse_stat MCHandler::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
-	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
+    cinfo[nconstants].name = MCValueRetain(p_name);
+	cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 

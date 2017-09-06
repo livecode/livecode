@@ -487,12 +487,9 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 		if (t_parent == NULL)
 			t_success = false;
 
-		// Clone the stack string
-		if (t_success)
-			t_success = MCNameClone(p_stack, t_parent -> m_object_stack);
-
 		if (t_success)
 		{
+            t_parent->m_object_stack = MCValueRetain(p_stack);
 			t_parent -> m_hash = t_hash;
 			t_parent -> m_object_id = p_id;
 		}

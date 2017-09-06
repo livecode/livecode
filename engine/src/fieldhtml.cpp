@@ -1036,7 +1036,7 @@ static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCh
 	if (p_src . has_metadata)
 		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
-		MCNameClone(p_src . text_font, r_dst . text_font);
+        r_dst.text_font = MCValueRetain(p_src.text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)

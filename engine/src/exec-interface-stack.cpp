@@ -403,8 +403,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	MCNewAutoNameRef t_old_name;
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 	{
-		if (t_success)
-			t_success = MCNameClone(getname(), &t_old_name);
+        t_old_name = getname();
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
@@ -1510,23 +1509,21 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 
 	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
 	{
-		MCValueRelease(_menubar);
-		t_success = MCNameClone(*t_new_menubar, _menubar);
-		if (t_success)
-		{
-			if (!hasmenubar())
-				flags &= ~F_MENU_BAR;
-			else
-				flags |= F_MENU_BAR;
-			if (opened)
-			{
-				setgeom();
-				updatemenubar();
+        MCValueAssign(_menubar, *t_new_menubar);
+        
+        if (!hasmenubar())
+            flags &= ~F_MENU_BAR;
+        else
+            flags |= F_MENU_BAR;
+        
+        if (opened)
+        {
+            setgeom();
+            updatemenubar();
 
-				// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-				dirtyall();
-			}
-		}
+            // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+            dirtyall();
+        }
 	}
 
 	if (t_success)

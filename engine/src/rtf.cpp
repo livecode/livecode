@@ -1589,7 +1589,7 @@ RTFStatus RTFReader::Flush(bool p_force)
 			t_block . text_shift = 0;
 		
 		if (m_state . GetHyperlink() != kMCEmptyName)
-			MCNameClone(m_state . GetHyperlink(), t_block . text_link);
+            t_block.text_link = MCValueRetain(m_state . GetHyperlink());
 		else
 			t_block . text_link = nil;
 
