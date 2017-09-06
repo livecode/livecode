@@ -28,9 +28,10 @@ end switch
 
 Description:
 Use the <break> <control structure> to end each case section in a
-<switch> <control structure|structure>. Form:The word break appears on a
-line by itself, within a <case> section of a <switch> <control
-structure>. 
+<switch> <control structure|structure>. 
+
+**Form:** The word break appears on a line by itself, within a <case> section of 
+a <switch> <control structure>. 
 
 A <switch> <control structure> consists of one or more conditions. For
 each condition, a set of <statement|statements> is executed. The <break>

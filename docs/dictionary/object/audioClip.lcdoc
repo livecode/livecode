@@ -52,7 +52,7 @@ since it has no user interface and cannot be owned by a <card>.)
 
 To play an audioClip, use the syntax 
 
-    play audioClip <filename_of_audioclip>
+    play audioClip &lt;filename_of_audioclip&gt;
     
 
 Or the syntax

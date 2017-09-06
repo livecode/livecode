@@ -111,7 +111,7 @@ struct MCDeployParameters
 	
 	// This can be set to commercial or professional trial. In that
 	// case, the standalone will be built in that mode.
-	uint32_t banner_class;
+	MCLicenseClass banner_class;
 	
 	// The timeout for the banner that's displayed before startup.
 	uint32_t banner_timeout;

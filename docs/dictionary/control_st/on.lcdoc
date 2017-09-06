@@ -45,10 +45,11 @@ The result:
 
 Description:
 Use the <on> <control structure> to <handle> a <message>, or to
-implement a custom command. Form:The first line of a message handler
-consists of the word "on" followed by the message's name. If the handler
-has any parameters, their names come after the message name, separated
-by commas.
+implement a custom command. 
+
+**Form:** The first line of a message handler consists of the word "on"
+followed by the message's name. If the handler has any parameters, 
+their names come after the message name, separated by commas.
 
 The last line of a message handler consists of the word "end" followed
 by the handler's name.

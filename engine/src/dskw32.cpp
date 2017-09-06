@@ -1936,12 +1936,24 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
                  || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
-            uindex_t t_last_slash;
+            /* MCcmd is in LiveCode format, but this function actuall returns native
+             * paths so we just replicate what GetExecutablePath() does. */
+		    WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+		    DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
+		
+            WCHAR* t_last_slash = wcsrchr(wcFileNameBuf, '\\');
+            if (t_last_slash != nullptr)
+            {
+                *t_last_slash = '\0';
+            }
             
-            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
-                t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+		    if (!MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_native_path))
+            {
+                delete wcFileNameBuf;
+                return false;
+            }
+
+            t_wasfound = True;
         }
         else
         {

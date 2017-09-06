@@ -1232,8 +1232,10 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
-	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
-    void GetKey(MCExecContext& ctxt, bool& r_value);
+	void GetPassword(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetPassword(MCExecContext &ctxt, MCValueRef p_password);
+    void GetKey(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetKey(MCExecContext &ctxt, MCValueRef p_password);
     
     // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
     void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);

@@ -42,13 +42,19 @@ suggested file name is provided in the defaultFilePath, it appears in
 the file name box.
 
 types:
-The  types parameter specifies which extensions are available at the
+The types parameter specifies which extensions are available at the
 bottom of the dialog box. A file type consists of an optional
 description, a line feed or comma, and a file extension specification:
-[description],*.extension You can include more than one file type by
-separating the file types with commas.>*Cross-platform note:* The types
-parameter applies only to Windows systems. On Mac OS and Unix systems,
-this parameter has no effect.
+
+  [description],*.extension 
+
+You can include more than one file type by separating the file types 
+with commas.
+
+>*Cross-platform note:*  The <types> <parameter> applies only to
+> <Windows|Windows systems>. On <Mac OS> and <Unix|Unix systems>, this
+> <parameter> has no effect.
+
 
 It:
 The absolute file path of the file the user chose is placed in the it
@@ -59,18 +65,14 @@ If the user cancels the <dialog box|dialog>, the <it> <variable> is set
 to empty, and the <result> <function> <return|returns> cancel.
 
 Description:
-Use the <ask file> <command> to let the user provide the <file path|name
-and location> of a new <file>.
-
->*Cross-platform note:*  The <types> <parameter> applies only to
-> <Windows|Windows systems>. On <Mac OS> and <Unix|Unix systems>, this
-> <parameter> has no effect.
+Use the <ask file> <command> to let the user provide the 
+<file path|name and location> of a new <file>.
 
 The dialog box is the same one most applications use for the "Save"
 command in the File menu. (If the systemFileSelector <property> is set
 to true on <Mac OS> and <Windows|Windows systems>, and always on
-<Unix|Unix systems>, the <application> displays its own built-in <dialog
-box>, instead of the one provided by the operating system.)
+<Unix|Unix systems>, the <application> displays its own built-in 
+<dialog box>, instead of the one provided by the operating system.)
 
 >*Important:*  The ask file command does not create the file. It only
 > displays the dialog box and retrieves the path to the file the user
@@ -87,8 +89,8 @@ dialog box appears normally. Attempting to open a sheet from within
 another sheet displays the second stack as a <modal dialog box> instead.
 
 If the systemFileSelector <property> is set to false, LiveCode's
-built-in <dialog box> is used instead of the operating system's <file
-dialog box|standard file dialog>.
+built-in <dialog box> is used instead of the operating system's 
+<file dialog box|standard file dialog>.
 
 >*Cross-platform note:*  On <Mac OS|Mac OS systems> where Navigation
 > Services is in use, if you don't specify a default file name, the file

@@ -378,6 +378,11 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo;
 - (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point;
 
+- (void)webView:(WebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WebFrame*)frame;
+- (BOOL)webView:(WebView *)sender runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame;
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener;
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener allowMultipleFiles:(BOOL)allowMultipleFiles;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1170,6 +1175,64 @@ bool MCWebViewBrowser::Init(void)
 - (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point
 {
 	return WebDragSourceActionNone;
+}
+
+- (void)webView:(WebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WebFrame*)frame
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    [t_alert setMessageText:message];
+    [t_alert runModal];
+    [t_pool release];
+}
+
+- (BOOL)webView:(WebView *)sender runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    NSInteger t_response;
+    [t_alert setMessageText:message];
+    [t_alert addButtonWithTitle:@"Cancel"];
+    t_response = [t_alert runModal];
+    [t_pool release];
+    return (t_response == NSAlertFirstButtonReturn);
+}
+
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener
+{
+    [self webView: sender runOpenPanelForFileButtonWithResultListener: resultListener allowMultipleFiles: NO];
+}
+
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener allowMultipleFiles:(BOOL)allowMultipleFiles
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    
+    // Create an open-file panel that allows a single file to be chosen
+    NSOpenPanel* t_dialog = [NSOpenPanel openPanel];
+    [t_dialog setCanChooseDirectories:NO];
+    [t_dialog setCanChooseFiles:YES];
+    [t_dialog setAllowsMultipleSelection:allowMultipleFiles];
+    
+    // Run the dialogue
+    NSInteger t_result = [t_dialog runModal];
+    
+    // If the user didn't cancel it, get the selection
+    if (t_result == NSFileHandlingPanelOKButton)
+    {
+        NSMutableArray *t_paths = [[[NSMutableArray alloc] init] autorelease];
+        for(NSURL *t_url in [t_dialog URLs])
+        {
+            [t_paths addObject: [[t_url filePathURL] path]];
+        }
+        [resultListener chooseFilenames: t_paths];
+    }
+    else
+    {
+        // The dialogue was cancelled and no selection was made
+        [resultListener cancel];
+    }
+    
+    [t_pool release];
 }
 
 @end

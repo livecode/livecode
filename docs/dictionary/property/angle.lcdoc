@@ -26,15 +26,14 @@ Example:
 set the angle of graphic myGraphic to the angle of myGraphic + 5
 
 Value:
-The <angle> of a <graphic> or <image> is an <integer> between zero and
-
-360. By default, the <angle> <property> of a newly created <graphic> or
-     <image> is zero.
+The <angle> of a <graphic> or <image> is an <integer> between zero 
+and 360. By default, the <angle> <property> of a newly created <graphic> 
+or <image> is zero.
 
 
 Description:
-Use the <angle> <property> to create an arc shape, or to turn a <regular
-polygon> or <image> object.
+Use the <angle> <property> to create an arc shape, or to turn a 
+<regular polygon> or <image> object.
 
 If you specify an <angleInDegrees> greater than 360, the <angle> is set
 to the number you specify mod 360.

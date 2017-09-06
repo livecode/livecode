@@ -2203,7 +2203,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 		{
 			if (!p_cut)
 			{
-                MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+                MCStackHandle t_old_defaultstack = MCdefaultstackptr;
                 MCdefaultstackptr = static_cast<MCStack *>(p_dst . object);
 				MCdefaultstackptr -> stopedit();
 
@@ -2983,7 +2983,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
         
 	// MW-2007-05-01: Reverting this as it causes problems :o(
 	//stackptr -> setflag(True, F_VISIBLE);
-    MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    MCStackHandle t_old_defaultstack = MCdefaultstackptr;
     Boolean oldtrace = MCtrace;
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
@@ -3172,7 +3172,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_new_name, bool p_force_invisible, bool p_with_group)
 {
-	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr;
 	Boolean wasvisible = MCtemplatestack->isvisible();
 
 	/* Check that a specified parent stack has a usable name before
@@ -3384,7 +3384,7 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible)
 {
-    MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    MCStackHandle t_old_defaultstack = MCdefaultstackptr;
     
 	MCObject *t_object = nil;
 	switch (p_target->gettype())

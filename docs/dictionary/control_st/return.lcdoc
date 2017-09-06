@@ -80,7 +80,8 @@ Description:
 Use the <return> <control structure> to <return(constant)> a <value>
 from a custom function or <getProp> <handler>, or to <return(constant)>
 an error message from a <message handler> or <setProp> <handler>.
-Form:The <return> <statement> appears on a line by itself, anywhere
+
+**Form:** The <return> <statement> appears on a line by itself, anywhere
 inside a <handler>.
 
 When the <return> <control structure> is <execute|executed>, any
@@ -88,17 +89,17 @@ remaining <statement|statements> in the <handler> are skipped. Hence,
 the <return> <control structure> is usually used either at the end of a
 <handler> or within an <if> <control structure>.
 
-The plain form of the <return> <control structure> always sets <the
-result> to <value>. Additionally, if it is used within a <function> or
-<getProp> <handler> then <value> is passed to the calling handler as the
-return value of the <function>, or value of the property.
+The plain form of the <return> <control structure> always sets
+<the result> to <value>. Additionally, if it is used within a <function>
+or <getProp> <handler> then <value> is passed to the calling handler as
+the return value of the <function>, or value of the property.
 
-The value form of the <return> <control structure> always sets <the
-result> to empty. If it is used within a <command> or <message> handler
-then the <it> variable in the calling handler will be set to <value>. If
-it is used within a <function> handler, then <value> is passed to the
-calling handler as the return value of the <function>, or value of the
-property. 
+The value form of the <return> <control structure> always sets
+<the result> to empty. If it is used within a <command> or <message>
+handler then the <it> variable in the calling handler will be set to
+<value>. If it is used within a <function> handler, then <value> is
+passed to the calling handler as the return value of the <function>,
+or value of the property. 
 
 The error form of the <return> <control structure> sets <the result> to
 <value>. If it is used within a <command> or <message> handler, then the
@@ -112,9 +113,9 @@ command and function handlers - not getProp or setProp handlers.
 When a message handler executes a <return> <statement>, the <message>
 stops and is not <pass|passed> to the next <object(glossary)> in the
 <message path>. To halt the current <message handler> and <pass> the
-<message> on through the <message path>, use the <pass> <control
-structure> instead. To halt the current <handler> without returning a
-value, use the <exit> <control structure> instead.
+<message> on through the <message path>, use the <pass> 
+<control structure> instead. To halt the current <handler> without
+returning a value, use the <exit> <control structure> instead.
 
 The value and error forms of the <return> command allow much easier
 scripting of the distinction between a return value of a handler call,

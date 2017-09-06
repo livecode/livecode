@@ -40,11 +40,13 @@ Description:
 Use the <bottomLeft> <property> to change the placement of a <control>
 or window.
 
-The <bottomLeft> of a stack is in <absolute (screen)
-coordinates(glossary)>. The first <item> (the <left>) of a <card|card's>
+The <bottomLeft> of a stack is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The first <item> (the <left>) of a <card|card's>
 <bottomLeft> <property> is always zero; the second <item> (the <bottom>)
 is always the height of the <stack window>. The <bottomLeft> of a group
-or control is in <relative (window) coordinates(glossary)>.
+or control is in 
+<relative coordinates(glossary)|relative (window) coordinates>.
 
 In window coordinates, the point 0,0 is at the top left of the stack
 window. In screen coordinates, the point 0,0 is at the top left of the

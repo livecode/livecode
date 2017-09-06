@@ -41,12 +41,13 @@ Description:
 Use the <bottomRight> <property> to change the placement of a <control>
 or window.
 
-The <bottomRight> of a <stack> is in <absolute (screen)
-coordinates(glossary)>. The first <item> (the <right>) of a
-<card|card's> <bottomRight> <property> is always the width of the <stack
-window>; the second <item> (the <bottom>) is always the height of the
-<stack window>. The <bottomRight> of a <group> or <control> is in
-<relative (window) coordinates(glossary)>.
+The <bottomRight> of a <stack> is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The first <item> (the <right>) of a
+<card|card's> <bottomRight> <property> is always the width of the 
+<stack window>; the second <item> (the <bottom>) is always the height
+of the <stack window>. The <bottomRight> of a <group> or <control> is
+in <relative coordinates(glossary)|relative (window) coordinates>.
 
 In window coordinates, the point 0,0 is at the top left of the stack
 window. In screen coordinates, the point 0,0 is at the top left of the
