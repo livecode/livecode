@@ -253,7 +253,7 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
             t_success = !ctxt . HasError();
         }
         if (t_success)
-            t_success = MCArrayStoreValue(*v, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value);
+            t_success = MCArrayStoreValue(*v, false, MCNAME(gradientprops[tablesize].token), t_prop_value);
     }
     
     MCerrorlock--;
@@ -523,7 +523,7 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
             {
                 MCValueRef t_prop_value;
                 
-                if (MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value))
+                if (MCArrayFetchValue(*t_array, false, MCNAME(gradientprops[tablesize].token), t_prop_value))
                 {
                     MCExecValue t_value;
                     t_value . valueref_value = MCValueRetain(t_prop_value);

@@ -706,7 +706,7 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
                     // Fetch the property, then store it into the array.
                     MCBitmapEffectFetchProperty(ctxt, t_effect, s_bitmap_effect_properties[i] . value, t_value);
                     MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &(&t_valueref));
-                    MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
+                    MCArrayStoreValue(*v, false, MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
                 }
             }
             r_value . arrayref_value = MCValueRetain(*v);
@@ -1021,7 +1021,7 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
                 MCValueRef t_prop_value;
                 
                 // If we don't have the given element, then move to the next one
-                if (!MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(s_bitmap_effect_properties[i] . token), t_prop_value))
+                if (!MCArrayFetchValue(*t_array, false, MCNAME(s_bitmap_effect_properties[i] . token), t_prop_value))
                     continue;
                 
                 // Otherwise, fetch the keys value and attempt to set the property
