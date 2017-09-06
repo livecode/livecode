@@ -1959,9 +1959,8 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    put builderComponentFolders() into tComponents
    
    repeat for each element tComponent in tComponents
-      if editionCompare(pEdition, tComponent["metadata"]["edition"]) >= 0 then
-         addFolderToListIfExists tComponent["folder"] & slash & "guides", false, xFolders
-      end if
+      -- each non-community guide should have notes on editon support
+      addFolderToListIfExists tComponent["folder"] & slash & "guides", false, xFolders
    end repeat
    
    addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
