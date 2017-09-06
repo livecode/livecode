@@ -224,7 +224,7 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	// In server mode, we need to resolve $ vars in the context of the global
 	// scope. (This doesn't happen in non-server mode as there is never any
 	// 'code' in 'global' scope).
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
 	{
 		for (tmp = MCglobals ; tmp != NULL ; tmp = tmp->getnext())
 			if (tmp->hasname(p_name))

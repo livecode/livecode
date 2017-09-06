@@ -750,10 +750,11 @@ bool MCVariable::remove(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
 		
 		if (is_env)
 		{
-			if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
+            MCStringRef t_name_string = MCNameGetString(*name);
+			if (!isdigit(MCStringGetNativeCharAtIndex(t_name_string, 1)) && MCStringGetNativeCharAtIndex(t_name_string, 1) != '#')
 			{
 				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(t_name_string)), &t_env);
 				MCS_unsetenv(*t_env);
 			}
 		}
@@ -937,21 +938,19 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 	if (!createwithname(p_name, t_new_global))
 		return false;
 
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
-  {
-    MCAutoStringRef t_env;
-    /* UNCHECKED */ MCStringCopySubstring(
-      MCNameGetString(p_name),
-      MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))), 
-      &t_env
-    );
-        
-    MCAutoStringRef t_value;
-    if (MCS_getenv(*t_env, &t_value))
-      t_new_global -> setvalueref(*t_value);
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
+    {
+        MCAutoStringRef t_env;
+        /* UNCHECKED */ MCStringCopySubstring(MCNameGetString(p_name),
+                                              MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))),
+                                              &t_env);
+            
+        MCAutoStringRef t_value;
+        if (MCS_getenv(*t_env, &t_value))
+            t_new_global -> setvalueref(*t_value);
 
-    t_new_global -> is_env = true;
-  }
+        t_new_global -> is_env = true;
+    }
 
 	t_new_global -> is_global = true;
 
@@ -1037,7 +1036,8 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
     MCAutoStringRef t_stringref_value;
 	if (is_env)
 	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
+        MCStringRef t_name_string = MCNameGetString(*name);
+		if (!isdigit(MCStringGetNativeCharAtIndex(t_name_string, 1)) && MCStringGetNativeCharAtIndex(t_name_string, 1) != '#')
 		{
             MCExecTypeCopy(value, t_value);
             MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_stringref_value));

@@ -615,7 +615,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 		}
 	}
 
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
 	{
 		MCVariable *t_global;
 		/* UNCHECKED */ MCVariable::ensureglobal(p_name, t_global);

@@ -1057,13 +1057,6 @@ bool MCCStringIsInteger(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
-{
-	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct get_array_extent_context_t
 {
 	index_t minimum;
