@@ -5017,9 +5017,9 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 //   using a c-string for the name.
 void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
-	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
-	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
+	MCNewAutoNameRef t_textfont_name;
+    /* UNCHECKED */ MCNameCreate(p_textfont, &t_textfont_name);
+	setfontattrs(FF_HAS_ALL_FATTR, *t_textfont_name, p_textsize, p_textstyle);
 }
 
 // MW-2012-02-19: [[ SplitTextAttrs ]] This method returns true if any of the font

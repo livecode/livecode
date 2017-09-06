@@ -1801,8 +1801,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						MCVarref *newvar;
 						newfact = NULL;
 
-						MCAutoNameRef t_name;
-						/* UNCHECKED */ t_name . Clone(gettoken_nameref());
+						MCNewAutoNameRef t_name = gettoken_nameref();
 
 						if (next(type) == PS_NORMAL)
 							backup();
@@ -1810,7 +1809,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							type = ST_ERR;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
-						if (type != ST_LP && findvar(t_name, &newvar) == PS_NORMAL)
+						if (type != ST_LP && findvar(*t_name, &newvar) == PS_NORMAL)
 						{
 							newvar->parsearray(*this);
 							newfact = newvar;
@@ -1819,7 +1818,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-							if (findnewvar(t_name, kMCEmptyName, &newvar) != PS_NORMAL)
+							if (findnewvar(*t_name, kMCEmptyName, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;
@@ -1828,7 +1827,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newfact = newvar;
 							}
 						else if (type == ST_LP)
-								newfact = new (nothrow) MCFuncref(t_name);
+								newfact = new (nothrow) MCFuncref(*t_name);
 						if (newfact == NULL)
 						{
 							if (MCexplicitvariables)
@@ -1840,7 +1839,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-								if (finduqlvar(t_name, &newvar) != PS_NORMAL)
+								if (finduqlvar(*t_name, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;

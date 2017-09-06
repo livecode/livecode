@@ -1468,10 +1468,9 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	//   change case of names of objects.
 	if (t_success && getname() != *t_new_name)
 	{
-		MCAutoNameRef t_old_name;
-		t_old_name . Clone(getname());
+		MCNewAutoNameRef t_old_name = getname();
 		setname(*t_new_name);
-		message_with_valueref_args(MCM_name_changed, t_old_name, getname());
+		message_with_valueref_args(MCM_name_changed, *t_old_name, getname());
 	}
 	
 	if (t_success)
