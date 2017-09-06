@@ -63,7 +63,7 @@ static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillP
 	uint4 tablesize = ELEMENTS(gradientprops);
 	while (tablesize--)
 	{
-		if (MCNameIsEqualToCString(p_token, gradientprops[tablesize].token, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_token), gradientprops[tablesize].token, kMCCompareCaseless))
 		{
 			r_prop = gradientprops[tablesize].value;
 			return ES_NORMAL;
