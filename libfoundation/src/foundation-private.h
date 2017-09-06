@@ -308,10 +308,6 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
-    // If set then the array keys are case sensitive.
-    kMCArrayFlagIsCaseSensitive = 1 << 8,
-    // If set the the array keys are form sensitive.
-    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue

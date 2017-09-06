@@ -2850,13 +2850,9 @@ MC_DLLEXPORT extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
 MC_DLLEXPORT bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
-// Create an immutable array containing the given keys and values with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
 MC_DLLEXPORT bool MCArrayCreateMutable(MCArrayRef& r_array);
-// Create an empty mutable array with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
@@ -2875,11 +2871,6 @@ MC_DLLEXPORT bool MCArrayIsMutable(MCArrayRef array);
 
 // Returns the number of elements in the array.
 MC_DLLEXPORT uindex_t MCArrayGetCount(MCArrayRef array);
-
-// Returns whether the keys of the array have been predesignated case sensitive or not.
-MC_DLLEXPORT bool MCArrayIsCaseSensitive(MCArrayRef array);
-// Returns whether the keys of the array have been predesignated form sensitive or not.
-MC_DLLEXPORT bool MCArrayIsFormSensitive(MCArrayRef array);
 
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
