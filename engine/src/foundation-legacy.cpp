@@ -1057,7 +1057,20 @@ bool MCCStringIsInteger(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
+char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
+{
+	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct get_array_extent_context_t
+{
+	index_t minimum;
+	index_t maximum;
+};
+
+static bool get_name_as_index(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
     t_key = MCNameGetString(p_name);
@@ -1095,26 +1108,13 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 	return false;
 }
 
-char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
-{
-	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct get_array_extent_context_t
-{
-	index_t minimum;
-	index_t maximum;
-};
-
 static bool get_array_extent(void *context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
 	get_array_extent_context_t *ctxt;
 	ctxt = (get_array_extent_context_t *)context;
 
 	index_t t_index;
-	if (!MCNameGetAsIndex(p_key, t_index))
+	if (!get_name_as_index(p_key, t_index))
 		return false;
 
 	ctxt -> minimum = MCMin(ctxt -> minimum, t_index);
