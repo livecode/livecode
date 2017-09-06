@@ -87,20 +87,20 @@ MCHandler::~MCHandler()
 
 	for(uint32_t i = 0; i < nvnames; i++)
 	{
-		MCNameDelete(vinfo[i] . name);
+		MCValueRelease(vinfo[i] . name);
 		MCValueRelease(vinfo[i] . init);
 	}
 	delete[] vinfo; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < npnames; i++)
-		MCNameDelete(pinfo[i] . name);
+		MCValueRelease(pinfo[i] . name);
 	delete[] pinfo; /* Allocated with new[] */
 
 	delete[] globals; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */
@@ -108,7 +108,7 @@ MCHandler::~MCHandler()
 	// MW-2013-11-08: [[ RefactorIt ]] Delete the it varref.
 	delete m_it;
 
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCHandler::newparam(MCScriptPoint& sp)
@@ -137,7 +137,7 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	{
 		if (MCNameIsEqualTo(pinfo[i] . name, t_name, kMCCompareCaseless))
 		{
-			MCNameDelete(t_name);
+			MCValueRelease(t_name);
 			MCperror -> add(PE_HANDLER_DUPPARAM, sp);
 			return PS_ERROR;
 		}
@@ -538,7 +538,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		{
 			if (nvnames >= oldnvnames)
 			{
-				MCNameDelete(vinfo[nvnames] . name);
+				MCValueRelease(vinfo[nvnames] . name);
 				MCValueRelease(vinfo[nvnames] . init);
 			}
 			delete vars[nvnames];

@@ -1592,7 +1592,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
         }
 		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
         
-        MCNameDelete(t_key);
+        MCValueRelease(t_key);
 	}
 	return NULL;
 }

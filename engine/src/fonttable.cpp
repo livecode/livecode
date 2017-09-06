@@ -210,7 +210,7 @@ void MCLogicalFontTableFinish(void)
 		uint2 t_textsize;
 		bool t_unicode;
 		MCLogicalFontTableGetEntry(i, t_textfont, t_textstyle, t_textsize, t_unicode);
-		MCNameDelete(t_textfont);
+		MCValueRelease(t_textfont);
 	}
 	MCMemoryDeleteArray(s_logical_font_table);
 

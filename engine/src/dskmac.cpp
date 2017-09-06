@@ -4552,7 +4552,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGCHLD, &action, NULL);
         while (MCnprocesses--)
         {
-            MCNameDelete(MCprocesses[MCnprocesses] . name);
+            MCValueRelease(MCprocesses[MCnprocesses] . name);
             MCprocesses[MCnprocesses] . name = nil;
             if (MCprocesses[MCnprocesses].pid != 0
 		        && (MCprocesses[MCnprocesses].ihandle != NULL

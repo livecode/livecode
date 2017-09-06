@@ -138,7 +138,7 @@ RTFStatus RTFState::Restore(void)
 		
         MCValueRelease(t_entry -> metadata);
         MCValueRelease(t_entry -> paragraph_metadata);
-		MCNameDelete(t_entry -> hyperlink);
+		MCValueRelease(t_entry -> hyperlink);
 
 		delete t_entry;
 	}

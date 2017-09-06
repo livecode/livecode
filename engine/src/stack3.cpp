@@ -271,7 +271,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		MCNameRef t_menubar;
 		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
-		MCNameDelete(_menubar);
+		MCValueRelease(_menubar);
 		_menubar = t_menubar;
 	}
 	

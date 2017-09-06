@@ -1837,7 +1837,7 @@ void MCBlock::freeatts()
 	freerefs();
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Free the fontname name if we have that attr.
 	if (flags & F_HAS_FNAME)
-		MCNameDelete(atts -> fontname);
+		MCValueRelease(atts -> fontname);
 	if (flags & F_HAS_COLOR)
 		delete atts->color;
 	if (flags & F_HAS_BACK_COLOR)

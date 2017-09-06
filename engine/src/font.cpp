@@ -217,7 +217,7 @@ void MCFontRelease(MCFontRef self)
 	else
 		s_fonts = self -> next;
 
-	MCNameDelete(self -> name);
+	MCValueRelease(self -> name);
 	MCMemoryDelete(self);
 }
 

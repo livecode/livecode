@@ -126,7 +126,7 @@ void MCFontnode::calculatemetrics()
 
 MCFontnode::~MCFontnode()
 {
-    MCNameDelete(reqname);
+    MCValueRelease(reqname);
     
     // Don't delete the fontstruct for system fonts (it is still cached elsewhere)
     if ((reqstyle & FA_SYSTEM_FONT) == 0)

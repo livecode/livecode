@@ -329,7 +329,7 @@ MCParentScript::MCParentScript(void)
 
 MCParentScript::~MCParentScript(void)
 {
-	MCNameDelete(m_object_stack);
+	MCValueRelease(m_object_stack);
 }
 
 ////

@@ -44,7 +44,7 @@ MCExternalHandlerList::~MCExternalHandlerList(void)
 		MCExternal::Unload(m_externals[i]);
 
 	for(uint32_t i = 0; i < m_handlers . Count(); i++)
-		MCNameDelete(m_handlers[i] . name);
+		MCValueRelease(m_handlers[i] . name);
 }
 
 bool MCExternalHandlerList::IsEmpty(void)
