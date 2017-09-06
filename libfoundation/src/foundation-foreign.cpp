@@ -236,7 +236,7 @@ struct integral_type_desc_t: public numeric_type_desc_t<CType> {
 
 struct bool_type_desc_t {
     using c_type = bool;
-    static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt8;
+    static constexpr auto primitive_type = kMCForeignPrimitiveTypeBool;
     static constexpr MCTypeInfoRef& base_type_info() { return kMCNullTypeInfo; }
     static constexpr MCTypeInfoRef& type_info() { return kMCBoolTypeInfo; }
     static constexpr auto is_optional = false;
