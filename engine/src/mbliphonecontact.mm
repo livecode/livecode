@@ -142,7 +142,7 @@ static bool name_to_key(MCNameRef p_name, CFStringRef &r_key)
 {
 	for (uindex_t i = 0; i < ELEMENTS(s_key_map); i++)
 	{
-		if (MCNameIsEqualTo(*s_key_map[i].name, p_name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(*s_key_map[i].name, p_name))
 		{
 			r_key = s_key_map[i].key;
 			return true;

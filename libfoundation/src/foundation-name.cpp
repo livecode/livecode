@@ -259,7 +259,8 @@ bool MCNameIsEmpty(MCNameRef self)
 	return self == kMCEmptyName;
 }
 
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
+MC_DLLEXPORT_DEF
+bool MCNameIsEqualToCaseless(MCNameRef self, MCNameRef p_other_name)
 {
 	__MCAssertIsName(self);
 	__MCAssertIsName(p_other_name);

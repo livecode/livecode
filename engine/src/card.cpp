@@ -1048,7 +1048,7 @@ Boolean MCCard::doubleup(uint2 which)
 
 void MCCard::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened)
 		{

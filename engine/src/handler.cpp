@@ -135,7 +135,7 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	// OK-2010-01-11: [[Bug 7744]] - Check existing parsed parameters for duplicates.
 	for (uint2 i = 0; i < npnames; i++)
 	{
-		if (MCNameIsEqualTo(pinfo[i] . name, t_name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(pinfo[i] . name, t_name))
 		{
 			MCValueRelease(t_name);
 			MCperror -> add(PE_HANDLER_DUPPARAM, sp);
@@ -228,7 +228,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
             return PS_ERROR;
         
         // AL-2014-11-04: [[ Bug 13902 ]] Check if the param we just created was called 'it'.
-        if (MCNameIsEqualTo(pinfo[npnames - 1] . name, MCN_it))
+        if (MCNameIsEqualToCaseless(pinfo[npnames - 1] . name, MCN_it))
             t_needs_it = false;
     }
 		
@@ -288,7 +288,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 					MCperror->add(PE_HANDLER_NOEND, sp);
 					return PS_ERROR;
 				}
-				if (!MCNameIsEqualTo(name, sp.gettoken_nameref(), kMCCompareCaseless))
+				if (!MCNameIsEqualToCaseless(name, sp.gettoken_nameref()))
 				{
 					MCperror->add(PE_HANDLER_BADEND, sp);
 					return PS_ERROR;
@@ -367,7 +367,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
             
             // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
             //  param type, with this handler and param index, so that use of the get command syncs up correctly.
-            if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
+            if (i < npnames && MCNameIsEqualToCaseless(pinfo[i] . name, MCN_it))
                 m_it = new (nothrow) MCVarref(this, i, True);
             
 			plist = plist->getnext();
@@ -593,14 +593,14 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nvnames ; i++)
-		if (MCNameIsEqualTo(p_name, vinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, vinfo[i] . name))
 		{
 			*dptr = new (nothrow) MCVarref(this, i, False);
 			return PS_NORMAL;
 		}
 
 	for (i = 0 ; i < npnames ; i++)
-		if (MCNameIsEqualTo(p_name, pinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, pinfo[i] . name))
 	{
 			*dptr = new (nothrow) MCVarref(this, i, True);
 			return PS_NORMAL;
@@ -660,7 +660,7 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
 			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;

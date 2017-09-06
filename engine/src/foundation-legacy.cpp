@@ -1105,17 +1105,6 @@ char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
 	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
 }
 
-bool MCNameIsEqualTo(MCNameRef p_left, MCNameRef p_right, MCCompareOptions p_options)
-{
-	if (p_left == p_right)
-		return true;
-
-	if (p_options == kMCCompareCaseless)
-		return MCNameIsEqualTo(p_left, p_right);
-
-	return false;
-}
-
 bool MCNameIsEqualToCString(MCNameRef p_left, const char *p_cstring, MCCompareOptions p_options)
 {
 	return MCStringIsEqualToCString(MCNameGetString(p_left), p_cstring, p_options);

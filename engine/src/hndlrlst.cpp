@@ -209,13 +209,13 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 		}
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_msg, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_msg))
 	{
 		*dptr = new (nothrow) MCVarref(MCmb);
 		return PS_NORMAL;
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_each, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_each))
 	{
 		*dptr = new (nothrow) MCVarref(MCeach);
 		return PS_NORMAL;
@@ -329,7 +329,7 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
 			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;

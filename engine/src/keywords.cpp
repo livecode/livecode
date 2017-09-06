@@ -140,7 +140,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is always present now,
 		//   so there's no need to 'local it'. However, scripts do contain this so
 		//   don't do a check for an existing var in this case.
-		if (!MCNameIsEqualTo(*t_token_name, MCN_it, kMCCompareCaseless))
+		if (!MCNameIsEqualToCaseless(*t_token_name, MCN_it))
 		{
 			MCExpression *e = NULL;
 			MCVarref *v = NULL;

@@ -1507,7 +1507,7 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 	if (t_success)
 		t_success = MCNameCreate(p_menubar, &t_new_menubar);
 
-	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
+	if (t_success && !MCNameIsEqualToCaseless(getmenubar(), *t_new_menubar))
 	{
         MCValueAssign(_menubar, *t_new_menubar);
         
