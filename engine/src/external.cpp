@@ -174,7 +174,7 @@ bool MCExternalHandlerList::AddHandler(void *state, Handler_type type, const cha
 
 	// Inter the name of the handler.
 	MCNewAutoNameRef t_name;
-    if (!MCNameCreateWithCString(p_name_cstring, &t_name))
+    if (!MCNameCreateWithNativeChars((const char_t*)p_name_cstring, strlen(p_name_cstring), &t_name))
     {
         return false;
     }

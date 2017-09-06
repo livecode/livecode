@@ -1192,7 +1192,8 @@ void RTFReader::ProcessField(void)
 	if (t_type != nil && t_data != nil)
 	{
 		MCNameRef t_name;
-		/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t *)t_data, strlen(t_data), t_name);
+        
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithCString(t_data, &t_string);
 		if (MCU_strcasecmp(t_type, "HYPERLINK") == 0)

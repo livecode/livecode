@@ -675,9 +675,7 @@ private:
 			p2 . setn_argument(p_data_offset + p_data_length);
 			p3 . setn_argument(p_data_total);
 
-			MCNewAutoNameRef t_message_name;
-			/* UNCHECKED */ MCNameCreateWithCString("payloadProgress", &t_message_name);
-			context->target->message(*t_message_name, &p1);
+			context->target->message(MCNAME("payloadProgress"), &p1);
 		}
 
 		return true;

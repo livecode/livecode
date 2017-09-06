@@ -441,53 +441,32 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_ty
     {
         MCValueRef t_value;
         
-        MCNewAutoNameRef t_age_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("age", &t_age_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("age"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Age]];
 
-        MCNewAutoNameRef t_dist_id_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("distribution id", &t_dist_id_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_dist_id_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("distribution id"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Distribution_Id]];
         
-        MCNewAutoNameRef t_gender_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("gender", &t_gender_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("gender"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Gender]];
         
-        MCNewAutoNameRef t_coordinates_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("coordinates", &t_coordinates_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_coordinates_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("coordinates"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Gps_Coordinates]];
 
-        MCNewAutoNameRef t_keywords_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("keywords", &t_keywords_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("keywords"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Keywords]];
         
-        MCNewAutoNameRef t_location_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("location", &t_location_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_location_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("location"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Location]];
         
-        MCNewAutoNameRef t_phone_key;
         if (t_success)
-            t_success = MCNameCreateWithCString("phone number", &t_phone_key);
-        if (t_success)
-            if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
+            if (MCArrayFetchValue(p_meta_data, false, MCNAME("phone number"), t_value))
                 [t_meta_data setObject:MCStringConvertToAutoreleasedNSString(((MCStringRef)t_value)) forKey:[NSNumber numberWithInt:Key_Msisdn]];
     }
     

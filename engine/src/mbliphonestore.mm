@@ -901,59 +901,48 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     
     MCAutoNumberRef t_price_number;
     
-    MCNewAutoNameRef t_price_key, t_description_key, t_title_key, t_currency_code_key, t_currency_symbol_key;
-    MCNewAutoNameRef t_unicode_description_key, t_unicode_title_key, t_unicode_currency_symbol_key;
-    
     MCAutoArrayRef t_array;
     if (t_success)
         t_success = MCArrayCreateMutable(&t_array);
     
     if (t_success)
         t_success = (MCNumberCreateWithReal([[m_product price] doubleValue], &t_price_number)
-                     && MCNameCreateWithCString("price", &t_price_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_price_key, *t_price_number));
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("price"), *t_price_number));
 
         
     if (t_success && *t_description != nil)
     {
-        t_success = (MCNameCreateWithCString("description", &t_description_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_description_key, *t_description));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("description"), *t_description);
     }
     
     if (t_success && *t_title != nil)
     {
-        t_success = (MCNameCreateWithCString("title", &t_title_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_title_key, *t_title));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("title"), *t_title);
     }
     
     if (t_success && *t_currency_code != nil)
     {
-        t_success = (MCNameCreateWithCString("currency code", &t_currency_code_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_code_key, *t_currency_code));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("currency code"), *t_currency_code);
     }
     
     if (t_success && *t_currency_symbol != nil)
     {
-        t_success = (MCNameCreateWithCString("currency symbol", &t_currency_symbol_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_symbol_key, *t_currency_symbol));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("currency symbol"), *t_currency_symbol);
     }
     
     if (t_success && *t_unicode_description != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode description", &t_unicode_description_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_description_key, *t_utf16_description));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode description"), *t_utf16_description);
     }
     
     if (t_success && *t_unicode_title != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode title", &t_unicode_title_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_title_key, *t_utf16_title));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode title"), *t_utf16_title);
     }
     
     if (t_success && *t_unicode_currency_symbol != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode currency symbol", &t_unicode_currency_symbol_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_currency_symbol_key, *t_utf16_currency_symbol));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode currency symbol"), *t_utf16_currency_symbol);
     }
     
     MCParameter p1, p2;

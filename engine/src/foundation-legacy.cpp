@@ -1057,11 +1057,6 @@ bool MCCStringIsInteger(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNameCreateWithCString(const char *p_cstring, MCNameRef& r_name)
-{
-	return MCNameCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), r_name);
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
