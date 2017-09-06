@@ -629,6 +629,9 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
         [(NSOpenPanel *)t_panel setCanChooseFiles: NO];
         [(NSOpenPanel *)t_panel setCanChooseDirectories: YES];
         [(NSOpenPanel *)t_panel setAllowsMultipleSelection: NO];
+
+        // MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
+        [t_panel setCanCreateDirectories: YES];
     }
     
     if (p_kind != kMCPlatformFileDialogKindSave && 
