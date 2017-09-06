@@ -398,7 +398,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
         t_found = MCFontCreate(t_font_name, 0, t_font_size, t_font_ref);
     if (t_found)
         r_font = t_font_ref;
-    MCNameDelete(t_font_name);
+    MCValueRelease(t_font_name);
     
     return t_found;
 }

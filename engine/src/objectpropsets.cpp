@@ -71,7 +71,7 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 	MCObjectPropertySet *t_new_set;
 	if (!createwithname_nocopy(t_new_name, t_new_set))
 	{
-		MCNameDelete(t_new_name);
+		MCValueRelease(t_new_name);
 		return false;
 	}
 

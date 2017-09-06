@@ -359,7 +359,7 @@ MCComref::~MCComref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCComref::parse(MCScriptPoint &sp)

@@ -172,7 +172,7 @@ void MCHandlerlist::reset(void)
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */

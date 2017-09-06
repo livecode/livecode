@@ -106,7 +106,7 @@ public:
 
 	void Destroy(void)
 	{
-		MCNameDelete(m_message);
+		MCValueRelease(m_message);
 		delete this;
 	}
 

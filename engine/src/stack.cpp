@@ -631,7 +631,7 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(filename);
 
-	MCNameDelete(_menubar);
+	MCValueRelease(_menubar);
 
 	unloadexternals();
 

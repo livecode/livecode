@@ -275,7 +275,7 @@ MCNameRef MCScriptPoint::gettoken_nameref(void)
     {
         MCAutoStringRef t_string_token;
         if (token_nameref != nil)
-            MCNameDelete(token_nameref);
+            MCValueRelease(token_nameref);
         /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
 		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
     }

@@ -4063,7 +4063,7 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 			s_loaded_parent_script_reference = true;
 		}
 
-		MCNameDelete(t_stack);
+		MCValueRelease(t_stack);
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -4902,7 +4902,7 @@ void MCObject::clearfontattrs(void)
 	if (m_font_attrs == nil)
 		return;
 
-	MCNameDelete(m_font_attrs -> name);
+	MCValueRelease(m_font_attrs -> name);
 	MCMemoryDelete(m_font_attrs); /* Allocated with MCMemoryNew() */
 	m_font_attrs = nil;
 
@@ -4959,7 +4959,7 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 	if (p_which == 0)
 	{
 		if (m_font_attrs != nil)
-			MCNameDelete(m_font_attrs -> name);
+			MCValueRelease(m_font_attrs -> name);
 		delete m_font_attrs;
 		m_font_attrs = nil;
 		m_font_flags &= ~FF_HAS_ALL_FATTR;
@@ -4971,7 +4971,7 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 	if ((p_which & FF_HAS_TEXTFONT) != 0)
 	{
-		MCNameDelete(m_font_attrs -> name);
+		MCValueRelease(m_font_attrs -> name);
 		if (p_textfont != nil && !MCNameIsEmpty(p_textfont))
 		{
 			/* UNCHECKED */ MCNameClone(p_textfont, m_font_attrs -> name);

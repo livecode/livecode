@@ -1044,7 +1044,7 @@ static void import_html_free_style(MCFieldCharacterStyle& p_style)
 	MCValueRelease(p_style . link_text);
 	MCValueRelease(p_style . image_source);
 	MCValueRelease(p_style . metadata);
-	MCNameDelete(p_style . text_font);
+	MCValueRelease(p_style . text_font);
 }
 
 static bool import_html_equal_style(const MCFieldCharacterStyle& left, const MCFieldCharacterStyle& right)
@@ -1733,7 +1733,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						{
 							t_style . has_text_font = true;
 							if (t_style . text_font != nil)
-								MCNameDelete(t_style . text_font);
+								MCValueRelease(t_style . text_font);
 							MCNameCreate(p_tag . attrs[i] . value, t_style . text_font);
 						}
 						break;

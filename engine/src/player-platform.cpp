@@ -2159,8 +2159,8 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     // Free the existing callback table.
     for(uindex_t i = 0; i < m_callback_count; i++)
     {
-        MCNameDelete(m_callbacks[i] . message);
-        MCNameDelete(m_callbacks[i] . parameter);
+        MCValueRelease(m_callbacks[i] . message);
+        MCValueRelease(m_callbacks[i] . parameter);
     }
     MCMemoryDeleteArray(m_callbacks);
     m_callbacks = nil;

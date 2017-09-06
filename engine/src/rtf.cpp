@@ -216,7 +216,7 @@ RTFReader::RTFReader(void)
 
 RTFReader::~RTFReader(void)
 {
-	MCNameDelete(m_attributes . text_link);
+	MCValueRelease(m_attributes . text_link);
     MCValueRelease(m_attributes . text_metadata);
 
 	if (m_font_name != NULL)
@@ -1212,7 +1212,7 @@ void RTFReader::ProcessField(void)
         {
             m_state . SetParagraphMetadata(*t_string);
 		}
-		MCNameDelete(t_name);
+		MCValueRelease(t_name);
 	}
 
 	free(m_field_inst);
@@ -1639,7 +1639,7 @@ RTFStatus RTFReader::Flush(bool p_force)
 	if (t_changed)
 	{
         MCValueRelease(m_attributes . text_metadata);
-        MCNameDelete(m_attributes . text_link);
+        MCValueRelease(m_attributes . text_link);
 		memcpy(&m_attributes, &t_block, sizeof(MCTextBlock));
 		m_attributes_changed = false;
 	}

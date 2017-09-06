@@ -1510,7 +1510,7 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 
 	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
 	{
-		MCNameDelete(_menubar);
+		MCValueRelease(_menubar);
 		t_success = MCNameClone(*t_new_menubar, _menubar);
 		if (t_success)
 		{
