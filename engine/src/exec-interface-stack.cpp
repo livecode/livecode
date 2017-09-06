@@ -1155,7 +1155,6 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_name_string;
-		MCNewAutoNameRef t_name;
 		
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
@@ -1170,10 +1169,10 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			{
 				// Lookup 't_name_string' as a name, if it doesn't exist it can't exist as a substack
 				// name.
-				&t_name = MCValueRetain(MCNameLookupCaseless(*t_name_string));
-				if (*t_name != nil)
-				{
-					while (tsub -> hasname(*t_name))
+                MCNameRef t_name = MCNameLookupCaseless(*t_name_string);
+                if (t_name != nullptr)
+                {
+					while (tsub -> hasname(t_name))
 					{
 						tsub = (MCStack *)tsub->nptr;
 						if (tsub == oldsubs)
