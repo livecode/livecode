@@ -102,7 +102,9 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-dist-docs:
+dist-docs: dist-docs-api dist-docs-guide
+
+dist-docs-api:
 	mkdir -p $(docs_build_dir)
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
 	  --built-docs-dir $(docs_build_dir)
@@ -113,7 +115,7 @@ dist-notes:
 	  --stage notes --warn-as-error \
 	  --built-docs-dir $(docs_build_dir)
 
-dist-guide:
+dist-docs-guide:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
 		--stage guide --warn-as-error
