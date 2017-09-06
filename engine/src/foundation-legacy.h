@@ -84,7 +84,6 @@ char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
 
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCCompareOptions options);
 bool MCNameIsEqualToCString(MCNameRef left, const char *cstring, MCCompareOptions options);
-bool MCNameIsEqualToOldString(MCNameRef left, const MCString& string, MCCompareOptions options);
 
 ////////////////////////////////////////////////////////////////////////////////
 
