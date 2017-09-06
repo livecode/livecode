@@ -5580,7 +5580,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 	if (MCStringGetLength(docname))
 	{
 		for (i = 0 ; i < MCnprocesses ; i++)
-			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCCompareExact))
+			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCStringOptionCompareExact))
 				break;
 		if (i == MCnprocesses)
 		{

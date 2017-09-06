@@ -53,7 +53,7 @@ bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name,
 {
 	while (p_node_count-- > 0)
 	{
-		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCCompareExact))
+		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCStringOptionCompareExact))
 		{
 			r_index = p_node_count;
 			return true;
