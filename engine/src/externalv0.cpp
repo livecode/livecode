@@ -434,11 +434,14 @@ static int trans_stat(Exec_stat stat)
 
 static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname, MCContainer& r_container)
 {
-	MCAutoNameRef t_name;
-	/* UNCHECKED */ t_name . CreateWithOldString(vname);
-
+	MCNewAutoNameRef t_name;
+    if (!MCNameCreateWithOldString(vname, &t_name))
+    {
+        return ES_ERROR;
+    }
+	
 	MCAutoPointer<MCVarref> newvar;
-    if (MCECptr -> FindVar(t_name, &(&newvar)) != PS_NORMAL)
+    if (MCECptr -> FindVar(*t_name, &(&newvar)) != PS_NORMAL)
     {
 		return ES_ERROR;
     }

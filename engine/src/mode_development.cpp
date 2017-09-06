@@ -425,14 +425,14 @@ void MCStack::mode_load(void)
 	// a custom property 'ideOverride' with value true.
 	if (props != NULL)
 	{
-		MCAutoNameRef t_ide_override_name;
-		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
+		MCNewAutoNameRef t_ide_override_name;
+		/* UNCHECKED */ MCNameCreateWithCString("ideOverride", &t_ide_override_name);
 
         bool t_old_lock = MClockmessages;
 		MClockmessages = true;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
+        getcustomprop(ctxt, kMCEmptyName, *t_ide_override_name, nil, t_value);
 		MClockmessages = t_old_lock;
 
 		bool t_treat_as_ide;
