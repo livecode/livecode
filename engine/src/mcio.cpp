@@ -53,7 +53,7 @@ bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name,
 {
 	while (p_node_count-- > 0)
 	{
-		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCCompareExact))
+		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCStringOptionCompareExact))
 		{
 			r_index = p_node_count;
 			return true;
@@ -114,9 +114,9 @@ void IO_cleanprocesses()
 				MCPlayerHandle t_player = MCplayers;
 				while (t_player.IsValid())
 				{
-					if (MCNameIsEqualToCString(MCprocesses[i].name,
-                                               t_player->getcommand(),
-                                               kMCCompareExact))
+					if (MCStringIsEqualToCString(MCNameGetString(MCprocesses[i].name),
+                                                 t_player->getcommand(),
+                                                 kMCCompareExact))
 					{
 						t_player->playstop(); // removes from linked list
 						break;
@@ -177,7 +177,7 @@ bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
 	IO_cleansockets(MCS_time());
 	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
-		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
+		if (MCNameIsEqualToCaseless(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
 }

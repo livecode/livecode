@@ -76,21 +76,9 @@ MCString MCDataGetOldString(MCDataRef data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNameCreateWithCString(const char *cstring, MCNameRef& r_name);
-bool MCNameCreateWithOldString(const MCString& oldstring, MCNameRef& r_name);
-void MCNameDelete(MCNameRef name);
-bool MCNameClone(MCNameRef name, MCNameRef& r_new_name);
-
 bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
-
-bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCCompareOptions options);
-bool MCNameIsEqualToCString(MCNameRef left, const char *cstring, MCCompareOptions options);
-bool MCNameIsEqualToOldString(MCNameRef left, const MCString& string, MCCompareOptions options);
-
-MCNameRef MCNameLookupWithCString(const char *cstring, MCCompareOptions options);
-MCNameRef MCNameLookupWithOldString(const MCString& string, MCCompareOptions options);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -268,60 +256,6 @@ template<typename T> inline void MCListRemove(T*& x_list, T *p_element)
 	MCListRemove(t_list, p_element);
 	x_list = static_cast<T *>(t_list);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MCAutoNameRef
-{
-public:
-	MCAutoNameRef(void)
-	{
-		m_name = nil;
-	}
-
-	~MCAutoNameRef(void)
-	{
-		MCValueRelease(m_name);
-	}
-
-	bool CreateWithCString(const char *p_name)
-	{
-		return MCNameCreateWithCString(p_name, m_name);
-	}
-
-	bool CreateWithOldString(const MCString& p_name)
-	{
-		return MCNameCreateWithOldString(p_name, m_name);
-	}
-
-	bool Clone(MCNameRef p_name)
-	{
-		m_name = p_name;
-		MCValueRetain(m_name);
-		return true;
-	}
-
-	MCNameRef Take(void)
-	{
-		MCNameRef t_name;
-		t_name = m_name;
-		m_name = nil;
-		return t_name;
-	}
-
-	operator MCNameRef& (void)
-	{
-		return m_name;
-	}
-
-	operator MCNameRef (void) const
-	{
-		return m_name;
-	}
-
-private:
-	MCNameRef m_name;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 

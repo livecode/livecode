@@ -995,17 +995,17 @@ public:
             !MCS_resolvepath(*t_tilde, &t_home))
             return false;
 
-        if (MCNameIsEqualTo(p_type, MCN_desktop, kMCCompareCaseless))
+        if (MCNameIsEqualToCaseless(p_type, MCN_desktop))
             return MCStringFormat(r_folder, "%@/Desktop", *t_home);
-        else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
+        else if (MCNameIsEqualToCaseless(p_type, MCN_home))
             return MCStringCopy(*t_home, r_folder);
-        else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
+        else if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+        else if (MCNameIsEqualToCaseless(p_type, MCN_engine)
                  // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
                  // so the resources folder is the engine folder.
-                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+                 || MCNameIsEqualToCaseless(p_type, MCN_resources))
         {
             uindex_t t_last_slash;
             
@@ -1940,7 +1940,7 @@ public:
         sigaction(SIGCHLD, &action, NULL);
         while (MCnprocesses--)
         {
-            MCNameDelete(MCprocesses[MCnprocesses] . name);
+            MCValueRelease(MCprocesses[MCnprocesses] . name);
             MCprocesses[MCnprocesses] . name = nil;
             if (MCprocesses[MCnprocesses].pid != 0
                     && (MCprocesses[MCnprocesses].ihandle != NULL

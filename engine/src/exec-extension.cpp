@@ -339,7 +339,7 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
     }
     
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
-        if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
+        if (MCNameIsEqualToCaseless(t_ext -> module_name, *t_name))
         {
             bool t_in_use = false;
             

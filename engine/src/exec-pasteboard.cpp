@@ -391,58 +391,58 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
 
 MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy = false)
 {
-	if (MCNameIsEqualTo(p_key, MCN_text))
+	if (MCNameIsEqualToCaseless(p_key, MCN_text))
 		return TRANSFER_TYPE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_unicode))
+	if (MCNameIsEqualToCaseless(p_key, MCN_unicode))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_styles))
+	if (MCNameIsEqualToCaseless(p_key, MCN_styles))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-    if (MCNameIsEqualTo(p_key, MCN_styledtext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_styledtext))
         return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
     
-	if (MCNameIsEqualTo(p_key, MCN_rtf))
+	if (MCNameIsEqualToCaseless(p_key, MCN_rtf))
         return p_legacy ? TRANSFER_TYPE_RTF_TEXT : TRANSFER_TYPE_RTF;
 
-	if (MCNameIsEqualTo(p_key, MCN_html))
+	if (MCNameIsEqualToCaseless(p_key, MCN_html))
         return p_legacy ? TRANSFER_TYPE_HTML_TEXT : TRANSFER_TYPE_HTML;
 
-	if (MCNameIsEqualTo(p_key, MCN_files))
+	if (MCNameIsEqualToCaseless(p_key, MCN_files))
 		return TRANSFER_TYPE_FILES;
 
-	if (MCNameIsEqualTo(p_key, MCN_private))
+	if (MCNameIsEqualToCaseless(p_key, MCN_private))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (MCNameIsEqualTo(p_key, MCN_image))
+	if (MCNameIsEqualToCaseless(p_key, MCN_image))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (MCNameIsEqualTo(p_key, MCN_objects))
+	if (MCNameIsEqualToCaseless(p_key, MCN_objects))
 		return TRANSFER_TYPE_OBJECTS;
     
-    if (MCNameIsEqualTo(p_key, MCN_rtftext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_rtftext))
         return TRANSFER_TYPE_RTF_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_htmltext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_htmltext))
         return TRANSFER_TYPE_HTML_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_png))
+    if (MCNameIsEqualToCaseless(p_key, MCN_png))
         return TRANSFER_TYPE_PNG;
     
-    if (MCNameIsEqualTo(p_key, MCN_gif))
+    if (MCNameIsEqualToCaseless(p_key, MCN_gif))
         return TRANSFER_TYPE_GIF;
     
-    if (MCNameIsEqualTo(p_key, MCN_jpeg))
+    if (MCNameIsEqualToCaseless(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_bitmap))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_bitmap))
 		return TRANSFER_TYPE_BMP;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_metafile))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_metafile))
 		return TRANSFER_TYPE_WIN_METAFILE;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_enh_metafile))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_enh_metafile))
 		return TRANSFER_TYPE_WIN_ENH_METAFILE;
 
 	return TRANSFER_TYPE_NULL;

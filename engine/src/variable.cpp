@@ -236,7 +236,7 @@ void MCVariable::clearuql(void)
     
     // SN-2014-04-09 [[ Bug 12160 ]] Put after/before on an uninitialised, by-reference parameter inserts the variable's name in it
     // The content of a UQL value was not cleared when needed
-    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, *name))
+    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualToCaseless(value . nameref_value, *name))
         clear();
     
 	is_uql = false;
@@ -897,10 +897,13 @@ bool MCVariable::converttomutabledata(MCExecContext& ctxt)
 
 MCVariable *MCVariable::lookupglobal_cstring(const char *p_name)
 {
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_string);
+
 	// If we can't find an existing name, then there can be no global with
 	// name 'p_name'.
 	MCNameRef t_name;
-	t_name = MCNameLookupWithCString(p_name, kMCCompareCaseless);
+	t_name = MCNameLookupCaseless(*t_string);
 	if (t_name == nil)
 		return nil;
 

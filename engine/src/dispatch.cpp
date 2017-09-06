@@ -704,11 +704,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     }
     
-    MCNewAutoNameRef t_script_name;
-    if (!MCNameClone(sp . gettoken_nameref(), &t_script_name))
-    {
-        return nullptr;
-    }
+    MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
     
     // Parse end of line.
     Parse_stat t_stat;
@@ -855,8 +851,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
         {
             if (x_stack->hasname(tstk->getname()))
             {
-                MCAutoNameRef t_stack_name;
-                /* UNCHECKED */ t_stack_name . Clone(x_stack -> getname());
+                MCNewAutoNameRef t_stack_name = x_stack->getname();
                 
                 delete x_stack;
                 x_stack = nullptr;
@@ -870,7 +865,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
                     tstk = stacks;
                     do
                     {
-                        if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
+                        if (MCNameIsEqualToCaseless(*t_stack_name, tstk->getname()))
                         {
                             x_stack = tstk;
                             break;
@@ -2132,7 +2127,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{
 		MCStackSecurityExecutionTimeout();
 	}

@@ -80,7 +80,7 @@ RTFStatus RTFState::Save(void)
 
             /* UNCHECKED */ MCStringCopy(m_entries -> metadata, t_new_entry -> metadata);
             /* UNCHECKED */ MCStringCopy(m_entries -> paragraph_metadata, t_new_entry -> paragraph_metadata);
-			MCNameClone(m_entries -> hyperlink, t_new_entry -> hyperlink);
+            t_new_entry->hyperlink = MCValueRetain(m_entries -> hyperlink);
 		}
 		else
 		{
@@ -110,7 +110,7 @@ RTFStatus RTFState::Save(void)
 
             t_new_entry -> metadata = MCValueRetain(kMCEmptyString);
             t_new_entry -> paragraph_metadata = MCValueRetain(kMCEmptyString);
-			MCNameClone(kMCEmptyName, t_new_entry -> hyperlink);
+            t_new_entry -> hyperlink = MCValueRetain(kMCEmptyName);
 		}
 		
 		m_entries = t_new_entry;
@@ -138,7 +138,7 @@ RTFStatus RTFState::Restore(void)
 		
         MCValueRelease(t_entry -> metadata);
         MCValueRelease(t_entry -> paragraph_metadata);
-		MCNameDelete(t_entry -> hyperlink);
+		MCValueRelease(t_entry -> hyperlink);
 
 		delete t_entry;
 	}

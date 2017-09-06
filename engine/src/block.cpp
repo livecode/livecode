@@ -97,7 +97,7 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Copy across the font attrs the other
 		//   block has.
 		if ((flags & F_HAS_FNAME) != 0)
-			/* UNCHECKED */ MCNameClone(bref.atts->fontname, atts -> fontname);
+            atts->fontname = MCValueRetain(bref.atts->fontname);
 		if ((flags & F_HAS_FSIZE) != 0)
 			atts -> fontsize = bref . atts -> fontsize;
 		if ((flags & F_HAS_FSTYLE) != 0)
@@ -215,7 +215,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2012-02-17: [[ SplitTextAttrs ]] Only set the font attrs if they are
 			//   not inherited.
 			if (!getflag(F_INHERIT_FNAME))
-				MCNameClone(t_fontname, atts -> fontname);
+                atts->fontname = MCValueRetain(t_fontname);
 			if (!getflag(F_INHERIT_FSIZE))
 				atts -> fontsize = t_fontsize;
 			if (!getflag(F_INHERIT_FSTYLE))
@@ -1837,7 +1837,7 @@ void MCBlock::freeatts()
 	freerefs();
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Free the fontname name if we have that attr.
 	if (flags & F_HAS_FNAME)
-		MCNameDelete(atts -> fontname);
+		MCValueRelease(atts -> fontname);
 	if (flags & F_HAS_COLOR)
 		delete atts->color;
 	if (flags & F_HAS_BACK_COLOR)

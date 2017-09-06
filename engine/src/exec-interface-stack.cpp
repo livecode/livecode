@@ -403,8 +403,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	MCNewAutoNameRef t_old_name;
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 	{
-		if (t_success)
-			t_success = MCNameClone(getname(), &t_old_name);
+        t_old_name = getname();
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
@@ -1155,7 +1154,6 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_name_string;
-		MCNewAutoNameRef t_name;
 		
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
@@ -1170,10 +1168,10 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			{
 				// Lookup 't_name_string' as a name, if it doesn't exist it can't exist as a substack
 				// name.
-				&t_name = MCValueRetain(MCNameLookup(*t_name_string));
-				if (*t_name != nil)
-				{
-					while (tsub -> hasname(*t_name))
+                MCNameRef t_name = MCNameLookupCaseless(*t_name_string);
+                if (t_name != nullptr)
+                {
+					while (tsub -> hasname(t_name))
 					{
 						tsub = (MCStack *)tsub->nptr;
 						if (tsub == oldsubs)
@@ -1509,25 +1507,23 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 	if (t_success)
 		t_success = MCNameCreate(p_menubar, &t_new_menubar);
 
-	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
+	if (t_success && !MCNameIsEqualToCaseless(getmenubar(), *t_new_menubar))
 	{
-		MCNameDelete(_menubar);
-		t_success = MCNameClone(*t_new_menubar, _menubar);
-		if (t_success)
-		{
-			if (!hasmenubar())
-				flags &= ~F_MENU_BAR;
-			else
-				flags |= F_MENU_BAR;
-			if (opened)
-			{
-				setgeom();
-				updatemenubar();
+        MCValueAssign(_menubar, *t_new_menubar);
+        
+        if (!hasmenubar())
+            flags &= ~F_MENU_BAR;
+        else
+            flags |= F_MENU_BAR;
+        
+        if (opened)
+        {
+            setgeom();
+            updatemenubar();
 
-				// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-				dirtyall();
-			}
-		}
+            // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+            dirtyall();
+        }
 	}
 
 	if (t_success)

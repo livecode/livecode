@@ -2030,54 +2030,6 @@ MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
 #define DBL_INT_MAX     (1LL << DBL_MANT_DIG)   /* the maximum integer faithfully representable by a double */
 #define DBL_INT_MIN     (-DBL_INT_MAX)          /* the minimum integer faithfully representable by a double */
 
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  NAME DEFINITIONS
-//
-
-// Like MCSTR but for NameRefs
-MC_DLLEXPORT MCNameRef MCNAME(const char *);
-
-// Create a name using the given string.
-MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
-// Create a name using chars.
-MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
-// Create a name using native chars.
-MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
-
-// Create a name using the given string, releasing the original.
-MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
-
-// Looks for an existing name matching the given string.
-MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
-
-// Returns a unsigned integer which can be used to order a table for a binary
-// search.
-MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
-
-// Returns the string content of the name.
-MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
-
-// Returns true if the given name is the empty name.
-MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
-
-}
-
-// Returns true if the names are equal (caselessly). Note that MCNameIsEqualTo
-// is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
-// the name's string) rather than exact.
-bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
-
-extern "C" {
-
-// The empty name object;
-MC_DLLEXPORT extern MCNameRef kMCEmptyName;
-
-MC_DLLEXPORT extern MCNameRef kMCTrueName;
-MC_DLLEXPORT extern MCNameRef kMCFalseName;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  STRING DEFINITIONS
@@ -2765,6 +2717,49 @@ MCStringNormalizeLineEndings(MCStringRef p_input,
                              MCStringLineEndingOptions p_options,
                              MCStringRef& r_output, 
                              MCStringLineEndingStyle* r_original_style);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NAME DEFINITIONS
+//
+
+// Like MCSTR but for NameRefs
+MC_DLLEXPORT MCNameRef MCNAME(const char *);
+
+// Create a name using the given string.
+MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
+// Create a name using native chars.
+MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
+
+// Create a name using the given string, releasing the original.
+MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
+
+// Looks for an existing name matching the given string.
+MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
+
+// Returns a unsigned integer which can be used to order a table for a binary
+// search.
+MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
+
+// Returns the string content of the name.
+MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
+
+// Returns true if the given name is the empty name.
+MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
+
+// Returns true if the names are equal under the options specified by options.
+MC_DLLEXPORT bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCStringOptions p_options);
+
+// Returns true if the names are equal caselessly.
+MC_DLLEXPORT bool MCNameIsEqualToCaseless(MCNameRef left, MCNameRef right);
+
+// The empty name object;
+MC_DLLEXPORT extern MCNameRef kMCEmptyName;
+
+MC_DLLEXPORT extern MCNameRef kMCTrueName;
+MC_DLLEXPORT extern MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

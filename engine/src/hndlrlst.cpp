@@ -172,7 +172,7 @@ void MCHandlerlist::reset(void)
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */
@@ -209,13 +209,13 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 		}
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_msg, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_msg))
 	{
 		*dptr = new (nothrow) MCVarref(MCmb);
 		return PS_NORMAL;
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_each, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_each))
 	{
 		*dptr = new (nothrow) MCVarref(MCeach);
 		return PS_NORMAL;
@@ -329,7 +329,7 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
 			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
@@ -340,8 +340,8 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
-	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
+    cinfo[nconstants].name = MCValueRetain(p_name);
+	cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 

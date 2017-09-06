@@ -1643,7 +1643,7 @@ Boolean MCButton::doubleup(uint2 which)
 #ifdef _MAC_DESKTOP
 void MCButton::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
