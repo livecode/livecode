@@ -154,9 +154,12 @@ function buildICU {
 		HOST_ICU_BINDIR="${HOST_ICU_DIR}/bin"
 	fi
 	
-	# Copy data files
-	mkdir -p "${OUTPUT_DIR}/share/${NAME}"
-	cp "${INSTALL_DIR}/${NAME}/share/icu/${ICU_VERSION}/icudt${ICU_VERSION_MAJOR}l.dat" "${OUTPUT_DIR}/share/${NAME}/icudata.dat"
+	# Copy data file, if not done yet
+	if [ ! -f "${OUTPUT_DIR}/share/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
+		echo "Copying icu data file"
+		mkdir -p "${OUTPUT_DIR}/share"
+		cp "${INSTALL_DIR}/${NAME}/share/icu/${ICU_VERSION}/icudt${ICU_VERSION_MAJOR}l.dat" "${OUTPUT_DIR}/share/icudt${ICU_VERSION_MAJOR}l.dat"
+	fi
 	
 	# Copy libraries
 	for L in data i18n io le lx tu uc ; do

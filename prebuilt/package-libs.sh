@@ -90,9 +90,6 @@ function doPackage {
 
 	# Package up ICU
 	local ICU_FILES=
-	if [ -f "${SHAREPATH}/icudata.dat" ] ; then
-		ICU_FILES+="${SHAREPATH}/icudata.dat "
-	fi
 	if [ -f "${LIBPATH}/libicudata.a" ] ; then
 		for LIB in i18n io le lx tu uc ; do
 			if [ -f "${LIBPATH}/libicu${LIB}.a" ] ; then
@@ -159,11 +156,15 @@ if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
 		OPENSSL_HDR_NAME+="-${OpenSSL_BUILDREVISION}"
 	fi
 	ICU_HDR_NAME="ICU-${ICU_VERSION}-All-Universal-Headers"
+	ICU_DATA_NAME="ICU-${ICU_VERSION}-All-Universal-Data"
 	if [ ! -z "${ICU_BUILDREVISION}" ] ; then
 		ICU_HDR_NAME+="-${ICU_BUILDREVISION}"
+		ICU_DATA_NAME+="-${ICU_BUILDREVISION}"
 	fi
 	tar -cf "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar" include/openssl/*.h
 	tar -cf "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar" include/unicode/*.h
+	tar -cf "${PACKAGE_DIR}/${ICU_DATA_NAME}.tar" share/icu*.dat
 	bzip2 -zf --best "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar"
 	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar"
+	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_DATA_NAME}.tar"
 fi
