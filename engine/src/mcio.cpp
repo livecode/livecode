@@ -114,9 +114,9 @@ void IO_cleanprocesses()
 				MCPlayerHandle t_player = MCplayers;
 				while (t_player.IsValid())
 				{
-					if (MCNameIsEqualToCString(MCprocesses[i].name,
-                                               t_player->getcommand(),
-                                               kMCCompareExact))
+					if (MCStringIsEqualToCString(MCNameGetString(MCprocesses[i].name),
+                                                 t_player->getcommand(),
+                                                 kMCCompareExact))
 					{
 						t_player->playstop(); // removes from linked list
 						break;

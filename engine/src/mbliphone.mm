@@ -698,7 +698,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	{
         MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
+	else if (MCStringIsEqualToCString(MCNameGetString(p_type), "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
         t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
@@ -716,7 +716,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_path);
                     
 	}
-	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareCaseless))
+	else if (MCStringIsEqualToCString(MCNameGetString(p_type), "library", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);

@@ -92,7 +92,7 @@ static Exec_stat MCBitmapEffectLookupProperty(MCBitmapEffectType p_type, MCNameR
 	for(uint4 i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
 	{
 		// Check to see if we've found a match.
-		if (MCNameIsEqualToCString(p_token, s_bitmap_effect_properties[i] . token, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_token), s_bitmap_effect_properties[i] . token, kMCCompareCaseless))
 		{
 			// Check to see if its applicable to this type.
 			if ((s_bitmap_effect_properties[i] . mask & (1 << p_type)) != 0)

@@ -1105,11 +1105,6 @@ char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
 	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
 }
 
-bool MCNameIsEqualToCString(MCNameRef p_left, const char *p_cstring, MCCompareOptions p_options)
-{
-	return MCStringIsEqualToCString(MCNameGetString(p_left), p_cstring, p_options);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct get_array_extent_context_t

@@ -82,8 +82,6 @@ bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
 
-bool MCNameIsEqualToCString(MCNameRef left, const char *cstring, MCCompareOptions options);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum IO_stat
