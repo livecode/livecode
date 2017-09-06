@@ -772,7 +772,7 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 
             // Import the type
             MCValueRef t_imported;
-            if (!t_desc->doimport(MCForeignValueGetContentsPtr(x_value), false, t_imported))
+            if (!t_desc->doimport(t_desc, MCForeignValueGetContentsPtr(x_value), false, t_imported))
                 return false;
 
             // Recursively convert to a script type
