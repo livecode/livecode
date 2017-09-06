@@ -214,8 +214,9 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 	fi
 done
 
-# Don't forget the headers on non-Windows platforms
+# Don't forget the headers & data on non-Windows platforms
 if [ 0 -eq "$FETCH_HEADERS" ]; then
 	fetchLibrary OpenSSL All Universal Headers
 	fetchLibrary ICU All Universal Headers
+	fetchLibrary ICU All Universal Data
 fi

@@ -5,6 +5,14 @@
 		'prebuilt-common.gypi',
 	],
 	
+	'target_defaults':
+	{
+		'variables':
+		{
+			'icu_data':'share/icudt58l.dat',
+		},
+	},
+	
 	'targets':
 	[
 		{
@@ -197,7 +205,7 @@
 					'inputs':
 					[
 						'../util/encode_data.pl',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 					],
 					'outputs':
 					[
@@ -208,7 +216,7 @@
 					[
 						'<@(perl)',
 						'../util/encode_data.pl',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 						'<@(_outputs)',
 						# Really nasty hack to prevent this from being treated as a path
 						'$(this_is_an_undefined_variable)s_icudata',
@@ -235,7 +243,7 @@
 					'inputs':
 					[
 						'>(prebuilt_bin_dir)/icupkg',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 					],
 					'outputs':
 					[
@@ -245,7 +253,7 @@
 					[
 						'>(prebuilt_bin_dir)/icupkg',
 						'--list',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 						'--auto_toc_prefix',
 						'--outlist',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
@@ -277,7 +285,7 @@
 					'inputs':
 					[
 						'>(prebuilt_bin_dir)/icupkg',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 					],
 					'outputs':
@@ -291,7 +299,7 @@
 						'--remove',
 						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 						'--auto_toc_prefix',
-						'>(prebuilt_share_dir)/icudata.dat',
+						'>(icu_data)',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
 					],
 				},
