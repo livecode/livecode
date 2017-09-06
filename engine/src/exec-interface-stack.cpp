@@ -1170,7 +1170,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			{
 				// Lookup 't_name_string' as a name, if it doesn't exist it can't exist as a substack
 				// name.
-				&t_name = MCValueRetain(MCNameLookup(*t_name_string));
+				&t_name = MCValueRetain(MCNameLookupCaseless(*t_name_string));
 				if (*t_name != nil)
 				{
 					while (tsub -> hasname(*t_name))

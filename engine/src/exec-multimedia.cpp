@@ -575,7 +575,7 @@ static MCPlayer* MCMultimediaExecGetClip(MCExecContext& ctxt, MCStringRef p_clip
 	if (p_chunk_type == CT_EXPRESSION)
 	{
         // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
-		return MCPlayer::FindPlayerByName(MCNameLookup(p_clip));
+		return MCPlayer::FindPlayerByName(MCNameLookupCaseless(p_clip));
 	}
 	
     if (p_chunk_type == CT_ID)

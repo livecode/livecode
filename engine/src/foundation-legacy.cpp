@@ -1150,7 +1150,7 @@ MCNameRef MCNameLookupWithCString(const char *cstring, MCCompareOptions options)
 		return nil;
 
 	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
+	t_name = MCNameLookupCaseless(t_string);
 	MCValueRelease(t_string);
 
 	return t_name;
@@ -1163,7 +1163,7 @@ MCNameRef MCNameLookupWithOldString(const MCString& string, MCCompareOptions opt
 		return nil;
 
 	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
+	t_name = MCNameLookupCaseless(t_string);
 	MCValueRelease(t_string);
 
 	return t_name;
