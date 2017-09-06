@@ -878,7 +878,7 @@ function getReadableVersion pVersion
 end getReadableVersion
 
 function getBundleFilenameStub pVersion, pPlatform, pEdition
-   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getFullReadableVersion(pVersion)
+   return "LiveCode" && editionDisplayName(pEdition) && getFullReadableVersion(pVersion)
 end getBundleFilenameStub
 
 function getInstallerFilenameStub pVersion, pPlatform, pEdition
@@ -896,7 +896,7 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
       put "Linux" into pPlatform
    end if
 
-   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "Installer-" & pVersion & "-" & pPlatform
+   return "LiveCode" & editionTitleCase(pEdition) & "Installer-" & pVersion & "-" & pPlatform
 end getInstallerFilenameStub
 
 function getDmgFilenameStub pVersion, pPlatform, pEdition
@@ -913,7 +913,7 @@ function getDmgFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
       put "Linux" into pPlatform
    end if
-   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "-" & pVersion & "-" & pPlatform
+   return "LiveCode" & editionTitleCase(pEdition) & "-" & pVersion & "-" & pPlatform
 end getDmgFilenameStub
 
 function loadTextFile pFile
