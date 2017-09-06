@@ -116,7 +116,7 @@ protected:
 
 	bool setMessage(const char *p_message)
 	{
-		return MCNameCreateWithCString(p_message, m_message);
+		return MCNameCreateWithNativeChars((const char_t*)p_message, strlen(p_message), m_message);
 	}
 
 	bool setObject(MCObjectHandle p_object)

@@ -244,22 +244,16 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
     while (t_success && tablesize--)
     {
         MCValueRef t_prop_value;
-        MCNewAutoNameRef t_key;
         
-        t_success = MCNameCreateWithCString(gradientprops[tablesize].token, &t_key);
-        
+        MCExecValue t_value;
+        t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
         if (t_success)
         {
-            MCExecValue t_value;
-            t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
-			if (t_success)
-			{
-				MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
-				t_success = !ctxt . HasError();
-			}
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
+            t_success = !ctxt . HasError();
         }
         if (t_success)
-            t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+            t_success = MCArrayStoreValue(*v, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value);
     }
     
     MCerrorlock--;

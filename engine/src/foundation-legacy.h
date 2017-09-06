@@ -76,8 +76,6 @@ MCString MCDataGetOldString(MCDataRef data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNameCreateWithCString(const char *cstring, MCNameRef& r_name);
-
 bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);

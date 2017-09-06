@@ -1019,11 +1019,9 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
             if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
             {
                 MCValueRef t_prop_value;
-                MCNewAutoNameRef t_key;
                 
-                /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
                 // If we don't have the given element, then move to the next one
-                if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+                if (!MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(s_bitmap_effect_properties[i] . token), t_prop_value))
                     continue;
                 
                 // Otherwise, fetch the keys value and attempt to set the property

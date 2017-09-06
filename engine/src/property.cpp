@@ -450,7 +450,10 @@ bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name)
 {
 	for (uint32_t i = 0; i < property_overrides_size; i++)
 		if (property_overrides[i].property == p_property)
-			return MCNameCreateWithCString(property_overrides[i].lt.token, r_name);
+        {
+            r_name = MCNAME(property_overrides[i].lt.token);
+            return true;
+        }
 	
 	return false;
 }

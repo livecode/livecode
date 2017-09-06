@@ -357,7 +357,7 @@ void MCObject::setname(MCNameRef p_new_name)
 void MCObject::setname_cstring(const char *p_new_name)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)p_new_name, strlen(p_new_name), &t_name);
 	setname(*t_name);
 }
 
