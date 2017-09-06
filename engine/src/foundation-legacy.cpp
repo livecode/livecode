@@ -1062,11 +1062,6 @@ bool MCNameCreateWithCString(const char *p_cstring, MCNameRef& r_name)
 	return MCNameCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), r_name);
 }
 
-bool MCNameCreateWithOldString(const MCString& p_old_string, MCNameRef& r_name)
-{
-	return MCNameCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_name);
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
@@ -1324,7 +1319,7 @@ IO_stat MCArrayLoadFromHandleLegacy(MCArrayRef self, IO_handle p_stream)
 			// so we pass p_translate = true.
 			t_stat = IO_read_string_legacy_full(t_key, t_length, p_stream, 1, true, true);
 			if (t_stat == IO_NORMAL)
-				if (!MCNameCreateWithOldString(MCString(t_key, t_length), &t_name))
+				if (!MCNameCreateWithNativeChars((const char_t*)t_key, t_length, &t_name))
 					t_stat = IO_ERROR;
 			
 			MCMemoryDeallocate(t_key);

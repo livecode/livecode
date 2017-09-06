@@ -435,7 +435,7 @@ static int trans_stat(Exec_stat stat)
 static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname, MCContainer& r_container)
 {
 	MCNewAutoNameRef t_name;
-    if (!MCNameCreateWithOldString(vname, &t_name))
+    if (!MCNameCreateWithNativeChars((const char_t *)vname.getstring(), vname.getlength(), &t_name))
     {
         return ES_ERROR;
     }

@@ -1861,8 +1861,6 @@ void MCCard::geometrychanged(const MCRectangle &p_rect)
 
 MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
-   // MCNewAutoNameRef t_name;
-   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
 	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else
