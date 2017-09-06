@@ -411,8 +411,9 @@ MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle p_object, MCNa
 	
 	t_event->m_url = MCValueRetain(p_url);
 	if (t_success)
-		t_success = MCNameClone(p_message, t_event->m_message);
-	if (p_status == kMCSystemUrlStatusError)
+        t_event->m_message = MCValueRetain(p_message);
+    
+    if (p_status == kMCSystemUrlStatusError)
         t_event -> m_error = MCValueRetain(p_error);
 	
 	if (t_success)

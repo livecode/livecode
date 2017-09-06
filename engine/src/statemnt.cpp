@@ -344,7 +344,7 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 MCComref::MCComref(MCNameRef n)
 {
-	/* UNCHECKED */ MCNameClone(n, name);
+    name = MCValueRetain(n);
 	handler = nil;
 	params = NULL;
 	resolved = false;

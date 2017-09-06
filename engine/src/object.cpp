@@ -4889,7 +4889,7 @@ void MCObject::copyfontattrs(const MCObject& p_other)
 
 	/* UNCHECKED */ MCMemoryNew(m_font_attrs);
 	if ((m_font_flags & FF_HAS_TEXTFONT) != 0)
-		MCNameClone(p_other . m_font_attrs -> name, m_font_attrs -> name);
+        m_font_attrs -> name = MCValueRetain(m_font_attrs -> name);
 	if ((m_font_flags & FF_HAS_TEXTSIZE) != 0)
 		m_font_attrs -> size = p_other . m_font_attrs -> size;
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) != 0)
@@ -4974,7 +4974,7 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 		MCValueRelease(m_font_attrs -> name);
 		if (p_textfont != nil && !MCNameIsEmpty(p_textfont))
 		{
-			/* UNCHECKED */ MCNameClone(p_textfont, m_font_attrs -> name);
+            m_font_attrs -> name = MCValueRetain(p_textfont);
 			m_font_flags |= FF_HAS_TEXTFONT;
 		}
 		else

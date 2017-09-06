@@ -513,7 +513,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		else
 		{
 			which = P_CUSTOM;
-			/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), &customprop);
+            customprop = sp . gettoken_nameref();
 			if (sp.next(type) == PS_NORMAL && type == ST_LB)
 			{
 				if (sp.parseexp(False, True, &(&customindex)) != PS_NORMAL
@@ -1181,8 +1181,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   simplify code.
 	if (which == P_CUSTOM)
     {
-        if (!MCNameClone(*customprop, t_prop_name))
-            return false;
+        t_prop_name = MCValueRetain(*customprop);
     }
 	
 	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'

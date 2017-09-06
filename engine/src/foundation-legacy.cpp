@@ -1067,13 +1067,6 @@ bool MCNameCreateWithOldString(const MCString& p_old_string, MCNameRef& r_name)
 	return MCNameCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_name);
 }
 
-bool MCNameClone(MCNameRef p_name, MCNameRef& r_new_name)
-{
-	r_new_name = p_name;
-	MCValueRetain(p_name);
-	return true;
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
