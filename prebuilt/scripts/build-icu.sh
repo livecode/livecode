@@ -6,7 +6,7 @@ source "${BASEDIR}/scripts/lib_versions.inc"
 source "${BASEDIR}/scripts/util.inc"
 
 # Configuration flags
-ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=archive --disable-samples --disable-tests --disable-extras"
+ICU_CONFIG="--disable-shared --enable-static --prefix=/ --sbindir=/bin --with-data-packaging=archive --disable-samples --disable-tests --disable-extras"
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
 ICU_VERSION_ALT=$(echo "${ICU_VERSION}" | sed 's/\./_/g')
@@ -35,7 +35,8 @@ if [ ! -d "$ICU_SRC" ] ; then
 	mv icu "${ICU_SRC}"
 fi
 
-
+ICU_LIBS="data i18n io le lx tu uc"
+ICU_BINARIES="icupkg pkgdata"
 
 function buildICU {
 	local PLATFORM=$1
@@ -162,7 +163,7 @@ function buildICU {
 	fi
 	
 	# Copy libraries
-	for L in data i18n io le lx tu uc ; do
+	for L in ${ICU_LIBS} ; do
 		if [ -f "${INSTALL_DIR}/${NAME}/lib/libicu${L}.a" ] ; then
 			if [ "${PLATFORM}" == "mac" -o "${PLATFORM}" == "ios" ] ; then
 				VAR="ICU${L}_LIBS"
@@ -175,14 +176,17 @@ function buildICU {
 	done
 
 	# Copy executables
-	if [ -f "${INSTALL_DIR}/${NAME}/bin/pkgdata" ] ; then
-		mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
-		cp "${INSTALL_DIR}/${NAME}/bin/pkgdata" "${OUTPUT_DIR}/bin/${NAME}"
-	fi
-	if [ -f "${INSTALL_DIR}/${NAME}/sbin/icupkg" ] ; then
-		mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
-		cp "${INSTALL_DIR}/${NAME}/sbin/icupkg" "${OUTPUT_DIR}/bin/${NAME}"
-	fi
+	for B in ${ICU_BINARIES} ; do
+		if [ -f "${INSTALL_DIR}/${NAME}/bin/${B}" ] ; then
+			if [ "${PLATFORM}" == "mac" -o "${PLATFORM}" == "ios" ] ; then
+				VAR="ICU${B}_BINARIES"
+				eval "$VAR+=\"${INSTALL_DIR}/${NAME}/bin/${B} \""
+			else
+				mkdir -p "${OUTPUT_DIR}/bin/${NAME}"
+				cp "${INSTALL_DIR}/${NAME}/bin/${B}" "${OUTPUT_DIR}/bin/${NAME}/${B}"
+			fi
+		fi
+	done
 	
 	# Copy over the headers, if it has not yet been done
 	if [ ! -e "${OUTPUT_DIR}/include/unicode" ] ; then
@@ -215,8 +219,14 @@ if [ "${HOST_PLATFORM}" != "${PLATFORM}" ] ; then
 	CUSTOM_CXX="${TMP_CUSTOM_CXX}"
 	
 	# clear universal libs lists
-	for L in data i18n io le lx tu uc ; do
+	for L in ${ICU_LIBS} ; do
 		VAR="ICU${L}_LIBS"
+		eval "$VAR="
+	done
+	
+	#clear universal binaries lists
+	for B in ${ICU_BINARIES} ; do
+		VAR="ICU${B}_BINARIES"
 		eval "$VAR="
 	done
 
@@ -233,11 +243,24 @@ if [ "${ARCH}" == "universal" ] ; then
 	echo "Creating ICU ${PLATFORM_NAME} universal libraries"
 	mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}"
 	
-	for L in data i18n io le lx tu uc ; do
+	for L in ${ICU_LIBS} ; do
 		VAR="ICU${L}_LIBS"
 		eval VALUE=\$$VAR
 		if [ ! -z "${VALUE}" ] ; then
 			lipo -create $VALUE -output "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}/libicu${L}.a"
+		fi
+		eval "$VAR="
+	done
+
+	# Create the universal binaries
+	echo "Creating ICU ${PLATFORM_NAME} universal binaries"
+	mkdir -p "${OUTPUT_DIR}/bin/${PLATFORM}/${SUBPLATFORM}"
+	
+	for B in ${ICU_BINARIES} ; do
+		VAR="ICU${B}_BINARIES"
+		eval VALUE=\$$VAR
+		if [ ! -z "${VALUE}" ] ; then
+			lipo -create $VALUE -output "${OUTPUT_DIR}/bin/${PLATFORM}/${SUBPLATFORM}/${B}"
 		fi
 		eval "$VAR="
 	done
