@@ -100,11 +100,11 @@ IF %MODE%==debug (
 	set MODE_SUFFIX=
 )
 
-ECHO copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudata.dat" >>%ICU_BUILD_LOG%
-copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudata.dat" >>%ICU_BUILD_LOG% 2>>&1
+ECHO copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudt%ICU_VERSION_MAJOR%l.dat" >>%ICU_BUILD_LOG%
+copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudt%ICU_VERSION_MAJOR%l.dat" >>%ICU_BUILD_LOG% 2>>&1
 
 SET ICU_FILES=lib/sicudt%MODE_SUFFIX%.lib lib/sicuin%MODE_SUFFIX%.lib lib/sicuio%MODE_SUFFIX%.lib lib/sicutu%MODE_SUFFIX%.lib lib/sicuuc%MODE_SUFFIX%.lib
-SET ICU_FILES=%ICU_FILES% include share/icudata.dat bin/icupkg.exe bin/pkgdata.exe
+SET ICU_FILES=%ICU_FILES% include share/icudt%ICU_VERSION_MAJOR%l.dat bin/icupkg.exe bin/pkgdata.exe
 
 bash -c "tar --create --file=%ICU_TAR_CYG% --transform='flags=r;s|^|%BUILDTRIPLE%/|' --transform='flags=r;s|d.lib$|.lib|' %ICU_FILES%" >>%ICU_BUILD_LOG% 2>>&1
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
