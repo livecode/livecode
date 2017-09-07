@@ -216,7 +216,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
                 
                 // MW-2014-11-06: [[ Bug 3680 ]] If now, explicitvariables is on and we don't have a literal or
                 //   a number, its an error.
-                if (MCexplicitvariables && type != ST_LIT && type != ST_NUM)
+                if (MCexplicitvariables && type != ST_LIT && type != ST_ESCLIT && type != ST_NUM)
                 {
 					if (constant)
 						MCperror->add(PE_CONSTANT_BADINIT, sp);

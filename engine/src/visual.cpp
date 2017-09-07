@@ -89,7 +89,7 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 		if (sp.next(type) != PS_NORMAL)
 			return PS_NORMAL;
 			
-		if (type != ST_ID && type != ST_LIT)
+		if (type != ST_ID && type != ST_LIT && type != ST_ESCLIT)
 		{
 			sp.backup();
 			// MW-2005-05-08: [[CoreImage]] We've reached the end of the command so return and

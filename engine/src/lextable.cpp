@@ -59,7 +59,7 @@ const uint8_t type_table[256] =
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //     ^X      ^Y      ^Z      ^[
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //     ^\      ^]      ^^      ^_
     ST_SPC,  ST_OP,   ST_LIT,  ST_COM,  //              !       "       #
-    ST_ID,   ST_OP,   ST_OP,   ST_ID,   //      $       %       &       '
+    ST_ID,   ST_OP,   ST_OP,   ST_ESCLIT,   //      $       %       &       '
     ST_LP,   ST_RP,   ST_OP,   ST_OP,   //      (       )       *       +
     ST_SEP,  ST_MIN,  ST_NUM,  ST_OP,   //      ,       -       .       /
     ST_NUM,  ST_NUM,  ST_NUM,  ST_NUM,  //      0       1       2       3
@@ -127,7 +127,7 @@ const uint8_t unicode_type_table[256] =
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^X      ^Y      ^Z      ^[
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^\      ^]      ^^      ^_
     ST_SPC,         ST_OP,          ST_LIT,         ST_COM,         //              !       "       #
-    ST_ID,          ST_OP,          ST_OP,          ST_ID,          //      $       %       &       '
+    ST_ID,          ST_OP,          ST_OP,          ST_ESCLIT,          //      $       %       &       '
     ST_LP,          ST_RP,          ST_OP,          ST_OP,          //      (       )       *       +
     ST_SEP,         ST_MIN,         ST_NUM,         ST_OP,          //      ,       -       .       /
     ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      0       1       2       3

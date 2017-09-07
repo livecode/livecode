@@ -1792,6 +1792,9 @@ enum Parse_errors
 	
     // {PE-0582} send: can't send script in time
     PE_SEND_SCRIPTINTIME,
+    
+    // {PE-0583} Script: error parsing escape sequences in literal
+    PE_PARSE_BADLIT_ESCAPE,
 };
 
 extern const char *MCparsingerrors;
