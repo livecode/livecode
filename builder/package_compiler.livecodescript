@@ -489,10 +489,14 @@ private command compilerParse @self, pScript
             end if
             break
          case "emit"
+            local tClass
+            put wordToName(word 2 of tLine) into tClass
+            
             local tMaxWords
-            switch word 2 of tLine
+            switch tClass
             case "externals"
             case "dbdrivers"
+               delete the last char of tClass
                put 4 into tMaxWords
                break
             case "string"
@@ -510,7 +514,7 @@ private command compilerParse @self, pScript
             end if
             
             put "emit" into tCommand["type"]
-            put wordToName(word 2 of tLine) into tCommand["class"]
+            put tClass into tCommand["class"]
             put wordToName(word -1 of tLine) into tCommand["target"]
             break
          case "declare"
@@ -984,7 +988,6 @@ private command compilerExecuteEmit @self, pCommand
    
    local tClass
    put pCommand["class"] into tClass
-   delete the last char of tClass
    
    local tIndex
    put the number of elements in self["derived"] + 1 into tIndex
