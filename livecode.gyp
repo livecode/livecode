@@ -19,6 +19,68 @@
 		},
 
 		{
+			'target_name': 'prebuilts',
+			'type': 'none',
+			'dependencies':
+			[
+				'thirdparty/libffi/libffi.gyp:libffi',
+				'thirdparty/libpng/libpng.gyp:libpng',
+				'thirdparty/libz/libz.gyp:libz',
+				'thirdparty/libgif/libgif.gyp:libgif',
+				'thirdparty/libjpeg/libjpeg.gyp:libjpeg',
+				'thirdparty/libpcre/libpcre.gyp:libpcre',
+				'thirdparty/libskia/libskia.gyp:libskia',
+			],
+
+			'conditions':
+			[
+				[
+					'OS != "emscripten"',
+					{
+						'dependencies':
+						[
+							'thirdparty/libmysql/libmysql.gyp:libmysql',
+							'thirdparty/libsqlite/libsqlite.gyp:libsqlite',
+							'thirdparty/libcairo/libcairo.gyp:libcairo',
+							'thirdparty/libxml/libxml.gyp:libxml',
+							'thirdparty/libxslt/libxslt.gyp:libxslt',
+							'thirdparty/libzip/libzip.gyp:libzip',
+						],
+					},
+				],
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'thirdparty/libiodbc/libiodbc.gyp:libiodbc',
+							'thirdparty/libpq/libpq.gyp:libpq',
+						],
+					}
+				],
+				[
+					'OS == "emscripten" or OS == "android"',
+					{
+						'dependencies':
+						[
+							'thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+							'thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+						],
+					},
+				],
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'thirdparty/libexpat/libexpat.gyp:libexpat',
+						],
+					},
+				],
+			],
+		},
+
+		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
 			
@@ -39,7 +101,6 @@
 			
 			'conditions':
 			[
-				
 				[
 					'OS != "emscripten"',
 					{

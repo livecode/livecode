@@ -29,6 +29,10 @@ export CUSTOM_CXX="${CXX}"
 export CUSTOM_EMMAKE="${EMMAKE}"
 export CUSTOM_EMCONFIGURE="${EMCONFIGURE}"
 
+${BASEDIR}/scripts/build-thirdparty.sh
+
+exit 0
+
 # Set which libs to build for the target platform
 case "${PLATFORM}" in
 	android)
