@@ -19,3 +19,25 @@ readVersion OpenSSL
 readVersion ICU
 readVersion Curl
 readVersion CEF
+readVersion Thirdparty
+
+Thirdparty_VERSION=$(git -C ../thirdparty/ log -n 1 --pretty=format:%H)
+
+# Libraries used on all platforms
+Thirdparty_LIBS_CORE="libffi libpng libz libgif libjpeg libpcre libskia"
+
+# Libraries used only on native (non emscripten) platforms
+Thirdparty_LIBS_NATIVE="libmysql libsqlite libxml libxslt libzip"
+
+# Libraries used only on desktop platforms
+Thirdparty_LIBS_DESKTOP="libiodbc libpq libcairo"
+
+# Libraries used by emscripten / android for fonts
+Thirdparty_LIBS_FONTS="libharfbuzz libfreetype"
+
+Thirdparty_LIBS_mac="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_DESKTOP"
+Thirdparty_LIBS_linux="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_DESKTOP"
+Thirdparty_LIBS_win32="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_DESKTOP"
+Thirdparty_LIBS_ios="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE libcairo"
+Thirdparty_LIBS_emscripten="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_FONTS"
+Thirdparty_LIBS_android="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_FONTS libexpat"
