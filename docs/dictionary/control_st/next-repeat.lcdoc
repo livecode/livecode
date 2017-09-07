@@ -23,8 +23,8 @@ anywhere inside a <repeat> <control structure>.
 
 The <next repeat> <control structure> skips the rest of the current
 <iteration>, and continues to the next <iteration>. The following
-example performs the loop action only if the <current card|current
-card's> name does not begin with the character ".":
+example performs the loop action only if the <folder|folder's> name
+does not begin with the character ".":
 
     local tFolders
     repeat for each line tFolder in folders(tPath)
