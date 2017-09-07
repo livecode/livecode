@@ -450,7 +450,10 @@ bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name)
 {
 	for (uint32_t i = 0; i < property_overrides_size; i++)
 		if (property_overrides[i].property == p_property)
-			return MCNameCreateWithCString(property_overrides[i].lt.token, r_name);
+        {
+            r_name = MCNAME(property_overrides[i].lt.token);
+            return true;
+        }
 	
 	return false;
 }
@@ -513,7 +516,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		else
 		{
 			which = P_CUSTOM;
-			/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), &customprop);
+            customprop = sp . gettoken_nameref();
 			if (sp.next(type) == PS_NORMAL && type == ST_LB)
 			{
 				if (sp.parseexp(False, True, &(&customindex)) != PS_NORMAL
@@ -1181,8 +1184,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   simplify code.
 	if (which == P_CUSTOM)
     {
-        if (!MCNameClone(*customprop, t_prop_name))
-            return false;
+        t_prop_name = MCValueRetain(*customprop);
     }
 	
 	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'

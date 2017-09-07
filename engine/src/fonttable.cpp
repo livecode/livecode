@@ -92,7 +92,7 @@ static uint32_t MCLogicalFontTableLookupEntry(MCNameRef p_textfont, uint2 p_text
 			/* UNCHECKED */ MCMemoryResizeArray(s_logical_font_table_capacity > 0 ? s_logical_font_table_capacity * 2 : 32, s_logical_font_table, s_logical_font_table_capacity);
 		
 		s_logical_font_table[s_logical_font_table_size++] = t_entry;
-		MCNameClone(t_entry . textfont, t_entry . textfont);
+        MCValueRetain(t_entry.textfont);
 	}
 
 	return s_logical_font_table_size - 1;
@@ -210,7 +210,7 @@ void MCLogicalFontTableFinish(void)
 		uint2 t_textsize;
 		bool t_unicode;
 		MCLogicalFontTableGetEntry(i, t_textfont, t_textstyle, t_textsize, t_unicode);
-		MCNameDelete(t_textfont);
+		MCValueRelease(t_textfont);
 	}
 	MCMemoryDeleteArray(s_logical_font_table);
 

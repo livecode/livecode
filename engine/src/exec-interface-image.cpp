@@ -868,10 +868,6 @@ void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecV
             MCAutoArrayRef v;
             t_stat = MCArrayCreateMutable(&v);
             
-            MCNewAutoNameRef t_key;
-            if (t_stat)
-                t_stat = MCNameCreateWithCString("density", &t_key);
-            
             MCValueRef t_prop_value;
             
             if (t_stat)
@@ -881,7 +877,7 @@ void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecV
             }
             
             if (t_stat)
-                t_stat = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+                t_stat = MCArrayStoreValue(*v, false, MCNAME("density"), t_prop_value);
             
             if (t_stat)
             {

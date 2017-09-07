@@ -285,7 +285,7 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
     t_error = false;
     MCNameCreate(p_folder, &t_path);
     // We have a special, mode-specific resource folder
-    if (MCNameIsEqualTo(*t_path, MCN_resources, kMCStringOptionCompareCaseless))
+    if (MCNameIsEqualToCaseless(*t_path, MCN_resources))
         MCModeGetResourcesFolder(r_path);
     else if (!MCS_getspecialfolder(*t_path, r_path))
         t_error = true;

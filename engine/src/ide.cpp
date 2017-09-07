@@ -2473,7 +2473,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
             break;
             case kMCIdeFilterPropertyName:
                 if (p_object -> getname() != nil)
-                    MCNameClone(p_object -> getname(), (MCNameRef&)&t_left_value);
+                    t_left_value = p_object->getname();
                 else
                     t_left_value = kMCEmptyString;
                 break;

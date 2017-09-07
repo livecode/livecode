@@ -2471,7 +2471,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
  			}
 	}
 
-	MCNameDelete(t_message_as_name);
+	MCValueRelease(t_message_as_name);
 
 	while(t_params != nil)
 	{

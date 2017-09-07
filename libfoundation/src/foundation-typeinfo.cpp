@@ -713,7 +713,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		 * in debug builds and will only happen once per type. */
 		for (index_t j = 0; j < i; ++j)
 		{
-			MCAssert(!MCNameIsEqualTo(p_fields[i] . name, p_fields[j] . name));
+			MCAssert(!MCNameIsEqualToCaseless(p_fields[i] . name, p_fields[j] . name));
 		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
@@ -1306,14 +1306,14 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
     if (t_code == kMCTypeInfoTypeIsAlias)
-        return MCNameIsEqualTo(self -> alias . name, other_self -> alias . name) &&
+        return MCNameIsEqualToCaseless(self -> alias . name, other_self -> alias . name) &&
                 self -> alias . typeinfo == other_self -> alias . typeinfo;
     
     if (t_code == kMCTypeInfoTypeIsNamed)
     {
         if (self -> named . name == kMCEmptyName || other_self -> named . name == kMCEmptyName)
             return false;
-        return MCNameIsEqualTo(self -> named . name, other_self -> named . name);
+        return MCNameIsEqualToCaseless(self -> named . name, other_self -> named . name);
     }
     
     if (t_code == kMCTypeInfoTypeIsOptional)

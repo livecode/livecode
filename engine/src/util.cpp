@@ -1161,7 +1161,7 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 	if (name == nil || MCNameIsEmpty(name) || MCNameIsEmpty(test))
 		return false;
     
-	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(name, test))
 		return true;
 
 	MCAssert(type - CT_STACK < (sizeof(nametable) / sizeof(nametable[0])));
@@ -2449,7 +2449,7 @@ MCNameRef MCU_charsettolanguage(uint1 charset)
 uint1 MCU_languagetocharset(MCNameRef p_language)
 {
 	for (uinteger_t i = 0; i < ELEMENTS(langtocharsets); i++)
-		if (MCNameIsEqualTo(p_language, *langtocharsets[i].langname))
+		if (MCNameIsEqualToCaseless(p_language, *langtocharsets[i].langname))
 			return langtocharsets[i].charset;
 
 	return 0;

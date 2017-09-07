@@ -329,7 +329,7 @@ MCParentScript::MCParentScript(void)
 
 MCParentScript::~MCParentScript(void)
 {
-	MCNameDelete(m_object_stack);
+	MCValueRelease(m_object_stack);
 }
 
 ////
@@ -468,7 +468,7 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 	for(t_parent = s_table[t_index]; t_parent != NULL; t_parent = t_parent -> m_chain)
 		if (t_parent -> m_hash == t_hash &&
 			t_parent -> m_object_id == p_id &&
-			MCNameIsEqualTo(t_parent -> m_object_stack, p_stack, kMCCompareCaseless))
+			MCNameIsEqualToCaseless(t_parent -> m_object_stack, p_stack))
 			break;
 
 	// At this point we start a success variable since we are about to have to
@@ -487,12 +487,9 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 		if (t_parent == NULL)
 			t_success = false;
 
-		// Clone the stack string
-		if (t_success)
-			t_success = MCNameClone(p_stack, t_parent -> m_object_stack);
-
 		if (t_success)
 		{
+            t_parent->m_object_stack = MCValueRetain(p_stack);
 			t_parent -> m_hash = t_hash;
 			t_parent -> m_object_id = p_id;
 		}

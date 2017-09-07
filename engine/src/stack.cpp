@@ -273,7 +273,7 @@ MCStack::MCStack()
 	stackfiles = NULL;
 	linkatts = NULL;
 	filename = MCValueRetain(kMCEmptyString);
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _menubar);
+    _menubar = MCValueRetain(kMCEmptyName);
 	menuy = menuheight = 0;
 	menuwindow = False;
 
@@ -494,7 +494,7 @@ MCStack::MCStack(const MCStack &sref)
 	else
 		linkatts = NULL;
 	filename = MCValueRetain(kMCEmptyString);
-	/* UNCHECKED */ MCNameClone(sref._menubar, _menubar);
+    _menubar = MCValueRetain(sref._menubar);
 	menuy = menuheight = 0;
 
 	f_extended_state = 0;
@@ -631,7 +631,7 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(filename);
 
-	MCNameDelete(_menubar);
+	MCValueRelease(_menubar);
 
 	unloadexternals();
 
@@ -1200,7 +1200,7 @@ Boolean MCStack::doubleup(uint2 which)
 
 void MCStack::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (scrollmode == SM_PAGEDEC || scrollmode == SM_LINEDEC)
 		{
@@ -1228,7 +1228,7 @@ void MCStack::timer(MCNameRef mptr, MCParameter *params)
 			if (scrollmode == SM_LINEINC || scrollmode == SM_LINEDEC)
 				MCscreen->addtimer(this, MCM_internal, MCrepeatrate);
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 		{
 			if (opened && hashandlers & HH_IDLE && state & CS_KFOCUSED
 			        && getstack()->gettool(this) == T_BROWSE)
@@ -1585,7 +1585,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 {
 	if (!opened)
 	{
-		if (window == NULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
+		if (window == NULL && !MCNameIsEqualToCaseless(message, MCM_start_up)
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else

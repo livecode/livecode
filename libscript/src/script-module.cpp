@@ -442,7 +442,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     
     // If there is already a module with the same name in memory, there's nothing we can do.
     for(MCScriptModule *t_other_module = s_modules; t_other_module != nil; t_other_module = t_other_module -> next_module)
-        if (MCNameIsEqualTo(t_other_module -> name, t_module -> name))
+        if (MCNameIsEqualToCaseless(t_other_module -> name, t_module -> name))
         {
             MCScriptDestroyObject(t_module);
             return MCErrorThrowGeneric(MCSTR("module already loaded"));
@@ -528,7 +528,7 @@ MCScriptConfigureBuiltinModule(MCScriptModuleRef p_module,
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
 {
     for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)
-        if (MCNameIsEqualTo(p_name, t_module -> name))
+        if (MCNameIsEqualToCaseless(p_name, t_module -> name))
         {
             r_module = t_module;
             return true;
@@ -1133,7 +1133,7 @@ __MCScriptLookupDefinitionInModule(MCScriptModuleRef self,
             continue;
 		}
         
-        if (!MCNameIsEqualTo(p_name,
+        if (!MCNameIsEqualToCaseless(p_name,
 							 self->exported_definitions[i].name))
 		{
             continue;
@@ -1377,7 +1377,7 @@ static void def_to_name(MCScriptModuleRef self, uindex_t p_index, MCStringRef& r
     else
         t_name = self -> definition_names[p_index];
     
-    if (!MCNameIsEqualTo(t_name, MCNAME("undefined")))
+    if (!MCNameIsEqualToCaseless(t_name, MCNAME("undefined")))
         MCStringFormat(r_string, "%@", t_name);
     else
         MCStringFormat(r_string, "nothing");
@@ -1436,7 +1436,7 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
     __enterln(stream, "import module %@", self -> name);
     for(uindex_t i = 0; i < self -> dependency_count; i++)
     {
-        if (MCNameIsEqualTo(self -> dependencies[i] . name, MCNAME("__builtin__")))
+        if (MCNameIsEqualToCaseless(self -> dependencies[i] . name, MCNAME("__builtin__")))
             continue;
         
         __writeln(stream, "use %@", self -> dependencies[i] . name);

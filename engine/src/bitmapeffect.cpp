@@ -92,7 +92,7 @@ static Exec_stat MCBitmapEffectLookupProperty(MCBitmapEffectType p_type, MCNameR
 	for(uint4 i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
 	{
 		// Check to see if we've found a match.
-		if (MCNameIsEqualToCString(p_token, s_bitmap_effect_properties[i] . token, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_token), s_bitmap_effect_properties[i] . token, kMCCompareCaseless))
 		{
 			// Check to see if its applicable to this type.
 			if ((s_bitmap_effect_properties[i] . mask & (1 << p_type)) != 0)
@@ -706,7 +706,7 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
                     // Fetch the property, then store it into the array.
                     MCBitmapEffectFetchProperty(ctxt, t_effect, s_bitmap_effect_properties[i] . value, t_value);
                     MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &(&t_valueref));
-                    MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
+                    MCArrayStoreValue(*v, false, MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
                 }
             }
             r_value . arrayref_value = MCValueRetain(*v);
@@ -1019,11 +1019,9 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
             if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
             {
                 MCValueRef t_prop_value;
-                MCNewAutoNameRef t_key;
                 
-                /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
                 // If we don't have the given element, then move to the next one
-                if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+                if (!MCArrayFetchValue(*t_array, false, MCNAME(s_bitmap_effect_properties[i] . token), t_prop_value))
                     continue;
                 
                 // Otherwise, fetch the keys value and attempt to set the property
