@@ -135,13 +135,13 @@ private command ComponentsCreate pComponents
       ComponentsCreatePath tComponent, tCollated, tBugInfo
    end repeat
    
-   repeat for each item tEdition in builderEditionNames()
-      local tClass
-      put replaceText(toLower(tEdition)," ","-") into tClass
+   repeat for each item tEdition in editionNames()
+      local tDisplayName
+      put editionDisplayName(tEdition) into tDisplayName
       repeat for each item tCategory in builderComponentCategories()
          if NotesHaveContent(tCollated[tEdition][tCategory], tBugInfo[tEdition][tCategory]) then
-            MarkdownAppend "notes", merge("# LiveCode [[ tEdition ]] [[ tCategory ]] changes")
-            MarkdownAppend "updates", merge("# LiveCode [[ tEdition ]] [[ tCategory ]] changes")
+            MarkdownAppend "notes", merge("# LiveCode [[ tDisplayName ]] [[ tCategory ]] changes")
+            MarkdownAppend "updates", merge("# LiveCode [[ tDisplayName ]] [[ tCategory ]] changes")
             
             NotesGenerate tCategory, tCollated[tEdition][tCategory], 1
             BugGenerate tBugInfo[tEdition][tCategory], tCategory

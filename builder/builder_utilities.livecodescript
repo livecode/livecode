@@ -672,18 +672,6 @@ end builderComponentCategories
 
 /**
 
-Return the names of editions in notes priority order
-
-Returns:
-An commma delimited list
-
-**/
-function builderEditionNames
-   return "Business,Indy,Community Plus,Community"
-end builderEditionNames
-
-/**
-
 Iterate the components directories of the public and private repositories
 and parse the yaml file in each subdirectory.
 
