@@ -95,8 +95,8 @@ If the custom property you want to control is in a custom property set,
 use array notation in the first line of the <setProp> <handler>, as in
 the following example:
 
-    setProp mySet[thisProperty] pValue
-        if thisProperty is "that" then put pValue into me
+    setProp mySet[pProperty] pValue
+        if pProperty is "that" then put pValue into me
     end setProp
 
 
