@@ -91,13 +91,13 @@ function doPackage {
 	# Package up ICU
 	local ICU_FILES=
 	if [ -f "${LIBPATH}/libicudata.a" ] ; then
-		for LIB in i18n io le lx tu uc ; do
+		for LIB in data i18n io le lx tu uc ; do
 			if [ -f "${LIBPATH}/libicu${LIB}.a" ] ; then
 				ICU_FILES+="${LIBPATH}/libicu${LIB}.a "
 			fi
 		done
 	elif [ -f "${LIBPATH}/sicudt.lib" ] ; then
-		for LIB in in io le lx tu uc ; do
+		for LIB in dt in io le lx tu uc ; do
 			if [ -f "${LIBPATH}/sicu${LIB}.lib" ] ; then
 				ICU_FILES+="${LIBPATH}/sicu${LIB}.lib "
 			fi
