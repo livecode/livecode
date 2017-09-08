@@ -676,7 +676,6 @@
 			'src/lnxdclnx.cpp',
 			'src/lnxdcs.cpp',
 			'src/lnxdnd.cpp',
-			'src/lnxflstold.cpp',
 			'src/lnxgtktheme.cpp',
 			'src/lnxgtkthemedrawing.cpp',
 			'src/lnximage.cpp',

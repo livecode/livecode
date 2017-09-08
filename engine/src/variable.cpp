@@ -964,72 +964,6 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
-{
-	MCExecContext ctxt(ep);
-	if (is_env)
-	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
-		{
-			MCAutoStringRef t_string;
-			if (ep . copyasstringref(&t_string))
-			{
-				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
-				MCS_setenv(*t_env, *t_string);
-			}
-		}
-	}
-	else if (is_msg)
-	{
-		eval(ep);
-		MCAutoStringRef t_string;
-		/* UNCHECPED */ ep.copyasstringref(&t_string);
-		MCB_setmsg(ctxt, *t_string);
-	}
-
-	if (notify && MCnwatchedvars)
-	{
-		uint2 i;
-		for (i = 0 ; i < MCnwatchedvars ; i++)
-		{
-			if ((MCwatchedvars[i].object == NULL || MCwatchedvars[i].object == ep.getobj()) &&
-				(MCwatchedvars[i].handlername == NULL || ep.gethandler()->hasname(MCwatchedvars[i].handlername)) &&
-				hasname(MCwatchedvars[i].varname))
-			{
-				// If this is a global watch (object == handlername == nil) then
-				// check that this var is a global - if not carry on the search.
-				if (MCwatchedvars[i] . object == NULL &&
-					MCwatchedvars[i] . handlername == NULL &&
-					!is_global)
-					continue;
-
-				// Otherwise, trigger the setvar message.
-				eval(ep);
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
-				{
-					MCExecPoint ep2(ep);
-					MCExecContext ctxt(ep2);
-					MCAutoValueRef t_val;
-					ctxt.GetHandler()->eval(ctxt, MCwatchedvars[i].expression, &t_val);
-					
-					MCAutoBooleanRef t_bool;
-					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
-						MCB_setvar(ctxt, *t_string, name);
-				}
-				else
-					MCB_setvar(ctxt, *t_string, name);
-
-				break;
-			}
-		}
-	}
-}
-#endif
-
 void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 {
     MCExecValue t_value;
@@ -1093,21 +1027,6 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 		}
 	}
 }
-
-#if 0
-Exec_stat MCVariable::remove(MCExecPoint& ep, Boolean notify)
-{
-	value . clear();
-	
-	if (is_env)
-	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
-			MCS_unsetenv(MCNameGetCString(*name) + 1);
-	}
-
-	return ES_NORMAL;
-}
-#endif
 
 MCVarref *MCVariable::newvarref(void)
 {

@@ -426,7 +426,7 @@ public:
     
     // Conversion to handles to compatible types
     // [[ C++11 ]] Currently disabled due to lack of required C++11 support on all platforms
-#if 0 && __cplusplus >= 201103L
+#if NEEDS_CPP_11 && __cplusplus >= 201103L
     template <class U, class = typename std::enable_if<std::is_convertible<T*, U*>::value, void>::type>
     operator typename MCObjectProxy<U>::Handle () const
     {

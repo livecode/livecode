@@ -953,31 +953,6 @@ void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
     // Not needed
 }
 
-#ifdef OLD_GRAPHICS
-MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
-{
-	Pixmap t_image;
-	t_image = createpixmap(w, h, 1, False);
-
-	XSetForeground(dpy, gc1, 0);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetRegion(dpy, gc1, (Region)r);
-
-	XSetForeground(dpy, gc1, 1);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetClipMask(dpy, gc1, None);
-
-	MCBitmap *t_bitmap;
-	t_bitmap = getimage(t_image, 0, 0, w, h, False);
-
-	freepixmap(t_image);
-
-	return t_bitmap;
-}
-#endif
-
 void MCScreenDC::setfunction(uint4 rop)
 {
 	if (rop < 0x10)

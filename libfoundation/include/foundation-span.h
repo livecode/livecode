@@ -93,7 +93,7 @@ public:
     {
         /* TODO[C++14] Some compilers don't allow statements in
          * constexpr constructors yet */
-#if 0
+#if NEEDS_CPP_14
         MCAssert(p_span == nullptr ||
                  (p_index >= 0 && p_index < p_span->length())),
 #endif

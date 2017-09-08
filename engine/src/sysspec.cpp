@@ -1230,42 +1230,6 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* LEGACY */
-#if 0
-IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
-{
-    char *t_resolved_path;
-    t_resolved_path = MCS_resolvepath(p_path);
-    
-    uint32_t t_mode;
-    if (strequal(p_mode, IO_READ_MODE))
-        t_mode = kMCOpenFileModeRead;
-    else if (strequal(p_mode, IO_WRITE_MODE))
-        t_mode = kMCOpenFileModeWrite;
-    else if (strequal(p_mode, IO_UPDATE_MODE))
-        t_mode = kMCOpenFileModeUpdate;
-    else if (strequal(p_mode, IO_APPEND_MODE))
-        t_mode = kMCOpenFileModeAppend;
-    
-    MCSystemFileHandle *t_handle;
-    if (!p_driver)
-        t_handle = MCsystem -> OpenFile(t_resolved_path, t_mode, p_map && MCmmap);
-    else
-        t_handle = MCsystem -> OpenDevice(t_resolved_path, t_mode, MCserialcontrolsettings);
-    
-    // MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
-    delete t_resolved_path;
-    
-    if (t_handle == NULL)
-        return NULL;
-    
-    if (p_offset != 0)
-        t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
-    
-    return new IO_header(t_handle, 0);;
-}
-#endif 
-
 IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode)
 {
     return MCsystem -> DeployOpen(path, p_mode);
@@ -1294,10 +1258,6 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 
 	if (t_handle == NULL)
 		return NULL;
-#ifdef OLD_IO_HANDLE
-    if (p_mode == kMCOpenFileModeAppend)
-        t_handle -> flags |= IO_SEEKED;
-#endif
 
     if (p_mode == kMCOpenFileModeAppend)
         t_handle -> Seek(0, kMCSystemFileSeekEnd);
