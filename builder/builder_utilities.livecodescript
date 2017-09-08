@@ -645,11 +645,11 @@ command builderExtUnpack pEdition
    end if
    
    local tEdition
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   put editionTitleCase(pEdition) into tEdition
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack builderMergExtVersion(), tEdition
    
-   if pEdition is not "community" then
+   if editionCompare(pEdition, "communityplus") > 0 then
       -- Ensure that the TSNet bundle is downloaded and unpacked
       builderTSNetUnpack builderTSNetVersion(), tEdition
    end if
