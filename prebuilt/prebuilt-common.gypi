@@ -8,8 +8,8 @@
 				{
 					'variables':
 					{
-						'prebuilt_bin_dir': 'bin/mac',
-						'prebuilt_share_dir': 'share/mac',
+						'prebuilt_icu_bin_dir': 'bin/mac',
+						'prebuilt_icu_share_dir': 'share',
 					},
 				},
 			],
@@ -18,8 +18,8 @@
 				{
 					'variables':
 					{
-						'prebuilt_bin_dir': 'bin/ios/$(SDK_NAME)',
-						'prebuilt_share_dir': 'share/ios/$(SDK_NAME)',
+						'prebuilt_icu_bin_dir': 'bin/ios/$(SDK_NAME)',
+						'prebuilt_icu_share_dir': 'share',
 					}
 				},
 			],
@@ -29,8 +29,8 @@
 					'variables':
 					{
 						# Gyp doesn't seem to handle non-absolute paths here properly...
-						'prebuilt_bin_dir': 'bin/linux/>(toolset_arch)',
-						'prebuilt_share_dir': 'share/linux/>(toolset_arch)',
+						'prebuilt_icu_bin_dir': 'bin/linux/>(toolset_arch)',
+						'prebuilt_icu_share_dir': 'share',
 					},
 				},
 			],
@@ -40,8 +40,8 @@
 					'variables':
 					{
 						# Gyp doesn't seem to handle non-absolute paths here properly...
-						'prebuilt_bin_dir': 'bin/android/<(target_arch)',
-						'prebuilt_share_dir': 'share/android/<(target_arch)',
+						'prebuilt_icu_bin_dir': 'bin/android/<(target_arch)',
+						'prebuilt_icu_share_dir': 'share',
 					},
 				},
 			],
@@ -50,8 +50,9 @@
 				{
 					'variables':
 					{
-						'prebuilt_bin_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/bin',
-						'prebuilt_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
+						# Hack required due to GYP failure / refusal to treat this as a path
+						'prebuilt_icu_bin_dir': '$(SolutionDir)../../prebuilt/unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/bin',
+						'prebuilt_icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
 					},
 				},
 			],
@@ -60,8 +61,8 @@
 				{
 					'variables':
 					{
-						'prebuilt_bin_dir': 'bin/emscripten/js',
-						'prebuilt_share_dir': 'share/emscripten/js',
+						'prebuilt_icu_bin_dir': 'bin/emscripten/js',
+						'prebuilt_icu_share_dir': 'share',
 					},
 				},
 			],

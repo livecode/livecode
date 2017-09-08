@@ -5,14 +5,6 @@
 		'prebuilt-common.gypi',
 	],
 	
-	'target_defaults':
-	{
-		'variables':
-		{
-			'icu_data':'share/icudt58l.dat',
-		},
-	},
-	
 	'targets':
 	[
 		{
@@ -188,44 +180,6 @@
 		},
 
 		{
-			'target_name': 'encode_icu_data',
-			'type': 'none',
-			
-			'toolsets': ['host'],
-
-			'dependencies':
-			[
-				'libicu',
-			],
-			
-			'actions':
-			[
-				{
-					'action_name': 'encode_icu_data',
-					'inputs':
-					[
-						'../util/encode_data.pl',
-						'>(icu_data)',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/icudata.cpp',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/encode_data.pl',
-						'>(icu_data)',
-						'<@(_outputs)',
-						# Really nasty hack to prevent this from being treated as a path
-						'$(this_is_an_undefined_variable)s_icudata',
-					],
-				},
-			],
-		},
-		
-		{
 			'target_name': 'minimal_icu_data',
 			'type': 'none',
 			
@@ -242,8 +196,7 @@
 					'action_name': 'list_icu_data',
 					'inputs':
 					[
-						'>(prebuilt_bin_dir)/icupkg',
-						'>(icu_data)',
+						'>(prebuilt_icu_share_dir)/icudt58l.dat',
 					],
 					'outputs':
 					[
@@ -251,9 +204,9 @@
 					],
 					'action':
 					[
-						'>(prebuilt_bin_dir)/icupkg',
+						'>(prebuilt_icu_bin_dir)/icupkg',
 						'--list',
-						'>(icu_data)',
+						'>(prebuilt_icu_share_dir)/icudt58l.dat',
 						'--auto_toc_prefix',
 						'--outlist',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
@@ -273,6 +226,7 @@
 					],
 					'action':
 					[
+						'python',
 						'../util/remove_matching.py',
 						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
 						'rsrc/icudata-minimal-list.txt',
@@ -284,8 +238,6 @@
 					'action_name': 'minimal_icu_data',
 					'inputs':
 					[
-						'>(prebuilt_bin_dir)/icupkg',
-						'>(icu_data)',
 						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 					],
 					'outputs':
@@ -295,11 +247,11 @@
 					
 					'action':
 					[
-						'>(prebuilt_bin_dir)/icupkg',
+						'>(prebuilt_icu_bin_dir)/icupkg',
 						'--remove',
 						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 						'--auto_toc_prefix',
-						'>(icu_data)',
+						'>(prebuilt_icu_share_dir)/icudt58l.dat',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
 					],
 				},
@@ -323,8 +275,8 @@
 					'action_name': 'encode_minimal_icu_data',
 					'inputs':
 					[
-						'../util/encode_data.pl',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
+						'../util/encode_data.pl',
 					],
 					'outputs':
 					[
