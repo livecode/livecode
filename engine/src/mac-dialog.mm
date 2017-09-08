@@ -631,13 +631,6 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
         [(NSOpenPanel *)t_panel setAllowsMultipleSelection: NO];
     }
     
-    if (p_kind != kMCPlatformFileDialogKindSave && 
-        [t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
-    {
-        // show accessory view when dialog opens
-        [t_panel setAccessoryViewDisclosed: YES];
-    }
-    
     MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, p_kind != kMCPlatformFileDialogKindFolder ? *t_initial_file : nil);
 }
 
