@@ -38,21 +38,6 @@ on run argv
 			-- AppleScript seems to treat "." directories as neither files nor folders so the shell is needed here
 			do shell script "cp " & quoted form of POSIX path of backgroundImage & " " & quoted form of (diskPath & "/.background/bg.tiff")
 			
-			-- Set the position of the icons
-			set fileList to every item of it
-			repeat with i in fileList
-				-- We're slightly fuzzy here as the app bundle name varies with edition and version
-				if the name of i is "Applications" then
-					set the position of i to {410, 177}
-				else if the name of i ends with ".app" then
-					set the position of i to {137, 191}
-				end if
-			end repeat
-			
-			-- Close and re-open the window to force refresh
-			close
-			open
-			
 			-- Configure the Finder window's appearance
 			set the current view of container window to icon view
 			set toolbar visible of container window to false
@@ -63,6 +48,23 @@ on run argv
 			set icon size of viewOptions to 128
 			set text size of viewOptions to 14
 			set background picture of viewOptions to file "bg.tiff" of item ".background"
+			
+			-- Set the position of the icons
+			set fileList to every item of it
+			repeat with i in fileList
+				-- We're slightly fuzzy here as the app bundle name varies with edition and version
+				if the name of i is "Applications" then
+					set the position of i to {410, 177}
+				else if the name of i ends with ".app" then
+					set the position of i to {137, 191}
+				else
+					set the position of i to {700, 700}
+				end if
+			end repeat
+			
+			-- Close and re-open the window to force refresh
+			--close
+			--open
 			
 			-- According to http://joemaller.com/659/setting-icon-position-and-window-size-on-disk-images/, Finder sometimes does not save the size and position of a window until it detects user interaction on either the window's resizing handle or its zoom button. Simulate two clicks on the zoom button to trigger the save.
 			--set theWindow to container window
