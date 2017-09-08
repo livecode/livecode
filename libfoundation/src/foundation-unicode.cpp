@@ -142,10 +142,7 @@ const UProperty MCUnicodePropToICUProp[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// This is unused, but needs to be declared to resolve link errors in libicu
-char icudt58_dat[] = "";
-
-extern char s_icudata[];
+extern unsigned char s_icudata[];
 bool __MCUnicodeInitialize()
 {
     bool t_success = true;
