@@ -1135,34 +1135,6 @@ Boolean MCS_mac_nodelay(int4 p_fd)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if 0
-static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
-		return MCStringCopy(p_path, r_stdpath);
-    
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-    
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
-    
-	for (uindex_t i = 0; i < t_length; i++)
-	{
-		if (t_src[i] == '/')
-			t_dst[i] = ':';
-		else if (t_src[i] == ':')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-	}
-    
-	return t_path.CreateStringAndRelease(r_stdpath);
-}
-#endif
-
 static OSStatus MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
     MCAutoStringRef t_auto_path;

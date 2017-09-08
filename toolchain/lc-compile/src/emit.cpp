@@ -1337,33 +1337,6 @@ static bool define_builtin_typeinfo(const char *name, intptr_t& r_new_index)
     return true;
 }
 
-#if 0
-void EmitNamedType(NameRef module_name, NameRef name, intptr_t& r_new_index)
-{
-    MCAutoStringRef t_string;
-    MCStringFormat(&t_string, "%@.%@", to_mcnameref(module_name), to_mcnameref(name));
-    MCNewAutoNameRef t_name;
-    MCNameCreate(*t_string, &t_name);
-    MCAutoTypeInfoRef t_type;
-    MCNamedTypeInfoCreate(*t_name, &t_type);
-    if (!define_typeinfo(*t_type, r_new_index))
-        return;
-
-    Debug_Emit("NamedType(%s, %s -> %ld)", cstring_from_nameref(module_name),
-               cstring_from_nameref(name), r_new_index);
-}
-
-void EmitAliasType(NameRef name, intptr_t target_index, intptr_t& r_new_index)
-{
-    MCAutoTypeInfoRef t_type;
-    MCAliasTypeInfoCreate(to_mcnameref(name), to_mctypeinforef(target_index), &t_type);
-    if (!define_typeinfo(*t_type, r_new_index))
-        return;
-
-    Debug_Emit("AliasType(%s, %ld -> %ld)", to_mcnameref(name), target_index, r_new_index);
-}
-#endif
-
 void EmitDefinedType(intptr_t index, intptr_t& r_type_index)
 {
     uindex_t t_type_index;

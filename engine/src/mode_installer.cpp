@@ -1322,8 +1322,7 @@ IO_stat MCDispatch::startup(void)
 	t_project_info = (MCCapsuleInfo *)MCExecutableFindSection(PROJECT_SECTION_NAME);
 	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
-//#ifdef _DEBUG
-#if 0
+#if DEBUG_INSTALLER_STARTUP
         char *openpath = t_mccmd; //point to MCcmd string
         MCStack *t_stack;
 		IO_handle t_stream;
