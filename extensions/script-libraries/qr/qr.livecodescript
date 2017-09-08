@@ -162,7 +162,7 @@ private command __Initialize
    put "38,3362,0,660,1260,1860,2220" & LF after tTmpString
    put "39,3532,0,720,1316,1950,2310" & LF after tTmpString
    put "40,3706,0,750,1372,2040,2430" after tTmpString
-   put into sCapacityList
+   put tTmpString into sCapacityList
    put empty into tTmpString
    
    # ECC data
