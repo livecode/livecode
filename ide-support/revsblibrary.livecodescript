@@ -2551,7 +2551,7 @@ function revSBEnginePath pPlatform
    put the editionType into tEdition
    // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
    //  allow to create broken applications, so that the executable file in it bears the edition.
-   if tEdition is "professional" then
+   if tEdition is not "community" then
       put "Commercial" into tEdition
    end if
    
