@@ -139,7 +139,11 @@ function TesterGetPrettyTestName pFilename, pExtension
    if pExtension is empty then
       put "livecodescript" into pExtension
    end if
-
+   
+   if pFilename begins with (the folder & slash) then
+      delete char 1 to length(the folder & slash) of pFilename
+   end if
+   
    if pFilename ends with ("." & pExtension) then
       set the itemDelimiter to "."
       return item 1 to -2 of pFileName
