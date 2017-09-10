@@ -24,14 +24,15 @@ on _TestImportScreenSnapshotFromRectHandler
 end _TestImportScreenSnapshotFromRectHandler
 
 on TestImportScreenSnapshotFromRectNoUI
-   TestSkipIfNot "environment", "command line"
+   TestSkipIf "ui"
    TestSkipIf "platform", "HTML5"
    TestAssertThrow "should now throw an error", "_TestImportScreenSnapshotFromRectHandler",\
         the long id of me, "EE_SNAPSHOT_FAILED"
 end TestImportScreenSnapshotFromRectNoUI
 
 on TestImportScreenSnapshotFromRectUI
-    TestSkipIf "environment", "command line"
+    TestSkipIfNot "ui"
+    TestSkipIf "environment", "server"
     TestSkipIf "platform", "HTML5"
 
     _TestImportScreenSnapshotFromRectHandler

@@ -339,7 +339,7 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
     }
     
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
-        if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
+        if (MCNameIsEqualToCaseless(t_ext -> module_name, *t_name))
         {
             bool t_in_use = false;
             
@@ -772,7 +772,7 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 
             // Import the type
             MCValueRef t_imported;
-            if (!t_desc->doimport(MCForeignValueGetContentsPtr(x_value), false, t_imported))
+            if (!t_desc->doimport(t_desc, MCForeignValueGetContentsPtr(x_value), false, t_imported))
                 return false;
 
             // Recursively convert to a script type

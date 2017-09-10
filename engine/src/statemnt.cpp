@@ -344,7 +344,7 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 MCComref::MCComref(MCNameRef n)
 {
-	/* UNCHECKED */ MCNameClone(n, name);
+    name = MCValueRetain(n);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -359,7 +359,7 @@ MCComref::~MCComref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCComref::parse(MCScriptPoint &sp)

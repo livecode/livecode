@@ -70,6 +70,7 @@ install:
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: |
+  echo "travis_fold:start:travisscript"
   case "${TRAVIS_OS_NAME}" in
     linux)
       BUILD_PLATFORM=linux
@@ -96,6 +97,7 @@ script: |
     make all-${BUILD_PLATFORM} &&
     ${CHECK_COMMAND} make check-${BUILD_PLATFORM} V=1
   fi
+  echo "travis_fold:end:travisscript"
 
 addons:
   # Configuration for Coverity Scan integration

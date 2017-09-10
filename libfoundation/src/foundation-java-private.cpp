@@ -330,14 +330,25 @@ bool initialise_jvm()
     vm_args.version = JNI_VERSION_1_6;
     init_jvm_args(&vm_args);
     
+    const char *t_class_path = getenv("CLASSPATH");
+    if (t_class_path == nullptr)
+    {
+        t_class_path = "/usr/lib/java";
+    }
+    
+    char *t_option = strdup("-Djava.class.path=");
+    t_option = strcat(t_option, t_class_path);
+    
     JavaVMOption* options = new (nothrow) JavaVMOption[1];
-    options[0].optionString = const_cast<char*>("-Djava.class.path=/usr/lib/java");
+    options[0].optionString = t_option;
     
     vm_args.nOptions = 1;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    return create_jvm(&vm_args);
+    bool t_success = create_jvm(&vm_args);
+    free(t_option);
+    return t_success;
 #endif
     return true;
 }
@@ -1838,8 +1849,8 @@ jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_
         return nullptr;
     
     MCErrorRef t_error =
-        MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
-                                     t_mutable_list, &t_result);
+        MCHandlerTryToExternalInvokeWithList(static_cast<MCHandlerRef>(t_handler),
+                                             t_mutable_list, &t_result);
     jobject t_return = nullptr;
     if (*t_result != nil)
     {
@@ -1858,7 +1869,7 @@ jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_
     if (t_error != nil)
         MCErrorThrow(t_error);
     
-    return s_env->NewGlobalRef(t_return);
+    return s_env->NewLocalRef(t_return);
 }
 #else
 

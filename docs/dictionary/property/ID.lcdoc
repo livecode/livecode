@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the ID of {image | stack} to <number>
 
-Syntax: get the [{ long | abbr[ev[iated]] | short }] ID of <object>
+Syntax: get the [{ long | abbreviated | short }] ID of <object>
 
 Summary:
 Reports the unique ID number assigned to an <object(glossary)>.

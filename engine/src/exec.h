@@ -5676,7 +5676,7 @@ template<> struct MCExecValueTraits<MCNameRef>
         self . nameref_value = p_value;
     }
 
-    inline static void release(MCNameRef& self) { MCNameDelete(self); }
+    inline static void release(MCNameRef& self) { MCValueRelease(self); }
     inline static MCNameRef retain(MCNameRef& self) { return MCValueRetain(self); } 
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNameRef& r_value)

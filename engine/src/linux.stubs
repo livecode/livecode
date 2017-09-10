@@ -226,6 +226,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_show: (pointer) -> ()
 	gdk_window_show_unraised: (pointer) -> ()
 	gdk_window_raise: (pointer) -> ()
+	gdk_window_lower: (pointer) -> ()
 	gdk_window_iconify: (pointer) -> ()
 	gdk_window_deiconify: (pointer) -> ()
 	gdk_window_set_title: (pointer, pointer) -> ()

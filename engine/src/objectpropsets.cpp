@@ -64,14 +64,12 @@ bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectProper
 
 bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*& r_set)
 {
-	MCNameRef t_new_name;
-	if (!MCNameClone(p_name, t_new_name))
-		return false;
+	MCNameRef t_new_name = MCValueRetain(p_name);
 
 	MCObjectPropertySet *t_new_set;
 	if (!createwithname_nocopy(t_new_name, t_new_set))
 	{
-		MCNameDelete(t_new_name);
+		MCValueRelease(t_new_name);
 		return false;
 	}
 

@@ -2,7 +2,7 @@ Name: name
 
 Type: property
 
-Syntax: set the [{ long | abbr[ev[iated]] | short }] name of <object> to <string>
+Syntax: set the [{ long | abbreviated | short }] name of <object> to <string>
 
 Syntax: get the name
 

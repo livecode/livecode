@@ -51,7 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 Checkersize = 64;
 static uint2 Venetiansize = 64;
-#if 0
+#if INCLUDE_ZOOM_EFFECT
 static uint2 Zoomsize = 16;
 #endif
 
@@ -982,7 +982,7 @@ Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGI
 	return True;
 }
 
-#if 0
+#if INCLUDE_ZOOM_EFFECT
 Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
 

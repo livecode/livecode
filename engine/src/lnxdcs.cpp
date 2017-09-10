@@ -953,31 +953,6 @@ void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
     // Not needed
 }
 
-#ifdef OLD_GRAPHICS
-MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
-{
-	Pixmap t_image;
-	t_image = createpixmap(w, h, 1, False);
-
-	XSetForeground(dpy, gc1, 0);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetRegion(dpy, gc1, (Region)r);
-
-	XSetForeground(dpy, gc1, 1);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetClipMask(dpy, gc1, None);
-
-	MCBitmap *t_bitmap;
-	t_bitmap = getimage(t_image, 0, 0, w, h, False);
-
-	freepixmap(t_image);
-
-	return t_bitmap;
-}
-#endif
-
 void MCScreenDC::setfunction(uint4 rop)
 {
 	if (rop < 0x10)
@@ -1417,8 +1392,9 @@ void MCScreenDC::enablebackdrop(bool p_hard)
         gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
         gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
         gdk_window_set_skip_pager_hint(backdrop, TRUE);
-        gdk_window_fullscreen(backdrop);
-        gdk_window_show_unraised(backdrop);
+	gdk_window_move_resize(backdrop, 0, 0, device_getwidth(), device_getheight());
+        gdk_window_lower(backdrop);
+	gdk_window_show_unraised(backdrop);
 	}
 	else
 	{

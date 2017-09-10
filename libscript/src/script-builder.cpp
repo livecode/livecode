@@ -487,7 +487,7 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef self, MCNameRef p_de
         return;
     
     for(uindex_t i = 0; i < self -> module . dependency_count; i++)
-        if (MCNameIsEqualTo(p_dependency, self -> module . dependencies[i] . name))
+        if (MCNameIsEqualToCaseless(p_dependency, self -> module . dependencies[i] . name))
         {
             r_index = i;
             return;
@@ -556,7 +556,7 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     }
     
     for(uindex_t i = 0; i < self -> module . imported_definition_count; i++)
-        if (MCNameIsEqualTo(p_name, self -> module . imported_definitions[i] . name) &&
+        if (MCNameIsEqualToCaseless(p_name, self -> module . imported_definitions[i] . name) &&
             p_kind == self -> module . imported_definitions[i] . kind &&
             p_index == self -> module . imported_definitions[i] . module)
         {
@@ -1060,7 +1060,7 @@ void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_ne
         bool t_equal;
         t_equal = true;
         for(uindex_t j = 0; j < t_type -> field_count; j++)
-            if (!MCNameIsEqualTo(t_type -> fields[j] . name, t_other_type -> fields[j] . name) ||
+            if (!MCNameIsEqualToCaseless(t_type -> fields[j] . name, t_other_type -> fields[j] . name) ||
                 t_type -> fields[j] . type != t_other_type -> fields[j] . type)
             {
                 t_equal = false;
@@ -1846,7 +1846,7 @@ void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef self, MCNa
     self -> current_line = p_line;
     
     for(uindex_t i = 0; i < self -> module . source_file_count; i++)
-        if (MCNameIsEqualTo(p_file, self -> module . source_files[i]))
+        if (MCNameIsEqualToCaseless(p_file, self -> module . source_files[i]))
         {
             self -> current_file = i;
             return;

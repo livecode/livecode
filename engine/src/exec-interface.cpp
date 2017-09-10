@@ -1311,7 +1311,7 @@ void MCInterfaceEvalFlushEvents(MCExecContext& ctxt, MCNameRef p_name, MCStringR
 	    };
 	for (integer_t i = 0; i < FE_LAST; i++)
 	{
-		if (MCNameIsEqualTo(p_name, enames[i]))
+		if (MCNameIsEqualToCaseless(p_name, enames[i]))
 		{
 			MCscreen->flushevents(i);
 			break;

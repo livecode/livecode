@@ -425,14 +425,11 @@ void MCStack::mode_load(void)
 	// a custom property 'ideOverride' with value true.
 	if (props != NULL)
 	{
-		MCAutoNameRef t_ide_override_name;
-		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
-
         bool t_old_lock = MClockmessages;
 		MClockmessages = true;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
+        getcustomprop(ctxt, kMCEmptyName, MCNAME("ideOverride"), nil, t_value);
 		MClockmessages = t_old_lock;
 
 		bool t_treat_as_ide;
@@ -820,6 +817,12 @@ void MCModePreMain(void)
 			return;
 		}
 	}
+}
+
+// Pixel scaling can be enabled in Development mode
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled

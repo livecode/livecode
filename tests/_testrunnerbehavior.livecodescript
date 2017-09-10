@@ -54,15 +54,19 @@ function getCommandLineInfo
 end getCommandLineInfo
 
 command TestRunnerMain
+   __EnsureLibs
    local tInfo
    put getCommandLineInfo() into tInfo
+   TestRunnerMainWithInfo tInfo
+end TestRunnerMain
 
-   switch tInfo["args"][1]
+command TestRunnerMainWithInfo pInfo
+   switch pInfo["args"][1]
       case "invoke"
-         doInvoke tInfo
+         doInvoke pInfo
          break
       case "run"
-         doRun tInfo
+         doRun pInfo
          break
       case "--help"
       case "-h"
@@ -75,7 +79,24 @@ command TestRunnerMain
    end switch
    
    send "DoQuit" to me
-end TestRunnerMain
+end TestRunnerMainWithInfo
+
+private command __EnsureLibs
+   if the platform is "MacOS" then
+      local tEngineFolder
+      put specialFolderPath("engine") into tEngineFolder
+      local tBuildFolder
+      put tEngineFolder into tBuildFolder
+      set the itemDelimiter to slash
+      delete item -3 to -1 of tBuildFolder
+      if there is not a folder (tEngineFolder & "/revpdfprinter.bundle") then
+         get shell(merge("cp -rf [[ quote & tBuildFolder ]]/revpdfprinter.bundle[[ quote && quote & tEngineFolder & quote ]]"))
+      end if
+      if there is not a file (tEngineFolder & "/revsecurity.dylib") then
+         get shell(merge("cp -f [[ quote & tBuildFolder ]]/revsecurity.dylib[[ quote && quote & tEngineFolder & quote ]]"))
+      end if
+   end if
+end __EnsureLibs
 
 on DoQuit
    -- Allow errorDialog message to be sent

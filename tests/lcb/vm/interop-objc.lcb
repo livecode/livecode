@@ -75,7 +75,6 @@ end handler
 
 ---------
 
-
 public handler TestObjInterop_RoundtripNumber()
 	if not the operating system is in ["mac", "ios"] then
 		skip test "objc binding succeeds" because "not implemented on" && the operating system
@@ -100,5 +99,26 @@ public handler TestObjInterop_RoundtripNumber()
 end handler
 
 --------
+
+__safe foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) returns optional any binds to "<builtin>"
+__safe foreign handler NSArrayFirstObject(in pObj as ObjcId) returns ObjcId binds to "objc:NSArray.firstObject"
+
+private handler __CallNSNumberMethodOnNSString(in pString as ObjcObject) returns optional any
+	return NSArrayFirstObject(pString)
+end handler
+
+public handler TestObjcInterop_CatchObjcException()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc exception handler succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tArguments as List
+	variable tResult as optional any
+	put [ StringToNSString("foo") ] into tArguments
+	test "objc exception is caught" when MCHandlerTryToInvokeWithList(__CallNSNumberMethodOnNSString, tArguments, tResult) is not nothing
+end handler
+
+---------
 
 end module

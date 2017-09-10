@@ -1,0 +1,262 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+Name: iOS Native Button
+
+Description: 
+This widget is a native push button on iOS.
+
+Name: enabled
+
+Syntax: 
+set the enabled of <widget> to {true | false}
+get the enabled of <widget>
+
+Description:
+Use the <enabled> property to enable or disable the native button. When
+disabled, the button has a greyed out appearance and does not accept 
+clicks or touches.
+*/
+widget com.livecode.widget.native.ios.button
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "iOS Native Button"
+metadata svgicon is "M 535.66797 241.55273 C 491.1077 241.55273 455.23438 277.42605 455.23438 321.98633 L 455.23438 913.65039 C 455.23438 958.21066 491.1077 994.08398 535.66797 994.08398 L 2014.5762 994.08398 C 2059.1364 994.08398 2095.0098 958.21066 2095.0098 913.65039 L 2095.0098 321.98633 C 2095.0098 277.42605 2059.1364 241.55273 2014.5762 241.55273 L 535.66797 241.55273 z M 1155.1543 304.32422 C 1293.7311 304.30837 1399.8223 413.6262 1399.8223 613.28906 C 1399.8223 831.92443 1278.4507 931.3125 1145.5957 931.3125 C 1009.8798 931.3125 899.97656 823.80972 899.97656 622.33203 C 899.97656 415.4574 1013.7086 304.32422 1155.1543 304.32422 z M 1637.668 305.20508 C 1689.1647 305.20508 1728.013 319.66027 1746.082 332.30859 L 1738.9023 347.9043 C 1723.5436 337.0708 1682.0317 323.26562 1636.875 323.26562 C 1535.6646 323.26562 1491.5781 399.7417 1491.5781 456.04102 C 1491.5781 533.80129 1551.8559 559.80417 1629.5527 596.8457 C 1719.89 641.10692 1767.7656 680.13793 1767.7656 765.07031 C 1767.7656 856.31896 1702.7239 930.38477 1587.082 930.38477 C 1539.1912 930.38477 1484.0899 914.13108 1456.9863 893.34375 L 1465.0605 875.2832 C 1494.8824 895.15914 1546.3559 914.35352 1590.625 914.35352 C 1674.646 914.35352 1749.3711 855.57405 1749.3711 769.05664 C 1749.3711 688.7683 1699.5944 646.87616 1615.082 610.88867 C 1539.4457 578.68139 1471.4414 543.72442 1471.4414 457.89648 C 1471.4414 368.46267 1541.9021 305.20508 1637.668 305.20508 z M 1156.1758 325.58008 C 999.78351 325.58008 917.99023 456.01743 917.99023 617.80664 C 917.99023 783.58214 998.33285 912.36328 1146.4355 912.36328 C 1295.5685 912.36328 1381.1035 779.61907 1381.1035 615.91992 C 1381.1035 464.11624 1312.5681 325.58008 1156.1758 325.58008 z M 799.93164 336.48438 C 810.31342 336.48438 816.91406 344.97176 816.91406 355.35352 C 816.91406 366.19495 810.31315 374.21484 798.98828 374.21484 C 789.55751 374.21484 782.48047 366.19495 782.48047 355.35352 C 782.48047 344.97176 790.02537 336.48438 799.93164 336.48438 z M 790.80859 488.61328 L 808.58398 488.61328 L 808.58398 922.26953 L 790.80859 922.26953 L 790.80859 488.61328 z"
+
+constant kSvgIcon is "M4.621 6.965c0 1.368-.833 2.38-2.262 2.38-1.19 0-2.083-1.012-2.083-2.38 0-1.31.952-2.381 2.202-2.381 1.31 0 2.143 1.071 2.143 2.381zM1.327 78.5V23.78H3.57V78.5H1.327zM78.174 39.512c0 27.588-15.315 40.129-32.079 40.129-17.125 0-30.993-13.565-30.993-38.988C15.102 14.549 29.453.526 47.301.526 64.787.524 78.174 14.318 78.174 39.512zm-60.799.57C17.375 61 27.513 77.25 46.201 77.25c18.818 0 29.611-16.75 29.611-37.406 0-19.155-8.648-36.636-28.382-36.636S17.375 19.667 17.375 40.082zM86.406 72.571c3.763 2.508 10.258 4.93 15.844 4.93 10.602 0 20.031-7.417 20.031-18.334 0-10.131-6.281-15.417-16.945-19.958-9.544-4.064-18.125-8.475-18.125-19.305 0-11.285 8.891-19.267 20.975-19.267 6.498 0 11.4 1.824 13.68 3.42l-.906 1.968c-1.938-1.367-7.176-3.109-12.874-3.109-12.771 0-18.334 9.65-18.334 16.754 0 9.812 7.606 13.093 17.41 17.767 11.399 5.585 17.44 10.51 17.44 21.227 0 11.514-8.207 20.86-22.799 20.86-6.043 0-12.996-2.051-16.416-4.674l1.019-2.279z"
+
+/**
+Syntax:
+set the label of <widget> to <pLabel>
+get the label of <widget>
+
+Summary: The label displayed by the button.
+
+Value (string): The string to use as the button label
+
+Example:
+    set the label of widget "iOS Button" to "Click me!"
+
+Description:
+The <label> property is the label displayed by the button.
+*/
+
+property label get mLabel set SetLabel
+metadata label.editor is "com.livecode.pi.string"
+metadata label.default is ""
+
+private variable mLabel as String
+private variable mButtonView as optional ObjcObject
+private variable mButtonProxy as optional ObjcObject
+
+private handler IsIOS() returns Boolean
+    return the operating system is "ios"
+end handler
+
+/**/
+
+public handler OnCreate()
+	put "" into mLabel
+end handler
+
+public handler OnDestroy()
+	put nothing into mButtonView
+end handler
+
+/**/
+
+public handler OnOpen()
+    if IsIOS() then
+        unsafe
+            CreateButtonView()
+        end unsafe
+    end if
+end handler
+
+public handler OnClose()
+    if IsIOS() then
+        unsafe
+            DestroyButtonView()
+        end unsafe
+    end if
+end handler
+
+/**/
+
+constant kBorderWidth is 5
+private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
+    return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
+end handler
+
+public handler OnPaint()
+	if IsIOS() then
+		return
+	end if
+
+    // Draw placeholder image - the icon
+    variable tFillPaint as Paint
+    variable tStrokePaint as Paint
+    put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
+    put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
+    variable tBounds as Rectangle
+    put my bounds into tBounds
+    set the paint of this canvas to tFillPaint
+    fill rectangle path of tBounds on this canvas
+    set the paint of this canvas to tStrokePaint
+    set the stroke width of this canvas to kBorderWidth
+    set the join style of this canvas to "bevel"
+    stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
+    variable tPath as Path
+    put path kSvgIcon into tPath
+    constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
+    fill tPath on this canvas
+    // Draw the control name
+    put solid paint with color [1, 1, 1, 0.1] into tFillPaint
+    put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
+    variable tNameString as String
+    if mLabel is empty then
+        put my name into tNameString
+    else
+        put mLabel into tNameString
+    end if
+    set the font of this canvas to my font
+    
+    variable tTextBounds as Rectangle
+    put the image bounds of text tNameString on this canvas into tTextBounds
+    translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
+    translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
+    set the paint of this canvas to tFillPaint
+    
+    variable tRect as Rectangle
+    put expandRectangle(tTextBounds, kBorderWidth) into tRect
+    fill rounded rectangle path of tRect with radius 5 on this canvas
+    set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
+    fill text tNameString at center of tRect on this canvas
+end handler
+
+/**/
+
+public handler OnSave(out rProperties as Array)
+	put mLabel into rProperties["label"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["label"] into mLabel
+end handler
+
+/**/
+
+public handler OnParentPropertyChanged()
+    unsafe
+        UpdateButtonView()
+    end unsafe
+end handler
+
+/**/
+
+private handler SetLabel(in pLabel as String) returns nothing
+	put pLabel into mLabel
+	unsafe
+        UpdateButtonView()
+	end unsafe
+    redraw all
+end handler
+
+/****/
+
+private handler ButtonActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	post "mouseUp"
+
+    // Wake the engine to deal with the posted signal
+    MCEngineRunloopBreakWait()
+end handler
+
+/****/
+
+private type NSUInteger is CULong
+private foreign handler ObjC_UIButtonButtonWithType(in pType as NSUInteger) returns ObjcId binds to "objc:UIButton.+buttonWithType:?ui"
+private foreign handler ObjC_UIButtonSetTitleForState(in pObj as ObjcId, in pTitle as ObjcId, in pState as NSUInteger) returns nothing binds to "objc:UIButton.-setTitle:forState:?ui"
+private foreign handler ObjC_UIButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:UIButton.-setEnabled:?ui"
+private foreign handler ObjC_UIButtonGetTitleLabel(in pObj as ObjcId) returns ObjcId binds to "objc:UIButton.-titleLabel?ui"
+private foreign handler ObjC_UILabelSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:UILabel.-setFont:?ui"
+private foreign handler ObjC_UIButtonAddTargetActionForControlEvents(in pObj as ObjcId, in pTarget as ObjcId, in pAction as UIntPtr, in pControlEvents as NSUInteger) returns nothing binds to "objc:UIButton.-addTarget:action:forControlEvents:?ui"
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "<builtin>"
+
+private unsafe handler CreateButtonView() returns nothing
+	variable tButtonView as ObjcObject
+
+    /* For a standard push button we need:
+     *   type to be UIButtonTypeSystem = 1 */
+	put ObjC_UIButtonButtonWithType(1) into tButtonView
+
+    set my native layer to PointerFromObjcObject(tButtonView)
+	put tButtonView into mButtonView
+
+	put ObjcProxyGetTarget(ButtonActionCallback, nothing) into mButtonProxy
+
+    /* For a push button action we need:
+     *   controlEvents to be UIControlEventTouchUpInside = 1 << 6 */
+    ObjC_UIButtonAddTargetActionForControlEvents(mButtonView, mButtonProxy, ObjcProxyGetAction(), 1 shifted left by 6 bitwise)
+
+	UpdateButtonView()
+end handler
+
+private unsafe handler DestroyButtonView() returns nothing
+	set my native layer to nothing
+	put nothing into mButtonView
+	put nothing into mButtonProxy
+end handler
+
+private unsafe handler UpdateButtonView() returns nothing
+	if mButtonView is nothing then
+		return
+	end if
+	
+    /* Set the enabled state of the button to the host property. */
+    ObjC_UIButtonSetEnabled(mButtonView, my enabled)
+
+    /* Set the font of the button to the host property. */
+    variable tFontToUse as ObjcObject
+    MCCanvasFontGetHandle(my font, tFontToUse)
+    ObjC_UILabelSetFont(ObjC_UIButtonGetTitleLabel(mButtonView), tFontToUse)
+
+    /* Set the label of the button to mLabel, if not empty; otherwise to the
+     * name of the host. */
+    variable tLabelToUse as String
+    if mLabel is the empty string then
+        put my name into tLabelToUse
+    else
+        put mLabel into tLabelToUse
+    end if
+
+    /* We use UIControlStateNormal = 0 */
+	ObjC_UIButtonSetTitleForState(mButtonView, StringToNSString(tLabelToUse), 0)
+end handler
+
+/**/
+
+end widget

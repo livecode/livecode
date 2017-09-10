@@ -71,7 +71,7 @@ static bool __cbuffer_defined(void *contents)
     return *(void **)contents != nil;
 }
 
-static bool __cbuffer_move(void *from, void *to)
+static bool __cbuffer_move(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     *(void **)to = *(void **)from;
     return true;
@@ -79,7 +79,7 @@ static bool __cbuffer_move(void *from, void *to)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __cstring_copy(void *from, void *to)
+static bool __cstring_copy(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     if (*(void **)from == nil)
     {
@@ -103,7 +103,7 @@ static bool __cstring_copy(void *from, void *to)
     return true;
 }
 
-static bool __cstring_equal(void *left, void *right, bool& r_equal)
+static bool __cstring_equal(const MCForeignTypeDescriptor*, void *left, void *right, bool& r_equal)
 {
     if (*(void **)left == nil || *(void **)right == nil)
 		r_equal = (left == right);
@@ -112,7 +112,7 @@ static bool __cstring_equal(void *left, void *right, bool& r_equal)
 	return true;
 }
 
-static bool __cstring_hash(void *value, hash_t& r_hash)
+static bool __cstring_hash(const MCForeignTypeDescriptor*, void *value, hash_t& r_hash)
 {
     if (*(void **)value == nil)
     {
@@ -125,7 +125,7 @@ static bool __cstring_hash(void *value, hash_t& r_hash)
     return true;
 }
 
-static bool __nativecstring_import(void *contents, bool release, MCValueRef& r_value)
+static bool __nativecstring_import(const MCForeignTypeDescriptor*, void *contents, bool release, MCValueRef& r_value)
 {
     if (release)
         return MCStringCreateWithCStringAndRelease(*(char **)contents, (MCStringRef&)r_value);
@@ -133,7 +133,7 @@ static bool __nativecstring_import(void *contents, bool release, MCValueRef& r_v
     return MCStringCreateWithCString(*(const char **)contents, (MCStringRef&)r_value);
 }
 
-static bool __nativecstring_export(MCValueRef value, bool release, void *contents)
+static bool __nativecstring_export(const MCForeignTypeDescriptor*, MCValueRef value, bool release, void *contents)
 {
 	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
 		return false;
@@ -162,7 +162,8 @@ __wstring_len (const unichar_t *value)
 }
 
 static bool
-__wstring_copy (void *from,
+__wstring_copy (const MCForeignTypeDescriptor*,
+                void *from,
                 void *to)
 {
 	if (nil == *(void **) from)
@@ -189,7 +190,8 @@ __wstring_copy (void *from,
 }
 
 static bool
-__wstring_equal (void *left,
+__wstring_equal (const MCForeignTypeDescriptor*,
+                 void *left,
                  void *right,
                  bool & r_equal)
 {
@@ -212,7 +214,8 @@ __wstring_equal (void *left,
 }
 
 static bool
-__wstring_hash (void *value,
+__wstring_hash (const MCForeignTypeDescriptor*,
+                void *value,
                 hash_t & r_hash)
 {
 	if (nil == *(void **)value)
@@ -227,7 +230,8 @@ __wstring_hash (void *value,
 }
 
 static bool
-__wstring_import (void *contents,
+__wstring_import (const MCForeignTypeDescriptor*,
+                  void *contents,
                   bool release,
                   MCValueRef & r_value)
 {
@@ -240,7 +244,8 @@ __wstring_import (void *contents,
 }
 
 static bool
-__wstring_export (MCValueRef value,
+__wstring_export (const MCForeignTypeDescriptor*,
+                  MCValueRef value,
                   bool release,
                   void *contents)
 {
@@ -262,9 +267,10 @@ __wstring_export (MCValueRef value,
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool
-__utf8string_import (void *contents,
-				  bool release,
-				  MCValueRef & r_value)
+__utf8string_import (const MCForeignTypeDescriptor*,
+                     void *contents,
+                     bool release,
+                     MCValueRef & r_value)
 {
 	char *t_utf8string;
 	t_utf8string = *(char **) contents;
@@ -276,9 +282,10 @@ __utf8string_import (void *contents,
 }
 
 static bool
-__utf8string_export (MCValueRef value,
-				  bool release,
-				  void *contents)
+__utf8string_export (const MCForeignTypeDescriptor*,
+                     MCValueRef value,
+                     bool release,
+                     void *contents)
 {
 	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
 		return false;

@@ -2,7 +2,7 @@ Name: menuPick
 
 Type: message
 
-Syntax: menuPick <pChosenItem>, <pPreviousTab>
+Syntax: menuPick <pChosenItem> [, <pPreviousTab>]
 
 Summary:
 Sent to a <button(object)> when a <menu item> is chosen from the <menu>
@@ -17,8 +17,8 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-on menuPick theItem -- in a pulldown menu
-  if theItem is "Close" then close the defaultStack
+on menuPick pChosenItem -- in a pulldown menu
+  if pChosenItem is "Close" then close the defaultStack
   else if theItem is "Quit" then quit
 end menuPick
 

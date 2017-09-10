@@ -14,7 +14,7 @@ Associations: internet library
 
 Introduced: 1.1
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -84,6 +84,14 @@ password to use the <delete URL> <command>.
 > needed to ensure the <command> works in a mobile 
 > <standalone application>. If included, the <Internet library> 
 > implementation will be used instead of the engine implementation.
+
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
+
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
 
 References: libURLSetFTPStopTime (command), post (command),
 delete file (command), delete folder (command),

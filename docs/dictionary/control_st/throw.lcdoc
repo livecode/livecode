@@ -5,7 +5,7 @@ Type: control structure
 Syntax: throw <errorString>
 
 Summary:
-<return|Returns> an error message to a< control structure(keyword)>.
+<return|Returns> an error message to a <control structure>.
 
 Introduced: 1.0
 
@@ -18,7 +18,8 @@ open file tFile for text read
 
 Example:
 if the result is not empty then
-  throw "failed_to_open_file"end if
+  throw "failed_to_open_file"
+end if
 
 Parameters:
 errorString (string):
@@ -28,8 +29,10 @@ structure.
 
 Description:
 Use the <throw> <control structure> in a <handler> <call|called> from
-within a <try> <control structure>. Form:The <throw> <statement> appears
-on a line by itself, anywhere inside a <handler>.
+within a <try> <control structure>. 
+
+**Form:** The <throw> <statement> appears on a line by itself, anywhere 
+inside a <handler>.
 
 If LiveCode generates the error (for example, an execution error from a
 built-in command), it returns a positive number to the <try> <control

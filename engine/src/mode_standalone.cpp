@@ -720,6 +720,10 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+    
+    // the first auxiliary stack loaded during startup will currently be the home stack
+    // we want it to be the initial stack
+    MCdispatcher->changehome(t_stack);
 
 	/* Complete startup tasks and send the startup message */
 
@@ -1313,6 +1317,12 @@ void MCModeSetupCrashReporting(void)
 bool MCModeHandleMessage(LPARAM lparam)
 {
 	return false;
+}
+
+// Pixel scaling can be enabled in standalone mode.
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone

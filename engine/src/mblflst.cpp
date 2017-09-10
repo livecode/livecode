@@ -115,7 +115,7 @@ MCFontnode::~MCFontnode(void)
 
 MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
-	if (!MCNameIsEqualTo(fname, *reqname))
+	if (!MCNameIsEqualToCaseless(fname, *reqname))
 		return NULL;
 	if (size == 0)
 		return font;

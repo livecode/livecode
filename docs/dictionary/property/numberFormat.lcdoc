@@ -60,7 +60,7 @@ digits, no trailing zeroes are added.
 > <string|strings>. Otherwise, the number retains its full <numeric>
 > <precision>. 
 
-Since the <numberFormat> is a <local> <property>, its value is <reset> to
+Since the <numberFormat> is a <local property>, its value is <reset> to
 0.###### when the current handler finishes <execute|executing>. It
 retains its <value> only for the current <handler>, and setting it in
 one <handler> does not affect its value in other <handler|handlers> it

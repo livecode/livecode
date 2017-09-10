@@ -187,6 +187,20 @@
 					'_releasedbconnectionref',
 				],
 			},
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
 			
 			'all_dependent_settings':
 			{
@@ -282,6 +296,17 @@
 						'libraries':
 						[
 							'-lodbc32.lib',
+						],
+					},
+				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
 						],
 					},
 				],
@@ -411,7 +436,21 @@
 					'_releasedbconnectionref',
 				],
 			},
-			
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
+
 			'all_dependent_settings':
 			{
 				'variables':
@@ -606,6 +645,17 @@
 						},
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -723,6 +773,20 @@
 			'sources!':
 			[
 				'src/iossupport.cpp',
+			],
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':

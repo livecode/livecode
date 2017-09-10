@@ -210,7 +210,7 @@ private:
     };
 };
 
-#if 0
+#if MCS_LIBRARY_NEW_IOS_STATIC_IMPL
 MC_DLLEXPORT_DEF void
 MCSLibraryRegisterStatic(MCSLibraryStaticInfo& p_info)
 {

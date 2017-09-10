@@ -57,7 +57,7 @@ inline int32 fast_rint(double val) {
  */
 inline int32 fast_floor(double val) {
 	val = val + (68719476736.0*1.5);
-#if 0
+#if LARGER_FAST_FLOOR
 	return (int32)((*(long long *)&val)>>16);
 #else
 	return (((int32*)&val)[iman_]>>16);

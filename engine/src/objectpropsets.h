@@ -30,7 +30,7 @@ public:
 	bool hasname(MCNameRef p_name) const
 	{
         return m_name.IsSet() &&
-            MCNameIsEqualTo(*m_name, p_name, kMCCompareCaseless);
+            MCNameIsEqualToCaseless(*m_name, p_name);
 	}
 
 	MCNameRef getname(void) const

@@ -353,12 +353,12 @@ void MCWidget::recompute(void)
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
 {
-    extern LT factor_table[];
+    extern const LT factor_table[];
     extern const uint4 factor_table_size;
     for(uindex_t i = 0; i < factor_table_size; i++)
         if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
         {
-            /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
+            r_name = MCNAME(factor_table[i] . token);
             return;
         }
 	
