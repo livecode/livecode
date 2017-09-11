@@ -1432,6 +1432,7 @@ static bool MCPropertyFormatList(Formatter p_format,
                                  Element *p_list,
                                  uindex_t p_count,
                                  char_t p_delimiter,
+								 bool p_is_point_list,
                                  MCStringRef &r_string)
 {
     if (p_count == 0)
@@ -1446,9 +1447,16 @@ static bool MCPropertyFormatList(Formatter p_format,
         MCAutoStringRef t_formatted;
         if (!p_format(p_list[i], &t_formatted))
             return false;
-        if (!MCListAppend(*t_list, *t_formatted))
-            return false;
-    }
+		
+		if (p_is_point_list && ((MCPoint*)p_list)[i].x == MININT2 && ((MCPoint*)p_list)[i].y == MININT2)
+		{
+			if (!MCListAppend(*t_list, kMCEmptyString))
+				return false;
+		}
+		else
+			if (!MCListAppend(*t_list, *t_formatted))
+				return false;
+	}
 
     return MCListCopyAsString(*t_list, r_string);
 }
@@ -1457,26 +1465,26 @@ static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_
 {
     auto t_format =
         [](uinteger_t& x, MCStringRef& s) { return MCStringFormat(s, "%d", x); };
-    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, false, r_string);
 }
 
 static bool MCPropertyFormatDoubleList(double *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
     auto t_format =
         [](double& x, MCStringRef& s) { return MCStringFormat(s, "%f", x); };
-    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, false, r_string);
 }
 
 static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    return MCPropertyFormatList(MCStringCopy, p_list, p_count, p_delimiter, r_string);
+    return MCPropertyFormatList(MCStringCopy, p_list, p_count, p_delimiter, false, r_string);
 }
 
 static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
     auto t_format =
-        [](MCPoint& p, MCStringRef& s) { return MCStringFormat(s, "%d,%d", p.x, p.y); };
-    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
+        [](MCPoint& p, MCStringRef& s) {return MCStringFormat(s, "%d,%d", p.x, p.y); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, true, r_string);
 }
 
 static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
