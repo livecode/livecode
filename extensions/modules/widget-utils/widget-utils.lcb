@@ -282,4 +282,68 @@ public handler getNativeThemeName() returns String
 	end if
 end handler
 
+
+/**
+Summary: Hit test to determine if a point is within or on a path
+
+Example:
+	variable tPath as Path
+	put circle path centered at point [my width / 2, my height / 2] with radius (my width/2) into tPath
+	if hitTestPath(the mouse position, tPath, 1, false) then
+		-- mouse is on the circle perimiter
+	else if hitTestPath(the mouse position, tPath, 0, true) then
+		-- mouse is within the circle
+	else
+		-- mouse is somewhere else
+	end if
+
+Description:
+Determine if a point is within or on a path
+
+Parameters:
+pPoint (Point): A point to test against the path
+pPath (Path): A path to test
+pStrokeWidth (Number): If greater than 0 the stroke width will be used
+to determine the hit area. If 0 and pWithin is false a stroke width of 1
+will be used.
+pWithin (Boolean): If true the handler will return true if the point is
+within the filled path. If false the handler will return true if the
+point is on the stroked path.
+
+*/
+public handler hitTestPath(in pPoint as Point, in pPath as Path, in pStrokeWidth as Number, in pWithin as Boolean) \
+	returns Boolean
+	
+	-- create a 1 x 1 canvas
+	variable tCanvas as Canvas
+	put a new canvas with size [1,1] into tCanvas
+	-- ensure we either get pixels drawn with our color or not drawn
+	set the antialias of tCanvas to false
+	
+	-- translate the path by the point
+	translate pPath by [-(the x of pPoint), -(the y of pPoint)]
+	
+	-- draw the path to the canvas
+	set the paint of tCanvas to solid paint with color [0.0, 0.0, 0.0, 1.0]
+	if pStrokeWidth is 0 and not pWithin then
+		put 1 into pStrokeWidth
+	end if
+	
+	if pWithin then
+		fill pPath on tCanvas
+	end if
+	
+	if pStrokeWidth > 0 then
+		set the stroke width of tCanvas to pStrokeWidth
+		stroke pPath on tCanvas
+	end if
+	
+	-- get the pixel data of the canvas
+	variable tData as Data
+	put the pixel data of tCanvas into tData
+	
+	-- return whether pixel is opaque
+	return the first byte of tData is the byte with code 255
+end handler
+
 end module
