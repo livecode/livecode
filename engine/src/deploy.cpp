@@ -420,7 +420,7 @@ static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params
     {
         t_success = MCDeployCapsuleDefine(p_capsule,
 								 kMCCapsuleSectionTypeLicense,
-								 &t_buffer,
+								 t_buffer,
 								 uint32_t(t_length));
     }
     

@@ -126,3 +126,9 @@ prebuilt/fetched
 ###################################
 stamp-mlc*
 _mlc
+
+# Built Notes   #
+#################
+LiveCodeNotes-*
+LiveCodeUpdates-*
+LiveCodeUserGuide-*

@@ -83,11 +83,15 @@ installer LiveCode
 		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Community then
 			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+		if TargetEdition is CommunityPlus then
+			desktop icon "private:engine/rsrc/CommunityPlus/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Indy then
 			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Business then
 			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 	include Uninstaller
+	if TargetEdition is CommunityPlus then
+		include Commercial.CommunityPlusComponents
 	if TargetEdition is Indy then
 		include Commercial.IndyComponents
 	if TargetEdition is Business then
@@ -102,11 +106,15 @@ component Externals
 		include Commercial.BusinessExternals
 	if TargetEdition is "Indy" then
 		include Commercial.IndyExternals
+	if TargetEdition is "CommunityPlus" then
+		include Commercial.CommunityPlusExternals
 	include Databases.[[TargetPlatform]]
 	if TargetEdition is "Business" then
 		include Commercial.BusinessDatabases
 	if TargetEdition is "Indy" then
 		include Commercial.IndyDatabases
+	if TargetEdition is "CommunityPlus" then
+		include Commercial.CommunityPlusDatabases
 	if TargetPlatform is Linux then
 		include Externals.CEF.Linux
 	if TargetPlatform is Windows then
@@ -146,6 +154,9 @@ component Misc
 		if TargetEdition is "Community" then
 			textfile "ide:License Agreement.txt"
 			textfile "ide:about.txt"
+		if TargetEdition is "CommunityPlus" then
+			textfile "private:License Agreement.txt"
+			textfile "private:about.txt"
 		if TargetEdition is "Indy" then
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
@@ -379,11 +390,11 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/resources/media"
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
+		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
-		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place

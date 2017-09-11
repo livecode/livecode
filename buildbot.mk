@@ -82,7 +82,11 @@ else ifeq ($(BUILD_PLATFORM),linux-x86_64)
   LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
   UPLOAD_ENABLE_CHECKSUM ?= yes
+ifeq ($(BUILD_EDITION),commercial)
   UPLOAD_RELEASE_NOTES ?= yes
+else
+  UPLOAD_RELEASE_NOTES ?= no
+endif
 endif
 
 # FIXME add --warn-as-error
@@ -98,58 +102,23 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-ifeq ($(BUILD_EDITION),commercial)
-  dist-docs: dist-docs-commercial
-  dist-docs: dist-guide-commercial
-  dist-notes: dist-notes-commercial
-endif
+dist-docs: dist-docs-api dist-docs-guide
 
-dist-docs: dist-docs-community
-dist-docs: dist-guide-community
-dist-notes: dist-notes-community
-
-dist-docs-community:
+dist-docs-api:
 	mkdir -p $(docs_build_dir)
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
-	  --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 	  
-dist-docs-commercial:
-	mkdir -p $(docs_build_dir)
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-
-dist-notes-community:
+dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
 	  --stage notes --warn-as-error \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 
-dist-notes-commercial:
+dist-docs-guide:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage notes --warn-as-error \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-
-dist-guide-community:
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition community \
-	    --stage guide --warn-as-error
-	    
-dist-guide-commercial:
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition indy \
-	    --stage guide --warn-as-error
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition business \
-	    --stage guide --warn-as-error
+		--stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-server: dist-server-commercial
@@ -167,7 +136,7 @@ dist-server-commercial:
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
-distmac-disk: distmac-disk-indy distmac-disk-business
+distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
 endif
 
 dist-tools: dist-tools-community dist-tools-version-check
@@ -175,12 +144,14 @@ distmac-disk: distmac-disk-community
 
 dist-tools-community:
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 dist-tools-commercial:
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition communityplus \
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+  	  --built-docs-dir $(docs_build_dir)
 # Ensure that the version for which we're trying to build installers
 # hasn't already been tagged.
 dist-tools-version-check:
@@ -199,6 +170,8 @@ dist-tools-version-check:
 
 distmac-bundle-community:
 	$(buildtool_command) --platform mac --stage bundle --edition community
+distmac-bundle-communityplus:
+	$(buildtool_command) --platform mac --stage bundle --edition communityplus
 distmac-bundle-indy:
 	$(buildtool_command) --platform mac --stage bundle --edition indy
 distmac-bundle-business:
@@ -221,7 +194,11 @@ dist-upload-files.txt sha1sum.txt:
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
-		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-file; \
+		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.md' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.pdf' >> dist-upload-files.txt; \
 	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  xargs --arg-file=dist-upload-files.txt $(SHA1SUM) > sha1sum.txt; \
