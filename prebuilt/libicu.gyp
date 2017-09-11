@@ -24,7 +24,7 @@
 					'variables':
 					{
 						# Gyp doesn't seem to handle non-absolute paths here properly...
-						'prebuilt_icu_bin_dir': 'bin/linux/>(toolset_arch)',
+						'prebuilt_icu_bin_dir': 'bin/linux/<(host_arch)',
 						'prebuilt_icu_share_dir': 'share',
 					},
 				},
