@@ -19,7 +19,20 @@
 				},
 			],
 			[
-				'host_os == "linux"',
+				# Workaround x86 linux builder identifying (via uname -m) as x86_64:
+				#   Use target arch executables if building on linux for linux
+				'host_os == "linux" and OS == "linux"',
+				{
+					'variables':
+					{
+						# Gyp doesn't seem to handle non-absolute paths here properly...
+						'prebuilt_icu_bin_dir': 'bin/linux/<(target_arch)',
+						'prebuilt_icu_share_dir': 'share',
+					},
+				},
+			],
+			[
+				'host_os == "linux" and OS != "linux"',
 				{
 					'variables':
 					{
