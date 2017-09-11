@@ -46,8 +46,6 @@ metadata author is "LiveCode"
 metadata title is "Mac Native Button"
 metadata svgicon is "m -19.375905,-4.8110434 c -1.108001,0 -2,0.892 -2,2 l 0,15.4453124 c 0,1.108 0.891999,2 2,2 l 27.5722648,0 c 1.108,0 2.0000002,-0.892 2.0000002,-2 l 0,-15.4453124 c 0,-1.108 -0.8920002,-2 -2.0000002,-2 l -27.5722648,0 z m 6.857421,2.3847656 13.8593751,0 c 0.588,0 1.0664531,0.4812187 1.0644531,1.0742188 l 0,9.8437501 c 0,0.594 -0.4764531,1.074219 -1.0644531,1.074219 l -5.3203125,0 c 0,0 0.5936093,2.1484369 3.22460934,2.1484369 l 0,0.537109 -3.49218744,0 -4.5683598,0 -1.8789057,0 0,-0.537109 c 2.5589997,0 3.4921873,-2.1484369 3.4921873,-2.1484369 l -5.3164063,0 c -0.589,-10e-7 -1.066406,-0.480219 -1.066406,-1.074219 l 0,-9.8437501 c 0,-0.593 0.477406,-1.0742188 1.066406,-1.0742188 z m 0.07617,1.1425781 0,9.1074219 13.7070312,0 0,-9.1074219 -13.7070312,0 z m 7.8105468,1.12890629 c 0.04,0.364 -0.1062656,0.7291875 -0.3222656,0.9921875 -0.217,0.26200001 -0.5709219,0.46450001 -0.9199219,0.43750001 -0.047,-0.35600001 0.128125,-0.72598441 0.328125,-0.95898441 0.225,-0.262 0.6020625,-0.4577031 0.9140625,-0.4707031 z m -0.00586,1.50195311 c 0.202,0.008 0.7707688,0.080281 1.1347656,0.6132813 -0.028,0.019 -0.6779219,0.3956406 -0.6699219,1.1816406 0.009,0.938 0.8220313,1.2508594 0.8320313,1.2558594 -0.008,0.021 -0.1296882,0.4448126 -0.4296876,0.8828125 -0.2579999,0.3770001 -0.5262187,0.7537187 -0.9492187,0.7617187 -0.415,0.008 -0.5474375,-0.2460937 -1.0234375,-0.2460937 -0.475,0 -0.6245782,0.2379062 -1.0175781,0.2539062 -0.4080001,0.015 -0.7185154,-0.4081561 -0.9785159,-0.7851562 -0.533,-0.7709999 -0.941531,-2.1769532 -0.394531,-3.1269532 0.272,-0.471 0.7581563,-0.7693437 1.2851562,-0.7773437 0.4,-0.007 0.7794376,0.2695313 1.0234376,0.2695313 0.246,0 0.7054999,-0.3322032 1.1875,-0.2832032 z M -5.5887964,8.147941 c -0.331,0 -0.5996094,0.2676561 -0.5996094,0.5976561 0,0.331 0.2686093,0.599609 0.5996094,0.599609 0.33,10e-7 0.5986093,-0.268609 0.5996093,-0.599609 10e-8,-0.33 -0.2696093,-0.5976561 -0.5996093,-0.5976561 z"
 
-constant kSvgIcon is "M14.926,0.656H1.067C0.478,0.656,0,1.137,0,1.73v9.844c0,0.594,0.478,1.074,1.067,1.074h5.316 c0,0-0.934,2.149-3.493,2.149v0.537h1.88h4.568h3.493v-0.537c-2.631,0-3.226-2.149-3.226-2.149h5.32 c0.588,0,1.065-0.48,1.065-1.074V1.73C15.992,1.137,15.514,0.656,14.926,0.656z M7.996,12.427c-0.331,0-0.599-0.268-0.599-0.599 c0-0.33,0.268-0.598,0.599-0.598c0.33,0,0.599,0.268,0.599,0.598C8.594,12.159,8.326,12.427,7.996,12.427z M14.849,10.906H1.143 V1.798H14.85L14.849,10.906L14.849,10.906zM6.824,9.133c0.393-0.016,0.542-0.255,1.017-0.255c0.476,0,0.609,0.255,1.024,0.247 C9.288,9.117,9.556,8.74,9.814,8.363c0.3-0.438,0.423-0.862,0.431-0.883c-0.01-0.005-0.824-0.317-0.833-1.255 c-0.008-0.786,0.642-1.163,0.67-1.182C9.718,4.51,9.149,4.437,8.947,4.429C8.465,4.38,8.005,4.713,7.759,4.713 c-0.244,0-0.623-0.277-1.023-0.27C6.209,4.451,5.724,4.75,5.452,5.221c-0.547,0.95-0.14,2.356,0.393,3.127 C6.105,8.725,6.416,9.148,6.824,9.133z M8.953,2.928c-0.312,0.013-0.689,0.208-0.914,0.47c-0.2,0.233-0.376,0.604-0.329,0.96 c0.349,0.027,0.704-0.177,0.921-0.439C8.847,3.656,8.993,3.292,8.953,2.928z"
-
 /**
 Syntax:
 set the label of <widget> to <pLabel>
@@ -106,55 +104,20 @@ end handler
 
 /**/
 
-constant kBorderWidth is 5
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-    return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
 public handler OnPaint()
 	if IsMac() then
 		return
 	end if
 
-    // Draw placeholder image - the icon
-    variable tFillPaint as Paint
-    variable tStrokePaint as Paint
-    put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-    put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-    variable tBounds as Rectangle
-    put my bounds into tBounds
-    set the paint of this canvas to tFillPaint
-    fill rectangle path of tBounds on this canvas
-    set the paint of this canvas to tStrokePaint
-    set the stroke width of this canvas to kBorderWidth
-    set the join style of this canvas to "bevel"
-    stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-    variable tPath as Path
-    put path kSvgIcon into tPath
-    constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
-    fill tPath on this canvas
-    // Draw the control name
-    put solid paint with color [1, 1, 1, 0.1] into tFillPaint
-    put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
-    variable tNameString as String
+    variable tLabel as String
     if mLabel is empty then
-        put my name into tNameString
+        put my name into tLabel
     else
-        put mLabel into tNameString
+        put mLabel into tLabel
     end if
-    set the font of this canvas to my font
     
-    variable tTextBounds as Rectangle
-    put the image bounds of text tNameString on this canvas into tTextBounds
-    translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
-    translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-    set the paint of this canvas to tFillPaint
-    
-    variable tRect as Rectangle
-    put expandRectangle(tTextBounds, kBorderWidth) into tRect
-    fill rounded rectangle path of tRect with radius 5 on this canvas
-    set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
-    fill text tNameString at center of tRect on this canvas
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("mac"), \
+        tLabel, my font, nothing)
 end handler
 
 /**/

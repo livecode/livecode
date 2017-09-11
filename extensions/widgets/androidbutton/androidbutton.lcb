@@ -215,56 +215,20 @@ public handler OnClick()
 	post "mouseUp"
 end handler
 
-constant kSvgIcon is "M493 615Q509 615 520.5 603.5 532 592 532 576 532 560 520.5 548.5 509 537 493 537 477 537 466 548.5 455 560 455 576 455 592 466 603.5 477 615 493 615ZM915 615Q931 615 942 603.5 953 592 953 576 953 560 942 548.5 931 537 915 537 899 537 887.5 548.5 876 560 876 576 876 592 887.5 603.5 899 615 915 615ZM103 799Q145 799 175 829 205 859 205 901L205 1331Q205 1374 175.5 1404 146 1434 103 1434 60 1434 30 1404 0 1374 0 1331L0 901Q0 859 30 829 60 799 103 799ZM1163 818L1163 1484Q1163 1530 1131 1562 1099 1594 1054 1594L979 1594 979 1821Q979 1864 949 1894 919 1924 876 1924 833 1924 803 1894 773 1864 773 1821L773 1594 635 1594 635 1821Q635 1864 605 1894 575 1924 532 1924 490 1924 460 1894 430 1864 430 1821L429 1594 355 1594Q309 1594 277 1562 245 1530 245 1484L245 818 1163 818ZM931 413Q1038 468 1102 566.5 1166 665 1166 782L241 782Q241 665 305 566.5 369 468 477 413L406 282Q399 269 411 262 424 256 431 268L503 400Q598 358 704 358 810 358 905 400L977 268Q984 256 997 262 1009 269 1002 282ZM1408 901L1408 1331Q1408 1374 1378 1404 1348 1434 1305 1434 1263 1434 1233 1404 1203 1374 1203 1331L1203 901Q1203 858 1233 828.5 1263 799 1305 799 1348 799 1378 828.5 1408 858 1408 901Z"
-constant kBorderWidth is 5
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-    return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
 public handler OnPaint()
     if IsAndroid() then
         return
     end if
     
-    // Draw placeholder image - the icon
-    variable tFillPaint as Paint
-    variable tStrokePaint as Paint
-    put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-    put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-    variable tBounds as Rectangle
-    put my bounds into tBounds
-    set the paint of this canvas to tFillPaint
-    fill rectangle path of tBounds on this canvas
-    set the paint of this canvas to tStrokePaint
-    set the stroke width of this canvas to kBorderWidth
-    set the join style of this canvas to "bevel"
-    stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-    variable tPath as Path
-    put path kSvgIcon into tPath
-    constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
-    fill tPath on this canvas
-    // Draw the control name
-    put solid paint with color [1, 1, 1, 0.1] into tFillPaint
-    put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
-    variable tNameString as String
+    variable tLabel as String
     if mLabel is empty then
-        put my name into tNameString
+        put my name into tLabel
     else
-        put mLabel into tNameString
+        put mLabel into tLabel
     end if
-    set the font of this canvas to my font
     
-    variable tTextBounds as Rectangle
-    put the image bounds of text tNameString on this canvas into tTextBounds
-    translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
-    translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-    set the paint of this canvas to tFillPaint
-    
-    variable tRect as Rectangle
-    put expandRectangle(tTextBounds, kBorderWidth) into tRect
-    fill rounded rectangle path of tRect with radius 5 on this canvas
-    set the paint of this canvas to solid paint with stringToColor(mColor)
-    fill text tNameString at center of tRect on this canvas
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("android"), \
+        tLabel, my font, stringToColor(mColor))
 end handler
 
 handler SetEnabled(in pValue as Boolean)
