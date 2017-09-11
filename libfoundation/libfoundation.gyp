@@ -39,7 +39,7 @@
 			'dependencies':
 			[
 				'../prebuilt/libicu.gyp:libicu',
-				'../prebuilt/libicu.gyp:encode_minimal_icu_data#host',
+				'../prebuilt/libicu.gyp:encode_minimal_icu_data',
 				'../thirdparty/libffi/libffi.gyp:libffi',
 				'../thirdparty/libz/libz.gyp:libz',
 			],

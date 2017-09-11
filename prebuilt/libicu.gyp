@@ -2,8 +2,46 @@
 	'includes':
 	[
 		'../common.gypi',
-		'prebuilt-common.gypi',
 	],
+	
+	'target_defaults':
+	{
+		'conditions':
+		[
+			[
+				'host_os == "mac"',
+				{
+					'variables':
+					{
+						'prebuilt_icu_bin_dir': 'bin/mac',
+						'prebuilt_icu_share_dir': 'share',
+					},
+				},
+			],
+			[
+				'host_os == "linux"',
+				{
+					'variables':
+					{
+						# Gyp doesn't seem to handle non-absolute paths here properly...
+						'prebuilt_icu_bin_dir': 'bin/linux/>(toolset_arch)',
+						'prebuilt_icu_share_dir': 'share',
+					},
+				},
+			],
+			[
+				'host_os == "win"',
+				{
+					'variables':
+					{
+						# Hack required due to GYP failure / refusal to treat this as a path
+						'prebuilt_icu_bin_dir': '$(SolutionDir)../../prebuilt/unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/bin',
+						'prebuilt_icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
+					},
+				},
+			],
+		],
+	},
 	
 	'targets':
 	[
@@ -189,11 +227,11 @@
 			'target_name': 'minimal_icu_data',
 			'type': 'none',
 			
-			'toolsets': ['host'],
+			'toolsets': ['host', 'target'],
 
 			'dependencies':
 			[
-				'libicu',
+				'fetch.gyp:fetch#host',
 			],
 			
 			'actions':
@@ -206,7 +244,7 @@
 					],
 					'outputs':
 					[
-						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-full-list.txt',
 					],
 					'action':
 					[
@@ -215,7 +253,7 @@
 						'>(prebuilt_icu_share_dir)/icudt58l.dat',
 						'--auto_toc_prefix',
 						'--outlist',
-						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-full-list.txt',
 					],
 				},
 				
@@ -223,20 +261,20 @@
 					'action_name': 'gen_icu_data_remove_list',
 					'inputs':
 					[
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-full-list.txt',
 						'rsrc/icudata-minimal-list.txt',
 					],
 					'outputs':
 					[
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 					],
 					'action':
 					[
 						'python',
 						'../util/remove_matching.py',
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-full-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-full-list.txt',
 						'rsrc/icudata-minimal-list.txt',
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 					],
 				},
 				
@@ -244,7 +282,7 @@
 					'action_name': 'minimal_icu_data',
 					'inputs':
 					[
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 					],
 					'outputs':
 					[
@@ -255,7 +293,7 @@
 					[
 						'>(prebuilt_icu_bin_dir)/icupkg',
 						'--remove',
-						'>(SHARED_INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
+						'<(INTERMEDIATE_DIR)/data/icudata-remove-list.txt',
 						'--auto_toc_prefix',
 						'>(prebuilt_icu_share_dir)/icudt58l.dat',
 						'<(SHARED_INTERMEDIATE_DIR)/data/icudata-minimal.dat',
@@ -268,7 +306,7 @@
 			'target_name': 'encode_minimal_icu_data',
 			'type': 'none',
 			
-			'toolsets': ['host'],
+			'toolsets': ['host', 'target'],
 
 			'dependencies':
 			[
