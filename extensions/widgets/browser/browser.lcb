@@ -709,52 +709,8 @@ end handler
 ----------
 
 constant kSvgIcon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2.3S21.7,6.6,21.7,12z M11.9,16.6c0-0.2-0.1-0.3-0.3-0.4  C11,16,10.4,16,9.9,15.5c-0.1-0.2-0.1-0.4-0.2-0.6c-0.2-0.2-0.7-0.3-1-0.4c-0.4,0-0.8,0-1.3,0c-0.2,0-0.5,0-0.7,0  c-0.3-0.1-0.5-0.5-0.7-0.8C6,13.6,6,13.4,5.8,13.4c-0.2-0.1-0.4,0.1-0.6,0c-0.1-0.1-0.1-0.2-0.1-0.3c0-0.3,0.2-0.6,0.4-0.8  c0.3-0.2,0.6,0.1,0.9,0.1c0.1,0,0.1,0,0.2,0.1C6.9,12.6,7,13,7,13.3c0,0.1,0,0.2,0,0.2c0,0.1,0.1,0.1,0.2,0.1c0.1-0.5,0.1-1,0.2-1.5  c0-0.6,0.6-1.2,1.1-1.4c0.2-0.1,0.3,0.1,0.5,0c0.6-0.2,2.1-0.8,1.8-1.6C10.6,8.4,10,7.7,9.2,7.8C9,7.9,8.9,8,8.7,8.1  C8.4,8.3,7.8,8.9,7.5,8.9C7,8.8,7,8.1,7.1,7.8c0.1-0.4,1-1.7,1.6-1.5C8.8,6.4,9,6.6,9.1,6.7c0.2,0.1,0.5,0.1,0.8,0.1  c0.1,0,0.2,0,0.3-0.1c0.1-0.1,0.1-0.1,0.1-0.2c0-0.3-0.3-0.6-0.5-0.8C9.6,5.5,9.3,5.3,9,5.2C8,4.9,6.4,5.3,5.6,6  C4.8,6.7,4.2,7.9,3.8,8.9C3.6,9.5,3.4,10.3,3.3,11c-0.1,0.5-0.2,0.9,0.1,1.4C3.7,13,4.3,13.6,4.9,14c0.4,0.3,1.2,0.3,1.6,0.8  c0.3,0.4,0.2,0.9,0.2,1.4c0,0.6,0.4,1.1,0.6,1.6c0.1,0.3,0.2,0.7,0.3,1c0,0.1,0.1,0.7,0.1,0.8c0.6,0.3,1.1,0.6,1.8,0.8  c0.1,0,0.5-0.6,0.5-0.7c0.3-0.3,0.5-0.7,0.8-0.9c0.2-0.1,0.4-0.2,0.6-0.4c0.2-0.2,0.3-0.6,0.4-0.9C11.9,17.3,12,16.9,11.9,16.6z   M12.1,7.4c0.1,0,0.2-0.1,0.4-0.2c0.3-0.2,0.6-0.5,0.9-0.7c0.3-0.2,0.6-0.5,0.8-0.7c0.3-0.2,0.5-0.6,0.6-0.9  c0.1-0.2,0.4-0.6,0.3-0.9c-0.1-0.2-0.6-0.3-0.8-0.4c-0.8-0.2-1.5-0.3-2.3-0.3c-0.3,0-0.7,0.1-0.8,0.4c-0.1,0.5,0.3,0.4,0.7,0.5  c0,0,0.1,0.8,0.1,0.9c0.1,0.5-0.2,0.8-0.2,1.3c0,0.3,0,0.8,0.2,1C12,7.4,12.1,7.4,12.1,7.4z M20.5,14.4c0.1-0.2,0.1-0.5,0.2-0.7  c0.1-0.5,0.1-1,0.1-1.5c0-1-0.1-2-0.4-2.9C20.2,9,20.1,8.7,20,8.4c-0.2-0.5-0.5-1-0.9-1.4c-0.4-0.5-0.9-1.9-1.8-1.5  c-0.3,0.1-0.5,0.5-0.7,0.7c-0.2,0.3-0.4,0.6-0.6,0.9c-0.1,0.1-0.2,0.3-0.1,0.4c0,0.1,0.1,0.1,0.2,0.1c0.2,0.1,0.3,0.1,0.5,0.2  c0.1,0,0.2,0.1,0.1,0.2c0,0,0,0.1-0.1,0.1c-0.5,0.5-1,0.9-1.5,1.4c-0.1,0.1-0.2,0.3-0.2,0.4c0,0.1,0.1,0.1,0.1,0.2  c0,0.1-0.1,0.1-0.2,0.2c-0.2,0.1-0.4,0.2-0.5,0.3c-0.1,0.2,0,0.5-0.1,0.7c-0.1,0.5-0.4,0.9-0.6,1.4c-0.2,0.3-0.3,0.6-0.5,0.9  c0,0.4-0.1,0.7,0.1,1c0.5,0.7,1.4,0.3,2.1,0.6c0.2,0.1,0.4,0.1,0.5,0.3c0.3,0.3,0.3,0.8,0.4,1.1c0.1,0.4,0.2,0.8,0.4,1.2  c0.1,0.5,0.3,1,0.4,1.4c0.9-0.7,1.7-1.5,2.3-2.5C19.9,16,20.2,15.2,20.5,14.4z"
-constant kBorderWidth is 5
-
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-	return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
 public handler OnPaint() returns nothing
-	// Draw placeholder image - the browser icon
-	variable tFillPaint as Paint
-	variable tStrokePaint as Paint
-	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-
-	variable tBounds as Rectangle
-	put my bounds into tBounds
-
-	set the paint of this canvas to tFillPaint
-	fill rectangle path of tBounds on this canvas
-	set the paint of this canvas to tStrokePaint
-	set the stroke width of this canvas to kBorderWidth
-	set the join style of this canvas to "bevel"
-	stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-
-	variable tPath as Path
-	put path kSvgIcon into tPath
-	constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
-	fill tPath on this canvas
-
-	// Draw the control name
-	put solid paint with color [1, 1, 1] into tFillPaint
-	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
-
-	variable tNameString as String
-	put my name into tNameString
-
-	set the font of this canvas to font "Arial" at size 14
-
-	variable tTextBounds as Rectangle
-	put the image bounds of text tNameString on this canvas into tTextBounds
-
-	translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
-	translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-	set the paint of this canvas to tFillPaint
-	fill rounded rectangle path of expandRectangle(tTextBounds, kBorderWidth) with radius 5 on this canvas
-	set the paint of this canvas to tStrokePaint
-	fill text tNameString at point [0, 0] on this canvas
+    paintPlaceholderImage(this canvas, my bounds, kSvgIcon, my name, nothing, nothing)
 end handler
 
 ----------
