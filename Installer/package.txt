@@ -155,7 +155,7 @@ component Misc
 			textfile "ide:License Agreement.txt"
 			textfile "ide:about.txt"
 		if TargetEdition is "CommunityPlus" then
-			textfile "private:License Agreement.txt"
+			textfile "private:CommunityPlus License Agreement.txt" as "License Agreement.txt"
 			textfile "private:about.txt"
 		if TargetEdition is "Indy" then
 			textfile "private:License Agreement.txt"

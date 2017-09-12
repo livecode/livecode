@@ -348,11 +348,17 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    set the uProductTag of stack tInstaller to tProductTag & "-" & pVersion
    set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
    
-   if editionIsInPrivateRepo(pEdition) then
-      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
-   else
-      set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
-   end if
+   switch pEdition
+      case "community"
+         set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
+         break
+      case "communityplus"
+         set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "CommunityPlus License Agreement.txt")
+         break
+      default
+         set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
+         break
+   end switch
    
    -- move behaviors to substacks
    local tInstallerBehaviors, tInstallerBehavior
