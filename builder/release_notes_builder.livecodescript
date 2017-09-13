@@ -126,6 +126,22 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
    end try
 end releaseNotesBuilderRun
 
+private function editionNames
+    return "professional,commercial,communityplus,community"
+end editionNames
+
+private function editionDisplayName pEdition
+   switch pEdition
+      case "community"
+         return "Community"
+      case "communityplus"
+         return "Community Plus"
+      case "commercial"
+         return "Indy"
+      case "professional"
+         return "Business"
+   end switch
+end editionDisplayName
 
 private command ComponentsCreate pComponents
    BuilderLog "report", "Creating component release notes"
