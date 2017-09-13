@@ -21,8 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "exec.h"
 
-
-
 #include "mblandroidjava.h"
 
 #include <jni.h>
@@ -500,18 +498,38 @@ bool MCJavaStringFromNative(JNIEnv *env, const char *p_string, jstring &r_java_s
     }
 }
 
-bool MCJavaStringFromNativeUTF8(JNIEnv *env, const char *p_string, jstring &r_java_string)
+bool MCJavaStringFromUTF8(JNIEnv *env, const char *p_string, jstring &r_java_string)
 {
     if (p_string == nil)
     {
         r_java_string = nil;
         return true;
     }
-    else
+    
+    /* The JNI NewStringUTF function expected Modified UTF-8 which encodes NUL
+     * as two bytes, and SMP chars as two surrogates. This differs from the
+     * encoding of p_string, which is standard UTF-8. Therefore, we convert
+     * p_string to UTF-16, and then use NewString instead. */
+    
+    /* Create a StringRef from the UTF-8, which does the necessary conversion
+     * to UTF-16. */
+    MCAutoStringRef t_string;
+    if (!MCStringCreateWithBytes((const char_t *)p_string, strlen(p_string), kMCStringEncodingUTF8, false, &t_string))
     {
-        return nil != (r_java_string = env->NewStringUTF(p_string));
+        return false;
     }
+    
+    /* Now lock the content of the stringref as UTF-16 so we can pass the buffer
+     * and length to the JNI function. */
+    MCAutoStringRefAsUTF16String t_utf16_string;
+    if (!t_utf16_string.Lock(*t_string))
+    {
+        return false;
+    }
+    
+    return nil != (r_java_string = env->NewString(t_utf16_string.Ptr(), t_utf16_string.Size()));
 }
+
 bool MCJavaStringFromUnicode(JNIEnv *env, const MCString *p_string, jstring &r_java_string)
 {
     if (p_string == nil)
@@ -1729,7 +1747,7 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
                 {
                     t_cstring = va_arg(p_args, const char *);
 
-                    t_success = MCJavaStringFromNativeUTF8(env, t_cstring, t_java_string);
+                    t_success = MCJavaStringFromUTF8(env, t_cstring, t_java_string);
                     if (t_success)
                         t_value . l = t_java_string;
                     
