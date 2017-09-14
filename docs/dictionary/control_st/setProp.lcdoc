@@ -75,7 +75,7 @@ script contains the <setProp> <handler>.
 > <recursion> will result:
 
     setProp myCustomProperty pValue
-        set the myCustomProperty of the target to newValue + 1
+        set the myCustomProperty of the target to pValue + 1
         -- Because the target is the button, and this handler is in
         -- the card, the above statement sends another setProp trigger
         -- to the button.
