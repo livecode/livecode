@@ -272,6 +272,7 @@ public handler OnCreate()
 	setSelected([])
 	
 	put true into mShowFrameBorder
+	put true into mIsHorizontal	
 		
 	// Initialise other variables
 	put true into mGeometryIsChanged
