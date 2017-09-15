@@ -1441,13 +1441,14 @@ static bool MCPropertyFormatList(Formatter p_format,
     if (!MCListCreateMutable(p_delimiter, &t_list))
         return false;
 
-    for (uindex_t i = 0; i < p_count; ++i)
-    {
-        MCAutoStringRef t_formatted;
+	for (uindex_t i = 0; i < p_count; ++i)
+	{
+		MCAutoStringRef t_formatted;
 		if (!p_format(p_list[i], &t_formatted))
-            return false;
+			return false;
 		if (!MCListAppend(*t_list, *t_formatted))
-			return false;	}
+			return false;
+	}
 
     return MCListCopyAsString(*t_list, r_string);
 }
