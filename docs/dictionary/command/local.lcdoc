@@ -2,7 +2,7 @@ Name: local
 
 Type: command
 
-Syntax: local <variableName> [= <value>] [, ...]
+Syntax: local <variableName> [= <value>] [, <variableName> [= <value>] ...]
 
 Summary:
 <declare|Declares> one or more <local variable|local variables> and

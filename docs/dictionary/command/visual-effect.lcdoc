@@ -2,8 +2,7 @@ Name: visual effect
 
 Type: command
 
-Syntax: visual [effect] <effectName> [<speed>] [to <finalImage>] 
-[with sound <audioClip>] [and <param> <value> and ...]
+Syntax: visual [effect] <effectName> [<speed>] [to <finalImage>] [with sound <audioClip>] [and <param> <value> ...]
 
 Summary:
 Adds a visual effect transition.
