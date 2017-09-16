@@ -48,7 +48,7 @@
 					'variables':
 					{
 						# Hack required due to GYP failure / refusal to treat this as a path
-						'prebuilt_icu_bin_dir': '$(SolutionDir)../../prebuilt/unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/bin',
+						'prebuilt_icu_bin_dir': '$(ProjectDir)../../../prebuilt/unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/bin',
 						'prebuilt_icu_share_dir': 'unpacked/icu/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/share',
 					},
 				},
