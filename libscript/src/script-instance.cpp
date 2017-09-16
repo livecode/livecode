@@ -1028,7 +1028,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
     
     /* Next we must compute the cif. */
-    MCAutoPointer<void> t_layout_cif;
+    MCAutoCustomPointer<void, MCMemoryDeallocate> t_layout_cif;
     ffi_cif *t_cif = nullptr;
     ffi_type *t_cif_return_type = nullptr;
     ffi_type **t_cif_arg_types = nullptr;

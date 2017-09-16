@@ -2758,6 +2758,15 @@ enum Exec_errors
 
     // {EE-0903} snapshot: no screen
     EE_SNAPSHOT_FAILED,
+    
+    // {EE-0904} literal: error in value expression
+    EE_SEQLITERAL_BADEXPR,
+    
+    // {EE-0905} literal: error in key expression
+    EE_ARRLITERAL_BADKEYEXPR,
+    
+    // {EE-0906} literal: error in value expression
+    EE_ARRLITERAL_BADVALEXPR,
 };
 
 extern const char *MCexecutionerrors;

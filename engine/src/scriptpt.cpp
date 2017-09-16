@@ -1572,6 +1572,16 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				return PS_NORMAL;
 			}
 			break;
+        case ST_LC:
+            newfact = insertfactor(new MCArrayLiteral, curfact, top);
+            newfact->parse(*this, doingthe);
+            needfact = False;
+            break;
+        case ST_LB:
+            newfact = insertfactor(new MCSequenceLiteral, curfact, top);
+            newfact->parse(*this, doingthe);
+            needfact = False;
+            break;
 		default:
 			if (lookup(SP_FACTOR, te) == PS_NORMAL)
 			{

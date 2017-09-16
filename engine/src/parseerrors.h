@@ -1792,6 +1792,27 @@ enum Parse_errors
 	
     // {PE-0582} send: can't send script in time
     PE_SEND_SCRIPTINTIME,
+    
+    // {PE-0583} out of memory
+    PE_OUTOFMEMORY,
+    
+    // {PE-0584} literal: expression expected
+    PE_SEQLITERAL_EXPEXPECTED,
+    
+    // {PE-0585} literal: ',' or ']' expected
+    PE_SEQLITERAL_SEPEXPECTED,
+    
+    // {PE-0586} literal: expression for key expected
+    PE_ARRLITERAL_KEYEXPEXPECTED,
+    
+    // {PE-0587} literal: expression for value expected
+    PE_ARRLITERAL_VALEXPEXPECTED,
+    
+    // {PE-0588} literal: ':' expected
+    PE_ARRLITERAL_COLEXPECTED,
+    
+    // {PE-0589} literal: ',' or '}' expected
+    PE_ARRLITERAL_SEPEXPECTED,
 };
 
 extern const char *MCparsingerrors;

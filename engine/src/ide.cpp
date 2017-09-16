@@ -877,6 +877,9 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 				case ST_RP:
 				case ST_LB:
 				case ST_RB:
+                case ST_LC:
+                case ST_RC:
+                case ST_COL:
 				case ST_SEP:
 					t_char = next_valid_char(p_text, t_index);
 					t_class = COLOURIZE_CLASS_OPERATOR;
@@ -930,8 +933,6 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					t_end = t_index;
 				break;
 
-                case ST_LC:
-                case ST_RC:
                 case ST_EOF:
 				case ST_ERR:
 					t_char = next_valid_char(p_text, t_index);
