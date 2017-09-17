@@ -2,7 +2,10 @@ Name: getProp
 
 Type: control structure
 
-Syntax: getProp <propertyName> <statementList> end <propertyName>
+Syntax:
+getProp <propertyName>
+   <statementList>
+end <propertyName>
 
 Summary:
 <handle|Handles> the <message> sent to an <object(glossary)> when you
