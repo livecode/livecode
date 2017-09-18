@@ -619,8 +619,19 @@ static void MCScreenDCDoSnapshot(void *p_env)
 										  -[window bounds].size.height * [[window layer] anchorPoint].y);
 					
 					// Render the layer hierarchy to the current context
-					[[window layer] renderInContext:t_img_context];
-					
+                    if ([window respondsToSelector: @selector(drawViewHierarchyInRect:afterScreenUpdates:)])
+                    {
+                        // This method is supported in iOS7+ and will capture many
+                        // native view's content.
+                        UIGraphicsPushContext(t_img_context);
+                        [window drawViewHierarchyInRect:[window bounds] afterScreenUpdates:YES];
+                        UIGraphicsPopContext();
+                    }
+                    else
+                    {
+                        [[window layer] renderInContext:t_img_context];
+					}
+                    
 					// Restore the context
 					CGContextRestoreGState(t_img_context);
 				}

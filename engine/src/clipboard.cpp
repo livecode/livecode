@@ -1112,8 +1112,13 @@ bool MCClipboard::CopyAsBMP(MCDataRef& r_bmp) const
 	// Copy and decode the BMP file
 	MCAutoDataRef t_bmp;
 	if (!CopyAsData(kMCRawClipboardKnownTypeWinDIBv5, &t_bmp))
-		return false;
-	
+    {
+        if (!CopyAsData(kMCRawClipboardKnownTypeWinDIB, &t_bmp))
+        {
+		    return false;
+	    }
+    }
+
 	MCDataRef t_decoded = m_clipboard->DecodeTransferredBMP(*t_bmp);
 	if (t_decoded == nil)
 		return false;

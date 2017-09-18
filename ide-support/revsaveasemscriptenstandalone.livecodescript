@@ -307,7 +307,7 @@ end storeExtensionByKind
 private function getExtensionFilesByKind pInstallFolder
    local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
    
-   if isCommercialDeployment() then
+   if not revEnvironmentEditionProperty("open_source_required") then
       put empty into tFiles
       put 0 into tFileCount
       
@@ -534,7 +534,7 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          put true into tCleanTempFile
          
          -- Clear standalone settings
-         if isCommercialDeployment() then
+         if not revEnvironmentEditionProperty("open_source_required") then
             set the customProperties["cRevStandaloneSettings"] of tStack to empty
          else
             -- For Community edition deployment to retain everything

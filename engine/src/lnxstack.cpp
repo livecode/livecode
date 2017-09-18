@@ -295,31 +295,16 @@ void MCStack::sethints()
 		|| t_env == kMCModeEnvironmentTypeInstaller
 		|| t_env == kMCModeEnvironmentTypeServer)
 	{
-		const char *t_edition_name;
-		switch (MClicenseparameters.license_class)
-		{
-		case kMCLicenseClassProfessionalEvaluation:
-		case kMCLicenseClassProfessional:
-			t_edition_name = "business";
-				break;
-		case kMCLicenseClassEvaluation:
-		case kMCLicenseClassCommercial:
-			t_edition_name = "indy";
-			break;
-		case kMCLicenseClassNone:
-		case kMCLicenseClassCommunity:
-		default:
-			t_edition_name = "community";
-			break;
-		}
-
-		if (MCStringCreateMutable(0, &t_app_name))
+        
+        MCAutoStringRef t_edition_name;
+        if (MCStringCreateMutable(0, &t_app_name) &&
+            MCStringFromLicenseClass(MClicenseparameters.license_class, true, &t_edition_name))
 		{
 			bool t_success = true;
 			if (t_env == kMCModeEnvironmentTypeEditor)
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%s", MCapplicationstring, *t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
 			else
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%@_%s", MCapplicationstring, *t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
 				
 			if (t_success)
 			{

@@ -51,7 +51,7 @@ private function OutputGetGuideFilename tSuffix, pVersion
    end if
    
    local tBasename
-   put merge("LiveCode[[sEdition]]UserGuide-") & replaceText(pVersion, "[-,\.]", "_") into tBasename
+   put merge("LiveCodeUserGuide-") & replaceText(pVersion, "[-,\.]", "_") into tBasename
    return sOutputPath & slash & tBasename & "." & tSuffix
 end OutputGetGuideFilename
 

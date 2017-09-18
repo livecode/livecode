@@ -862,7 +862,7 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    end if
    
    -- Auto-remove stack passwords from community stacks
-   if revLicenseType() is "community" then
+   if not revEnvironmentEditionProperty("password_protection") then
       if xSettingsA["password"] is not empty then
          delete variable xSettingsA["password"]
       end if
@@ -2613,7 +2613,7 @@ function revSBEnginePath pPlatform
    put the editionType into tEdition
    // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
    //  allow to create broken applications, so that the executable file in it bears the edition.
-   if tEdition is "professional" then
+   if tEdition is not "community" then
       put "Commercial" into tEdition
    end if
    

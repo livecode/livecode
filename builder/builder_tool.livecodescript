@@ -5,6 +5,7 @@ local sDebug -- True if the builder should run in debugging mode
 on startup
    set the itemdelimiter to slash
    start using stack (item 1 to -2 of the filename of me & slash & "builder_utilities.livecodescript")
+   start using stack (item 1 to -2 of the filename of me & slash & "edition_utilities.livecodescript")
    set the itemDelimiter to comma
    
    __loadExternal "revzip"
@@ -56,7 +57,7 @@ on startup
          put tArgs[tArgIndex + 1] into tStage
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--edition" then
-         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business,commercial" then
+         if tArgs[tArgIndex + 1] is not among the items of editionNames() then
             __builderLog "error", "Unknown edition '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tEdition
