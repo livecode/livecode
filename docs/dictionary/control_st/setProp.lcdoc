@@ -2,7 +2,10 @@ Name: setProp
 
 Type: control structure
 
-Syntax: setProp <propertyName> <newValue> <statementList> end <propertyName>
+Syntax:
+setProp <propertyName> <newValue>
+   <statementList>
+end <propertyName>
 
 Summary:
 <handle|Handles> the <trigger> sent to an <object(glossary)> when you
