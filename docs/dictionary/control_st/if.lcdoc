@@ -2,7 +2,12 @@ Name: if
 
 Type: control structure
 
-Syntax: if <condition> then <statementList> [else <elseStatementList>]
+Syntax:
+if <condition> then
+   <statementList>
+[else
+   <elseStatementList>]
+end if
 
 Summary:
 <execute|Executes> a list of <statement|statements> if a condition is
