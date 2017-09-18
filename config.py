@@ -203,11 +203,15 @@ def guess_xcode_arch(target_sdk):
     if sdk == 'iphoneos':
         if int(ver) < 8:
             return 'armv7'
+        elif int(ver) >= 11:
+        	return 'arm64'
         else:
             return 'armv7 arm64'
     if sdk == 'iphonesimulator':
         if int(ver) < 8:
             return 'i386'
+        elif int(ver) >= 11:
+        	return 'x86_64'
         else:
             return 'i386 x86_64'
 
