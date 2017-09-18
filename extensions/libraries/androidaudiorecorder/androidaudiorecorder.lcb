@@ -19,7 +19,7 @@ metadata title is "Android Audio Recorder"
 
 -- We need permissions to record audio and write to the external
 -- storage directory.
-metadata android.permissions is "RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,CAPTURE_AUDIO_OUTPUT"
+metadata android.permissions is "RECORD_AUDIO,CAPTURE_AUDIO_OUTPUT"
 
 use com.livecode.foreign
 use com.livecode.java
@@ -44,11 +44,6 @@ __safe foreign handler _JNI_MediaRecorderReset(in pRecorder as JObject) returns 
 	binds to "java:android.media.MediaRecorder>reset()V"
 __safe foreign handler _JNI_MediaRecorderGetMaxAmplitude(in pRecorder as JObject) returns JInt \
     binds to "java:android.media.MediaRecorder>getMaxAmplitude()I"
-    
-__safe foreign handler _JNI_GetExternalStorageDir() returns JObject \
-	binds to "java:android.os.Environment>getExternalStorageDirectory()Ljava/io/File;!static"
-__safe foreign handler _JNI_GetFilePath(in pFile as JObject) returns JString \
-	binds to "java:java.io.File>getAbsolutePath()Ljava/lang/String;"
 
 -- This will store an instance of a MediaRecorder
 private variable mRecorder as optional JObject
@@ -130,11 +125,14 @@ end handler
 Summary: Start recording an audio file, using the given filename
 
 Example:
-    androidRecorderStartRecording "recording.mp4"
+   local tFilePath
+   put specialFolderPath("external documents") & slash & "recording.mp4" \
+      into tFilePath   
+   androidRecorderStartRecording tFilePath
 
 Parameters:
-pFileName: The filename to use when recording audio
-    
+pFileName: The absolute filename of the output file
+
 Description:
 Use the <androidRecorderStartRecording> handler to start recording audio
 on Android using the input source, compression type and output format 
@@ -148,12 +146,10 @@ androidRecorderSetRecordInput (handler),
 androidRecorderSetRecordCompressionType (handler), 
 androidRecorderSetRecordFormat (handler)
 */
-public handler androidRecorderStartRecording(in pFileName as String) returns String
+public handler androidRecorderStartRecording(in pFileName as String) returns nothing
     if not IsAndroid() then
         throw "Not supported on this platform"
     end if
-    -- Record an mp4 file in the external storage directory with the given
-    -- name, (i.e. /storage/emulated/0/pFileName.mp4 or equivalent)
 
     CreateRecorder()
     
@@ -161,23 +157,9 @@ public handler androidRecorderStartRecording(in pFileName as String) returns Str
         throw "unable to create recorder"
     end if
     
-    variable tFile as JString
-    put GetAbsolutePathToPublicDocument(pFileName) into tFile
-    _JNI_MediaRecorderSetRecordOutputFile(mRecorder, tFile)
+    _JNI_MediaRecorderSetRecordOutputFile(mRecorder, StringToJString(pFileName))
     _JNI_MediaRecorderPrepare(mRecorder)
     _JNI_MediaRecorderStart(mRecorder)
-    return StringFromJString(tFile)
-end handler
-
-handler GetAbsolutePathToPublicDocument(in pDoc as String) returns JString
-    variable tDirectory as JObject
-    put _JNI_GetExternalStorageDir() into tDirectory
-    
-    variable tPath as String
-    put StringFromJString(_JNI_GetFilePath(tDirectory)) & "/" & pDoc into tPath
-    variable tFile as JObject
-
-    return StringToJString(tPath)
 end handler
 
 /**
