@@ -51,7 +51,7 @@ function deployGetIphoneOSes
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3"
+   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
