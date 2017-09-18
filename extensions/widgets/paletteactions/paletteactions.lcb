@@ -29,7 +29,7 @@ use com.livecode.library.widgetutils
 
 metadata title is "Palette Actions"
 metadata author is "LiveCode"
-metadata version is "1.0.0"
+metadata version is "1.0.1"
 metadata userVisible is "false"
 
 property navNames		get getNavNames			set setNavNames
@@ -741,7 +741,7 @@ private handler setData(in pArray as Array, in pDefaultArray as Array, out rList
 	end if
 
 	put tList into rList
-	recalculateRects()
+	put true into mRecalculate
 	redraw all
 end handler
 
