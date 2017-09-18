@@ -87,6 +87,7 @@ It will run on the following versions of Android:
 * 4.4 (KitKat)
 * 5.0-5.1 (Lollipop)
 * 6.0 (Marshmallow)
+* 7.0 (Nougat)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and

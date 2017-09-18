@@ -1079,12 +1079,12 @@ MCRectangle MCPlayer::GetNativeViewRect(const MCRectangle &p_object_rect)
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
-    if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
+    if (MCNameIsEqualToCaseless(mptr, MCM_play_started))
     {
         state &= ~CS_PAUSED;
         redrawcontroller();
     }
-    else if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_play_stopped))
     {
         state |= CS_PAUSED;
         redrawcontroller();
@@ -1097,14 +1097,14 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
             return; //obj is already deleted, do not pass msg up.
         }
     }
-    else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_play_paused))
     {
         state |= CS_PAUSED;
         redrawcontroller();
         
         m_modify_selection_while_playing = false;
     }
-    else if (MCNameIsEqualTo(mptr, MCM_current_time_changed, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_current_time_changed))
     {
         // If params is nil then this did not originate from the player!
         if (params != nil)
@@ -1115,7 +1115,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
             params -> setn_argument(getmoviecurtime());
         }
     }
-    else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_internal))
     {
         handle_mstilldown(Button1);
         MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
@@ -1299,6 +1299,7 @@ MCPlayerDuration MCPlayer::getmoviecurtime()
 
 void MCPlayer::setcurtime(MCPlayerDuration newtime, bool notify)
 {
+    newtime = MCMin(newtime, getduration());
 	lasttime = newtime;
 	if (m_platform_player != nil && hasfilename())
     {
@@ -1821,9 +1822,9 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 			
             for (uindex_t i = 0; i < t_track_count; i++)
             {
-				// If the list of enabledtracks we set contains empty/0, just skip it
+				// If the list of enabledtracks we set contains 0 (empty), just skip it
 				if (p_tracks_id[i] == 0)
-					i++;
+					continue;
 					
                 uindex_t t_index;
                 if (!MCPlatformFindPlayerTrackWithId(m_platform_player, p_tracks_id[i], t_index))
@@ -2158,8 +2159,8 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     // Free the existing callback table.
     for(uindex_t i = 0; i < m_callback_count; i++)
     {
-        MCNameDelete(m_callbacks[i] . message);
-        MCNameDelete(m_callbacks[i] . parameter);
+        MCValueRelease(m_callbacks[i] . message);
+        MCValueRelease(m_callbacks[i] . parameter);
     }
     MCMemoryDeleteArray(m_callbacks);
     m_callbacks = nil;
@@ -2924,7 +2925,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlayerDuration t_current_time, t_duration;
             t_current_time = getmoviecurtime();
             t_duration = getduration();
-            
+			t_current_time = MCMin(t_current_time, t_duration);
+			
             MCRectangle t_well_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
             
@@ -3477,14 +3479,7 @@ void MCPlayer::handle_mstilldown(int p_which)
     {
         case kMCPlayerControllerPartScrubForward:
         {
-            MCPlayerDuration t_current_time, t_duration;
-            t_current_time = getmoviecurtime();
-            t_duration = getduration();
-            
-            if (t_current_time > t_duration)
-                t_current_time = t_duration;
-            
-            double t_rate;
+	    double t_rate;
             if (m_inside)
             {
                 t_rate = 2.0;
@@ -3499,14 +3494,7 @@ void MCPlayer::handle_mstilldown(int p_which)
             
         case kMCPlayerControllerPartScrubBack:
         {
-            MCPlayerDuration t_current_time, t_duration;
-            t_current_time = getmoviecurtime();
-            t_duration = getduration();
-            
-            if (t_current_time < 0.0)
-                t_current_time = 0.0;
-            
-            double t_rate;
+	    double t_rate;
             if (m_inside)
             {
                 t_rate = -2.0;

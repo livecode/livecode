@@ -2,7 +2,7 @@ Name: pushNotificationReceived
 
 Type: message
 
-Syntax: pushNotificationReceived <message>
+Syntax: pushNotificationReceived <pMessage>
 
 Summary:
 Sent when the application receives a push notification from a Push
@@ -22,7 +22,7 @@ on pushNotificationReceived tMessage
 end pushNotificationReceived
 
 Parameters:
-message:
+pMessage:
 The Notification Message received. This is text that was submitted when
 the message was scheduled with the Push Notification Server.
 

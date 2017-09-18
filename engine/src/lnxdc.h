@@ -327,11 +327,7 @@ public:
 	
 	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
-	
-#ifdef OLD_GRAPHICS
-	MCBitmap *regiontomask(MCRegionRef r, int32_t w, int32_t h);
-#endif
-    
+
     // Processes all outstanding GDK events and adds them to the event queue
     void EnqueueGdkEvents(bool p_may_block = false);
     

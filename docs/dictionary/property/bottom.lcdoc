@@ -36,11 +36,13 @@ Description:
 Use the <bottom> <property> to change the vertical placement of a
 <control> or window.
 
-The <bottom> of a <stack> is in <absolute (screen)
-coordinates(glossary)>. The <bottom> of a <card> is always equal to the
+The <bottom> of a <stack> is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The <bottom> of a <card> is always equal to the
 height of the <stack window>; setting the <bottom> of a <card> does not
 cause a <error|script error>, but it has no effect. The <bottom> of a
-<group> or <control> is in <relative (window) coordinates(glossary)>.
+<group> or <control> is in 
+<relative coordinates(glossary)|relative (window) coordinates>.
 
 Changing the <bottom> of an <object(glossary)> shifts it to the new
 position without resizing it. To change an <object|object's> height, set

@@ -480,7 +480,11 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
                 // us how to unpack a colour pixel.
                 MCColor t_color;
 				MCColorSetPixel(t_color, ctxt . colors[i]);
-                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", t_color . red, t_color . green, t_color . blue);
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text,
+                                                     "\\red%d\\green%d\\blue%d;",
+                                                     MCClamp(t_color.red >> 8, 0, 255),
+                                                     MCClamp(t_color.green >> 8, 0, 255),
+                                                     MCClamp(t_color.blue >> 8, 0, 255));
             }
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}

@@ -479,11 +479,11 @@ command revSearchForInclusions pStack, @xSettings
    end if
 end revSearchForInclusions
 
-private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileList
+private on revStandalonePreBuild pStack, pFolder, pPlatform, @rStackName, @rStackFileList
    revStandaloneProgress "Loading settings..."
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies sStandaloneSettingsA
+   revSBUpdateForDependencies pPlatform, sStandaloneSettingsA
    
    local tCount
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
@@ -615,7 +615,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
    
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
+   revStandalonePreBuild pStack, pFolder, "macosx", tStackName, tStackFileList
    
    set the itemDelimiter to slash
    put the effective filename of stack pStack into tOriginalFileName
@@ -722,7 +722,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
+   revStandalonePreBuild pStack, pFolder, "windows", tStackName, tStackFileList
    
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
    if sStandaloneSettingsA["Windows,iconFile"] = "" then 
@@ -893,7 +893,7 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, tStackName, tStackFileList
+   revStandalonePreBuild pStack, pFolder, "linux", tStackName, tStackFileList
    
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA

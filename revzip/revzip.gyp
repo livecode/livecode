@@ -100,6 +100,17 @@
 						],
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':

@@ -8,6 +8,9 @@ Summary:
 Sent periodically to an <object(glossary)> while the <mouse pointer> is
 within its borders.
 
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android

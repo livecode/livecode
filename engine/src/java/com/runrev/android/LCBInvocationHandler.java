@@ -42,9 +42,8 @@ public class LCBInvocationHandler extends Object implements InvocationHandler
 	
 	public Object invoke(Object proxy, Method method, Object[] args)
 	{
-		doNativeListenerCallback(m_handler_ptr, method.getName(), args);
-		return proxy;
+		return doNativeListenerCallback(m_handler_ptr, method.getName(), args);
 	}
 	
-	public static native void doNativeListenerCallback(long handler, String method_name, Object[] args);
+	public static native Object doNativeListenerCallback(long handler, String method_name, Object[] args);
 }

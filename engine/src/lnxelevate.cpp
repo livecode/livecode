@@ -266,7 +266,7 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 		// Shouldn't return.
 		execvp(t_argv[0], (char * const *) t_argv);
 
-		// If we get here an error occured. We just exit with '-1' since the parent
+		// If we get here an error occurred. We just exit with '-1' since the parent
 		// will detect termination of the child.
 		_exit(-1);
 	}

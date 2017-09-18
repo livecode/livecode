@@ -23,7 +23,7 @@ Value (enum):
 Set the <allowableDragActions> during a <dragStart> handler to indicate
 how the offered data can be manipulated.
 
--   move: up being dropped the data should be removed from the source
+-   move: upon being dropped the data should be removed from the source
 -   copy: the source application should do nothing if the data is
     dropped 
 -   link: the target application will link to the provided data in some

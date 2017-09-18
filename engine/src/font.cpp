@@ -124,7 +124,7 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 		return false;
 
 	self -> references = 1;
-	/* UNCHECKED */ MCNameClone(p_name, self -> name);
+    self->name = MCValueRetain(p_name);
 	self -> style = p_style;
 	self -> size = p_size;
 
@@ -217,7 +217,7 @@ void MCFontRelease(MCFontRef self)
 	else
 		s_fonts = self -> next;
 
-	MCNameDelete(self -> name);
+	MCValueRelease(self -> name);
 	MCMemoryDelete(self);
 }
 
@@ -234,6 +234,11 @@ MCFontStyle MCFontGetStyle(MCFontRef self)
 int32_t MCFontGetSize(MCFontRef self)
 {
 	return self->size;
+}
+
+void *MCFontGetHandle(MCFontRef self)
+{
+    return self->fontstruct->fid;
 }
 
 bool MCFontHasPrinterMetrics(MCFontRef self)

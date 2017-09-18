@@ -299,7 +299,11 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		
 		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
-			MCresult -> sets("failed to load external");
+            MCAutoStringRef t_error;
+            if (!MCStringFormat(&t_error, "failed to load external: %@", *t_external_str))
+                MCresult -> sets("failed to load external");
+            else
+                MCresult -> setvalueref(*t_error);
 			return false;
 		}
 	}
@@ -716,6 +720,10 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+    
+    // the first auxiliary stack loaded during startup will currently be the home stack
+    // we want it to be the initial stack
+    MCdispatcher->changehome(t_stack);
 
 	/* Complete startup tasks and send the startup message */
 
@@ -1309,6 +1317,12 @@ void MCModeSetupCrashReporting(void)
 bool MCModeHandleMessage(LPARAM lparam)
 {
 	return false;
+}
+
+// Pixel scaling can be enabled in standalone mode.
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone

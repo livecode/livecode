@@ -37,8 +37,10 @@ on TestScriptStatus
    
    delete stack "foo"
    
-   get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revaskdialog.rev")
+   TestSkipIfNot "ide"
    
+   get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revaskdialog.rev")
+      
    TestAssert "script status is uncompiled when stack is only loaded", \
-         the scriptStatus of card 1 of it is "uncompiled"
+            the scriptStatus of card 1 of it is "uncompiled"
 end TestScriptStatus

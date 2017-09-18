@@ -2,7 +2,7 @@ Name: linkClicked
 
 Type: message
 
-Syntax: linkClicked <linkedTextOfChunk>
+Syntax: linkClicked <pLinkedTextOfChunk>
 
 Summary:
 Sent when the user clicks <grouped text>.
@@ -21,32 +21,26 @@ launch url pLink
 end linkClicked
 
 Parameters:
-linkedTextOfChunk:
+pLinkedTextOfChunk:
 The linkText property of the clicked text group.
 
 Description:
 Handle the <linkClicked> <message> to respond to the user clicking a
 <grouped text|text group>.
 
-&nbsp;
-
 The <linkClicked> <message> is sent to the <field(keyword)> that was
 clicked. 
-
-&nbsp;
 
 The <linkClicked> <message> is sent only when the <Browse tool> is being
 used and is sent only if the <field(keyword)> is <lock|locked>. The
 <linkClicked> <message> is not sent if the <field(object)|field's>
 <listBehavior> <property> is true.
 
-&nbsp;
-
 If the clicked text is grouped text--that is, if its textStyle
 <property> contains "link" --then the <linkText> <property> of the
-clicked group is sent as the <linkedTextOfChunk> <parameter>. If the
+clicked group is sent as the <pLinkedTextOfChunk> <parameter>. If the
 text's <linkText> is empty, the <clickText> is sent as the
-<linkedTextOfChunk> <parameter>.
+<pLinkedTextOfChunk> <parameter>.
 
 References: click (command), clickLoc (function), clickText (function),
 property (glossary), Browse tool (glossary), grouped text (glossary),

@@ -2,9 +2,7 @@ Name: weekdayNames
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system | internet }] weekdayNames
-
-Syntax: the [internet] [{ english | system }] weekdayNames
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] weekdayNames
 
 Syntax: weekdayNames()
 

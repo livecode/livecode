@@ -500,6 +500,7 @@ extern "C" MC_DLLEXPORT void MCCanvasFontGetItalic(MCCanvasFontRef p_font, bool 
 extern "C" MC_DLLEXPORT void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font);
 extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uinteger_t &r_size);
 extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontGetHandle(MCCanvasFontRef p_font, void*& r_handle);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);

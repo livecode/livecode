@@ -105,7 +105,7 @@ struct export_html_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *s_export_html_tag_strings[] =
+static const char * const s_export_html_tag_strings[] =
 {
 	"a",
 	"span",
@@ -122,7 +122,7 @@ static const char *s_export_html_tag_strings[] =
 	"font"
 };
 
-static const char *s_export_html_list_types[] =
+static const char * const s_export_html_list_types[] =
 {
 	"",
 	"disc",
@@ -138,7 +138,7 @@ static const char *s_export_html_list_types[] =
 
 // This is the list of HTML entities for ISO8859-1 (unicode) codepoints in the range
 // 0x00A0 to 0x00FF inclusive.
-static const char *s_export_html_native_entities[] =
+static const char * const s_export_html_native_entities[] =
 {
 	"nbsp", "iexcl", "cent", "pound", "curren", "yen", "brvbar", "sect", 
 	"uml", "copy", "ordf", "laquo", "not", "shy", "reg", "macr", 
@@ -154,7 +154,7 @@ static const char *s_export_html_native_entities[] =
 	"oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml", 
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
 {
 	{ "OElig", 0x0152 }, { "oelig", 0x0153 }, { "Scaron", 0x0160 }, 
 	{ "scaron", 0x0161 }, { "Yuml", 0x0178 }, { "fnof", 0x0192 }, { "circ", 0x02C6 }, 
@@ -902,7 +902,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "start", kImportHtmlAttrStart },
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
 {
 	{ "AElig", 0x00C6 }, { "Aacute", 0x00C1 }, { "Acirc", 0x00C2 }, { "Agrave", 0x00C0 }, 
 	{ "Alpha", 0x0391 }, { "Aring", 0x00C5 }, { "Atilde", 0x00C3 }, { "Auml", 0x00C4 }, 
@@ -1036,7 +1036,7 @@ static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCh
 	if (p_src . has_metadata)
 		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
-		MCNameClone(p_src . text_font, r_dst . text_font);
+        r_dst.text_font = MCValueRetain(p_src.text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)
@@ -1044,7 +1044,7 @@ static void import_html_free_style(MCFieldCharacterStyle& p_style)
 	MCValueRelease(p_style . link_text);
 	MCValueRelease(p_style . image_source);
 	MCValueRelease(p_style . metadata);
-	MCNameDelete(p_style . text_font);
+	MCValueRelease(p_style . text_font);
 }
 
 static bool import_html_equal_style(const MCFieldCharacterStyle& left, const MCFieldCharacterStyle& right)
@@ -1733,7 +1733,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						{
 							t_style . has_text_font = true;
 							if (t_style . text_font != nil)
-								MCNameDelete(t_style . text_font);
+								MCValueRelease(t_style . text_font);
 							MCNameCreate(p_tag . attrs[i] . value, t_style . text_font);
 						}
 						break;

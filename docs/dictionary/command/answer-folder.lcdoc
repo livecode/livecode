@@ -4,7 +4,7 @@ Synonyms: answer directory
 
 Type: command
 
-Syntax: answer folder <prompt> [with <defaultPath>] [as sheet]
+Syntax: answer folder <prompt> [with <defaultPath>] [titled <windowTitle>] [as sheet]
 
 Summary:
 Displays a <file dialog box|standard file dialog> for the user to choose
@@ -33,12 +33,17 @@ If you specify empty, no prompt appears.
 
 defaultPath:
 The name and location of the folder whose contents are listed when the
-dialog box appears. If no defaultPath is specified, the dialog box lists
-the contents of the last folder you used with a file dialog box.
+<dialog box> appears. If no defaultPath is specified, the <dialog box> lists
+the contents of the last <folder> you used with a <file dialog box>.
+
+windowTitle:
+If specified, appears in the title bar of the dialog box.
+If no <windowTitle> is given, the title bar is blank. This parameter
+has no effect on macOS 10.11 (El Capitan) and above, so make sure that any important information is placed in the <prompt> parameter.
 
 It:
-The absolute file path of the folder the user selects is placed in the
-it <variable>.
+The absolute file path of the <folder> the user selects is placed in the
+<it> <variable>.
 
 The result:
 If the user cancels the <dialog box|dialog>, the <it> <variable> is set
@@ -48,17 +53,17 @@ Description:
 Use the <answer folder> <command> when you want the user to choose a
 <folder> --for example, as a destination for <export|exported> <files>.
 
-If the as sheet form is used, the dialog box appears as a sheet on OS X
+If the as sheet form is used, the <dialog box> appears as a sheet on OS X
 systems. On other systems, the as sheet form has no effect and the
-dialog box appears normally. Attempting to open a sheet from within
+<dialog box> appears normally. Attempting to open a sheet from within
 another sheet displays the second stack as a <modal dialog box> instead.
-To give a dialog box a prompt when using the as sheet form a non-empty
+To give a <dialog box> a prompt when using the as sheet form a non-empty
 title must be provided. This will cause the prompt to appear in the same
 place it would if as sheet was not being used.
 
 If the systemFileSelector <property> is set to false, LiveCode's
-built-in <dialog box> is used instead of the operating system's <file
-dialog box|standard file dialog>.
+built-in <dialog box> is used instead of the operating system's 
+<file dialog box|standard file dialog>.
 
 Changes:
 The answer folder...as sheet form was introduced in version 2.0.

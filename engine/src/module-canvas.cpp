@@ -232,7 +232,7 @@ bool MCProperListGetNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNu
         if (MCTypeInfoIsForeign(t_typeinfo))
         {
             const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_typeinfo);
-            if (t_desc->doimport(MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
+            if (t_desc->doimport(t_desc, MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
                 return true;
         }
     }
@@ -4798,6 +4798,12 @@ void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, t_name, t_style, p_size);
 }
 
+MC_DLLEXPORT_DEF
+void MCCanvasFontGetHandle(MCCanvasFontRef p_font, void*& r_handle)
+{
+    r_handle = MCFontGetHandle(MCCanvasFontGetMCFont(p_font));
+}
+
 // Operations
 
 MCCanvasRectangleRef MCCanvasFontMeasureTextTypographicBoundsWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
@@ -6072,7 +6078,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_ca
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
-    r_height = MCGContextGetWidth(t_canvas -> context);
+    r_height = MCGContextGetHeight(t_canvas -> context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -39,6 +39,7 @@
 			'dependencies':
 			[
 				'../prebuilt/libicu.gyp:libicu',
+				'../prebuilt/libicu.gyp:encode_minimal_icu_data',
 				'../thirdparty/libffi/libffi.gyp:libffi',
 				'../thirdparty/libz/libz.gyp:libz',
 			],
@@ -127,6 +128,8 @@
                 'src/system-library-w32.hpp',
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
+				
+				'<(SHARED_INTERMEDIATE_DIR)/src/icudata-minimal.cpp',
 			],
 
 			'actions':
@@ -159,9 +162,15 @@
 				[
 					'OS != "mac" and OS != "ios"',
 					{
+                        'sources':
+                        [
+                            'src/foundation-objc-dummy.cpp',
+                        ],
+                    
 						'sources!':
 						[
 							'src/foundation-string-cf.cpp',
+                            'src/foundation-objc.mm',
 						],
 					},
 				],

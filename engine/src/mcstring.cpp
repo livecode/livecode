@@ -62,7 +62,7 @@ const uint1 MCmactranslations[256] =
     };
 
 
-const char *MCtoolnames[] =
+const char * const MCtoolnames[] =
     {
         "undefined", "browse", "brush", "bucket",
         "button", "curve", "dropper", "eraser",
@@ -75,105 +75,114 @@ const char *MCtoolnames[] =
 
 const uint4 MCbuildnumber = MC_BUILD_REVISION;
 
-const char *MCcopystring = "Copy of ";
-const char *MCstandardstring = "standard";
-const char *MCdialogstring = "dialog";
-const char *MCmovablestring = "movable";
-const char *MCpalettestring = "palette";
-const char *MCmodalstring = "modal";
-const char *MCsheetstring = "sheet";
-const char *MCdrawerstring = "drawer";
-const char *MCmodelessstring = "modeless";
-const char *MCtoplevelstring = "toplevel";
-const char *MCtransparentstring = "transparent";
-const char *MCopaquestring = "opaque";
-const char *MCrectanglestring = "rectangle";
-const char *MCshadowstring = "shadow";
-const char *MCscrollingstring = "scrolling";
-const char *MCroundrectstring = "roundrect";
-const char *MCcheckboxstring = "checkbox";
-const char *MCradiobuttonstring = "radiobutton";
-const char *MClinestring = "line";
-const char *MCpolygonstring = "polygon";
-const char *MCarcstring = "arc";
-const char *MCovalstring = "oval";
-const char *MCregularstring = "regular";
-const char *MCcurvestring = "curve";
-const char *MCtextstring = "text";
-const char *MCleftstring = "left";
-const char *MCcenterstring = "center";
-const char *MCrightstring = "right";
-const char *MCjustifystring = "justify";
-const char *MCplainstring = "plain";
-const char *MCmixedstring = "mixed";
-const char *MCboxstring = "box";
-const char *MCthreedboxstring = "threedbox";
-const char *MCunderlinestring = "underline";
-const char *MCstrikeoutstring = "strikeout";
-const char *MCgroupstring = "group";
-const char *MClinkstring = "link";
-const char *MCtruestring = "true";
-const char *MCfalsestring = "false";
-const char *MCshiftstring = "shift";
-const char *MCcommandstring = "command";
-const char *MCcontrolstring = "control";
-const char *MCmod1string = "alt";
-const char *MCpulldownstring = "pulldown";
-const char *MCpopupstring = "popup";
-const char *MCoptionstring = "option";
-const char *MCcascadestring = "cascade";
-const char *MCcombostring = "combobox";
-const char *MCtabstring = "tabbed";
-const char *MCstackstring = "stack";
-const char *MCaudiostring = "audioclip";
-const char *MCvideostring = "videoclip";
-const char *MCdefaultstring = "default";
-const char *MCtitlestring = "title";
-const char *MCmenustring = "menu";
-const char *MCminimizestring = "minimize";
-const char *MCmaximizestring = "maximize";
-const char *MCclosestring = "close";
-const char *MCmetalstring = "metal";
-const char *MCutilitystring = "system";
-const char *MCnoshadowstring = "noshadow";
-const char *MCbackgroundstring = "background";
-const char *MCforcetaskbarstring = "forcetaskbar";
-const char *MCunicodestring = "unicode";
-const char *MCnativestring = "native";
+const char * const MCcopystring = "Copy of ";
+const char * const MCstandardstring = "standard";
+const char * const MCdialogstring = "dialog";
+const char * const MCmovablestring = "movable";
+const char * const MCpalettestring = "palette";
+const char * const MCmodalstring = "modal";
+const char * const MCsheetstring = "sheet";
+const char * const MCdrawerstring = "drawer";
+const char * const MCmodelessstring = "modeless";
+const char * const MCtoplevelstring = "toplevel";
+const char * const MCtransparentstring = "transparent";
+const char * const MCopaquestring = "opaque";
+const char * const MCrectanglestring = "rectangle";
+const char * const MCshadowstring = "shadow";
+const char * const MCscrollingstring = "scrolling";
+const char * const MCroundrectstring = "roundrect";
+const char * const MCcheckboxstring = "checkbox";
+const char * const MCradiobuttonstring = "radiobutton";
+const char * const MClinestring = "line";
+const char * const MCpolygonstring = "polygon";
+const char * const MCarcstring = "arc";
+const char * const MCovalstring = "oval";
+const char * const MCregularstring = "regular";
+const char * const MCcurvestring = "curve";
+const char * const MCtextstring = "text";
+const char * const MCleftstring = "left";
+const char * const MCcenterstring = "center";
+const char * const MCrightstring = "right";
+const char * const MCjustifystring = "justify";
+const char * const MCplainstring = "plain";
+const char * const MCmixedstring = "mixed";
+const char * const MCboxstring = "box";
+const char * const MCthreedboxstring = "threedbox";
+const char * const MCunderlinestring = "underline";
+const char * const MCstrikeoutstring = "strikeout";
+const char * const MCgroupstring = "group";
+const char * const MClinkstring = "link";
+const char * const MCtruestring = "true";
+const char * const MCfalsestring = "false";
+const char * const MCdownstring = "down";
+const char * const MCupstring = "up";
+const char * const MCshiftstring = "shift";
+const char * const MCcommandstring = "command";
+const char * const MCcontrolstring = "control";
+const char * const MCmod1string = "alt";
+const char * const MCpulldownstring = "pulldown";
+const char * const MCpopupstring = "popup";
+const char * const MCoptionstring = "option";
+const char * const MCcascadestring = "cascade";
+const char * const MCcombostring = "combobox";
+const char * const MCtabstring = "tabbed";
+const char * const MCstackstring = "stack";
+const char * const MCaudiostring = "audioclip";
+const char * const MCvideostring = "videoclip";
+const char * const MCdefaultstring = "default";
+const char * const MCtitlestring = "title";
+const char * const MCmenustring = "menu";
+const char * const MCminimizestring = "minimize";
+const char * const MCmaximizestring = "maximize";
+const char * const MCclosestring = "close";
+const char * const MCmetalstring = "metal";
+const char * const MCutilitystring = "system";
+const char * const MCnoshadowstring = "noshadow";
+const char * const MCbackgroundstring = "background";
+const char * const MCforcetaskbarstring = "forcetaskbar";
+const char * const MCunicodestring = "unicode";
+const char * const MCnativestring = "native";
 
-const char *MCcardstring = "card";
-const char *MCbuttonstring = "button";
-const char *MCgraphicstring = "graphic";
-const char *MCepsstring = "EPS";
-const char *MCscrollbarstring = "scrollbar";
-const char *MCplayerstring = "player";
-const char *MCscalestring = "scale";
-const char *MCprogressstring = "progress";
-const char *MCimagestring = "image";
-const char *MCfieldstring = "field";
-const char *MCcolorstring = "colorPalette";
-const char *MCmagnifierstring = "magnifier";
-const char *MCwidgetstring = "widget";
+const char * const MCcardstring = "card";
+const char * const MCbuttonstring = "button";
+const char * const MCgraphicstring = "graphic";
+const char * const MCepsstring = "EPS";
+const char * const MCscrollbarstring = "scrollbar";
+const char * const MCplayerstring = "player";
+const char * const MCscalestring = "scale";
+const char * const MCprogressstring = "progress";
+const char * const MCimagestring = "image";
+const char * const MCfieldstring = "field";
+const char * const MCcolorstring = "colorPalette";
+const char * const MCmagnifierstring = "magnifier";
+const char * const MCwidgetstring = "widget";
 
-const char *MCnotfoundstring = "not found";
-const char *MClnfamstring = "Appearance Manager";
-const char *MClnfmacstring = "Macintosh";
-const char *MClnfmotifstring = "Motif";
-const char *MClnfwinstring = "Windows 95";
-const char *MCuntitledstring = "Untitled";
+const char * const MCnotfoundstring = "not found";
+const char * const MCplatformstring = PLATFORM_STRING;
+const char * const MClnfamstring = "Appearance Manager";
+const char * const MClnfmacstring = "Macintosh";
+const char * const MClnfmotifstring = "Motif";
+const char * const MClnfwinstring = "Windows 95";
+const char * const MCuntitledstring = "Untitled";
 // MW-2012-08-29: [[ Bug 10309 ]] Update 'applicationstring' to be 'LiveCode'.
-const char *MCapplicationstring = "livecode";
-const char *MChelpnamestring = "Help";
-const char *MChomenamestring = "Home";
-const char *MCdonestring = "done";
-const char *MCnullstring = "";
-const char *MCintersectstring = "intersect";
-const char *MCsurroundstring = "surround";
-const char *MCtopstring = "top";
-const char *MCbottomstring = "bottom";
-const char *MCcancelstring = "Cancel";
+const char * const MCapplicationstring = "livecode";
+const char * const MCanswernamestring = "Answer Dialog";
+const char * const MCasknamestring = "Ask Dialog";
+const char * const MCfsnamestring = "File Selector";
+const char * const MCcsnamestring = "Color Chooser";
+const char * const MChelpnamestring = "Help";
+const char * const MChomenamestring = "Home";
+const char * const MChcstatnamestring = "HyperCard Import Status";
+const char * const MCmessagenamestring = "Message Box";
+const char * const MCdonestring = "done";
+const char * const MCnullstring = "";
+const char * const MCintersectstring = "intersect";
+const char * const MCsurroundstring = "surround";
+const char * const MCtopstring = "top";
+const char * const MCbottomstring = "bottom";
+const char * const MCcancelstring = "Cancel";
 
-const char *MCtextalignstrings[] = { MCleftstring, MCcenterstring, MCrightstring, MCjustifystring };
+const char * const MCtextalignstrings[] = { MCleftstring, MCcenterstring, MCrightstring, MCjustifystring };
 
 MCNameRef MCN_msg;
 MCNameRef MCN_each;
@@ -198,7 +207,6 @@ MCNameRef MCN_image;
 MCNameRef MCN_objects;
 MCNameRef MCN_private;
 MCNameRef MCN_text;
-//MCNameRef MCN_unicode;
 MCNameRef MCN_styles;
 MCNameRef MCN_styledtext;
 MCNameRef MCN_rtftext;
@@ -265,7 +273,6 @@ MCNameRef MCN_x86_64;
 MCNameRef MCN_motorola_powerpc;
 MCNameRef MCN_i386;
 MCNameRef MCN_arm;
-// SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
 MCNameRef MCN_arm64;
 
 MCNameRef MCN_local_mac;
@@ -297,7 +304,6 @@ MCNameRef MCN_fonts;
 MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
-//MCNameRef MCN_system;
 MCNameRef MCN_temporary;
 MCNameRef MCN_support;
 
@@ -318,22 +324,16 @@ MCNameRef MCN_color_chooser;
 MCNameRef MCN_color;
 MCNameRef MCN_file_selector;
 MCNameRef MCN_file;
-//MCNameRef MCN_files;
 MCNameRef MCN_folder;
 MCNameRef MCN_folders;
 MCNameRef MCN_answer_dialog;
 MCNameRef MCN_ask_dialog;
 
-//MCNameRef MCN_plain;
 MCNameRef MCN_clear;
-//MCNameRef MCN_color;
 MCNameRef MCN_effect;
 MCNameRef MCN_error;
-//MCNameRef MCN_file;
-//MCNameRef MCN_folder;
 MCNameRef MCN_information;
 MCNameRef MCN_password;
-//MCNameRef MCN_printer;
 MCNameRef MCN_program;
 MCNameRef MCN_question;
 MCNameRef MCN_record;
@@ -361,7 +361,6 @@ MCNameRef MCM_current_time_changed;
 MCNameRef MCM_cut_key;
 MCNameRef MCM_debug_str;
 
-// AL-2014-11-27: [[ NewIdeMEssages ]] Add deleteAudioclip message
 MCNameRef MCM_delete_audioclip;
 MCNameRef MCM_delete_background;
 MCNameRef MCM_delete_button;
@@ -375,7 +374,6 @@ MCNameRef MCM_delete_key;
 MCNameRef MCM_delete_scrollbar;
 MCNameRef MCM_delete_player;
 MCNameRef MCM_delete_stack;
-// AL-2014-11-27: [[ NewIdeMEssages ]] Add deleteVideoclip message
 MCNameRef MCM_delete_videoclip;
 MCNameRef MCM_delete_widget;
 MCNameRef MCM_delete_url;
@@ -423,8 +421,6 @@ MCNameRef MCM_library_stack;
 MCNameRef MCM_link_clicked;
 MCNameRef MCM_load_url;
 MCNameRef MCM_main_stack_changed;
-
-// MW-2013-03-20: [[ MainStacksChanged ]]
 MCNameRef MCM_main_stacks_changed;
 
 MCNameRef MCM_menu_pick;
@@ -448,13 +444,11 @@ MCNameRef MCM_move_stack;
 MCNameRef MCM_move_stopped;
 MCNameRef MCM_movie_touched;
 MCNameRef MCM_name_changed;
-// AL-2014-11-27: [[ NewIdeMEssages ]] Add newAudioclip message
 MCNameRef MCM_new_audioclip;
 MCNameRef MCM_new_background;
 MCNameRef MCM_new_card;
 MCNameRef MCM_new_stack;
 MCNameRef MCM_new_tool;
-// AL-2014-11-27: [[ NewIdeMEssages ]] Add newVideoclip message
 MCNameRef MCM_new_videoclip;
 MCNameRef MCM_node_changed;
 MCNameRef MCM_object_selection_ended;
@@ -549,11 +543,8 @@ MCNameRef MCN_email;
 MCNameRef MCN_phone;
 MCNameRef MCN_address;
 
-//MCNameRef MCN_home;
 MCNameRef MCN_work;
 MCNameRef MCN_other;
-//MCNameRef MCN_mobile;
-//MCNameRef MCN_iphone;
 MCNameRef MCN_main;
 MCNameRef MCN_homefax;
 MCNameRef MCN_workfax;
@@ -613,7 +604,6 @@ MCNameRef MCM_input_text_changed;
 MCNameRef MCM_product_details_received;
 MCNameRef MCM_product_request_error;
 MCNameRef MCM_nfc_tag_received;
-
 #endif
 
 #ifdef _IOS_MOBILE
@@ -629,12 +619,8 @@ MCNameRef MCM_player_state_changed;
 MCNameRef MCM_player_movie_changed;
 MCNameRef MCM_player_stopped;
 MCNameRef MCM_reachability_changed;
-//MCNameRef MCM_product_details_received;
-//MCNameRef MCM_product_request_error;
 MCNameRef MCM_protected_data_available;
 MCNameRef MCM_protected_data_unavailable;
-
-// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
 MCNameRef MCM_remote_control_received;
 #endif
 
@@ -646,927 +632,471 @@ MCNameRef MCN_font_message;
 MCNameRef MCN_font_tooltip;
 MCNameRef MCN_font_system;
 
-void X_initialize_names(void)
+const struct { const char *cstring; MCNameRef *name_var; } kInitialNames[] =
 {
-	/* UNCHECKED */ MCNameCreateWithCString("msg", MCN_msg);
-	/* UNCHECKED */ MCNameCreateWithCString("each", MCN_each);
-	/* UNCHECKED */ MCNameCreateWithCString("it", MCN_it);
+	{ "msg", &MCN_msg },
+	{ "each", &MCN_each },
+	{ "it", &MCN_it },
 	
-    // SN-2014-08-11: [[ Bug 13144 ]] Cancel string should be 'Cancel', not 'cancel'
-	/* UNCHECKED */ MCNameCreateWithCString("Cancel", MCN_cancel);
+	{ "Cancel", &MCN_cancel },
 
-	/* UNCHECKED */ MCNameCreateWithCString(DEFAULT_TEXT_FONT, MCN_default_text_font);
-	/* UNCHECKED */ MCNameCreateWithCString(PLATFORM_STRING, MCN_platform_string);
-	/* UNCHECKED */ MCNameCreateWithCString(MC_BUILD_ENGINE_SHORT_VERSION, MCN_version_string);
+	{ DEFAULT_TEXT_FONT, &MCN_default_text_font },
+	{ PLATFORM_STRING, &MCN_platform_string },
+	{ MC_BUILD_ENGINE_SHORT_VERSION, &MCN_version_string },
 
-	/* UNCHECKED */ MCNameCreateWithCString("metadata", MCN_metadata);
-	/* UNCHECKED */ MCNameCreateWithCString("runs", MCN_runs);
-	/* UNCHECKED */ MCNameCreateWithCString("style", MCN_style);
+	{ "metadata", &MCN_metadata },
+	{ "runs", &MCN_runs },
+	{ "style", &MCN_style },
 
-	/* UNCHECKED */ MCNameCreateWithCString("down", MCN_down);
-	/* UNCHECKED */ MCNameCreateWithCString("up", MCN_up);
+	{ "down", &MCN_down },
+	{ "up", &MCN_up },
 
-	/* UNCHECKED */ MCNameCreateWithCString("empty", MCN_empty);
-	/* UNCHECKED */ MCNameCreateWithCString("files", MCN_files);
-	/* UNCHECKED */ MCNameCreateWithCString("image", MCN_image);
-	/* UNCHECKED */ MCNameCreateWithCString("objects", MCN_objects);
-	/* UNCHECKED */ MCNameCreateWithCString("private", MCN_private);
-	/* UNCHECKED */ MCNameCreateWithCString("text", MCN_text);
-//	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
-	/* UNCHECKED */ MCNameCreateWithCString("styles", MCN_styles);
-    /* UNCHECKED */ MCNameCreateWithCString("styledtext", MCN_styledtext);
-    /* UNCHECKED */ MCNameCreateWithCString("rtftext", MCN_rtftext);
-    /* UNCHECKED */ MCNameCreateWithCString("htmltext", MCN_htmltext);
-    /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
-    /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
-    /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
-	/* UNCHECKED */ MCNameCreateWithCString("windows bitmap", MCN_win_bitmap);
-	/* UNCHECKED */ MCNameCreateWithCString("windows metafile", MCN_win_metafile);
-	/* UNCHECKED */ MCNameCreateWithCString("windows enhanced metafile", MCN_win_enh_metafile);
-	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
-	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
+	{ "empty", &MCN_empty },
+	{ "files", &MCN_files },
+	{ "image", &MCN_image },
+	{ "objects", &MCN_objects },
+	{ "private", &MCN_private },
+	{ "text", &MCN_text },
+	{ "styles", &MCN_styles },
+    { "styledtext", &MCN_styledtext },
+    { "rtftext", &MCN_rtftext },
+    { "htmltext", &MCN_htmltext },
+    { "png", &MCN_png },
+    { "gif", &MCN_gif },
+    { "jpeg", &MCN_jpeg },
+	{ "windows bitmap", &MCN_win_bitmap },
+	{ "windows metafile", &MCN_win_metafile },
+	{ "windows enhanced metafile", &MCN_win_enh_metafile },
+	{ "rtf", &MCN_rtf },
+	{ "html", &MCN_html },
 
-	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
-	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
-	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
-    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
-	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
-	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
-    /* UNCHECKED */ MCNameCreateWithCString("installer command line", MCN_installer_cmdline);
-	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
-	/* UNCHECKED */ MCNameCreateWithCString("player", MCN_player);
-	/* UNCHECKED */ MCNameCreateWithCString("server", MCN_server);
-	/* UNCHECKED */ MCNameCreateWithCString("standalone application", MCN_standalone_application);
+	{ "browser", &MCN_browser },
+	{ "command line", &MCN_command_line },
+	{ "development", &MCN_development },
+    { "development command line", &MCN_development_cmdline },
+	{ "helper application", &MCN_helper_application },
+	{ "installer", &MCN_installer },
+    { "installer command line", &MCN_installer_cmdline },
+	{ "mobile", &MCN_mobile },
+	{ "player", &MCN_player },
+	{ "server", &MCN_server },
+	{ "standalone application", &MCN_standalone_application },
 
-	/* UNCHECKED */ MCNameCreateWithCString("all", MCN_all);
-	/* UNCHECKED */ MCNameCreateWithCString("autokey", MCN_auto_key);
-	/* UNCHECKED */ MCNameCreateWithCString("disk", MCN_disk);
-	/* UNCHECKED */ MCNameCreateWithCString("activate", MCN_activate);
-	/* UNCHECKED */ MCNameCreateWithCString("highlevel", MCN_high_level);
-	/* UNCHECKED */ MCNameCreateWithCString("system", MCN_system);
+	{ "all", &MCN_all },
+	{ "autokey", &MCN_auto_key },
+	{ "disk", &MCN_disk },
+	{ "activate", &MCN_activate },
+	{ "highlevel", &MCN_high_level },
+	{ "system", &MCN_system },
 
-	/* UNCHECKED */ MCNameCreateWithCString("ansi", MCN_ansi);
-	/* UNCHECKED */ MCNameCreateWithCString("arabic", MCN_arabic);
-	/* UNCHECKED */ MCNameCreateWithCString("bulgarian", MCN_bulgarian);
-	/* UNCHECKED */ MCNameCreateWithCString("chinese", MCN_chinese);
-	/* UNCHECKED */ MCNameCreateWithCString("english", MCN_english);
-	/* UNCHECKED */ MCNameCreateWithCString("greek", MCN_greek);
-	/* UNCHECKED */ MCNameCreateWithCString("hebrew", MCN_hebrew);
-	/* UNCHECKED */ MCNameCreateWithCString("japanese", MCN_japanese);
-	/* UNCHECKED */ MCNameCreateWithCString("korean", MCN_korean);
-	/* UNCHECKED */ MCNameCreateWithCString("lithuanian", MCN_lithuanian);
-	/* UNCHECKED */ MCNameCreateWithCString("polish", MCN_polish);
-	/* UNCHECKED */ MCNameCreateWithCString("roman", MCN_roman);
-	/* UNCHECKED */ MCNameCreateWithCString("russian", MCN_russian);
-	/* UNCHECKED */ MCNameCreateWithCString("simpleChinese", MCN_simple_chinese);
-	/* UNCHECKED */ MCNameCreateWithCString("thai", MCN_thai);
-	/* UNCHECKED */ MCNameCreateWithCString("turkish", MCN_turkish);
-	/* UNCHECKED */ MCNameCreateWithCString("ukrainian", MCN_ukrainian);
-	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
-	/* UNCHECKED */ MCNameCreateWithCString("utf8", MCN_utf8);
-	/* UNCHECKED */ MCNameCreateWithCString("vietnamese", MCN_vietnamese);
-	/* UNCHECKED */ MCNameCreateWithCString("w", MCN_w_char);
-	/* UNCHECKED */ MCNameCreateWithCString("*", MCN_asterisk_char);
+	{ "ansi", &MCN_ansi },
+	{ "arabic", &MCN_arabic },
+	{ "bulgarian", &MCN_bulgarian },
+	{ "chinese", &MCN_chinese },
+	{ "english", &MCN_english },
+	{ "greek", &MCN_greek },
+	{ "hebrew", &MCN_hebrew },
+	{ "japanese", &MCN_japanese },
+	{ "korean", &MCN_korean },
+	{ "lithuanian", &MCN_lithuanian },
+	{ "polish", &MCN_polish },
+	{ "roman", &MCN_roman },
+	{ "russian", &MCN_russian },
+	{ "simpleChinese", &MCN_simple_chinese },
+	{ "thai", &MCN_thai },
+	{ "turkish", &MCN_turkish },
+	{ "ukrainian", &MCN_ukrainian },
+	{ "unicode", &MCN_unicode },
+	{ "utf8", &MCN_utf8 },
+	{ "vietnamese", &MCN_vietnamese },
+	{ "w", &MCN_w_char },
+	{ "*", &MCN_asterisk_char },
 
-	/* UNCHECKED */ MCNameCreateWithCString("plain", MCN_plain);
-	/* UNCHECKED */ MCNameCreateWithCString("bold", MCN_bold);
-	/* UNCHECKED */ MCNameCreateWithCString("italic", MCN_italic);
-	/* UNCHECKED */ MCNameCreateWithCString("bold-italic", MCN_bold_italic);
+	{ "plain", &MCN_plain },
+	{ "bold", &MCN_bold },
+	{ "italic", &MCN_italic },
+	{ "bold-italic", &MCN_bold_italic },
 
-	/* UNCHECKED */ MCNameCreateWithCString("unknown", MCN_unknown);
-	/* UNCHECKED */ MCNameCreateWithCString("x86", MCN_x86);
-    /* UNCHECKED */ MCNameCreateWithCString("x86_64", MCN_x86_64);
-	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
-	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
-	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
-    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
-    /* UNCHECKED */ MCNameCreateWithCString("arm64", MCN_arm64);
+	{ "unknown", &MCN_unknown },
+	{ "x86", &MCN_x86 },
+    { "x86_64", &MCN_x86_64 },
+	{ "Motorola PowerPC", &MCN_motorola_powerpc },
+	{ "i386", &MCN_i386 },
+	{ "ARM", &MCN_arm },
+    { "arm64", &MCN_arm64 },
 
-	/* UNCHECKED */ MCNameCreateWithCString("local Mac", MCN_local_mac);
-	/* UNCHECKED */ MCNameCreateWithCString("local Win32", MCN_local_win32);
-	/* UNCHECKED */ MCNameCreateWithCString("android", MCN_android);
-	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
-	/* UNCHECKED */ MCNameCreateWithCString("wince", MCN_wince);
+	{ "local Mac", &MCN_local_mac },
+	{ "local Win32", &MCN_local_win32 },
+	{ "android", &MCN_android },
+	{ "iphone", &MCN_iphone },
+	{ "wince", &MCN_wince },
 
-	/* UNCHECKED */ MCNameCreateWithCString("Mac OS", MCN_mac_os);
-	/* UNCHECKED */ MCNameCreateWithCString("Win32", MCN_win32);
+	{ "Mac OS", &MCN_mac_os },
+	{ "Win32", &MCN_win32 },
 
-	/* UNCHECKED */ MCNameCreateWithCString("done", MCN_done);
+	{ "done", &MCN_done },
 
-	/* UNCHECKED */ MCNameCreateWithCString("StaticGray", MCN_staticgray);
-	/* UNCHECKED */ MCNameCreateWithCString("GrayScale", MCN_grayscale);
-	/* UNCHECKED */ MCNameCreateWithCString("StaticColor", MCN_staticcolor);
-	/* UNCHECKED */ MCNameCreateWithCString("PseudoColor", MCN_pseudocolor);
-	/* UNCHECKED */ MCNameCreateWithCString("TrueColor", MCN_truecolor);
-	/* UNCHECKED */ MCNameCreateWithCString("DirectColor", MCN_directcolor);
+	{ "StaticGray", &MCN_staticgray },
+	{ "GrayScale", &MCN_grayscale },
+	{ "StaticColor", &MCN_staticcolor },
+	{ "PseudoColor", &MCN_pseudocolor },
+	{ "TrueColor", &MCN_truecolor },
+	{ "DirectColor", &MCN_directcolor },
 
-	/* UNCHECKED */ MCNameCreateWithCString("bounds", MCN_bounds);
-	/* UNCHECKED */ MCNameCreateWithCString("pixels", MCN_pixels);
-	/* UNCHECKED */ MCNameCreateWithCString("opaque pixels", MCN_opaque_pixels);
+	{ "bounds", &MCN_bounds },
+	{ "pixels", &MCN_pixels },
+	{ "opaque pixels", &MCN_opaque_pixels },
 
-	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
-	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
-	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
-    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
-	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
-	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
-	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
-//	/* UNCHECKED */ MCNameCreateWithCString("system", MCN_system);
-	/* UNCHECKED */ MCNameCreateWithCString("temporary", MCN_temporary);
-	/* UNCHECKED */ MCNameCreateWithCString("support", MCN_support);
+	{ "desktop", &MCN_desktop },
+	{ "documents", &MCN_documents },
+	{ "engine", &MCN_engine },
+    { "resources", &MCN_resources },
+	{ "fonts", &MCN_fonts },
+	{ "home", &MCN_home },
+	{ "start", &MCN_start },
+	{ "temporary", &MCN_temporary },
+	{ "support", &MCN_support },
 
-	/* UNCHECKED */ MCNameCreateWithCString("Apple", MCN_apple);
-	/* UNCHECKED */ MCNameCreateWithCString("Control", MCN_control);
-	/* UNCHECKED */ MCNameCreateWithCString("Extension", MCN_extension);
-	/* UNCHECKED */ MCNameCreateWithCString("Preferences", MCN_preferences);
+	{ "Apple", &MCN_apple },
+	{ "Control", &MCN_control },
+	{ "Extension", &MCN_extension },
+	{ "Preferences", &MCN_preferences },
 	
-	/* UNCHECKED */ MCNameCreateWithCString("unhandled", MCN_unhandled);
-	/* UNCHECKED */ MCNameCreateWithCString("handled", MCN_handled);
-	/* UNCHECKED */ MCNameCreateWithCString("passed", MCN_passed);
+	{ "unhandled", &MCN_unhandled },
+	{ "handled", &MCN_handled },
+	{ "passed", &MCN_passed },
 
-	/* UNCHECKED */ MCNameCreateWithCString("Page Setup Dialog", MCN_page_setup_dialog);
-	/* UNCHECKED */ MCNameCreateWithCString("pagesetup", MCN_pagesetup);
-	/* UNCHECKED */ MCNameCreateWithCString("Print Dialog", MCN_print_dialog);
-	/* UNCHECKED */ MCNameCreateWithCString("printer", MCN_printer);
-	/* UNCHECKED */ MCNameCreateWithCString("Color Chooser", MCN_color_chooser);
-	/* UNCHECKED */ MCNameCreateWithCString("color", MCN_color);
-	/* UNCHECKED */ MCNameCreateWithCString("File Selector", MCN_file_selector);
-	/* UNCHECKED */ MCNameCreateWithCString("file", MCN_file);
-	///* UNCHECKED */ MCNameCreateWithCString("files", MCN_files);
-	/* UNCHECKED */ MCNameCreateWithCString("folder", MCN_folder);
-	/* UNCHECKED */ MCNameCreateWithCString("folders", MCN_folders);
-	/* UNCHECKED */ MCNameCreateWithCString("Answer Dialog", MCN_answer_dialog);
-	/* UNCHECKED */ MCNameCreateWithCString("Ask Dialog", MCN_ask_dialog);
+	{ "Page Setup Dialog", &MCN_page_setup_dialog },
+	{ "pagesetup", &MCN_pagesetup },
+	{ "Print Dialog", &MCN_print_dialog },
+	{ "printer", &MCN_printer },
+	{ "Color Chooser", &MCN_color_chooser },
+	{ "color", &MCN_color },
+	{ "File Selector", &MCN_file_selector },
+	{ "file", &MCN_file },
+	{ "folder", &MCN_folder },
+	{ "folders", &MCN_folders },
+	{ "Answer Dialog", &MCN_answer_dialog },
+	{ "Ask Dialog", &MCN_ask_dialog },
 
-	///* UNCHECKED */ MCNameCreateWithCString("plain", MCN_plain);
-	/* UNCHECKED */ MCNameCreateWithCString("clear", MCN_clear);
-	///* UNCHECKED */ MCNameCreateWithCString("color", MCN_color);
-	/* UNCHECKED */ MCNameCreateWithCString("effect", MCN_effect);
-	/* UNCHECKED */ MCNameCreateWithCString("error", MCN_error);
-	///* UNCHECKED */ MCNameCreateWithCString("file", MCN_file);
-	///* UNCHECKED */ MCNameCreateWithCString("folder", MCN_folder);
-	/* UNCHECKED */ MCNameCreateWithCString("information", MCN_information);
-	/* UNCHECKED */ MCNameCreateWithCString("password", MCN_password);
-	///* UNCHECKED */ MCNameCreateWithCString("printer", MCN_printer);
-	/* UNCHECKED */ MCNameCreateWithCString("program", MCN_program);
-	/* UNCHECKED */ MCNameCreateWithCString("question", MCN_question);
-	/* UNCHECKED */ MCNameCreateWithCString("record", MCN_record);
-	/* UNCHECKED */ MCNameCreateWithCString("titled", MCN_titled);
-	/* UNCHECKED */ MCNameCreateWithCString("warning", MCN_warning);
+	{ "clear", &MCN_clear },
+	{ "effect", &MCN_effect },
+	{ "error", &MCN_error },
+	{ "information", &MCN_information },
+	{ "password", &MCN_password },
+	{ "program", &MCN_program },
+	{ "question", &MCN_question },
+	{ "record", &MCN_record },
+	{ "titled", &MCN_titled },
+	{ "warning", &MCN_warning },
 
-	/* UNCHECKED */ MCNameCreateWithCString("Message Box", MCN_messagename);
-	/* UNCHECKED */ MCNameCreateWithCString("msgchanged", MCM_msgchanged);
-	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
-	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
-	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
-	/* UNCHECKED */ MCNameCreateWithCString("assertError", MCM_assert_error);
-	/* UNCHECKED */ MCNameCreateWithCString("backspaceKey", MCM_backspace_key);
-	/* UNCHECKED */ MCNameCreateWithCString("closeBackground", MCM_close_background);
-	/* UNCHECKED */ MCNameCreateWithCString("closeCard", MCM_close_card);
-	/* UNCHECKED */ MCNameCreateWithCString("closeControl", MCM_close_control);
-	/* UNCHECKED */ MCNameCreateWithCString("closeField", MCM_close_field);
-	/* UNCHECKED */ MCNameCreateWithCString("closeStack", MCM_close_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("closeStackRequest", MCM_close_stack_request);
-	/* UNCHECKED */ MCNameCreateWithCString("colorChanged", MCM_color_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("commandKeyDown", MCM_command_key_down);
-	/* UNCHECKED */ MCNameCreateWithCString("controlKeyDown", MCM_control_key_down);
-	/* UNCHECKED */ MCNameCreateWithCString("copyKey", MCM_copy_key);
-	/* UNCHECKED */ MCNameCreateWithCString("currentTimeChanged", MCM_current_time_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("cutKey", MCM_cut_key);
-	/* UNCHECKED */ MCNameCreateWithCString("debugStr", MCM_debug_str);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteBackground", MCM_delete_background);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteButton", MCM_delete_button);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteCard", MCM_delete_card);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteEPS", MCM_delete_eps);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteField", MCM_delete_field);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteGraphic", MCM_delete_graphic);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteGroup", MCM_delete_group);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteImage", MCM_delete_image);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteKey", MCM_delete_key);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteScrollbar", MCM_delete_scrollbar);
-	/* UNCHECKED */ MCNameCreateWithCString("deletePlayer", MCM_delete_player);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteStack", MCM_delete_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteWidget", MCM_delete_widget);
-	/* UNCHECKED */ MCNameCreateWithCString("deleteURL", MCM_delete_url);
-	/* UNCHECKED */ MCNameCreateWithCString("desktopChanged", MCM_desktop_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("dragDrop", MCM_drag_drop);
-	/* UNCHECKED */ MCNameCreateWithCString("dragEnd", MCM_drag_end);
-	/* UNCHECKED */ MCNameCreateWithCString("dragEnter", MCM_drag_enter);
-	/* UNCHECKED */ MCNameCreateWithCString("dragLeave", MCM_drag_leave);
-	/* UNCHECKED */ MCNameCreateWithCString("dragMove", MCM_drag_move);
-	/* UNCHECKED */ MCNameCreateWithCString("dragStart", MCM_drag_start);
-	/* UNCHECKED */ MCNameCreateWithCString("editScript", MCM_edit_script);
-	/* UNCHECKED */ MCNameCreateWithCString("enterInField", MCM_enter_in_field);
-	/* UNCHECKED */ MCNameCreateWithCString("enterKey", MCM_enter_key);
-	/* UNCHECKED */ MCNameCreateWithCString("errorDialog", MCM_error_dialog);
-	/* UNCHECKED */ MCNameCreateWithCString("escapeKey", MCM_escape_key);
-	/* UNCHECKED */ MCNameCreateWithCString("eval", MCM_eval);
-	/* UNCHECKED */ MCNameCreateWithCString("exitField", MCM_exit_field);
-	/* UNCHECKED */ MCNameCreateWithCString("focusIn", MCM_focus_in);
-	/* UNCHECKED */ MCNameCreateWithCString("focusOut", MCM_focus_out);
-	/* UNCHECKED */ MCNameCreateWithCString("functionKey", MCM_function_key);
-	/* UNCHECKED */ MCNameCreateWithCString("getCachedURLs", MCM_get_cached_urls);
-	/* UNCHECKED */ MCNameCreateWithCString("getURL", MCM_get_url);
-	/* UNCHECKED */ MCNameCreateWithCString("getURLStatus", MCM_get_url_status);
-	/* UNCHECKED */ MCNameCreateWithCString("gradientEditEnded", MCM_gradient_edit_ended);
-	/* UNCHECKED */ MCNameCreateWithCString("gradientEditStarted", MCM_gradient_edit_started);
-	/* UNCHECKED */ MCNameCreateWithCString("help", MCM_help);
-	/* UNCHECKED */ MCNameCreateWithCString("hotSpotClicked", MCM_hot_spot_clicked);
-	/* UNCHECKED */ MCNameCreateWithCString("iconMenuPick", MCM_icon_menu_pick);
-	/* UNCHECKED */ MCNameCreateWithCString("iconMenuOpening", MCM_icon_menu_opening);
-	/* UNCHECKED */ MCNameCreateWithCString("statusIconMenuPick", MCM_status_icon_menu_pick);
-	/* UNCHECKED */ MCNameCreateWithCString("statusIconMenuOpening", MCM_status_icon_menu_opening);
-	/* UNCHECKED */ MCNameCreateWithCString("statusIconClick", MCM_status_icon_click);
-	/* UNCHECKED */ MCNameCreateWithCString("statusIconDoubleClick", MCM_status_icon_double_click);
-	/* UNCHECKED */ MCNameCreateWithCString("iconifyStack", MCM_iconify_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("idChanged", MCM_id_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("idle", MCM_idle);
-	/* UNCHECKED */ MCNameCreateWithCString("internal", MCM_internal);
-	/* UNCHECKED */ MCNameCreateWithCString("internal2", MCM_internal2);
-	/* UNCHECKED */ MCNameCreateWithCString("internal3", MCM_internal3);
-	/* UNCHECKED */ MCNameCreateWithCString("keyDown", MCM_key_down);
-	/* UNCHECKED */ MCNameCreateWithCString("keyUp", MCM_key_up);
-	/* UNCHECKED */ MCNameCreateWithCString("keyboardActivated", MCM_keyboard_activated);
-	/* UNCHECKED */ MCNameCreateWithCString("keyboardDeactivated", MCM_keyboard_deactivated);
-	/* UNCHECKED */ MCNameCreateWithCString("libraryStack", MCM_library_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("linkClicked", MCM_link_clicked);
-	/* UNCHECKED */ MCNameCreateWithCString("loadURL", MCM_load_url);
-	/* UNCHECKED */ MCNameCreateWithCString("mainStackChanged", MCM_main_stack_changed);
-	// MW-2013-03-20: [[ MainStacksChanged ]]
-	/* UNCHECKED */ MCNameCreateWithCString("_mainStacksChanged", MCM_main_stacks_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("menuPick", MCM_menu_pick);
-	/* UNCHECKED */ MCNameCreateWithCString("message", MCM_message);
-	/* UNCHECKED */ MCNameCreateWithCString("messageHandled", MCM_message_handled);
-	/* UNCHECKED */ MCNameCreateWithCString("messageNotHandled", MCM_message_not_handled);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseDoubleDown", MCM_mouse_double_down);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseDoubleUp", MCM_mouse_double_up);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseDown", MCM_mouse_down);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseDownInBackdrop", MCM_mouse_down_in_backdrop);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseEnter", MCM_mouse_enter);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseLeave", MCM_mouse_leave);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseMove", MCM_mouse_move);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseRelease", MCM_mouse_release);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseStillDown", MCM_mouse_still_down);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseUp", MCM_mouse_up);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseUpInBackdrop", MCM_mouse_up_in_backdrop);
-	/* UNCHECKED */ MCNameCreateWithCString("mouseWithin", MCM_mouse_within);
-	/* UNCHECKED */ MCNameCreateWithCString("moveControl", MCM_move_control);
-	/* UNCHECKED */ MCNameCreateWithCString("moveStack", MCM_move_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("moveStopped", MCM_move_stopped);
-	/* UNCHECKED */ MCNameCreateWithCString("movieTouched", MCM_movie_touched);
-	/* UNCHECKED */ MCNameCreateWithCString("nameChanged", MCM_name_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("newBackground", MCM_new_background);
-	/* UNCHECKED */ MCNameCreateWithCString("newCard", MCM_new_card);
-	/* UNCHECKED */ MCNameCreateWithCString("newStack", MCM_new_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("newTool", MCM_new_tool);
-	/* UNCHECKED */ MCNameCreateWithCString("nodeChanged", MCM_node_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("objectSelectionEnded", MCM_object_selection_ended);
-	/* UNCHECKED */ MCNameCreateWithCString("objectSelectionStarted", MCM_object_selection_started);
-	/* UNCHECKED */ MCNameCreateWithCString("openBackground", MCM_open_background);
-	/* UNCHECKED */ MCNameCreateWithCString("openCard", MCM_open_card);
-	/* UNCHECKED */ MCNameCreateWithCString("openControl", MCM_open_control);
-	/* UNCHECKED */ MCNameCreateWithCString("openField", MCM_open_field);
-	/* UNCHECKED */ MCNameCreateWithCString("openStack", MCM_open_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("optionKeyDown", MCM_option_key_down);
-	/* UNCHECKED */ MCNameCreateWithCString("pasteKey", MCM_paste_key);
-	/* UNCHECKED */ MCNameCreateWithCString("playPaused", MCM_play_paused);
-    /* UNCHECKED */ MCNameCreateWithCString("playRateChanged", MCM_play_rate_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("playStarted", MCM_play_started);
-	/* UNCHECKED */ MCNameCreateWithCString("playStopped", MCM_play_stopped);
-	/* UNCHECKED */ MCNameCreateWithCString("postURL", MCM_post_url);
-	/* UNCHECKED */ MCNameCreateWithCString("preOpenBackground", MCM_preopen_background);
-	/* UNCHECKED */ MCNameCreateWithCString("preOpenCard", MCM_preopen_card);
-	/* UNCHECKED */ MCNameCreateWithCString("preOpenControl", MCM_preopen_control);
-	/* UNCHECKED */ MCNameCreateWithCString("preOpenStack", MCM_preopen_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("propertyChanged", MCM_property_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("putURL", MCM_put_url);
-	/* UNCHECKED */ MCNameCreateWithCString("QTDebugStr", MCM_qtdebugstr);
-	/* UNCHECKED */ MCNameCreateWithCString("rawKeyDown", MCM_raw_key_down);
-	/* UNCHECKED */ MCNameCreateWithCString("rawKeyUp", MCM_raw_key_up);
-	/* UNCHECKED */ MCNameCreateWithCString("relaunch", MCM_relaunch);
-	/* UNCHECKED */ MCNameCreateWithCString("releaseStack", MCM_release_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("reloadStack", MCM_reload_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("resizeControl", MCM_resize_control);
-	/* UNCHECKED */ MCNameCreateWithCString("resizeControlEnded", MCM_resize_control_ended);
-	/* UNCHECKED */ MCNameCreateWithCString("resizeControlStarted", MCM_resize_control_started);
-	/* UNCHECKED */ MCNameCreateWithCString("resizeStack", MCM_resize_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("resolutionError", MCM_resolution_error);
-	/* UNCHECKED */ MCNameCreateWithCString("resume", MCM_resume);
-	/* UNCHECKED */ MCNameCreateWithCString("resumeStack", MCM_resume_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("returnInField", MCM_return_in_field);
-	/* UNCHECKED */ MCNameCreateWithCString("returnKey", MCM_return_key);
-	/* UNCHECKED */ MCNameCreateWithCString("saveStackRequest", MCM_save_stack_request);
-	/* UNCHECKED */ MCNameCreateWithCString("scriptParsingError", MCM_script_error);
-	/* UNCHECKED */ MCNameCreateWithCString("scriptExecutionError", MCM_script_execution_error);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarBeginning", MCM_scrollbar_beginning);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarDrag", MCM_scrollbar_drag);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarEnd", MCM_scrollbar_end);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarLineDec", MCM_scrollbar_line_dec);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarLineInc", MCM_scrollbar_line_inc);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarPageDec", MCM_scrollbar_page_dec);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollbarPageInc", MCM_scrollbar_page_inc);
-	/* UNCHECKED */ MCNameCreateWithCString("selectedObjectChanged", MCM_selected_object_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("selectionChanged", MCM_selection_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("shell", MCM_shell);
-	/* UNCHECKED */ MCNameCreateWithCString("signal", MCM_signal);
-	/* UNCHECKED */ MCNameCreateWithCString("shutDown", MCM_shut_down);
-	/* UNCHECKED */ MCNameCreateWithCString("shutDownRequest", MCM_shut_down_request);
-	/* UNCHECKED */ MCNameCreateWithCString("socketError", MCM_socket_error);
-	/* UNCHECKED */ MCNameCreateWithCString("socketClosed", MCM_socket_closed);
-	/* UNCHECKED */ MCNameCreateWithCString("socketTimeout", MCM_socket_timeout);
-	/* UNCHECKED */ MCNameCreateWithCString("startUp", MCM_start_up);
-	/* UNCHECKED */ MCNameCreateWithCString("suspend", MCM_suspend);
-	/* UNCHECKED */ MCNameCreateWithCString("suspendStack", MCM_suspend_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("tabKey", MCM_tab_key);
-	/* UNCHECKED */ MCNameCreateWithCString("textChanged", MCM_text_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("trace", MCM_trace);
-	/* UNCHECKED */ MCNameCreateWithCString("traceBreak", MCM_trace_break);
-	/* UNCHECKED */ MCNameCreateWithCString("traceDone", MCM_trace_done);
-	/* UNCHECKED */ MCNameCreateWithCString("traceError", MCM_trace_error);
-	/* UNCHECKED */ MCNameCreateWithCString("undoChanged", MCM_undo_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("undoKey", MCM_undo_key);
-	/* UNCHECKED */ MCNameCreateWithCString("uniconifyStack", MCM_uniconify_stack);
-	/* UNCHECKED */ MCNameCreateWithCString("unloadURL", MCM_unload_url);
-	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
-	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
+	{ "Message Box", &MCN_messagename },
+	{ "msgchanged", &MCM_msgchanged },
+	{ "HyperCard Import Status", &MCN_hcstat },
+	{ "appleEvent", &MCM_apple_event },
+	{ "arrowKey", &MCM_arrow_key },
+	{ "assertError", &MCM_assert_error },
+	{ "backspaceKey", &MCM_backspace_key },
+	{ "closeBackground", &MCM_close_background },
+	{ "closeCard", &MCM_close_card },
+	{ "closeControl", &MCM_close_control },
+	{ "closeField", &MCM_close_field },
+	{ "closeStack", &MCM_close_stack },
+	{ "closeStackRequest", &MCM_close_stack_request },
+	{ "colorChanged", &MCM_color_changed },
+	{ "commandKeyDown", &MCM_command_key_down },
+	{ "controlKeyDown", &MCM_control_key_down },
+	{ "copyKey", &MCM_copy_key },
+	{ "currentTimeChanged", &MCM_current_time_changed },
+	{ "cutKey", &MCM_cut_key },
+	{ "debugStr", &MCM_debug_str },
+	{ "deleteBackground", &MCM_delete_background },
+	{ "deleteButton", &MCM_delete_button },
+	{ "deleteCard", &MCM_delete_card },
+	{ "deleteEPS", &MCM_delete_eps },
+	{ "deleteField", &MCM_delete_field },
+	{ "deleteGraphic", &MCM_delete_graphic },
+	{ "deleteGroup", &MCM_delete_group },
+	{ "deleteImage", &MCM_delete_image },
+	{ "deleteKey", &MCM_delete_key },
+	{ "deleteScrollbar", &MCM_delete_scrollbar },
+	{ "deletePlayer", &MCM_delete_player },
+	{ "deleteStack", &MCM_delete_stack },
+	{ "deleteWidget", &MCM_delete_widget },
+	{ "deleteURL", &MCM_delete_url },
+	{ "desktopChanged", &MCM_desktop_changed },
+	{ "dragDrop", &MCM_drag_drop },
+	{ "dragEnd", &MCM_drag_end },
+	{ "dragEnter", &MCM_drag_enter },
+	{ "dragLeave", &MCM_drag_leave },
+	{ "dragMove", &MCM_drag_move },
+	{ "dragStart", &MCM_drag_start },
+	{ "editScript", &MCM_edit_script },
+	{ "enterInField", &MCM_enter_in_field },
+	{ "enterKey", &MCM_enter_key },
+	{ "errorDialog", &MCM_error_dialog },
+	{ "escapeKey", &MCM_escape_key },
+	{ "eval", &MCM_eval },
+	{ "exitField", &MCM_exit_field },
+	{ "focusIn", &MCM_focus_in },
+	{ "focusOut", &MCM_focus_out },
+	{ "functionKey", &MCM_function_key },
+	{ "getCachedURLs", &MCM_get_cached_urls },
+	{ "getURL", &MCM_get_url },
+	{ "getURLStatus", &MCM_get_url_status },
+	{ "gradientEditEnded", &MCM_gradient_edit_ended },
+	{ "gradientEditStarted", &MCM_gradient_edit_started },
+	{ "help", &MCM_help },
+	{ "hotSpotClicked", &MCM_hot_spot_clicked },
+	{ "iconMenuPick", &MCM_icon_menu_pick },
+	{ "iconMenuOpening", &MCM_icon_menu_opening },
+	{ "statusIconMenuPick", &MCM_status_icon_menu_pick },
+	{ "statusIconMenuOpening", &MCM_status_icon_menu_opening },
+	{ "statusIconClick", &MCM_status_icon_click },
+	{ "statusIconDoubleClick", &MCM_status_icon_double_click },
+	{ "iconifyStack", &MCM_iconify_stack },
+	{ "idChanged", &MCM_id_changed },
+	{ "idle", &MCM_idle },
+	{ "internal", &MCM_internal },
+	{ "internal2", &MCM_internal2 },
+	{ "internal3", &MCM_internal3 },
+	{ "keyDown", &MCM_key_down },
+	{ "keyUp", &MCM_key_up },
+	{ "keyboardActivated", &MCM_keyboard_activated },
+	{ "keyboardDeactivated", &MCM_keyboard_deactivated },
+	{ "libraryStack", &MCM_library_stack },
+	{ "linkClicked", &MCM_link_clicked },
+	{ "loadURL", &MCM_load_url },
+	{ "mainStackChanged", &MCM_main_stack_changed },
+	{ "_mainStacksChanged", &MCM_main_stacks_changed },
+	{ "menuPick", &MCM_menu_pick },
+	{ "message", &MCM_message },
+	{ "messageHandled", &MCM_message_handled },
+	{ "messageNotHandled", &MCM_message_not_handled },
+	{ "mouseDoubleDown", &MCM_mouse_double_down },
+	{ "mouseDoubleUp", &MCM_mouse_double_up },
+	{ "mouseDown", &MCM_mouse_down },
+	{ "mouseDownInBackdrop", &MCM_mouse_down_in_backdrop },
+	{ "mouseEnter", &MCM_mouse_enter },
+	{ "mouseLeave", &MCM_mouse_leave },
+	{ "mouseMove", &MCM_mouse_move },
+	{ "mouseRelease", &MCM_mouse_release },
+	{ "mouseStillDown", &MCM_mouse_still_down },
+	{ "mouseUp", &MCM_mouse_up },
+	{ "mouseUpInBackdrop", &MCM_mouse_up_in_backdrop },
+	{ "mouseWithin", &MCM_mouse_within },
+	{ "moveControl", &MCM_move_control },
+	{ "moveStack", &MCM_move_stack },
+	{ "moveStopped", &MCM_move_stopped },
+	{ "movieTouched", &MCM_movie_touched },
+	{ "nameChanged", &MCM_name_changed },
+	{ "newBackground", &MCM_new_background },
+	{ "newCard", &MCM_new_card },
+	{ "newStack", &MCM_new_stack },
+	{ "newTool", &MCM_new_tool },
+	{ "nodeChanged", &MCM_node_changed },
+	{ "objectSelectionEnded", &MCM_object_selection_ended },
+	{ "objectSelectionStarted", &MCM_object_selection_started },
+	{ "openBackground", &MCM_open_background },
+	{ "openCard", &MCM_open_card },
+	{ "openControl", &MCM_open_control },
+	{ "openField", &MCM_open_field },
+	{ "openStack", &MCM_open_stack },
+	{ "optionKeyDown", &MCM_option_key_down },
+	{ "pasteKey", &MCM_paste_key },
+	{ "playPaused", &MCM_play_paused },
+    { "playRateChanged", &MCM_play_rate_changed },
+	{ "playStarted", &MCM_play_started },
+	{ "playStopped", &MCM_play_stopped },
+	{ "postURL", &MCM_post_url },
+	{ "preOpenBackground", &MCM_preopen_background },
+	{ "preOpenCard", &MCM_preopen_card },
+	{ "preOpenControl", &MCM_preopen_control },
+	{ "preOpenStack", &MCM_preopen_stack },
+	{ "propertyChanged", &MCM_property_changed },
+	{ "putURL", &MCM_put_url },
+	{ "QTDebugStr", &MCM_qtdebugstr },
+	{ "rawKeyDown", &MCM_raw_key_down },
+	{ "rawKeyUp", &MCM_raw_key_up },
+	{ "relaunch", &MCM_relaunch },
+	{ "releaseStack", &MCM_release_stack },
+	{ "reloadStack", &MCM_reload_stack },
+	{ "resizeControl", &MCM_resize_control },
+	{ "resizeControlEnded", &MCM_resize_control_ended },
+	{ "resizeControlStarted", &MCM_resize_control_started },
+	{ "resizeStack", &MCM_resize_stack },
+	{ "resolutionError", &MCM_resolution_error },
+	{ "resume", &MCM_resume },
+	{ "resumeStack", &MCM_resume_stack },
+	{ "returnInField", &MCM_return_in_field },
+	{ "returnKey", &MCM_return_key },
+	{ "saveStackRequest", &MCM_save_stack_request },
+	{ "scriptParsingError", &MCM_script_error },
+	{ "scriptExecutionError", &MCM_script_execution_error },
+	{ "scrollbarBeginning", &MCM_scrollbar_beginning },
+	{ "scrollbarDrag", &MCM_scrollbar_drag },
+	{ "scrollbarEnd", &MCM_scrollbar_end },
+	{ "scrollbarLineDec", &MCM_scrollbar_line_dec },
+	{ "scrollbarLineInc", &MCM_scrollbar_line_inc },
+	{ "scrollbarPageDec", &MCM_scrollbar_page_dec },
+	{ "scrollbarPageInc", &MCM_scrollbar_page_inc },
+	{ "selectedObjectChanged", &MCM_selected_object_changed },
+	{ "selectionChanged", &MCM_selection_changed },
+	{ "shell", &MCM_shell },
+	{ "signal", &MCM_signal },
+	{ "shutDown", &MCM_shut_down },
+	{ "shutDownRequest", &MCM_shut_down_request },
+	{ "socketError", &MCM_socket_error },
+	{ "socketClosed", &MCM_socket_closed },
+	{ "socketTimeout", &MCM_socket_timeout },
+	{ "startUp", &MCM_start_up },
+	{ "suspend", &MCM_suspend },
+	{ "suspendStack", &MCM_suspend_stack },
+	{ "tabKey", &MCM_tab_key },
+	{ "textChanged", &MCM_text_changed },
+	{ "trace", &MCM_trace },
+	{ "traceBreak", &MCM_trace_break },
+	{ "traceDone", &MCM_trace_done },
+	{ "traceError", &MCM_trace_error },
+	{ "undoChanged", &MCM_undo_changed },
+	{ "undoKey", &MCM_undo_key },
+	{ "uniconifyStack", &MCM_uniconify_stack },
+	{ "unloadURL", &MCM_unload_url },
+	{ "updateScreen", &MCM_update_screen },
+	{ "updateVariable", &MCM_update_var },
 
 #ifdef FEATURE_PLATFORM_URL
-	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
+	{ "urlProgress", &MCM_url_progress },
 #endif
-
     
-    /* UNCHECKED */ MCNameCreateWithCString("deleteAudioclip", MCM_delete_audioclip);
-    /* UNCHECKED */ MCNameCreateWithCString("deleteVideoclip", MCM_delete_videoclip);
-    /* UNCHECKED */ MCNameCreateWithCString("newAudioclip", MCM_new_audioclip);
-    /* UNCHECKED */ MCNameCreateWithCString("newVideoclip", MCM_new_videoclip);
+    { "deleteAudioclip", &MCM_delete_audioclip },
+    { "deleteVideoclip", &MCM_delete_videoclip },
+    { "newAudioclip", &MCM_new_audioclip },
+    { "newVideoclip", &MCM_new_videoclip },
     
 #ifdef _MOBILE
-	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
-	/* UNCHECKED */ MCNameCreateWithCString("lastname", MCN_lastname);
-	/* UNCHECKED */ MCNameCreateWithCString("middlename", MCN_middlename);
-	/* UNCHECKED */ MCNameCreateWithCString("prefix", MCN_prefix);
-	/* UNCHECKED */ MCNameCreateWithCString("suffix", MCN_suffix);
-	/* UNCHECKED */ MCNameCreateWithCString("nickname", MCN_nickname);
-	/* UNCHECKED */ MCNameCreateWithCString("firstnamephonetic", MCN_firstnamephonetic);
-	/* UNCHECKED */ MCNameCreateWithCString("lastnamephonetic", MCN_lastnamephonetic);
-	/* UNCHECKED */ MCNameCreateWithCString("middlenamephonetic", MCN_middlenamephonetic);
-	/* UNCHECKED */ MCNameCreateWithCString("organization", MCN_organization);
-	/* UNCHECKED */ MCNameCreateWithCString("jobtitle", MCN_jobtitle);
-	/* UNCHECKED */ MCNameCreateWithCString("department", MCN_department);
-	/* UNCHECKED */ MCNameCreateWithCString("note", MCN_note);
+	{ "firstname", &MCN_firstname },
+	{ "lastname", &MCN_lastname },
+	{ "middlename", &MCN_middlename },
+	{ "prefix", &MCN_prefix },
+	{ "suffix", &MCN_suffix },
+	{ "nickname", &MCN_nickname },
+	{ "firstnamephonetic", &MCN_firstnamephonetic },
+	{ "lastnamephonetic", &MCN_lastnamephonetic },
+	{ "middlenamephonetic", &MCN_middlenamephonetic },
+	{ "organization", &MCN_organization },
+	{ "jobtitle", &MCN_jobtitle },
+	{ "department", &MCN_department },
+	{ "note", &MCN_note },
 
-	/* UNCHECKED */ MCNameCreateWithCString("email", MCN_email);
-	/* UNCHECKED */ MCNameCreateWithCString("phone", MCN_phone);
-	/* UNCHECKED */ MCNameCreateWithCString("address", MCN_address);
+	{ "email", &MCN_email },
+	{ "phone", &MCN_phone },
+	{ "address", &MCN_address },
 
-//	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
-	/* UNCHECKED */ MCNameCreateWithCString("work", MCN_work);
-	/* UNCHECKED */ MCNameCreateWithCString("other", MCN_other);
+	{ "work", &MCN_work },
+	{ "other", &MCN_other },
 
-//	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
-//	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
-	/* UNCHECKED */ MCNameCreateWithCString("main", MCN_main);
-	/* UNCHECKED */ MCNameCreateWithCString("homefax", MCN_homefax);
-	/* UNCHECKED */ MCNameCreateWithCString("workfax", MCN_workfax);
-	/* UNCHECKED */ MCNameCreateWithCString("otherfax", MCN_otherfax);
-	/* UNCHECKED */ MCNameCreateWithCString("pager", MCN_pager);
+	{ "main", &MCN_main },
+	{ "homefax", &MCN_homefax },
+	{ "workfax", &MCN_workfax },
+	{ "otherfax", &MCN_otherfax },
+	{ "pager", &MCN_pager },
 	
-	/* UNCHECKED */ MCNameCreateWithCString("street", MCN_street);
-	/* UNCHECKED */ MCNameCreateWithCString("city", MCN_city);
-	/* UNCHECKED */ MCNameCreateWithCString("state", MCN_state);
-	/* UNCHECKED */ MCNameCreateWithCString("zip", MCN_zip);
-	/* UNCHECKED */ MCNameCreateWithCString("country", MCN_country);
-	/* UNCHECKED */ MCNameCreateWithCString("countrycode", MCN_countrycode);
+	{ "street", &MCN_street },
+	{ "city", &MCN_city },
+	{ "state", &MCN_state },
+	{ "zip", &MCN_zip },
+	{ "country", &MCN_country },
+	{ "countrycode", &MCN_countrycode },
 	
 	
-	/* UNCHECKED */ MCNameCreateWithCString("touchStart", MCM_touch_start);
-	/* UNCHECKED */ MCNameCreateWithCString("touchMove", MCM_touch_move);
-	/* UNCHECKED */ MCNameCreateWithCString("touchEnd", MCM_touch_end);
-	/* UNCHECKED */ MCNameCreateWithCString("touchRelease", MCM_touch_release);
-	/* UNCHECKED */ MCNameCreateWithCString("motionStart", MCM_motion_start);
-	/* UNCHECKED */ MCNameCreateWithCString("motionEnd", MCM_motion_end);
-	/* UNCHECKED */ MCNameCreateWithCString("motionRelease", MCM_motion_release);
-	/* UNCHECKED */ MCNameCreateWithCString("accelerationChanged", MCM_acceleration_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("orientationChanged", MCM_orientation_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("locationChanged", MCM_location_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("locationError", MCM_location_error);
-	/* UNCHECKED */ MCNameCreateWithCString("headingChanged", MCM_heading_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("headingError", MCM_heading_error);
-	/* UNCHECKED */ MCNameCreateWithCString("purchaseStateUpdate", MCM_purchase_updated);
-    /* UNCHECKED */ MCNameCreateWithCString("rotationRateChanged", MCM_rotation_rate_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("trackingError", MCM_tracking_error);
-    /* UNCHECKED */ MCNameCreateWithCString("localNotificationReceived", MCM_local_notification_received);
-    /* UNCHECKED */ MCNameCreateWithCString("pushNotificationReceived", MCM_push_notification_received);
-    /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistered", MCM_push_notification_registered);
-    /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistrationError", MCM_push_notification_registration_error);
-    /* UNCHECKED */ MCNameCreateWithCString("urlWakeUp", MCM_url_wake_up);
-	/* UNCHECKED */ MCNameCreateWithCString("launchDataChanged", MCM_launch_data_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("browserStartedLoading", MCM_browser_started_loading);
-	/* UNCHECKED */ MCNameCreateWithCString("browserFinishedLoading", MCM_browser_finished_loading);
-	/* UNCHECKED */ MCNameCreateWithCString("browserLoadFailed", MCM_browser_load_failed);
-    /* UNCHECKED */ MCNameCreateWithCString("soundFinishedOnChannel", MCM_sound_finished_on_channel);
-    /* UNCHECKED */ MCNameCreateWithCString("adLoaded", MCM_ad_loaded);
-	/* UNCHECKED */ MCNameCreateWithCString("adClicked", MCM_ad_clicked);
-    /* UNCHECKED */ MCNameCreateWithCString("adLoadFailed", MCM_ad_load_failed);
-    /* UNCHECKED */ MCNameCreateWithCString("adResizeStart", MCM_ad_resize_start);
-    /* UNCHECKED */ MCNameCreateWithCString("adResizeEnd", MCM_ad_resize_end);
-    /* UNCHECKED */ MCNameCreateWithCString("adExpandStart", MCM_ad_expand_start);
-    /* UNCHECKED */ MCNameCreateWithCString("adExpandEnd", MCM_ad_expand_end);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerDidScroll", MCM_scroller_did_scroll);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerBeginDrag", MCM_scroller_begin_drag);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerEndDrag", MCM_scroller_end_drag);
-	/* UNCHECKED */ MCNameCreateWithCString("playerFinished", MCM_player_finished);
-	/* UNCHECKED */ MCNameCreateWithCString("playerError", MCM_player_error);
-	/* UNCHECKED */ MCNameCreateWithCString("playerPropertyAvailable", MCM_player_property_available);
-	/* UNCHECKED */ MCNameCreateWithCString("inputBeginEditing", MCM_input_begin_editing);
-	/* UNCHECKED */ MCNameCreateWithCString("inputEndEditing", MCM_input_end_editing);
-	/* UNCHECKED */ MCNameCreateWithCString("inputReturnKey", MCM_input_return_key);
-	/* UNCHECKED */ MCNameCreateWithCString("inputTextChanged", MCM_input_text_changed);
-    /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
-    /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
-	/* UNCHECKED */ MCNameCreateWithCString("nfcTagReceived", MCM_nfc_tag_received);
+	{ "touchStart", &MCM_touch_start },
+	{ "touchMove", &MCM_touch_move },
+	{ "touchEnd", &MCM_touch_end },
+	{ "touchRelease", &MCM_touch_release },
+	{ "motionStart", &MCM_motion_start },
+	{ "motionEnd", &MCM_motion_end },
+	{ "motionRelease", &MCM_motion_release },
+	{ "accelerationChanged", &MCM_acceleration_changed },
+	{ "orientationChanged", &MCM_orientation_changed },
+	{ "locationChanged", &MCM_location_changed },
+	{ "locationError", &MCM_location_error },
+	{ "headingChanged", &MCM_heading_changed },
+	{ "headingError", &MCM_heading_error },
+	{ "purchaseStateUpdate", &MCM_purchase_updated },
+    { "rotationRateChanged", &MCM_rotation_rate_changed },
+	{ "trackingError", &MCM_tracking_error },
+    { "localNotificationReceived", &MCM_local_notification_received },
+    { "pushNotificationReceived", &MCM_push_notification_received },
+    { "pushNotificationRegistered", &MCM_push_notification_registered },
+    { "pushNotificationRegistrationError", &MCM_push_notification_registration_error },
+    { "urlWakeUp", &MCM_url_wake_up },
+	{ "launchDataChanged", &MCM_launch_data_changed },
+	{ "browserStartedLoading", &MCM_browser_started_loading },
+	{ "browserFinishedLoading", &MCM_browser_finished_loading },
+	{ "browserLoadFailed", &MCM_browser_load_failed },
+    { "soundFinishedOnChannel", &MCM_sound_finished_on_channel },
+    { "adLoaded", &MCM_ad_loaded },
+	{ "adClicked", &MCM_ad_clicked },
+    { "adLoadFailed", &MCM_ad_load_failed },
+    { "adResizeStart", &MCM_ad_resize_start },
+    { "adResizeEnd", &MCM_ad_resize_end },
+    { "adExpandStart", &MCM_ad_expand_start },
+    { "adExpandEnd", &MCM_ad_expand_end },
+	{ "scrollerDidScroll", &MCM_scroller_did_scroll },
+	{ "scrollerBeginDrag", &MCM_scroller_begin_drag },
+	{ "scrollerEndDrag", &MCM_scroller_end_drag },
+	{ "playerFinished", &MCM_player_finished },
+	{ "playerError", &MCM_player_error },
+	{ "playerPropertyAvailable", &MCM_player_property_available },
+	{ "inputBeginEditing", &MCM_input_begin_editing },
+	{ "inputEndEditing", &MCM_input_end_editing },
+	{ "inputReturnKey", &MCM_input_return_key },
+	{ "inputTextChanged", &MCM_input_text_changed },
+    { "productDetailsReceived", &MCM_product_details_received },
+    { "productRequestError", &MCM_product_request_error },
+	{ "nfcTagReceived", &MCM_nfc_tag_received },
 #endif
 	
 #ifdef _IOS_MOBILE
-	/* UNCHECKED */ MCNameCreateWithCString("browserLoadRequest", MCM_browser_load_request);
-	/* UNCHECKED */ MCNameCreateWithCString("browserLoadRequested", MCM_browser_load_requested);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerBeginDecelerate", MCM_scroller_begin_decelerate);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerEndDecelerate", MCM_scroller_end_decelerate);
-	/* UNCHECKED */ MCNameCreateWithCString("scrollerScrollToTop", MCM_scroller_scroll_to_top);
-	/* UNCHECKED */ MCNameCreateWithCString("playerProgressChanged", MCM_player_progress_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("playerEnterFullscreen", MCM_player_enter_fullscreen);
-	/* UNCHECKED */ MCNameCreateWithCString("playerLeaveFullscreen", MCM_player_leave_fullscreen);
-	/* UNCHECKED */ MCNameCreateWithCString("playerStateChanged", MCM_player_state_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("playerMovieChanged", MCM_player_movie_changed);
-	/* UNCHECKED */ MCNameCreateWithCString("playerStopped", MCM_player_stopped);
-	/* UNCHECKED */ MCNameCreateWithCString("reachabilityChanged", MCM_reachability_changed);
-    /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
-    /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
-	
-	// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
-	/* UNCHECKED */ MCNameCreateWithCString("remoteControlReceived", MCM_remote_control_received);
+	{ "browserLoadRequest", &MCM_browser_load_request },
+	{ "browserLoadRequested", &MCM_browser_load_requested },
+	{ "scrollerBeginDecelerate", &MCM_scroller_begin_decelerate },
+	{ "scrollerEndDecelerate", &MCM_scroller_end_decelerate },
+	{ "scrollerScrollToTop", &MCM_scroller_scroll_to_top },
+	{ "playerProgressChanged", &MCM_player_progress_changed },
+	{ "playerEnterFullscreen", &MCM_player_enter_fullscreen },
+	{ "playerLeaveFullscreen", &MCM_player_leave_fullscreen },
+	{ "playerStateChanged", &MCM_player_state_changed },
+	{ "playerMovieChanged", &MCM_player_movie_changed },
+	{ "playerStopped", &MCM_player_stopped },
+	{ "reachabilityChanged", &MCM_reachability_changed },
+    { "protectedDataDidBecomeAvailable", &MCM_protected_data_available },
+    { "protectedDataWillBecomeUnavailable", &MCM_protected_data_unavailable },
+	{ "remoteControlReceived", &MCM_remote_control_received },
 #endif
     
-    /* UNCHECKED */ MCNameCreateWithCString("(Default)", MCN_font_default);
-    /* UNCHECKED */ MCNameCreateWithCString("(Styled Text)", MCN_font_usertext);
-    /* UNCHECKED */ MCNameCreateWithCString("(Menu)", MCN_font_menutext);
-    /* UNCHECKED */ MCNameCreateWithCString("(Text)", MCN_font_content);
-    /* UNCHECKED */ MCNameCreateWithCString("(Message)", MCN_font_message);
-    /* UNCHECKED */ MCNameCreateWithCString("(Tooltip)", MCN_font_tooltip);
-    /* UNCHECKED */ MCNameCreateWithCString("(System)", MCN_font_system);
+    { "(Default)", &MCN_font_default },
+    { "(Styled Text)", &MCN_font_usertext },
+    { "(Menu)", &MCN_font_menutext },
+    { "(Text)", &MCN_font_content },
+    { "(Message)", &MCN_font_message },
+    { "(Tooltip)", &MCN_font_tooltip },
+    { "(System)", &MCN_font_system },
+};
+
+void X_initialize_names(void)
+{
+    for(size_t i = 0; i < sizeof(kInitialNames) / sizeof(kInitialNames[0]); i++)
+    {
+        MCNameCreateWithNativeChars((const char_t*)kInitialNames[i].cstring, strlen(kInitialNames[i].cstring), *kInitialNames[i].name_var);
+    }
 }
 
 void MCU_finalize_names(void)
 {
-	MCNameDelete(MCN_msg);
-	MCNameDelete(MCN_each);
-	MCNameDelete(MCN_it);
-
-	MCNameDelete(MCN_cancel);
-	
-	MCNameDelete(MCN_default_text_font);
-    MCNameDelete(MCN_platform_string);
-	MCNameDelete(MCN_version_string);
-
-	MCNameDelete(MCN_metadata);
-	MCNameDelete(MCN_runs);
-	MCNameDelete(MCN_style);
-
-	MCNameDelete(MCN_down);
-	MCNameDelete(MCN_up);
-
-	MCNameDelete(MCN_empty);
-	MCNameDelete(MCN_files);
-	MCNameDelete(MCN_image);
-	MCNameDelete(MCN_objects);
-	MCNameDelete(MCN_private);
-	MCNameDelete(MCN_text);
-//	MCNameDelete(MCN_unicode);
-	MCNameDelete(MCN_styles);
-    MCNameDelete(MCN_styledtext);
-    MCNameDelete(MCN_rtftext);
-    MCNameDelete(MCN_htmltext);
-    MCNameDelete(MCN_png);
-    MCNameDelete(MCN_gif);
-    MCNameDelete(MCN_jpeg);
-	MCNameDelete(MCN_win_bitmap);
-	MCNameDelete(MCN_win_metafile);
-	MCNameDelete(MCN_win_enh_metafile);
-	MCNameDelete(MCN_rtf);
-	MCNameDelete(MCN_html);
-
-	MCNameDelete(MCN_browser);
-	MCNameDelete(MCN_command_line);
-	MCNameDelete(MCN_development);
-    MCNameDelete(MCN_development_cmdline);
-	MCNameDelete(MCN_helper_application);
-	MCNameDelete(MCN_installer);
-	MCNameDelete(MCN_installer_cmdline);
-	MCNameDelete(MCN_mobile);
-	MCNameDelete(MCN_player);
-	MCNameDelete(MCN_server);
-	MCNameDelete(MCN_standalone_application);
-
-	MCNameDelete(MCN_all);
-	MCNameDelete(MCN_auto_key);
-	MCNameDelete(MCN_disk);
-	MCNameDelete(MCN_activate);
-	MCNameDelete(MCN_high_level);
-	MCNameDelete(MCN_system);
-
-	MCNameDelete(MCN_ansi);
-	MCNameDelete(MCN_arabic);
-	MCNameDelete(MCN_bulgarian);
-	MCNameDelete(MCN_chinese);
-	MCNameDelete(MCN_english);
-	MCNameDelete(MCN_greek);
-	MCNameDelete(MCN_hebrew);
-	MCNameDelete(MCN_japanese);
-	MCNameDelete(MCN_korean);
-	MCNameDelete(MCN_lithuanian);
-	MCNameDelete(MCN_polish);
-	MCNameDelete(MCN_roman);
-	MCNameDelete(MCN_russian);
-	MCNameDelete(MCN_simple_chinese);
-	MCNameDelete(MCN_thai);
-	MCNameDelete(MCN_turkish);
-	MCNameDelete(MCN_ukrainian);
-	MCNameDelete(MCN_unicode);
-	MCNameDelete(MCN_utf8);
-	MCNameDelete(MCN_vietnamese);
-	MCNameDelete(MCN_w_char);
-	MCNameDelete(MCN_asterisk_char);
-
-	MCNameDelete(MCN_plain);
-	MCNameDelete(MCN_bold);
-	MCNameDelete(MCN_italic);
-	MCNameDelete(MCN_bold_italic);
-
-	MCNameDelete(MCN_unknown);
-	MCNameDelete(MCN_x86);
-	MCNameDelete(MCN_x86_64);
-    MCNameDelete(MCN_motorola_powerpc);
-    MCNameDelete(MCN_i386);
-    MCNameDelete(MCN_arm);
-    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
-    MCNameDelete(MCN_arm64);
-
-	MCNameDelete(MCN_local_mac);
-	MCNameDelete(MCN_local_win32);
-	MCNameDelete(MCN_android);
-	MCNameDelete(MCN_iphone);
-	MCNameDelete(MCN_wince);
-
-	MCNameDelete(MCN_mac_os);
-	MCNameDelete(MCN_win32);
-
-	MCNameDelete(MCN_done);
-
-	MCNameDelete(MCN_staticgray);
-	MCNameDelete(MCN_grayscale);
-	MCNameDelete(MCN_staticcolor);
-	MCNameDelete(MCN_pseudocolor);
-	MCNameDelete(MCN_truecolor);
-	MCNameDelete(MCN_directcolor);
-
-	MCNameDelete(MCN_bounds);
-	MCNameDelete(MCN_pixels);
-	MCNameDelete(MCN_opaque_pixels);
-
-	MCNameDelete(MCN_desktop);
-	MCNameDelete(MCN_documents);
-	MCNameDelete(MCN_engine);
-    MCNameDelete(MCN_resources);
-	MCNameDelete(MCN_fonts);
-	MCNameDelete(MCN_home);
-	MCNameDelete(MCN_start);
-//	MCNameDelete(MCN_system);
-	MCNameDelete(MCN_temporary);
-
-	MCNameDelete(MCN_apple);
-	MCNameDelete(MCN_control);
-	MCNameDelete(MCN_extension);
-	MCNameDelete(MCN_preferences);
-	
-	MCNameDelete(MCN_unhandled);
-	MCNameDelete(MCN_handled);
-	MCNameDelete(MCN_passed);
-
-	MCNameDelete(MCN_page_setup_dialog);
-	MCNameDelete(MCN_pagesetup);
-	MCNameDelete(MCN_print_dialog);
-	MCNameDelete(MCN_printer);
-	MCNameDelete(MCN_color_chooser);
-	MCNameDelete(MCN_color);
-	MCNameDelete(MCN_file_selector);
-	MCNameDelete(MCN_file);
-	//MCNameDelete(MCN_files);
-	MCNameDelete(MCN_folder);
-	MCNameDelete(MCN_folders);
-	MCNameDelete(MCN_answer_dialog);
-	MCNameDelete(MCN_ask_dialog);
-
-	//MCNameDelete(MCN_plain);
-	MCNameDelete(MCN_clear);
-	//MCNameDelete(MCN_color);
-	MCNameDelete(MCN_effect);
-	MCNameDelete(MCN_error);
-	//MCNameDelete(MCN_file);
-	//MCNameDelete(MCN_folder);
-	MCNameDelete(MCN_information);
-	MCNameDelete(MCN_password);
-	//MCNameDelete(MCN_printer);
-	MCNameDelete(MCN_program);
-	MCNameDelete(MCN_question);
-	MCNameDelete(MCN_record);
-	MCNameDelete(MCN_titled);
-	MCNameDelete(MCN_warning);
-	
-	MCNameDelete(MCN_messagename);
-	MCNameDelete(MCM_msgchanged);
-	MCNameDelete(MCN_hcstat);
-    
-	MCNameDelete(MCM_apple_event);
-	MCNameDelete(MCM_arrow_key);
-	MCNameDelete(MCM_assert_error);
-	MCNameDelete(MCM_backspace_key);
-	MCNameDelete(MCM_close_background);
-	MCNameDelete(MCM_close_card);
-	MCNameDelete(MCM_close_control);
-	MCNameDelete(MCM_close_field);
-	MCNameDelete(MCM_close_stack);
-	MCNameDelete(MCM_close_stack_request);
-	MCNameDelete(MCM_color_changed);
-	MCNameDelete(MCM_command_key_down);
-	MCNameDelete(MCM_control_key_down);
-	MCNameDelete(MCM_copy_key);
-	MCNameDelete(MCM_current_time_changed);
-	MCNameDelete(MCM_cut_key);
-	MCNameDelete(MCM_debug_str);
-	MCNameDelete(MCM_delete_background);
-	MCNameDelete(MCM_delete_button);
-	MCNameDelete(MCM_delete_card);
-	MCNameDelete(MCM_delete_eps);
-	MCNameDelete(MCM_delete_field);
-	MCNameDelete(MCM_delete_graphic);
-	MCNameDelete(MCM_delete_group);
-	MCNameDelete(MCM_delete_image);
-	MCNameDelete(MCM_delete_key);
-	MCNameDelete(MCM_delete_scrollbar);
-	MCNameDelete(MCM_delete_player);
-	MCNameDelete(MCM_delete_stack);
-	MCNameDelete(MCM_delete_widget);
-	MCNameDelete(MCM_delete_url);
-	MCNameDelete(MCM_desktop_changed);
-	MCNameDelete(MCM_drag_drop);
-	MCNameDelete(MCM_drag_end);
-	MCNameDelete(MCM_drag_enter);
-	MCNameDelete(MCM_drag_leave);
-	MCNameDelete(MCM_drag_move);
-	MCNameDelete(MCM_drag_start);
-	MCNameDelete(MCM_edit_script);
-	MCNameDelete(MCM_enter_in_field);
-	MCNameDelete(MCM_enter_key);
-	MCNameDelete(MCM_error_dialog);
-	MCNameDelete(MCM_escape_key);
-	MCNameDelete(MCM_eval);
-	MCNameDelete(MCM_exit_field);
-	MCNameDelete(MCM_focus_in);
-	MCNameDelete(MCM_focus_out);
-	MCNameDelete(MCM_function_key);
-	MCNameDelete(MCM_get_cached_urls);
-	MCNameDelete(MCM_get_url);
-	MCNameDelete(MCM_get_url_status);
-	MCNameDelete(MCM_gradient_edit_ended);
-	MCNameDelete(MCM_gradient_edit_started);
-	MCNameDelete(MCM_help);
-	MCNameDelete(MCM_hot_spot_clicked);
-	MCNameDelete(MCM_icon_menu_pick);
-	MCNameDelete(MCM_icon_menu_opening);
-	MCNameDelete(MCM_status_icon_menu_pick);
-	MCNameDelete(MCM_status_icon_menu_opening);
-	MCNameDelete(MCM_status_icon_click);
-	MCNameDelete(MCM_status_icon_double_click);
-	MCNameDelete(MCM_iconify_stack);
-	MCNameDelete(MCM_id_changed);
-	MCNameDelete(MCM_idle);
-	MCNameDelete(MCM_internal);
-	MCNameDelete(MCM_internal2);
-	MCNameDelete(MCM_key_down);
-	MCNameDelete(MCM_key_up);
-	MCNameDelete(MCM_keyboard_activated);
-	MCNameDelete(MCM_keyboard_deactivated);
-	MCNameDelete(MCM_library_stack);
-	MCNameDelete(MCM_link_clicked);
-	MCNameDelete(MCM_load_url);
-	MCNameDelete(MCM_main_stack_changed);
-	MCNameDelete(MCM_menu_pick);
-	MCNameDelete(MCM_message);
-	MCNameDelete(MCM_message_handled);
-	MCNameDelete(MCM_message_not_handled);
-	MCNameDelete(MCM_mouse_double_down);
-	MCNameDelete(MCM_mouse_double_up);
-	MCNameDelete(MCM_mouse_down);
-	MCNameDelete(MCM_mouse_down_in_backdrop);
-	MCNameDelete(MCM_mouse_enter);
-	MCNameDelete(MCM_mouse_leave);
-	MCNameDelete(MCM_mouse_move);
-	MCNameDelete(MCM_mouse_release);
-	MCNameDelete(MCM_mouse_still_down);
-	MCNameDelete(MCM_mouse_up);
-	MCNameDelete(MCM_mouse_up_in_backdrop);
-	MCNameDelete(MCM_mouse_within);
-	MCNameDelete(MCM_move_control);
-	MCNameDelete(MCM_move_stack);
-	MCNameDelete(MCM_move_stopped);
-	MCNameDelete(MCM_movie_touched);
-	MCNameDelete(MCM_name_changed);
-	MCNameDelete(MCM_new_background);
-	MCNameDelete(MCM_new_card);
-	MCNameDelete(MCM_new_stack);
-	MCNameDelete(MCM_new_tool);
-	MCNameDelete(MCM_node_changed);
-	MCNameDelete(MCM_object_selection_ended);
-	MCNameDelete(MCM_object_selection_started);
-	MCNameDelete(MCM_open_background);
-	MCNameDelete(MCM_open_card);
-	MCNameDelete(MCM_open_control);
-	MCNameDelete(MCM_open_field);
-	MCNameDelete(MCM_open_stack);
-	MCNameDelete(MCM_option_key_down);
-	MCNameDelete(MCM_paste_key);
-	MCNameDelete(MCM_play_paused);
-    MCNameDelete(MCM_play_rate_changed);
-	MCNameDelete(MCM_play_started);
-	MCNameDelete(MCM_play_stopped);
-	MCNameDelete(MCM_post_url);
-	MCNameDelete(MCM_preopen_background);
-	MCNameDelete(MCM_preopen_card);
-	MCNameDelete(MCM_preopen_control);
-	MCNameDelete(MCM_preopen_stack);
-	MCNameDelete(MCM_property_changed);
-	MCNameDelete(MCM_put_url);
-	MCNameDelete(MCM_qtdebugstr);
-	MCNameDelete(MCM_raw_key_down);
-	MCNameDelete(MCM_raw_key_up);
-	MCNameDelete(MCM_relaunch);
-	MCNameDelete(MCM_release_stack);
-	MCNameDelete(MCM_reload_stack);
-	MCNameDelete(MCM_resize_control);
-	MCNameDelete(MCM_resize_control_ended);
-	MCNameDelete(MCM_resize_control_started);
-	MCNameDelete(MCM_resize_stack);
-	MCNameDelete(MCM_resolution_error);
-	MCNameDelete(MCM_resume);
-	MCNameDelete(MCM_resume_stack);
-	MCNameDelete(MCM_return_in_field);
-	MCNameDelete(MCM_return_key);
-	MCNameDelete(MCM_save_stack_request);
-	MCNameDelete(MCM_script_error);
-	MCNameDelete(MCM_script_execution_error);
-	MCNameDelete(MCM_scrollbar_beginning);
-	MCNameDelete(MCM_scrollbar_drag);
-	MCNameDelete(MCM_scrollbar_end);
-	MCNameDelete(MCM_scrollbar_line_dec);
-	MCNameDelete(MCM_scrollbar_line_inc);
-	MCNameDelete(MCM_scrollbar_page_dec);
-	MCNameDelete(MCM_scrollbar_page_inc);
-	MCNameDelete(MCM_selected_object_changed);
-	MCNameDelete(MCM_selection_changed);
-	MCNameDelete(MCM_shell);
-	MCNameDelete(MCM_signal);
-	MCNameDelete(MCM_shut_down);
-	MCNameDelete(MCM_shut_down_request);
-	MCNameDelete(MCM_socket_error);
-	MCNameDelete(MCM_socket_closed);
-	MCNameDelete(MCM_socket_timeout);
-	MCNameDelete(MCM_start_up);
-	MCNameDelete(MCM_suspend);
-	MCNameDelete(MCM_suspend_stack);
-	MCNameDelete(MCM_tab_key);
-	MCNameDelete(MCM_text_changed);
-	MCNameDelete(MCM_trace);
-	MCNameDelete(MCM_trace_break);
-	MCNameDelete(MCM_trace_done);
-	MCNameDelete(MCM_trace_error);
-	MCNameDelete(MCM_undo_changed);
-	MCNameDelete(MCM_undo_key);
-	MCNameDelete(MCM_uniconify_stack);
-	MCNameDelete(MCM_unload_url);
-	MCNameDelete(MCM_update_screen);
-	MCNameDelete(MCM_update_var);
-
-#ifdef FEATURE_PLATFORM_URL
-	MCNameDelete(MCM_url_progress);
-#endif
-
-    MCNameDelete(MCM_delete_audioclip);
-    MCNameDelete(MCM_delete_videoclip);
-    MCNameDelete(MCM_new_audioclip);
-    MCNameDelete(MCM_new_videoclip);
-    
-#ifdef _MOBILE
-	MCNameDelete(MCN_firstname);
-	MCNameDelete(MCN_lastname);
-	MCNameDelete(MCN_middlename);
-	MCNameDelete(MCN_prefix);
-	MCNameDelete(MCN_suffix);
-	MCNameDelete(MCN_nickname);
-	MCNameDelete(MCN_firstnamephonetic);
-	MCNameDelete(MCN_lastnamephonetic);
-	MCNameDelete(MCN_middlenamephonetic);
-	MCNameDelete(MCN_organization);
-	MCNameDelete(MCN_jobtitle);
-	MCNameDelete(MCN_department);
-	MCNameDelete(MCN_note);
-
-	MCNameDelete(MCN_email);
-	MCNameDelete(MCN_phone);
-	MCNameDelete(MCN_address);
-	
-//	MCNameDelete(MCN_home);
-	MCNameDelete(MCN_work);
-	MCNameDelete(MCN_other);
-//	MCNameDelete(MCN_mobile);
-//	MCNameDelete(MCN_iphone);
-	MCNameDelete(MCN_main);
-	MCNameDelete(MCN_homefax);
-	MCNameDelete(MCN_workfax);
-	MCNameDelete(MCN_otherfax);
-	MCNameDelete(MCN_pager);
-	
-	MCNameDelete(MCN_street);
-	MCNameDelete(MCN_city);
-	MCNameDelete(MCN_state);
-	MCNameDelete(MCN_zip);
-	MCNameDelete(MCN_country);
-	MCNameDelete(MCN_countrycode);
-	
-	MCNameDelete(MCM_touch_start);
-	MCNameDelete(MCM_touch_move);
-	MCNameDelete(MCM_touch_end);
-	MCNameDelete(MCM_touch_release);
-	MCNameDelete(MCM_motion_start);
-	MCNameDelete(MCM_motion_end);
-	MCNameDelete(MCM_motion_release);
-	MCNameDelete(MCM_acceleration_changed);
-	MCNameDelete(MCM_orientation_changed);
-	MCNameDelete(MCM_location_changed);
-	MCNameDelete(MCM_location_error);
-	MCNameDelete(MCM_heading_changed);
-	MCNameDelete(MCM_heading_error);
-	MCNameDelete(MCM_purchase_updated);
-    MCNameDelete(MCM_rotation_rate_changed);
-    MCNameDelete(MCM_tracking_error);
-    MCNameDelete(MCM_local_notification_received);
-    MCNameDelete(MCM_push_notification_received);
-    MCNameDelete(MCM_push_notification_registered);
-    MCNameDelete(MCM_push_notification_registration_error);
-    MCNameDelete(MCM_url_wake_up);
-	MCNameDelete(MCM_launch_data_changed);
-	MCNameDelete(MCM_browser_started_loading);
-	MCNameDelete(MCM_browser_finished_loading);
-	MCNameDelete(MCM_browser_load_failed);
-    MCNameDelete(MCM_sound_finished_on_channel);
-    MCNameDelete(MCM_ad_loaded);
-    MCNameDelete(MCM_ad_clicked);
-    MCNameDelete(MCM_ad_resize_start);
-    MCNameDelete(MCM_ad_resize_end);
-    MCNameDelete(MCM_ad_expand_start);
-    MCNameDelete(MCM_ad_expand_end);
-	MCNameDelete(MCM_scroller_did_scroll);
-	MCNameDelete(MCM_scroller_begin_drag);
-	MCNameDelete(MCM_scroller_end_drag);
-	MCNameDelete(MCM_player_finished);
-	MCNameDelete(MCM_player_error);
-	MCNameDelete(MCM_player_property_available);
-	MCNameDelete(MCM_input_begin_editing);
-	MCNameDelete(MCM_input_end_editing);
-	MCNameDelete(MCM_input_return_key);
-	MCNameDelete(MCM_input_text_changed);
-	MCNameDelete(MCM_nfc_tag_received);
-#endif
-	
-#ifdef _IOS_MOBILE
-	MCNameDelete(MCM_browser_load_request);
-	MCNameDelete(MCM_browser_load_requested);
-	MCNameDelete(MCM_scroller_begin_decelerate);
-	MCNameDelete(MCM_scroller_end_decelerate);
-	MCNameDelete(MCM_scroller_scroll_to_top);
-	MCNameDelete(MCM_player_progress_changed);
-	MCNameDelete(MCM_player_enter_fullscreen);
-	MCNameDelete(MCM_player_leave_fullscreen);
-	MCNameDelete(MCM_player_state_changed);
-	MCNameDelete(MCM_player_movie_changed);
-	MCNameDelete(MCM_player_stopped);
-	MCNameDelete(MCM_reachability_changed);
-#endif
-    
-    MCNameDelete(MCN_font_default);
-    MCNameDelete(MCN_font_usertext);
-    MCNameDelete(MCN_font_menutext);
-    MCNameDelete(MCN_font_content);
-    MCNameDelete(MCN_font_message);
-    MCNameDelete(MCN_font_tooltip);
-    MCNameDelete(MCN_font_system);
+    for(size_t i = 0; i < sizeof(kInitialNames) / sizeof(kInitialNames[0]); i++)
+    {
+        MCValueRelease(*kInitialNames[i].name_var);
+    }
 }

@@ -39,6 +39,7 @@
     NAME DOUBLE
     SYNTAXPRECEDENCE
     BYTECODE
+    QueryExpressionListLength
 
 --------------------------------------------------------------------------------
 
@@ -126,6 +127,7 @@
     in
     out
     inout
+    variadic
 
 'type' BYTECODE
     sequence(Left: BYTECODE, Right: BYTECODE)
@@ -375,5 +377,15 @@
 
 'type' NAME
 'type' DOUBLE
+
+--------------------------------------------------------------------------------
+
+'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
+
+    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
+        QueryExpressionListLength(Tail -> TailCount)
+
+    'rule' QueryExpressionListLength(nil -> 0)
+        -- nothing
 
 --------------------------------------------------------------------------------

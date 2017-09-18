@@ -87,6 +87,9 @@ bool MCInitialize(void)
     if (!__MCJavaInitialize())
         return false;
     
+    if (!__MCObjcInitialize())
+        return false;
+
 	return true;
 }
 
@@ -108,7 +111,8 @@ void MCFinalize(void)
 	__MCStringFinalize();
     __MCUnicodeFinalize();
     __MCJavaFinalize();
-    
+    __MCObjcFinalize();
+
     // Finalize values last
 	__MCValueFinalize();
 }

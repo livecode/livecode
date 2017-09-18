@@ -67,17 +67,6 @@ on TestHighlightColors
 #	TestAssert "hilitecolor set to 1234", the hilitecolor of field 1 is "1234"
 end TestHighlightColors
 
-on TestLinkHighlightColors
-	set the linkhilitecolor to "blue"
-	TestAssert "linkhilitecolor set to blue", the linkhilitecolor is "blue"
-
-	set the linkhilitecolor to "255,255,0"
-	TestAssert "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0"
-
-	set the linkhilitecolor to "#336633"
-	TestAssert "linkhilitecolor set to hex value", the linkhilitecolor is "#336633"
-end TestLinkHighlightColors
-
 on TestFieldAutoHighlightDefault
 	create field
 	TestAssert "autohilite is false on field creation", the autohilite of field 1 is true

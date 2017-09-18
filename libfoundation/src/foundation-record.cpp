@@ -211,7 +211,7 @@ static bool __fetch_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
-        if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
+        if (MCNameIsEqualToCaseless(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
             r_value = self -> fields[i];
             return true;
@@ -234,7 +234,7 @@ static bool __store_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
-        if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
+        if (MCNameIsEqualToCaseless(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_resolved_typeinfo -> record . fields[i] . type))
                 return MCErrorThrowGeneric(nil);

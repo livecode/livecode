@@ -3248,7 +3248,7 @@ void MCBlock::SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname)
         flags &= ~F_HAS_FNAME;
         if (atts != nil)
         {
-            MCNameDelete(atts -> fontname);
+            MCValueRelease(atts -> fontname);
             atts -> fontname = nil;
         }
     }

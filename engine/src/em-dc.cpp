@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-async.h"
 #include "em-event.h"
 #include "em-util.h"
+#include "em-liburl.h"
 
 #include "osspec.h"
 #include "eventqueue.h"
@@ -64,7 +65,8 @@ MCScreenDC::open()
 {
 	return
 		MCEmscriptenEventInitialize() &&
-		MCEmscriptenViewInitialize();
+		MCEmscriptenViewInitialize() &&
+        MCEmscriptenLibUrlInitialize();
 }
 
 
@@ -73,6 +75,7 @@ MCScreenDC::close(Boolean force)
 {
 	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
+    MCEmscriptenLibUrlFinalize();
 
 	return true;
 }

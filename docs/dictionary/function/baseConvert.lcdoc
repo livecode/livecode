@@ -66,13 +66,12 @@ mathematical calculations such as addition on a number in another base,
 you must first convert the number to base 10, do the calculation, then
 convert back to the original base. Here is an example:
 
-    function hexSum firstAddend, secondAddend
-    -- adds together two hexadecimal numbers
-    put baseConvert(firstAddend,16,10) into convertedAddend1
-    put baseConvert(secondAddend,16,10) into convertedAddend2
-    put convertedAddend1 + convertedAddend2 into baseTenSum
-    return baseConvert(baseTenSum,10,16)
-
+    function hexSum pFirstAddend, pSecondAddend
+        -- adds together two hexadecimal numbers
+        put baseConvert(pFirstAddend,16,10) into tConvertedAddend1
+        put baseConvert(pSecondAddend,16,10) into tConvertedAddend2
+        put tConvertedAddend1 + tConvertedAddend2 into tBaseTenSum
+        return baseConvert(tBaseTenSum,10,16)
     end hexSum
 
 

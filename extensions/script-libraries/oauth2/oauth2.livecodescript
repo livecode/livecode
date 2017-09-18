@@ -118,7 +118,7 @@ pParams (optional array): An array of additional key -> value pairs of extra par
 the authorization url. Some services implement additional options that require extra parameters.
 
 The result:
-An error string if an error occured during authorization
+An error string if an error occurred during authorization
 
 It:
 An array containing the parsed JSON data returned by the token url
@@ -276,7 +276,7 @@ pRefreshToken (string): The refresh token obtained from a previous OAuth 2 autho
 pPort (integer): The port to use for the redirect uri. It is recommended to use the range 49152-65535.
 
 The result:
-An error string if an error occured during authorization
+An error string if an error occurred during authorization
 
 It:
 An array containing the parsed JSON data returned by the token url

@@ -60,7 +60,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFolderDialog(t_owner, p_title, p_prompt, p_initial);
+	MCPlatformBeginFolderOrFileDialog(kMCPlatformFileDialogKindFolder, t_owner, p_title, p_prompt, p_initial);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_folder;
@@ -158,7 +158,7 @@ int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MC
 	else
 		t_kind = kMCPlatformFileDialogKindOpen;
 	
-	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
+	MCPlatformBeginFolderOrFileDialog(t_kind, t_owner, p_title, p_prompt, p_initial, *t_types, t_types . Count());
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -191,7 +191,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 	else
 		t_kind = kMCPlatformFileDialogKindOpen;
 	
-	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
+	MCPlatformBeginFolderOrFileDialog(t_kind, t_owner, p_title, p_prompt, p_initial, p_types, p_type_count);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -227,7 +227,7 @@ int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
+	MCPlatformBeginFolderOrFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_initial, *t_types, t_types . Count());
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;
@@ -254,7 +254,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
+	MCPlatformBeginFolderOrFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_initial, p_types, p_type_count);
 	
 	MCPlatformDialogResult t_result;
 	MCAutoStringRef t_file, t_type;

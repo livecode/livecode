@@ -434,11 +434,14 @@ static int trans_stat(Exec_stat stat)
 
 static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname, MCContainer& r_container)
 {
-	MCAutoNameRef t_name;
-	/* UNCHECKED */ t_name . CreateWithOldString(vname);
-
+	MCNewAutoNameRef t_name;
+    if (!MCNameCreateWithNativeChars((const char_t *)vname.getstring(), vname.getlength(), &t_name))
+    {
+        return ES_ERROR;
+    }
+	
 	MCAutoPointer<MCVarref> newvar;
-    if (MCECptr -> FindVar(t_name, &(&newvar)) != PS_NORMAL)
+    if (MCECptr -> FindVar(*t_name, &(&newvar)) != PS_NORMAL)
     {
 		return ES_ERROR;
     }
@@ -626,7 +629,7 @@ static char *set_global(const char *arg1, const char *arg2,
                         const char *arg3, int *retval)
 {
 	MCNewAutoNameRef t_arg1;
-	/* UNCHECKED */ MCNameCreateWithCString(arg1, &t_arg1);
+	/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg1, strlen(arg1), &t_arg1);
 	MCVariable *tmp;
 	if (!MCVariable::ensureglobal(*t_arg1, tmp))
 	{
@@ -847,7 +850,7 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 	if (arg2 != NULL && strlen(arg2) != 0)
 	{
 		MCNameRef t_key;
-		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg2, strlen(arg2), t_key);
 		var.eval_on_path(*MCECptr, {&t_key, 1}, &t_value);
 		MCValueRelease(t_key);
 	}
@@ -886,7 +889,7 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 	if (arg2 != NULL && strlen(arg2) > 0)
 	{
 		MCNameRef t_key;
-		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg2, strlen(arg2), t_key);
 		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 		MCValueRelease(t_key);
 	}
@@ -1015,10 +1018,10 @@ static char *set_array(const char *arg1, const char *arg2,
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
-			/* UNCHECKED */ MCNameCreateWithCString(tbuf, t_key);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)tbuf, strlen(tbuf), t_key);
 		}
 		else
-			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)value -> keys[i], strlen(value -> keys[i]), t_key);
 		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 	}
 	return NULL;
@@ -1582,7 +1585,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
-			/* UNCHECKED */ MCNameCreateWithCString(tbuf, t_key);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)tbuf, strlen(tbuf), t_key);
 		}
 		else
         {
@@ -1592,7 +1595,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
         }
 		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
         
-        MCNameDelete(t_key);
+        MCValueRelease(t_key);
 	}
 	return NULL;
 }

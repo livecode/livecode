@@ -209,6 +209,7 @@
     EmitHandlerTypeInParameter
     EmitHandlerTypeOutParameter
     EmitHandlerTypeInOutParameter
+    EmitHandlerTypeVariadicParameter
     EmitEndHandlerType
     EmitHandlerParameter
     EmitHandlerVariable
@@ -353,6 +354,8 @@
     Error_BytecodeNotAllowedInSafeContext
     Error_UnsafeHandlerCallNotAllowedInSafeContext
     Error_InvalidNameForNamespace
+    Error_VariadicParametersOnlyAllowedInForeignHandlers
+    Error_VariadicParameterMustBeLast
 
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
@@ -612,6 +615,7 @@
 'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)
+'action' EmitHandlerTypeVariadicParameter(Name: NAME)
 'action' EmitEndHandlerType(-> INT)
 
 'action' EmitHandlerParameter(Name: NAME, Type: INT -> Index: INT)
@@ -779,6 +783,9 @@
 
 'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
 'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
+
+'action' Error_VariadicParametersOnlyAllowedInForeignHandlers(Position: POS)
+'action' Error_VariadicParameterMustBeLast(Position: POS)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

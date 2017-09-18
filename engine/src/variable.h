@@ -225,7 +225,7 @@ public:
 
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(*name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(*name, other_name);
 	}
 
 	//////////

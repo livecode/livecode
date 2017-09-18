@@ -657,12 +657,12 @@ Returns the metadata for a file or folder.
 Syntax: dropboxGetMetadata <pAccessToken>, <pPath>, <pIncludeMediaInfo>, [<pCallback>]
 
 Description:
+
 >*Note:* Metadata for the root folder is unsupported.
 
-If the path is a folder, all its contents will be deleted too.
-A successful response indicates that the file or folder was deleted. The returned
-metadata will be the corresponding FileMetadata or FolderMetadata for the item at
-time of deletion, and not a DeletedMetadata object.
+If the path is a folder, then a folderMetadata json is returned.
+If the path is a file then a fileMetadata json is returned.
+If the path is a file or folder that has been deleted, then a deletedMetadata json is returned.
 
 If the callback parameter is not empty the request will be asynchronus and
 when complete the callback will be sent to the object that accessed the API.
@@ -676,7 +676,7 @@ The callback will be sent with three parameters:
 Parameters:
 pAccessToken: An OAuth2 Access token to access the user's account
 
-pPath: Path in the user's Dropbox to be deleted.
+pPath: Path to a file or folder in the user's Dropbox to be queried
 
 pIncludeMediaInfo (boolean): If true, FileMetadata.media_info is set for photo and
 video. The default for this field is False.
@@ -5011,6 +5011,7 @@ private function __get_metadata_POST pPath,pIncludeMediaInfo
    path can be file or folder
    {"path":"/apps/MyApp/seasons.txt"}
    */
+   if pIncludeMediaInfo is empty then put "false" into pIncludeMediaInfo
    return __CB(__Q("path") & ":" &  __Q(pPath) & "," &__Q("include_media_info") & ":" & pIncludeMediaInfo)
 end __get_metadata_POST
 
@@ -5180,6 +5181,9 @@ private function __list_revisions_POST pPath,pLimit
    #--limit UInt64 The maximum number of revision entries returned. The default for this field is 10.
    {"path":"/apps/MyApp/seasons.docx","limit": 10}
    */
+   if pLimit is not an integer then 
+      put 1000 into pLimit
+   end if
    return __CB(__Q("path") & ":" &  __Q(pPath) & "," &__Q("limit") & ":" & pLimit)
 end __list_revisions_POST
 
@@ -5375,8 +5379,10 @@ private function __list_folder_members_POST pSharedFolderId,pActions,pLimit
    --
    { "shared_folder_id": "84528192421","actions": [], "limit": 1000}
    */
-   if pLimit is empty then put "1000" into pLimit
-   return __CB(__Q("shared_folder_id") & ":" &  __Q(pSharedFolderId) & "," & __Q("actions") & ":" & __List(pActions)& "," & __Q("limit") & ":" &  __Q(pLimit) )
+   if pLimit is not an integer then
+      put 1000 into pLimit
+   end if
+   return __CB(__Q("shared_folder_id") & ":" &  __Q(pSharedFolderId) & "," & __Q("actions") & ":" & __List(pActions)& "," & __Q("limit") & ":" &  pLimit )
 end __list_folder_members_POST
 
 private function __list_folder_members_continue_POST pCursor
@@ -5403,8 +5409,10 @@ private function __list_folders_POST pLimit,pActions
    unshare Void Stop sharing this folder.
    {"limit": 100, "actions": []}
    */
-   if pLimit is empty then put "1000" into pLimit
-   return __CB(__Q("limit") & ":" &  __Q(pLimit) & "," & __Q("actions") & ":" & __List(pActions))
+   if pLimit is not an integer then
+      put 1000 into pLimit
+   end if
+   return __CB(__Q("limit") & ":" &  pLimit & "," & __Q("actions") & ":" & __List(pActions))
 end __list_folders_POST
 
 private function __list_folders_continue_POST pCursor
@@ -5422,8 +5430,10 @@ private function __list_mountable_folders_POST pLimit,pActions
    actions List of (FolderAction)? Folder actions to query. This field is optional.
    FolderAction (open union) 
    */
-   if pLimit is empty then put "1000" into pLimit
-   return __CB(__Q("limit") & ":" &  __Q(pLimit) & "," & __Q("actions") & ":" & __List(pActions))
+   if pLimit is not an integer then
+      put 1000 into pLimit
+   end if
+   return __CB(__Q("limit") & ":" &  pLimit & "," & __Q("actions") & ":" & __List(pActions))
 end __list_mountable_folders_POST
 
 private function __list_mountable_folders_continue_POST pCursor

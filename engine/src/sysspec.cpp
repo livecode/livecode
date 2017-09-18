@@ -1230,42 +1230,6 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* LEGACY */
-#if 0
-IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
-{
-    char *t_resolved_path;
-    t_resolved_path = MCS_resolvepath(p_path);
-    
-    uint32_t t_mode;
-    if (strequal(p_mode, IO_READ_MODE))
-        t_mode = kMCOpenFileModeRead;
-    else if (strequal(p_mode, IO_WRITE_MODE))
-        t_mode = kMCOpenFileModeWrite;
-    else if (strequal(p_mode, IO_UPDATE_MODE))
-        t_mode = kMCOpenFileModeUpdate;
-    else if (strequal(p_mode, IO_APPEND_MODE))
-        t_mode = kMCOpenFileModeAppend;
-    
-    MCSystemFileHandle *t_handle;
-    if (!p_driver)
-        t_handle = MCsystem -> OpenFile(t_resolved_path, t_mode, p_map && MCmmap);
-    else
-        t_handle = MCsystem -> OpenDevice(t_resolved_path, t_mode, MCserialcontrolsettings);
-    
-    // MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
-    delete t_resolved_path;
-    
-    if (t_handle == NULL)
-        return NULL;
-    
-    if (p_offset != 0)
-        t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
-    
-    return new IO_header(t_handle, 0);;
-}
-#endif 
-
 IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode)
 {
     return MCsystem -> DeployOpen(path, p_mode);
@@ -1294,10 +1258,6 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 
 	if (t_handle == NULL)
 		return NULL;
-#ifdef OLD_IO_HANDLE
-    if (p_mode == kMCOpenFileModeAppend)
-        t_handle -> flags |= IO_SEEKED;
-#endif
 
     if (p_mode == kMCOpenFileModeAppend)
         t_handle -> Seek(0, kMCSystemFileSeekEnd);
@@ -1462,7 +1422,12 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
             t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
         if (t_success)
-            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
+            t_success = MCStringNormalizeLineEndings(*t_text, 
+                                                     kMCStringLineEndingStyleLF, 
+                                                     kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                                     kMCStringLineEndingOptionNormalizeLSToVT, 
+                                                     r_text, 
+                                                     nullptr);
         
         MCresult -> clear();
     }
@@ -1564,7 +1529,11 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     // convert the line endings before writing
     MCAutoStringRef t_converted;
     if (t_success)
-        t_success = MCStringConvertLineEndingsFromLiveCode(p_string, &t_converted);
+        t_success = MCStringNormalizeLineEndings(p_string, 
+                                                 kMCStringLineEndingStyleLegacyNative, 
+                                                 false, 
+                                                 &t_converted, 
+                                                 nullptr);
     
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
@@ -1789,8 +1758,15 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
         // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was in 6.x:
         //  line-ending conversion for servers and Windows only
 #if defined(_SERVER) || defined(_WINDOWS)
-        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
+        if (!MCStringNormalizeLineEndings(*t_data_string, 
+                                           kMCStringLineEndingStyleLF, 
+                                           kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                           kMCStringLineEndingOptionNormalizeLSToVT, 
+                                           r_output, 
+                                           nullptr))
+        {
             r_output = MCValueRetain(kMCEmptyString);
+        }
 #else
         r_output = MCValueRetain(*t_data_string);
 #endif

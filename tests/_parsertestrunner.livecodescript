@@ -107,9 +107,12 @@ private command __BuildErrorMap
       exit __BuildErrorMap
    end if 
    
-   write the backscripts to stdout
-   	
-   put TestBuildErrorMap("parseerrors.h", "PE", "UNDEFINED") into sErrorMap
+   try
+      put TestBuildErrorMap("parseerrors.h", "PE", "UNDEFINED") into sErrorMap
+   catch tError
+      write "ERROR: " & tError & return to stderr
+      quit 1
+   end try
 end __BuildErrorMap
 
 function CompilerTestRunner_DoesOutputSatisfyAssertion pCompilerOutput, pCompilerExitCode, pAssertion, pTestInfo

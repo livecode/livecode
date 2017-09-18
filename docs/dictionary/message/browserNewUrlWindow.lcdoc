@@ -4,14 +4,12 @@ Synonyms: xbrowser_newurlwindow
 
 Type: message
 
-Syntax: browserNewUrlWindow <instanceId>, <url>
+Syntax: browserNewUrlWindow <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_NewUrlWindow <url>, <instanceId>
+Syntax: XBrowser_NewUrlWindow <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a url has been opened in a new window.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,12 +25,10 @@ on browserNewUrlWindow pInstanceId, pUrl
 end browserNewUrlWindow
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that has opened in a new window
 
 Description:

@@ -29,7 +29,7 @@ Example:
 answer file (field "Prompt") with type "LiveCode Stacks|rev|RSTK"
 
 Example:
-answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG" \
+answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG"
 
 Parameters:
 prompt (string):
@@ -54,8 +54,8 @@ have a title bar.)
 It:
 The absolute file path of the file the user chose is placed in the it
 <variable>. If the answer files form is used, a return-delimited list of
-such paths is placed in the it variable. If the user cancels the <dialog
-box|dialog>, the <it> <variable> is set to empty.
+such paths is placed in the it variable. If the user cancels the 
+<dialog box|dialog>, the <it> <variable> is set to empty.
 
 The result:
 If <types> are specified, the result function will return the tag of the
@@ -65,11 +65,11 @@ Description:
 Use the <answer file> command when a <handler> needs the <file path> of
 a <file> before continuing.
 
-The dialog box displayed is the same one most programs use for the
+The <dialog box> displayed is the same one most programs use for the
 "Open" command in the File menu.
 
 >*Important:*  The <answer file> <command> does not open the <file>. It
-> only displays the dialog box and retrieves the path to the file the
+> only displays the <dialog box> and retrieves the path to the file the
 > user specifies.
 
 If more than one type is specified, a drop-down list containing the tags
@@ -78,15 +78,15 @@ display. (This list is always displayed on Windows systems).
 
 If the as sheet form is used, the dialog box appears as a sheet on OS X
 systems. On other systems, the as sheet form has no effect and the
-dialog box appears normally. Attempting to open a sheet from within
+<dialog box> appears normally. Attempting to open a sheet from within
 another sheet displays the second stack as a <modal dialog box> instead.
-To give a dialog box a prompt when using the as sheet form a non-empty
+To give a <dialog box> a prompt when using the as sheet form a non-empty
 title must be provided. This will cause the prompt to appear in the same
 place it would if as sheet was not being used.
 
 If the systemFileSelector <property> is set to false, LiveCode's
-built-in <dialog box> is used instead of the operating system's <file
-dialog box|standard file dialog>.
+built-in <dialog box> is used instead of the operating system's 
+<file dialog box|standard file dialog>.
 
 Changes:
 The answer file ... with type ... form was introduced in version 2.6.

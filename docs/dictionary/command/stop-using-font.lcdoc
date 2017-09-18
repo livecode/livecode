@@ -21,7 +21,6 @@ stop using font file "C:/myFontFolder/myCustomFont.ttf"
 Parameters:
 fontFile:
 
-
 The result:
 The <stop using font> command puts empty into the result if successful.
 Otherwise an error string is put into the result.
@@ -29,16 +28,17 @@ Otherwise an error string is put into the result.
 Description:
 The <stop using font> command unloads a font file from memory.
 The <fontFile> is the path of the font file to unload
->*Note:* The <fontNames> <function> will return the name of all available
-> fonts and the <fontFilesInUse> <property> will return the fill paths of
-> the loaded font files. To determine the name of the newly unloaded
-> font, compare the value of the <fontNames> before and after unloading
-> the font.
->*Warning:* 
-Ensure fonts are not in use before unloading them to avoid unexpected
-behaviour.< 
+
+>*Note:* The <fontNames> <function> will return the name of all 
+> available fonts and the <fontFilesInUse> <property> will return the 
+> fill paths of the loaded font files. To determine the name of the 
+> newly unloaded font, compare the value of the <fontNames> before and 
+> after unloading the font.
 
 References: start using font (command), function (glossary),
 fontNames (function), property (glossary),
 fontFilesInUse (property)
 
+References: start using font (command), function (glossary),
+fontNames (function), property (glossary),
+fontFilesInUse (property)

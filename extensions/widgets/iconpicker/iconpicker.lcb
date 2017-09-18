@@ -25,6 +25,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconsvg
+use com.livecode.library.widgetutils
 
 metadata author is "LiveCode"
 metadata version is "1.0.0"
@@ -48,46 +49,89 @@ private variable mDataTravel as Real
 private variable mViewTopPosition as Real
 private variable mFirstDataItem as Integer
 private variable mRecalculate as Boolean
+private variable mRecalculateGeometry as Boolean
 private variable mHoverRow as Integer
 private variable mFrameBorder as Boolean
 
 private variable mIconRects as List
-
 private variable mSelectedElement as optional String
-
 private variable mShowNames as Boolean
+private variable mIconSize as Number
+private variable mFilterString as String
 
 property preferredSize		get getPreferredSize
 metadata preferredSize.user_visible is "false"
 
 property selectedIcon get mSelectedElement set setSelectedElement
-
 property showFrameBorder	get mFrameBorder	set setFrameBorder
+property showNames get mShowNames set SetShowNames
+property iconSize get mIconSize set SetIconSize
+property filterString get mFilterString set SetFilterString
 
 constant kIconColor is [0,0,0]
 
-constant kIconSize is 65
+constant kDefaultIconSize is 65
 constant kIconPaddingRatio is 0.25
 constant kMinCols is 3
 constant kMinRows is 3
 
 public handler OnCreate()
-	put iconList() into mDataList
+    put "" into mFilterString
+	SetDataList()
 	put the empty array into mPaths
 	put 1 into mFirstDataItem
-	put true into mRecalculate
+	put true into mRecalculateGeometry
+	put false into mRecalculate
 	
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
 
-	put currently popped up into mShowNames
+	put false into mShowNames
+	put kDefaultIconSize into mIconSize
 
     updateParameters()
 	initialiseScrollbar()
 end handler
 
+public handler OnSave(out rProperties as Array)
+    put mShowNames into rProperties["showNames"]
+    put mIconSize into rProperties["iconSize"]
+    put mFrameBorder into rProperties["showFrameBorder"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+    put pProperties["showNames"] into mShowNames
+    put pProperties["iconSize"] into mIconSize
+    put pProperties["showFrameBorder"] into mFrameBorder
+end handler
+
+handler SetDataList()
+    variable tDataList as List
+    put iconList() into tDataList
+    
+    variable tFilteredData as List
+    if mFilterString is not empty then
+        variable tElement as String
+        repeat for each element tElement in tDataList
+            if tElement contains mFilterString then
+                push tElement onto tFilteredData
+            end if  
+        end repeat
+    else
+        put tDataList into tFilteredData
+    end if
+    
+    put tFilteredData into mDataList
+    put true into mRecalculate
+    redraw all
+end handler
+
 public handler OnPaint()
+    if mRecalculateGeometry then
+        updateGeometry()
+    end if
+
 	if mRecalculate then
 		updateParameters()
 	end if
@@ -146,7 +190,7 @@ private handler drawTitleBar()
 	set the font of this canvas to tFont
 
 	variable tLeft as Number
-	put kIconSize * kIconPaddingRatio into tLeft
+	put mIconSize * kIconPaddingRatio into tLeft
 
 	if mSelectedElement is nothing then
 		put rectangle [tLeft + mColWidth,0,mViewWidth,tTopRowHeight] into tTextRect
@@ -155,7 +199,7 @@ private handler drawTitleBar()
 		put rectangle [tLeft + mColWidth,0,mViewWidth,tTopRowHeight] into tTextRect
 		fill text mSelectedElement at left of tTextRect on this canvas
 		variable tIconRect as Rectangle
-		put rectangle [tLeft, kIconSize * kIconPaddingRatio, tLeft + kIconSize, tTopRowHeight - (kIconSize * kIconPaddingRatio)] into tIconRect
+		put rectangle [tLeft, mIconSize * kIconPaddingRatio, tLeft + mIconSize, tTopRowHeight - (mIconSize * kIconPaddingRatio)] into tIconRect
 		if mSelectedElement is not among the keys of mPaths then
 			put path iconSVGPathFromName(mSelectedElement) into tPath
 		else
@@ -292,8 +336,6 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 private handler indexToSectorRect(in pIndex as Integer) returns Rectangle
-	log pIndex
-
 	variable tLeft as Real
 	variable tRight as Real
 	variable tTop as Real
@@ -333,11 +375,8 @@ end handler
 public handler OnGeometryChanged()
 	// Only resizing necessitates a recalculation
 	if my height is not mViewHeight + topRowHeight() or my width is not mViewWidth + kScrollbarWidth then
-      variable tFirstDataItem as Number
-      put mFirstDataItem into tFirstDataItem
-      updateParameters()
-      scrollToIndex(tFirstDataItem)
-	end if
+    	put true into mRecalculateGeometry
+    end if
 end handler
 
 --------------------------------------------------------------------------------
@@ -360,15 +399,23 @@ private handler updateFirstDataItem()
 end handler
 
 private handler topRowHeight() returns Number
-	return kIconSize * (1 + kIconPaddingRatio * 2)
+	return mIconSize * (1 + kIconPaddingRatio * 2)
 end handler
 
 private handler minContentHeight() returns Number
-	return kIconSize * (kMinRows + (kMinRows + 1) * kIconPaddingRatio)
+	return mIconSize * (kMinRows + (kMinRows + 1) * kIconPaddingRatio)
 end handler
 
 private handler minContentWidth() returns Number
-	return kIconSize * (kMinCols + (kMinCols + 1) * kIconPaddingRatio)
+	return mIconSize * (kMinCols + (kMinCols + 1) * kIconPaddingRatio)
+end handler
+
+private handler updateGeometry() returns nothing
+    variable tFirstDataItem as Number
+    put mFirstDataItem into tFirstDataItem
+    updateParameters()
+    scrollToIndex(tFirstDataItem)
+	put false into mRecalculateGeometry
 end handler
 
 private handler updateParameters() returns nothing
@@ -392,16 +439,15 @@ private handler updateParameters() returns nothing
     end if
 
 	put (tHeight - topRowHeight()) into mViewHeight
-	put the floor of (mViewHeight / (kIconSize * (1 + kIconPaddingRatio))) into mNumRows
+	put the floor of (mViewHeight / (mIconSize * (1 + kIconPaddingRatio))) into mNumRows
 	
 	put tWidth - kScrollbarWidth into mViewWidth
-	put the floor of (mViewWidth / (kIconSize * (1 + kIconPaddingRatio))) into mNumCols
+	put the floor of (mViewWidth / (mIconSize * (1 + kIconPaddingRatio))) into mNumCols
 	
 	put mViewHeight / mNumRows into mRowHeight
 	put mViewWidth / mNumCols into mColWidth
 
-	
-	put the number of elements in mDataList into mDataCount
+    put the number of elements in mDataList into mDataCount
 	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
 	
 	put mDataHeight - mViewHeight into mDataTravel
@@ -440,59 +486,17 @@ private handler updateIconRects(in pTopOffset as Real)
 	variable tCol as Integer
 	repeat with tRow from 1 up to mNumRows
 		repeat with tCol from 1 up to mNumCols
-			put (tCol - 1) * mViewWidth / mNumCols + kIconSize * kIconPaddingRatio into tLeft
-			put tCol * mViewWidth / mNumCols - kIconSize * kIconPaddingRatio into tRight
+			put (tCol - 1) * mViewWidth / mNumCols + mIconSize * kIconPaddingRatio into tLeft
+			put tCol * mViewWidth / mNumCols - mIconSize * kIconPaddingRatio into tRight
 						
-			put (tRow - 1) * mViewHeight / mNumRows + kIconSize * kIconPaddingRatio + tIconTopOffset into tTop
-			put tRow * mViewHeight / mNumRows - kIconSize * kIconPaddingRatio + pTopOffset into tBottom
+			put (tRow - 1) * mViewHeight / mNumRows + mIconSize * kIconPaddingRatio + tIconTopOffset into tTop
+			put tRow * mViewHeight / mNumRows - mIconSize * kIconPaddingRatio + pTopOffset into tBottom
 
 			push rectangle [tLeft, tTop, tRight, tBottom] onto tRects
 		end repeat
 	end repeat
 
 	put tRects into mIconRects	
-end handler
-
-private handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path)
-
-	// Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-	
-	// Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-		
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-		
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-    put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	// align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 --------------------------------------------------------------------------------
@@ -529,35 +533,6 @@ private handler getFontName() returns String
 	return the name of the font of this canvas
 end handler
 
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-
 --------------------------------------------------------------------------------
 --
 --		Properties
@@ -569,11 +544,11 @@ constant kPreferredRows is 5
 
 public handler getPreferredSize() returns List
 	variable tWidth
-	put kIconSize * kPreferredCols * (1 + kIconPaddingRatio) into tWidth
+	put mIconSize * kPreferredCols * (1 + kIconPaddingRatio) into tWidth
 	add 2 * kScrollbarWidth to tWidth
 	
 	variable tHeight
-	put kIconSize * kPreferredRows * (1 + kIconPaddingRatio) into tHeight
+	put mIconSize * kPreferredRows * (1 + kIconPaddingRatio) into tHeight
 	add topRowHeight() to tHeight
 	return [tWidth, tHeight]
 end handler
@@ -597,6 +572,23 @@ private handler setSelectedElement(in pIcon as String)
       put pIcon into mSelectedElement
       scrollToIndex(tIconIndex)
    end if
+end handler
+
+private handler SetIconSize(in pSize as Number)
+    put pSize into mIconSize
+    put true into mRecalculateGeometry
+    redraw all
+end handler
+
+private handler SetShowNames(in pShow as Boolean)
+    put pShow into mShowNames
+    redraw all
+end handler
+
+private handler SetFilterString(in pString as String)
+    put pString into mFilterString
+    SetDataList()
+    redraw all
 end handler
 
 private handler scrollToIndex(in pIndex as Number)

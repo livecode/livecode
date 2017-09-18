@@ -912,6 +912,13 @@ IsNameValidForNamespace(NameRef p_id)
     
     GetStringOfNameLiteral (p_id, &t_id);
     
+    /* Empty names are always fine (as they are only allowed in specific
+     * contexts) */
+    if (*t_id == '\0')
+    {
+        return 1;
+    }
+    
     /* Must not start with a digit */
     if (t_id[0] >= '0' &&
         t_id[0] <= '9')
@@ -931,6 +938,13 @@ IsNameSuitableForDefinition (NameRef p_id)
 	size_t i;
 
 	GetStringOfNameLiteral (p_id, &t_id);
+
+    /* Empty names are always fine (as they are only allowed in specific
+     * contexts) */
+    if (*t_id == '\0')
+    {
+        return 1;
+    }
 
     for(i = 0; '\0' != t_id[i]; ++i)
     {

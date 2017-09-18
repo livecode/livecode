@@ -33,7 +33,6 @@ The <environment> function returns one of:
 -   "browser": The stack is running as a LiveCode applet.
 -   "mobile": The stack is running on a mobile device.
 
-
 Description:
 Use the <environment> function to change a stack's behavior depending on
 how the stack was opened.

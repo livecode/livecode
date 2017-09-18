@@ -26,6 +26,8 @@
 //    LiveCode
 
 installer LiveCode
+	if BaseEdition is Commercial then
+		additional manifest "../Installer/commercial-package.txt"
 	include Misc
 	include Toolset
 	include Plugins
@@ -86,8 +88,6 @@ installer LiveCode
 		if TargetEdition is Business then
 			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 	include Uninstaller
-	if BaseEdition is Commercial then
-		additional manifest "../Installer/commercial-package.txt"
 	if TargetEdition is Indy then
 		include Commercial.IndyComponents
 	if TargetEdition is Business then
@@ -98,7 +98,15 @@ component Runtime
 
 component Externals
 	include Externals.[[TargetPlatform]]
+	if TargetEdition is "Business" then
+		include Commercial.BusinessExternals
+	if TargetEdition is "Indy" then
+		include Commercial.IndyExternals
 	include Databases.[[TargetPlatform]]
+	if TargetEdition is "Business" then
+		include Commercial.BusinessDatabases
+	if TargetEdition is "Indy" then
+		include Commercial.IndyDatabases
 	if TargetPlatform is Linux then
 		include Externals.CEF.Linux
 	if TargetPlatform is Windows then
@@ -379,7 +387,15 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.textfield
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.field
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.ios.button
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
@@ -727,13 +743,12 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:Externals/CEF/libcef.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libffmpegsumo.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libpdf.so
 		rfolder linux-[[TargetArchitecture]]:Externals/CEF/locales
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_200_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_extensions.pak
+
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:icudtl.dat
@@ -748,12 +763,9 @@ component Externals.CEF.Windows
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:CEF/libcef.dll
 		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_46.dll
 		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/ffmpegsumo.dll
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
-		executable windows:CEF/pdf.dll
 		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
@@ -778,8 +790,6 @@ component Databases.Linux
 	declare dbdriver "ODBC" using dbodbc.so
 	declare dbdriver "PostgreSQL" using dbpostgresql.so
 	declare dbdriver "SqLite" using dbsqlite.so
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.so
 
 //////////
 
@@ -791,15 +801,11 @@ component Databases.Windows
 		executable windows:dbodbc.dll
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
 	declare dbdriver "PostgreSQL" using dbpostgresql.dll
 	declare dbdriver "SqLite" using dbsqlite.dll
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.dll
 	
 //////////
 
@@ -811,15 +817,11 @@ component Databases.MacOSX
 		executable macosx:dbodbc.bundle
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
 	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
 	declare dbdriver "SqLite" using dbsqlite.bundle
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.bundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -835,6 +837,7 @@ component Toolset
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasstandalone.livecodescript
 		stack ide-support:revsblibrary.livecodescript
+		stack ide-support:revhtml5urllibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 		file repo:extensions/script-libraries/dropbox/dropbox.livecodescript
@@ -843,5 +846,7 @@ component Toolset
 		file repo:extensions/script-libraries/mime/mime.livecodescript
 		file repo:extensions/script-libraries/diff/diff.livecodescript
 		file repo:extensions/script-libraries/messageauthentication/messageauthentication.livecodescript
+		file repo:extensions/script-libraries/httpd/httpd.livecodescript
+		file repo:extensions/script-libraries/qr/qr.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////

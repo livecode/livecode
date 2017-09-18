@@ -389,7 +389,7 @@ static bool MCDeployCapsuleFilterFlush(MCDeployCapsuleFilterState& self)
 		self . stream . next_in = self . input;
 	}
 
-	// If a buf error occured, we either need more space, or more input
+	// If a buf error occurred, we either need more space, or more input
 	if (t_result == Z_BUF_ERROR)
 	{
 		// If the input buffer is not maxed out, return as we need more input

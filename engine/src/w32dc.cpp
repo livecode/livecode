@@ -157,6 +157,9 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
+	if (t_success && !p_globally)
+		t_success = MCGFontAddPlatformFileResource(p_path);
+
 	return t_success;
 }
 
@@ -179,6 +182,9 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
+	if (t_success && !p_globally)
+		t_success = MCGFontRemovePlatformFileResource(p_path);
+
 	return t_success;
 }
 
@@ -339,7 +345,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 	HRESULT t_result;
 	
 	// try to get per-monitor DPI setting
-	if (!MCWin32GetDPIForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
+	if (!MCWin32GetDpiForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
 		t_result != S_OK)
 	{
 		// fallback to the global system DPI setting
@@ -360,7 +366,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 // IM-2014-08-08: [[ Bug 12372 ]] Set up dpi-awareness if pixel scaling is enabled
 void MCResPlatformInitPixelScaling()
 {
-	if (MCModeGetPixelScalingEnabled())
+	if (MCModeCanEnablePixelScaling() && MCModeGetPixelScalingEnabled())
 	{
 		BOOL t_result;
 		/* UNCHECKED */ MCWin32SetProcessDPIAware(t_result);

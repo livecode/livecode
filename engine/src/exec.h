@@ -3815,6 +3815,7 @@ extern MCExecMethodInfo *kMCEngineExecStopUsingStackMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecStopUsingStackByNameMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecDispatchMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecSendScriptMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendInTimeMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecCallMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecLockErrorsMethodInfo;
@@ -3947,6 +3948,7 @@ void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name);
 
 void MCEngineExecDispatch(MCExecContext& ctxt, int handler_type, MCNameRef message, MCObjectPtr *target, MCParameter *params);
 void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
+void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units);
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
 
@@ -5674,7 +5676,7 @@ template<> struct MCExecValueTraits<MCNameRef>
         self . nameref_value = p_value;
     }
 
-    inline static void release(MCNameRef& self) { MCNameDelete(self); }
+    inline static void release(MCNameRef& self) { MCValueRelease(self); }
     inline static MCNameRef retain(MCNameRef& self) { return MCValueRetain(self); } 
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNameRef& r_value)

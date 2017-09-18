@@ -983,11 +983,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 		t_info_dict = [[NSMutableDictionary alloc] initWithCapacity: 8];
 		for(uindex_t i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
 		{
-            MCNewAutoNameRef t_key;
-            if (!MCNameCreateWithCString(s_props[i] . key, &t_key))
-                return false;
-            
-			if (!MCArrayFetchValue(p_props, false, *t_key, t_prop_value))
+			if (!MCArrayFetchValue(p_props, false, MCNAME(s_props[i].key), t_prop_value))
 				continue;
             
 			NSObject *t_value;

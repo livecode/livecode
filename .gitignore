@@ -116,8 +116,10 @@ sdks/
 
 # Ignore prebuilts #
 ###################
+prebuilt/bin
 prebuilt/include
 prebuilt/lib
+prebuilt/share
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched

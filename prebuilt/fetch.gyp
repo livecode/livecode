@@ -339,6 +339,7 @@
 					
 					'outputs':
 					[
+						'bin/linux',
 						'lib/linux',
 					],
 					
@@ -367,6 +368,7 @@
 					
 					'outputs':
 					[
+						'bin/mac',
 						'lib/mac',
 					],
 					
@@ -395,6 +397,7 @@
 					
 					'outputs':
 					[
+						'bin/win32/<(target_arch)',
 						'lib/win32/<(target_arch)',
                         'unpacked',
 					],

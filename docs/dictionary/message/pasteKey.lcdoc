@@ -8,7 +8,7 @@ Summary:
 Sent when the user presses the <key combination> equivalent to the
 "Paste" <menu item>.
 
-Associations: field
+Associations: card, field
 
 Introduced: 1.0
 

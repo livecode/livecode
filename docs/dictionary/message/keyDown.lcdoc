@@ -2,10 +2,12 @@ Name: keyDown
 
 Type: message
 
-Syntax: keyDown <keyName>
+Syntax: keyDown <pKeyName>
 
 Summary:
 Sent when the user presses a key.
+
+Associations: card, field
 
 Introduced: 1.0
 
@@ -20,7 +22,7 @@ on keyDown theKey
 end keyDown
 
 Parameters:
-keyName:
+pKeyName:
 The actual character of the pressed key.
 
 Description:
