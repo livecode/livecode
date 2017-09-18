@@ -34,7 +34,7 @@ import uuid
 
 # LiveCode build configuration script
 import config
-#import fetch
+import fetch
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
@@ -54,7 +54,9 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'js-emscripten-sdk1.35',
 )
 # The set of build tasks that this branch supports
-BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract', 'prebuilts-upload')
+BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract',
+    'dist-notes', 'dist-docs', 'dist-server', 'dist-tools', 'dist-upload',
+    'distmac-archive', 'distmac-extract', 'distmac-disk')
 
 SKIP_EXIT_STATUS = 88
 
@@ -104,100 +106,158 @@ def check_target_triple():
         print('Buildbot build for "{}" platform is not supported'.format(triple))
         sys.exit(SKIP_EXIT_STATUS)
 
-def split_target_triple():
-	# Fetch target triple as 3-tuple of (platform, arch, subplatform)
-	check_target_triple()
-	target_components = get_target_triple().split('-')
-	# add empty values for missing components
-	while len(target_components) < 3:
-		target_components.append(None)
+################################################################
+# Defer to buildbot.mk
+################################################################
 
-	target_arch = target_components[0]
-	target_platform = target_components[1]
-	target_subplatform = target_components[2]
-
-	return (target_platform, target_arch, target_subplatform)
+def exec_buildbot_make(target):
+    args = ["make", "-f", "buildbot.mk", target]
+    print(' '.join(args))
+    sys.exit(subprocess.call(args))
 
 ################################################################
 # Fetch prebuilts
 ################################################################
 
+def exec_fetch(args):
+    print('fetch.py ' + ' '.join(args))
+    sys.exit(fetch.fetch(args))
+
 def do_fetch():
-	print('skip fetch step')
-	#check_target_triple()
-	#exec_fetch(['--target', get_target_triple()])
+    check_target_triple()
+    exec_fetch(['--target', get_target_triple()])
 
 ################################################################
 # Configure with gyp
 ################################################################
 
-def format_target_params(platform, arch, subplatform):
-	args = []
-	if platform is not None:
-		args.extend(['--target-platform', platform])
-	if arch is not None:
-		args.extend(['--target-arch', arch])
-	if subplatform is not None:
-		args.extend(['--target-subplatform', subplatform])
-	return args
+def exec_configure(args):
+    print('config.py ' + ' '.join(args))
+    sys.exit(config.configure(args))
 
-def build(target):
-	args = ["python", "prebuilt/build.py"] + format_target_params(*target)
-	print(' '.join(args))
-	return subprocess.call(args)
-	
-def package(target):
-	args = ["python", "prebuilt/package.py"] + format_target_params(*target)
-	print(' '.join(args))
-	return subprocess.call(args)
-	
 def do_configure():
-	target = split_target_triple()
-	# perform build + package + upload in configure step
+    check_target_triple()
+    platform, subplatform = get_build_platform()
 
-	exit_status = build(target)
-	if exit_status is 0:
-		exit_status = package(target)
-
-	return exit_status
+    if platform == 'ios':
+        if subplatform is None:
+            error('You must set $BUILD_SUBPLATFORM for iOS builds')
+        exec_configure(['--platform', 'ios',
+                        '--generator-output',
+                        'build-{}-{}/livecode'.format(platform, subplatform),
+                        '-Dtarget_sdk=' + subplatform])
+    else:
+        exec_configure(['--platform', platform])
+    return 0
 
 ################################################################
 # Compile
 ################################################################
 
+def exec_make(target):
+    args = ['make', target]
+    print(' '.join(args))
+    sys.exit(subprocess.call(args))
+
+# mspdbsrv is the service used by Visual Studio to collect debug
+# data during compilation.  One instance is shared by all C++
+# compiler instances and threads.  It poses a unique challenge in
+# several ways:
+#
+# - If not running when the build job starts, the build job will
+#   automatically spawn it as soon as it needs to emit debug symbols.
+#   There's no way to prevent this from happening.
+#
+# - The build job _doesn't_ automatically clean it up when it finishes
+#
+# - By default, mspdbsrv inherits its parent process' file handles,
+#   including (unfortunately) some log handles owned by Buildbot.  This
+#   can prevent Buildbot from detecting that the compile job is finished
+#
+# - If a compile job starts and detects an instance of mspdbsrv already
+#   running, by default it will reuse it.  So, if you have a compile
+#   job A running, and start a second job B, job B will use job A's
+#   instance of mspdbsrv.  If you kill mspdbsrv when job A finishes,
+#   job B will die horribly.  To make matters worse, the version of
+#   mspdbsrv should match the version of Visual Studio being used.
+#
+# This class works around these problems:
+#
+# - It sets the _MSPDBSRV_ENDPOINT_ to a value that's probably unique to
+#   the build, to prevent other builds on the same machine from sharing
+#   the same mspdbsrv endpoint
+#
+# - It launches mspdbsrv with _all_ file handles closed, so that it
+#   can't block the build from being detected as finished.
+#
+# - It explicitly kills mspdbsrv after the build job has finished.
+#
+# - It wraps all of this into a context manager, so mspdbsrv gets killed
+#   even if a Python exception causes a non-local exit.
+class UniqueMspdbsrv(object):
+    def __enter__(self):
+        os.environ['_MSPDBSRV_ENDPOINT_'] = str(uuid.uuid4())
+
+        mspdbsrv_exe = os.path.join(config.get_program_files_x86(),
+            'Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.10.25017\\bin\\HostX86\\x86\\mspdbsrv.exe')
+        args = [mspdbsrv_exe, '-start', '-shutdowntime', '-1']
+        print(' '.join(args))
+        self.proc = subprocess.Popen(args, close_fds=True)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.proc.terminate()
+        return False
+
+def exec_msbuild(platform):
+    # Run the make.cmd batch script; it's run using Wine if this is
+    # not actually a Windows system.
+    cwd = 'build-' + platform
+
+    if _platform.system() == 'Windows':
+        with UniqueMspdbsrv() as mspdbsrv:
+            args = ['cmd', '/C', '..\\make.cmd']
+            print(' '.join(args))
+            result = subprocess.call(args, cwd=cwd)
+
+        sys.exit(result)
+
+    else:
+        args = ['wine', 'cmd', '/K', '..\\make.cmd']
+        print(' '.join(args))
+        exit_status = sys.exit(subprocess.call(args, cwd=cwd))
+
+        # Clean up any Wine processes that are still hanging around.
+        # This is important in case the build fails.
+        args = ['wineserver', '-k', '-w']
+        subprocess.call(args, cwd=cwd)
+
+        sys.exit(exit_status)
+
 def do_compile():
-	print('skip compile')
+    check_target_triple()
+
+    platform, subplatform = get_build_platform()
+    if platform.startswith('win-'):
+        return exec_msbuild(platform)
+    else:
+        # Just defer to the top level Makefile
+        if platform == 'ios':
+            if subplatform is None:
+                error('You must set $BUILD_SUBPLATFORM for iOS builds')
+            target = 'compile-{}-{}'.format(platform, subplatform)
+        else:
+            target = 'compile-' + platform
+        return exec_make(target)
 
 ################################################################
 # Archive / extract built binaries
 ################################################################
 
-def bin_archive(target):
-	args = ["python", "prebuilt/archive.py"] + format_target_params(*target)
-	print(' '.join(args))
-	return subprocess.call(args)
-
 def do_bin_archive():
-	target = split_target_triple()
-	return bin_archive(target)
-
-def do_bin_extract():
-    return subprocess.call(['python', 'prebuilt/extract.py'])
-
-################################################################
-# Upload packaged binaries
-################################################################
-
-def prebuilts_upload(target):
-	args = ["python", "prebuilt/upload.py"] + format_target_params(*target)
-	print(' '.join(args))
-	return subprocess.call(args)
-
-def do_prebuilts_upload():
-	target = split_target_triple()
-	# perform build + package + upload in configure step
-
-	return prebuilts_upload(target)
+    platform, subplatform = get_build_platform()
+    bindir = platform + '-bin'
+    shutil.make_archive(bindir, 'bztar', '.', bindir)
 
 ################################################################
 # Main entry point
@@ -217,10 +277,8 @@ def buildbot_task(target):
         return do_compile()
     elif target == 'bin-archive':
         return do_bin_archive()
-    elif target == 'bin-extract':
-        return do_bin_extract()
-    elif target == 'prebuilts-upload':
-        return do_prebuilts_upload()
+    else:
+        return exec_buildbot_make(target)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
