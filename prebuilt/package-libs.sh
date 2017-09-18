@@ -1,11 +1,31 @@
 #!/bin/bash
+#Abort packaging on error
+set -e
 
 # Versions
+source "scripts/platform.inc"
 source "scripts/lib_versions.inc"
 
 # Package directory
 PACKAGE_DIR="`pwd`/packaged"
 mkdir -p "${PACKAGE_DIR}"
+
+function generateTarFileName {
+	local LIBNAME=$1
+	local PLATFORM=$2
+	
+	eval local BUILDREVISION="\$${LIBNAME}_BUILDREVISION"
+	eval local VERSION="\$${LIBNAME}_VERSION"
+	
+	# Tar file name may include prebuilt build revision number
+	if [ ! -z "${BUILDREVISION}" ] ; then
+		local TAR_FILE="${PACKAGE_DIR}/${LIBNAME}-${VERSION}-${PLATFORM}-${BUILDREVISION}.tar"
+	else
+		local TAR_FILE="${PACKAGE_DIR}/${LIBNAME}-${VERSION}-${PLATFORM}.tar"
+	fi
+	
+	eval ${LIBNAME}_TAR='"${TAR_FILE}"'
+}
 
 # Packager function
 function doPackage {
@@ -40,30 +60,30 @@ function doPackage {
 	fi
 
 	if [ ! -z "${PACKAGE_SUBPLATFORM}" ] ; then
-		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}-${PACKAGE_SUBPLATFORM}"
+		local SUFFIX="${PLATFORM}-${PACKAGE_ARCH}-${PACKAGE_SUBPLATFORM}"
 	else
-		local SUFFIX="-${PLATFORM}-${PACKAGE_ARCH}"
+		local SUFFIX="${PLATFORM}-${PACKAGE_ARCH}"
 	fi
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
-	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}${SUFFIX}.tar"
-	local CURL_TAR="${PACKAGE_DIR}/Curl-${Curl_VERSION}${SUFFIX}.tar"
-	local ICU_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}${SUFFIX}.tar"
-	local CEF_TAR="${PACKAGE_DIR}/CEF-${CEF_VERSION}${SUFFIX}.tar"
-
+	generateTarFileName OpenSSL "${SUFFIX}"
+	generateTarFileName Curl "${SUFFIX}"
+	generateTarFileName ICU "${SUFFIX}"
+	generateTarFileName CEF "${SUFFIX}"
+	
 	# Package up OpenSSL
 	if [ -f "${LIBPATH}/libcustomcrypto.a" ] ; then
-		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libcustomcrypto.a" "${LIBPATH}/libcustomssl.a"
+		tar -cf "${OpenSSL_TAR}" "${LIBPATH}/libcustomcrypto.a" "${LIBPATH}/libcustomssl.a"
 	elif [ -f "${LIBPATH}/revsecurity.dll" ] ; then
-		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll" "${LIBPATH}/revsecurity.def"
+		tar -cf "${OpenSSL_TAR}" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll" "${LIBPATH}/revsecurity.def"
 	fi
 
 	# Package up Curl
 	if [ -f "${LIBPATH}/libcurl.a" ] ; then
-		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl.a"
+		tar -cf "${Curl_TAR}" "${LIBPATH}/libcurl.a"
 	elif [ -f "${LIBPATH}/libcurl_a.lib" ] ; then
-		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl_a.lib"
+		tar -cf "${Curl_TAR}" "${LIBPATH}/libcurl_a.lib"
 	fi
 
 	# Package up ICU
@@ -95,11 +115,11 @@ function doPackage {
 	fi
 
 	# Compress the packages
-	if [ -f "${OPENSSL_TAR}" ] ; then
-		bzip2 -zf --best "${OPENSSL_TAR}"
+	if [ -f "${OpenSSL_TAR}" ] ; then
+		bzip2 -zf --best "${OpenSSL_TAR}"
 	fi
-	if [ -f "${CURL_TAR}" ] ; then
-		bzip2 -zf --best "${CURL_TAR}"
+	if [ -f "${Curl_TAR}" ] ; then
+		bzip2 -zf --best "${Curl_TAR}"
 	fi
 	if [ -f "${ICU_TAR}" ] ; then
 		bzip2 -zf --best "${ICU_TAR}"
@@ -125,10 +145,16 @@ doPackage "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 # We only need shared headers to be packaged once, so only do this on linux-x86_64
 if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
 	# Package up the includes
-	OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers.tar"
-	ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
-	tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
-	tar -cf "${ICU_HDR_TAR}" include/unicode/*.h
-	bzip2 -zf --best "${OPENSSL_HDR_TAR}"
-	bzip2 -zf --best "${ICU_HDR_TAR}"
+	OPENSSL_HDR_NAME="OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers"
+	if [ ! -z "${OpenSSL_BUILDREVISION}" ] ; then
+		OPENSSL_HDR_NAME+="-${OpenSSL_BUILDREVISION}"
+	fi
+	ICU_HDR_NAME="ICU-${ICU_VERSION}-All-Universal-Headers"
+	if [ ! -z "${ICU_BUILDREVISION}" ] ; then
+		ICU_HDR_NAME+="-${ICU_BUILDREVISION}"
+	fi
+	tar -cf "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar" include/openssl/*.h
+	tar -cf "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar" include/unicode/*.h
+	bzip2 -zf --best "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar"
+	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar"
 fi
