@@ -60,24 +60,10 @@ void MCLicenseSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
     {
         MCAutoStringRef t_class;
-        if (ctxt . ConvertToString(t_value, &t_class))
+        MCLicenseClass t_license_class;
+        if (ctxt . ConvertToString(t_value, &t_class) && MCStringToLicenseClass(*t_class, t_license_class))
         {
-            static struct { const char *tag; uint32_t value; } s_class_map[] =
-            {
-                { "community", kMCLicenseClassCommunity },
-                { "evaluation", kMCLicenseClassEvaluation },
-                { "commercial", kMCLicenseClassCommercial },
-                { "professional evaluation", kMCLicenseClassProfessionalEvaluation },
-                { "professional", kMCLicenseClassProfessional },
-                { "", kMCLicenseClassNone }
-            };
-            
-            uint4 t_index;
-            for(t_index = 0; s_class_map[t_index] . tag != NULL; ++t_index)
-                if (MCStringIsEqualToCString(*t_class, s_class_map[t_index] . tag, kMCCompareCaseless))
-                    break;
-            
-            MClicenseparameters . license_class = s_class_map[t_index] . value;
+            MClicenseparameters . license_class = t_license_class;
         }
         else
             MClicenseparameters . license_class = kMCLicenseClassNone;
@@ -193,16 +179,6 @@ void MCLicenseGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits)
 
 void MCLicenseGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
 {
-    static const char *s_class_types[] =
-    {
-        "",
-        "Community",
-        "Evaluation",
-        "Commercial",
-        "Professional Evaluation",
-        "Professional",
-    };
-    
     static const char *s_deploy_targets[] =
     {
         "Windows",
@@ -234,11 +210,14 @@ void MCLicenseGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     if (t_license_org == nil)
         t_license_org = kMCEmptyString;
 
+    MCAutoStringRef t_class;
+    if (t_success)
+        t_success = MCStringFromLicenseClass(MClicenseparameters . license_class, false, &t_class);
     
     if (t_success)
-        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%s\n%u\n",
+        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%@\n%u\n",
                                          t_license_name, t_license_org,
-                                         s_class_types[MClicenseparameters . license_class],
+                                         *t_class,
                                          MClicenseparameters . license_multiplicity);
     
     if (MClicenseparameters . deploy_targets != 0)

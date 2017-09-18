@@ -951,7 +951,7 @@ void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings)
             MCcrashreportfilename = MCValueRetain((MCStringRef)t_filename);
     }
 }
-
+            
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER

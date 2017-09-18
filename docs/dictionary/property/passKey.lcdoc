@@ -12,6 +12,8 @@ Associations: stack
 
 Introduced: 1.0
 
+Edition: indy
+
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile
@@ -41,8 +43,12 @@ authentication in a <handler>.
     set the scriptOnly of stack "Secrets" to false
     set the password of stack "Secrets" to field "Password"
 
-
+>**Note:** Setting the <passKey> of a <stack> is only supported in 
+> *LiveCode Indy* and *LiveCode Business*. In *LiveCode Community* and
+> *LiveCode Community Plus* setting the <passKey> of a <stack> will
+> result in an execution error, however, *LiveCode Community Plus* does
+> support using <password> protected <stack|stacks>.
+    
 References: stacks (function), property (glossary), unlock (glossary),
 dialog box (glossary), handler (glossary), string (keyword),
 stack (object), password (property), script (property)
-

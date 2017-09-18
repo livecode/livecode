@@ -48,6 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "osspec.h"
 #include "stackfileformat.h"
+#include "mcerror.h"
 
 //////////
 
@@ -2147,16 +2148,28 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     MCRedrawDirtyScreen();
 }
 
-void MCStack::GetPassword(MCExecContext& ctxt, MCDataRef& r_value)
+void MCStack::GetPassword(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(kMCEmptyData);
 }
 
-void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
+void MCStack::SetPassword(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
+}
+
+void MCStack::GetKey(MCExecContext& ctxt, MCValueRef& r_value)
 {
     // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
     //   whether or not the script is available.
-    r_value = iskeyed();
+    r_value = MCValueRetain(iskeyed() ? kMCTrue : kMCFalse);
+}
+
+void MCStack::SetKey(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
 }
 
 // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property

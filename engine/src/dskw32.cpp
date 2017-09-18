@@ -1950,7 +1950,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                                         &t_self);
             MCSLibraryCopyNativePath(*t_self,
                                      &t_native_path);
-
             t_wasfound = True;
         }
         else
@@ -3871,4 +3870,3 @@ uint2 MCS_charsettolangid(uint1 charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
